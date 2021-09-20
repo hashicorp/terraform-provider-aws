@@ -6,25 +6,26 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsImageBuilderImageDataSource_Arn_Aws(t *testing.T) {
 	dataSourceName := "data.aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsImageBuilderImageDataSourceConfigArnAws(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrRegionalARNAccountID(dataSourceName, "arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/x.x.x`)),
-					testAccMatchResourceAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
-					testAccCheckResourceAttrRfc3339(dataSourceName, "date_created"),
+					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/x.x.x`)),
+					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexp.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
+					acctest.CheckResourceAttrRFC3339(dataSourceName, "date_created"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "distribution_configuration_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", "true"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "image_recipe_arn"),
@@ -44,13 +45,13 @@ func TestAccAwsImageBuilderImageDataSource_Arn_Aws(t *testing.T) {
 
 // Verify additional fields returned by Self owned Images
 func TestAccAwsImageBuilderImageDataSource_Arn_Self(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_imagebuilder_image.test"
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
