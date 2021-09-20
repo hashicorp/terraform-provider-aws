@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
@@ -28,8 +29,8 @@ func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"virtual_interface_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -42,7 +43,7 @@ func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -103,7 +104,7 @@ func resourceHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, me
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
 
 	arn := d.Get("arn").(string)
-	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
+	tags, err := tftags.DirectconnectListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect hosted public virtual interface (%s): %s", arn, err)
