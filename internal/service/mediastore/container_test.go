@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
+func TestAccMediaStoreContainer_basic(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,7 +38,7 @@ func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMediaStoreContainer_tags(t *testing.T) {
+func TestAccMediaStoreContainer_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_media_store_container.test"
 
