@@ -7,10 +7,6 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
@@ -19,7 +15,10 @@ func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
 	resourceName := "aws_lex_bot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
@@ -58,7 +57,10 @@ func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
