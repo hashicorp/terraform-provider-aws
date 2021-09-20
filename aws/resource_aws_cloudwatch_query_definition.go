@@ -73,7 +73,7 @@ func resourceAwsCloudWatchQueryDefinitionCreate(ctx context.Context, d *schema.R
 func getAwsCloudWatchQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlogs.PutQueryDefinitionInput {
 	result := &cloudwatchlogs.PutQueryDefinitionInput{
 		Name:          aws.String(d.Get("name").(string)),
-		LogGroupNames: expandStringList(d.Get("log_group_names").([]interface{})),
+		LogGroupNames: flex.ExpandStringList(d.Get("log_group_names").([]interface{})),
 		QueryString:   aws.String(d.Get("query_string").(string)),
 	}
 

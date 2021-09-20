@@ -248,7 +248,7 @@ func expandCloudWatchLogMetricTransformations(m map[string]interface{}) []*cloud
 	}
 
 	if dims := m["dimensions"].(map[string]interface{}); len(dims) > 0 {
-		transformation.Dimensions = expandStringMap(dims)
+		transformation.Dimensions = flex.ExpandStringMap(dims)
 	}
 
 	if v, ok := m["unit"].(string); ok && v != "" {
