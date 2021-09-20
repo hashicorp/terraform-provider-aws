@@ -26,12 +26,12 @@ const (
 	LexIntentVersionLatest = "$LATEST"
 )
 
-func resourceAwsLexIntent() *schema.Resource {
+func ResourceIntent() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLexIntentCreate,
-		Read:   resourceAwsLexIntentRead,
-		Update: resourceAwsLexIntentUpdate,
-		Delete: resourceAwsLexIntentDelete,
+		Create: resourceIntentCreate,
+		Read:   resourceIntentRead,
+		Update: resourceIntentUpdate,
+		Delete: resourceIntentDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -281,7 +281,7 @@ func hasIntentConfigChanges(d resourceDiffer) bool {
 	return false
 }
 
-func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIntentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 	name := d.Get("name").(string)
 
@@ -351,10 +351,10 @@ func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(name)
 
-	return resourceAwsLexIntentRead(d, meta)
+	return resourceIntentRead(d, meta)
 }
 
-func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
@@ -432,7 +432,7 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIntentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutIntentInput{
@@ -499,10 +499,10 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error updating intent %s: %w", d.Id(), err)
 	}
 
-	return resourceAwsLexIntentRead(d, meta)
+	return resourceIntentRead(d, meta)
 }
 
-func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.DeleteIntentInput{

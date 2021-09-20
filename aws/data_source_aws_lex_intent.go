@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLexIntent() *schema.Resource {
+func DataSourceIntent() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLexIntentRead,
+		Read: dataSourceIntentRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -63,7 +63,7 @@ func dataSourceAwsLexIntent() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	intentName := d.Get("name").(string)

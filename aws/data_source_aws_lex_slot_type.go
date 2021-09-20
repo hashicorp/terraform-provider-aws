@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLexSlotType() *schema.Resource {
+func DataSourceSlotType() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLexSlotTypeRead,
+		Read: dataSourceSlotTypeRead,
 
 		Schema: map[string]*schema.Schema{
 			"checksum": {
@@ -77,7 +77,7 @@ func dataSourceAwsLexSlotType() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLexSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 	slotTypeName := d.Get("name").(string)
 
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn

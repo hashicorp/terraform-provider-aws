@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLexBotAlias() *schema.Resource {
+func DataSourceBotAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLexBotAliasRead,
+		Read: dataSourceBotAliasRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -54,7 +54,7 @@ func dataSourceAwsLexBotAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	botName := d.Get("bot_name").(string)

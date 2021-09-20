@@ -24,12 +24,12 @@ const (
 	LexSlotTypeVersionLatest = "$LATEST"
 )
 
-func resourceAwsLexSlotType() *schema.Resource {
+func ResourceSlotType() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLexSlotTypeCreate,
-		Read:   resourceAwsLexSlotTypeRead,
-		Update: resourceAwsLexSlotTypeUpdate,
-		Delete: resourceAwsLexSlotTypeDelete,
+		Create: resourceSlotTypeCreate,
+		Read:   resourceSlotTypeRead,
+		Update: resourceSlotTypeUpdate,
+		Delete: resourceSlotTypeDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -133,7 +133,7 @@ func hasSlotTypeConfigChanges(d resourceDiffer) bool {
 	return false
 }
 
-func resourceAwsLexSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSlotTypeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 	name := d.Get("name").(string)
 
@@ -172,10 +172,10 @@ func resourceAwsLexSlotTypeCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(name)
 
-	return resourceAwsLexSlotTypeRead(d, meta)
+	return resourceSlotTypeRead(d, meta)
 }
 
-func resourceAwsLexSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
@@ -244,7 +244,7 @@ func getLatestLexSlotTypeVersion(conn *lexmodelbuildingservice.LexModelBuildingS
 	return version, nil
 }
 
-func resourceAwsLexSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSlotTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
@@ -280,10 +280,10 @@ func resourceAwsLexSlotTypeUpdate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error updating slot type %s: %w", d.Id(), err)
 	}
 
-	return resourceAwsLexSlotTypeRead(d, meta)
+	return resourceSlotTypeRead(d, meta)
 }
 
-func resourceAwsLexSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.DeleteSlotTypeInput{

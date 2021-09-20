@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -43,7 +44,7 @@ func testSweepLexBots(region string) error {
 		}
 
 		for _, bot := range page.Bots {
-			r := resourceAwsLexBot()
+			r := ResourceBot()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(bot.Name))
@@ -721,7 +722,7 @@ func TestAccAwsLexBot_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLexBotExists(rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLexBot(), rName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBot(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

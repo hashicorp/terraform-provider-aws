@@ -25,12 +25,12 @@ const (
 	LexBotAliasDeleteTimeout = 5 * time.Minute
 )
 
-func resourceAwsLexBotAlias() *schema.Resource {
+func ResourceBotAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLexBotAliasCreate,
-		Read:   resourceAwsLexBotAliasRead,
-		Update: resourceAwsLexBotAliasUpdate,
-		Delete: resourceAwsLexBotAliasDelete,
+		Create: resourceBotAliasCreate,
+		Read:   resourceBotAliasRead,
+		Update: resourceBotAliasUpdate,
+		Delete: resourceBotAliasDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsLexBotAliasImport,
 		},
@@ -115,7 +115,7 @@ var validateLexBotAliasName = validation.All(
 	validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 )
 
-func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	botName := d.Get("bot_name").(string)
@@ -165,10 +165,10 @@ func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(id)
 
-	return resourceAwsLexBotAliasRead(d, meta)
+	return resourceBotAliasRead(d, meta)
 }
 
-func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
@@ -208,7 +208,7 @@ func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutBotAliasInput{
@@ -255,10 +255,10 @@ func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error updating bot alias '%s': %w", d.Id(), err)
 	}
 
-	return resourceAwsLexBotAliasRead(d, meta)
+	return resourceBotAliasRead(d, meta)
 }
 
-func resourceAwsLexBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
 	botName := d.Get("bot_name").(string)
