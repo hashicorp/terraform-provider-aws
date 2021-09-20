@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func testAccAwsSecurityHubActionTarget_basic(t *testing.T) {
@@ -53,7 +54,7 @@ func testAccAwsSecurityHubActionTarget_disappears(t *testing.T) {
 				Config: testAccAwsSecurityHubActionTargetConfigIdentifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceActionTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceActionTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,7 +139,7 @@ func testAccCheckAwsSecurityHubActionTargetExists(n string) resource.TestCheckFu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
-		action, err := resourceAwsSecurityHubActionTargetCheckExists(conn, rs.Primary.ID)
+		action, err := tfsecurityhub.ActionTargetCheckExists(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -160,7 +161,7 @@ func testAccCheckAwsSecurityHubActionTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		action, err := resourceAwsSecurityHubActionTargetCheckExists(conn, rs.Primary.ID)
+		action, err := tfsecurityhub.ActionTargetCheckExists(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
 			continue

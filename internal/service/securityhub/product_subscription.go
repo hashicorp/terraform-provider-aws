@@ -58,7 +58,7 @@ func resourceProductSubscriptionCreate(d *schema.ResourceData, meta interface{})
 func resourceProductSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
-	productArn, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(d.Id())
+	productArn, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func resourceProductSubscriptionRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Reading Security Hub product subscriptions to find %s", d.Id())
 
-	exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, productSubscriptionArn)
+	exists, err := ProductSubscriptionCheckExists(conn, productSubscriptionArn)
 
 	if err != nil {
 		return fmt.Errorf("Error reading Security Hub product subscriptions to find %s: %s", d.Id(), err)
@@ -84,7 +84,7 @@ func resourceProductSubscriptionRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsSecurityHubProductSubscriptionCheckExists(conn *securityhub.SecurityHub, productSubscriptionArn string) (bool, error) {
+func ProductSubscriptionCheckExists(conn *securityhub.SecurityHub, productSubscriptionArn string) (bool, error) {
 	input := &securityhub.ListEnabledProductsForImportInput{}
 	exists := false
 
@@ -105,7 +105,7 @@ func resourceAwsSecurityHubProductSubscriptionCheckExists(conn *securityhub.Secu
 	return exists, nil
 }
 
-func resourceAwsSecurityHubProductSubscriptionParseId(id string) (string, string, error) {
+func ProductSubscriptionParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 
 	if len(parts) != 2 {
@@ -119,7 +119,7 @@ func resourceProductSubscriptionDelete(d *schema.ResourceData, meta interface{})
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Disabling Security Hub product subscription %s", d.Id())
 
-	_, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(d.Id())
+	_, productSubscriptionArn, err := ProductSubscriptionParseID(d.Id())
 
 	if err != nil {
 		return err
