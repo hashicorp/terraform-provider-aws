@@ -110,7 +110,7 @@ func resourceSecretVersionCreate(d *schema.ResourceData, meta interface{}) error
 func resourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
-	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
+	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func resourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
 func resourceSecretVersionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
-	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
+	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func resourceSecretVersionUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceSecretVersionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecretsManagerConn
 
-	secretID, versionID, err := decodeSecretsManagerSecretVersionID(d.Id())
+	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -265,7 +265,7 @@ func resourceSecretVersionDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func decodeSecretsManagerSecretVersionID(id string) (string, string, error) {
+func DecodeSecretVersionID(id string) (string, string, error) {
 	idParts := strings.Split(id, "|")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("expected ID in format SecretID|VersionID, received: %s", id)
