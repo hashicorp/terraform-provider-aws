@@ -1,4 +1,4 @@
-package aws
+package neptune
 
 import (
 	"fmt"
@@ -10,10 +10,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -107,7 +105,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 	endpointId := aws.StringValue(out.DBClusterEndpointIdentifier)
 	d.SetId(fmt.Sprintf("%s:%s", clusterId, endpointId))
 
-	_, err = waiter.WaitDBClusterEndpointAvailable(conn, d.Id())
+	_, err = WaitDBClusterEndpointAvailable(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error waiting for Neptune Cluster Endpoint (%q) to be Available: %w", d.Id(), err)
 	}
@@ -121,7 +119,7 @@ func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := finder.FindEndpointByID(conn, d.Id())
+	resp, err := FindEndpointByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
 		log.Printf("[DEBUG] Neptune Cluster Endpoint (%s) not found", d.Id())
@@ -193,7 +191,7 @@ func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("error updating Neptune Cluster Endpoint (%q): %w", d.Id(), err)
 		}
 
-		_, err = waiter.WaitDBClusterEndpointAvailable(conn, d.Id())
+		_, err = WaitDBClusterEndpointAvailable(conn, d.Id())
 		if err != nil {
 			return fmt.Errorf("error waiting for Neptune Cluster Endpoint (%q) to be Available: %w", d.Id(), err)
 		}
@@ -227,7 +225,7 @@ func resourceClusterEndpointDelete(d *schema.ResourceData, meta interface{}) err
 		}
 		return fmt.Errorf("Neptune Cluster Endpoint cannot be deleted: %w", err)
 	}
-	_, err = waiter.WaitDBClusterEndpointDeleted(conn, d.Id())
+	_, err = WaitDBClusterEndpointDeleted(conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) {
 			return nil

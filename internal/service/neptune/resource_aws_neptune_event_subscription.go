@@ -1,4 +1,4 @@
-package aws
+package neptune
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"

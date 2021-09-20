@@ -1,4 +1,4 @@
-package aws
+package neptune_test
 
 import (
 	//"errors"
@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
 func TestAccAWSNeptuneClusterEndpoint_basic(t *testing.T) {
@@ -159,7 +159,7 @@ func testAccCheckAWSNeptuneClusterEndpointDestroyWithProvider(s *terraform.State
 			continue
 		}
 
-		_, err := finder.FindEndpointByID(conn, rs.Primary.ID)
+		_, err := tfneptune.FindEndpointByID(conn, rs.Primary.ID)
 		// Return nil if the cluster is already destroyed
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
@@ -190,7 +190,7 @@ func testAccCheckAWSNeptuneClusterEndpointExistsWithProvider(n string, v *neptun
 
 		provider := providerF()
 		conn := provider.Meta().(*conns.AWSClient).NeptuneConn
-		resp, err := finder.FindEndpointByID(conn, rs.Primary.ID)
+		resp, err := tfneptune.FindEndpointByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("Neptune Cluster Endpoint (%s) not found: %w", rs.Primary.ID, err)
 		}

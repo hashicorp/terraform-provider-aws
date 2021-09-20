@@ -1,4 +1,4 @@
-package aws
+package neptune_test
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 )
 
 func init() {
@@ -57,7 +57,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 				continue
 			}
 
-			_, err = waiter.WaitEventSubscriptionDeleted(conn, name)
+			_, err = tfneptune.WaitEventSubscriptionDeleted(conn, name)
 			if tfawserr.ErrMessageContains(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 				continue
 			}
