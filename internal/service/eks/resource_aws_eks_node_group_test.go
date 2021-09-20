@@ -1052,7 +1052,7 @@ func testAccCheckAWSEksNodeGroupExists(resourceName string, nodeGroup *eks.Nodeg
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		output, err := finder.NodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+		output, err := finder.FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
 		if err != nil {
 			return err
@@ -1078,7 +1078,7 @@ func testAccCheckAWSEksNodeGroupDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.NodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+		_, err = finder.FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
 		if tfresource.NotFound(err) {
 			continue

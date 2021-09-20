@@ -64,7 +64,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	clusterName := d.Get("cluster_name").(string)
 	id := tfeks.AddonCreateResourceID(clusterName, addonName)
 
-	addon, err := finder.AddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
+	addon, err := finder.FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading EKS Add-On (%s): %w", id, err))

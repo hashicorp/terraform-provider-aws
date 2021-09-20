@@ -268,7 +268,7 @@ func testAccCheckAWSEksFargateProfileExists(resourceName string, fargateProfile 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		output, err := finder.FargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
+		output, err := finder.FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
 
 		if err != nil {
 			return err
@@ -294,7 +294,7 @@ func testAccCheckAWSEksFargateProfileDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.FargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
+		_, err = finder.FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
 
 		if tfresource.NotFound(err) {
 			continue

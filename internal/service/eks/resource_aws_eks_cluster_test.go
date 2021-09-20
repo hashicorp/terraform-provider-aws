@@ -620,7 +620,7 @@ func testAccCheckAWSEksClusterExists(resourceName string, cluster *eks.Cluster) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		output, err := finder.ClusterByName(conn, rs.Primary.ID)
+		output, err := finder.FindClusterByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -640,7 +640,7 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		_, err := finder.ClusterByName(conn, rs.Primary.ID)
+		_, err := finder.FindClusterByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

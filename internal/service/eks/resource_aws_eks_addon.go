@@ -147,7 +147,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(id)
 
-	_, err = waiter.AddonCreated(ctx, conn, clusterName, addonName)
+	_, err = waiter.waitAddonCreated(ctx, conn, clusterName, addonName)
 
 	if err != nil {
 		// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
@@ -177,7 +177,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	addon, err := finder.AddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
+	addon, err := finder.FindAddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Add-On (%s) not found, removing from state", d.Id())
@@ -249,7 +249,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.AddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID)
+		_, err = waiter.waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID)
 
 		if err != nil {
 			if d.Get("resolve_conflicts") != eks.ResolveConflictsOverwrite {
@@ -293,7 +293,7 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error deleting EKS Add-On (%s): %w", d.Id(), err))
 	}
 
-	_, err = waiter.AddonDeleted(ctx, conn, clusterName, addonName)
+	_, err = waiter.waitAddonDeleted(ctx, conn, clusterName, addonName)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) to delete: %w", d.Id(), err))

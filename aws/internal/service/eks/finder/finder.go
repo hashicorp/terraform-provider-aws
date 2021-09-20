@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func AddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
+func FindAddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
 	input := &eks.DescribeAddonInput{
 		AddonName:   aws.String(addonName),
 		ClusterName: aws.String(clusterName),
@@ -40,7 +40,7 @@ func AddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterN
 	return output.Addon, nil
 }
 
-func AddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string) (*eks.Update, error) {
+func FindAddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.EKS, clusterName, addonName, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		AddonName: aws.String(addonName),
 		Name:      aws.String(clusterName),
@@ -70,7 +70,7 @@ func AddonUpdateByClusterNameAddonNameAndID(ctx context.Context, conn *eks.EKS, 
 	return output.Update, nil
 }
 
-func ClusterByName(conn *eks.EKS, name string) (*eks.Cluster, error) {
+func FindClusterByName(conn *eks.EKS, name string) (*eks.Cluster, error) {
 	input := &eks.DescribeClusterInput{
 		Name: aws.String(name),
 	}
@@ -100,7 +100,7 @@ func ClusterByName(conn *eks.EKS, name string) (*eks.Cluster, error) {
 	return output.Cluster, nil
 }
 
-func ClusterUpdateByNameAndID(conn *eks.EKS, name, id string) (*eks.Update, error) {
+func FindClusterUpdateByNameAndID(conn *eks.EKS, name, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		Name:     aws.String(name),
 		UpdateId: aws.String(id),
@@ -129,7 +129,7 @@ func ClusterUpdateByNameAndID(conn *eks.EKS, name, id string) (*eks.Update, erro
 	return output.Update, nil
 }
 
-func FargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
+func FindFargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, clusterName, fargateProfileName string) (*eks.FargateProfile, error) {
 	input := &eks.DescribeFargateProfileInput{
 		ClusterName:        aws.String(clusterName),
 		FargateProfileName: aws.String(fargateProfileName),
@@ -158,7 +158,7 @@ func FargateProfileByClusterNameAndFargateProfileName(conn *eks.EKS, clusterName
 	return output.FargateProfile, nil
 }
 
-func NodegroupByClusterNameAndNodegroupName(conn *eks.EKS, clusterName, nodeGroupName string) (*eks.Nodegroup, error) {
+func FindNodegroupByClusterNameAndNodegroupName(conn *eks.EKS, clusterName, nodeGroupName string) (*eks.Nodegroup, error) {
 	input := &eks.DescribeNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
@@ -187,7 +187,7 @@ func NodegroupByClusterNameAndNodegroupName(conn *eks.EKS, clusterName, nodeGrou
 	return output.Nodegroup, nil
 }
 
-func NodegroupUpdateByClusterNameNodegroupNameAndID(conn *eks.EKS, clusterName, nodeGroupName, id string) (*eks.Update, error) {
+func FindNodegroupUpdateByClusterNameNodegroupNameAndID(conn *eks.EKS, clusterName, nodeGroupName, id string) (*eks.Update, error) {
 	input := &eks.DescribeUpdateInput{
 		Name:          aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
@@ -217,12 +217,12 @@ func NodegroupUpdateByClusterNameNodegroupNameAndID(conn *eks.EKS, clusterName, 
 	return output.Update, nil
 }
 
-func OidcIdentityProviderConfigByClusterNameAndConfigName(ctx context.Context, conn *eks.EKS, clusterName, configName string) (*eks.OidcIdentityProviderConfig, error) {
+func FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx context.Context, conn *eks.EKS, clusterName, configName string) (*eks.OidcIdentityProviderConfig, error) {
 	input := &eks.DescribeIdentityProviderConfigInput{
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &eks.IdentityProviderConfig{
 			Name: aws.String(configName),
-			Type: aws.String(tfeks.IdentityProviderConfigTypeOidc),
+			Type: aws.String(tfeks.IdentityProviderConfigTypeOIDC),
 		},
 	}
 

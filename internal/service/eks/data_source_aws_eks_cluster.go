@@ -149,7 +149,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	cluster, err := finder.ClusterByName(conn, name)
+	cluster, err := finder.FindClusterByName(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error reading EKS Cluster (%s): %w", name, err)
