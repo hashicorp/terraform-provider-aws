@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePrincipalAssociation() *schema.Resource {
@@ -33,7 +34,7 @@ func ResourcePrincipalAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"principal": {
@@ -41,8 +42,8 @@ func ResourcePrincipalAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.Any(
-					validateAwsAccountId,
-					validateArn,
+					verify.ValidAccountID,
+					verify.ValidARN,
 				),
 			},
 		},
