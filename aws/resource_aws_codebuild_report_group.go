@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeBuildReportGroup() *schema.Resource {
+func ResourceReportGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeBuildReportGroupCreate,
-		Read:   resourceAwsCodeBuildReportGroupRead,
-		Update: resourceAwsCodeBuildReportGroupUpdate,
-		Delete: resourceAwsCodeBuildReportGroupDelete,
+		Create: resourceReportGroupCreate,
+		Read:   resourceReportGroupRead,
+		Update: resourceReportGroupUpdate,
+		Delete: resourceReportGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -106,7 +106,7 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeBuildReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -124,10 +124,10 @@ func resourceAwsCodeBuildReportGroupCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(resp.ReportGroup.Arn))
 
-	return resourceAwsCodeBuildReportGroupRead(d, meta)
+	return resourceReportGroupRead(d, meta)
 }
 
-func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -169,7 +169,7 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsCodeBuildReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -191,10 +191,10 @@ func resourceAwsCodeBuildReportGroupUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error updating CodeBuild Report Group: %w", err)
 	}
 
-	return resourceAwsCodeBuildReportGroupRead(d, meta)
+	return resourceReportGroupRead(d, meta)
 }
 
-func resourceAwsCodeBuildReportGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReportGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	deleteOpts := &codebuild.DeleteReportGroupInput{

@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeBuildWebhook() *schema.Resource {
+func ResourceWebhook() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeBuildWebhookCreate,
-		Read:   resourceAwsCodeBuildWebhookRead,
-		Delete: resourceAwsCodeBuildWebhookDelete,
-		Update: resourceAwsCodeBuildWebhookUpdate,
+		Create: resourceWebhookCreate,
+		Read:   resourceWebhookRead,
+		Delete: resourceWebhookDelete,
+		Update: resourceWebhookUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -89,7 +89,7 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	input := &codebuild.CreateWebhookInput{
@@ -117,7 +117,7 @@ func resourceAwsCodeBuildWebhookCreate(d *schema.ResourceData, meta interface{})
 	d.Set("secret", resp.Webhook.Secret)
 	d.SetId(d.Get("project_name").(string))
 
-	return resourceAwsCodeBuildWebhookRead(d, meta)
+	return resourceWebhookRead(d, meta)
 }
 
 func expandWebhookFilterGroups(d *schema.ResourceData) [][]*codebuild.WebhookFilter {
@@ -156,7 +156,7 @@ func expandWebhookFilterData(data map[string]interface{}) []*codebuild.WebhookFi
 	return filters
 }
 
-func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
@@ -194,7 +194,7 @@ func resourceAwsCodeBuildWebhookRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	var err error
@@ -225,10 +225,10 @@ func resourceAwsCodeBuildWebhookUpdate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	return resourceAwsCodeBuildWebhookRead(d, meta)
+	return resourceWebhookRead(d, meta)
 }
 
-func resourceAwsCodeBuildWebhookDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	_, err := conn.DeleteWebhook(&codebuild.DeleteWebhookInput{
