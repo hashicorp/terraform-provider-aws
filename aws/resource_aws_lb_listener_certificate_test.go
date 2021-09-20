@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
@@ -165,7 +166,7 @@ func TestAccAwsLbListenerCertificate_disappears(t *testing.T) {
 				Config: testAccLbListenerCertificateConfig(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLbListenerCertificateExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLbListenerCertificate(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceListenerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLbTargetGroup() *schema.Resource {
+func DataSourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLbTargetGroupRead,
+		Read: dataSourceTargetGroupRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -146,7 +146,7 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

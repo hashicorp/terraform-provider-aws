@@ -24,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLbListener() *schema.Resource {
+func ResourceListener() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLbListenerCreate,
-		Read:   resourceAwsLbListenerRead,
-		Update: resourceAwsLbListenerUpdate,
-		Delete: resourceAwsLbListenerDelete,
+		Create: resourceListenerCreate,
+		Read:   resourceListenerRead,
+		Update: resourceListenerUpdate,
+		Delete: resourceListenerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -382,7 +382,7 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 	}
 }
 
-func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -464,10 +464,10 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(output.Listeners[0].ListenerArn))
 
-	return resourceAwsLbListenerRead(d, meta)
+	return resourceListenerRead(d, meta)
 }
 
-func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -554,7 +554,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -644,10 +644,10 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsLbListenerRead(d, meta)
+	return resourceListenerRead(d, meta)
 }
 
-func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	_, err := conn.DeleteListener(&elbv2.DeleteListenerInput{

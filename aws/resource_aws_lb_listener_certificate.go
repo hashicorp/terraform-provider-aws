@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLbListenerCertificate() *schema.Resource {
+func ResourceListenerCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLbListenerCertificateCreate,
-		Read:   resourceAwsLbListenerCertificateRead,
-		Delete: resourceAwsLbListenerCertificateDelete,
+		Create: resourceListenerCertificateCreate,
+		Read:   resourceListenerCertificateRead,
+		Delete: resourceListenerCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -39,7 +39,7 @@ func resourceAwsLbListenerCertificate() *schema.Resource {
 	}
 }
 
-func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	listenerArn := d.Get("listener_arn").(string)
@@ -81,10 +81,10 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(tfelbv2.ListenerCertificateCreateID(listenerArn, certificateArn))
 
-	return resourceAwsLbListenerCertificateRead(d, meta)
+	return resourceListenerCertificateRead(d, meta)
 }
 
-func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	listenerArn, certificateArn, err := tfelbv2.ListenerCertificateParseID(d.Id())
@@ -130,7 +130,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsLbListenerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	certificateArn := d.Get("certificate_arn").(string)

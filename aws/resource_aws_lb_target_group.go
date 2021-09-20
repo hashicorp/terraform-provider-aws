@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLbTargetGroup() *schema.Resource {
+func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		// NLBs have restrictions on them at this time
 		CustomizeDiff: customdiff.Sequence(
@@ -31,10 +31,10 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 			SetTagsDiff,
 		),
 
-		Create: resourceAwsLbTargetGroupCreate,
-		Read:   resourceAwsLbTargetGroupRead,
-		Update: resourceAwsLbTargetGroupUpdate,
-		Delete: resourceAwsLbTargetGroupDelete,
+		Create: resourceTargetGroupCreate,
+		Read:   resourceTargetGroupRead,
+		Update: resourceTargetGroupUpdate,
+		Delete: resourceTargetGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -285,7 +285,7 @@ func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 	}
 }
 
-func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -379,10 +379,10 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		return errors.New("error creating LB Target Group: no groups returned in response")
 	}
 	d.SetId(aws.StringValue(resp.TargetGroups[0].TargetGroupArn))
-	return resourceAwsLbTargetGroupUpdate(d, meta)
+	return resourceTargetGroupUpdate(d, meta)
 }
 
-func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	var targetGroup *elbv2.TargetGroup
@@ -436,7 +436,7 @@ func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) erro
 	return flattenAwsLbTargetGroupResource(d, meta, targetGroup)
 }
 
-func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	if d.HasChange("tags_all") {
@@ -622,10 +622,10 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsLbTargetGroupRead(d, meta)
+	return resourceTargetGroupRead(d, meta)
 }
 
-func resourceAwsLbTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	input := &elbv2.DeleteTargetGroupInput{
