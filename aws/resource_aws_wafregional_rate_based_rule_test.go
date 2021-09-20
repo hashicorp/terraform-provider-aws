@@ -26,7 +26,7 @@ func init() {
 }
 
 func testSweepWafRegionalRateBasedRules(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := acctest.SharedRegionalSweeperClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -37,7 +37,7 @@ func testSweepWafRegionalRateBasedRules(region string) error {
 	for {
 		output, err := conn.ListRateBasedRules(input)
 
-		if testSweepSkipSweepError(err) {
+		if acctest.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping WAF Regional Rate-Based Rule sweep for %s: %s", region, err)
 			return nil
 		}
@@ -125,7 +125,7 @@ func TestAccAWSWafRegionalRateBasedRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,7 +154,7 @@ func TestAccAWSWafRegionalRateBasedRule_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -200,7 +200,7 @@ func TestAccAWSWafRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -238,14 +238,14 @@ func TestAccAWSWafRegionalRateBasedRule_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafRegionalRateBasedRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafRegionalRateBasedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -264,7 +264,7 @@ func TestAccAWSWafRegionalRateBasedRule_changePredicates(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -312,7 +312,7 @@ func TestAccAWSWafRegionalRateBasedRule_changeRateLimit(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -348,7 +348,7 @@ func TestAccAWSWafRegionalRateBasedRule_noPredicates(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -383,7 +383,7 @@ func testAccCheckAWSWafRegionalRateBasedRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
 		resp, err := conn.GetRateBasedRule(
 			&waf.GetRateBasedRuleInput{
 				RuleId: aws.String(rs.Primary.ID),
@@ -417,7 +417,7 @@ func testAccCheckAWSWafRegionalRateBasedRuleExists(n string, v *waf.RateBasedRul
 			return fmt.Errorf("No WAF Rule ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
 		resp, err := conn.GetRateBasedRule(&waf.GetRateBasedRuleInput{
 			RuleId: aws.String(rs.Primary.ID),
 		})

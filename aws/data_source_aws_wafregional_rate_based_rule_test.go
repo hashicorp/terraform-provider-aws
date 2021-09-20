@@ -19,7 +19,7 @@ func TestAccDataSourceAwsWafRegionalRateBasedRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWafRegionalRateBasedRuleConfig_NonExistent,

@@ -21,7 +21,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +56,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_changeNameForceNew(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,7 +96,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +119,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_changeTuples(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_noTuples(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,8 +195,8 @@ func TestAccAWSWafRegionalSqlInjectionMatchSet_noTuples(t *testing.T) {
 
 func testAccCheckAWSWafRegionalSqlInjectionMatchSetDisappears(v *waf.SqlInjectionMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
-		region := testAccProvider.Meta().(*AWSClient).region
+		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		region := acctest.Provider.Meta().(*AWSClient).region
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -246,7 +246,7 @@ func testAccCheckAWSWafRegionalSqlInjectionMatchSetExists(n string, v *waf.SqlIn
 			return fmt.Errorf("No WAF SqlInjectionMatchSet ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
 		resp, err := conn.GetSqlInjectionMatchSet(&waf.GetSqlInjectionMatchSetInput{
 			SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -269,7 +269,7 @@ func testAccCheckAWSWafRegionalSqlInjectionMatchSetDestroy(s *terraform.State) e
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
 		resp, err := conn.GetSqlInjectionMatchSet(
 			&waf.GetSqlInjectionMatchSetInput{
 				SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
