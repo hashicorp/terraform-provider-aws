@@ -3,7 +3,6 @@ package worklink
 import (
 	"fmt"
 	"regexp"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validFleetName(v interface{}, k string) (ws []string, errors []error) {
