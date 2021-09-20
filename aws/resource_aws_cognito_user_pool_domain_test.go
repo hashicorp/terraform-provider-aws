@@ -199,7 +199,7 @@ func testAccCheckAWSCognitoUserPoolDomainDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
