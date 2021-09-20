@@ -1,4 +1,4 @@
-package aws
+package route53resolver
 
 import (
 	"fmt"
@@ -7,8 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -56,7 +54,7 @@ func resourceQueryLogConfigAssociationCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(output.ResolverQueryLogConfigAssociation.Id))
 
-	_, err = waiter.waitQueryLogConfigAssociationCreated(conn, d.Id())
+	_, err = waitQueryLogConfigAssociationCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config Association (%s) to become available: %w", d.Id(), err)
@@ -68,7 +66,7 @@ func resourceQueryLogConfigAssociationCreate(d *schema.ResourceData, meta interf
 func resourceQueryLogConfigAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	queryLogConfigAssociation, err := finder.FindResolverQueryLogConfigAssociationByID(conn, d.Id())
+	queryLogConfigAssociation, err := FindResolverQueryLogConfigAssociationByID(conn, d.Id())
 
 	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver Query Log Config Association (%s) not found, removing from state", d.Id())
@@ -109,7 +107,7 @@ func resourceQueryLogConfigAssociationDelete(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error deleting Route53 Resolver Query Log Config Association (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitQueryLogConfigAssociationDeleted(conn, d.Id())
+	_, err = waitQueryLogConfigAssociationDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config Association (%s) to be deleted: %w", d.Id(), err)

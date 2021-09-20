@@ -4,7 +4,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -154,7 +153,7 @@ func FindFirewallConfigByID(conn *route53resolver.Route53Resolver, firewallConfi
 // FindFirewallRuleByID returns the DNS Firewall rule corresponding to the specified rule group and domain list IDs.
 // Returns nil if no DNS Firewall rule is found.
 func FindFirewallRuleByID(conn *route53resolver.Route53Resolver, firewallRuleId string) (*route53resolver.FirewallRule, error) {
-	firewallRuleGroupId, firewallDomainListId, err := tfroute53resolver.FirewallRuleParseID(firewallRuleId)
+	firewallRuleGroupId, firewallDomainListId, err := FirewallRuleParseID(firewallRuleId)
 
 	if err != nil {
 		return nil, err

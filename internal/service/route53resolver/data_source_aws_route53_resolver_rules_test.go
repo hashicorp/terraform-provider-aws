@@ -1,4 +1,4 @@
-package aws
+package route53resolver_test
 
 import (
 	"fmt"

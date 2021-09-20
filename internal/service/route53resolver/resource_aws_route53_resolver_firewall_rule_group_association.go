@@ -1,4 +1,4 @@
-package aws
+package route53resolver
 
 import (
 	"fmt"
@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -97,7 +95,7 @@ func resourceFirewallRuleGroupAssociationCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.FirewallRuleGroupAssociation.Id))
 
-	_, err = waiter.waitFirewallRuleGroupAssociationCreated(conn, d.Id())
+	_, err = waitFirewallRuleGroupAssociationCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver DNS Firewall rule group association (%s) to become available: %w", d.Id(), err)
@@ -111,7 +109,7 @@ func resourceFirewallRuleGroupAssociationRead(d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ruleGroupAssociation, err := finder.FindFirewallRuleGroupAssociationByID(conn, d.Id())
+	ruleGroupAssociation, err := FindFirewallRuleGroupAssociationByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall rule group association (%s) not found, removing from state", d.Id())
@@ -180,7 +178,7 @@ func resourceFirewallRuleGroupAssociationUpdate(d *schema.ResourceData, meta int
 			return fmt.Errorf("error creating Route 53 Resolver DNS Firewall rule group association: %w", err)
 		}
 
-		_, err = waiter.waitFirewallRuleGroupAssociationUpdated(conn, d.Id())
+		_, err = waitFirewallRuleGroupAssociationUpdated(conn, d.Id())
 
 		if err != nil {
 			return fmt.Errorf("error waiting for Route53 Resolver DNS Firewall rule group association (%s) to be updated: %w", d.Id(), err)
@@ -212,7 +210,7 @@ func resourceFirewallRuleGroupAssociationDelete(d *schema.ResourceData, meta int
 		return fmt.Errorf("error deleting Route 53 Resolver DNS Firewall rule group association (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitFirewallRuleGroupAssociationDeleted(conn, d.Id())
+	_, err = waitFirewallRuleGroupAssociationDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver DNS Firewall rule group association (%s) to be deleted: %w", d.Id(), err)

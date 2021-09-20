@@ -1,4 +1,4 @@
-package aws
+package route53resolver
 
 import (
 	"fmt"
@@ -9,8 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -121,7 +119,7 @@ func resourceFirewallRuleCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error creating Route 53 Resolver DNS Firewall rule: %w", err)
 	}
 
-	d.SetId(tfroute53resolver.FirewallRuleCreateID(firewallRuleGroupId, firewallDomainListId))
+	d.SetId(FirewallRuleCreateID(firewallRuleGroupId, firewallDomainListId))
 
 	return resourceFirewallRuleRead(d, meta)
 }
@@ -129,7 +127,7 @@ func resourceFirewallRuleCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceFirewallRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	rule, err := finder.FindFirewallRuleByID(conn, d.Id())
+	rule, err := FindFirewallRuleByID(conn, d.Id())
 
 	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall rule (%s) not found, removing from state", d.Id())

@@ -1,4 +1,4 @@
-package aws
+package route53resolver
 
 import (
 	"fmt"
@@ -8,8 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -90,7 +89,7 @@ func resourceFirewallRuleGroupRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ruleGroup, err := finder.FindFirewallRuleGroupByID(conn, d.Id())
+	ruleGroup, err := FindFirewallRuleGroupByID(conn, d.Id())
 
 	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall rule group (%s) not found, removing from state", d.Id())

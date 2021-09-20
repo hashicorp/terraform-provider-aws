@@ -1,4 +1,4 @@
-package aws
+package route53resolver_test
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 )
 
 func init() {
@@ -193,7 +193,7 @@ func testAccCheckRoute53ResolverQueryLogConfigDestroy(s *terraform.State) error 
 		}
 
 		// Try to find the resource
-		_, err := finder.FindResolverQueryLogConfigByID(conn, rs.Primary.ID)
+		_, err := tfroute53resolver.FindResolverQueryLogConfigByID(conn, rs.Primary.ID)
 		// Verify the error is what we want
 		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			continue
@@ -219,7 +219,7 @@ func testAccCheckRoute53ResolverQueryLogConfigExists(n string, v *route53resolve
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
-		out, err := finder.FindResolverQueryLogConfigByID(conn, rs.Primary.ID)
+		out, err := tfroute53resolver.FindResolverQueryLogConfigByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

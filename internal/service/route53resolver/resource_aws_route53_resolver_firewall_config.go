@@ -1,4 +1,4 @@
-package aws
+package route53resolver
 
 import (
 	"fmt"
@@ -8,8 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -72,7 +71,7 @@ func resourceFirewallConfigCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceFirewallConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	config, err := finder.FindFirewallConfigByID(conn, d.Id())
+	config, err := FindFirewallConfigByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route 53 Resolver DNS Firewall config (%s) not found, removing from state", d.Id())
