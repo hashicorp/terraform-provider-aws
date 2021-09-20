@@ -3,7 +3,6 @@ package amplify_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 

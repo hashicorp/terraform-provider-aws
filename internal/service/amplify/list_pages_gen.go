@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ListAppsPages(conn *amplify.Amplify, input *amplify.ListAppsInput, fn func(*amplify.ListAppsOutput, bool) bool) error {
