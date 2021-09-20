@@ -1,4 +1,4 @@
-package aws
+package ds
 
 import (
 	"fmt"
@@ -9,10 +9,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directoryservice/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directoryservice/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -391,7 +389,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(directoryId)
 
-	_, err = waiter.waitDirectoryCreated(conn, d.Id())
+	_, err = waitDirectoryCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Directory Service Directory (%s) to create: %w", d.Id(), err)
@@ -447,7 +445,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	dir, err := finder.findDirectoryByID(conn, d.Id())
+	dir, err := findDirectoryByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
@@ -529,7 +527,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Directory Service Directory (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.waitDirectoryDeleted(conn, d.Id())
+	_, err = waitDirectoryDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Directory Service Directory (%s) to delete: %w", d.Id(), err)
