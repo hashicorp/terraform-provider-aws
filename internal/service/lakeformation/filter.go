@@ -1,12 +1,8 @@
 package lakeformation
 
 import (
-	"reflect"
-	"sort"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
@@ -180,5 +176,3 @@ func FilterDatabasePermissions(principal *string, allPermissions []*lakeformatio
 
 	return cleanPermissions
 }
-
-

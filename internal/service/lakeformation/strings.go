@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func StringSlicesEqualIgnoreOrder(s1, s2 []*string) bool {

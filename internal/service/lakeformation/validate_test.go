@@ -2,7 +2,6 @@ package lakeformation
 
 import (
 	"testing"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestValidPrincipal(t *testing.T) {
