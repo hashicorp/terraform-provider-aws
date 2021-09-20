@@ -6,20 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDataPipelinePipeline_basic(t *testing.T) {
 	var conf1, conf2 datapipeline.PipelineDescription
-	rName1 := fmt.Sprintf("tf-datapipeline-%s", acctest.RandString(5))
-	rName2 := fmt.Sprintf("tf-datapipeline-%s", acctest.RandString(5))
+	rName1 := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
+	rName2 := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataPipeline(t) },
-		ErrorCheck:   testAccErrorCheck(t, datapipeline.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -49,12 +50,12 @@ func TestAccAWSDataPipelinePipeline_basic(t *testing.T) {
 
 func TestAccAWSDataPipelinePipeline_description(t *testing.T) {
 	var conf1, conf2 datapipeline.PipelineDescription
-	rName := fmt.Sprintf("tf-datapipeline-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataPipeline(t) },
-		ErrorCheck:   testAccErrorCheck(t, datapipeline.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -84,12 +85,12 @@ func TestAccAWSDataPipelinePipeline_description(t *testing.T) {
 
 func TestAccAWSDataPipelinePipeline_disappears(t *testing.T) {
 	var conf datapipeline.PipelineDescription
-	rName := fmt.Sprintf("tf-datapipeline-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataPipeline(t) },
-		ErrorCheck:   testAccErrorCheck(t, datapipeline.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -107,12 +108,12 @@ func TestAccAWSDataPipelinePipeline_disappears(t *testing.T) {
 
 func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
 	var conf datapipeline.PipelineDescription
-	rName := fmt.Sprintf("tf-datapipeline-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataPipeline(t) },
-		ErrorCheck:   testAccErrorCheck(t, datapipeline.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDataPipeline(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -229,7 +230,7 @@ func testAccPreCheckAWSDataPipeline(t *testing.T) {
 
 	_, err := conn.ListPipelines(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
