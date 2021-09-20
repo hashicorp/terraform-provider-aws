@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -234,7 +234,7 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 
 	allPermissions, err := waiter.PermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
 
-	d.SetId(fmt.Sprintf("%d", hashcode.String(input.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
 	if err != nil {
 		return fmt.Errorf("error reading Lake Formation permissions: %w", err)
