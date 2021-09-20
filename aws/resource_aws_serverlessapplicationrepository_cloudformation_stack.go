@@ -13,13 +13,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	cffinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	cfwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -83,11 +84,11 @@ func ResourceCloudFormationStack() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -144,7 +145,7 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), serverlessApplicationRepositoryCloudFormationStackNamePrefix)
 	d.Set("name", &stackName)
 
-	tags := keyvaluetags.CloudformationKeyValueTags(stack.Tags)
+	tags := tftags.CloudformationKeyValueTags(stack.Tags)
 	var applicationID, semanticVersion string
 	if v, ok := tags[serverlessApplicationRepositoryCloudFormationStackTagApplicationID]; ok {
 		applicationID = aws.StringValue(v.Value)
@@ -300,7 +301,7 @@ func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.Reso
 	serverlessConn := client.ServerlessAppRepoConn
 	cfConn := client.CloudFormationConn
 	defaultTagsConfig := client.DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	stackName := d.Get("name").(string)
 	changeSetRequest := serverlessrepository.CreateCloudFormationChangeSetRequest{
