@@ -178,9 +178,9 @@ func testAccCheckAWSDataPipelinePipelineDestroy(s *terraform.State) error {
 		}
 		// Try to find the Pipeline
 		pipelineDescription, err := resourceAwsDataPipelinePipelineRetrieve(rs.Primary.ID, conn)
-		if isAWSErr(err, datapipeline.ErrCodePipelineNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineNotFoundException, "") {
 			continue
-		} else if isAWSErr(err, datapipeline.ErrCodePipelineDeletedException, "") {
+		} else if tfawserr.ErrMessageContains(err, datapipeline.ErrCodePipelineDeletedException, "") {
 			continue
 		}
 
