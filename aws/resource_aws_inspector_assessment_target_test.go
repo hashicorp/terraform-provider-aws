@@ -6,19 +6,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSInspectorTarget_basic(t *testing.T) {
 	var assessmentTarget1 inspector.AssessmentTarget
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
@@ -26,7 +27,7 @@ func TestAccAWSInspectorTarget_basic(t *testing.T) {
 				Config: testAccAWSInspectorTargetAssessmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInspectorTargetExists(resourceName, &assessmentTarget1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`target/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_arn", ""),
 				),
@@ -42,12 +43,12 @@ func TestAccAWSInspectorTarget_basic(t *testing.T) {
 
 func TestAccAWSInspectorTarget_disappears(t *testing.T) {
 	var assessmentTarget1 inspector.AssessmentTarget
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
@@ -65,13 +66,13 @@ func TestAccAWSInspectorTarget_disappears(t *testing.T) {
 
 func TestAccAWSInspectorTarget_Name(t *testing.T) {
 	var assessmentTarget1, assessmentTarget2 inspector.AssessmentTarget
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
@@ -100,14 +101,14 @@ func TestAccAWSInspectorTarget_Name(t *testing.T) {
 
 func TestAccAWSInspectorTarget_ResourceGroupArn(t *testing.T) {
 	var assessmentTarget1, assessmentTarget2, assessmentTarget3, assessmentTarget4 inspector.AssessmentTarget
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	inspectorResourceGroupResourceName1 := "aws_inspector_resource_group.test1"
 	inspectorResourceGroupResourceName2 := "aws_inspector_resource_group.test2"
 	resourceName := "aws_inspector_assessment_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInspectorTargetAssessmentDestroy,
 		Steps: []resource.TestStep{
