@@ -15,7 +15,7 @@ import (
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
-func TestAccAWSStorageGatewayTapePool_basic(t *testing.T) {
+func TestAccStorageGatewayTapePool_basic(t *testing.T) {
 	var TapePool storagegateway.PoolInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_tape_pool.test"
@@ -46,7 +46,7 @@ func TestAccAWSStorageGatewayTapePool_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayTapePool_retention(t *testing.T) {
+func TestAccStorageGatewayTapePool_retention(t *testing.T) {
 	var TapePool storagegateway.PoolInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_tape_pool.test"
@@ -77,7 +77,7 @@ func TestAccAWSStorageGatewayTapePool_retention(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayTapePool_tags(t *testing.T) {
+func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 	var TapePool storagegateway.PoolInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_tape_pool.test"
@@ -122,7 +122,7 @@ func TestAccAWSStorageGatewayTapePool_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayTapePool_disappears(t *testing.T) {
+func TestAccStorageGatewayTapePool_disappears(t *testing.T) {
 	var storedIscsiVolume storagegateway.PoolInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_tape_pool.test"

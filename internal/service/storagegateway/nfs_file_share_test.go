@@ -16,7 +16,7 @@ import (
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
-func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_basic(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -66,7 +66,7 @@ func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_tags(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_tags(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -114,7 +114,7 @@ func TestAccAWSStorageGatewayNfsFileShare_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_fileShareName(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_fileShareName(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -148,7 +148,7 @@ func TestAccAWSStorageGatewayNfsFileShare_fileShareName(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_ClientList(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_clientList(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -193,7 +193,7 @@ func TestAccAWSStorageGatewayNfsFileShare_ClientList(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_DefaultStorageClass(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_defaultStorageClass(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -227,7 +227,7 @@ func TestAccAWSStorageGatewayNfsFileShare_DefaultStorageClass(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_GuessMIMETypeEnabled(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_guessMIMETypeEnabled(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -261,7 +261,7 @@ func TestAccAWSStorageGatewayNfsFileShare_GuessMIMETypeEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_KMSEncrypted(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_kmsEncrypted(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -292,7 +292,7 @@ func TestAccAWSStorageGatewayNfsFileShare_KMSEncrypted(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_KMSKeyArn(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_kmsKeyARN(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -337,7 +337,7 @@ func TestAccAWSStorageGatewayNfsFileShare_KMSKeyArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_NFSFileShareDefaults(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_nFSFileShareDefaults(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -379,7 +379,7 @@ func TestAccAWSStorageGatewayNfsFileShare_NFSFileShareDefaults(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_ObjectACL(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_objectACL(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -413,7 +413,7 @@ func TestAccAWSStorageGatewayNfsFileShare_ObjectACL(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_ReadOnly(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_readOnly(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -447,7 +447,7 @@ func TestAccAWSStorageGatewayNfsFileShare_ReadOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_RequesterPays(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_requesterPays(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -481,7 +481,7 @@ func TestAccAWSStorageGatewayNfsFileShare_RequesterPays(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_Squash(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_squash(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -515,7 +515,7 @@ func TestAccAWSStorageGatewayNfsFileShare_Squash(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_notificationPolicy(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_notificationPolicy(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -556,7 +556,7 @@ func TestAccAWSStorageGatewayNfsFileShare_notificationPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_cacheAttributes(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_cacheAttributes(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"
@@ -600,7 +600,7 @@ func TestAccAWSStorageGatewayNfsFileShare_cacheAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayNfsFileShare_disappears(t *testing.T) {
+func TestAccStorageGatewayNFSFileShare_disappears(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_nfs_file_share.test"

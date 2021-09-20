@@ -72,7 +72,7 @@ func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 	}
 }
 
-func TestAccAWSStorageGatewayCachedIscsiVolume_basic(t *testing.T) {
+func TestAccStorageGatewayCachediSCSIVolume_basic(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
@@ -111,7 +111,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayCachedIscsiVolume_kms(t *testing.T) {
+func TestAccStorageGatewayCachediSCSIVolume_kms(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
@@ -140,7 +140,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_kms(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayCachedIscsiVolume_Tags(t *testing.T) {
+func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
@@ -188,7 +188,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayCachedIscsiVolume_SnapshotId(t *testing.T) {
+func TestAccStorageGatewayCachediSCSIVolume_snapshotID(t *testing.T) {
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"
@@ -226,7 +226,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SnapshotId(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayCachedIscsiVolume_SourceVolumeArn(t *testing.T) {
+func TestAccStorageGatewayCachediSCSIVolume_sourceVolumeARN(t *testing.T) {
 	acctest.Skip(t, "This test can cause Storage Gateway 2.0.10.0 to enter an irrecoverable state during volume deletion.")
 	var cachedIscsiVolume storagegateway.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -265,7 +265,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SourceVolumeArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayCachedIscsiVolume_disappears(t *testing.T) {
+func TestAccStorageGatewayCachediSCSIVolume_disappears(t *testing.T) {
 	var storedIscsiVolume storagegateway.CachediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cached_iscsi_volume.test"

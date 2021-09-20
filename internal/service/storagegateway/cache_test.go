@@ -70,7 +70,7 @@ func TestDecodeStorageGatewayCacheID(t *testing.T) {
 	}
 }
 
-func TestAccAWSStorageGatewayCache_FileGateway(t *testing.T) {
+func TestAccStorageGatewayCache_fileGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cache.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
@@ -100,7 +100,7 @@ func TestAccAWSStorageGatewayCache_FileGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayCache_TapeAndVolumeGateway(t *testing.T) {
+func TestAccStorageGatewayCache_tapeAndVolumeGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_cache.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"

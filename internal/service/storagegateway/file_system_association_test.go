@@ -15,7 +15,7 @@ import (
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
-func TestAccAWSStorageGatewayFileSystemAssociation_basic(t *testing.T) {
+func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_file_system_association.test"
@@ -52,7 +52,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayFileSystemAssociation_tags(t *testing.T) {
+func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_file_system_association.test"
@@ -103,7 +103,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T) {
+func TestAccStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T) {
 	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_file_system_association.test"
@@ -142,7 +142,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T)
 	})
 }
 
-func TestAccAWSStorageGatewayFileSystemAssociation_auditDestination(t *testing.T) {
+func TestAccStorageGatewayFileSystemAssociation_auditDestination(t *testing.T) {
 	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_file_system_association.test"
@@ -185,7 +185,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_auditDestination(t *testing.T
 	})
 }
 
-func TestAccAWSStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
+func TestAccStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_file_system_association.test"
@@ -210,7 +210,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayFileSystemAssociation_disappears_storageGateway(t *testing.T) {
+func TestAccStorageGatewayFileSystemAssociation_Disappears_storageGateway(t *testing.T) {
 	var fileSystemAssociation storagegateway.FileSystemAssociationInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_file_system_association.test"
@@ -235,7 +235,7 @@ func TestAccAWSStorageGatewayFileSystemAssociation_disappears_storageGateway(t *
 	})
 }
 
-func TestAccAWSStorageGatewayFileSystemAssociation_disappears_fsxFileSystem(t *testing.T) {
+func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *testing.T) {
 
 	t.Skip("A bug in the service API has been reported. Deleting the FSx file system before the association prevents association from being deleted.")
 

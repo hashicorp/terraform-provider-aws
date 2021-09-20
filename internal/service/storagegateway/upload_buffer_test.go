@@ -70,7 +70,7 @@ func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
 	}
 }
 
-func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
+func TestAccStorageGatewayUploadBuffer_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
@@ -103,7 +103,7 @@ func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17809
-func TestAccAWSStorageGatewayUploadBuffer_DiskPath(t *testing.T) {
+func TestAccStorageGatewayUploadBuffer_diskPath(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"

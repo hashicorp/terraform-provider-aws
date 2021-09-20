@@ -16,7 +16,7 @@ import (
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 )
 
-func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
+func TestAccStorageGatewayStorediSCSIVolume_basic(t *testing.T) {
 	var storedIscsiVolume storagegateway.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
@@ -57,7 +57,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayStoredIscsiVolume_kms(t *testing.T) {
+func TestAccStorageGatewayStorediSCSIVolume_kms(t *testing.T) {
 	var storedIscsiVolume storagegateway.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
@@ -86,7 +86,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_kms(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayStoredIscsiVolume_tags(t *testing.T) {
+func TestAccStorageGatewayStorediSCSIVolume_tags(t *testing.T) {
 	var storedIscsiVolume storagegateway.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
@@ -134,7 +134,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayStoredIscsiVolume_snapshotId(t *testing.T) {
+func TestAccStorageGatewayStorediSCSIVolume_snapshotID(t *testing.T) {
 	var storedIscsiVolume storagegateway.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
@@ -171,7 +171,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_snapshotId(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayStoredIscsiVolume_disappears(t *testing.T) {
+func TestAccStorageGatewayStorediSCSIVolume_disappears(t *testing.T) {
 	var storedIscsiVolume storagegateway.StorediSCSIVolume
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"

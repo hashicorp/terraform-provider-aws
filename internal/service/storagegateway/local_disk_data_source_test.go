@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSStorageGatewayLocalDiskDataSource_DiskNode(t *testing.T) {
+func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
@@ -39,7 +39,7 @@ func TestAccAWSStorageGatewayLocalDiskDataSource_DiskNode(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayLocalDiskDataSource_DiskPath(t *testing.T) {
+func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 

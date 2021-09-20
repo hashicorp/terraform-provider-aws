@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_Authentication_activeDirectory(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -65,7 +65,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *test
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_Authentication_GuestAccess(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_Authentication_guestAccess(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -115,7 +115,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Authentication_GuestAccess(t *testing.
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_accessBasedEnumeration(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_accessBasedEnumeration(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -156,7 +156,7 @@ func TestAccAWSStorageGatewaySmbFileShare_accessBasedEnumeration(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_notificationPolicy(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_notificationPolicy(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -197,7 +197,7 @@ func TestAccAWSStorageGatewaySmbFileShare_notificationPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_DefaultStorageClass(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_defaultStorageClass(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -231,7 +231,7 @@ func TestAccAWSStorageGatewaySmbFileShare_DefaultStorageClass(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_FileShareName(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_fileShareName(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -265,7 +265,7 @@ func TestAccAWSStorageGatewaySmbFileShare_FileShareName(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_Tags(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_tags(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -310,7 +310,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_GuessMIMETypeEnabled(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_guessMIMETypeEnabled(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -347,7 +347,7 @@ func TestAccAWSStorageGatewaySmbFileShare_GuessMIMETypeEnabled(t *testing.T) {
 /*
 Currently failing when enabling oplocks:
 
-=== CONT  TestAccAWSStorageGatewaySmbFileShare_OpLocksEnabled
+=== CONT  TestAccStorageGatewaySMBFileShare_opLocksEnabled
     resource_aws_storagegateway_smb_file_share_test.go:350: Step 2/3 error: Error running apply: exit status 1
 
         Error: error updating Storage Gateway SMB File Share (arn:aws:storagegateway:us-west-2:123456789012:share/share-86C5A6E3): InvalidGatewayRequestException: The specified gateway is out of date.
@@ -362,7 +362,7 @@ Currently failing when enabling oplocks:
           Message_: "The specified gateway is out of date."
         }
 
-func TestAccAWSStorageGatewaySmbFileShare_OpLocksEnabled(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_opLocksEnabled(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -397,7 +397,7 @@ func TestAccAWSStorageGatewaySmbFileShare_OpLocksEnabled(t *testing.T) {
 }
 */
 
-func TestAccAWSStorageGatewaySmbFileShare_InvalidUserList(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_invalidUserList(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -439,7 +439,7 @@ func TestAccAWSStorageGatewaySmbFileShare_InvalidUserList(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_KMSEncrypted(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_kmsEncrypted(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -470,7 +470,7 @@ func TestAccAWSStorageGatewaySmbFileShare_KMSEncrypted(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_KMSKeyArn(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_kmsKeyARN(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -515,7 +515,7 @@ func TestAccAWSStorageGatewaySmbFileShare_KMSKeyArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_ObjectACL(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_objectACL(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -549,7 +549,7 @@ func TestAccAWSStorageGatewaySmbFileShare_ObjectACL(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_ReadOnly(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_readOnly(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -583,7 +583,7 @@ func TestAccAWSStorageGatewaySmbFileShare_ReadOnly(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_RequesterPays(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_requesterPays(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -617,7 +617,7 @@ func TestAccAWSStorageGatewaySmbFileShare_RequesterPays(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_ValidUserList(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_validUserList(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -659,7 +659,7 @@ func TestAccAWSStorageGatewaySmbFileShare_ValidUserList(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_smb_acl(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_SMB_acl(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -701,7 +701,7 @@ func TestAccAWSStorageGatewaySmbFileShare_smb_acl(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_audit(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_audit(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -737,7 +737,7 @@ func TestAccAWSStorageGatewaySmbFileShare_audit(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_cacheAttributes(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -781,7 +781,7 @@ func TestAccAWSStorageGatewaySmbFileShare_cacheAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_caseSensitivity(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_caseSensitivity(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -822,7 +822,7 @@ func TestAccAWSStorageGatewaySmbFileShare_caseSensitivity(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_disappears(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_disappears(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
@@ -845,7 +845,7 @@ func TestAccAWSStorageGatewaySmbFileShare_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewaySmbFileShare_AdminUserList(t *testing.T) {
+func TestAccStorageGatewaySMBFileShare_adminUserList(t *testing.T) {
 	var smbFileShare storagegateway.SMBFileShareInfo
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_smb_file_share.test"
