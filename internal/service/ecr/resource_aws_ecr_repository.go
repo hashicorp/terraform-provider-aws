@@ -157,7 +157,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		RepositoryNames: aws.StringSlice([]string{d.Id()}),
 	}
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		out, err = conn.DescribeRepositories(input)

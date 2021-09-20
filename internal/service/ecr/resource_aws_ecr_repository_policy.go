@@ -95,7 +95,7 @@ func resourceRepositoryPolicyRead(d *schema.ResourceData, meta interface{}) erro
 
 	var out *ecr.GetRepositoryPolicyOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		out, err = conn.GetRepositoryPolicy(input)

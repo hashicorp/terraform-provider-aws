@@ -74,7 +74,7 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 
 	var resp *ecr.GetLifecyclePolicyOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.GetLifecyclePolicy(input)
