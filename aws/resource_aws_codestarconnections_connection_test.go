@@ -180,7 +180,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) err
 				ConnectionArn: aws.String(rs.Primary.ID),
 			})
 
-			if err != nil && !isAWSErr(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
+			if err != nil && !tfawserr.ErrMessageContains(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
 				return err
 			}
 		}
