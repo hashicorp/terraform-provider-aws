@@ -189,7 +189,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getPolicyStatement(output *events.DescribeEventBusOutput, statementID string) (*CloudWatchEventPermissionPolicyStatement, error) {
-	var policyDoc CloudWatchEventPermissionPolicyDoc
+	var policyDoc PermissionPolicyDoc
 
 	if output == nil || output.Policy == nil {
 		return nil, &resource.NotFoundError{
@@ -203,7 +203,7 @@ func getPolicyStatement(output *events.DescribeEventBusOutput, statementID strin
 		return nil, fmt.Errorf("error reading CloudWatch Events permission (%s): %w", statementID, err)
 	}
 
-	return findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, statementID)
+	return FindPermissionPolicyStatementByID(&policyDoc, statementID)
 }
 
 func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -293,25 +293,25 @@ func validateCloudWatchEventPermissionStatementID(v interface{}, k string) (ws [
 	return
 }
 
-// CloudWatchEventPermissionPolicyDoc represents the Policy attribute of DescribeEventBus
+// PermissionPolicyDoc represents the Policy attribute of DescribeEventBus
 // See also: https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_DescribeEventBus.html
-type CloudWatchEventPermissionPolicyDoc struct {
+type PermissionPolicyDoc struct {
 	Version    string
 	ID         string                                     `json:"Id,omitempty"`
 	Statements []CloudWatchEventPermissionPolicyStatement `json:"Statement"`
 }
 
 // String returns the string representation
-func (d CloudWatchEventPermissionPolicyDoc) String() string {
+func (d PermissionPolicyDoc) String() string {
 	return awsutil.Prettify(d)
 }
 
 // GoString returns the string representation
-func (d CloudWatchEventPermissionPolicyDoc) GoString() string {
+func (d PermissionPolicyDoc) GoString() string {
 	return d.String()
 }
 
-// CloudWatchEventPermissionPolicyStatement represents the Statement attribute of CloudWatchEventPermissionPolicyDoc
+// CloudWatchEventPermissionPolicyStatement represents the Statement attribute of PermissionPolicyDoc
 // See also: https://docs.aws.amazon.com/AmazonCloudWatchEvents/latest/APIReference/API_DescribeEventBus.html
 type CloudWatchEventPermissionPolicyStatement struct {
 	Sid       string
@@ -373,7 +373,7 @@ func (c *CloudWatchEventPermissionPolicyStatementCondition) UnmarshalJSON(b []by
 	return nil
 }
 
-func findCloudWatchEventPermissionPolicyStatementByID(policy *CloudWatchEventPermissionPolicyDoc, id string) (
+func FindPermissionPolicyStatementByID(policy *PermissionPolicyDoc, id string) (
 	*CloudWatchEventPermissionPolicyStatement, error) {
 
 	log.Printf("[DEBUG] Finding statement (%s) in CloudWatch Events permission policy: %s", id, policy)

@@ -33,7 +33,7 @@ func ResourceTarget() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsCloudWatchEventTargetV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsCloudWatchEventTargetStateUpgradeV0,
+				Upgrade: TargetStateUpgradeV0,
 				Version: 0,
 			},
 		},
