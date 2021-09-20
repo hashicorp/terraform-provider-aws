@@ -1,4 +1,4 @@
-package finder
+package storagegateway
 
 import (
 	"fmt"
