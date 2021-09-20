@@ -57,7 +57,7 @@ func testSweepSchemasRegistries(region string) error {
 						continue
 					}
 
-					r := ResourceSchema()
+					r := tfschemas.ResourceSchema()
 					d := r.Data(nil)
 					d.SetId(tfschemas.SchemaCreateResourceID(schemaName, registryName))
 					err = r.Delete(d, client)
@@ -80,7 +80,7 @@ func testSweepSchemasRegistries(region string) error {
 				continue
 			}
 
-			r := ResourceRegistry()
+			r := tfschemas.ResourceRegistry()
 			d := r.Data(nil)
 			d.SetId(registryName)
 			err = r.Delete(d, client)
@@ -152,7 +152,7 @@ func TestAccAWSSchemasRegistry_disappears(t *testing.T) {
 				Config: testAccAWSSchemasRegistryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasRegistryExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRegistry(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

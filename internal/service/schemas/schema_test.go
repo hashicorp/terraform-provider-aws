@@ -117,7 +117,7 @@ func TestAccAWSSchemasSchema_disappears(t *testing.T) {
 				Config: testAccAWSSchemasSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSchema(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
