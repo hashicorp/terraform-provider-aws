@@ -172,7 +172,7 @@ func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 	}
 
-	access, err := finder.AccessByServerIDAndExternalID(conn, serverID, externalID)
+	access, err := finder.FindAccessByServerIDAndExternalID(conn, serverID, externalID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Access (%s) not found, removing from state", d.Id())

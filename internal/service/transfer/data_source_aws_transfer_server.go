@@ -86,7 +86,7 @@ func dataSourceServerRead(d *schema.ResourceData, meta interface{}) error {
 
 	serverID := d.Get("server_id").(string)
 
-	output, err := finder.ServerByID(conn, serverID)
+	output, err := finder.FindServerByID(conn, serverID)
 
 	if err != nil {
 		return fmt.Errorf("error reading Transfer Server (%s): %w", serverID, err)

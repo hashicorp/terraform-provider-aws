@@ -13,9 +13,9 @@ const (
 	userStateExists = "exists"
 )
 
-func ServerState(conn *transfer.Transfer, id string) resource.StateRefreshFunc {
+func statusServerState(conn *transfer.Transfer, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ServerByID(conn, id)
+		output, err := finder.FindServerByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -29,9 +29,9 @@ func ServerState(conn *transfer.Transfer, id string) resource.StateRefreshFunc {
 	}
 }
 
-func UserState(conn *transfer.Transfer, serverID, userName string) resource.StateRefreshFunc {
+func statusUserState(conn *transfer.Transfer, serverID, userName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.UserByServerIDAndUserName(conn, serverID, userName)
+		output, err := finder.FindUserByServerIDAndUserName(conn, serverID, userName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

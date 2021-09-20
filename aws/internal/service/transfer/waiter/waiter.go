@@ -9,15 +9,15 @@ import (
 )
 
 const (
-	ServerDeletedTimeout = 10 * time.Minute
-	UserDeletedTimeout   = 10 * time.Minute
+	serverDeletedTimeout = 10 * time.Minute
+	userDeletedTimeout   = 10 * time.Minute
 )
 
-func ServerCreated(conn *transfer.Transfer, id string, timeout time.Duration) (*transfer.DescribedServer, error) {
+func waitServerCreated(conn *transfer.Transfer, id string, timeout time.Duration) (*transfer.DescribedServer, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{transfer.StateStarting},
 		Target:  []string{transfer.StateOnline},
-		Refresh: ServerState(conn, id),
+		Refresh: statusServerState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -30,12 +30,12 @@ func ServerCreated(conn *transfer.Transfer, id string, timeout time.Duration) (*
 	return nil, err
 }
 
-func ServerDeleted(conn *transfer.Transfer, id string) (*transfer.DescribedServer, error) {
+func waitServerDeleted(conn *transfer.Transfer, id string) (*transfer.DescribedServer, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: transfer.State_Values(),
 		Target:  []string{},
-		Refresh: ServerState(conn, id),
-		Timeout: ServerDeletedTimeout,
+		Refresh: statusServerState(conn, id),
+		Timeout: serverDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -47,11 +47,11 @@ func ServerDeleted(conn *transfer.Transfer, id string) (*transfer.DescribedServe
 	return nil, err
 }
 
-func ServerStarted(conn *transfer.Transfer, id string, timeout time.Duration) (*transfer.DescribedServer, error) {
+func waitServerStarted(conn *transfer.Transfer, id string, timeout time.Duration) (*transfer.DescribedServer, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{transfer.StateStarting, transfer.StateOffline, transfer.StateStopping},
 		Target:  []string{transfer.StateOnline},
-		Refresh: ServerState(conn, id),
+		Refresh: statusServerState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -64,11 +64,11 @@ func ServerStarted(conn *transfer.Transfer, id string, timeout time.Duration) (*
 	return nil, err
 }
 
-func ServerStopped(conn *transfer.Transfer, id string, timeout time.Duration) (*transfer.DescribedServer, error) {
+func waitServerStopped(conn *transfer.Transfer, id string, timeout time.Duration) (*transfer.DescribedServer, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{transfer.StateStarting, transfer.StateOnline, transfer.StateStopping},
 		Target:  []string{transfer.StateOffline},
-		Refresh: ServerState(conn, id),
+		Refresh: statusServerState(conn, id),
 		Timeout: timeout,
 	}
 
@@ -81,12 +81,12 @@ func ServerStopped(conn *transfer.Transfer, id string, timeout time.Duration) (*
 	return nil, err
 }
 
-func UserDeleted(conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
+func waitUserDeleted(conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{userStateExists},
 		Target:  []string{},
-		Refresh: UserState(conn, serverID, userName),
-		Timeout: UserDeletedTimeout,
+		Refresh: statusUserState(conn, serverID, userName),
+		Timeout: userDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

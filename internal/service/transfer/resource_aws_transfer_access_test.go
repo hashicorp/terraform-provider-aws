@@ -183,7 +183,7 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
-		output, err := finder.AccessByServerIDAndExternalID(conn, serverID, externalID)
+		output, err := finder.FindAccessByServerIDAndExternalID(conn, serverID, externalID)
 
 		if err != nil {
 			return err
@@ -208,7 +208,7 @@ func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
 		if err != nil {
 			return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 		}
-		_, err = finder.AccessByServerIDAndExternalID(conn, serverID, externalID)
+		_, err = finder.FindAccessByServerIDAndExternalID(conn, serverID, externalID)
 
 		if tfresource.NotFound(err) {
 			continue

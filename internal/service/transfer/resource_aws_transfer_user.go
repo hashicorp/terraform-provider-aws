@@ -188,7 +188,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing Transfer User ID: %w", err)
 	}
 
-	user, err := finder.UserByServerIDAndUserName(conn, serverID, userName)
+	user, err := finder.FindUserByServerIDAndUserName(conn, serverID, userName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer User (%s) not found, removing from state", d.Id())
@@ -315,7 +315,7 @@ func transferUserDelete(conn *transfer.Transfer, serverID, userName string) erro
 		return fmt.Errorf("error deleting Transfer User (%s): %w", id, err)
 	}
 
-	_, err = waiter.UserDeleted(conn, serverID, userName)
+	_, err = waiter.waitUserDeleted(conn, serverID, userName)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Transfer User (%s) delete: %w", id, err)
