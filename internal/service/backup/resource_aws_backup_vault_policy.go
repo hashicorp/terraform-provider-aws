@@ -70,7 +70,7 @@ func resourceAwsBackupVaultPolicyPut(d *schema.ResourceData, meta interface{}) e
 func resourceVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	output, err := finder.BackupVaultAccessPolicyByName(conn, d.Id())
+	output, err := finder.FindBackupVaultAccessPolicyByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Policy (%s) not found, removing from state", d.Id())
@@ -97,7 +97,7 @@ func resourceVaultPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		BackupVaultName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) || tfawserr.ErrCodeEquals(err, tfbackup.ErrCodeAccessDeniedException) {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) || tfawserr.ErrCodeEquals(err, tfbackup.errCodeAccessDeniedException) {
 		return nil
 	}
 

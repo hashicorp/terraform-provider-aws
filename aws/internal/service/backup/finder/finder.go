@@ -9,14 +9,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func BackupVaultAccessPolicyByName(conn *backup.Backup, name string) (*backup.GetBackupVaultAccessPolicyOutput, error) {
+func FindBackupVaultAccessPolicyByName(conn *backup.Backup, name string) (*backup.GetBackupVaultAccessPolicyOutput, error) {
 	input := &backup.GetBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(name),
 	}
 
 	output, err := conn.GetBackupVaultAccessPolicy(input)
 
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) || tfawserr.ErrCodeEquals(err, tfbackup.ErrCodeAccessDeniedException) {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) || tfawserr.ErrCodeEquals(err, tfbackup.errCodeAccessDeniedException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

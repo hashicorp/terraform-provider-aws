@@ -1,5 +1,5 @@
 package backup
 
 const (
-	ErrCodeAccessDeniedException = "AccessDeniedException"
+	errCodeAccessDeniedException = "AccessDeniedException"
 )
