@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DescribeDirectoriesPages(conn *directoryservice.DirectoryService, input *directoryservice.DescribeDirectoriesInput, fn func(*directoryservice.DescribeDirectoriesOutput, bool) bool) error {
