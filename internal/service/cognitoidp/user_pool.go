@@ -1725,7 +1725,7 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 		}
 
 		if !configured {
-			if cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input) {
+			if UserPoolSchemaAttributeMatchesStandardAttribute(input) {
 				continue
 			}
 			// When adding a Cognito Identity Provider, the API will automatically add an "identities" attribute
@@ -1928,7 +1928,7 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 	return []map[string]interface{}{}
 }
 
-func cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidentityprovider.SchemaAttributeType) bool {
+func UserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidentityprovider.SchemaAttributeType) bool {
 	if input == nil {
 		return false
 	}

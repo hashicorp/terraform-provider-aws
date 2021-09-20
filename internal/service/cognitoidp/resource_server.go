@@ -104,7 +104,7 @@ func resourceResourceServerCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
-	userPoolID, identifier, err := decodeCognitoResourceServerID(d.Id())
+	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error 
 func resourceResourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
-	userPoolID, identifier, err := decodeCognitoResourceServerID(d.Id())
+	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func resourceResourceServerUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceResourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
-	userPoolID, identifier, err := decodeCognitoResourceServerID(d.Id())
+	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func resourceResourceServerDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func decodeCognitoResourceServerID(id string) (string, string, error) {
+func DecodeResourceServerID(id string) (string, string, error) {
 	idParts := strings.Split(id, "|")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("expected ID in format UserPoolID|Identifier, received: %s", id)

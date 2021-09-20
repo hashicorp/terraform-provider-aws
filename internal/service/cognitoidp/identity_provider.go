@@ -119,7 +119,7 @@ func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Reading Cognito Identity Provider: %s", d.Id())
 
-	userPoolID, providerName, err := decodeCognitoIdentityProviderID(d.Id())
+	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func resourceIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Print("[DEBUG] Updating Cognito Identity Provider")
 
-	userPoolID, providerName, err := decodeCognitoIdentityProviderID(d.Id())
+	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider: %s", d.Id())
 
-	userPoolID, providerName, err := decodeCognitoIdentityProviderID(d.Id())
+	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -222,7 +222,7 @@ func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func decodeCognitoIdentityProviderID(id string) (string, string, error) {
+func DecodeIdentityProviderID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("expected ID in format UserPoolID:ProviderName, received: %s", id)

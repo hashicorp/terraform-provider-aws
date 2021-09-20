@@ -83,7 +83,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T
 				Config: testAccAWSCognitoUserPoolUICustomizationConfig_AllClients_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -279,7 +279,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolUICustomizationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -501,7 +501,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationDestroy(s *terraform.State) er
 			continue
 		}
 
-		userPoolId, clientId, err := parseCognitoUserPoolUICustomizationID(rs.Primary.ID)
+		userPoolId, clientId, err := tfcognitoidp.ParseUserPoolUICustomizationID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", rs.Primary.ID, err)
@@ -542,7 +542,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationExists(name string) resource.T
 			return errors.New("No Cognito User Pool Client ID set")
 		}
 
-		userPoolId, clientId, err := parseCognitoUserPoolUICustomizationID(rs.Primary.ID)
+		userPoolId, clientId, err := tfcognitoidp.ParseUserPoolUICustomizationID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", rs.Primary.ID, err)

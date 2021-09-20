@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
 func init() {
@@ -1448,7 +1449,7 @@ func TestAccAWSCognitoUserPool_disappears(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists(resourceName, nil),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPool(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1561,7 +1562,7 @@ resource "aws_iam_role_policy" "test" {
     Statement = [{
       Action   = "sns:publish"
       Effect   = "Allow"
-      Resource = "*"
+      tfcognitoidp.Resource = "*"
     }]
     Version = "2012-10-17"
   })
@@ -2041,7 +2042,7 @@ resource "aws_kms_key" "test" {
         "AWS": "*"
       },
       "Action": "kms:*",
-      "Resource": "*"
+      "tfcognitoidp.Resource": "*"
     }
   ]
 }
@@ -2336,7 +2337,7 @@ resource "aws_iam_role_policy" "test" {
       "Action": [
         "sns:publish"
       ],
-      "Resource": [
+      "tfcognitoidp.Resource": [
         "*"
       ]
     }

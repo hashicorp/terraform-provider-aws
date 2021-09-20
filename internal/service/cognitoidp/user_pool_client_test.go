@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
 func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
@@ -536,7 +537,7 @@ func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPoolClient(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPoolClient(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -559,7 +560,7 @@ func TestAccAWSCognitoUserPoolClient_disappears_userPool(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -822,7 +823,7 @@ resource "aws_iam_role_policy" "test" {
         "mobiletargeting:PutItems"
       ],
       "Effect": "Allow",
-      "Resource": "arn:${data.aws_partition.current.partition}:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
+      "tfcognitoidp.Resource": "arn:${data.aws_partition.current.partition}:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
     }
   ]
 }
