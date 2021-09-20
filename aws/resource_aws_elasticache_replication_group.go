@@ -26,13 +26,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticacheReplicationGroup() *schema.Resource {
+func ResourceReplicationGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsElasticacheReplicationGroupCreate,
-		Read:   resourceAwsElasticacheReplicationGroupRead,
-		Update: resourceAwsElasticacheReplicationGroupUpdate,
-		Delete: resourceAwsElasticacheReplicationGroupDelete,
+		Create: resourceReplicationGroupCreate,
+		Read:   resourceReplicationGroupRead,
+		Update: resourceReplicationGroupUpdate,
+		Delete: resourceReplicationGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -315,7 +315,7 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -450,10 +450,10 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsElasticacheReplicationGroupRead(d, meta)
+	return resourceReplicationGroupRead(d, meta)
 }
 
-func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -587,7 +587,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	if d.HasChanges("cluster_mode.0.num_node_groups", "cluster_mode.0.replicas_per_node_group") {
@@ -710,10 +710,10 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsElasticacheReplicationGroupRead(d, meta)
+	return resourceReplicationGroupRead(d, meta)
 }
 
-func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {

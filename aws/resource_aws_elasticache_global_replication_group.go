@@ -30,12 +30,12 @@ const (
 	GlobalReplicationGroupMemberRoleSecondary = "SECONDARY"
 )
 
-func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
+func ResourceGlobalReplicationGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheGlobalReplicationGroupCreate,
-		Read:   resourceAwsElasticacheGlobalReplicationGroupRead,
-		Update: resourceAwsElasticacheGlobalReplicationGroupUpdate,
-		Delete: resourceAwsElasticacheGlobalReplicationGroupDelete,
+		Create: resourceGlobalReplicationGroupCreate,
+		Read:   resourceGlobalReplicationGroupRead,
+		Update: resourceGlobalReplicationGroupUpdate,
+		Delete: resourceGlobalReplicationGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile("^" + elasticacheGlobalReplicationGroupRegionPrefixFormat)
@@ -150,7 +150,7 @@ func elasticacheDescriptionStateFunc(v interface{}) string {
 	return s
 }
 
-func resourceAwsElasticacheGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	input := &elasticache.CreateGlobalReplicationGroupInput{
@@ -173,10 +173,10 @@ func resourceAwsElasticacheGlobalReplicationGroupCreate(d *schema.ResourceData, 
 		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", d.Id(), err)
 	}
 
-	return resourceAwsElasticacheGlobalReplicationGroupRead(d, meta)
+	return resourceGlobalReplicationGroupRead(d, meta)
 }
 
-func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	globalReplicationGroup, err := finder.GlobalReplicationGroupByID(conn, d.Id())
@@ -212,7 +212,7 @@ func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsElasticacheGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	// Only one field can be changed per request
@@ -231,7 +231,7 @@ func resourceAwsElasticacheGlobalReplicationGroupUpdate(d *schema.ResourceData, 
 		}
 	}
 
-	return resourceAwsElasticacheGlobalReplicationGroupRead(d, meta)
+	return resourceGlobalReplicationGroupRead(d, meta)
 }
 
 type elasticacheGlobalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicationGroupInput)
@@ -254,7 +254,7 @@ func updateElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 	return nil
 }
 
-func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	// Using Update timeout because the Global Replication Group could be in the middle of an update operation

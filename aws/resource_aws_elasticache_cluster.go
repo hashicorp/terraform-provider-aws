@@ -30,12 +30,12 @@ const (
 	elasticacheDefaultMemcachedPort = "11211"
 )
 
-func resourceAwsElasticacheCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheClusterCreate,
-		Read:   resourceAwsElasticacheClusterRead,
-		Update: resourceAwsElasticacheClusterUpdate,
-		Delete: resourceAwsElasticacheClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -274,7 +274,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -372,10 +372,10 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be created: %w", d.Id(), err)
 	}
 
-	return resourceAwsElasticacheClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -491,7 +491,7 @@ func elasticacheSetResourceDataEngineVersionFromCacheCluster(d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	if d.HasChange("tags_all") {
@@ -604,7 +604,7 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsElasticacheClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
 func getCacheNodesToRemove(oldNumberOfNodes int, cacheNodesToRemove int) []*string {
@@ -648,7 +648,7 @@ func (b byCacheNodeId) Less(i, j int) bool {
 		*b[i].CacheNodeId < *b[j].CacheNodeId
 }
 
-func resourceAwsElasticacheClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)

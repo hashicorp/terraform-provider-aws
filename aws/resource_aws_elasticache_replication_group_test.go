@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepElasticacheReplicationGroups(region string) error {
 		}
 
 		for _, replicationGroup := range page.ReplicationGroups {
-			r := resourceAwsElasticacheReplicationGroup()
+			r := ResourceReplicationGroup()
 			d := r.Data(nil)
 
 			if replicationGroup.GlobalReplicationGroupInfo != nil {
@@ -233,7 +234,7 @@ func TestAccAWSElasticacheReplicationGroup_disappears(t *testing.T) {
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticacheReplicationGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1701,7 +1702,7 @@ func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_disappears(t
 				Config: testAccAWSElasticacheReplicationGroupConfig_GlobalReplicationGroupId_Basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticacheReplicationGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

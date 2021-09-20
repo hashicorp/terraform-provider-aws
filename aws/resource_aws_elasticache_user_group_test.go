@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSElasticacheUserGroup_basic(t *testing.T) {
@@ -141,7 +142,7 @@ func TestAccAWSElasticacheUserGroup_disappears(t *testing.T) {
 				Config: testAccAWSElasticacheUserGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheUserGroupExists(resourceName, &userGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticacheUserGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
