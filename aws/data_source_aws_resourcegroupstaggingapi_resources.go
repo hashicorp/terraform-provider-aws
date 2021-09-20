@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
+func DataSourceResources() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsResourceGroupsTaggingAPIResourcesRead,
+		Read: dataSourceResourcesRead,
 
 		Schema: map[string]*schema.Schema{
 			"exclude_compliant_resources": {
@@ -94,7 +94,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
 	}
 }
 
-func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceResourcesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingConn
 
 	input := &resourcegroupstaggingapi.GetResourcesInput{}
