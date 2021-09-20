@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourcePermissionSet() *schema.Resource {
@@ -64,7 +65,7 @@ func DataSourcePermissionSet() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -159,7 +160,7 @@ func dataSourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("session_duration", permissionSet.SessionDuration)
 	d.Set("relay_state", permissionSet.RelayState)
 
-	tags, err := keyvaluetags.SsoadminListTags(conn, arn, instanceArn)
+	tags, err := tftags.SsoadminListTags(conn, arn, instanceArn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSO Permission Set (%s): %w", arn, err)
 	}
