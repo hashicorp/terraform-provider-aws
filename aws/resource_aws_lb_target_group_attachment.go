@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLbTargetGroupAttachment() *schema.Resource {
@@ -46,7 +47,7 @@ func resourceAwsLbTargetGroupAttachment() *schema.Resource {
 }
 
 func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -69,7 +70,7 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 		d.Get("target_group_arn").(string))
 
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := elbconn.RegisterTargets(params)
+		_, err := conn.RegisterTargets(params)
 
 		if tfawserr.ErrMessageContains(err, "InvalidTarget", "") {
 			return resource.RetryableError(fmt.Errorf("Error attaching instance to LB, retrying: %s", err))
@@ -82,7 +83,7 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = elbconn.RegisterTargets(params)
+		_, err = conn.RegisterTargets(params)
 	}
 	if err != nil {
 		return fmt.Errorf("Error registering targets with target group: %s", err)
@@ -95,7 +96,7 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsLbAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -114,7 +115,7 @@ func resourceAwsLbAttachmentDelete(d *schema.ResourceData, meta interface{}) err
 		Targets:        []*elbv2.TargetDescription{target},
 	}
 
-	_, err := elbconn.DeregisterTargets(params)
+	_, err := conn.DeregisterTargets(params)
 	if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 		return fmt.Errorf("Error deregistering Targets: %s", err)
 	}
@@ -125,7 +126,7 @@ func resourceAwsLbAttachmentDelete(d *schema.ResourceData, meta interface{}) err
 // resourceAwsLbAttachmentRead requires all of the fields in order to describe the correct
 // target, so there is no work to do beyond ensuring that the target and group still exist.
 func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -139,7 +140,7 @@ func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error
 		target.AvailabilityZone = aws.String(v.(string))
 	}
 
-	resp, err := elbconn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
+	resp, err := conn.DescribeTargetHealth(&elbv2.DescribeTargetHealthInput{
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
 		Targets:        []*elbv2.TargetDescription{target},
 	})

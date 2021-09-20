@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
@@ -173,7 +174,7 @@ func TestAccAwsLbListenerCertificate_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsLbListenerCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_listener_certificate" {

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestLBListenerARNFromRuleARN(t *testing.T) {
@@ -1296,7 +1297,7 @@ func testAccCheckAWSLBListenerRuleActionOrderDisappears(rule *elbv2.Rule, action
 			return fmt.Errorf("Unable to find action order %d from actions: %#v", actionOrderToDelete, rule.Actions)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 		input := &elbv2.ModifyRuleInput{
 			Actions: newActions,
@@ -1330,7 +1331,7 @@ func testAccCheckAWSLBListenerRuleExists(n string, res *elbv2.Rule) resource.Tes
 			return errors.New("No Listener Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 		describe, err := conn.DescribeRules(&elbv2.DescribeRulesInput{
 			RuleArns: []*string{aws.String(rs.Primary.ID)},
@@ -1351,7 +1352,7 @@ func testAccCheckAWSLBListenerRuleExists(n string, res *elbv2.Rule) resource.Tes
 }
 
 func testAccCheckAWSLBListenerRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_listener_rule" && rs.Type != "aws_alb_listener_rule" {

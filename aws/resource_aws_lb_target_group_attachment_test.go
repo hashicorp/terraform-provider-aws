@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
@@ -136,7 +137,7 @@ func testAccCheckAWSLBTargetGroupAttachmentDisappears(n string) resource.TestChe
 			return fmt.Errorf("Attachment not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
 
 		target := &elbv2.TargetDescription{
@@ -174,7 +175,7 @@ func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFu
 			return errors.New("No Target Group Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 		_, hasPort := rs.Primary.Attributes["port"]
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
@@ -205,7 +206,7 @@ func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFu
 }
 
 func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {

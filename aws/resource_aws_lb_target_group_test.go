@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepLBTargetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).elbv2conn
+	conn := client.(*conns.AWSClient).ELBV2Conn
 
 	err = conn.DescribeTargetGroupsPages(&elbv2.DescribeTargetGroupsInput{}, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
 		if page == nil || len(page.TargetGroups) == 0 {
@@ -1423,7 +1424,7 @@ func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resour
 			return errors.New("No Target Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 		targetGroup, err := finder.TargetGroupByARN(conn, rs.Primary.ID)
 
@@ -1461,7 +1462,7 @@ func testAccCheckAWSLBTargetGroupRecreated(i, j *elbv2.TargetGroup) resource.Tes
 }
 
 func testAccCheckAWSLBTargetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_target_group" && rs.Type != "aws_alb_target_group" {
