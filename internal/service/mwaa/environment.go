@@ -301,7 +301,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().MwaaTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[INFO] Creating MWAA Environment: %s", input)
@@ -373,7 +373,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("webserver_url", environment.WebserverUrl)
 	d.Set("weekly_maintenance_window_start", environment.WeeklyMaintenanceWindowStart)
 
-	tags := tftags.MwaaKeyValueTags(environment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(environment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -479,7 +479,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.MwaaUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating MWAA Environment (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
