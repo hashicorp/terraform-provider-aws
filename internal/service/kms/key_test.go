@@ -75,7 +75,7 @@ func testSweepKmsKeys(region string) error {
 	return nil
 }
 
-func TestAccAWSKmsKey_basic(t *testing.T) {
+func TestAccKMSKey_basic(t *testing.T) {
 	var key kms.KeyMetadata
 	resourceName := "aws_kms_key.test"
 
@@ -104,7 +104,7 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsKey_asymmetricKey(t *testing.T) {
+func TestAccKMSKey_asymmetricKey(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"
@@ -127,7 +127,7 @@ func TestAccAWSKmsKey_asymmetricKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsKey_disappears(t *testing.T) {
+func TestAccKMSKey_disappears(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"
@@ -150,7 +150,7 @@ func TestAccAWSKmsKey_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsKey_policy(t *testing.T) {
+func TestAccKMSKey_policy(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"
@@ -185,7 +185,7 @@ func TestAccAWSKmsKey_policy(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsKey_policyBypass(t *testing.T) {
+func TestAccKMSKey_policyBypass(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"
@@ -217,7 +217,7 @@ func TestAccAWSKmsKey_policyBypass(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsKey_policyBypassUpdate(t *testing.T) {
+func TestAccKMSKey_policyBypassUpdate(t *testing.T) {
 	var before, after kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"
@@ -246,7 +246,7 @@ func TestAccAWSKmsKey_policyBypassUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsKey_Policy_IamRole(t *testing.T) {
+func TestAccKMSKey_Policy_iamRole(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"
@@ -274,7 +274,7 @@ func TestAccAWSKmsKey_Policy_IamRole(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7646
-func TestAccAWSKmsKey_Policy_IamServiceLinkedRole(t *testing.T) {
+func TestAccKMSKey_Policy_iamServiceLinkedRole(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"
@@ -301,7 +301,7 @@ func TestAccAWSKmsKey_Policy_IamServiceLinkedRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsKey_isEnabled(t *testing.T) {
+func TestAccKMSKey_isEnabled(t *testing.T) {
 	var key1, key2, key3 kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"
@@ -349,7 +349,7 @@ func TestAccAWSKmsKey_isEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsKey_tags(t *testing.T) {
+func TestAccKMSKey_tags(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_key.test"

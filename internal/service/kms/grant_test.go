@@ -14,7 +14,7 @@ import (
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
-func TestAccAWSKmsGrant_basic(t *testing.T) {
+func TestAccKMSGrant_basic(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -46,7 +46,7 @@ func TestAccAWSKmsGrant_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
+func TestAccKMSGrant_withConstraints(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -94,7 +94,7 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
+func TestAccKMSGrant_withRetiringPrincipal(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -121,7 +121,7 @@ func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsGrant_bare(t *testing.T) {
+func TestAccKMSGrant_bare(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -150,7 +150,7 @@ func TestAccAWSKmsGrant_bare(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsGrant_ARN(t *testing.T) {
+func TestAccKMSGrant_arn(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -182,7 +182,7 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsGrant_AsymmetricKey(t *testing.T) {
+func TestAccKMSGrant_asymmetricKey(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
@@ -208,7 +208,7 @@ func TestAccAWSKmsGrant_AsymmetricKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsGrant_disappears(t *testing.T) {
+func TestAccKMSGrant_disappears(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 

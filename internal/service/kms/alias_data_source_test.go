@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
+func TestAccKMSAliasDataSource_awsService(t *testing.T) {
 	rName := "alias/aws/s3"
 	resourceName := "data.aws_kms_alias.test"
 
@@ -33,7 +33,7 @@ func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsKmsAlias_CMK(t *testing.T) {
+func TestAccKMSAliasDataSource_cmk(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	aliasResourceName := "aws_kms_alias.test"
 	datasourceAliasResourceName := "data.aws_kms_alias.test"

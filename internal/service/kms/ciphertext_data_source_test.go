@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsKmsCiphertext_basic(t *testing.T) {
+func TestAccKMSCiphertextDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
@@ -25,7 +25,7 @@ func TestAccDataSourceAwsKmsCiphertext_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsKmsCiphertext_validate(t *testing.T) {
+func TestAccKMSCiphertextDataSource_validate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
@@ -42,7 +42,7 @@ func TestAccDataSourceAwsKmsCiphertext_validate(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
+func TestAccKMSCiphertextDataSource_Validate_withContext(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),

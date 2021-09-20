@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSKmsAlias_basic(t *testing.T) {
+func TestAccKMSAlias_basic(t *testing.T) {
 	var alias kms.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
@@ -47,7 +47,7 @@ func TestAccAWSKmsAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsAlias_disappears(t *testing.T) {
+func TestAccKMSAlias_disappears(t *testing.T) {
 	var alias kms.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
@@ -70,7 +70,7 @@ func TestAccAWSKmsAlias_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsAlias_Name_Generated(t *testing.T) {
+func TestAccKMSAlias_Name_generated(t *testing.T) {
 	var alias kms.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
@@ -98,7 +98,7 @@ func TestAccAWSKmsAlias_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsAlias_NamePrefix(t *testing.T) {
+func TestAccKMSAlias_namePrefix(t *testing.T) {
 	var alias kms.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
@@ -126,7 +126,7 @@ func TestAccAWSKmsAlias_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsAlias_UpdateKeyID(t *testing.T) {
+func TestAccKMSAlias_updateKeyID(t *testing.T) {
 	var alias kms.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
@@ -164,7 +164,7 @@ func TestAccAWSKmsAlias_UpdateKeyID(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsAlias_MultipleAliasesForSameKey(t *testing.T) {
+func TestAccKMSAlias_multipleAliasesForSameKey(t *testing.T) {
 	var alias kms.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
@@ -197,7 +197,7 @@ func TestAccAWSKmsAlias_MultipleAliasesForSameKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
+func TestAccKMSAlias_arnDiffSuppress(t *testing.T) {
 	var alias kms.AliasListEntry
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
