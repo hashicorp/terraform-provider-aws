@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWorkspacesWorkspace() *schema.Resource {
+func DataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWorkspacesWorkspaceRead,
+		Read: dataSourceWorkspaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"bundle_id": {
@@ -96,7 +96,7 @@ func dataSourceAwsWorkspacesWorkspace() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWorkspacesWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

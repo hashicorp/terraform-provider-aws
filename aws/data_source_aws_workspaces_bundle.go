@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWorkspacesBundle() *schema.Resource {
+func DataSourceBundle() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsWorkspaceBundleRead,
 

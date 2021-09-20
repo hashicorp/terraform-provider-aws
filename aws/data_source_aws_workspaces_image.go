@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWorkspacesImage() *schema.Resource {
+func DataSourceImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWorkspacesImageRead,
+		Read: dataSourceImageRead,
 
 		Schema: map[string]*schema.Schema{
 			"image_id": {
@@ -42,7 +42,7 @@ func dataSourceAwsWorkspacesImage() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWorkspacesImageRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
 	imageID := d.Get("image_id").(string)
