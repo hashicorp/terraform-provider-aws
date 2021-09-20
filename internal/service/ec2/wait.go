@@ -1,4 +1,4 @@
-package waiter
+package ec2
 
 import (
 	"errors"

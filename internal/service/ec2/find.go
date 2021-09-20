@@ -1,4 +1,4 @@
-package finder
+package ec2
 
 import (
 	"fmt"
