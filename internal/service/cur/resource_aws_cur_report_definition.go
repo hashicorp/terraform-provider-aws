@@ -1,4 +1,4 @@
-package aws
+package cur
 
 import (
 	"fmt"
@@ -10,7 +10,6 @@ import (
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -163,7 +162,7 @@ func resourceReportDefinitionCreate(d *schema.ResourceData, meta interface{}) er
 func resourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
-	reportDefinition, err := finder.FindReportDefinitionByName(conn, d.Id())
+	reportDefinition, err := FindReportDefinitionByName(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading Cost And Usage Report Definition (%s): %w", d.Id(), err)

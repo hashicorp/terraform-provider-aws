@@ -1,4 +1,4 @@
-package aws
+package cur_test
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcur "github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 )
 
 func init() {
@@ -378,7 +378,7 @@ func testAccCheckAwsCurReportDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		matchingReportDefinition, err := finder.FindReportDefinitionByName(conn, rs.Primary.ID)
+		matchingReportDefinition, err := tfcur.FindReportDefinitionByName(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading Report Definition (%s): %w", rs.Primary.ID, err)
 		}
@@ -402,7 +402,7 @@ func testAccCheckAwsCurReportDefinitionExists(resourceName string) resource.Test
 			return fmt.Errorf("Resource not found: %s", resourceName)
 		}
 
-		matchingReportDefinition, err := finder.FindReportDefinitionByName(conn, rs.Primary.ID)
+		matchingReportDefinition, err := tfcur.FindReportDefinitionByName(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading Report Definition (%s): %w", rs.Primary.ID, err)
 		}

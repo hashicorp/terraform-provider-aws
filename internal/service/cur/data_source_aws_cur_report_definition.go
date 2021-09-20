@@ -1,11 +1,10 @@
-package aws
+package cur
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -73,7 +72,7 @@ func dataSourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) er
 
 	reportName := d.Get("report_name").(string)
 
-	reportDefinition, err := finder.FindReportDefinitionByName(conn, reportName)
+	reportDefinition, err := FindReportDefinitionByName(conn, reportName)
 
 	if err != nil {
 		return fmt.Errorf("error reading Report Definition (%s): %w", reportName, err)

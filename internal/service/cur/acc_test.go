@@ -1,4 +1,4 @@
-package aws
+package cur_test
 
 import (
 	"context"
