@@ -14,10 +14,10 @@ const (
 	environmentStatusUnknown  = "Unknown"
 )
 
-// EnvironmentStatus fetches the Environment and its Status
-func EnvironmentStatus(conn *mwaa.MWAA, name string) resource.StateRefreshFunc {
+// statusEnvironment fetches the Environment and its Status
+func statusEnvironment(conn *mwaa.MWAA, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		environment, err := finder.EnvironmentByName(conn, name)
+		environment, err := finder.findEnvironmentByName(conn, name)
 
 		if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
 			return nil, environmentStatusNotFound, nil

@@ -10,22 +10,22 @@ import (
 
 const (
 	// Maximum amount of time to wait for an environment creation
-	EnvironmentCreatedTimeout = 120 * time.Minute
+	environmentCreatedTimeout = 120 * time.Minute
 
 	// Maximum amount of time to wait for an environment update
-	EnvironmentUpdatedTimeout = 90 * time.Minute
+	environmentUpdatedTimeout = 90 * time.Minute
 
 	// Maximum amount of time to wait for an environment deletion
-	EnvironmentDeletedTimeout = 90 * time.Minute
+	environmentDeletedTimeout = 90 * time.Minute
 )
 
-// EnvironmentCreated waits for a Environment to return AVAILABLE
-func EnvironmentCreated(conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
+// waitEnvironmentCreated waits for a Environment to return AVAILABLE
+func waitEnvironmentCreated(conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusCreating},
 		Target:  []string{mwaa.EnvironmentStatusAvailable},
-		Refresh: EnvironmentStatus(conn, name),
-		Timeout: EnvironmentCreatedTimeout,
+		Refresh: statusEnvironment(conn, name),
+		Timeout: environmentCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -37,13 +37,13 @@ func EnvironmentCreated(conn *mwaa.MWAA, name string) (*mwaa.Environment, error)
 	return nil, err
 }
 
-// EnvironmentUpdated waits for a Environment to return AVAILABLE
-func EnvironmentUpdated(conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
+// waitEnvironmentUpdated waits for a Environment to return AVAILABLE
+func waitEnvironmentUpdated(conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusUpdating},
 		Target:  []string{mwaa.EnvironmentStatusAvailable},
-		Refresh: EnvironmentStatus(conn, name),
-		Timeout: EnvironmentUpdatedTimeout,
+		Refresh: statusEnvironment(conn, name),
+		Timeout: environmentUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -55,13 +55,13 @@ func EnvironmentUpdated(conn *mwaa.MWAA, name string) (*mwaa.Environment, error)
 	return nil, err
 }
 
-// EnvironmentDeleted waits for a Environment to be deleted
-func EnvironmentDeleted(conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
+// waitEnvironmentDeleted waits for a Environment to be deleted
+func waitEnvironmentDeleted(conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusDeleting},
 		Target:  []string{},
-		Refresh: EnvironmentStatus(conn, name),
-		Timeout: EnvironmentDeletedTimeout,
+		Refresh: statusEnvironment(conn, name),
+		Timeout: environmentDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

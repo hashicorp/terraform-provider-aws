@@ -313,7 +313,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(input.Name))
 
-	if _, err := waiter.EnvironmentCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.waitEnvironmentCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for MWAA Environment (%s) creation: %w", d.Id(), err)
 	}
 
@@ -327,7 +327,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Reading MWAA Environment: %s", d.Id())
 
-	environment, err := finder.EnvironmentByName(conn, d.Id())
+	environment, err := finder.findEnvironmentByName(conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
@@ -472,7 +472,7 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating MWAA Environment (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.EnvironmentUpdated(conn, d.Id()); err != nil {
+		if _, err := waiter.waitEnvironmentUpdated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for MWAA Environment (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -503,7 +503,7 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting MWAA Environment (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.EnvironmentDeleted(conn, d.Id())
+	_, err = waiter.waitEnvironmentDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for MWAA Environment (%s) deletion: %w", d.Id(), err)

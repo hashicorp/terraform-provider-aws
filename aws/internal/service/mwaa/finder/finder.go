@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// EnvironmentByName returns the MWAA Environment corresponding to the specified Name.
+// findEnvironmentByName returns the MWAA Environment corresponding to the specified Name.
 // Returns nil if no environment is found.
-func EnvironmentByName(conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
+func findEnvironmentByName(conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
 	input := &mwaa.GetEnvironmentInput{
 		Name: aws.String(name),
 	}
