@@ -1,7 +1,10 @@
 package aws
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"log"
 	"regexp"
 	"strings"
@@ -88,6 +91,11 @@ func resourceAwsDocDBCluster() *schema.Resource {
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"global_cluster_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"reader_endpoint": {
@@ -358,12 +366,18 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("Error creating DocDB Cluster: %s", err)
 		}
 	} else {
-		if _, ok := d.GetOk("master_password"); !ok {
-			return fmt.Errorf(`provider.aws: aws_docdb_cluster: %s: "master_password": required field is not set`, identifier)
+		// Secondary DocDB clusters part of a global cluster will not supply the master_password
+		if _, ok := d.GetOk("global_cluster_identifier"); !ok {
+			if _, ok := d.GetOk("master_password"); !ok {
+				return fmt.Errorf(`provider.aws: aws_docdb_cluster: %s: "master_password": required field is not set`, identifier)
+			}
 		}
 
-		if _, ok := d.GetOk("master_username"); !ok {
-			return fmt.Errorf(`provider.aws: aws_docdb_cluster: %s: "master_username": required field is not set`, identifier)
+		// Secondary DocDB clusters part of a global cluster will not supply the master_username
+		if _, ok := d.GetOk("global_cluster_identifier"); !ok {
+			if _, ok := d.GetOk("master_username"); !ok {
+				return fmt.Errorf(`provider.aws: aws_docdb_cluster: %s: "master_username": required field is not set`, identifier)
+			}
 		}
 
 		createOpts := &docdb.CreateDBClusterInput{
@@ -373,6 +387,10 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Tags:                tags.IgnoreAws().DocdbTags(),
+		}
+
+		if attr, ok := d.GetOk("global_cluster_identifier"); ok {
+			createOpts.GlobalClusterIdentifier = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("port"); ok {
@@ -527,6 +545,20 @@ func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
+	globalCluster, err := docDBDescribeGlobalClusterFromDbClusterARN(context.TODO(), conn, aws.StringValue(dbc.DBClusterArn))
+
+	// Ignore the following API error for regions/partitions that do not support DocDB Global Clusters:
+	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+	if err != nil && !isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
+		return fmt.Errorf("error reading DocDB Global Cluster information for DB Cluster (%s): %w", d.Id(), err)
+	}
+
+	if globalCluster != nil {
+		d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+	} else {
+		d.Set("global_cluster_identifier", "")
+	}
+
 	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
 		return fmt.Errorf("error setting availability_zones: %s", err)
 	}
@@ -544,7 +576,6 @@ func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
-
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 
@@ -652,6 +683,32 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		requestUpdate = true
 	}
 
+	if d.HasChange("global_cluster_identifier") {
+		oRaw, nRaw := d.GetChange("global_cluster_identifier")
+		o := oRaw.(string)
+		n := nRaw.(string)
+
+		if o == "" {
+			return errors.New("existing DocDB Clusters cannot be added to an existing DocDB Global Cluster")
+		}
+
+		if n != "" {
+			return errors.New("existing DocDB Clusters cannot be migrated between existing DocDB Global Clusters")
+		}
+
+		input := &docdb.RemoveFromGlobalClusterInput{
+			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
+			GlobalClusterIdentifier: aws.String(o),
+		}
+
+		log.Printf("[DEBUG] Removing DocDB Cluster from DocDB Global Cluster: %s", input)
+		_, err := conn.RemoveFromGlobalCluster(input)
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+			return fmt.Errorf("error removing DocDB Cluster (%s) from DocDB Global Cluster: %w", d.Id(), err)
+		}
+	}
+
 	if requestUpdate {
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.ModifyDBCluster(req)
@@ -702,6 +759,22 @@ func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).docdbconn
 	log.Printf("[DEBUG] Destroying DocDB Cluster (%s)", d.Id())
 
+	// Automatically remove from global cluster to bypass this error on deletion:
+	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
+	if d.Get("global_cluster_identifier").(string) != "" {
+		input := &docdb.RemoveFromGlobalClusterInput{
+			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
+			GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
+		}
+
+		log.Printf("[DEBUG] Removing DocDB Cluster from DocDB Global Cluster: %s", input)
+		_, err := conn.RemoveFromGlobalCluster(input)
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, docdb.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+			return fmt.Errorf("error removing DocDB Cluster (%s) from DocDB Global Cluster: %w", d.Id(), err)
+		}
+	}
+
 	deleteOpts := docdb.DeleteDBClusterInput{
 		DBClusterIdentifier: aws.String(d.Id()),
 	}
@@ -719,10 +792,13 @@ func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] DocDB Cluster delete options: %s", deleteOpts)
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
 			if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return resource.RetryableError(err)
 			}
 			if isAWSErr(err, docdb.ErrCodeDBClusterNotFoundFault, "") {

@@ -682,6 +682,7 @@ func Provider() *schema.Provider {
 			"aws_docdb_cluster_instance":                           resourceAwsDocDBClusterInstance(),
 			"aws_docdb_cluster_parameter_group":                    resourceAwsDocDBClusterParameterGroup(),
 			"aws_docdb_cluster_snapshot":                           resourceAwsDocDBClusterSnapshot(),
+			"aws_docdb_global_cluster":                             resourceAwsDocDBGlobalCluster(),
 			"aws_docdb_subnet_group":                               resourceAwsDocDBSubnetGroup(),
 			"aws_dx_bgp_peer":                                      resourceAwsDxBgpPeer(),
 			"aws_dx_connection":                                    resourceAwsDxConnection(),
