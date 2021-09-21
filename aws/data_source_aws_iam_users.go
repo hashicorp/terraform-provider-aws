@@ -39,6 +39,7 @@ func dataSourceAwsIAMUsers() *schema.Resource {
 
 func dataSourceAwsIAMUsersRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
+
 	input := &iam.ListUsersInput{}
 
 	if v, ok := d.GetOk("path_prefix"); ok {
@@ -46,6 +47,7 @@ func dataSourceAwsIAMUsersRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var results []*iam.User
+
 	err := conn.ListUsersPages(input, func(page *iam.ListUsersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -72,8 +74,8 @@ func dataSourceAwsIAMUsersRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(meta.(*AWSClient).region)
 
-	var names []string
-	var arns []string
+	var arns, names []string
+
 	for _, r := range results {
 		names = append(names, aws.StringValue(r.UserName))
 		arns = append(arns, aws.StringValue(r.Arn))
@@ -82,6 +84,7 @@ func dataSourceAwsIAMUsersRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("names", names); err != nil {
 		return fmt.Errorf("error setting names: %w", err)
 	}
+
 	if err := d.Set("arns", arns); err != nil {
 		return fmt.Errorf("error setting arns: %w", err)
 	}

@@ -16,9 +16,9 @@ func TestAccAWSIAMUsersDataSource_nameRegex(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMUsersConfigDataSource_nameRegex(rCount, rName),
@@ -38,9 +38,9 @@ func TestAccAWSIAMUsersDataSource_pathPrefix(t *testing.T) {
 	rPathPrefix := acctest.RandomWithPrefix("tf-acc-path")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMUsersConfigDataSource_pathPrefix(rCount, rName, rPathPrefix),
@@ -57,9 +57,9 @@ func TestAccAWSIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 	dataSourceName := "data.aws_iam_users.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMUsersConfigDataSource_nonExistentNameRegex,
@@ -76,9 +76,9 @@ func TestAccAWSIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 	dataSourceName := "data.aws_iam_users.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMUsersConfigDataSource_nonExistentPathPrefix,
