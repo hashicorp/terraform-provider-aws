@@ -429,42 +429,54 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading MSK Cluster (%s): %w", d.Id(), err)
 	}
 
-	brokerOut, err := conn.GetBootstrapBrokers(&kafka.GetBootstrapBrokersInput{
+	output, err := conn.GetBootstrapBrokers(&kafka.GetBootstrapBrokersInput{
 		ClusterArn: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return fmt.Errorf("failed requesting bootstrap broker info for %q : %s", d.Id(), err)
+		return fmt.Errorf("error reading MSK Cluster (%s) bootstrap brokers: %w", d.Id(), err)
 	}
 
 	d.Set("arn", cluster.ClusterArn)
-	d.Set("bootstrap_brokers", tfkafka.SortEndpointsString(aws.StringValue(brokerOut.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_iam", tfkafka.SortEndpointsString(aws.StringValue(brokerOut.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", tfkafka.SortEndpointsString(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", tfkafka.SortEndpointsString(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_iam", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
-		return fmt.Errorf("error setting broker_node_group_info: %s", err)
+		return fmt.Errorf("error setting broker_node_group_info: %w", err)
 	}
 
 	if err := d.Set("client_authentication", flattenMskClientAuthentication(cluster.ClientAuthentication)); err != nil {
-		return fmt.Errorf("error setting configuration_info: %s", err)
+		return fmt.Errorf("error setting configuration_info: %w", err)
 	}
 
 	d.Set("cluster_name", cluster.ClusterName)
 
 	if err := d.Set("configuration_info", flattenMskConfigurationInfo(cluster.CurrentBrokerSoftwareInfo)); err != nil {
-		return fmt.Errorf("error setting configuration_info: %s", err)
+		return fmt.Errorf("error setting configuration_info: %w", err)
 	}
 
 	d.Set("current_version", cluster.CurrentVersion)
 	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
 
 	if err := d.Set("encryption_info", flattenMskEncryptionInfo(cluster.EncryptionInfo)); err != nil {
-		return fmt.Errorf("error setting encryption_info: %s", err)
+		return fmt.Errorf("error setting encryption_info: %w", err)
 	}
 
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
+
+	if err := d.Set("logging_info", flattenMskLoggingInfo(cluster.LoggingInfo)); err != nil {
+		return fmt.Errorf("error setting logging_info: %w", err)
+	}
+
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
+
+	if err := d.Set("open_monitoring", flattenMskOpenMonitoring(cluster.OpenMonitoring)); err != nil {
+		return fmt.Errorf("error setting open_monitoring: %w", err)
+	}
+
+	d.Set("zookeeper_connect_string", tfkafka.SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 
 	tags := keyvaluetags.KafkaKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
@@ -476,16 +488,6 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	if err := d.Set("open_monitoring", flattenMskOpenMonitoring(cluster.OpenMonitoring)); err != nil {
-		return fmt.Errorf("error setting open_monitoring: %s", err)
-	}
-
-	if err := d.Set("logging_info", flattenMskLoggingInfo(cluster.LoggingInfo)); err != nil {
-		return fmt.Errorf("error setting logging_info: %s", err)
-	}
-
-	d.Set("zookeeper_connect_string", tfkafka.SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 
 	return nil
 }
@@ -530,7 +532,7 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		output, err := conn.UpdateBrokerType(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker type: %s", d.Id(), err)
+			return fmt.Errorf("error updating MSK Cluster (%s) broker type: %w", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -552,7 +554,7 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		output, err := conn.UpdateBrokerCount(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker count: %s", d.Id(), err)
+			return fmt.Errorf("error updating MSK Cluster (%s) broker count: %w", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -576,7 +578,7 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		output, err := conn.UpdateMonitoring(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
+			return fmt.Errorf("error updating MSK Cluster (%s) monitoring: %w", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -598,7 +600,7 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		output, err := conn.UpdateClusterConfiguration(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) configuration: %s", d.Id(), err)
+			return fmt.Errorf("error updating MSK Cluster (%s) configuration: %w", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
@@ -640,7 +642,7 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.KafkaUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating MSK Cluster (%s) tags: %w", d.Id(), err)
 		}
 	}
 
