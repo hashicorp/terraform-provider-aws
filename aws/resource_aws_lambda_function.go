@@ -539,7 +539,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 			return resource.RetryableError(err)
 		}
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "") {
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
 			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 			return resource.RetryableError(err)
 		}
@@ -1065,7 +1065,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 				return resource.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "") {
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
 				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 				return resource.RetryableError(err)
 			}
