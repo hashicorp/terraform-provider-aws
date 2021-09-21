@@ -264,6 +264,16 @@ In addition to all arguments above, the following attributes are exported:
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphbetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 
+## Timeouts
+
+`aws_msk_cluster` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+* `create` - (Default `120 minutes`) How long to wait for the MSK Cluster to be created.
+* `update` - (Default `120 minutes`) How long to wait for the MSK Cluster to be updated.
+Note that the `update` timeout is used separately for `ebs_volume_size`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
+* `delete` - (Default `120 minutes`) How long to wait for the MSK Cluster to be deleted.
+
 ## Import
 
 MSK clusters can be imported using the cluster `arn`, e.g.
