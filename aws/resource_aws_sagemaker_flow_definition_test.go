@@ -59,7 +59,7 @@ func testSweepSagemakerFlowDefinitions(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerFlowDefinition_basic(t *testing.T) {
+func testAccAWSSagemakerFlowDefinition_basic(t *testing.T) {
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_flow_definition.test"
@@ -101,7 +101,7 @@ func TestAccAWSSagemakerFlowDefinition_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFlowDefinition_humanLoopConfig_publicWorkforce(t *testing.T) {
+func testAccAWSSagemakerFlowDefinition_humanLoopConfig_publicWorkforce(t *testing.T) {
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_flow_definition.test"
@@ -133,7 +133,7 @@ func TestAccAWSSagemakerFlowDefinition_humanLoopConfig_publicWorkforce(t *testin
 	})
 }
 
-func TestAccAWSSagemakerFlowDefinition_humanLoopRequestSource(t *testing.T) {
+func testAccAWSSagemakerFlowDefinition_humanLoopRequestSource(t *testing.T) {
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_flow_definition.test"
@@ -165,7 +165,7 @@ func TestAccAWSSagemakerFlowDefinition_humanLoopRequestSource(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFlowDefinition_tags(t *testing.T) {
+func testAccAWSSagemakerFlowDefinition_tags(t *testing.T) {
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_flow_definition.test"
@@ -210,7 +210,7 @@ func TestAccAWSSagemakerFlowDefinition_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerFlowDefinition_disappears(t *testing.T) {
+func testAccAWSSagemakerFlowDefinition_disappears(t *testing.T) {
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_flow_definition.test"
