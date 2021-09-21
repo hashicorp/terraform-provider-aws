@@ -46,7 +46,7 @@ func wafv2RootStatementSchema(level int) *schema.Schema {
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 				"not_statement":                         wafv2StatementSchema(level - 1),
 				"or_statement":                          wafv2StatementSchema(level - 1),
-				"rate_based_statement":                  wafv2RateBasedStatementSchema(level - 1),
+				"rate_based_statement":                  wafv2RateBasedStatementSchema(level), // not reducing to allow for deeper scope_down_statements
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
 				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
@@ -75,7 +75,6 @@ func wafv2StatementSchema(level int) *schema.Schema {
 								"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 								"not_statement":                         wafv2StatementSchema(level - 1),
 								"or_statement":                          wafv2StatementSchema(level - 1),
-								"rate_based_statement":                  wafv2RateBasedStatementSchema(level - 1),
 								"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 								"size_constraint_statement":             wafv2SizeConstraintSchema(),
 								"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
