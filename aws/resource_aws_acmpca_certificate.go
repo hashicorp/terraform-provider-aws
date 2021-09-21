@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/waiter"
 )
 
@@ -161,14 +162,26 @@ func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}
 func resourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
 
-	getCertificateInput := &acmpca.GetCertificateInput{
-		CertificateArn:          aws.String(d.Id()),
-		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
+	var certificateOutput *acmpca.GetCertificateOutput
+	var err error
+	if strings.Contains(d.Id(), "/certificate/") {
+		// normal pca certs
+		getCertificateInput := &acmpca.GetCertificateInput{
+			CertificateArn:          aws.String(d.Id()),
+			CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
+		}
+
+		log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
+
+		certificateOutput, err = conn.GetCertificate(getCertificateInput)
+	} else if d.Id() == d.Get("certificate_authority_arn") {
+		// root CA cert
+		log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %s", d.Get("certificate_authority_arn"))
+
+		var tmp *acmpca.GetCertificateAuthorityCertificateOutput
+		tmp, err = finder.CertificateAuthorityCertificateByARN(conn, d.Get("certificate_authority_arn").(string))
+		certificateOutput = (*acmpca.GetCertificateOutput)(tmp)
 	}
-
-	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
-
-	certificateOutput, err := conn.GetCertificate(getCertificateInput)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] ACM PCA Certificate (%s) not found, removing from state", d.Id())
