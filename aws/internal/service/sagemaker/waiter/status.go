@@ -184,10 +184,6 @@ func FlowDefinitionStatus(conn *sagemaker.SageMaker, name string) resource.State
 			return nil, "", err
 		}
 
-		if aws.StringValue(output.FlowDefinitionStatus) == sagemaker.FlowDefinitionStatusFailed {
-			return output, sagemaker.FlowDefinitionStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
-		}
-
 		return output, aws.StringValue(output.FlowDefinitionStatus), nil
 	}
 }

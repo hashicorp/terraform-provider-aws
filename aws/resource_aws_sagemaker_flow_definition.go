@@ -200,13 +200,6 @@ func resourceAwsSagemakerFlowDefinition() *schema.Resource {
 					},
 				},
 			},
-			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateArn,
-			},
-
 			"output_config": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -231,6 +224,12 @@ func resourceAwsSagemakerFlowDefinition() *schema.Resource {
 						},
 					},
 				},
+			},
+			"role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -273,6 +272,7 @@ func resourceAwsSagemakerFlowDefinitionCreate(d *schema.ResourceData, meta inter
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(iamwaiter.PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateFlowDefinition(input)
 	}, "ValidationException")
+
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker Flow Definition (%s): %w", name, err)
 	}
@@ -280,7 +280,7 @@ func resourceAwsSagemakerFlowDefinitionCreate(d *schema.ResourceData, meta inter
 	d.SetId(name)
 
 	if _, err := waiter.FlowDefinitionActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Flow Definition (%s) to Active: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for SageMaker Flow Definition (%s) to become active: %w", d.Id(), err)
 	}
 
 	return resourceAwsSagemakerFlowDefinitionRead(d, meta)
@@ -375,10 +375,7 @@ func resourceAwsSagemakerFlowDefinitionDelete(d *schema.ResourceData, meta inter
 	}
 
 	if _, err := waiter.FlowDefinitionDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return nil
-		}
-		return fmt.Errorf("error waiting for SageMaker Flow Definition (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for SageMaker Flow Definition (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

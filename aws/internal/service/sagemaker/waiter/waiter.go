@@ -388,12 +388,8 @@ func AppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, a
 // FlowDefinitionActive waits for a FlowDefinition to return Active
 func FlowDefinitionActive(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			sagemaker.FlowDefinitionStatusInitializing,
-		},
-		Target: []string{
-			sagemaker.FlowDefinitionStatusActive,
-		},
+		Pending: []string{sagemaker.FlowDefinitionStatusInitializing},
+		Target:  []string{sagemaker.FlowDefinitionStatusActive},
 		Refresh: FlowDefinitionStatus(conn, name),
 		Timeout: FlowDefinitionActiveTimeout,
 	}
@@ -401,6 +397,10 @@ func FlowDefinitionActive(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
+		if status, reason := aws.StringValue(output.FlowDefinitionStatus), aws.StringValue(output.FailureReason); status == sagemaker.FlowDefinitionStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -410,9 +410,7 @@ func FlowDefinitionActive(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 // FlowDefinitionDeleted waits for a FlowDefinition to return Deleted
 func FlowDefinitionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			sagemaker.FlowDefinitionStatusDeleting,
-		},
+		Pending: []string{sagemaker.FlowDefinitionStatusDeleting},
 		Target:  []string{},
 		Refresh: FlowDefinitionStatus(conn, name),
 		Timeout: FlowDefinitionDeletedTimeout,
@@ -421,6 +419,10 @@ func FlowDefinitionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.D
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
+		if status, reason := aws.StringValue(output.FlowDefinitionStatus), aws.StringValue(output.FailureReason); status == sagemaker.FlowDefinitionStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
