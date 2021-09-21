@@ -12,7 +12,7 @@ Use this data source to get a list of AWS Cloudwatch Log Groups
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cloudwatch_log_groups" "example" {
   log_group_prefix = "/MyImportantLogs"
 }
@@ -28,5 +28,5 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arns` - The ARNs of the Cloudwatch log groups
-* `log_group_names` - The names of the Cloudwatch log groups
+* `arns` - Set of ARNs of the Cloudwatch log groups
+* `log_group_names` - Set of names of the Cloudwatch log groups
