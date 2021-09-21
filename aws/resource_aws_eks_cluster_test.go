@@ -174,7 +174,7 @@ func TestAccAWSEksCluster_EncryptionConfig_Create(t *testing.T) {
 }
 
 func TestAccAWSEksCluster_EncryptionConfig_Update(t *testing.T) {
-	var cluster eks.Cluster
+	var cluster1, cluster2 eks.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_cluster.test"
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -188,14 +188,15 @@ func TestAccAWSEksCluster_EncryptionConfig_Update(t *testing.T) {
 			{
 				Config: testAccAWSEksClusterConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksClusterExists(resourceName, &cluster),
+					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSEksClusterConfig_EncryptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksClusterExists(resourceName, &cluster),
+					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_config.0.provider.0.key_arn", kmsKeyResourceName, "arn"),
@@ -206,6 +207,51 @@ func TestAccAWSEksCluster_EncryptionConfig_Update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/19968.
+func TestAccAWSEksCluster_EncryptionConfig_VersionUpdate(t *testing.T) {
+	var cluster1, cluster2 eks.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_cluster.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksClusterConfig_EncryptionConfig_Version(rName, "1.19"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_config.0.provider.0.key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksClusterConfig_EncryptionConfig_Version(rName, "1.20"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_config.0.provider.0.key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
+				),
 			},
 		},
 	})
@@ -814,6 +860,35 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName))
+}
+
+func testAccAWSEksClusterConfig_EncryptionConfig_Version(rName, version string) string {
+	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  version  = %[2]q
+
+  encryption_config {
+    resources = ["secrets"]
+
+    provider {
+      key_arn = aws_kms_key.test.arn
+    }
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName, version))
 }
 
 func testAccAWSEksClusterConfig_VpcConfig_SecurityGroupIds(rName string) string {

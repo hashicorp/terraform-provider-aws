@@ -14,6 +14,8 @@ bug:
   - "(doesn't support update|failed to satisfy constraint: Member must not be null|Invalid address to set|panic:|produced an (invalid|unexpected) new value|Provider produced inconsistent (final plan|result after apply))"
 crash:
   - 'panic:'
+sweeper:
+  - 'sweeper'
 #
 # AWS Per-Service Labeling
 #
@@ -246,6 +248,8 @@ service/mediastore:
   - '((\*|-) ?`?|(data|resource) "?)aws_media_store_'
 service/mediatailor:
   - '((\*|-) ?`?|(data|resource) "?)aws_media_tailor_'
+service/memorydb:
+  - '((\*|-) ?`?|(data|resource) "?)aws_memorydb_'
 service/mobile:
   - '((\*|-) ?`?|(data|resource) "?)aws_mobile_'
 service/mq:
@@ -294,6 +298,10 @@ service/route53:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53_(?!resolver_)'
 service/route53domains:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53domains_'
+service/route53recoverycontrolconfig:
+  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoverycontrolconfig_'  
+service/route53recoveryreadiness:
+  - '((\*|-) ?`?|(data|resource) "?)aws_route53recoveryreadiness_'
 service/route53resolver:
   - '((\*|-) ?`?|(data|resource) "?)aws_route53_resolver_'
 service/s3:

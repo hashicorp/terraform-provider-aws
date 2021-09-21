@@ -1,6 +1,10 @@
 package eks
 
 const (
+	IdentityProviderConfigTypeOidc = "oidc"
+)
+
+const (
 	ResourcesSecrets = "secrets"
 )
 

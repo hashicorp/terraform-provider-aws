@@ -8,12 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 )
 
-const (
-	TableNameAllTables        = "ALL_TABLES"
-	TableTypeTable            = "Table"
-	TableTypeTableWithColumns = "TableWithColumns"
-)
-
 func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	// For most Lake Formation resources, filtering within the provider is unnecessary. The input
 	// contains everything for AWS to give you back exactly what you want. However, many challenges
@@ -29,29 +23,29 @@ func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType stri
 	// permissions in the special cases to avoid extra permissions being included.
 
 	if input.Resource.Catalog != nil {
-		return FilterLakeFormationCatalogPermissions(allPermissions)
+		return FilterLakeFormationCatalogPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if input.Resource.DataLocation != nil {
-		return FilterLakeFormationDataLocationPermissions(allPermissions)
+		return FilterLakeFormationDataLocationPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if input.Resource.Database != nil {
-		return FilterLakeFormationDatabasePermissions(allPermissions)
+		return FilterLakeFormationDatabasePermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if tableType == TableTypeTableWithColumns {
-		return FilterLakeFormationTableWithColumnsPermissions(input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+		return FilterLakeFormationTableWithColumnsPermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 	}
 
 	if input.Resource.Table != nil || tableType == TableTypeTable {
-		return FilterLakeFormationTablePermissions(input.Resource.Table, allPermissions)
+		return FilterLakeFormationTablePermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, allPermissions)
 	}
 
 	return nil
 }
 
-func FilterLakeFormationTablePermissions(table *lakeformation.TableResource, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterLakeFormationTablePermissions(principal *string, table *lakeformation.TableResource, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	// CREATE PERMS (in)     = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT, SELECT on Table, Name = (Table Name)
 	//      LIST PERMS (out) = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT         on Table, Name = (Table Name)
 	//      LIST PERMS (out) = SELECT                                             on TableWithColumns, Name = (Table Name), ColumnWildcard
@@ -63,6 +57,10 @@ func FilterLakeFormationTablePermissions(table *lakeformation.TableResource, all
 	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
+		if aws.StringValue(principal) != aws.StringValue(perm.Principal.DataLakePrincipalIdentifier) {
+			continue
+		}
+
 		if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
 			if aws.StringValue(perm.Resource.TableWithColumns.Name) == aws.StringValue(table.Name) || (table.TableWildcard != nil && aws.StringValue(perm.Resource.TableWithColumns.Name) == TableNameAllTables) {
 				if len(perm.Permissions) > 0 && aws.StringValue(perm.Permissions[0]) == lakeformation.PermissionSelect {
@@ -94,7 +92,7 @@ func FilterLakeFormationTablePermissions(table *lakeformation.TableResource, all
 	return cleanPermissions
 }
 
-func FilterLakeFormationTableWithColumnsPermissions(twc *lakeformation.TableResource, columnNames []*string, excludedColumnNames []*string, columnWildcard bool, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterLakeFormationTableWithColumnsPermissions(principal *string, twc *lakeformation.TableResource, columnNames []*string, excludedColumnNames []*string, columnWildcard bool, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	// CREATE PERMS (in)       = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT, SELECT on TableWithColumns, Name = (Table Name), ColumnWildcard
 	//        LIST PERMS (out) = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT         on Table, Name = (Table Name)
 	//        LIST PERMS (out) = SELECT                                             on TableWithColumns, Name = (Table Name), ColumnWildcard
@@ -102,6 +100,10 @@ func FilterLakeFormationTableWithColumnsPermissions(twc *lakeformation.TableReso
 	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
+		if aws.StringValue(principal) != aws.StringValue(perm.Principal.DataLakePrincipalIdentifier) {
+			continue
+		}
+
 		if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnNames != nil {
 			if StringSlicesEqualIgnoreOrder(perm.Resource.TableWithColumns.ColumnNames, columnNames) {
 				cleanPermissions = append(cleanPermissions, perm)
@@ -130,10 +132,14 @@ func FilterLakeFormationTableWithColumnsPermissions(twc *lakeformation.TableReso
 	return cleanPermissions
 }
 
-func FilterLakeFormationCatalogPermissions(allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterLakeFormationCatalogPermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
+		if aws.StringValue(principal) != aws.StringValue(perm.Principal.DataLakePrincipalIdentifier) {
+			continue
+		}
+
 		if perm.Resource.Catalog != nil {
 			cleanPermissions = append(cleanPermissions, perm)
 		}
@@ -142,10 +148,14 @@ func FilterLakeFormationCatalogPermissions(allPermissions []*lakeformation.Princ
 	return cleanPermissions
 }
 
-func FilterLakeFormationDataLocationPermissions(allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterLakeFormationDataLocationPermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
+		if aws.StringValue(principal) != aws.StringValue(perm.Principal.DataLakePrincipalIdentifier) {
+			continue
+		}
+
 		if perm.Resource.DataLocation != nil {
 			cleanPermissions = append(cleanPermissions, perm)
 		}
@@ -154,10 +164,14 @@ func FilterLakeFormationDataLocationPermissions(allPermissions []*lakeformation.
 	return cleanPermissions
 }
 
-func FilterLakeFormationDatabasePermissions(allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterLakeFormationDatabasePermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
+		if aws.StringValue(principal) != aws.StringValue(perm.Principal.DataLakePrincipalIdentifier) {
+			continue
+		}
+
 		if perm.Resource.Database != nil {
 			cleanPermissions = append(cleanPermissions, perm)
 		}

@@ -3,6 +3,7 @@ package waiter
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -16,6 +17,10 @@ func PermissionsStatus(conn *lakeformation.LakeFormation, input *lakeformation.L
 		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
 				if permission == nil {
+					continue
+				}
+
+				if aws.StringValue(input.Principal.DataLakePrincipalIdentifier) != aws.StringValue(permission.Principal.DataLakePrincipalIdentifier) {
 					continue
 				}
 

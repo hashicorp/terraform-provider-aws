@@ -32,19 +32,23 @@ resource "aws_vpc" "mainvpc" {
 resource "aws_default_security_group" "default" {
   vpc_id = aws_vpc.mainvpc.id
 
-  ingress {
-    protocol  = -1
-    self      = true
-    from_port = 0
-    to_port   = 0
-  }
+  ingress = [
+    {
+      protocol  = -1
+      self      = true
+      from_port = 0
+      to_port   = 0
+    }
+  ]
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  egress = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
 }
 ```
 
@@ -60,12 +64,14 @@ resource "aws_vpc" "mainvpc" {
 resource "aws_default_security_group" "default" {
   vpc_id = aws_vpc.mainvpc.id
 
-  ingress {
-    protocol  = -1
-    self      = true
-    from_port = 0
-    to_port   = 0
-  }
+  ingress = [
+    {
+      protocol  = -1
+      self      = true
+      from_port = 0
+      to_port   = 0
+    }
+  ]
 }
 ```
 
@@ -84,7 +90,9 @@ The following arguments are optional:
 
 ### egress and ingress
 
-Both the `egress` and `ingress` configuration blocks have the same arguments.
+Both arguments are processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+Both `egress` and `ingress` objects have the same arguments.
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `description` - (Optional) Description of this rule.

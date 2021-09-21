@@ -5,14 +5,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsApiGatewayDomainName_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	dataSourceName := "data.aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	rName := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)

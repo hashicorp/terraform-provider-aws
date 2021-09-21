@@ -13,7 +13,9 @@ import (
 func TestAccDataSourceAwsGlueConnection_basic(t *testing.T) {
 	resourceName := "aws_glue_connection.test"
 	datasourceName := "data.aws_glue_connection.test"
-	rName := fmt.Sprintf("tf-testacc-glue-connection-%s", acctest.RandString(13))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
@@ -21,7 +23,7 @@ func TestAccDataSourceAwsGlueConnection_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsGlueConnectionConfig(rName),
+				Config: testAccDataSourceAwsGlueConnectionConfig(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsGlueConnectionCheck(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
@@ -49,20 +51,21 @@ func testAccDataSourceAwsGlueConnectionCheck(name string) resource.TestCheckFunc
 	}
 }
 
-func testAccDataSourceAwsGlueConnectionConfig(rName string) string {
+func testAccDataSourceAwsGlueConnectionConfig(rName, jdbcConnectionUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_connection" "test" {
+  name = %[1]q
+
   connection_properties = {
-    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    JDBC_CONNECTION_URL = %[2]q
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
 
-  name = "%s"
 }
 
 data "aws_glue_connection" "test" {
   id = aws_glue_connection.test.id
 }
-`, rName)
+`, rName, jdbcConnectionUrl)
 }

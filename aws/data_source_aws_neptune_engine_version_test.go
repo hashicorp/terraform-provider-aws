@@ -12,7 +12,7 @@ import (
 
 func TestAccAWSNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
-	version := "1.0.1.0"
+	version := "1.0.2.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAWSNeptuneEngineVersionPreCheck(t) },

@@ -7,11 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEfsFileSystem() *schema.Resource {
@@ -112,8 +115,13 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"transition_to_ia": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice(efs.TransitionToIARules_Values(), false),
+						},
+						"transition_to_primary_storage_class": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(efs.TransitionToPrimaryStorageClassRules_Values(), false),
 						},
 					},
 				},
@@ -188,20 +196,18 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		return errors.New("encrypted must be set to true when kms_key_id is specified")
 	}
 
-	log.Printf("[DEBUG] EFS file system create options: %#v", *createOpts)
+	log.Printf("[DEBUG] Creating EFS file system: %s", createOpts)
 	fs, err := conn.CreateFileSystem(createOpts)
+
 	if err != nil {
-		return fmt.Errorf("Error creating EFS file system: %w", err)
+		return fmt.Errorf("error creating EFS file system: %w", err)
 	}
 
 	d.SetId(aws.StringValue(fs.FileSystemId))
-	log.Printf("[INFO] EFS file system ID: %s", d.Id())
 
 	if _, err := waiter.FileSystemAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EFS file system (%s) to be available: %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] EFS file system %q created.", d.Id())
 
 	_, hasLifecyclePolicy := d.GetOk("lifecycle_policy")
 	if hasLifecyclePolicy {
@@ -209,9 +215,9 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 			FileSystemId:      aws.String(d.Id()),
 			LifecyclePolicies: expandEfsFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
 		})
+
 		if err != nil {
-			return fmt.Errorf("Error creating lifecycle policy for EFS file system %q: %s",
-				d.Id(), err.Error())
+			return fmt.Errorf("error creating EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -234,6 +240,7 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		_, err := conn.UpdateFileSystem(input)
+
 		if err != nil {
 			return fmt.Errorf("error updating EFS file system (%s): %w", d.Id(), err)
 		}
@@ -257,9 +264,9 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		_, err := conn.PutLifecycleConfiguration(input)
+
 		if err != nil {
-			return fmt.Errorf("Error updating lifecycle policy for EFS file system %q: %s",
-				d.Id(), err.Error())
+			return fmt.Errorf("error updating EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -279,33 +286,16 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
-		FileSystemId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
-			log.Printf("[WARN] EFS file system (%s) could not be found.", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
+	fs, err := finder.FileSystemByID(conn, d.Id())
 
-	if hasEmptyFileSystems(resp) {
-		return fmt.Errorf("EFS file system %q could not be found.", d.Id())
-	}
-
-	var fs *efs.FileSystemDescription
-	for _, f := range resp.FileSystems {
-		if d.Id() == *f.FileSystemId {
-			fs = f
-			break
-		}
-	}
-	if fs == nil {
-		log.Printf("[WARN] EFS File System (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EFS file system (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading EFS file system (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", fs.FileSystemArn)
@@ -340,8 +330,9 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
 	}
 
 	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
@@ -358,28 +349,23 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
-			return nil
-		}
-		return fmt.Errorf("Error delete file system: %s with err %s", d.Id(), err.Error())
+		return fmt.Errorf("error deleting EFS file system (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.FileSystemDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for EFS file system (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {
-	if fs != nil && len(fs.FileSystems) > 0 {
-		return false
-	}
-	return true
 }
 
 func flattenEfsFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []interface{} {
@@ -394,6 +380,10 @@ func flattenEfsFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []
 
 		if apiObject.TransitionToIA != nil {
 			tfMap["transition_to_ia"] = aws.StringValue(apiObject.TransitionToIA)
+		}
+
+		if apiObject.TransitionToPrimaryStorageClass != nil {
+			tfMap["transition_to_primary_storage_class"] = aws.StringValue(apiObject.TransitionToPrimaryStorageClass)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -416,6 +406,10 @@ func expandEfsFileSystemLifecyclePolicies(tfList []interface{}) []*efs.Lifecycle
 
 		if v, ok := tfMap["transition_to_ia"].(string); ok && v != "" {
 			apiObject.TransitionToIA = aws.String(v)
+		}
+
+		if v, ok := tfMap["transition_to_primary_storage_class"].(string); ok && v != "" {
+			apiObject.TransitionToPrimaryStorageClass = aws.String(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)

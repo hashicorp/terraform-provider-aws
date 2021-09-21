@@ -80,11 +80,11 @@ func ServerStopped(conn *transfer.Transfer, id string, timeout time.Duration) (*
 	return nil, err
 }
 
-func UserDeleted(conn *transfer.Transfer, serverId, userName string) (*transfer.DescribedUser, error) {
+func UserDeleted(conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"Available"},
+		Pending: []string{userStateExists},
 		Target:  []string{},
-		Refresh: UserState(conn, serverId, userName),
+		Refresh: UserState(conn, serverID, userName),
 		Timeout: UserDeletedTimeout,
 	}
 

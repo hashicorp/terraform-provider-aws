@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	ec2finder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -469,27 +470,17 @@ func testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGr
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		input := &ec2.DescribeSecurityGroupsInput{
-			Filters: buildEC2AttributeFilterList(
-				map[string]string{
-					"group-name": "GlobalAccelerator",
-					"vpc-id":     aws.StringValue(vpc.VpcId),
-				},
-			),
+		sg, err := ec2finder.SecurityGroupByNameAndVpcID(conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
+		if tfresource.NotFound(err) {
+			// Already gone.
+			return nil
 		}
-
-		output, err := conn.DescribeSecurityGroups(input)
 		if err != nil {
 			return err
 		}
 
-		if len(output.SecurityGroups) == 0 {
-			// Already gone.
-			return nil
-		}
-
 		_, err = conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: output.SecurityGroups[0].GroupId,
+			GroupId: sg.GroupId,
 		})
 		if err != nil {
 			return err

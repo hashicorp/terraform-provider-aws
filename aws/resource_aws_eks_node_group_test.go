@@ -63,6 +63,10 @@ func testSweepEksNodeGroups(region string) error {
 				return !lastPage
 			})
 
+			if testSweepSkipSweepError(err) {
+				continue
+			}
+
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Node Groups (%s): %w", region, err))
 			}
@@ -128,6 +132,7 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", eksClusterResourceName, "version"),
 				),
 			},
@@ -599,6 +604,11 @@ func TestAccAWSEksNodeGroup_RemoteAccess_Ec2SshKey(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
@@ -606,7 +616,7 @@ func TestAccAWSEksNodeGroup_RemoteAccess_Ec2SshKey(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName),
+				Config: testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "1"),
@@ -627,6 +637,11 @@ func TestAccAWSEksNodeGroup_RemoteAccess_SourceSecurityGroupIds(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_node_group.test"
 
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
 		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
@@ -634,7 +649,7 @@ func TestAccAWSEksNodeGroup_RemoteAccess_SourceSecurityGroupIds(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName),
+				Config: testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "1"),
@@ -928,6 +943,44 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 						"value":  "value2",
 						"effect": "NO_SCHEDULE",
 					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEksNodeGroup_UpdateConfig(t *testing.T) {
+	var nodeGroup1 eks.Nodegroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksNodeGroupConfigUpdateConfig1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksNodeGroupConfigUpdateConfig2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "0"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "40"),
 				),
 			},
 		},
@@ -1832,11 +1885,11 @@ resource "aws_eks_node_group" "test" {
 `, rName))
 }
 
-func testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName string) string {
+func testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName, publicKey string) string {
 	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 example@example.com"
+  public_key = %[2]q
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1861,14 +1914,14 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName))
+`, rName, publicKey))
 }
 
-func testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName string) string {
+func testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName, publicKey string) string {
 	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 example@example.com"
+  public_key = %[2]q
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1894,7 +1947,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName))
+`, rName, publicKey))
 }
 
 func testAccAWSEksNodeGroupConfigScalingConfigSizes(rName string, desiredSize, maxSize, minSize int) string {
@@ -2037,6 +2090,60 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 `, rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2))
+}
+
+func testAccAWSEksNodeGroupConfigUpdateConfig1(rName string) string {
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+  ]
+}
+`, rName))
+}
+
+func testAccAWSEksNodeGroupConfigUpdateConfig2(rName string) string {
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  update_config {
+    max_unavailable_percentage = 40
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+  ]
+}
+`, rName))
 }
 
 func testAccAWSEksNodeGroupConfigVersion(rName, version string) string {
