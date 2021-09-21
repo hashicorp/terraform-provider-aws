@@ -12,11 +12,6 @@ import (
 )
 
 const (
-	// TODO Remove?
-	// ClusterCreatedTimeout = 120 * time.Minute
-	// ClusterUpdatedTimeout = 120 * time.Minute
-	// ClusterDeletedTimeout = 120 * time.Minute
-
 	ConfigurationDeletedTimeout = 5 * time.Minute
 )
 
@@ -31,9 +26,10 @@ func ClusterCreated(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafk
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*kafka.ClusterInfo); ok {
-		// Ideally we would look at output.StateInfo if the state was FAILED
-		//  https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-stateinfo
-		// but for some reason it's not exposed in the SDK model.
+		if state, stateInfo := aws.StringValue(output.State), output.StateInfo; state == kafka.ClusterStateFailed && stateInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateInfo.Code), aws.StringValue(stateInfo.Message)))
+		}
+
 		return output, err
 	}
 
@@ -51,9 +47,10 @@ func ClusterDeleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafk
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*kafka.ClusterInfo); ok {
-		// Ideally we would look at output.StateInfo if the state was FAILED
-		//  https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-stateinfo
-		// but for some reason it's not exposed in the SDK model.
+		if state, stateInfo := aws.StringValue(output.State), output.StateInfo; state == kafka.ClusterStateFailed && stateInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateInfo.Code), aws.StringValue(stateInfo.Message)))
+		}
+
 		return output, err
 	}
 
