@@ -379,8 +379,9 @@ Supported arguments for the `core_instance_group` configuration block:
 
 * `instance_type` - (Required) EC2 instance type for all instances in the instance group.
 * `autoscaling_policy` - (Optional) String containing the [EMR Auto Scaling Policy](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html) JSON.
-* `bid_price` - (Optional) Bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
+* `bid_price` - (Optional) If set, the bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance and will implicitly create a Spot request. If not set while `market` is configured to `SPOT`, the maximum price is set equal to the On-Demand price.
 * `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
+* `market` - (Optional) The instance purchasing option. Valid values are `ON_DEMAND` or `SPOT`. Defaults to `ON_DEMAND` unless `bid_price` is set to a non-empty value.
 * `instance_count` - (Optional) Target number of instances for the instance group. Must be at least 1. Defaults to 1.
 * `name` - (Optional) Friendly name given to the instance group.
 
@@ -428,9 +429,10 @@ Attributes for Kerberos configuration
 Supported nested arguments for the `master_instance_group` configuration block:
 
 * `instance_type` - (Required) EC2 instance type for all instances in the instance group.
-* `bid_price` - (Optional) Bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
+* `bid_price` - (Optional) If set, the bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance and will implicitly create a Spot request. If not set while `market` is configured to `SPOT`, the maximum price is set equal to the On-Demand price.
 * `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
 * `instance_count` - (Optional) Target number of instances for the instance group. Must be 1 or 3. Defaults to 1. Launching with multiple master nodes is only supported in EMR version 5.23.0+, and requires this resource's `core_instance_group` to be configured. Public (Internet accessible) instances must be created in VPC subnets that have [map public IP on launch](/docs/providers/aws/r/subnet.html#map_public_ip_on_launch) enabled. Termination protection is automatically enabled when launched with multiple master nodes and Terraform must have the `termination_protection = false` configuration applied before destroying this resource.
+* `market` - (Optional) The instance purchasing option. Valid values are `ON_DEMAND` or `SPOT`. Defaults to `ON_DEMAND` unless `bid_price` is set to a non-empty value.
 * `name` - (Optional) Friendly name given to the instance group.
 
 ## ebs_config
