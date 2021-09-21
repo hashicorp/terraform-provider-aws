@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -346,12 +347,11 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 }
 
 func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *testing.T) {
-	TestAccSkip(t, "Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
-
 	var cluster1 kafka.ClusterInfo
+	var ca acmpca.CertificateAuthority
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_cluster.test"
-
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -360,13 +360,22 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
+			// We need to create and activate the CA before creating the MSK cluster.
+			{
+				Config: testAccMskClusterConfigRootCA(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
+				),
+			},
 			{
 				Config: testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.0.tls.0.certificate_authority_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
 				),
 			},
 			{
@@ -376,6 +385,14 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 				ImportStateVerifyIgnore: []string{
 					"current_version",
 				},
+			},
+			{
+				Config: testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1080,19 +1097,29 @@ resource "aws_msk_cluster" "test" {
 `, rName, t))
 }
 
-func testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+func testAccMskClusterConfigRootCA(commonName string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = %[2]q
+      common_name = %[1]q
     }
   }
 }
+`, commonName)
+}
 
+func testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName string) string {
+	return composeConfig(
+		testAccMskClusterBaseConfig(rName),
+		testAccMskClusterConfigRootCA(commonName),
+		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
