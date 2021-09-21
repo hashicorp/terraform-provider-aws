@@ -79,6 +79,10 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"transition_to_primary_storage_class": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -145,16 +149,7 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
 	d.Set("performance_mode", fs.PerformanceMode)
-
-	fsARN := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(fs.FileSystemId)),
-		Service:   "elasticfilesystem",
-	}.String()
-
-	d.Set("arn", fsARN)
+	d.Set("arn", fs.FileSystemArn)
 	d.Set("file_system_id", fs.FileSystemId)
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
