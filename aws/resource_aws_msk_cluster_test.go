@@ -131,6 +131,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
 					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
 					testCheckResourceAttrIsSortedCsv(resourceName, "zookeeper_connect_string"),
+					testCheckResourceAttrIsSortedCsv(resourceName, "zookeeper_connect_string_tls"),
 				),
 			},
 			{
