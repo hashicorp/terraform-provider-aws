@@ -169,6 +169,7 @@ func TestAccAWSEc2TransitGateway_serial(t *testing.T) {
 			"SharedTransitGateway": testAccAWSEc2TransitGatewayVpcAttachment_SharedTransitGateway,
 			"SubnetIds":            testAccAWSEc2TransitGatewayVpcAttachment_SubnetIds,
 			"Tags":                 testAccAWSEc2TransitGatewayVpcAttachment_Tags,
+			"TransitGatewayDefaultRouteTableAssociation":                       testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAssociation,
 			"TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
 			"TransitGatewayDefaultRouteTablePropagation":                       testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTablePropagation,
 		},
