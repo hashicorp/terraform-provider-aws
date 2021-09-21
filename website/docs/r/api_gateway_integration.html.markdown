@@ -12,7 +12,7 @@ Provides an HTTP Method Integration for an API Gateway Integration.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
@@ -57,7 +57,7 @@ EOF
 
 ## Lambda integration
 
-```hcl
+```terraform
 # Variables
 variable "myregion" {}
 
@@ -106,11 +106,8 @@ resource "aws_lambda_function" "lambda" {
   function_name = "mylambda"
   role          = aws_iam_role.role.arn
   handler       = "lambda.lambda_handler"
-  runtime       = "python2.7"
+  runtime       = "python3.6"
 
-  # The filebase64sha256() function is available in Terraform 0.11.12 and later
-  # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
-  # source_code_hash = "${base64sha256(file("lambda.zip"))}"
   source_code_hash = filebase64sha256("lambda.zip")
 }
 
@@ -138,7 +135,7 @@ POLICY
 
 ## VPC Link
 
-```hcl
+```terraform
 variable "name" {}
 variable "subnet_id" {}
 
@@ -236,6 +233,10 @@ The following arguments are supported:
 The `tls_config` configuration block supports the following arguments:
 
 * `insecure_skip_verification` - (Optional) Specifies whether or not API Gateway skips verification that the certificate for an integration endpoint is issued by a [supported certificate authority](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-supported-certificate-authorities-for-http-endpoints.html). This isn’t recommended, but it enables you to use certificates that are signed by private certificate authorities, or certificates that are self-signed. If enabled, API Gateway still performs basic certificate validation, which includes checking the certificate's expiration date, hostname, and presence of a root certificate authority. Supported only for `HTTP` and `HTTP_PROXY` integrations.
+
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_efs_file_system: Add `lifecycle_policy.transition_to_primary_storage_class` argument to support Intelligent-Tiering
+```

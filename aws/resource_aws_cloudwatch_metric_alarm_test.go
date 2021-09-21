@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
 )
 
 func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
@@ -19,6 +20,7 @@ func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -29,8 +31,18 @@ func TestAccAWSCloudWatchMetricAlarm_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metric_name", "CPUUtilization"),
 					resource.TestCheckResourceAttr(resourceName, "statistic", "Average"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", regexp.MustCompile(`alarm:.+`)),
-					testAccCheckCloudWatchMetricAlarmDimension(resourceName, "InstanceId", "i-abc123"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_description", "This metric monitors ec2 cpu utilization"),
+					resource.TestCheckResourceAttr(resourceName, "threshold", "80"),
+					resource.TestCheckResourceAttr(resourceName, "period", "120"),
+					resource.TestCheckResourceAttr(resourceName, "namespace", "AWS/EC2"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "comparison_operator", "GreaterThanOrEqualToThreshold"),
+					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", "0"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_periods", "2"),
+					resource.TestCheckResourceAttr(resourceName, "insufficient_data_actions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dimensions.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dimensions.InstanceId", "i-abc123"),
 				),
 			},
 			{
@@ -49,6 +61,7 @@ func TestAccAWSCloudWatchMetricAlarm_AlarmActions_EC2Automate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -96,6 +109,7 @@ func TestAccAWSCloudWatchMetricAlarm_AlarmActions_SNSTopic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -122,6 +136,7 @@ func TestAccAWSCloudWatchMetricAlarm_AlarmActions_SWFAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -148,6 +163,7 @@ func TestAccAWSCloudWatchMetricAlarm_datapointsToAlarm(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -169,6 +185,7 @@ func TestAccAWSCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -197,6 +214,7 @@ func TestAccAWSCloudWatchMetricAlarm_evaluateLowSampleCountPercentiles(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -225,6 +243,7 @@ func TestAccAWSCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -246,6 +265,7 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -258,6 +278,13 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchMetricAlarmConfigWithCrossAccountMetric(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", "account_id"),
 				),
 			},
 			{
@@ -301,6 +328,7 @@ func TestAccAWSCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -319,6 +347,7 @@ func TestAccAWSCloudWatchMetricAlarm_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -363,6 +392,7 @@ func TestAccAWSCloudWatchMetricAlarm_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
 		Steps: []resource.TestStep{
@@ -378,24 +408,6 @@ func TestAccAWSCloudWatchMetricAlarm_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudWatchMetricAlarmDimension(n, k, v string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-		key := fmt.Sprintf("dimensions.%s", k)
-		val, ok := rs.Primary.Attributes[key]
-		if !ok {
-			return fmt.Errorf("Could not find dimension: %s", k)
-		}
-		if val != v {
-			return fmt.Errorf("Expected dimension %s => %s; got: %s", k, v, val)
-		}
-		return nil
-	}
-}
-
 func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricAlarm) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -404,17 +416,14 @@ func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricA
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
-		params := cloudwatch.DescribeAlarmsInput{
-			AlarmNames: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeAlarms(&params)
+		resp, err := finder.MetricAlarmByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		if len(resp.MetricAlarms) == 0 {
+		if resp == nil {
 			return fmt.Errorf("Alarm not found")
 		}
-		*alarm = *resp.MetricAlarms[0]
+		*alarm = *resp
 
 		return nil
 	}
@@ -428,15 +437,9 @@ func testAccCheckAWSCloudWatchMetricAlarmDestroy(s *terraform.State) error {
 			continue
 		}
 
-		params := cloudwatch.DescribeAlarmsInput{
-			AlarmNames: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		resp, err := conn.DescribeAlarms(&params)
-
+		resp, err := finder.MetricAlarmByName(conn, rs.Primary.ID)
 		if err == nil {
-			if len(resp.MetricAlarms) != 0 &&
-				*resp.MetricAlarms[0].AlarmName == rs.Primary.ID {
+			if resp != nil && aws.StringValue(resp.AlarmName) == rs.Primary.ID {
 				return fmt.Errorf("Alarm Still Exists: %s", rs.Primary.ID)
 			}
 		}
@@ -653,6 +656,39 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName)
 }
 
+func testAccAWSCloudWatchMetricAlarmConfigWithCrossAccountMetric(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = "%s"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  metric_query {
+    id          = "m1"
+    account_id  = data.aws_caller_identity.current.account_id
+    return_data = "true"
+
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Average"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
+  }
+}
+`, rName)
+}
+
 func testAccAWSCloudWatchMetricAlarmConfigWithAnomalyDetectionExpression(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
@@ -720,7 +756,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
       period      = "120"
-      stat        = "Average"
+      stat        = "p95.45"
       unit        = "Count"
 
       dimensions = {

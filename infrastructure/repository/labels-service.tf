@@ -19,9 +19,11 @@ variable "service_labels" {
     "applicationdiscoveryservice",
     "applicationinsights",
     "appmesh",
+    "apprunner",
     "appstream",
     "appsync",
     "athena",
+    "auditmanager",
     "autoscaling",
     "autoscalingplans",
     "backup",
@@ -123,6 +125,7 @@ variable "service_labels" {
     "lexmodelbuildingservice",
     "licensemanager",
     "lightsail",
+    "location",
     "machinelearning",
     "macie",
     "macie2",
@@ -135,6 +138,7 @@ variable "service_labels" {
     "mediapackagevod",
     "mediastore",
     "mediatailor",
+    "memorydb",
     "meteringmarketplace",
     "mobile",
     "mq",
@@ -160,15 +164,19 @@ variable "service_labels" {
     "rds",
     "redshift",
     "resourcegroups",
+    "resourcegroupstaggingapi",
     "robomaker",
     "route53",
     "route53domains",
+    "route53recoverycontrolconfig",
+    "route53recoveryreadiness",
     "route53resolver",
     "s3",
     "s3control",
     "s3outposts",
     "sagemaker",
     "savingsplans",
+    "schemas",
     "secretsmanager",
     "securityhub",
     "serverlessapplicationrepository",
@@ -215,5 +223,5 @@ resource "github_issue_label" "service" {
 
   repository = "terraform-provider-aws"
   name       = "service/${each.value}"
-  color      = "bfd4f2"
+  color      = "7b42bc" # color:terraform (logomark)
 }

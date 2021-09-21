@@ -12,10 +12,11 @@ import (
 
 func TestAccAWSNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_neptune_engine_version.test"
-	version := "1.0.1.0"
+	version := "1.0.2.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAWSNeptuneEngineVersionPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -43,6 +44,7 @@ func TestAccAWSNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAWSNeptuneEngineVersionPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -62,6 +64,7 @@ func TestAccAWSNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAWSNeptuneEngineVersionPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{

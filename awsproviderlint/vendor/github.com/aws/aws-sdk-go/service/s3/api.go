@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/internal/s3shared/arn"
 	"github.com/aws/aws-sdk-go/private/checksum"
 	"github.com/aws/aws-sdk-go/private/protocol"
@@ -67,7 +68,7 @@ func (c *S3) AbortMultipartUploadRequest(input *AbortMultipartUploadInput) (req 
 
 // AbortMultipartUpload API operation for Amazon Simple Storage Service.
 //
-// This operation aborts a multipart upload. After a multipart upload is aborted,
+// This action aborts a multipart upload. After a multipart upload is aborted,
 // no additional parts can be uploaded using that upload ID. The storage consumed
 // by any previously uploaded parts will be freed. However, if any part uploads
 // are currently in progress, those part uploads might or might not succeed.
@@ -76,10 +77,10 @@ func (c *S3) AbortMultipartUploadRequest(input *AbortMultipartUploadInput) (req 
 //
 // To verify that all parts have been removed, so you don't get charged for
 // the part storage, you should call the ListParts (https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListParts.html)
-// operation and ensure that the parts list is empty.
+// action and ensure that the parts list is empty.
 //
-// For information about permissions required to use the multipart upload API,
-// see Multipart Upload API and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
+// For information about permissions required to use the multipart upload, see
+// Multipart Upload and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
 //
 // The following operations are related to AbortMultipartUpload:
 //
@@ -175,10 +176,10 @@ func (c *S3) CompleteMultipartUploadRequest(input *CompleteMultipartUploadInput)
 // You first initiate the multipart upload and then upload all parts using the
 // UploadPart (https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html)
 // operation. After successfully uploading all relevant parts of an upload,
-// you call this operation to complete the upload. Upon receiving this request,
+// you call this action to complete the upload. Upon receiving this request,
 // Amazon S3 concatenates all the parts in ascending order by part number to
 // create a new object. In the Complete Multipart Upload request, you must provide
-// the parts list. You must ensure that the parts list is complete. This operation
+// the parts list. You must ensure that the parts list is complete. This action
 // concatenates the parts that you provide in the list. For each part in the
 // list, you must provide the part number and the ETag value, returned after
 // that part was uploaded.
@@ -199,7 +200,7 @@ func (c *S3) CompleteMultipartUploadRequest(input *CompleteMultipartUploadInput)
 // Multipart Upload (https://docs.aws.amazon.com/AmazonS3/latest/dev/uploadobjusingmpu.html).
 //
 // For information about permissions required to use the multipart upload API,
-// see Multipart Upload API and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
+// see Multipart Upload and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
 //
 // CompleteMultipartUpload has the following special errors:
 //
@@ -306,10 +307,10 @@ func (c *S3) CopyObjectRequest(input *CopyObjectInput) (req *request.Request, ou
 // Creates a copy of an object that is already stored in Amazon S3.
 //
 // You can store individual objects of up to 5 TB in Amazon S3. You create a
-// copy of your object up to 5 GB in size in a single atomic operation using
-// this API. However, to copy an object greater than 5 GB, you must use the
-// multipart upload Upload Part - Copy API. For more information, see Copy Object
-// Using the REST Multipart Upload API (https://docs.aws.amazon.com/AmazonS3/latest/dev/CopyingObjctsUsingRESTMPUapi.html).
+// copy of your object up to 5 GB in size in a single atomic action using this
+// API. However, to copy an object greater than 5 GB, you must use the multipart
+// upload Upload Part - Copy API. For more information, see Copy Object Using
+// the REST Multipart Upload API (https://docs.aws.amazon.com/AmazonS3/latest/dev/CopyingObjctsUsingRESTMPUapi.html).
 //
 // All copy requests must be authenticated. Additionally, you must have read
 // access to the source object and write access to the destination bucket. For
@@ -319,7 +320,7 @@ func (c *S3) CopyObjectRequest(input *CopyObjectInput) (req *request.Request, ou
 //
 // A copy request might return an error when Amazon S3 receives the copy request
 // or while Amazon S3 is copying the files. If the error occurs before the copy
-// operation starts, you receive a standard Amazon S3 error. If the error occurs
+// action starts, you receive a standard Amazon S3 error. If the error occurs
 // during the copy operation, the error response is embedded in the 200 OK response.
 // This means that a 200 OK response can contain either a success or an error.
 // Design your application to parse the contents of the response and handle
@@ -334,7 +335,7 @@ func (c *S3) CopyObjectRequest(input *CopyObjectInput) (req *request.Request, ou
 //
 // The copy request charge is based on the storage class and Region that you
 // specify for the destination object. For pricing information, see Amazon S3
-// pricing (https://aws.amazon.com/s3/pricing/).
+// pricing (http://aws.amazon.com/s3/pricing/).
 //
 // Amazon S3 transfer acceleration does not support cross-Region copies. If
 // you request a cross-Region copy using a transfer acceleration endpoint, you
@@ -355,9 +356,8 @@ func (c *S3) CopyObjectRequest(input *CopyObjectInput) (req *request.Request, ou
 // use the s3:x-amz-metadata-directive condition key to enforce certain metadata
 // behavior when objects are uploaded. For more information, see Specifying
 // Conditions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/amazon-s3-policy-keys.html)
-// in the Amazon S3 Developer Guide. For a complete list of Amazon S3-specific
-// condition keys, see Actions, Resources, and Condition Keys for Amazon S3
-// (https://docs.aws.amazon.com/AmazonS3/latest/dev/list_amazons3.html).
+// in the Amazon S3 User Guide. For a complete list of Amazon S3-specific condition
+// keys, see Actions, Resources, and Condition Keys for Amazon S3 (https://docs.aws.amazon.com/AmazonS3/latest/dev/list_amazons3.html).
 //
 //  x-amz-copy-source-if Headers
 //
@@ -396,32 +396,32 @@ func (c *S3) CopyObjectRequest(input *CopyObjectInput) (req *request.Request, ou
 //
 // When you perform a CopyObject operation, you can optionally use the appropriate
 // encryption-related headers to encrypt the object using server-side encryption
-// with AWS managed encryption keys (SSE-S3 or SSE-KMS) or a customer-provided
-// encryption key. With server-side encryption, Amazon S3 encrypts your data
-// as it writes it to disks in its data centers and decrypts the data when you
-// access it. For more information about server-side encryption, see Using Server-Side
-// Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html).
+// with Amazon Web Services managed encryption keys (SSE-S3 or SSE-KMS) or a
+// customer-provided encryption key. With server-side encryption, Amazon S3
+// encrypts your data as it writes it to disks in its data centers and decrypts
+// the data when you access it. For more information about server-side encryption,
+// see Using Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html).
 //
 // If a target object uses SSE-KMS, you can enable an S3 Bucket Key for the
 // object. For more information, see Amazon S3 Bucket Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Access Control List (ACL)-Specific Request Headers
 //
 // When copying an object, you can optionally use headers to grant ACL-based
 // permissions. By default, all objects are private. Only the owner has full
 // access control. When adding a new object, you can grant permissions to individual
-// AWS accounts or to predefined groups defined by Amazon S3. These permissions
-// are then added to the ACL on the object. For more information, see Access
-// Control List (ACL) Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html)
+// Amazon Web Services accounts or to predefined groups defined by Amazon S3.
+// These permissions are then added to the ACL on the object. For more information,
+// see Access Control List (ACL) Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html)
 // and Managing ACLs Using the REST API (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-using-rest-api.html).
 //
 // Storage Class Options
 //
-// You can use the CopyObject operation to change the storage class of an object
+// You can use the CopyObject action to change the storage class of an object
 // that is already stored in Amazon S3 using the StorageClass parameter. For
 // more information, see Storage Classes (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html)
-// in the Amazon S3 Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Versioning
 //
@@ -459,8 +459,8 @@ func (c *S3) CopyObjectRequest(input *CopyObjectInput) (req *request.Request, ou
 //
 // Returned Error Codes:
 //   * ErrCodeObjectNotInActiveTierError "ObjectNotInActiveTierError"
-//   The source object of the COPY operation is not in the active tier and is
-//   only stored in Amazon S3 Glacier.
+//   The source object of the COPY action is not in the active tier and is only
+//   stored in Amazon S3 Glacier.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/CopyObject
 func (c *S3) CopyObject(input *CopyObjectInput) (*CopyObjectOutput, error) {
@@ -529,12 +529,12 @@ func (c *S3) CreateBucketRequest(input *CreateBucketInput) (req *request.Request
 // CreateBucket API operation for Amazon Simple Storage Service.
 //
 // Creates a new S3 bucket. To create a bucket, you must register with Amazon
-// S3 and have a valid AWS Access Key ID to authenticate requests. Anonymous
-// requests are never allowed to create buckets. By creating the bucket, you
-// become the bucket owner.
+// S3 and have a valid Amazon Web Services Access Key ID to authenticate requests.
+// Anonymous requests are never allowed to create buckets. By creating the bucket,
+// you become the bucket owner.
 //
 // Not every string is an acceptable bucket name. For information about bucket
-// naming restrictions, see Working with Amazon S3 buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html).
+// naming restrictions, see Bucket naming rules (https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
 //
 // If you want to create an Amazon S3 on Outposts bucket, see Create Bucket
 // (https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_CreateBucket.html).
@@ -571,21 +571,33 @@ func (c *S3) CreateBucketRequest(input *CreateBucketInput) (req *request.Request
 //    (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html). You
 //    specify each grantee as a type=value pair, where the type is one of the
 //    following: id – if the value specified is the canonical user ID of an
-//    AWS account uri – if you are granting permissions to a predefined group
-//    emailAddress – if the value specified is the email address of an AWS
-//    account Using email addresses to specify a grantee is only supported in
-//    the following AWS Regions: US East (N. Virginia) US West (N. California)
-//    US West (Oregon) Asia Pacific (Singapore) Asia Pacific (Sydney) Asia Pacific
-//    (Tokyo) Europe (Ireland) South America (São Paulo) For a list of all
-//    the Amazon S3 supported Regions and endpoints, see Regions and Endpoints
-//    (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) in
-//    the AWS General Reference. For example, the following x-amz-grant-read
-//    header grants the AWS accounts identified by account IDs permissions to
-//    read object data and its metadata: x-amz-grant-read: id="11112222333",
-//    id="444455556666"
+//    Amazon Web Services account uri – if you are granting permissions to
+//    a predefined group emailAddress – if the value specified is the email
+//    address of an Amazon Web Services account Using email addresses to specify
+//    a grantee is only supported in the following Amazon Web Services Regions:
+//    US East (N. Virginia) US West (N. California) US West (Oregon) Asia Pacific
+//    (Singapore) Asia Pacific (Sydney) Asia Pacific (Tokyo) Europe (Ireland)
+//    South America (São Paulo) For a list of all the Amazon S3 supported Regions
+//    and endpoints, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
+//    in the Amazon Web Services General Reference. For example, the following
+//    x-amz-grant-read header grants the Amazon Web Services accounts identified
+//    by account IDs permissions to read object data and its metadata: x-amz-grant-read:
+//    id="11112222333", id="444455556666"
 //
 // You can use either a canned ACL or specify access permissions explicitly.
 // You cannot do both.
+//
+// Permissions
+//
+// If your CreateBucket request specifies ACL permissions and the ACL is public-read,
+// public-read-write, authenticated-read, or if you specify access permissions
+// explicitly through any other ACL, both s3:CreateBucket and s3:PutBucketAcl
+// permissions are needed. If the ACL the CreateBucket request is private, only
+// s3:CreateBucket permission is needed.
+//
+// If ObjectLockEnabledForBucket is set to true in your CreateBucket request,
+// s3:PutBucketObjectLockConfiguration and s3:PutBucketVersioning permissions
+// are required.
 //
 // The following operations are related to CreateBucket:
 //
@@ -607,10 +619,10 @@ func (c *S3) CreateBucketRequest(input *CreateBucketInput) (req *request.Request
 //
 //   * ErrCodeBucketAlreadyOwnedByYou "BucketAlreadyOwnedByYou"
 //   The bucket you tried to create already exists, and you own it. Amazon S3
-//   returns this error in all AWS Regions except in the North Virginia Region.
-//   For legacy compatibility, if you re-create an existing bucket that you already
-//   own in the North Virginia Region, Amazon S3 returns 200 OK and resets the
-//   bucket access control lists (ACLs).
+//   returns this error in all Amazon Web Services Regions except in the North
+//   Virginia Region. For legacy compatibility, if you re-create an existing bucket
+//   that you already own in the North Virginia Region, Amazon S3 returns 200
+//   OK and resets the bucket access control lists (ACLs).
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/CreateBucket
 func (c *S3) CreateBucket(input *CreateBucketInput) (*CreateBucketOutput, error) {
@@ -678,10 +690,10 @@ func (c *S3) CreateMultipartUploadRequest(input *CreateMultipartUploadInput) (re
 
 // CreateMultipartUpload API operation for Amazon Simple Storage Service.
 //
-// This operation initiates a multipart upload and returns an upload ID. This
-// upload ID is used to associate all of the parts in the specific multipart
-// upload. You specify this upload ID in each of your subsequent upload part
-// requests (see UploadPart (https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html)).
+// This action initiates a multipart upload and returns an upload ID. This upload
+// ID is used to associate all of the parts in the specific multipart upload.
+// You specify this upload ID in each of your subsequent upload part requests
+// (see UploadPart (https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html)).
 // You also include this upload ID in the final request to either complete or
 // abort the multipart upload request.
 //
@@ -691,19 +703,19 @@ func (c *S3) CreateMultipartUploadRequest(input *CreateMultipartUploadInput) (re
 // If you have configured a lifecycle rule to abort incomplete multipart uploads,
 // the upload must complete within the number of days specified in the bucket
 // lifecycle configuration. Otherwise, the incomplete multipart upload becomes
-// eligible for an abort operation and Amazon S3 aborts the multipart upload.
-// For more information, see Aborting Incomplete Multipart Uploads Using a Bucket
+// eligible for an abort action and Amazon S3 aborts the multipart upload. For
+// more information, see Aborting Incomplete Multipart Uploads Using a Bucket
 // Lifecycle Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuoverview.html#mpu-abort-incomplete-mpu-lifecycle-config).
 //
 // For information about the permissions required to use the multipart upload
-// API, see Multipart Upload API and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
+// API, see Multipart Upload and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
 //
 // For request signing, multipart upload is just a series of regular requests.
 // You initiate a multipart upload, send one or more requests to upload parts,
 // and then complete the multipart upload process. You sign each request individually.
 // There is nothing special about signing multipart upload requests. For more
-// information about signing, see Authenticating Requests (AWS Signature Version
-// 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html).
+// information about signing, see Authenticating Requests (Amazon Web Services
+// Signature Version 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html).
 //
 // After you initiate a multipart upload and upload one or more parts, to stop
 // being charged for storing the uploaded parts, you must either complete or
@@ -714,24 +726,26 @@ func (c *S3) CreateMultipartUploadRequest(input *CreateMultipartUploadInput) (re
 // You can optionally request server-side encryption. For server-side encryption,
 // Amazon S3 encrypts your data as it writes it to disks in its data centers
 // and decrypts it when you access it. You can provide your own encryption key,
-// or use AWS Key Management Service (AWS KMS) customer master keys (CMKs) or
-// Amazon S3-managed encryption keys. If you choose to provide your own encryption
-// key, the request headers you provide in UploadPart (AmazonS3/latest/API/API_UploadPart.html)
+// or use Amazon Web Services KMS keys or Amazon S3-managed encryption keys.
+// If you choose to provide your own encryption key, the request headers you
+// provide in UploadPart (https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html)
 // and UploadPartCopy (https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPartCopy.html)
 // requests must match the headers you used in the request to initiate the upload
 // by using CreateMultipartUpload.
 //
-// To perform a multipart upload with encryption using an AWS KMS CMK, the requester
-// must have permission to the kms:Encrypt, kms:Decrypt, kms:ReEncrypt*, kms:GenerateDataKey*,
-// and kms:DescribeKey actions on the key. These permissions are required because
-// Amazon S3 must decrypt and read data from the encrypted file parts before
-// it completes the multipart upload.
+// To perform a multipart upload with encryption using an Amazon Web Services
+// KMS key, the requester must have permission to the kms:Decrypt and kms:GenerateDataKey*
+// actions on the key. These permissions are required because Amazon S3 must
+// decrypt and read data from the encrypted file parts before it completes the
+// multipart upload. For more information, see Multipart upload API and permissions
+// (https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html#mpuAndPermissions)
+// in the Amazon S3 User Guide.
 //
-// If your AWS Identity and Access Management (IAM) user or role is in the same
-// AWS account as the AWS KMS CMK, then you must have these permissions on the
-// key policy. If your IAM user or role belongs to a different account than
-// the key, then you must have the permissions on both the key policy and your
-// IAM user or role.
+// If your Identity and Access Management (IAM) user or role is in the same
+// Amazon Web Services account as the KMS key, then you must have these permissions
+// on the key policy. If your IAM user or role belongs to a different account
+// than the key, then you must have the permissions on both the key policy and
+// your IAM user or role.
 //
 // For more information, see Protecting Data Using Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html).
 //
@@ -758,35 +772,37 @@ func (c *S3) CreateMultipartUploadRequest(input *CreateMultipartUploadInput) (re
 // encryption. Server-side encryption is for data encryption at rest. Amazon
 // S3 encrypts your data as it writes it to disks in its data centers and decrypts
 // it when you access it. The option you use depends on whether you want to
-// use AWS managed encryption keys or provide your own encryption key.
+// use Amazon Web Services managed encryption keys or provide your own encryption
+// key.
 //
-//    * Use encryption keys managed by Amazon S3 or customer master keys (CMKs)
-//    stored in AWS Key Management Service (AWS KMS) – If you want AWS to
-//    manage the keys used to encrypt data, specify the following headers in
-//    the request. x-amz-server-side-encryption x-amz-server-side-encryption-aws-kms-key-id
-//    x-amz-server-side-encryption-context If you specify x-amz-server-side-encryption:aws:kms,
-//    but don't provide x-amz-server-side-encryption-aws-kms-key-id, Amazon
-//    S3 uses the AWS managed CMK in AWS KMS to protect the data. All GET and
-//    PUT requests for an object protected by AWS KMS fail if you don't make
-//    them with SSL or by using SigV4. For more information about server-side
-//    encryption with CMKs stored in AWS KMS (SSE-KMS), see Protecting Data
-//    Using Server-Side Encryption with CMKs stored in AWS KMS (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html).
+//    * Use encryption keys managed by Amazon S3 or customer managed key stored
+//    in Amazon Web Services Key Management Service (Amazon Web Services KMS)
+//    – If you want Amazon Web Services to manage the keys used to encrypt
+//    data, specify the following headers in the request. x-amz-server-side-encryption
+//    x-amz-server-side-encryption-aws-kms-key-id x-amz-server-side-encryption-context
+//    If you specify x-amz-server-side-encryption:aws:kms, but don't provide
+//    x-amz-server-side-encryption-aws-kms-key-id, Amazon S3 uses the Amazon
+//    Web Services managed key in Amazon Web Services KMS to protect the data.
+//    All GET and PUT requests for an object protected by Amazon Web Services
+//    KMS fail if you don't make them with SSL or by using SigV4. For more information
+//    about server-side encryption with KMS key (SSE-KMS), see Protecting Data
+//    Using Server-Side Encryption with KMS keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html).
 //
 //    * Use customer-provided encryption keys – If you want to manage your
 //    own encryption keys, provide all the following headers in the request.
 //    x-amz-server-side-encryption-customer-algorithm x-amz-server-side-encryption-customer-key
 //    x-amz-server-side-encryption-customer-key-MD5 For more information about
-//    server-side encryption with CMKs stored in AWS KMS (SSE-KMS), see Protecting
-//    Data Using Server-Side Encryption with CMKs stored in AWS KMS (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html).
+//    server-side encryption with KMS keys (SSE-KMS), see Protecting Data Using
+//    Server-Side Encryption with KMS keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html).
 //
 // Access-Control-List (ACL)-Specific Request Headers
 //
 // You also can use the following access control–related headers with this
 // operation. By default, all objects are private. Only the owner has full access
 // control. When adding a new object, you can grant permissions to individual
-// AWS accounts or to predefined groups defined by Amazon S3. These permissions
-// are then added to the access control list (ACL) on the object. For more information,
-// see Using ACLs (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3_ACLs_UsingACLs.html).
+// Amazon Web Services accounts or to predefined groups defined by Amazon S3.
+// These permissions are then added to the access control list (ACL) on the
+// object. For more information, see Using ACLs (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3_ACLs_UsingACLs.html).
 // With this operation, you can grant access permissions using one of the following
 // two methods:
 //
@@ -795,26 +811,27 @@ func (c *S3) CreateMultipartUploadRequest(input *CreateMultipartUploadInput) (re
 //    and permissions. For more information, see Canned ACL (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#CannedACL).
 //
 //    * Specify access permissions explicitly — To explicitly grant access
-//    permissions to specific AWS accounts or groups, use the following headers.
-//    Each header maps to specific permissions that Amazon S3 supports in an
-//    ACL. For more information, see Access Control List (ACL) Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html).
+//    permissions to specific Amazon Web Services accounts or groups, use the
+//    following headers. Each header maps to specific permissions that Amazon
+//    S3 supports in an ACL. For more information, see Access Control List (ACL)
+//    Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html).
 //    In the header, you specify a list of grantees who get the specific permission.
 //    To grant permissions explicitly, use: x-amz-grant-read x-amz-grant-write
 //    x-amz-grant-read-acp x-amz-grant-write-acp x-amz-grant-full-control You
 //    specify each grantee as a type=value pair, where the type is one of the
 //    following: id – if the value specified is the canonical user ID of an
-//    AWS account uri – if you are granting permissions to a predefined group
-//    emailAddress – if the value specified is the email address of an AWS
-//    account Using email addresses to specify a grantee is only supported in
-//    the following AWS Regions: US East (N. Virginia) US West (N. California)
-//    US West (Oregon) Asia Pacific (Singapore) Asia Pacific (Sydney) Asia Pacific
-//    (Tokyo) Europe (Ireland) South America (São Paulo) For a list of all
-//    the Amazon S3 supported Regions and endpoints, see Regions and Endpoints
-//    (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) in
-//    the AWS General Reference. For example, the following x-amz-grant-read
-//    header grants the AWS accounts identified by account IDs permissions to
-//    read object data and its metadata: x-amz-grant-read: id="11112222333",
-//    id="444455556666"
+//    Amazon Web Services account uri – if you are granting permissions to
+//    a predefined group emailAddress – if the value specified is the email
+//    address of an Amazon Web Services account Using email addresses to specify
+//    a grantee is only supported in the following Amazon Web Services Regions:
+//    US East (N. Virginia) US West (N. California) US West (Oregon) Asia Pacific
+//    (Singapore) Asia Pacific (Sydney) Asia Pacific (Tokyo) Europe (Ireland)
+//    South America (São Paulo) For a list of all the Amazon S3 supported Regions
+//    and endpoints, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
+//    in the Amazon Web Services General Reference. For example, the following
+//    x-amz-grant-read header grants the Amazon Web Services accounts identified
+//    by account IDs permissions to read object data and its metadata: x-amz-grant-read:
+//    id="11112222333", id="444455556666"
 //
 // The following operations are related to CreateMultipartUpload:
 //
@@ -989,8 +1006,8 @@ func (c *S3) DeleteBucketAnalyticsConfigurationRequest(input *DeleteBucketAnalyt
 // To use this operation, you must have permissions to perform the s3:PutAnalyticsConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // For information about the Amazon S3 analytics feature, see Amazon S3 Analytics
 // – Storage Class Analysis (https://docs.aws.amazon.com/AmazonS3/latest/dev/analytics-storage-class.html).
@@ -1083,7 +1100,7 @@ func (c *S3) DeleteBucketCorsRequest(input *DeleteBucketCorsInput) (req *request
 // permission to others.
 //
 // For information about cors, see Enabling Cross-Origin Resource Sharing (https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Related Resources:
 //
@@ -1164,17 +1181,17 @@ func (c *S3) DeleteBucketEncryptionRequest(input *DeleteBucketEncryptionInput) (
 
 // DeleteBucketEncryption API operation for Amazon Simple Storage Service.
 //
-// This implementation of the DELETE operation removes default encryption from
+// This implementation of the DELETE action removes default encryption from
 // the bucket. For information about the Amazon S3 default encryption feature,
 // see Amazon S3 Default Bucket Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // To use this operation, you must have permissions to perform the s3:PutEncryptionConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html)
+// in the Amazon S3 User Guide.
 //
 // Related Resources
 //
@@ -1259,20 +1276,21 @@ func (c *S3) DeleteBucketIntelligentTieringConfigurationRequest(input *DeleteBuc
 //
 // The S3 Intelligent-Tiering storage class is designed to optimize storage
 // costs by automatically moving data to the most cost-effective storage access
-// tier, without additional operational overhead. S3 Intelligent-Tiering delivers
-// automatic cost savings by moving data between access tiers, when access patterns
-// change.
+// tier, without performance impact or operational overhead. S3 Intelligent-Tiering
+// delivers automatic cost savings in two low latency and high throughput access
+// tiers. For data that can be accessed asynchronously, you can choose to activate
+// automatic archiving capabilities within the S3 Intelligent-Tiering storage
+// class.
 //
-// The S3 Intelligent-Tiering storage class is suitable for objects larger than
-// 128 KB that you plan to store for at least 30 days. If the size of an object
-// is less than 128 KB, it is not eligible for auto-tiering. Smaller objects
-// can be stored, but they are always charged at the frequent access tier rates
-// in the S3 Intelligent-Tiering storage class.
+// The S3 Intelligent-Tiering storage class is the ideal storage class for data
+// with unknown, changing, or unpredictable access patterns, independent of
+// object size or retention period. If the size of an object is less than 128
+// KB, it is not eligible for auto-tiering. Smaller objects can be stored, but
+// they are always charged at the Frequent Access tier rates in the S3 Intelligent-Tiering
+// storage class.
 //
-// If you delete an object before the end of the 30-day minimum storage duration
-// period, you are charged for 30 days. For more information, see Storage class
-// for automatically optimizing frequently and infrequently accessed objects
-// (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-dynamic-data-access).
+// For more information, see Storage class for automatically optimizing frequently
+// and infrequently accessed objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-dynamic-data-access).
 //
 // Operations related to DeleteBucketIntelligentTieringConfiguration include:
 //
@@ -1361,8 +1379,8 @@ func (c *S3) DeleteBucketInventoryConfigurationRequest(input *DeleteBucketInvent
 // To use this operation, you must have permissions to perform the s3:PutInventoryConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // For information about the Amazon S3 inventory feature, see Amazon S3 Inventory
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html).
@@ -1550,8 +1568,8 @@ func (c *S3) DeleteBucketMetricsConfigurationRequest(input *DeleteBucketMetricsC
 // To use this operation, you must have permissions to perform the s3:PutMetricsConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // For information about CloudWatch request metrics for Amazon S3, see Monitoring
 // Metrics with Amazon CloudWatch (https://docs.aws.amazon.com/AmazonS3/latest/dev/cloudwatch-monitoring.html).
@@ -1725,20 +1743,20 @@ func (c *S3) DeleteBucketPolicyRequest(input *DeleteBucketPolicyInput) (req *req
 
 // DeleteBucketPolicy API operation for Amazon Simple Storage Service.
 //
-// This implementation of the DELETE operation uses the policy subresource to
-// delete the policy of a specified bucket. If you are using an identity other
-// than the root user of the AWS account that owns the bucket, the calling identity
-// must have the DeleteBucketPolicy permissions on the specified bucket and
-// belong to the bucket owner's account to use this operation.
+// This implementation of the DELETE action uses the policy subresource to delete
+// the policy of a specified bucket. If you are using an identity other than
+// the root user of the Amazon Web Services account that owns the bucket, the
+// calling identity must have the DeleteBucketPolicy permissions on the specified
+// bucket and belong to the bucket owner's account to use this operation.
 //
 // If you don't have DeleteBucketPolicy permissions, Amazon S3 returns a 403
 // Access Denied error. If you have the correct permissions, but you're not
 // using an identity that belongs to the bucket owner's account, Amazon S3 returns
 // a 405 Method Not Allowed error.
 //
-// As a security precaution, the root user of the AWS account that owns a bucket
-// can always use this operation, even if the policy explicitly denies the root
-// user the ability to perform this action.
+// As a security precaution, the root user of the Amazon Web Services account
+// that owns a bucket can always use this operation, even if the policy explicitly
+// denies the root user the ability to perform this action.
 //
 // For more information about bucket policies, see Using Bucket Policies and
 // UserPolicies (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-iam-policies.html).
@@ -1827,14 +1845,14 @@ func (c *S3) DeleteBucketReplicationRequest(input *DeleteBucketReplicationInput)
 // To use this operation, you must have permissions to perform the s3:PutReplicationConfiguration
 // action. The bucket owner has these permissions by default and can grant it
 // to others. For more information about permissions, see Permissions Related
-// to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // It can take a while for the deletion of a replication configuration to fully
 // propagate.
 //
 // For information about replication configuration, see Replication (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication.html)
-// in the Amazon S3 Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // The following operations are related to DeleteBucketReplication:
 //
@@ -2000,15 +2018,15 @@ func (c *S3) DeleteBucketWebsiteRequest(input *DeleteBucketWebsiteInput) (req *r
 
 // DeleteBucketWebsite API operation for Amazon Simple Storage Service.
 //
-// This operation removes the website configuration for a bucket. Amazon S3
-// returns a 200 OK response upon successfully deleting a website configuration
-// on the specified bucket. You will get a 200 OK response if the website configuration
+// This action removes the website configuration for a bucket. Amazon S3 returns
+// a 200 OK response upon successfully deleting a website configuration on the
+// specified bucket. You will get a 200 OK response if the website configuration
 // you are trying to delete does not exist on the bucket. Amazon S3 returns
 // a 404 response if the bucket specified in the request does not exist.
 //
-// This DELETE operation requires the S3:DeleteBucketWebsite permission. By
-// default, only the bucket owner can delete the website configuration attached
-// to a bucket. However, bucket owners can grant other users permission to delete
+// This DELETE action requires the S3:DeleteBucketWebsite permission. By default,
+// only the bucket owner can delete the website configuration attached to a
+// bucket. However, bucket owners can grant other users permission to delete
 // the website configuration by writing a bucket policy granting them the S3:DeleteBucketWebsite
 // permission.
 //
@@ -2095,7 +2113,8 @@ func (c *S3) DeleteObjectRequest(input *DeleteObjectInput) (req *request.Request
 //
 // Removes the null version (if there is one) of an object and inserts a delete
 // marker, which becomes the latest version of the object. If there isn't a
-// null version, Amazon S3 does not remove any objects.
+// null version, Amazon S3 does not remove any objects but will still respond
+// that the command was successful.
 //
 // To remove a specific version, you must be the bucket owner and you must use
 // the version Id subresource. Using this subresource permanently deletes the
@@ -2110,14 +2129,14 @@ func (c *S3) DeleteObjectRequest(input *DeleteObjectInput) (req *request.Request
 // For more information about MFA Delete, see Using MFA Delete (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMFADelete.html).
 // To see sample requests that use versioning, see Sample Request (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectDELETE.html#ExampleVersionObjectDelete).
 //
-// You can delete objects by explicitly calling the DELETE Object API or configure
-// its lifecycle (PutBucketLifecycle (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycle.html))
+// You can delete objects by explicitly calling DELETE Object or configure its
+// lifecycle (PutBucketLifecycle (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycle.html))
 // to enable Amazon S3 to remove them for you. If you want to block users or
 // accounts from removing or deleting objects from your bucket, you must deny
 // them the s3:DeleteObject, s3:DeleteObjectVersion, and s3:PutLifeCycleConfiguration
 // actions.
 //
-// The following operation is related to DeleteObject:
+// The following action is related to DeleteObject:
 //
 //    * PutObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html)
 //
@@ -2285,27 +2304,27 @@ func (c *S3) DeleteObjectsRequest(input *DeleteObjectsInput) (req *request.Reque
 
 // DeleteObjects API operation for Amazon Simple Storage Service.
 //
-// This operation enables you to delete multiple objects from a bucket using
-// a single HTTP request. If you know the object keys that you want to delete,
-// then this operation provides a suitable alternative to sending individual
-// delete requests, reducing per-request overhead.
+// This action enables you to delete multiple objects from a bucket using a
+// single HTTP request. If you know the object keys that you want to delete,
+// then this action provides a suitable alternative to sending individual delete
+// requests, reducing per-request overhead.
 //
 // The request contains a list of up to 1000 keys that you want to delete. In
 // the XML, you provide the object key names, and optionally, version IDs if
 // you want to delete a specific version of the object from a versioning-enabled
-// bucket. For each key, Amazon S3 performs a delete operation and returns the
+// bucket. For each key, Amazon S3 performs a delete action and returns the
 // result of that delete, success, or failure, in the response. Note that if
 // the object specified in the request is not found, Amazon S3 returns the result
 // as deleted.
 //
-// The operation supports two modes for the response: verbose and quiet. By
-// default, the operation uses verbose mode in which the response includes the
-// result of deletion of each key in your request. In quiet mode the response
-// includes only keys where the delete operation encountered an error. For a
-// successful deletion, the operation does not return any information about
-// the delete in the response body.
+// The action supports two modes for the response: verbose and quiet. By default,
+// the action uses verbose mode in which the response includes the result of
+// deletion of each key in your request. In quiet mode the response includes
+// only keys where the delete action encountered an error. For a successful
+// deletion, the action does not return any information about the delete in
+// the response body.
 //
-// When performing this operation on an MFA Delete enabled bucket, that attempts
+// When performing this action on an MFA Delete enabled bucket, that attempts
 // to delete any versioned objects, you must include an MFA token. If you do
 // not provide one, the entire request will fail, even if there are non-versioned
 // objects you are trying to delete. If you provide an invalid token, whether
@@ -2404,8 +2423,8 @@ func (c *S3) DeletePublicAccessBlockRequest(input *DeletePublicAccessBlockInput)
 // Removes the PublicAccessBlock configuration for an Amazon S3 bucket. To use
 // this operation, you must have the s3:PutBucketPublicAccessBlock permission.
 // For more information about permissions, see Permissions Related to Bucket
-// Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // The following operations are related to DeletePublicAccessBlock:
 //
@@ -2489,17 +2508,17 @@ func (c *S3) GetBucketAccelerateConfigurationRequest(input *GetBucketAccelerateC
 
 // GetBucketAccelerateConfiguration API operation for Amazon Simple Storage Service.
 //
-// This implementation of the GET operation uses the accelerate subresource
-// to return the Transfer Acceleration state of a bucket, which is either Enabled
+// This implementation of the GET action uses the accelerate subresource to
+// return the Transfer Acceleration state of a bucket, which is either Enabled
 // or Suspended. Amazon S3 Transfer Acceleration is a bucket-level feature that
 // enables you to perform faster data transfers to and from Amazon S3.
 //
 // To use this operation, you must have permission to perform the s3:GetAccelerateConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html)
+// in the Amazon S3 User Guide.
 //
 // You set the Transfer Acceleration state of an existing bucket to Enabled
 // or Suspended by using the PutBucketAccelerateConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketAccelerateConfiguration.html)
@@ -2511,7 +2530,7 @@ func (c *S3) GetBucketAccelerateConfigurationRequest(input *GetBucketAccelerateC
 //
 // For more information about transfer acceleration, see Transfer Acceleration
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/transfer-acceleration.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Related Resources
 //
@@ -2589,7 +2608,7 @@ func (c *S3) GetBucketAclRequest(input *GetBucketAclInput) (req *request.Request
 
 // GetBucketAcl API operation for Amazon Simple Storage Service.
 //
-// This implementation of the GET operation uses the acl subresource to return
+// This implementation of the GET action uses the acl subresource to return
 // the access control list (ACL) of a bucket. To use GET to return the ACL of
 // the bucket, you must have READ_ACP access to the bucket. If READ_ACP permission
 // is granted to the anonymous user, you can return the ACL of the bucket without
@@ -2671,19 +2690,19 @@ func (c *S3) GetBucketAnalyticsConfigurationRequest(input *GetBucketAnalyticsCon
 
 // GetBucketAnalyticsConfiguration API operation for Amazon Simple Storage Service.
 //
-// This implementation of the GET operation returns an analytics configuration
+// This implementation of the GET action returns an analytics configuration
 // (identified by the analytics configuration ID) from the bucket.
 //
 // To use this operation, you must have permissions to perform the s3:GetAnalyticsConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html)
+// in the Amazon S3 User Guide.
 //
 // For information about Amazon S3 analytics feature, see Amazon S3 Analytics
 // – Storage Class Analysis (https://docs.aws.amazon.com/AmazonS3/latest/dev/analytics-storage-class.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Related Resources
 //
@@ -2852,15 +2871,18 @@ func (c *S3) GetBucketEncryptionRequest(input *GetBucketEncryptionInput) (req *r
 
 // GetBucketEncryption API operation for Amazon Simple Storage Service.
 //
-// Returns the default encryption configuration for an Amazon S3 bucket. For
-// information about the Amazon S3 default encryption feature, see Amazon S3
-// Default Bucket Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html).
+// Returns the default encryption configuration for an Amazon S3 bucket. If
+// the bucket does not have a default encryption configuration, GetBucketEncryption
+// returns ServerSideEncryptionConfigurationNotFoundError.
+//
+// For information about the Amazon S3 default encryption feature, see Amazon
+// S3 Default Bucket Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html).
 //
 // To use this operation, you must have permission to perform the s3:GetEncryptionConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // The following operations are related to GetBucketEncryption:
 //
@@ -2944,20 +2966,21 @@ func (c *S3) GetBucketIntelligentTieringConfigurationRequest(input *GetBucketInt
 //
 // The S3 Intelligent-Tiering storage class is designed to optimize storage
 // costs by automatically moving data to the most cost-effective storage access
-// tier, without additional operational overhead. S3 Intelligent-Tiering delivers
-// automatic cost savings by moving data between access tiers, when access patterns
-// change.
+// tier, without performance impact or operational overhead. S3 Intelligent-Tiering
+// delivers automatic cost savings in two low latency and high throughput access
+// tiers. For data that can be accessed asynchronously, you can choose to activate
+// automatic archiving capabilities within the S3 Intelligent-Tiering storage
+// class.
 //
-// The S3 Intelligent-Tiering storage class is suitable for objects larger than
-// 128 KB that you plan to store for at least 30 days. If the size of an object
-// is less than 128 KB, it is not eligible for auto-tiering. Smaller objects
-// can be stored, but they are always charged at the frequent access tier rates
-// in the S3 Intelligent-Tiering storage class.
+// The S3 Intelligent-Tiering storage class is the ideal storage class for data
+// with unknown, changing, or unpredictable access patterns, independent of
+// object size or retention period. If the size of an object is less than 128
+// KB, it is not eligible for auto-tiering. Smaller objects can be stored, but
+// they are always charged at the Frequent Access tier rates in the S3 Intelligent-Tiering
+// storage class.
 //
-// If you delete an object before the end of the 30-day minimum storage duration
-// period, you are charged for 30 days. For more information, see Storage class
-// for automatically optimizing frequently and infrequently accessed objects
-// (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-dynamic-data-access).
+// For more information, see Storage class for automatically optimizing frequently
+// and infrequently accessed objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-dynamic-data-access).
 //
 // Operations related to GetBucketIntelligentTieringConfiguration include:
 //
@@ -3045,8 +3068,8 @@ func (c *S3) GetBucketInventoryConfigurationRequest(input *GetBucketInventoryCon
 // To use this operation, you must have permissions to perform the s3:GetInventoryConfiguration
 // action. The bucket owner has this permission by default and can grant this
 // permission to others. For more information about permissions, see Permissions
-// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // For information about the Amazon S3 inventory feature, see Amazon S3 Inventory
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html).
@@ -3148,8 +3171,8 @@ func (c *S3) GetBucketLifecycleRequest(input *GetBucketLifecycleInput) (req *req
 // To use this operation, you must have permission to perform the s3:GetLifecycleConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // GetBucketLifecycle has the following special error:
 //
@@ -3247,8 +3270,8 @@ func (c *S3) GetBucketLifecycleConfigurationRequest(input *GetBucketLifecycleCon
 // Accordingly, this section describes the latest API. The response describes
 // the new filter element that you can use to specify a filter to select a subset
 // of objects to which the rule applies. If you are using a previous version
-// of the lifecycle configuration, it still works. For the earlier API description,
-// see GetBucketLifecycle (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycle.html).
+// of the lifecycle configuration, it still works. For the earlier action, see
+// GetBucketLifecycle (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycle.html).
 //
 // Returns the lifecycle configuration information set on the bucket. For information
 // about lifecycle configuration, see Object Lifecycle Management (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html).
@@ -3256,8 +3279,8 @@ func (c *S3) GetBucketLifecycleConfigurationRequest(input *GetBucketLifecycleCon
 // To use this operation, you must have permission to perform the s3:GetLifecycleConfiguration
 // action. The bucket owner has this permission, by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // GetBucketLifecycleConfiguration has the following special error:
 //
@@ -3350,6 +3373,9 @@ func (c *S3) GetBucketLocationRequest(input *GetBucketLocationInput) (req *reque
 // information, see CreateBucket (https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html).
 //
 // To use this implementation of the operation, you must be the bucket owner.
+//
+// To use this API against an access point, provide the alias of the access
+// point in place of the bucket name.
 //
 // The following operations are related to GetBucketLocation:
 //
@@ -3516,8 +3542,8 @@ func (c *S3) GetBucketMetricsConfigurationRequest(input *GetBucketMetricsConfigu
 // To use this operation, you must have permissions to perform the s3:GetMetricsConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // For information about CloudWatch request metrics for Amazon S3, see Monitoring
 // Metrics with Amazon CloudWatch (https://docs.aws.amazon.com/AmazonS3/latest/dev/cloudwatch-monitoring.html).
@@ -3689,8 +3715,8 @@ func (c *S3) GetBucketNotificationConfigurationRequest(input *GetBucketNotificat
 //
 // Returns the notification configuration of a bucket.
 //
-// If notifications are not enabled on the bucket, the operation returns an
-// empty NotificationConfiguration element.
+// If notifications are not enabled on the bucket, the action returns an empty
+// NotificationConfiguration element.
 //
 // By default, you must be the bucket owner to read the notification configuration
 // of a bucket. However, the bucket owner can use a bucket policy to grant permission
@@ -3701,7 +3727,7 @@ func (c *S3) GetBucketNotificationConfigurationRequest(input *GetBucketNotificat
 // on a bucket, see Setting Up Notification of Bucket Events (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
 // For more information about bucket policies, see Using Bucket Policies (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-iam-policies.html).
 //
-// The following operation is related to GetBucketNotification:
+// The following action is related to GetBucketNotification:
 //
 //    * PutBucketNotification (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotification.html)
 //
@@ -3863,23 +3889,23 @@ func (c *S3) GetBucketPolicyRequest(input *GetBucketPolicyInput) (req *request.R
 // GetBucketPolicy API operation for Amazon Simple Storage Service.
 //
 // Returns the policy of a specified bucket. If you are using an identity other
-// than the root user of the AWS account that owns the bucket, the calling identity
-// must have the GetBucketPolicy permissions on the specified bucket and belong
-// to the bucket owner's account in order to use this operation.
+// than the root user of the Amazon Web Services account that owns the bucket,
+// the calling identity must have the GetBucketPolicy permissions on the specified
+// bucket and belong to the bucket owner's account in order to use this operation.
 //
 // If you don't have GetBucketPolicy permissions, Amazon S3 returns a 403 Access
 // Denied error. If you have the correct permissions, but you're not using an
 // identity that belongs to the bucket owner's account, Amazon S3 returns a
 // 405 Method Not Allowed error.
 //
-// As a security precaution, the root user of the AWS account that owns a bucket
-// can always use this operation, even if the policy explicitly denies the root
-// user the ability to perform this action.
+// As a security precaution, the root user of the Amazon Web Services account
+// that owns a bucket can always use this operation, even if the policy explicitly
+// denies the root user the ability to perform this action.
 //
 // For more information about bucket policies, see Using Bucket Policies and
 // User Policies (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-iam-policies.html).
 //
-// The following operation is related to GetBucketPolicy:
+// The following action is related to GetBucketPolicy:
 //
 //    * GetObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html)
 //
@@ -4052,11 +4078,11 @@ func (c *S3) GetBucketReplicationRequest(input *GetBucketReplicationInput) (req 
 // can return a wrong result.
 //
 // For information about replication configuration, see Replication (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
-// This operation requires permissions for the s3:GetReplicationConfiguration
-// action. For more information about permissions, see Using Bucket Policies
-// and User Policies (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-iam-policies.html).
+// This action requires permissions for the s3:GetReplicationConfiguration action.
+// For more information about permissions, see Using Bucket Policies and User
+// Policies (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-iam-policies.html).
 //
 // If you include the Filter element in a replication configuration, you must
 // also include the DeleteMarkerReplication and Priority elements. The response
@@ -4405,7 +4431,7 @@ func (c *S3) GetBucketWebsiteRequest(input *GetBucketWebsiteInput) (req *request
 // For more information about hosting websites, see Hosting Websites on Amazon
 // S3 (https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html).
 //
-// This GET operation requires the S3:GetBucketWebsite permission. By default,
+// This GET action requires the S3:GetBucketWebsite permission. By default,
 // only the bucket owner can read the bucket website configuration. However,
 // bucket owners can allow other users to read the website configuration by
 // writing a bucket policy granting them the S3:GetBucketWebsite permission.
@@ -4515,14 +4541,14 @@ func (c *S3) GetObjectRequest(input *GetObjectInput) (req *request.Request, outp
 // Deep Archive storage class, or S3 Intelligent-Tiering Archive or S3 Intelligent-Tiering
 // Deep Archive tiers, before you can retrieve the object you must first restore
 // a copy using RestoreObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_RestoreObject.html).
-// Otherwise, this operation returns an InvalidObjectStateError error. For information
+// Otherwise, this action returns an InvalidObjectStateError error. For information
 // about restoring archived objects, see Restoring Archived Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/restoring-objects.html).
 //
 // Encryption request headers, like x-amz-server-side-encryption, should not
 // be sent for GET requests if your object uses server-side encryption with
-// CMKs stored in AWS KMS (SSE-KMS) or server-side encryption with Amazon S3–managed
-// encryption keys (SSE-S3). If your object does use these types of keys, you’ll
-// get an HTTP 400 BadRequest error.
+// KMS keys (SSE-KMS) or server-side encryption with Amazon S3–managed encryption
+// keys (SSE-S3). If your object does use these types of keys, you’ll get
+// an HTTP 400 BadRequest error.
 //
 // If you encrypt an object by using server-side encryption with customer-provided
 // encryption keys (SSE-C) when you store the object in Amazon S3, then when
@@ -4537,16 +4563,15 @@ func (c *S3) GetObjectRequest(input *GetObjectInput) (req *request.Request, outp
 // For more information about SSE-C, see Server-Side Encryption (Using Customer-Provided
 // Encryption Keys) (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
 //
-// Assuming you have permission to read object tags (permission for the s3:GetObjectVersionTagging
-// action), the response also returns the x-amz-tagging-count header that provides
-// the count of number of tags associated with the object. You can use GetObjectTagging
-// (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectTagging.html)
+// Assuming you have the relevant permission to read object tags, the response
+// also returns the x-amz-tagging-count header that provides the count of number
+// of tags associated with the object. You can use GetObjectTagging (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectTagging.html)
 // to retrieve the tag set associated with an object.
 //
 // Permissions
 //
-// You need the s3:GetObject permission for this operation. For more information,
-// see Specifying Permissions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html).
+// You need the relevant read object (or version) permission for this operation.
+// For more information, see Specifying Permissions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html).
 // If the object you request does not exist, the error Amazon S3 returns depends
 // on whether you also have the s3:ListBucket permission.
 //
@@ -4558,12 +4583,15 @@ func (c *S3) GetObjectRequest(input *GetObjectInput) (req *request.Request, outp
 //
 // Versioning
 //
-// By default, the GET operation returns the current version of an object. To
-// return a different version, use the versionId subresource.
+// By default, the GET action returns the current version of an object. To return
+// a different version, use the versionId subresource.
 //
-// If the current version of the object is a delete marker, Amazon S3 behaves
-// as if the object was deleted and includes x-amz-delete-marker: true in the
-// response.
+//    * You need the s3:GetObjectVersion permission to access a specific version
+//    of an object.
+//
+//    * If the current version of the object is a delete marker, Amazon S3 behaves
+//    as if the object was deleted and includes x-amz-delete-marker: true in
+//    the response.
 //
 // For more information about versioning, see PutBucketVersioning (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketVersioning.html).
 //
@@ -5026,7 +5054,7 @@ func (c *S3) GetObjectTaggingRequest(input *GetObjectTaggingInput) (req *request
 // subresource associated with the object.
 //
 // To use this operation, you must have permission to perform the s3:GetObjectTagging
-// action. By default, the GET operation returns information about current version
+// action. By default, the GET action returns information about current version
 // of an object. For a versioned bucket, you can have multiple versions of an
 // object in your bucket. To retrieve tags of any other version, use the versionId
 // query parameter. You also need permission for the s3:GetObjectVersionTagging
@@ -5038,9 +5066,11 @@ func (c *S3) GetObjectTaggingRequest(input *GetObjectTaggingInput) (req *request
 // For information about the Amazon S3 object tagging feature, see Object Tagging
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-tagging.html).
 //
-// The following operation is related to GetObjectTagging:
+// The following action is related to GetObjectTagging:
 //
 //    * PutObjectTagging (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectTagging.html)
+//
+//    * DeleteObjectTagging (https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjectTagging.html)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5126,7 +5156,7 @@ func (c *S3) GetObjectTorrentRequest(input *GetObjectTorrentInput) (req *request
 //
 // This action is not supported by Amazon S3 on Outposts.
 //
-// The following operation is related to GetObjectTorrent:
+// The following action is related to GetObjectTorrent:
 //
 //    * GetObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html)
 //
@@ -5300,16 +5330,27 @@ func (c *S3) HeadBucketRequest(input *HeadBucketInput) (req *request.Request, ou
 
 // HeadBucket API operation for Amazon Simple Storage Service.
 //
-// This operation is useful to determine if a bucket exists and you have permission
-// to access it. The operation returns a 200 OK if the bucket exists and you
-// have permission to access it. Otherwise, the operation might return responses
-// such as 404 Not Found and 403 Forbidden.
+// This action is useful to determine if a bucket exists and you have permission
+// to access it. The action returns a 200 OK if the bucket exists and you have
+// permission to access it.
+//
+// If the bucket does not exist or you do not have permission to access it,
+// the HEAD request returns a generic 404 Not Found or 403 Forbidden code. A
+// message body is not included, so you cannot determine the exception beyond
+// these error codes.
 //
 // To use this operation, you must have permissions to perform the s3:ListBucket
 // action. The bucket owner has this permission by default and can grant this
 // permission to others. For more information about permissions, see Permissions
-// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
+//
+// To use this API against an access point, you must provide the alias of the
+// access point in place of the bucket name or specify the access point ARN.
+// When using the access point ARN, you must direct requests to the access point
+// hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+// When using the Amazon Web Services SDKs, you provide the ARN in place of
+// the bucket name. For more information see, Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5388,13 +5429,15 @@ func (c *S3) HeadObjectRequest(input *HeadObjectInput) (req *request.Request, ou
 
 // HeadObject API operation for Amazon Simple Storage Service.
 //
-// The HEAD operation retrieves metadata from an object without returning the
-// object itself. This operation is useful if you're only interested in an object's
-// metadata. To use HEAD, you must have READ access to the object.
+// The HEAD action retrieves metadata from an object without returning the object
+// itself. This action is useful if you're only interested in an object's metadata.
+// To use HEAD, you must have READ access to the object.
 //
-// A HEAD request has the same options as a GET operation on an object. The
-// response is identical to the GET response except that there is no response
-// body.
+// A HEAD request has the same options as a GET action on an object. The response
+// is identical to the GET response except that there is no response body. Because
+// of this, if the HEAD request generates an error, it returns a generic 404
+// Not Found or 403 Forbidden code. It is not possible to retrieve the exact
+// exception beyond these error codes.
 //
 // If you encrypt an object by using server-side encryption with customer-provided
 // encryption keys (SSE-C) when you store the object in Amazon S3, then when
@@ -5409,11 +5452,14 @@ func (c *S3) HeadObjectRequest(input *HeadObjectInput) (req *request.Request, ou
 // For more information about SSE-C, see Server-Side Encryption (Using Customer-Provided
 // Encryption Keys) (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
 //
-// Encryption request headers, like x-amz-server-side-encryption, should not
-// be sent for GET requests if your object uses server-side encryption with
-// CMKs stored in AWS KMS (SSE-KMS) or server-side encryption with Amazon S3–managed
-// encryption keys (SSE-S3). If your object does use these types of keys, you’ll
-// get an HTTP 400 BadRequest error.
+//    * Encryption request headers, like x-amz-server-side-encryption, should
+//    not be sent for GET requests if your object uses server-side encryption
+//    with KMS keys (SSE-KMS) or server-side encryption with Amazon S3–managed
+//    encryption keys (SSE-S3). If your object does use these types of keys,
+//    you’ll get an HTTP 400 BadRequest error.
+//
+//    * The last modified property in this case is the creation date of the
+//    object.
 //
 // Request headers are limited to 8 KB in size. For more information, see Common
 // Request Headers (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonRequestHeaders.html).
@@ -5434,8 +5480,8 @@ func (c *S3) HeadObjectRequest(input *HeadObjectInput) (req *request.Request, ou
 //
 // Permissions
 //
-// You need the s3:GetObject permission for this operation. For more information,
-// see Specifying Permissions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html).
+// You need the relevant read object (or version) permission for this operation.
+// For more information, see Specifying Permissions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html).
 // If the object you request does not exist, the error Amazon S3 returns depends
 // on whether you also have the s3:ListBucket permission.
 //
@@ -5445,7 +5491,7 @@ func (c *S3) HeadObjectRequest(input *HeadObjectInput) (req *request.Request, ou
 //    * If you don’t have the s3:ListBucket permission, Amazon S3 returns
 //    an HTTP status code 403 ("access denied") error.
 //
-// The following operation is related to HeadObject:
+// The following action is related to HeadObject:
 //
 //    * GetObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html)
 //
@@ -5527,19 +5573,19 @@ func (c *S3) ListBucketAnalyticsConfigurationsRequest(input *ListBucketAnalytics
 // Lists the analytics configurations for the bucket. You can have up to 1,000
 // analytics configurations per bucket.
 //
-// This operation supports list pagination and does not return more than 100
-// configurations at a time. You should always check the IsTruncated element
-// in the response. If there are no more configurations to list, IsTruncated
-// is set to false. If there are more configurations to list, IsTruncated is
-// set to true, and there will be a value in NextContinuationToken. You use
-// the NextContinuationToken value to continue the pagination of the list by
-// passing the value in continuation-token in the request to GET the next page.
+// This action supports list pagination and does not return more than 100 configurations
+// at a time. You should always check the IsTruncated element in the response.
+// If there are no more configurations to list, IsTruncated is set to false.
+// If there are more configurations to list, IsTruncated is set to true, and
+// there will be a value in NextContinuationToken. You use the NextContinuationToken
+// value to continue the pagination of the list by passing the value in continuation-token
+// in the request to GET the next page.
 //
 // To use this operation, you must have permissions to perform the s3:GetAnalyticsConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // For information about Amazon S3 analytics feature, see Amazon S3 Analytics
 // – Storage Class Analysis (https://docs.aws.amazon.com/AmazonS3/latest/dev/analytics-storage-class.html).
@@ -5628,20 +5674,21 @@ func (c *S3) ListBucketIntelligentTieringConfigurationsRequest(input *ListBucket
 //
 // The S3 Intelligent-Tiering storage class is designed to optimize storage
 // costs by automatically moving data to the most cost-effective storage access
-// tier, without additional operational overhead. S3 Intelligent-Tiering delivers
-// automatic cost savings by moving data between access tiers, when access patterns
-// change.
+// tier, without performance impact or operational overhead. S3 Intelligent-Tiering
+// delivers automatic cost savings in two low latency and high throughput access
+// tiers. For data that can be accessed asynchronously, you can choose to activate
+// automatic archiving capabilities within the S3 Intelligent-Tiering storage
+// class.
 //
-// The S3 Intelligent-Tiering storage class is suitable for objects larger than
-// 128 KB that you plan to store for at least 30 days. If the size of an object
-// is less than 128 KB, it is not eligible for auto-tiering. Smaller objects
-// can be stored, but they are always charged at the frequent access tier rates
-// in the S3 Intelligent-Tiering storage class.
+// The S3 Intelligent-Tiering storage class is the ideal storage class for data
+// with unknown, changing, or unpredictable access patterns, independent of
+// object size or retention period. If the size of an object is less than 128
+// KB, it is not eligible for auto-tiering. Smaller objects can be stored, but
+// they are always charged at the Frequent Access tier rates in the S3 Intelligent-Tiering
+// storage class.
 //
-// If you delete an object before the end of the 30-day minimum storage duration
-// period, you are charged for 30 days. For more information, see Storage class
-// for automatically optimizing frequently and infrequently accessed objects
-// (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-dynamic-data-access).
+// For more information, see Storage class for automatically optimizing frequently
+// and infrequently accessed objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-dynamic-data-access).
 //
 // Operations related to ListBucketIntelligentTieringConfigurations include:
 //
@@ -5726,19 +5773,19 @@ func (c *S3) ListBucketInventoryConfigurationsRequest(input *ListBucketInventory
 // Returns a list of inventory configurations for the bucket. You can have up
 // to 1,000 analytics configurations per bucket.
 //
-// This operation supports list pagination and does not return more than 100
-// configurations at a time. Always check the IsTruncated element in the response.
-// If there are no more configurations to list, IsTruncated is set to false.
-// If there are more configurations to list, IsTruncated is set to true, and
-// there is a value in NextContinuationToken. You use the NextContinuationToken
-// value to continue the pagination of the list by passing the value in continuation-token
+// This action supports list pagination and does not return more than 100 configurations
+// at a time. Always check the IsTruncated element in the response. If there
+// are no more configurations to list, IsTruncated is set to false. If there
+// are more configurations to list, IsTruncated is set to true, and there is
+// a value in NextContinuationToken. You use the NextContinuationToken value
+// to continue the pagination of the list by passing the value in continuation-token
 // in the request to GET the next page.
 //
 // To use this operation, you must have permissions to perform the s3:GetInventoryConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // For information about the Amazon S3 inventory feature, see Amazon S3 Inventory
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html)
@@ -5827,19 +5874,19 @@ func (c *S3) ListBucketMetricsConfigurationsRequest(input *ListBucketMetricsConf
 // are only for the request metrics of the bucket and do not provide information
 // on daily storage metrics. You can have up to 1,000 configurations per bucket.
 //
-// This operation supports list pagination and does not return more than 100
-// configurations at a time. Always check the IsTruncated element in the response.
-// If there are no more configurations to list, IsTruncated is set to false.
-// If there are more configurations to list, IsTruncated is set to true, and
-// there is a value in NextContinuationToken. You use the NextContinuationToken
-// value to continue the pagination of the list by passing the value in continuation-token
+// This action supports list pagination and does not return more than 100 configurations
+// at a time. Always check the IsTruncated element in the response. If there
+// are no more configurations to list, IsTruncated is set to false. If there
+// are more configurations to list, IsTruncated is set to true, and there is
+// a value in NextContinuationToken. You use the NextContinuationToken value
+// to continue the pagination of the list by passing the value in continuation-token
 // in the request to GET the next page.
 //
 // To use this operation, you must have permissions to perform the s3:GetMetricsConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // For more information about metrics configurations and CloudWatch request
 // metrics, see Monitoring Metrics with Amazon CloudWatch (https://docs.aws.amazon.com/AmazonS3/latest/dev/cloudwatch-monitoring.html).
@@ -6004,11 +6051,11 @@ func (c *S3) ListMultipartUploadsRequest(input *ListMultipartUploadsInput) (req 
 
 // ListMultipartUploads API operation for Amazon Simple Storage Service.
 //
-// This operation lists in-progress multipart uploads. An in-progress multipart
+// This action lists in-progress multipart uploads. An in-progress multipart
 // upload is a multipart upload that has been initiated using the Initiate Multipart
 // Upload request, but has not yet been completed or aborted.
 //
-// This operation returns at most 1,000 multipart uploads in the response. 1,000
+// This action returns at most 1,000 multipart uploads in the response. 1,000
 // multipart uploads is the maximum number of uploads a response can include,
 // which is also the default value. You can further limit the number of uploads
 // in a response by specifying the max-uploads parameter in the response. If
@@ -6025,7 +6072,7 @@ func (c *S3) ListMultipartUploadsRequest(input *ListMultipartUploadsInput) (req 
 // Upload (https://docs.aws.amazon.com/AmazonS3/latest/dev/uploadobjusingmpu.html).
 //
 // For information on permissions required to use the multipart upload API,
-// see Multipart Upload API and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
+// see Multipart Upload and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
 //
 // The following operations are related to ListMultipartUploads:
 //
@@ -6172,6 +6219,9 @@ func (c *S3) ListObjectVersionsRequest(input *ListObjectVersionsInput) (req *req
 // Returns metadata about all versions of the objects in a bucket. You can also
 // use request parameters as selection criteria to return metadata about a subset
 // of all the object versions.
+//
+// To use this operation, you must have permissions to perform the s3:ListBucketVersions
+// action. Be aware of the name difference.
 //
 // A 200 OK response can contain valid or invalid XML. Make sure to design your
 // application to parse the contents of the response and handle it appropriately.
@@ -6326,8 +6376,8 @@ func (c *S3) ListObjectsRequest(input *ListObjectsInput) (req *request.Request, 
 // to design your application to parse the contents of the response and handle
 // it appropriately.
 //
-// This API has been revised. We recommend that you use the newer version, ListObjectsV2
-// (https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html),
+// This action has been revised. We recommend that you use the newer version,
+// ListObjectsV2 (https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html),
 // when developing applications. For backward compatibility, Amazon S3 continues
 // to support ListObjects.
 //
@@ -6478,22 +6528,24 @@ func (c *S3) ListObjectsV2Request(input *ListObjectsV2Input) (req *request.Reque
 
 // ListObjectsV2 API operation for Amazon Simple Storage Service.
 //
-// Returns some or all (up to 1,000) of the objects in a bucket. You can use
-// the request parameters as selection criteria to return a subset of the objects
-// in a bucket. A 200 OK response can contain valid or invalid XML. Make sure
-// to design your application to parse the contents of the response and handle
-// it appropriately.
+// Returns some or all (up to 1,000) of the objects in a bucket with each request.
+// You can use the request parameters as selection criteria to return a subset
+// of the objects in a bucket. A 200 OK response can contain valid or invalid
+// XML. Make sure to design your application to parse the contents of the response
+// and handle it appropriately. Objects are returned sorted in an ascending
+// order of the respective key names in the list. For more information about
+// listing objects, see Listing object keys programmatically (https://docs.aws.amazon.com/AmazonS3/latest/userguide/ListingKeysUsingAPIs.html)
 //
 // To use this operation, you must have READ access to the bucket.
 //
-// To use this operation in an AWS Identity and Access Management (IAM) policy,
-// you must have permissions to perform the s3:ListBucket action. The bucket
-// owner has this permission by default and can grant this permission to others.
-// For more information about permissions, see Permissions Related to Bucket
-// Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// To use this action in an Identity and Access Management (IAM) policy, you
+// must have permissions to perform the s3:ListBucket action. The bucket owner
+// has this permission by default and can grant this permission to others. For
+// more information about permissions, see Permissions Related to Bucket Subresource
+// Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
-// This section describes the latest revision of the API. We recommend that
+// This section describes the latest revision of this action. We recommend that
 // you use this revised API for application development. For backward compatibility,
 // Amazon S3 continues to support the prior version of this API, ListObjects
 // (https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html).
@@ -6658,7 +6710,7 @@ func (c *S3) ListPartsRequest(input *ListPartsInput) (req *request.Request, outp
 // Upload (https://docs.aws.amazon.com/AmazonS3/latest/dev/uploadobjusingmpu.html).
 //
 // For information on permissions required to use the multipart upload API,
-// see Multipart Upload API and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
+// see Multipart Upload and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html).
 //
 // The following operations are related to ListParts:
 //
@@ -6804,8 +6856,8 @@ func (c *S3) PutBucketAccelerateConfigurationRequest(input *PutBucketAccelerateC
 // To use this operation, you must have permission to perform the s3:PutAccelerateConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // The Transfer Acceleration state of a bucket can be set to one of the following
 // two values:
@@ -6815,7 +6867,7 @@ func (c *S3) PutBucketAccelerateConfigurationRequest(input *PutBucketAccelerateC
 //    * Suspended – Disables accelerated data transfers to the bucket.
 //
 // The GetBucketAccelerateConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketAccelerateConfiguration.html)
-// operation returns the transfer acceleration state of a bucket.
+// action returns the transfer acceleration state of a bucket.
 //
 // After setting the Transfer Acceleration state of a bucket to Enabled, it
 // might take up to thirty minutes before the data transfer rates to the bucket
@@ -6941,27 +6993,28 @@ func (c *S3) PutBucketAclRequest(input *PutBucketAclInput) (req *request.Request
 //
 //    * Specify access permissions explicitly with the x-amz-grant-read, x-amz-grant-read-acp,
 //    x-amz-grant-write-acp, and x-amz-grant-full-control headers. When using
-//    these headers, you specify explicit access permissions and grantees (AWS
-//    accounts or Amazon S3 groups) who will receive the permission. If you
-//    use these ACL-specific headers, you cannot use the x-amz-acl header to
-//    set a canned ACL. These parameters map to the set of permissions that
+//    these headers, you specify explicit access permissions and grantees (Amazon
+//    Web Services accounts or Amazon S3 groups) who will receive the permission.
+//    If you use these ACL-specific headers, you cannot use the x-amz-acl header
+//    to set a canned ACL. These parameters map to the set of permissions that
 //    Amazon S3 supports in an ACL. For more information, see Access Control
 //    List (ACL) Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html).
 //    You specify each grantee as a type=value pair, where the type is one of
 //    the following: id – if the value specified is the canonical user ID
-//    of an AWS account uri – if you are granting permissions to a predefined
-//    group emailAddress – if the value specified is the email address of
-//    an AWS account Using email addresses to specify a grantee is only supported
-//    in the following AWS Regions: US East (N. Virginia) US West (N. California)
-//    US West (Oregon) Asia Pacific (Singapore) Asia Pacific (Sydney) Asia Pacific
-//    (Tokyo) Europe (Ireland) South America (São Paulo) For a list of all
-//    the Amazon S3 supported Regions and endpoints, see Regions and Endpoints
-//    (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) in
-//    the AWS General Reference. For example, the following x-amz-grant-write
-//    header grants create, overwrite, and delete objects permission to LogDelivery
-//    group predefined by Amazon S3 and two AWS accounts identified by their
-//    email addresses. x-amz-grant-write: uri="http://acs.amazonaws.com/groups/s3/LogDelivery",
-//    id="111122223333", id="555566667777"
+//    of an Amazon Web Services account uri – if you are granting permissions
+//    to a predefined group emailAddress – if the value specified is the email
+//    address of an Amazon Web Services account Using email addresses to specify
+//    a grantee is only supported in the following Amazon Web Services Regions:
+//    US East (N. Virginia) US West (N. California) US West (Oregon) Asia Pacific
+//    (Singapore) Asia Pacific (Sydney) Asia Pacific (Tokyo) Europe (Ireland)
+//    South America (São Paulo) For a list of all the Amazon S3 supported Regions
+//    and endpoints, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
+//    in the Amazon Web Services General Reference. For example, the following
+//    x-amz-grant-write header grants create, overwrite, and delete objects
+//    permission to LogDelivery group predefined by Amazon S3 and two Amazon
+//    Web Services accounts identified by their email addresses. x-amz-grant-write:
+//    uri="http://acs.amazonaws.com/groups/s3/LogDelivery", id="111122223333",
+//    id="555566667777"
 //
 // You can use either a canned ACL or specify access permissions explicitly.
 // You cannot do both.
@@ -6982,12 +7035,12 @@ func (c *S3) PutBucketAclRequest(input *PutBucketAclInput) (req *request.Request
 //    xsi:type="AmazonCustomerByEmail"><EmailAddress><>Grantees@email.com<></EmailAddress>lt;/Grantee>
 //    The grantee is resolved to the CanonicalUser and, in a response to a GET
 //    Object acl request, appears as the CanonicalUser. Using email addresses
-//    to specify a grantee is only supported in the following AWS Regions: US
-//    East (N. Virginia) US West (N. California) US West (Oregon) Asia Pacific
-//    (Singapore) Asia Pacific (Sydney) Asia Pacific (Tokyo) Europe (Ireland)
-//    South America (São Paulo) For a list of all the Amazon S3 supported Regions
-//    and endpoints, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
-//    in the AWS General Reference.
+//    to specify a grantee is only supported in the following Amazon Web Services
+//    Regions: US East (N. Virginia) US West (N. California) US West (Oregon)
+//    Asia Pacific (Singapore) Asia Pacific (Sydney) Asia Pacific (Tokyo) Europe
+//    (Ireland) South America (São Paulo) For a list of all the Amazon S3 supported
+//    Regions and endpoints, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
+//    in the Amazon Web Services General Reference.
 //
 // Related Resources
 //
@@ -7092,8 +7145,8 @@ func (c *S3) PutBucketAnalyticsConfigurationRequest(input *PutBucketAnalyticsCon
 // To use this operation, you must have permissions to perform the s3:PutAnalyticsConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // Special Errors
 //
@@ -7227,7 +7280,7 @@ func (c *S3) PutBucketCorsRequest(input *PutBucketCorsInput) (req *request.Reque
 //
 // For more information about CORS, go to Enabling Cross-Origin Resource Sharing
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) in the Amazon
-// Simple Storage Service Developer Guide.
+// S3 User Guide.
 //
 // Related Resources
 //
@@ -7314,27 +7367,27 @@ func (c *S3) PutBucketEncryptionRequest(input *PutBucketEncryptionInput) (req *r
 
 // PutBucketEncryption API operation for Amazon Simple Storage Service.
 //
-// This operation uses the encryption subresource to configure default encryption
+// This action uses the encryption subresource to configure default encryption
 // and Amazon S3 Bucket Key for an existing bucket.
 //
 // Default encryption for a bucket can use server-side encryption with Amazon
-// S3-managed keys (SSE-S3) or AWS KMS customer master keys (SSE-KMS). If you
-// specify default encryption using SSE-KMS, you can also configure Amazon S3
-// Bucket Key. For information about default encryption, see Amazon S3 default
-// bucket encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html)
-// in the Amazon Simple Storage Service Developer Guide. For more information
-// about S3 Bucket Keys, see Amazon S3 Bucket Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// S3-managed keys (SSE-S3) or customer managed keys (SSE-KMS). If you specify
+// default encryption using SSE-KMS, you can also configure Amazon S3 Bucket
+// Key. For information about default encryption, see Amazon S3 default bucket
+// encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html)
+// in the Amazon S3 User Guide. For more information about S3 Bucket Keys, see
+// Amazon S3 Bucket Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html)
+// in the Amazon S3 User Guide.
 //
-// This operation requires AWS Signature Version 4. For more information, see
-// Authenticating Requests (AWS Signature Version 4) (sig-v4-authenticating-requests.html).
+// This action requires Amazon Web Services Signature Version 4. For more information,
+// see Authenticating Requests (Amazon Web Services Signature Version 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html).
 //
 // To use this operation, you must have permissions to perform the s3:PutEncryptionConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html)
+// in the Amazon S3 User Guide.
 //
 // Related Resources
 //
@@ -7415,24 +7468,26 @@ func (c *S3) PutBucketIntelligentTieringConfigurationRequest(input *PutBucketInt
 
 // PutBucketIntelligentTieringConfiguration API operation for Amazon Simple Storage Service.
 //
-// Puts a S3 Intelligent-Tiering configuration to the specified bucket.
+// Puts a S3 Intelligent-Tiering configuration to the specified bucket. You
+// can have up to 1,000 S3 Intelligent-Tiering configurations per bucket.
 //
 // The S3 Intelligent-Tiering storage class is designed to optimize storage
 // costs by automatically moving data to the most cost-effective storage access
-// tier, without additional operational overhead. S3 Intelligent-Tiering delivers
-// automatic cost savings by moving data between access tiers, when access patterns
-// change.
+// tier, without performance impact or operational overhead. S3 Intelligent-Tiering
+// delivers automatic cost savings in two low latency and high throughput access
+// tiers. For data that can be accessed asynchronously, you can choose to activate
+// automatic archiving capabilities within the S3 Intelligent-Tiering storage
+// class.
 //
-// The S3 Intelligent-Tiering storage class is suitable for objects larger than
-// 128 KB that you plan to store for at least 30 days. If the size of an object
-// is less than 128 KB, it is not eligible for auto-tiering. Smaller objects
-// can be stored, but they are always charged at the frequent access tier rates
-// in the S3 Intelligent-Tiering storage class.
+// The S3 Intelligent-Tiering storage class is the ideal storage class for data
+// with unknown, changing, or unpredictable access patterns, independent of
+// object size or retention period. If the size of an object is less than 128
+// KB, it is not eligible for auto-tiering. Smaller objects can be stored, but
+// they are always charged at the Frequent Access tier rates in the S3 Intelligent-Tiering
+// storage class.
 //
-// If you delete an object before the end of the 30-day minimum storage duration
-// period, you are charged for 30 days. For more information, see Storage class
-// for automatically optimizing frequently and infrequently accessed objects
-// (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-dynamic-data-access).
+// For more information, see Storage class for automatically optimizing frequently
+// and infrequently accessed objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-dynamic-data-access).
 //
 // Operations related to PutBucketIntelligentTieringConfiguration include:
 //
@@ -7441,6 +7496,22 @@ func (c *S3) PutBucketIntelligentTieringConfigurationRequest(input *PutBucketInt
 //    * GetBucketIntelligentTieringConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketIntelligentTieringConfiguration.html)
 //
 //    * ListBucketIntelligentTieringConfigurations (https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBucketIntelligentTieringConfigurations.html)
+//
+// You only need S3 Intelligent-Tiering enabled on a bucket if you want to automatically
+// move objects stored in the S3 Intelligent-Tiering storage class to the Archive
+// Access or Deep Archive Access tier.
+//
+// Special Errors
+//
+//    * HTTP 400 Bad Request Error Code: InvalidArgument Cause: Invalid Argument
+//
+//    * HTTP 400 Bad Request Error Code: TooManyConfigurations Cause: You are
+//    attempting to create a new configuration but have already reached the
+//    1,000-configuration limit.
+//
+//    * HTTP 403 Forbidden Error Code: AccessDenied Cause: You are not the owner
+//    of the specified bucket, or you do not have the s3:PutIntelligentTieringConfiguration
+//    bucket permission to set the configuration on the bucket.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7515,22 +7586,22 @@ func (c *S3) PutBucketInventoryConfigurationRequest(input *PutBucketInventoryCon
 
 // PutBucketInventoryConfiguration API operation for Amazon Simple Storage Service.
 //
-// This implementation of the PUT operation adds an inventory configuration
-// (identified by the inventory ID) to the bucket. You can have up to 1,000
-// inventory configurations per bucket.
+// This implementation of the PUT action adds an inventory configuration (identified
+// by the inventory ID) to the bucket. You can have up to 1,000 inventory configurations
+// per bucket.
 //
 // Amazon S3 inventory generates inventories of the objects in the bucket on
 // a daily or weekly basis, and the results are published to a flat file. The
 // bucket that is inventoried is called the source bucket, and the bucket where
 // the inventory flat file is stored is called the destination bucket. The destination
-// bucket must be in the same AWS Region as the source bucket.
+// bucket must be in the same Amazon Web Services Region as the source bucket.
 //
 // When you configure an inventory for a source bucket, you specify the destination
 // bucket where you want the inventory to be stored, and whether to generate
 // the inventory daily or weekly. You can also configure what object metadata
 // to include and whether to inventory all object versions or only current versions.
 // For more information, see Amazon S3 Inventory (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // You must create a bucket policy on the destination bucket to grant permissions
 // to Amazon S3 to write objects to the bucket in the defined location. For
@@ -7540,9 +7611,9 @@ func (c *S3) PutBucketInventoryConfigurationRequest(input *PutBucketInventoryCon
 // To use this operation, you must have permissions to perform the s3:PutInventoryConfiguration
 // action. The bucket owner has this permission by default and can grant this
 // permission to others. For more information about permissions, see Permissions
-// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html)
+// in the Amazon S3 User Guide.
 //
 // Special Errors
 //
@@ -7654,14 +7725,14 @@ func (c *S3) PutBucketLifecycleRequest(input *PutBucketLifecycleInput) (req *req
 // Creates a new lifecycle configuration for the bucket or replaces an existing
 // lifecycle configuration. For information about lifecycle configuration, see
 // Object Lifecycle Management (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // By default, all Amazon S3 resources, including buckets, objects, and related
 // subresources (for example, lifecycle configuration and website configuration)
-// are private. Only the resource owner, the AWS account that created the resource,
-// can access it. The resource owner can optionally grant access permissions
-// to others by writing an access policy. For this operation, users must get
-// the s3:PutLifecycleConfiguration permission.
+// are private. Only the resource owner, the Amazon Web Services account that
+// created the resource, can access it. The resource owner can optionally grant
+// access permissions to others by writing an access policy. For this operation,
+// users must get the s3:PutLifecycleConfiguration permission.
 //
 // You can also explicitly deny permissions. Explicit denial also supersedes
 // any other permissions. If you want to prevent users or accounts from removing
@@ -7675,8 +7746,8 @@ func (c *S3) PutBucketLifecycleRequest(input *PutBucketLifecycleInput) (req *req
 //    * s3:PutLifecycleConfiguration
 //
 // For more information about permissions, see Managing Access Permissions to
-// your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html)
+// in the Amazon S3 User Guide.
 //
 // For more examples of transitioning objects to storage classes such as STANDARD_IA
 // or ONEZONE_IA, see Examples of Lifecycle Configuration (https://docs.aws.amazon.com/AmazonS3/latest/dev/intro-lifecycle-rules.html#lifecycle-configuration-examples).
@@ -7690,11 +7761,11 @@ func (c *S3) PutBucketLifecycleRequest(input *PutBucketLifecycleInput) (req *req
 //    * RestoreObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_RestoreObject.html)
 //
 //    * By default, a resource owner—in this case, a bucket owner, which is
-//    the AWS account that created the bucket—can perform any of the operations.
-//    A resource owner can also grant others permission to perform the operation.
-//    For more information, see the following topics in the Amazon Simple Storage
-//    Service Developer Guide: Specifying Permissions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html)
-//    Managing Access Permissions to your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
+//    the Amazon Web Services account that created the bucket—can perform
+//    any of the operations. A resource owner can also grant others permission
+//    to perform the operation. For more information, see the following topics
+//    in the Amazon S3 User Guide: Specifying Permissions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html)
+//    Managing Access Permissions to your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7779,7 +7850,7 @@ func (c *S3) PutBucketLifecycleConfigurationRequest(input *PutBucketLifecycleCon
 //
 // Creates a new lifecycle configuration for the bucket or replaces an existing
 // lifecycle configuration. For information about lifecycle configuration, see
-// Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// Managing your storage lifecycle (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html).
 //
 // Bucket lifecycle configuration now supports specifying a lifecycle rule using
 // an object key name prefix, one or more object tags, or a combination of both.
@@ -7814,10 +7885,10 @@ func (c *S3) PutBucketLifecycleConfigurationRequest(input *PutBucketLifecycleCon
 //
 // By default, all Amazon S3 resources are private, including buckets, objects,
 // and related subresources (for example, lifecycle configuration and website
-// configuration). Only the resource owner (that is, the AWS account that created
-// it) can access the resource. The resource owner can optionally grant access
-// permissions to others by writing an access policy. For this operation, a
-// user must get the s3:PutLifecycleConfiguration permission.
+// configuration). Only the resource owner (that is, the Amazon Web Services
+// account that created it) can access the resource. The resource owner can
+// optionally grant access permissions to others by writing an access policy.
+// For this operation, a user must get the s3:PutLifecycleConfiguration permission.
 //
 // You can also explicitly deny permissions. Explicit deny also supersedes any
 // other permissions. If you want to block users or accounts from removing or
@@ -7831,7 +7902,7 @@ func (c *S3) PutBucketLifecycleConfigurationRequest(input *PutBucketLifecycleCon
 //    * s3:PutLifecycleConfiguration
 //
 // For more information about permissions, see Managing Access Permissions to
-// Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // The following are related to PutBucketLifecycleConfiguration:
 //
@@ -7920,8 +7991,8 @@ func (c *S3) PutBucketLoggingRequest(input *PutBucketLoggingInput) (req *request
 //
 // Set the logging parameters for a bucket and to specify permissions for who
 // can view and modify the logging parameters. All logs are saved to buckets
-// in the same AWS Region as the source bucket. To set the logging status of
-// a bucket, you must be the bucket owner.
+// in the same Amazon Web Services Region as the source bucket. To set the logging
+// status of a bucket, you must be the bucket owner.
 //
 // The bucket owner is automatically granted FULL_CONTROL to all logs. You use
 // the Grantee request element to grant access to other people. The Permissions
@@ -8048,8 +8119,8 @@ func (c *S3) PutBucketMetricsConfigurationRequest(input *PutBucketMetricsConfigu
 // To use this operation, you must have permissions to perform the s3:PutMetricsConfiguration
 // action. The bucket owner has this permission by default. The bucket owner
 // can grant this permission to others. For more information about permissions,
-// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// see Permissions Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // For information about CloudWatch request metrics for Amazon S3, see Monitoring
 // Metrics with Amazon CloudWatch (https://docs.aws.amazon.com/AmazonS3/latest/dev/cloudwatch-monitoring.html).
@@ -8058,7 +8129,7 @@ func (c *S3) PutBucketMetricsConfigurationRequest(input *PutBucketMetricsConfigu
 //
 //    * DeleteBucketMetricsConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteBucketMetricsConfiguration.html)
 //
-//    * PutBucketMetricsConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketMetricsConfiguration.html)
+//    * GetBucketMetricsConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketMetricsConfiguration.html)
 //
 //    * ListBucketMetricsConfigurations (https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBucketMetricsConfigurations.html)
 //
@@ -8245,13 +8316,13 @@ func (c *S3) PutBucketNotificationConfigurationRequest(input *PutBucketNotificat
 //
 // </NotificationConfiguration>
 //
-// This operation replaces the existing notification configuration with the
-// configuration you include in the request body.
+// This action replaces the existing notification configuration with the configuration
+// you include in the request body.
 //
 // After Amazon S3 receives this request, it first verifies that any Amazon
 // Simple Notification Service (Amazon SNS) or Amazon Simple Queue Service (Amazon
 // SQS) destination exists, and that the bucket owner has permission to publish
-// to it by sending a test notification. In the case of AWS Lambda destinations,
+// to it by sending a test notification. In the case of Lambda destinations,
 // Amazon S3 verifies that the Lambda function permissions grant Amazon S3 permission
 // to invoke the function from the Amazon S3 bucket. For more information, see
 // Configuring Notifications for Amazon S3 Events (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
@@ -8266,8 +8337,8 @@ func (c *S3) PutBucketNotificationConfigurationRequest(input *PutBucketNotificat
 // The PUT notification is an atomic operation. For example, suppose your notification
 // configuration includes SNS topic, SQS queue, and Lambda function configurations.
 // When you send a PUT request with this configuration, Amazon S3 sends test
-// messages to your SNS topic. If the message fails, the entire PUT operation
-// will fail, and Amazon S3 will not add the configuration to your bucket.
+// messages to your SNS topic. If the message fails, the entire PUT action will
+// fail, and Amazon S3 will not add the configuration to your bucket.
 //
 // Responses
 //
@@ -8276,7 +8347,7 @@ func (c *S3) PutBucketNotificationConfigurationRequest(input *PutBucketNotificat
 // will also include the x-amz-sns-test-message-id header containing the message
 // ID of the test notification sent to the topic.
 //
-// The following operation is related to PutBucketNotificationConfiguration:
+// The following action is related to PutBucketNotificationConfiguration:
 //
 //    * GetBucketNotificationConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketNotificationConfiguration.html)
 //
@@ -8449,21 +8520,21 @@ func (c *S3) PutBucketPolicyRequest(input *PutBucketPolicyInput) (req *request.R
 // PutBucketPolicy API operation for Amazon Simple Storage Service.
 //
 // Applies an Amazon S3 bucket policy to an Amazon S3 bucket. If you are using
-// an identity other than the root user of the AWS account that owns the bucket,
-// the calling identity must have the PutBucketPolicy permissions on the specified
-// bucket and belong to the bucket owner's account in order to use this operation.
+// an identity other than the root user of the Amazon Web Services account that
+// owns the bucket, the calling identity must have the PutBucketPolicy permissions
+// on the specified bucket and belong to the bucket owner's account in order
+// to use this operation.
 //
 // If you don't have PutBucketPolicy permissions, Amazon S3 returns a 403 Access
 // Denied error. If you have the correct permissions, but you're not using an
 // identity that belongs to the bucket owner's account, Amazon S3 returns a
 // 405 Method Not Allowed error.
 //
-// As a security precaution, the root user of the AWS account that owns a bucket
-// can always use this operation, even if the policy explicitly denies the root
-// user the ability to perform this action.
+// As a security precaution, the root user of the Amazon Web Services account
+// that owns a bucket can always use this operation, even if the policy explicitly
+// denies the root user the ability to perform this action.
 //
-// For more information about bucket policies, see Using Bucket Policies and
-// User Policies (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-iam-policies.html).
+// For more information, see Bucket policy examples (https://docs.aws.amazon.com/AmazonS3/latest/userguide/example-bucket-policies.html).
 //
 // The following operations are related to PutBucketPolicy:
 //
@@ -8550,11 +8621,7 @@ func (c *S3) PutBucketReplicationRequest(input *PutBucketReplicationInput) (req 
 //
 // Creates a replication configuration or replaces an existing one. For more
 // information, see Replication (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication.html)
-// in the Amazon S3 Developer Guide.
-//
-// To perform this operation, the user or role performing the operation must
-// have the iam:PassRole (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html)
-// permission.
+// in the Amazon S3 User Guide.
 //
 // Specify the replication configuration in the request body. In the replication
 // configuration, you provide the name of the destination bucket or buckets
@@ -8579,23 +8646,32 @@ func (c *S3) PutBucketReplicationRequest(input *PutBucketReplicationInput) (req 
 // For information about enabling versioning on a bucket, see Using Versioning
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html).
 //
-// By default, a resource owner, in this case the AWS account that created the
-// bucket, can perform this operation. The resource owner can also grant others
-// permissions to perform the operation. For more information about permissions,
-// see Specifying Permissions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
-//
 // Handling Replication of Encrypted Objects
 //
 // By default, Amazon S3 doesn't replicate objects that are stored at rest using
-// server-side encryption with CMKs stored in AWS KMS. To replicate AWS KMS-encrypted
+// server-side encryption with KMS keys. To replicate Amazon Web Services KMS-encrypted
 // objects, add the following: SourceSelectionCriteria, SseKmsEncryptedObjects,
 // Status, EncryptionConfiguration, and ReplicaKmsKeyID. For information about
 // replication configuration, see Replicating Objects Created with SSE Using
-// CMKs stored in AWS KMS (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-config-for-kms-objects.html).
+// KMS keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-config-for-kms-objects.html).
 //
 // For information on PutBucketReplication errors, see List of replication-related
 // error codes (https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html#ReplicationErrorCodeList)
+//
+// Permissions
+//
+// To create a PutBucketReplication request, you must have s3:PutReplicationConfiguration
+// permissions for the bucket.
+//
+// By default, a resource owner, in this case the Amazon Web Services account
+// that created the bucket, can perform this operation. The resource owner can
+// also grant others permissions to perform the operation. For more information
+// about permissions, see Specifying Permissions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
+//
+// To perform this operation, the user or role performing the action must have
+// the iam:PassRole (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html)
+// permission.
 //
 // The following operations are related to PutBucketReplication:
 //
@@ -8771,23 +8847,25 @@ func (c *S3) PutBucketTaggingRequest(input *PutBucketTaggingInput) (req *request
 //
 // Sets the tags for a bucket.
 //
-// Use tags to organize your AWS bill to reflect your own cost structure. To
-// do this, sign up to get your AWS account bill with tag key values included.
-// Then, to see the cost of combined resources, organize your billing information
-// according to resources with the same tag key values. For example, you can
-// tag several resources with a specific application name, and then organize
-// your billing information to see the total cost of that application across
-// several services. For more information, see Cost Allocation and Tagging (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html).
+// Use tags to organize your Amazon Web Services bill to reflect your own cost
+// structure. To do this, sign up to get your Amazon Web Services account bill
+// with tag key values included. Then, to see the cost of combined resources,
+// organize your billing information according to resources with the same tag
+// key values. For example, you can tag several resources with a specific application
+// name, and then organize your billing information to see the total cost of
+// that application across several services. For more information, see Cost
+// Allocation and Tagging (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
+// and Using Cost Allocation in Amazon S3 Bucket Tags (https://docs.aws.amazon.com/AmazonS3/latest/dev/CostAllocTagging.html).
 //
-// Within a bucket, if you add a tag that has the same key as an existing tag,
-// the new value overwrites the old value. For more information, see Using Cost
-// Allocation in Amazon S3 Bucket Tags (https://docs.aws.amazon.com/AmazonS3/latest/dev/CostAllocTagging.html).
+// When this operation sets the tags for a bucket, it will overwrite any current
+// tags the bucket already has. You cannot use this operation to add tags to
+// an existing list of tags.
 //
 // To use this operation, you must have permissions to perform the s3:PutBucketTagging
 // action. The bucket owner has this permission by default and can grant this
 // permission to others. For more information about permissions, see Permissions
-// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html).
+// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html).
 //
 // PutBucketTagging has the following special errors:
 //
@@ -8795,13 +8873,13 @@ func (c *S3) PutBucketTaggingRequest(input *PutBucketTaggingInput) (req *request
 //    valid tag. This error can occur if the tag did not pass input validation.
 //    For information about tag restrictions, see User-Defined Tag Restrictions
 //    (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/allocation-tag-restrictions.html)
-//    and AWS-Generated Cost Allocation Tag Restrictions (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/aws-tag-restrictions.html).
+//    and Amazon Web Services-Generated Cost Allocation Tag Restrictions (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/aws-tag-restrictions.html).
 //
 //    * Error code: MalformedXMLError Description: The XML provided does not
 //    match the schema.
 //
 //    * Error code: OperationAbortedError Description: A conflicting conditional
-//    operation is currently in progress against this resource. Please try again.
+//    action is currently in progress against this resource. Please try again.
 //
 //    * Error code: InternalError Description: The service was unable to apply
 //    the provided tag to the bucket.
@@ -9008,7 +9086,7 @@ func (c *S3) PutBucketWebsiteRequest(input *PutBucketWebsiteInput) (req *request
 // document and any redirect rules. For more information, see Hosting Websites
 // on Amazon S3 (https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html).
 //
-// This PUT operation requires the S3:PutBucketWebsite permission. By default,
+// This PUT action requires the S3:PutBucketWebsite permission. By default,
 // only the bucket owner can configure the website attached to a bucket; however,
 // bucket owners can allow other users to set the website configuration by writing
 // a bucket policy that grants them the S3:PutBucketWebsite permission.
@@ -9067,7 +9145,7 @@ func (c *S3) PutBucketWebsiteRequest(input *PutBucketWebsiteInput) (req *request
 // Amazon S3 has a limitation of 50 routing rules per website configuration.
 // If you require more than 50 routing rules, you can use object redirect. For
 // more information, see Configuring an Object Redirect (https://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9158,31 +9236,40 @@ func (c *S3) PutObjectRequest(input *PutObjectInput) (req *request.Request, outp
 // you can calculate the MD5 while putting an object to Amazon S3 and compare
 // the returned ETag to the calculated MD5 value.
 //
-// The Content-MD5 header is required for any request to upload an object with
-// a retention period configured using Amazon S3 Object Lock. For more information
-// about Amazon S3 Object Lock, see Amazon S3 Object Lock Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)
-// in the Amazon Simple Storage Service Developer Guide.
+//    * To successfully complete the PutObject request, you must have the s3:PutObject
+//    in your IAM permissions.
+//
+//    * To successfully change the objects acl of your PutObject request, you
+//    must have the s3:PutObjectAcl in your IAM permissions.
+//
+//    * The Content-MD5 header is required for any request to upload an object
+//    with a retention period configured using Amazon S3 Object Lock. For more
+//    information about Amazon S3 Object Lock, see Amazon S3 Object Lock Overview
+//    (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html)
+//    in the Amazon S3 User Guide.
 //
 // Server-side Encryption
 //
 // You can optionally request server-side encryption. With server-side encryption,
 // Amazon S3 encrypts your data as it writes it to disks in its data centers
 // and decrypts the data when you access it. You have the option to provide
-// your own encryption key or use AWS managed encryption keys (SSE-S3 or SSE-KMS).
-// For more information, see Using Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html).
+// your own encryption key or use Amazon Web Services managed encryption keys
+// (SSE-S3 or SSE-KMS). For more information, see Using Server-Side Encryption
+// (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html).
 //
-// If you request server-side encryption using AWS Key Management Service (SSE-KMS),
-// you can enable an S3 Bucket Key at the object-level. For more information,
-// see Amazon S3 Bucket Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// If you request server-side encryption using Amazon Web Services Key Management
+// Service (SSE-KMS), you can enable an S3 Bucket Key at the object-level. For
+// more information, see Amazon S3 Bucket Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html)
+// in the Amazon S3 User Guide.
 //
 // Access Control List (ACL)-Specific Request Headers
 //
 // You can use headers to grant ACL- based permissions. By default, all objects
 // are private. Only the owner has full access control. When adding a new object,
-// you can grant permissions to individual AWS accounts or to predefined groups
-// defined by Amazon S3. These permissions are then added to the ACL on the
-// object. For more information, see Access Control List (ACL) Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html)
+// you can grant permissions to individual Amazon Web Services accounts or to
+// predefined groups defined by Amazon S3. These permissions are then added
+// to the ACL on the object. For more information, see Access Control List (ACL)
+// Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html)
 // and Managing ACLs Using the REST API (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-using-rest-api.html).
 //
 // Storage Class Options
@@ -9192,7 +9279,7 @@ func (c *S3) PutObjectRequest(input *PutObjectInput) (req *request.Request, outp
 // Depending on performance needs, you can specify a different Storage Class.
 // Amazon S3 on Outposts only uses the OUTPOSTS Storage Class. For more information,
 // see Storage Classes (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html)
-// in the Amazon S3 Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Versioning
 //
@@ -9293,7 +9380,7 @@ func (c *S3) PutObjectAclRequest(input *PutObjectAclInput) (req *request.Request
 // for a new or existing object in an S3 bucket. You must have WRITE_ACP permission
 // to set the ACL of an object. For more information, see What permissions can
 // I grant? (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#permissions)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // This action is not supported by Amazon S3 on Outposts.
 //
@@ -9302,7 +9389,7 @@ func (c *S3) PutObjectAclRequest(input *PutObjectAclInput) (req *request.Request
 // have an existing application that updates a bucket ACL using the request
 // body, you can continue to use that approach. For more information, see Access
 // Control List (ACL) Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html)
-// in the Amazon S3 Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Access Permissions
 //
@@ -9317,26 +9404,26 @@ func (c *S3) PutObjectAclRequest(input *PutObjectAclInput) (req *request.Request
 //
 //    * Specify access permissions explicitly with the x-amz-grant-read, x-amz-grant-read-acp,
 //    x-amz-grant-write-acp, and x-amz-grant-full-control headers. When using
-//    these headers, you specify explicit access permissions and grantees (AWS
-//    accounts or Amazon S3 groups) who will receive the permission. If you
-//    use these ACL-specific headers, you cannot use x-amz-acl header to set
-//    a canned ACL. These parameters map to the set of permissions that Amazon
-//    S3 supports in an ACL. For more information, see Access Control List (ACL)
-//    Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html).
+//    these headers, you specify explicit access permissions and grantees (Amazon
+//    Web Services accounts or Amazon S3 groups) who will receive the permission.
+//    If you use these ACL-specific headers, you cannot use x-amz-acl header
+//    to set a canned ACL. These parameters map to the set of permissions that
+//    Amazon S3 supports in an ACL. For more information, see Access Control
+//    List (ACL) Overview (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html).
 //    You specify each grantee as a type=value pair, where the type is one of
 //    the following: id – if the value specified is the canonical user ID
-//    of an AWS account uri – if you are granting permissions to a predefined
-//    group emailAddress – if the value specified is the email address of
-//    an AWS account Using email addresses to specify a grantee is only supported
-//    in the following AWS Regions: US East (N. Virginia) US West (N. California)
-//    US West (Oregon) Asia Pacific (Singapore) Asia Pacific (Sydney) Asia Pacific
-//    (Tokyo) Europe (Ireland) South America (São Paulo) For a list of all
-//    the Amazon S3 supported Regions and endpoints, see Regions and Endpoints
-//    (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region) in
-//    the AWS General Reference. For example, the following x-amz-grant-read
-//    header grants list objects permission to the two AWS accounts identified
-//    by their email addresses. x-amz-grant-read: emailAddress="xyz@amazon.com",
-//    emailAddress="abc@amazon.com"
+//    of an Amazon Web Services account uri – if you are granting permissions
+//    to a predefined group emailAddress – if the value specified is the email
+//    address of an Amazon Web Services account Using email addresses to specify
+//    a grantee is only supported in the following Amazon Web Services Regions:
+//    US East (N. Virginia) US West (N. California) US West (Oregon) Asia Pacific
+//    (Singapore) Asia Pacific (Sydney) Asia Pacific (Tokyo) Europe (Ireland)
+//    South America (São Paulo) For a list of all the Amazon S3 supported Regions
+//    and endpoints, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
+//    in the Amazon Web Services General Reference. For example, the following
+//    x-amz-grant-read header grants list objects permission to the two Amazon
+//    Web Services accounts identified by their email addresses. x-amz-grant-read:
+//    emailAddress="xyz@amazon.com", emailAddress="abc@amazon.com"
 //
 // You can use either a canned ACL or specify access permissions explicitly.
 // You cannot do both.
@@ -9357,12 +9444,12 @@ func (c *S3) PutObjectAclRequest(input *PutObjectAclInput) (req *request.Request
 //    xsi:type="AmazonCustomerByEmail"><EmailAddress><>Grantees@email.com<></EmailAddress>lt;/Grantee>
 //    The grantee is resolved to the CanonicalUser and, in a response to a GET
 //    Object acl request, appears as the CanonicalUser. Using email addresses
-//    to specify a grantee is only supported in the following AWS Regions: US
-//    East (N. Virginia) US West (N. California) US West (Oregon) Asia Pacific
-//    (Singapore) Asia Pacific (Sydney) Asia Pacific (Tokyo) Europe (Ireland)
-//    South America (São Paulo) For a list of all the Amazon S3 supported Regions
-//    and endpoints, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
-//    in the AWS General Reference.
+//    to specify a grantee is only supported in the following Amazon Web Services
+//    Regions: US East (N. Virginia) US West (N. California) US West (Oregon)
+//    Asia Pacific (Singapore) Asia Pacific (Sydney) Asia Pacific (Tokyo) Europe
+//    (Ireland) South America (São Paulo) For a list of all the Amazon S3 supported
+//    Regions and endpoints, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
+//    in the Amazon Web Services General Reference.
 //
 // Versioning
 //
@@ -9457,13 +9544,10 @@ func (c *S3) PutObjectLegalHoldRequest(input *PutObjectLegalHoldInput) (req *req
 
 // PutObjectLegalHold API operation for Amazon Simple Storage Service.
 //
-// Applies a Legal Hold configuration to the specified object.
+// Applies a Legal Hold configuration to the specified object. For more information,
+// see Locking Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html).
 //
 // This action is not supported by Amazon S3 on Outposts.
-//
-// Related Resources
-//
-//    * Locking Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9543,14 +9627,16 @@ func (c *S3) PutObjectLockConfigurationRequest(input *PutObjectLockConfiguration
 //
 // Places an Object Lock configuration on the specified bucket. The rule specified
 // in the Object Lock configuration will be applied by default to every new
-// object placed in the specified bucket.
+// object placed in the specified bucket. For more information, see Locking
+// Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html).
 //
-// DefaultRetention requires either Days or Years. You can't specify both at
-// the same time.
+//    * The DefaultRetention settings require both a mode and a period.
 //
-// Related Resources
+//    * The DefaultRetention period can be either Days or Years but you must
+//    select one. You cannot specify Days and Years at the same time.
 //
-//    * Locking Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html)
+//    * You can only enable Object Lock for new buckets. If you want to turn
+//    on Object Lock for an existing bucket, contact Amazon Web Services Support.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9628,13 +9714,19 @@ func (c *S3) PutObjectRetentionRequest(input *PutObjectRetentionInput) (req *req
 
 // PutObjectRetention API operation for Amazon Simple Storage Service.
 //
-// Places an Object Retention configuration on an object.
+// Places an Object Retention configuration on an object. For more information,
+// see Locking Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html).
+// Users or accounts require the s3:PutObjectRetention permission in order to
+// place an Object Retention configuration on objects. Bypassing a Governance
+// Retention configuration requires the s3:BypassGovernanceRetention permission.
 //
 // This action is not supported by Amazon S3 on Outposts.
 //
-// Related Resources
+// Permissions
 //
-//    * Locking Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock.html)
+// When the Object Lock retention mode is set to compliance, you need s3:PutObjectRetention
+// and s3:BypassGovernanceRetention permissions. For other requests to PutObjectRetention,
+// only s3:PutObjectRetention permissions are required.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9741,7 +9833,7 @@ func (c *S3) PutObjectTaggingRequest(input *PutObjectTaggingInput) (req *request
 //
 //    * Code: MalformedXMLError Cause: The XML provided does not match the schema.
 //
-//    * Code: OperationAbortedError Cause: A conflicting conditional operation
+//    * Code: OperationAbortedError Cause: A conflicting conditional action
 //    is currently in progress against this resource. Please try again.
 //
 //    * Code: InternalError Cause: The service was unable to apply the provided
@@ -9750,6 +9842,8 @@ func (c *S3) PutObjectTaggingRequest(input *PutObjectTaggingInput) (req *request
 // Related Resources
 //
 //    * GetObjectTagging (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectTagging.html)
+//
+//    * DeleteObjectTagging (https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjectTagging.html)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9938,9 +10032,9 @@ func (c *S3) RestoreObjectRequest(input *RestoreObjectInput) (req *request.Reque
 // To use this operation, you must have permissions to perform the s3:RestoreObject
 // action. The bucket owner has this permission by default and can grant this
 // permission to others. For more information about permissions, see Permissions
-// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
-// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// Related to Bucket Subresource Operations (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-with-s3-actions.html#using-with-s3-actions-related-to-bucket-subresources)
+// and Managing Access Permissions to Your Amazon S3 Resources (https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-access-control.html)
+// in the Amazon S3 User Guide.
 //
 // Querying Archives with Select Requests
 //
@@ -9950,24 +10044,23 @@ func (c *S3) RestoreObjectRequest(input *RestoreObjectInput) (req *request.Reque
 // queries and custom analytics on your archived data without having to restore
 // your data to a hotter Amazon S3 tier. For an overview about select requests,
 // see Querying Archived Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/querying-glacier-archives.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // When making a select request, do the following:
 //
 //    * Define an output location for the select query's output. This must be
-//    an Amazon S3 bucket in the same AWS Region as the bucket that contains
-//    the archive object that is being queried. The AWS account that initiates
-//    the job must have permissions to write to the S3 bucket. You can specify
-//    the storage class and encryption for the output objects stored in the
-//    bucket. For more information about output, see Querying Archived Objects
-//    (https://docs.aws.amazon.com/AmazonS3/latest/dev/querying-glacier-archives.html)
-//    in the Amazon Simple Storage Service Developer Guide. For more information
-//    about the S3 structure in the request body, see the following: PutObject
-//    (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html) Managing
-//    Access with ACLs (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3_ACLs_UsingACLs.html)
-//    in the Amazon Simple Storage Service Developer Guide Protecting Data Using
-//    Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html)
-//    in the Amazon Simple Storage Service Developer Guide
+//    an Amazon S3 bucket in the same Amazon Web Services Region as the bucket
+//    that contains the archive object that is being queried. The Amazon Web
+//    Services account that initiates the job must have permissions to write
+//    to the S3 bucket. You can specify the storage class and encryption for
+//    the output objects stored in the bucket. For more information about output,
+//    see Querying Archived Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/querying-glacier-archives.html)
+//    in the Amazon S3 User Guide. For more information about the S3 structure
+//    in the request body, see the following: PutObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html)
+//    Managing Access with ACLs (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3_ACLs_UsingACLs.html)
+//    in the Amazon S3 User Guide Protecting Data Using Server-Side Encryption
+//    (https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html)
+//    in the Amazon S3 User Guide
 //
 //    * Define the SQL expression for the SELECT type of restoration for your
 //    query in the request body's SelectParameters structure. You can use expressions
@@ -9983,7 +10076,7 @@ func (c *S3) RestoreObjectRequest(input *RestoreObjectInput) (req *request.Reque
 //
 // For more information about using SQL with S3 Glacier Select restore, see
 // SQL Reference for Amazon S3 Select and S3 Glacier Select (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-glacier-select-sql-reference.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // When making a select request, you can also do the following:
 //
@@ -10054,19 +10147,19 @@ func (c *S3) RestoreObjectRequest(input *RestoreObjectInput) (req *request.Reque
 //
 // For more information about archive retrieval options and provisioned capacity
 // for Expedited data access, see Restoring Archived Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/restoring-objects.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // You can use Amazon S3 restore speed upgrade to change the restore speed to
 // a faster speed while it is in progress. For more information, see Upgrading
 // the speed of an in-progress restore (https://docs.aws.amazon.com/AmazonS3/latest/dev/restoring-objects.html#restoring-objects-upgrade-tier.title.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // To get the status of object restoration, you can send a HEAD request. Operations
 // return the x-amz-restore header, which provides information about the restoration
 // status, in the response. You can use Amazon S3 event notifications to notify
 // you when a restore is initiated or completed. For more information, see Configuring
 // Amazon S3 Event Notifications (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // After restoring an archived object, you can update the restoration period
 // by reissuing the request with a new period. Amazon S3 updates the restoration
@@ -10081,11 +10174,11 @@ func (c *S3) RestoreObjectRequest(input *RestoreObjectInput) (req *request.Reque
 // the object in 3 days. For more information about lifecycle configuration,
 // see PutBucketLifecycleConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycleConfiguration.html)
 // and Object Lifecycle Management (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html)
-// in Amazon Simple Storage Service Developer Guide.
+// in Amazon S3 User Guide.
 //
 // Responses
 //
-// A successful operation returns either the 200 OK or 202 Accepted status code.
+// A successful action returns either the 200 OK or 202 Accepted status code.
 //
 //    * If the object is not previously restored, then Amazon S3 returns 202
 //    Accepted in the response.
@@ -10112,7 +10205,7 @@ func (c *S3) RestoreObjectRequest(input *RestoreObjectInput) (req *request.Reque
 //    * GetBucketNotificationConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketNotificationConfiguration.html)
 //
 //    * SQL Reference for Amazon S3 Select and S3 Glacier Select (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-glacier-select-sql-reference.html)
-//    in the Amazon Simple Storage Service Developer Guide
+//    in the Amazon S3 User Guide
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10123,7 +10216,7 @@ func (c *S3) RestoreObjectRequest(input *RestoreObjectInput) (req *request.Reque
 //
 // Returned Error Codes:
 //   * ErrCodeObjectAlreadyInActiveTierError "ObjectAlreadyInActiveTierError"
-//   This operation is not allowed against this storage tier.
+//   This action is not allowed against this storage tier.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/RestoreObject
 func (c *S3) RestoreObject(input *RestoreObjectInput) (*RestoreObjectOutput, error) {
@@ -10200,7 +10293,7 @@ func (c *S3) SelectObjectContentRequest(input *SelectObjectContentInput) (req *r
 
 // SelectObjectContent API operation for Amazon Simple Storage Service.
 //
-// This operation filters the contents of an Amazon S3 object based on a simple
+// This action filters the contents of an Amazon S3 object based on a simple
 // structured query language (SQL) statement. In the request, along with the
 // SQL expression, you must also specify a data serialization format (JSON,
 // CSV, or Apache Parquet) of the object. Amazon S3 uses this format to parse
@@ -10212,18 +10305,18 @@ func (c *S3) SelectObjectContentRequest(input *SelectObjectContentInput) (req *r
 //
 // For more information about Amazon S3 Select, see Selecting Content from Objects
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/selecting-content-from-objects.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // For more information about using SQL with Amazon S3 Select, see SQL Reference
 // for Amazon S3 Select and S3 Glacier Select (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-glacier-select-sql-reference.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Permissions
 //
 // You must have s3:GetObject permission for this operation. Amazon S3 Select
 // does not support anonymous access. For more information about permissions,
 // see Specifying Permissions in a Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-with-s3-actions.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Object Data Formats
 //
@@ -10246,25 +10339,24 @@ func (c *S3) SelectObjectContentRequest(input *SelectObjectContentInput) (req *r
 //    you must use the headers that are documented in the GetObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html).
 //    For more information about SSE-C, see Server-Side Encryption (Using Customer-Provided
 //    Encryption Keys) (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html)
-//    in the Amazon Simple Storage Service Developer Guide. For objects that
-//    are encrypted with Amazon S3 managed encryption keys (SSE-S3) and customer
-//    master keys (CMKs) stored in AWS Key Management Service (SSE-KMS), server-side
-//    encryption is handled transparently, so you don't need to specify anything.
-//    For more information about server-side encryption, including SSE-S3 and
-//    SSE-KMS, see Protecting Data Using Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html)
-//    in the Amazon Simple Storage Service Developer Guide.
+//    in the Amazon S3 User Guide. For objects that are encrypted with Amazon
+//    S3 managed encryption keys (SSE-S3) and Amazon Web Services KMS keys (SSE-KMS),
+//    server-side encryption is handled transparently, so you don't need to
+//    specify anything. For more information about server-side encryption, including
+//    SSE-S3 and SSE-KMS, see Protecting Data Using Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/serv-side-encryption.html)
+//    in the Amazon S3 User Guide.
 //
 // Working with the Response Body
 //
 // Given the response size is unknown, Amazon S3 Select streams the response
 // as a series of messages and includes a Transfer-Encoding header with chunked
 // as its value in the response. For more information, see Appendix: SelectObjectContent
-// Response (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTSelectObjectAppendix.html) .
+// Response (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTSelectObjectAppendix.html).
 //
 // GetObject Support
 //
-// The SelectObjectContent operation does not support the following GetObject
-// functionality. For more information, see GetObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html).
+// The SelectObjectContent action does not support the following GetObject functionality.
+// For more information, see GetObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html).
 //
 //    * Range: Although you can specify a scan range for an Amazon S3 Select
 //    request (see SelectObjectContentRequest - ScanRange (https://docs.aws.amazon.com/AmazonS3/latest/API/API_SelectObjectContent.html#AmazonS3-SelectObjectContent-request-ScanRange)
@@ -10274,7 +10366,7 @@ func (c *S3) SelectObjectContentRequest(input *SelectObjectContentInput) (req *r
 //    * GLACIER, DEEP_ARCHIVE and REDUCED_REDUNDANCY storage classes: You cannot
 //    specify the GLACIER, DEEP_ARCHIVE, or REDUCED_REDUNDANCY storage classes.
 //    For more information, about storage classes see Storage Classes (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html#storage-class-intro)
-//    in the Amazon Simple Storage Service Developer Guide.
+//    in the Amazon S3 User Guide.
 //
 // Special Errors
 //
@@ -10554,10 +10646,10 @@ func (c *S3) UploadPartRequest(input *UploadPartInput) (req *request.Request, ou
 // data against the provided MD5 value. If they do not match, Amazon S3 returns
 // an error.
 //
-// If the upload request is signed with Signature Version 4, then AWS S3 uses
-// the x-amz-content-sha256 header as a checksum instead of Content-MD5. For
-// more information see Authenticating Requests: Using the Authorization Header
-// (AWS Signature Version 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-auth-using-authorization-header.html).
+// If the upload request is signed with Signature Version 4, then Amazon Web
+// Services S3 uses the x-amz-content-sha256 header as a checksum instead of
+// Content-MD5. For more information see Authenticating Requests: Using the
+// Authorization Header (Amazon Web Services Signature Version 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-auth-using-authorization-header.html).
 //
 // Note: After you initiate multipart upload and upload one or more parts, you
 // must either complete or abort multipart upload in order to stop getting charged
@@ -10567,21 +10659,21 @@ func (c *S3) UploadPartRequest(input *UploadPartInput) (req *request.Request, ou
 //
 // For more information on multipart uploads, go to Multipart Upload Overview
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuoverview.html) in the
-// Amazon Simple Storage Service Developer Guide .
+// Amazon S3 User Guide .
 //
 // For information on the permissions required to use the multipart upload API,
-// go to Multipart Upload API and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// go to Multipart Upload and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html)
+// in the Amazon S3 User Guide.
 //
 // You can optionally request server-side encryption where Amazon S3 encrypts
 // your data as it writes it to disks in its data centers and decrypts it for
 // you when you access it. You have the option of providing your own encryption
-// key, or you can use the AWS managed encryption keys. If you choose to provide
-// your own encryption key, the request headers you provide in the request must
-// match the headers you used in the request to initiate the upload by using
-// CreateMultipartUpload (https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html).
+// key, or you can use the Amazon Web Services managed encryption keys. If you
+// choose to provide your own encryption key, the request headers you provide
+// in the request must match the headers you used in the request to initiate
+// the upload by using CreateMultipartUpload (https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html).
 // For more information, go to Using Server-Side Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Server-side encryption is supported by the S3 Multipart Upload actions. Unless
 // you are using a customer-provided encryption key, you don't need to specify
@@ -10697,10 +10789,10 @@ func (c *S3) UploadPartCopyRequest(input *UploadPartCopyInput) (req *request.Req
 //
 // The minimum allowable part size for a multipart upload is 5 MB. For more
 // information about multipart upload limits, go to Quick Facts (https://docs.aws.amazon.com/AmazonS3/latest/dev/qfacts.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 //
 // Instead of using an existing object as part data, you might use the UploadPart
-// (https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html) operation
+// (https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html) action
 // and provide data in your request.
 //
 // You must initiate a multipart upload before you can upload any part. In response
@@ -10711,15 +10803,15 @@ func (c *S3) UploadPartCopyRequest(input *UploadPartCopyInput) (req *request.Req
 //
 //    * For conceptual information about multipart uploads, see Uploading Objects
 //    Using Multipart Upload (https://docs.aws.amazon.com/AmazonS3/latest/dev/uploadobjusingmpu.html)
-//    in the Amazon Simple Storage Service Developer Guide.
+//    in the Amazon S3 User Guide.
 //
 //    * For information about permissions required to use the multipart upload
-//    API, see Multipart Upload API and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html)
-//    in the Amazon Simple Storage Service Developer Guide.
+//    API, see Multipart Upload and Permissions (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuAndPermissions.html)
+//    in the Amazon S3 User Guide.
 //
-//    * For information about copying objects using a single atomic operation
-//    vs. the multipart upload, see Operations on Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectOperations.html)
-//    in the Amazon Simple Storage Service Developer Guide.
+//    * For information about copying objects using a single atomic action vs.
+//    the multipart upload, see Operations on Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectOperations.html)
+//    in the Amazon S3 User Guide.
 //
 //    * For information about using server-side encryption with customer-provided
 //    encryption keys with the UploadPartCopy operation, see CopyObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html)
@@ -10808,11 +10900,133 @@ func (c *S3) UploadPartCopyWithContext(ctx aws.Context, input *UploadPartCopyInp
 	return out, req.Send()
 }
 
+const opWriteGetObjectResponse = "WriteGetObjectResponse"
+
+// WriteGetObjectResponseRequest generates a "aws/request.Request" representing the
+// client's request for the WriteGetObjectResponse operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See WriteGetObjectResponse for more information on using the WriteGetObjectResponse
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the WriteGetObjectResponseRequest method.
+//    req, resp := client.WriteGetObjectResponseRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/WriteGetObjectResponse
+func (c *S3) WriteGetObjectResponseRequest(input *WriteGetObjectResponseInput) (req *request.Request, output *WriteGetObjectResponseOutput) {
+	op := &request.Operation{
+		Name:       opWriteGetObjectResponse,
+		HTTPMethod: "POST",
+		HTTPPath:   "/WriteGetObjectResponse",
+	}
+
+	if input == nil {
+		input = &WriteGetObjectResponseInput{}
+	}
+
+	output = &WriteGetObjectResponseOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Sign.Remove(v4.SignRequestHandler)
+	handler := v4.BuildNamedHandler("v4.CustomSignerHandler", v4.WithUnsignedPayload)
+	req.Handlers.Sign.PushFrontNamed(handler)
+	req.Handlers.Unmarshal.Swap(restxml.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Build.PushBackNamed(protocol.NewHostPrefixHandler("{RequestRoute}.", input.hostLabels))
+	req.Handlers.Build.PushBackNamed(protocol.ValidateEndpointHostHandler)
+	return
+}
+
+// WriteGetObjectResponse API operation for Amazon Simple Storage Service.
+//
+// Passes transformed objects to a GetObject operation when using Object Lambda
+// access points. For information about Object Lambda access points, see Transforming
+// objects with Object Lambda access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/transforming-objects.html)
+// in the Amazon S3 User Guide.
+//
+// This operation supports metadata that can be returned by GetObject (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html),
+// in addition to RequestRoute, RequestToken, StatusCode, ErrorCode, and ErrorMessage.
+// The GetObject response metadata is supported so that the WriteGetObjectResponse
+// caller, typically an Lambda function, can provide the same metadata when
+// it internally invokes GetObject. When WriteGetObjectResponse is called by
+// a customer-owned Lambda function, the metadata returned to the end user GetObject
+// call might differ from what Amazon S3 would normally return.
+//
+// You can include any number of metadata headers. When including a metadata
+// header, it should be prefaced with x-amz-meta. For example, x-amz-meta-my-custom-header:
+// MyCustomValue. The primary use case for this is to forward GetObject metadata.
+//
+// Amazon Web Services provides some prebuilt Lambda functions that you can
+// use with S3 Object Lambda to detect and redact personally identifiable information
+// (PII) and decompress S3 objects. These Lambda functions are available in
+// the Amazon Web Services Serverless Application Repository, and can be selected
+// through the Amazon Web Services Management Console when you create your Object
+// Lambda access point.
+//
+// Example 1: PII Access Control - This Lambda function uses Amazon Comprehend,
+// a natural language processing (NLP) service using machine learning to find
+// insights and relationships in text. It automatically detects personally identifiable
+// information (PII) such as names, addresses, dates, credit card numbers, and
+// social security numbers from documents in your Amazon S3 bucket.
+//
+// Example 2: PII Redaction - This Lambda function uses Amazon Comprehend, a
+// natural language processing (NLP) service using machine learning to find
+// insights and relationships in text. It automatically redacts personally identifiable
+// information (PII) such as names, addresses, dates, credit card numbers, and
+// social security numbers from documents in your Amazon S3 bucket.
+//
+// Example 3: Decompression - The Lambda function S3ObjectLambdaDecompression,
+// is equipped to decompress objects stored in S3 in one of six compressed file
+// formats including bzip2, gzip, snappy, zlib, zstandard and ZIP.
+//
+// For information on how to view and use these functions, see Using Amazon
+// Web Services built Lambda functions (https://docs.aws.amazon.com/AmazonS3/latest/userguide/olap-examples.html)
+// in the Amazon S3 User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Storage Service's
+// API operation WriteGetObjectResponse for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/s3-2006-03-01/WriteGetObjectResponse
+func (c *S3) WriteGetObjectResponse(input *WriteGetObjectResponseInput) (*WriteGetObjectResponseOutput, error) {
+	req, out := c.WriteGetObjectResponseRequest(input)
+	return out, req.Send()
+}
+
+// WriteGetObjectResponseWithContext is the same as WriteGetObjectResponse with the addition of
+// the ability to pass a context and additional request options.
+//
+// See WriteGetObjectResponse for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *S3) WriteGetObjectResponseWithContext(ctx aws.Context, input *WriteGetObjectResponseInput, opts ...request.Option) (*WriteGetObjectResponseOutput, error) {
+	req, out := c.WriteGetObjectResponseRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // Specifies the days since the initiation of an incomplete multipart upload
 // that Amazon S3 will wait before permanently removing all parts of the upload.
 // For more information, see Aborting Incomplete Multipart Uploads Using a Bucket
 // Lifecycle Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuoverview.html#mpu-abort-incomplete-mpu-lifecycle-config)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 type AbortIncompleteMultipartUpload struct {
 	_ struct{} `type:"structure"`
 
@@ -10821,12 +11035,20 @@ type AbortIncompleteMultipartUpload struct {
 	DaysAfterInitiation *int64 `type:"integer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AbortIncompleteMultipartUpload) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AbortIncompleteMultipartUpload) GoString() string {
 	return s.String()
 }
@@ -10842,25 +11064,25 @@ type AbortMultipartUploadInput struct {
 
 	// The bucket name to which the upload was taking place.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -10874,7 +11096,7 @@ type AbortMultipartUploadInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Upload ID that identifies the multipart upload.
@@ -10883,12 +11105,20 @@ type AbortMultipartUploadInput struct {
 	UploadId *string `location:"querystring" locationName:"uploadId" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AbortMultipartUploadInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AbortMultipartUploadInput) GoString() string {
 	return s.String()
 }
@@ -10990,12 +11220,20 @@ type AbortMultipartUploadOutput struct {
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AbortMultipartUploadOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AbortMultipartUploadOutput) GoString() string {
 	return s.String()
 }
@@ -11008,7 +11246,7 @@ func (s *AbortMultipartUploadOutput) SetRequestCharged(v string) *AbortMultipart
 
 // Configures the transfer acceleration state for an Amazon S3 bucket. For more
 // information, see Amazon S3 Transfer Acceleration (https://docs.aws.amazon.com/AmazonS3/latest/dev/transfer-acceleration.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 type AccelerateConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -11016,12 +11254,20 @@ type AccelerateConfiguration struct {
 	Status *string `type:"string" enum:"BucketAccelerateStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AccelerateConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AccelerateConfiguration) GoString() string {
 	return s.String()
 }
@@ -11043,12 +11289,20 @@ type AccessControlPolicy struct {
 	Owner *Owner `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AccessControlPolicy) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AccessControlPolicy) GoString() string {
 	return s.String()
 }
@@ -11091,18 +11345,26 @@ type AccessControlTranslation struct {
 
 	// Specifies the replica ownership. For default and valid values, see PUT bucket
 	// replication (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTreplication.html)
-	// in the Amazon Simple Storage Service API Reference.
+	// in the Amazon S3 API Reference.
 	//
 	// Owner is a required field
 	Owner *string `type:"string" required:"true" enum:"OwnerOverride"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AccessControlTranslation) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AccessControlTranslation) GoString() string {
 	return s.String()
 }
@@ -11140,12 +11402,20 @@ type AnalyticsAndOperator struct {
 	Tags []*Tag `locationName:"Tag" locationNameList:"Tag" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsAndOperator) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsAndOperator) GoString() string {
 	return s.String()
 }
@@ -11204,12 +11474,20 @@ type AnalyticsConfiguration struct {
 	StorageClassAnalysis *StorageClassAnalysis `type:"structure" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsConfiguration) GoString() string {
 	return s.String()
 }
@@ -11268,12 +11546,20 @@ type AnalyticsExportDestination struct {
 	S3BucketDestination *AnalyticsS3BucketDestination `type:"structure" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsExportDestination) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsExportDestination) GoString() string {
 	return s.String()
 }
@@ -11319,12 +11605,20 @@ type AnalyticsFilter struct {
 	Tag *Tag `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsFilter) GoString() string {
 	return s.String()
 }
@@ -11392,12 +11686,20 @@ type AnalyticsS3BucketDestination struct {
 	Prefix *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsS3BucketDestination) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s AnalyticsS3BucketDestination) GoString() string {
 	return s.String()
 }
@@ -11450,7 +11752,8 @@ func (s *AnalyticsS3BucketDestination) SetPrefix(v string) *AnalyticsS3BucketDes
 }
 
 // In terms of implementation, a Bucket is a resource. An Amazon S3 bucket name
-// is globally unique, and the namespace is shared by all AWS accounts.
+// is globally unique, and the namespace is shared by all Amazon Web Services
+// accounts.
 type Bucket struct {
 	_ struct{} `type:"structure"`
 
@@ -11462,12 +11765,20 @@ type Bucket struct {
 	Name *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Bucket) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Bucket) GoString() string {
 	return s.String()
 }
@@ -11486,7 +11797,7 @@ func (s *Bucket) SetName(v string) *Bucket {
 
 // Specifies the lifecycle configuration for objects in an Amazon S3 bucket.
 // For more information, see Object Lifecycle Management (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 type BucketLifecycleConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -11496,12 +11807,20 @@ type BucketLifecycleConfiguration struct {
 	Rules []*LifecycleRule `locationName:"Rule" type:"list" flattened:"true" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s BucketLifecycleConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s BucketLifecycleConfiguration) GoString() string {
 	return s.String()
 }
@@ -11542,16 +11861,24 @@ type BucketLoggingStatus struct {
 	// Describes where logs are stored and the prefix that Amazon S3 assigns to
 	// all log object keys for a bucket. For more information, see PUT Bucket logging
 	// (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTlogging.html)
-	// in the Amazon Simple Storage Service API Reference.
+	// in the Amazon S3 API Reference.
 	LoggingEnabled *LoggingEnabled `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s BucketLoggingStatus) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s BucketLoggingStatus) GoString() string {
 	return s.String()
 }
@@ -11580,7 +11907,7 @@ func (s *BucketLoggingStatus) SetLoggingEnabled(v *LoggingEnabled) *BucketLoggin
 // Describes the cross-origin access configuration for objects in an Amazon
 // S3 bucket. For more information, see Enabling Cross-Origin Resource Sharing
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) in the Amazon
-// Simple Storage Service Developer Guide.
+// S3 User Guide.
 type CORSConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -11591,12 +11918,20 @@ type CORSConfiguration struct {
 	CORSRules []*CORSRule `locationName:"CORSRule" type:"list" flattened:"true" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CORSConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CORSConfiguration) GoString() string {
 	return s.String()
 }
@@ -11656,17 +11991,28 @@ type CORSRule struct {
 	// object).
 	ExposeHeaders []*string `locationName:"ExposeHeader" type:"list" flattened:"true"`
 
+	// Unique identifier for the rule. The value cannot be longer than 255 characters.
+	ID *string `type:"string"`
+
 	// The time in seconds that your browser is to cache the preflight response
 	// for the specified resource.
 	MaxAgeSeconds *int64 `type:"integer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CORSRule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CORSRule) GoString() string {
 	return s.String()
 }
@@ -11708,6 +12054,12 @@ func (s *CORSRule) SetAllowedOrigins(v []*string) *CORSRule {
 // SetExposeHeaders sets the ExposeHeaders field's value.
 func (s *CORSRule) SetExposeHeaders(v []*string) *CORSRule {
 	s.ExposeHeaders = v
+	return s
+}
+
+// SetID sets the ID field's value.
+func (s *CORSRule) SetID(v string) *CORSRule {
+	s.ID = &v
 	return s
 }
 
@@ -11769,12 +12121,20 @@ type CSVInput struct {
 	RecordDelimiter *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CSVInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CSVInput) GoString() string {
 	return s.String()
 }
@@ -11851,12 +12211,20 @@ type CSVOutput struct {
 	RecordDelimiter *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CSVOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CSVOutput) GoString() string {
 	return s.String()
 }
@@ -11891,7 +12259,7 @@ func (s *CSVOutput) SetRecordDelimiter(v string) *CSVOutput {
 	return s
 }
 
-// Container for specifying the AWS Lambda notification configuration.
+// Container for specifying the Lambda notification configuration.
 type CloudFunctionConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -11915,12 +12283,20 @@ type CloudFunctionConfiguration struct {
 	InvocationRole *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CloudFunctionConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CloudFunctionConfiguration) GoString() string {
 	return s.String()
 }
@@ -11967,12 +12343,20 @@ type CommonPrefix struct {
 	Prefix *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CommonPrefix) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CommonPrefix) GoString() string {
 	return s.String()
 }
@@ -11988,10 +12372,25 @@ type CompleteMultipartUploadInput struct {
 
 	// Name of the bucket to which the multipart upload was initiated.
 	//
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
+	//
+	// When using this action with Amazon S3 on Outposts, you must direct requests
+	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
+	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
+	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -12008,7 +12407,7 @@ type CompleteMultipartUploadInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// ID for the initiated multipart upload.
@@ -12017,12 +12416,20 @@ type CompleteMultipartUploadInput struct {
 	UploadId *string `location:"querystring" locationName:"uploadId" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CompleteMultipartUploadInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CompleteMultipartUploadInput) GoString() string {
 	return s.String()
 }
@@ -12125,26 +12532,27 @@ func (s CompleteMultipartUploadInput) updateArnableField(v string) (interface{},
 type CompleteMultipartUploadOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the bucket that contains the newly created object.
+	// The name of the bucket that contains the newly created object. Does not return
+	// the access point ARN or access point alias if used.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	Bucket *string `type:"string"`
 
 	// Indicates whether the multipart upload uses an S3 Bucket Key for server-side
-	// encryption with AWS KMS (SSE-KMS).
+	// encryption with Amazon Web Services KMS (SSE-KMS).
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Entity tag that identifies the newly created object's data. Objects with
@@ -12169,13 +12577,17 @@ type CompleteMultipartUploadOutput struct {
 	// request.
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 
-	// If present, specifies the ID of the AWS Key Management Service (AWS KMS)
-	// symmetric customer managed customer master key (CMK) that was used for the
-	// object.
+	// If present, specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetric customer managed key that was used for
+	// the object.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CompleteMultipartUploadOutput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
 	// If you specified server-side encryption either with an Amazon S3-managed
-	// encryption key or an AWS KMS customer master key (CMK) in your initiate multipart
+	// encryption key or an Amazon Web Services KMS key in your initiate multipart
 	// upload request, the response includes this header. It confirms the encryption
 	// algorithm that Amazon S3 used to encrypt the object.
 	ServerSideEncryption *string `location:"header" locationName:"x-amz-server-side-encryption" type:"string" enum:"ServerSideEncryption"`
@@ -12185,12 +12597,20 @@ type CompleteMultipartUploadOutput struct {
 	VersionId *string `location:"header" locationName:"x-amz-version-id" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CompleteMultipartUploadOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CompleteMultipartUploadOutput) GoString() string {
 	return s.String()
 }
@@ -12270,12 +12690,20 @@ type CompletedMultipartUpload struct {
 	Parts []*CompletedPart `locationName:"Part" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CompletedMultipartUpload) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CompletedMultipartUpload) GoString() string {
 	return s.String()
 }
@@ -12298,12 +12726,20 @@ type CompletedPart struct {
 	PartNumber *int64 `type:"integer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CompletedPart) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CompletedPart) GoString() string {
 	return s.String()
 }
@@ -12341,15 +12777,27 @@ type Condition struct {
 	// the parent element Condition is specified and sibling HttpErrorCodeReturnedEquals
 	// is not specified. If both conditions are specified, both must be true for
 	// the redirect to be applied.
+	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
 	KeyPrefixEquals *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Condition) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Condition) GoString() string {
 	return s.String()
 }
@@ -12370,12 +12818,20 @@ type ContinuationEvent struct {
 	_ struct{} `locationName:"ContinuationEvent" type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ContinuationEvent) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ContinuationEvent) GoString() string {
 	return s.String()
 }
@@ -12409,20 +12865,20 @@ type CopyObjectInput struct {
 
 	// The name of the destination bucket.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
@@ -12432,8 +12888,8 @@ type CopyObjectInput struct {
 	// to true causes Amazon S3 to use an S3 Bucket Key for object encryption with
 	// SSE-KMS.
 	//
-	// Specifying this header with a COPY operation doesn’t affect bucket-level
-	// settings for S3 Bucket Key.
+	// Specifying this header with a COPY action doesn’t affect bucket-level settings
+	// for S3 Bucket Key.
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Specifies caching behavior along the request/reply chain.
@@ -12455,7 +12911,7 @@ type CopyObjectInput struct {
 
 	// Specifies the source object for the copy operation. You specify the value
 	// in one of two formats, depending on whether you want to access the source
-	// object through an access point (https://docs.aws.amazon.com/AmazonS3/latest/dev/access-points.html):
+	// object through an access point (https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points.html):
 	//
 	//    * For objects not accessed through an access point, specify the name of
 	//    the source bucket and the key of the source object, separated by a slash
@@ -12471,8 +12927,9 @@ type CopyObjectInput struct {
 	//    the URL encoding of arn:aws:s3:us-west-2:123456789012:accesspoint/my-access-point/object/reports/january.pdf.
 	//    The value must be URL encoded. Amazon S3 supports copy operations using
 	//    access points only when the source and destination buckets are in the
-	//    same AWS Region. Alternatively, for objects accessed through Amazon S3
-	//    on Outposts, specify the ARN of the object as accessed in the format arn:aws:s3-outposts:<Region>:<account-id>:outpost/<outpost-id>/object/<key>.
+	//    same Amazon Web Services Region. Alternatively, for objects accessed through
+	//    Amazon S3 on Outposts, specify the ARN of the object as accessed in the
+	//    format arn:aws:s3-outposts:<Region>:<account-id>:outpost/<outpost-id>/object/<key>.
 	//    For example, to copy the object reports/january.pdf through outpost my-outpost
 	//    owned by account 123456789012 in Region us-west-2, use the URL encoding
 	//    of arn:aws:s3-outposts:us-west-2:123456789012:outpost/my-outpost/object/reports/january.pdf.
@@ -12506,6 +12963,10 @@ type CopyObjectInput struct {
 	// Specifies the customer-provided encryption key for Amazon S3 to use to decrypt
 	// the source object. The encryption key provided in this header must be one
 	// that was used when the source object was created.
+	//
+	// CopySourceSSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CopyObjectInput's
+	// String and GoString methods.
 	CopySourceSSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-copy-source-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321.
@@ -12513,12 +12974,12 @@ type CopyObjectInput struct {
 	// encryption key was transmitted without error.
 	CopySourceSSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-copy-source-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// The account id of the expected destination bucket owner. If the destination
+	// The account ID of the expected destination bucket owner. If the destination
 	// bucket is owned by a different account, the request will fail with an HTTP
 	// 403 (Access Denied) error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 
-	// The account id of the expected source bucket owner. If the source bucket
+	// The account ID of the expected source bucket owner. If the source bucket
 	// is owned by a different account, the request will fail with an HTTP 403 (Access
 	// Denied) error.
 	ExpectedSourceBucketOwner *string `location:"header" locationName:"x-amz-source-expected-bucket-owner" type:"string"`
@@ -12571,7 +13032,7 @@ type CopyObjectInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Specifies the algorithm to use to when encrypting the object (for example,
@@ -12583,6 +13044,10 @@ type CopyObjectInput struct {
 	// S3 does not store the encryption key. The key must be appropriate for use
 	// with the algorithm specified in the x-amz-server-side-encryption-customer-algorithm
 	// header.
+	//
+	// SSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CopyObjectInput's
+	// String and GoString methods.
 	SSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321.
@@ -12590,17 +13055,26 @@ type CopyObjectInput struct {
 	// encryption key was transmitted without error.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// Specifies the AWS KMS Encryption Context to use for object encryption. The
-	// value of this header is a base64-encoded UTF-8 string holding JSON with the
-	// encryption context key-value pairs.
+	// Specifies the Amazon Web Services KMS Encryption Context to use for object
+	// encryption. The value of this header is a base64-encoded UTF-8 string holding
+	// JSON with the encryption context key-value pairs.
+	//
+	// SSEKMSEncryptionContext is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CopyObjectInput's
+	// String and GoString methods.
 	SSEKMSEncryptionContext *string `location:"header" locationName:"x-amz-server-side-encryption-context" type:"string" sensitive:"true"`
 
-	// Specifies the AWS KMS key ID to use for object encryption. All GET and PUT
-	// requests for an object protected by AWS KMS will fail if not made via SSL
-	// or using SigV4. For information about configuring using any of the officially
-	// supported AWS SDKs and AWS CLI, see Specifying the Signature Version in Request
-	// Authentication (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingAWSSDK.html#specify-signature-version)
-	// in the Amazon S3 Developer Guide.
+	// Specifies the Amazon Web Services KMS key ID to use for object encryption.
+	// All GET and PUT requests for an object protected by Amazon Web Services KMS
+	// will fail if not made via SSL or using SigV4. For information about configuring
+	// using any of the officially supported Amazon Web Services SDKs and Amazon
+	// Web Services CLI, see Specifying the Signature Version in Request Authentication
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingAWSSDK.html#specify-signature-version)
+	// in the Amazon S3 User Guide.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CopyObjectInput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
 	// The server-side encryption algorithm used when storing this object in Amazon
@@ -12612,7 +13086,7 @@ type CopyObjectInput struct {
 	// Depending on performance needs, you can specify a different Storage Class.
 	// Amazon S3 on Outposts only uses the OUTPOSTS Storage Class. For more information,
 	// see Storage Classes (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html)
-	// in the Amazon S3 Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	StorageClass *string `location:"header" locationName:"x-amz-storage-class" type:"string" enum:"StorageClass"`
 
 	// The tag-set for the object destination object this value must be used in
@@ -12630,12 +13104,20 @@ type CopyObjectInput struct {
 	WebsiteRedirectLocation *string `location:"header" locationName:"x-amz-website-redirect-location" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CopyObjectInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CopyObjectInput) GoString() string {
 	return s.String()
 }
@@ -12957,7 +13439,7 @@ type CopyObjectOutput struct {
 	_ struct{} `type:"structure" payload:"CopyObjectResult"`
 
 	// Indicates whether the copied object uses an S3 Bucket Key for server-side
-	// encryption with AWS KMS (SSE-KMS).
+	// encryption with Amazon Web Services KMS (SSE-KMS).
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Container for all response elements.
@@ -12983,14 +13465,22 @@ type CopyObjectOutput struct {
 	// verification of the customer-provided encryption key.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// If present, specifies the AWS KMS Encryption Context to use for object encryption.
-	// The value of this header is a base64-encoded UTF-8 string holding JSON with
-	// the encryption context key-value pairs.
+	// If present, specifies the Amazon Web Services KMS Encryption Context to use
+	// for object encryption. The value of this header is a base64-encoded UTF-8
+	// string holding JSON with the encryption context key-value pairs.
+	//
+	// SSEKMSEncryptionContext is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CopyObjectOutput's
+	// String and GoString methods.
 	SSEKMSEncryptionContext *string `location:"header" locationName:"x-amz-server-side-encryption-context" type:"string" sensitive:"true"`
 
-	// If present, specifies the ID of the AWS Key Management Service (AWS KMS)
-	// symmetric customer managed customer master key (CMK) that was used for the
-	// object.
+	// If present, specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetric customer managed key that was used for
+	// the object.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CopyObjectOutput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
 	// The server-side encryption algorithm used when storing this object in Amazon
@@ -13001,12 +13491,20 @@ type CopyObjectOutput struct {
 	VersionId *string `location:"header" locationName:"x-amz-version-id" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CopyObjectOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CopyObjectOutput) GoString() string {
 	return s.String()
 }
@@ -13082,20 +13580,27 @@ type CopyObjectResult struct {
 	_ struct{} `type:"structure"`
 
 	// Returns the ETag of the new object. The ETag reflects only changes to the
-	// contents of an object, not its metadata. The source and destination ETag
-	// is identical for a successfully copied object.
+	// contents of an object, not its metadata.
 	ETag *string `type:"string"`
 
-	// Returns the date that the object was last modified.
+	// Creation date of the object.
 	LastModified *time.Time `type:"timestamp"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CopyObjectResult) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CopyObjectResult) GoString() string {
 	return s.String()
 }
@@ -13123,12 +13628,20 @@ type CopyPartResult struct {
 	LastModified *time.Time `type:"timestamp"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CopyPartResult) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CopyPartResult) GoString() string {
 	return s.String()
 }
@@ -13154,12 +13667,20 @@ type CreateBucketConfiguration struct {
 	LocationConstraint *string `type:"string" enum:"BucketLocationConstraint"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateBucketConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateBucketConfiguration) GoString() string {
 	return s.String()
 }
@@ -13194,7 +13715,10 @@ type CreateBucketInput struct {
 	// Allows grantee to read the bucket ACL.
 	GrantReadACP *string `location:"header" locationName:"x-amz-grant-read-acp" type:"string"`
 
-	// Allows grantee to create, overwrite, and delete any object in the bucket.
+	// Allows grantee to create new objects in the bucket.
+	//
+	// For the bucket and object owners of existing objects, also allows deletions
+	// and overwrites of those objects.
 	GrantWrite *string `location:"header" locationName:"x-amz-grant-write" type:"string"`
 
 	// Allows grantee to write the ACL for the applicable bucket.
@@ -13204,12 +13728,20 @@ type CreateBucketInput struct {
 	ObjectLockEnabledForBucket *bool `location:"header" locationName:"x-amz-bucket-object-lock-enabled" type:"boolean"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateBucketInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateBucketInput) GoString() string {
 	return s.String()
 }
@@ -13300,12 +13832,20 @@ type CreateBucketOutput struct {
 	Location *string `location:"header" locationName:"Location" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateBucketOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateBucketOutput) GoString() string {
 	return s.String()
 }
@@ -13326,20 +13866,20 @@ type CreateMultipartUploadInput struct {
 
 	// The name of the bucket to which to initiate the upload
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
@@ -13349,7 +13889,7 @@ type CreateMultipartUploadInput struct {
 	// to true causes Amazon S3 to use an S3 Bucket Key for object encryption with
 	// SSE-KMS.
 	//
-	// Specifying this header with an object operation doesn’t affect bucket-level
+	// Specifying this header with an object action doesn’t affect bucket-level
 	// settings for S3 Bucket Key.
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
@@ -13370,7 +13910,7 @@ type CreateMultipartUploadInput struct {
 	// A standard MIME type describing the format of the object data.
 	ContentType *string `location:"header" locationName:"Content-Type" type:"string"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -13419,7 +13959,7 @@ type CreateMultipartUploadInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Specifies the algorithm to use to when encrypting the object (for example,
@@ -13431,6 +13971,10 @@ type CreateMultipartUploadInput struct {
 	// S3 does not store the encryption key. The key must be appropriate for use
 	// with the algorithm specified in the x-amz-server-side-encryption-customer-algorithm
 	// header.
+	//
+	// SSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CreateMultipartUploadInput's
+	// String and GoString methods.
 	SSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321.
@@ -13438,17 +13982,26 @@ type CreateMultipartUploadInput struct {
 	// encryption key was transmitted without error.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// Specifies the AWS KMS Encryption Context to use for object encryption. The
-	// value of this header is a base64-encoded UTF-8 string holding JSON with the
-	// encryption context key-value pairs.
+	// Specifies the Amazon Web Services KMS Encryption Context to use for object
+	// encryption. The value of this header is a base64-encoded UTF-8 string holding
+	// JSON with the encryption context key-value pairs.
+	//
+	// SSEKMSEncryptionContext is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CreateMultipartUploadInput's
+	// String and GoString methods.
 	SSEKMSEncryptionContext *string `location:"header" locationName:"x-amz-server-side-encryption-context" type:"string" sensitive:"true"`
 
-	// Specifies the ID of the symmetric customer managed AWS KMS CMK to use for
-	// object encryption. All GET and PUT requests for an object protected by AWS
-	// KMS will fail if not made via SSL or using SigV4. For information about configuring
-	// using any of the officially supported AWS SDKs and AWS CLI, see Specifying
-	// the Signature Version in Request Authentication (https://docs.aws.amazon.com/http:/docs.aws.amazon.com/AmazonS3/latest/dev/UsingAWSSDK.html#specify-signature-version)
-	// in the Amazon S3 Developer Guide.
+	// Specifies the ID of the symmetric customer managed key to use for object
+	// encryption. All GET and PUT requests for an object protected by Amazon Web
+	// Services KMS will fail if not made via SSL or using SigV4. For information
+	// about configuring using any of the officially supported Amazon Web Services
+	// SDKs and Amazon Web Services CLI, see Specifying the Signature Version in
+	// Request Authentication (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingAWSSDK.html#specify-signature-version)
+	// in the Amazon S3 User Guide.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CreateMultipartUploadInput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
 	// The server-side encryption algorithm used when storing this object in Amazon
@@ -13460,7 +14013,7 @@ type CreateMultipartUploadInput struct {
 	// Depending on performance needs, you can specify a different Storage Class.
 	// Amazon S3 on Outposts only uses the OUTPOSTS Storage Class. For more information,
 	// see Storage Classes (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html)
-	// in the Amazon S3 Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	StorageClass *string `location:"header" locationName:"x-amz-storage-class" type:"string" enum:"StorageClass"`
 
 	// The tag-set for the object. The tag-set must be encoded as URL Query parameters.
@@ -13472,12 +14025,20 @@ type CreateMultipartUploadInput struct {
 	WebsiteRedirectLocation *string `location:"header" locationName:"x-amz-website-redirect-location" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateMultipartUploadInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateMultipartUploadInput) GoString() string {
 	return s.String()
 }
@@ -13738,26 +14299,27 @@ type CreateMultipartUploadOutput struct {
 	// incomplete multipart uploads.
 	AbortRuleId *string `location:"header" locationName:"x-amz-abort-rule-id" type:"string"`
 
-	// The name of the bucket to which the multipart upload was initiated.
+	// The name of the bucket to which the multipart upload was initiated. Does
+	// not return the access point ARN or access point alias if used.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	Bucket *string `locationName:"Bucket" type:"string"`
 
 	// Indicates whether the multipart upload uses an S3 Bucket Key for server-side
-	// encryption with AWS KMS (SSE-KMS).
+	// encryption with Amazon Web Services KMS (SSE-KMS).
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Object key for which the multipart upload was initiated.
@@ -13777,14 +14339,22 @@ type CreateMultipartUploadOutput struct {
 	// verification of the customer-provided encryption key.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// If present, specifies the AWS KMS Encryption Context to use for object encryption.
-	// The value of this header is a base64-encoded UTF-8 string holding JSON with
-	// the encryption context key-value pairs.
+	// If present, specifies the Amazon Web Services KMS Encryption Context to use
+	// for object encryption. The value of this header is a base64-encoded UTF-8
+	// string holding JSON with the encryption context key-value pairs.
+	//
+	// SSEKMSEncryptionContext is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CreateMultipartUploadOutput's
+	// String and GoString methods.
 	SSEKMSEncryptionContext *string `location:"header" locationName:"x-amz-server-side-encryption-context" type:"string" sensitive:"true"`
 
-	// If present, specifies the ID of the AWS Key Management Service (AWS KMS)
-	// symmetric customer managed customer master key (CMK) that was used for the
-	// object.
+	// If present, specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetric customer managed key that was used for
+	// the object.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by CreateMultipartUploadOutput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
 	// The server-side encryption algorithm used when storing this object in Amazon
@@ -13795,12 +14365,20 @@ type CreateMultipartUploadOutput struct {
 	UploadId *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateMultipartUploadOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s CreateMultipartUploadOutput) GoString() string {
 	return s.String()
 }
@@ -13886,26 +14464,41 @@ func (s *CreateMultipartUploadOutput) SetUploadId(v string) *CreateMultipartUplo
 
 // The container element for specifying the default Object Lock retention settings
 // for new objects placed in the specified bucket.
+//
+//    * The DefaultRetention settings require both a mode and a period.
+//
+//    * The DefaultRetention period can be either Days or Years but you must
+//    select one. You cannot specify Days and Years at the same time.
 type DefaultRetention struct {
 	_ struct{} `type:"structure"`
 
 	// The number of days that you want to specify for the default retention period.
+	// Must be used with Mode.
 	Days *int64 `type:"integer"`
 
 	// The default Object Lock retention mode you want to apply to new objects placed
-	// in the specified bucket.
+	// in the specified bucket. Must be used with either Days or Years.
 	Mode *string `type:"string" enum:"ObjectLockRetentionMode"`
 
 	// The number of years that you want to specify for the default retention period.
+	// Must be used with Mode.
 	Years *int64 `type:"integer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DefaultRetention) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DefaultRetention) GoString() string {
 	return s.String()
 }
@@ -13942,12 +14535,20 @@ type Delete struct {
 	Quiet *bool `type:"boolean"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Delete) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Delete) GoString() string {
 	return s.String()
 }
@@ -13995,7 +14596,7 @@ type DeleteBucketAnalyticsConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -14006,12 +14607,20 @@ type DeleteBucketAnalyticsConfigurationInput struct {
 	Id *string `location:"querystring" locationName:"id" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketAnalyticsConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketAnalyticsConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -14091,12 +14700,20 @@ type DeleteBucketAnalyticsConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketAnalyticsConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketAnalyticsConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -14109,18 +14726,26 @@ type DeleteBucketCorsInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketCorsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketCorsInput) GoString() string {
 	return s.String()
 }
@@ -14191,12 +14816,20 @@ type DeleteBucketCorsOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketCorsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketCorsOutput) GoString() string {
 	return s.String()
 }
@@ -14210,18 +14843,26 @@ type DeleteBucketEncryptionInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketEncryptionInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketEncryptionInput) GoString() string {
 	return s.String()
 }
@@ -14292,12 +14933,20 @@ type DeleteBucketEncryptionOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketEncryptionOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketEncryptionOutput) GoString() string {
 	return s.String()
 }
@@ -14310,18 +14959,26 @@ type DeleteBucketInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketInput) GoString() string {
 	return s.String()
 }
@@ -14403,12 +15060,20 @@ type DeleteBucketIntelligentTieringConfigurationInput struct {
 	Id *string `location:"querystring" locationName:"id" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketIntelligentTieringConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketIntelligentTieringConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -14482,12 +15147,20 @@ type DeleteBucketIntelligentTieringConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketIntelligentTieringConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketIntelligentTieringConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -14500,7 +15173,7 @@ type DeleteBucketInventoryConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -14511,12 +15184,20 @@ type DeleteBucketInventoryConfigurationInput struct {
 	Id *string `location:"querystring" locationName:"id" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketInventoryConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketInventoryConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -14596,12 +15277,20 @@ type DeleteBucketInventoryConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketInventoryConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketInventoryConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -14614,18 +15303,26 @@ type DeleteBucketLifecycleInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketLifecycleInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketLifecycleInput) GoString() string {
 	return s.String()
 }
@@ -14696,12 +15393,20 @@ type DeleteBucketLifecycleOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketLifecycleOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketLifecycleOutput) GoString() string {
 	return s.String()
 }
@@ -14714,7 +15419,7 @@ type DeleteBucketMetricsConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -14725,12 +15430,20 @@ type DeleteBucketMetricsConfigurationInput struct {
 	Id *string `location:"querystring" locationName:"id" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketMetricsConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketMetricsConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -14810,12 +15523,20 @@ type DeleteBucketMetricsConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketMetricsConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketMetricsConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -14824,12 +15545,20 @@ type DeleteBucketOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketOutput) GoString() string {
 	return s.String()
 }
@@ -14842,18 +15571,26 @@ type DeleteBucketOwnershipControlsInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketOwnershipControlsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketOwnershipControlsInput) GoString() string {
 	return s.String()
 }
@@ -14924,12 +15661,20 @@ type DeleteBucketOwnershipControlsOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketOwnershipControlsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketOwnershipControlsOutput) GoString() string {
 	return s.String()
 }
@@ -14942,18 +15687,26 @@ type DeleteBucketPolicyInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketPolicyInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketPolicyInput) GoString() string {
 	return s.String()
 }
@@ -15024,12 +15777,20 @@ type DeleteBucketPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketPolicyOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketPolicyOutput) GoString() string {
 	return s.String()
 }
@@ -15042,18 +15803,26 @@ type DeleteBucketReplicationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketReplicationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketReplicationInput) GoString() string {
 	return s.String()
 }
@@ -15124,12 +15893,20 @@ type DeleteBucketReplicationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketReplicationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketReplicationOutput) GoString() string {
 	return s.String()
 }
@@ -15142,18 +15919,26 @@ type DeleteBucketTaggingInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketTaggingInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketTaggingInput) GoString() string {
 	return s.String()
 }
@@ -15224,12 +16009,20 @@ type DeleteBucketTaggingOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketTaggingOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketTaggingOutput) GoString() string {
 	return s.String()
 }
@@ -15242,18 +16035,26 @@ type DeleteBucketWebsiteInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketWebsiteInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketWebsiteInput) GoString() string {
 	return s.String()
 }
@@ -15324,12 +16125,20 @@ type DeleteBucketWebsiteOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketWebsiteOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteBucketWebsiteOutput) GoString() string {
 	return s.String()
 }
@@ -15355,12 +16164,20 @@ type DeleteMarkerEntry struct {
 	VersionId *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteMarkerEntry) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteMarkerEntry) GoString() string {
 	return s.String()
 }
@@ -15417,12 +16234,20 @@ type DeleteMarkerReplication struct {
 	Status *string `type:"string" enum:"DeleteMarkerReplicationStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteMarkerReplication) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteMarkerReplication) GoString() string {
 	return s.String()
 }
@@ -15438,29 +16263,30 @@ type DeleteObjectInput struct {
 
 	// The bucket name of the bucket containing the object.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
 	// Indicates whether S3 Object Lock should bypass Governance-mode restrictions
-	// to process this operation.
+	// to process this operation. To use this header, you must have the s3:PutBucketPublicAccessBlock
+	// permission.
 	BypassGovernanceRetention *bool `location:"header" locationName:"x-amz-bypass-governance-retention" type:"boolean"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -15480,19 +16306,27 @@ type DeleteObjectInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// VersionId used to reference a specific version of the object.
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectInput) GoString() string {
 	return s.String()
 }
@@ -15611,12 +16445,20 @@ type DeleteObjectOutput struct {
 	VersionId *string `location:"header" locationName:"x-amz-version-id" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectOutput) GoString() string {
 	return s.String()
 }
@@ -15644,30 +16486,31 @@ type DeleteObjectTaggingInput struct {
 
 	// The bucket name containing the objects from which to remove the tags.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 
-	// Name of the object key.
+	// The key that identifies the object in the bucket from which to remove all
+	// tags.
 	//
 	// Key is a required field
 	Key *string `location:"uri" locationName:"Key" min:"1" type:"string" required:"true"`
@@ -15676,12 +16519,20 @@ type DeleteObjectTaggingInput struct {
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectTaggingInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectTaggingInput) GoString() string {
 	return s.String()
 }
@@ -15773,12 +16624,20 @@ type DeleteObjectTaggingOutput struct {
 	VersionId *string `location:"header" locationName:"x-amz-version-id" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectTaggingOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectTaggingOutput) GoString() string {
 	return s.String()
 }
@@ -15794,27 +16653,27 @@ type DeleteObjectsInput struct {
 
 	// The bucket name containing the objects to delete.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
 	// Specifies whether you want to delete this object even if it has a Governance-type
-	// Object Lock in place. You must have sufficient permissions to perform this
-	// operation.
+	// Object Lock in place. To use this header, you must have the s3:PutBucketPublicAccessBlock
+	// permission.
 	BypassGovernanceRetention *bool `location:"header" locationName:"x-amz-bypass-governance-retention" type:"boolean"`
 
 	// Container for the request.
@@ -15822,7 +16681,7 @@ type DeleteObjectsInput struct {
 	// Delete is a required field
 	Delete *Delete `locationName:"Delete" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -15837,16 +16696,24 @@ type DeleteObjectsInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectsInput) GoString() string {
 	return s.String()
 }
@@ -15952,7 +16819,7 @@ type DeleteObjectsOutput struct {
 	// was successfully deleted.
 	Deleted []*DeletedObject `type:"list" flattened:"true"`
 
-	// Container for a failed delete operation that describes the object that Amazon
+	// Container for a failed delete action that describes the object that Amazon
 	// S3 attempted to delete and the error it encountered.
 	Errors []*Error `locationName:"Error" type:"list" flattened:"true"`
 
@@ -15961,12 +16828,20 @@ type DeleteObjectsOutput struct {
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeleteObjectsOutput) GoString() string {
 	return s.String()
 }
@@ -15997,18 +16872,26 @@ type DeletePublicAccessBlockInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeletePublicAccessBlockInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeletePublicAccessBlockInput) GoString() string {
 	return s.String()
 }
@@ -16079,12 +16962,20 @@ type DeletePublicAccessBlockOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeletePublicAccessBlockOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeletePublicAccessBlockOutput) GoString() string {
 	return s.String()
 }
@@ -16110,12 +17001,20 @@ type DeletedObject struct {
 	VersionId *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeletedObject) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s DeletedObject) GoString() string {
 	return s.String()
 }
@@ -16151,17 +17050,18 @@ type Destination struct {
 
 	// Specify this only in a cross-account scenario (where source and destination
 	// bucket owners are not the same), and you want to change replica ownership
-	// to the AWS account that owns the destination bucket. If this is not specified
-	// in the replication configuration, the replicas are owned by same AWS account
-	// that owns the source object.
+	// to the Amazon Web Services account that owns the destination bucket. If this
+	// is not specified in the replication configuration, the replicas are owned
+	// by same Amazon Web Services account that owns the source object.
 	AccessControlTranslation *AccessControlTranslation `type:"structure"`
 
 	// Destination bucket owner account ID. In a cross-account scenario, if you
-	// direct Amazon S3 to change replica ownership to the AWS account that owns
-	// the destination bucket by specifying the AccessControlTranslation property,
-	// this is the account ID of the destination bucket owner. For more information,
-	// see Replication Additional Configuration: Changing the Replica Owner (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-change-owner.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// direct Amazon S3 to change replica ownership to the Amazon Web Services account
+	// that owns the destination bucket by specifying the AccessControlTranslation
+	// property, this is the account ID of the destination bucket owner. For more
+	// information, see Replication Additional Configuration: Changing the Replica
+	// Owner (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-change-owner.html)
+	// in the Amazon S3 User Guide.
 	Account *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of the bucket where you want Amazon S3 to
@@ -16189,16 +17089,24 @@ type Destination struct {
 	//
 	// For valid values, see the StorageClass element of the PUT Bucket replication
 	// (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTreplication.html)
-	// action in the Amazon Simple Storage Service API Reference.
+	// action in the Amazon S3 API Reference.
 	StorageClass *string `type:"string" enum:"StorageClass"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Destination) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Destination) GoString() string {
 	return s.String()
 }
@@ -16295,19 +17203,31 @@ type Encryption struct {
 	KMSContext *string `type:"string"`
 
 	// If the encryption type is aws:kms, this optional value specifies the ID of
-	// the symmetric customer managed AWS KMS CMK to use for encryption of job results.
-	// Amazon S3 only supports symmetric CMKs. For more information, see Using Symmetric
-	// and Asymmetric Keys (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
-	// in the AWS Key Management Service Developer Guide.
+	// the symmetric customer managed key to use for encryption of job results.
+	// Amazon S3 only supports symmetric keys. For more information, see Using symmetric
+	// and asymmetric keys (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
+	// in the Amazon Web Services Key Management Service Developer Guide.
+	//
+	// KMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by Encryption's
+	// String and GoString methods.
 	KMSKeyId *string `type:"string" sensitive:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Encryption) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Encryption) GoString() string {
 	return s.String()
 }
@@ -16348,21 +17268,29 @@ func (s *Encryption) SetKMSKeyId(v string) *Encryption {
 type EncryptionConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the ID (Key ARN or Alias ARN) of the customer managed customer
-	// master key (CMK) stored in AWS Key Management Service (KMS) for the destination
-	// bucket. Amazon S3 uses this key to encrypt replica objects. Amazon S3 only
-	// supports symmetric customer managed CMKs. For more information, see Using
-	// Symmetric and Asymmetric Keys (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
-	// in the AWS Key Management Service Developer Guide.
+	// Specifies the ID (Key ARN or Alias ARN) of the customer managed Amazon Web
+	// Services KMS key stored in Amazon Web Services Key Management Service (KMS)
+	// for the destination bucket. Amazon S3 uses this key to encrypt replica objects.
+	// Amazon S3 only supports symmetric, customer managed KMS keys. For more information,
+	// see Using symmetric and asymmetric keys (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
+	// in the Amazon Web Services Key Management Service Developer Guide.
 	ReplicaKmsKeyID *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s EncryptionConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s EncryptionConfiguration) GoString() string {
 	return s.String()
 }
@@ -16380,12 +17308,20 @@ type EndEvent struct {
 	_ struct{} `locationName:"EndEvent" type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s EndEvent) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s EndEvent) GoString() string {
 	return s.String()
 }
@@ -16422,14 +17358,14 @@ type Error struct {
 	//    * Code: AccessDenied Description: Access Denied HTTP Status Code: 403
 	//    Forbidden SOAP Fault Code Prefix: Client
 	//
-	//    * Code: AccountProblem Description: There is a problem with your AWS account
-	//    that prevents the operation from completing successfully. Contact AWS
-	//    Support for further assistance. HTTP Status Code: 403 Forbidden SOAP Fault
-	//    Code Prefix: Client
+	//    * Code: AccountProblem Description: There is a problem with your Amazon
+	//    Web Services account that prevents the action from completing successfully.
+	//    Contact Amazon Web Services Support for further assistance. HTTP Status
+	//    Code: 403 Forbidden SOAP Fault Code Prefix: Client
 	//
 	//    * Code: AllAccessDisabled Description: All access to this Amazon S3 resource
-	//    has been disabled. Contact AWS Support for further assistance. HTTP Status
-	//    Code: 403 Forbidden SOAP Fault Code Prefix: Client
+	//    has been disabled. Contact Amazon Web Services Support for further assistance.
+	//    HTTP Status Code: 403 Forbidden SOAP Fault Code Prefix: Client
 	//
 	//    * Code: AmbiguousGrantByEmailAddress Description: The email address you
 	//    provided is associated with more than one account. HTTP Status Code: 400
@@ -16449,8 +17385,8 @@ type Error struct {
 	//    SOAP Fault Code Prefix: Client
 	//
 	//    * Code: BucketAlreadyOwnedByYou Description: The bucket you tried to create
-	//    already exists, and you own it. Amazon S3 returns this error in all AWS
-	//    Regions except in the North Virginia Region. For legacy compatibility,
+	//    already exists, and you own it. Amazon S3 returns this error in all Amazon
+	//    Web Services Regions except in the North Virginia Region. For legacy compatibility,
 	//    if you re-create an existing bucket that you already own in the North
 	//    Virginia Region, Amazon S3 returns 200 OK and resets the bucket access
 	//    control lists (ACLs). Code: 409 Conflict (in all Regions except the North
@@ -16499,9 +17435,9 @@ type Error struct {
 	//    try again. HTTP Status Code: 500 Internal Server Error SOAP Fault Code
 	//    Prefix: Server
 	//
-	//    * Code: InvalidAccessKeyId Description: The AWS access key ID you provided
-	//    does not exist in our records. HTTP Status Code: 403 Forbidden SOAP Fault
-	//    Code Prefix: Client
+	//    * Code: InvalidAccessKeyId Description: The Amazon Web Services access
+	//    key ID you provided does not exist in our records. HTTP Status Code: 403
+	//    Forbidden SOAP Fault Code Prefix: Client
 	//
 	//    * Code: InvalidAddressingHeader Description: You must specify the Anonymous
 	//    role. HTTP Status Code: N/A SOAP Fault Code Prefix: Client
@@ -16528,9 +17464,9 @@ type Error struct {
 	//    Select a Region for Your Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html#access-bucket-intro).
 	//    HTTP Status Code: 400 Bad Request SOAP Fault Code Prefix: Client
 	//
-	//    * Code: InvalidObjectState Description: The operation is not valid for
-	//    the current state of the object. HTTP Status Code: 403 Forbidden SOAP
-	//    Fault Code Prefix: Client
+	//    * Code: InvalidObjectState Description: The action is not valid for the
+	//    current state of the object. HTTP Status Code: 403 Forbidden SOAP Fault
+	//    Code Prefix: Client
 	//
 	//    * Code: InvalidPart Description: One or more of the specified parts could
 	//    not be found. The part might not have been uploaded, or the specified
@@ -16542,8 +17478,8 @@ type Error struct {
 	//    Code: 400 Bad Request SOAP Fault Code Prefix: Client
 	//
 	//    * Code: InvalidPayer Description: All access to this object has been disabled.
-	//    Please contact AWS Support for further assistance. HTTP Status Code: 403
-	//    Forbidden SOAP Fault Code Prefix: Client
+	//    Please contact Amazon Web Services Support for further assistance. HTTP
+	//    Status Code: 403 Forbidden SOAP Fault Code Prefix: Client
 	//
 	//    * Code: InvalidPolicyDocument Description: The content of the form does
 	//    not meet the conditions specified in the policy document. HTTP Status
@@ -16579,12 +17515,12 @@ type Error struct {
 	//    on this bucket. HTTP Status Code: 400 Bad Request Code: N/A
 	//
 	//    * Code: InvalidRequest Description: Amazon S3 Transfer Acceleration is
-	//    not supported on this bucket. Contact AWS Support for more information.
-	//    HTTP Status Code: 400 Bad Request Code: N/A
+	//    not supported on this bucket. Contact Amazon Web Services Support for
+	//    more information. HTTP Status Code: 400 Bad Request Code: N/A
 	//
 	//    * Code: InvalidRequest Description: Amazon S3 Transfer Acceleration cannot
-	//    be enabled on this bucket. Contact AWS Support for more information. HTTP
-	//    Status Code: 400 Bad Request Code: N/A
+	//    be enabled on this bucket. Contact Amazon Web Services Support for more
+	//    information. HTTP Status Code: 400 Bad Request Code: N/A
 	//
 	//    * Code: InvalidSecurity Description: The provided security credentials
 	//    are not valid. HTTP Status Code: 403 Forbidden SOAP Fault Code Prefix:
@@ -16692,10 +17628,10 @@ type Error struct {
 	//
 	//    * Code: NotSignedUp Description: Your account is not signed up for the
 	//    Amazon S3 service. You must sign up before you can use Amazon S3. You
-	//    can sign up at the following URL: https://aws.amazon.com/s3 HTTP Status
-	//    Code: 403 Forbidden SOAP Fault Code Prefix: Client
+	//    can sign up at the following URL: Amazon S3 (http://aws.amazon.com/s3)
+	//    HTTP Status Code: 403 Forbidden SOAP Fault Code Prefix: Client
 	//
-	//    * Code: OperationAborted Description: A conflicting conditional operation
+	//    * Code: OperationAborted Description: A conflicting conditional action
 	//    is currently in progress against this resource. Try again. HTTP Status
 	//    Code: 409 Conflict SOAP Fault Code Prefix: Client
 	//
@@ -16731,8 +17667,8 @@ type Error struct {
 	//    Fault Code Prefix: Client
 	//
 	//    * Code: SignatureDoesNotMatch Description: The request signature we calculated
-	//    does not match the signature you provided. Check your AWS secret access
-	//    key and signing method. For more information, see REST Authentication
+	//    does not match the signature you provided. Check your Amazon Web Services
+	//    secret access key and signing method. For more information, see REST Authentication
 	//    (https://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html)
 	//    and SOAP Authentication (https://docs.aws.amazon.com/AmazonS3/latest/dev/SOAPAuthentication.html)
 	//    for details. HTTP Status Code: 403 Forbidden SOAP Fault Code Prefix: Client
@@ -16781,12 +17717,20 @@ type Error struct {
 	VersionId *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Error) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Error) GoString() string {
 	return s.String()
 }
@@ -16821,16 +17765,28 @@ type ErrorDocument struct {
 
 	// The object key name to use when a 4XX class error occurs.
 	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
+	//
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ErrorDocument) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ErrorDocument) GoString() string {
 	return s.String()
 }
@@ -16859,7 +17815,7 @@ func (s *ErrorDocument) SetKey(v string) *ErrorDocument {
 
 // Optional configuration to replicate existing source bucket objects. For more
 // information, see Replicating Existing Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-what-is-isnot-replicated.html#existing-object-replication)
-// in the Amazon S3 Developer Guide.
+// in the Amazon S3 User Guide.
 type ExistingObjectReplication struct {
 	_ struct{} `type:"structure"`
 
@@ -16867,12 +17823,20 @@ type ExistingObjectReplication struct {
 	Status *string `type:"string" required:"true" enum:"ExistingObjectReplicationStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ExistingObjectReplication) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ExistingObjectReplication) GoString() string {
 	return s.String()
 }
@@ -16905,19 +17869,27 @@ type FilterRule struct {
 	// the filtering rule applies. The maximum length is 1,024 characters. Overlapping
 	// prefixes and suffixes are not supported. For more information, see Configuring
 	// Event Notifications (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	Name *string `type:"string" enum:"FilterRuleName"`
 
 	// The value that the filter searches for in object key names.
 	Value *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s FilterRule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s FilterRule) GoString() string {
 	return s.String()
 }
@@ -16942,18 +17914,26 @@ type GetBucketAccelerateConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAccelerateConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAccelerateConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -17027,12 +18007,20 @@ type GetBucketAccelerateConfigurationOutput struct {
 	Status *string `type:"string" enum:"BucketAccelerateStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAccelerateConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAccelerateConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -17051,18 +18039,26 @@ type GetBucketAclInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAclInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAclInput) GoString() string {
 	return s.String()
 }
@@ -17139,12 +18135,20 @@ type GetBucketAclOutput struct {
 	Owner *Owner `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAclOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAclOutput) GoString() string {
 	return s.String()
 }
@@ -17169,7 +18173,7 @@ type GetBucketAnalyticsConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -17180,12 +18184,20 @@ type GetBucketAnalyticsConfigurationInput struct {
 	Id *string `location:"querystring" locationName:"id" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAnalyticsConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAnalyticsConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -17268,12 +18280,20 @@ type GetBucketAnalyticsConfigurationOutput struct {
 	AnalyticsConfiguration *AnalyticsConfiguration `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAnalyticsConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketAnalyticsConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -17292,18 +18312,26 @@ type GetBucketCorsInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketCorsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketCorsInput) GoString() string {
 	return s.String()
 }
@@ -17378,12 +18406,20 @@ type GetBucketCorsOutput struct {
 	CORSRules []*CORSRule `locationName:"CORSRule" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketCorsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketCorsOutput) GoString() string {
 	return s.String()
 }
@@ -17403,18 +18439,26 @@ type GetBucketEncryptionInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketEncryptionInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketEncryptionInput) GoString() string {
 	return s.String()
 }
@@ -17488,12 +18532,20 @@ type GetBucketEncryptionOutput struct {
 	ServerSideEncryptionConfiguration *ServerSideEncryptionConfiguration `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketEncryptionOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketEncryptionOutput) GoString() string {
 	return s.String()
 }
@@ -17519,12 +18571,20 @@ type GetBucketIntelligentTieringConfigurationInput struct {
 	Id *string `location:"querystring" locationName:"id" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketIntelligentTieringConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketIntelligentTieringConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -17601,12 +18661,20 @@ type GetBucketIntelligentTieringConfigurationOutput struct {
 	IntelligentTieringConfiguration *IntelligentTieringConfiguration `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketIntelligentTieringConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketIntelligentTieringConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -17625,7 +18693,7 @@ type GetBucketInventoryConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -17636,12 +18704,20 @@ type GetBucketInventoryConfigurationInput struct {
 	Id *string `location:"querystring" locationName:"id" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketInventoryConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketInventoryConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -17724,12 +18800,20 @@ type GetBucketInventoryConfigurationOutput struct {
 	InventoryConfiguration *InventoryConfiguration `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketInventoryConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketInventoryConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -17748,18 +18832,26 @@ type GetBucketLifecycleConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLifecycleConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLifecycleConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -17833,12 +18925,20 @@ type GetBucketLifecycleConfigurationOutput struct {
 	Rules []*LifecycleRule `locationName:"Rule" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLifecycleConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLifecycleConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -17857,18 +18957,26 @@ type GetBucketLifecycleInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLifecycleInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLifecycleInput) GoString() string {
 	return s.String()
 }
@@ -17942,12 +19050,20 @@ type GetBucketLifecycleOutput struct {
 	Rules []*Rule `locationName:"Rule" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLifecycleOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLifecycleOutput) GoString() string {
 	return s.String()
 }
@@ -17966,18 +19082,26 @@ type GetBucketLocationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLocationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLocationInput) GoString() string {
 	return s.String()
 }
@@ -18053,12 +19177,20 @@ type GetBucketLocationOutput struct {
 	LocationConstraint *string `type:"string" enum:"BucketLocationConstraint"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLocationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLocationOutput) GoString() string {
 	return s.String()
 }
@@ -18077,18 +19209,26 @@ type GetBucketLoggingInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLoggingInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLoggingInput) GoString() string {
 	return s.String()
 }
@@ -18161,16 +19301,24 @@ type GetBucketLoggingOutput struct {
 	// Describes where logs are stored and the prefix that Amazon S3 assigns to
 	// all log object keys for a bucket. For more information, see PUT Bucket logging
 	// (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTlogging.html)
-	// in the Amazon Simple Storage Service API Reference.
+	// in the Amazon S3 API Reference.
 	LoggingEnabled *LoggingEnabled `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLoggingOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketLoggingOutput) GoString() string {
 	return s.String()
 }
@@ -18189,7 +19337,7 @@ type GetBucketMetricsConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -18200,12 +19348,20 @@ type GetBucketMetricsConfigurationInput struct {
 	Id *string `location:"querystring" locationName:"id" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketMetricsConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketMetricsConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -18288,12 +19444,20 @@ type GetBucketMetricsConfigurationOutput struct {
 	MetricsConfiguration *MetricsConfiguration `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketMetricsConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketMetricsConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -18312,18 +19476,26 @@ type GetBucketNotificationConfigurationRequest struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketNotificationConfigurationRequest) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketNotificationConfigurationRequest) GoString() string {
 	return s.String()
 }
@@ -18398,18 +19570,26 @@ type GetBucketOwnershipControlsInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketOwnershipControlsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketOwnershipControlsInput) GoString() string {
 	return s.String()
 }
@@ -18484,12 +19664,20 @@ type GetBucketOwnershipControlsOutput struct {
 	OwnershipControls *OwnershipControls `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketOwnershipControlsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketOwnershipControlsOutput) GoString() string {
 	return s.String()
 }
@@ -18508,18 +19696,26 @@ type GetBucketPolicyInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketPolicyInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketPolicyInput) GoString() string {
 	return s.String()
 }
@@ -18593,12 +19789,20 @@ type GetBucketPolicyOutput struct {
 	Policy *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketPolicyOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketPolicyOutput) GoString() string {
 	return s.String()
 }
@@ -18617,18 +19821,26 @@ type GetBucketPolicyStatusInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketPolicyStatusInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketPolicyStatusInput) GoString() string {
 	return s.String()
 }
@@ -18702,12 +19914,20 @@ type GetBucketPolicyStatusOutput struct {
 	PolicyStatus *PolicyStatus `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketPolicyStatusOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketPolicyStatusOutput) GoString() string {
 	return s.String()
 }
@@ -18726,18 +19946,26 @@ type GetBucketReplicationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketReplicationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketReplicationInput) GoString() string {
 	return s.String()
 }
@@ -18812,12 +20040,20 @@ type GetBucketReplicationOutput struct {
 	ReplicationConfiguration *ReplicationConfiguration `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketReplicationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketReplicationOutput) GoString() string {
 	return s.String()
 }
@@ -18836,18 +20072,26 @@ type GetBucketRequestPaymentInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketRequestPaymentInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketRequestPaymentInput) GoString() string {
 	return s.String()
 }
@@ -18921,12 +20165,20 @@ type GetBucketRequestPaymentOutput struct {
 	Payer *string `type:"string" enum:"Payer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketRequestPaymentOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketRequestPaymentOutput) GoString() string {
 	return s.String()
 }
@@ -18945,18 +20197,26 @@ type GetBucketTaggingInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketTaggingInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketTaggingInput) GoString() string {
 	return s.String()
 }
@@ -19032,12 +20292,20 @@ type GetBucketTaggingOutput struct {
 	TagSet []*Tag `locationNameList:"Tag" type:"list" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketTaggingOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketTaggingOutput) GoString() string {
 	return s.String()
 }
@@ -19056,18 +20324,26 @@ type GetBucketVersioningInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketVersioningInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketVersioningInput) GoString() string {
 	return s.String()
 }
@@ -19146,12 +20422,20 @@ type GetBucketVersioningOutput struct {
 	Status *string `type:"string" enum:"BucketVersioningStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketVersioningOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketVersioningOutput) GoString() string {
 	return s.String()
 }
@@ -19176,18 +20460,26 @@ type GetBucketWebsiteInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketWebsiteInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketWebsiteInput) GoString() string {
 	return s.String()
 }
@@ -19271,12 +20563,20 @@ type GetBucketWebsiteOutput struct {
 	RoutingRules []*RoutingRule `locationNameList:"RoutingRule" type:"list"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketWebsiteOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetBucketWebsiteOutput) GoString() string {
 	return s.String()
 }
@@ -19310,17 +20610,17 @@ type GetObjectAclInput struct {
 
 	// The bucket name that contains the object for which to get the ACL information.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -19334,19 +20634,27 @@ type GetObjectAclInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// VersionId used to reference a specific version of the object.
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectAclInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectAclInput) GoString() string {
 	return s.String()
 }
@@ -19451,12 +20759,20 @@ type GetObjectAclOutput struct {
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectAclOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectAclOutput) GoString() string {
 	return s.String()
 }
@@ -19484,25 +20800,27 @@ type GetObjectInput struct {
 
 	// The bucket name containing the object.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using an Object Lambda access point the hostname takes the form AccessPointName-AccountId.s3-object-lambda.Region.amazonaws.com.
+	//
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -19544,7 +20862,7 @@ type GetObjectInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Sets the Cache-Control header of the response.
@@ -19565,15 +20883,19 @@ type GetObjectInput struct {
 	// Sets the Expires header of the response.
 	ResponseExpires *time.Time `location:"querystring" locationName:"response-expires" type:"timestamp" timestampFormat:"rfc822"`
 
-	// Specifies the algorithm to use to when encrypting the object (for example,
+	// Specifies the algorithm to use to when decrypting the object (for example,
 	// AES256).
 	SSECustomerAlgorithm *string `location:"header" locationName:"x-amz-server-side-encryption-customer-algorithm" type:"string"`
 
-	// Specifies the customer-provided encryption key for Amazon S3 to use in encrypting
-	// data. This value is used to store the object and then it is discarded; Amazon
-	// S3 does not store the encryption key. The key must be appropriate for use
-	// with the algorithm specified in the x-amz-server-side-encryption-customer-algorithm
+	// Specifies the customer-provided encryption key for Amazon S3 used to encrypt
+	// the data. This value is used to decrypt the object when recovering it and
+	// must match the one used when storing the data. The key must be appropriate
+	// for use with the algorithm specified in the x-amz-server-side-encryption-customer-algorithm
 	// header.
+	//
+	// SSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by GetObjectInput's
+	// String and GoString methods.
 	SSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321.
@@ -19585,12 +20907,20 @@ type GetObjectInput struct {
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectInput) GoString() string {
 	return s.String()
 }
@@ -19784,17 +21114,17 @@ type GetObjectLegalHoldInput struct {
 	// The bucket name containing the object whose Legal Hold status you want to
 	// retrieve.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -19808,19 +21138,27 @@ type GetObjectLegalHoldInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// The version ID of the object whose Legal Hold status you want to retrieve.
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectLegalHoldInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectLegalHoldInput) GoString() string {
 	return s.String()
 }
@@ -19918,12 +21256,20 @@ type GetObjectLegalHoldOutput struct {
 	LegalHold *ObjectLockLegalHold `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectLegalHoldOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectLegalHoldOutput) GoString() string {
 	return s.String()
 }
@@ -19939,28 +21285,36 @@ type GetObjectLockConfigurationInput struct {
 
 	// The bucket whose Object Lock configuration you want to retrieve.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectLockConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectLockConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -20034,12 +21388,20 @@ type GetObjectLockConfigurationOutput struct {
 	ObjectLockConfiguration *ObjectLockConfiguration `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectLockConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectLockConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -20060,7 +21422,7 @@ type GetObjectOutput struct {
 	Body io.ReadCloser `type:"blob"`
 
 	// Indicates whether the object uses an S3 Bucket Key for server-side encryption
-	// with AWS KMS (SSE-KMS).
+	// with Amazon Web Services KMS (SSE-KMS).
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Specifies caching behavior along the request/reply chain.
@@ -20103,7 +21465,7 @@ type GetObjectOutput struct {
 	// The date and time at which the object is no longer cacheable.
 	Expires *string `location:"header" locationName:"Expires" type:"string"`
 
-	// Last modified date of the object
+	// Creation date of the object.
 	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp"`
 
 	// A map of metadata to store with the object in S3.
@@ -20140,7 +21502,7 @@ type GetObjectOutput struct {
 	// request.
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 
-	// Provides information about object restoration operation and expiration time
+	// Provides information about object restoration action and expiration time
 	// of the restored object copy.
 	Restore *string `location:"header" locationName:"x-amz-restore" type:"string"`
 
@@ -20154,9 +21516,13 @@ type GetObjectOutput struct {
 	// verification of the customer-provided encryption key.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// If present, specifies the ID of the AWS Key Management Service (AWS KMS)
-	// symmetric customer managed customer master key (CMK) that was used for the
-	// object.
+	// If present, specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetric customer managed key that was used for
+	// the object.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by GetObjectOutput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
 	// The server-side encryption algorithm used when storing this object in Amazon
@@ -20179,12 +21545,20 @@ type GetObjectOutput struct {
 	WebsiteRedirectLocation *string `location:"header" locationName:"x-amz-website-redirect-location" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectOutput) GoString() string {
 	return s.String()
 }
@@ -20387,17 +21761,17 @@ type GetObjectRetentionInput struct {
 	// The bucket name containing the object whose retention settings you want to
 	// retrieve.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -20411,19 +21785,27 @@ type GetObjectRetentionInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// The version ID for the object whose retention settings you want to retrieve.
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectRetentionInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectRetentionInput) GoString() string {
 	return s.String()
 }
@@ -20521,12 +21903,20 @@ type GetObjectRetentionOutput struct {
 	Retention *ObjectLockRetention `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectRetentionOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectRetentionOutput) GoString() string {
 	return s.String()
 }
@@ -20542,25 +21932,25 @@ type GetObjectTaggingInput struct {
 
 	// The bucket name containing the object for which to get the tagging information.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -20570,16 +21960,31 @@ type GetObjectTaggingInput struct {
 	// Key is a required field
 	Key *string `location:"uri" locationName:"Key" min:"1" type:"string" required:"true"`
 
+	// Confirms that the requester knows that they will be charged for the request.
+	// Bucket owners need not specify this parameter in their requests. For information
+	// about downloading objects from requester pays buckets, see Downloading Objects
+	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
+	// in the Amazon S3 User Guide.
+	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
+
 	// The versionId of the object for which to get the tagging information.
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectTaggingInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectTaggingInput) GoString() string {
 	return s.String()
 }
@@ -20631,6 +22036,12 @@ func (s *GetObjectTaggingInput) SetKey(v string) *GetObjectTaggingInput {
 	return s
 }
 
+// SetRequestPayer sets the RequestPayer field's value.
+func (s *GetObjectTaggingInput) SetRequestPayer(v string) *GetObjectTaggingInput {
+	s.RequestPayer = &v
+	return s
+}
+
 // SetVersionId sets the VersionId field's value.
 func (s *GetObjectTaggingInput) SetVersionId(v string) *GetObjectTaggingInput {
 	s.VersionId = &v
@@ -20676,12 +22087,20 @@ type GetObjectTaggingOutput struct {
 	VersionId *string `location:"header" locationName:"x-amz-version-id" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectTaggingOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectTaggingOutput) GoString() string {
 	return s.String()
 }
@@ -20707,7 +22126,7 @@ type GetObjectTorrentInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -20721,16 +22140,24 @@ type GetObjectTorrentInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectTorrentInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectTorrentInput) GoString() string {
 	return s.String()
 }
@@ -20826,12 +22253,20 @@ type GetObjectTorrentOutput struct {
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectTorrentOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetObjectTorrentOutput) GoString() string {
 	return s.String()
 }
@@ -20857,18 +22292,26 @@ type GetPublicAccessBlockInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetPublicAccessBlockInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetPublicAccessBlockInput) GoString() string {
 	return s.String()
 }
@@ -20943,12 +22386,20 @@ type GetPublicAccessBlockOutput struct {
 	PublicAccessBlockConfiguration *PublicAccessBlockConfiguration `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetPublicAccessBlockOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GetPublicAccessBlockOutput) GoString() string {
 	return s.String()
 }
@@ -20969,12 +22420,20 @@ type GlacierJobParameters struct {
 	Tier *string `type:"string" required:"true" enum:"Tier"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GlacierJobParameters) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s GlacierJobParameters) GoString() string {
 	return s.String()
 }
@@ -21009,12 +22468,20 @@ type Grant struct {
 	Permission *string `type:"string" enum:"Permission"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Grant) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Grant) GoString() string {
 	return s.String()
 }
@@ -21056,7 +22523,7 @@ type Grantee struct {
 	// Email address of the grantee.
 	//
 	// Using email addresses to specify a grantee is only supported in the following
-	// AWS Regions:
+	// Amazon Web Services Regions:
 	//
 	//    * US East (N. Virginia)
 	//
@@ -21076,7 +22543,7 @@ type Grantee struct {
 	//
 	// For a list of all the Amazon S3 supported Regions and endpoints, see Regions
 	// and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
-	// in the AWS General Reference.
+	// in the Amazon Web Services General Reference.
 	EmailAddress *string `type:"string"`
 
 	// The canonical user ID of the grantee.
@@ -21091,12 +22558,20 @@ type Grantee struct {
 	URI *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Grantee) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Grantee) GoString() string {
 	return s.String()
 }
@@ -21149,36 +22624,44 @@ type HeadBucketInput struct {
 
 	// The bucket name.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s HeadBucketInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s HeadBucketInput) GoString() string {
 	return s.String()
 }
@@ -21249,12 +22732,20 @@ type HeadBucketOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s HeadBucketOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s HeadBucketOutput) GoString() string {
 	return s.String()
 }
@@ -21264,25 +22755,25 @@ type HeadObjectInput struct {
 
 	// The name of the bucket containing the object.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -21325,7 +22816,7 @@ type HeadObjectInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Specifies the algorithm to use to when encrypting the object (for example,
@@ -21337,6 +22828,10 @@ type HeadObjectInput struct {
 	// S3 does not store the encryption key. The key must be appropriate for use
 	// with the algorithm specified in the x-amz-server-side-encryption-customer-algorithm
 	// header.
+	//
+	// SSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by HeadObjectInput's
+	// String and GoString methods.
 	SSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321.
@@ -21348,12 +22843,20 @@ type HeadObjectInput struct {
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s HeadObjectInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s HeadObjectInput) GoString() string {
 	return s.String()
 }
@@ -21515,7 +23018,7 @@ type HeadObjectOutput struct {
 	ArchiveStatus *string `location:"header" locationName:"x-amz-archive-status" type:"string" enum:"ArchiveStatus"`
 
 	// Indicates whether the object uses an S3 Bucket Key for server-side encryption
-	// with AWS KMS (SSE-KMS).
+	// with Amazon Web Services KMS (SSE-KMS).
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Specifies caching behavior along the request/reply chain.
@@ -21555,7 +23058,7 @@ type HeadObjectOutput struct {
 	// The date and time at which the object is no longer cacheable.
 	Expires *string `location:"header" locationName:"Expires" type:"string"`
 
-	// Last modified date of the object
+	// Creation date of the object.
 	LastModified *time.Time `location:"header" locationName:"Last-Modified" type:"timestamp"`
 
 	// A map of metadata to store with the object in S3.
@@ -21636,7 +23139,7 @@ type HeadObjectOutput struct {
 	// If an archive copy is already restored, the header value indicates when Amazon
 	// S3 is scheduled to delete the object copy. For example:
 	//
-	// x-amz-restore: ongoing-request="false", expiry-date="Fri, 23 Dec 2012 00:00:00
+	// x-amz-restore: ongoing-request="false", expiry-date="Fri, 21 Dec 2012 00:00:00
 	// GMT"
 	//
 	// If the object restoration is in progress, the header returns the value ongoing-request="true".
@@ -21655,13 +23158,17 @@ type HeadObjectOutput struct {
 	// verification of the customer-provided encryption key.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// If present, specifies the ID of the AWS Key Management Service (AWS KMS)
-	// symmetric customer managed customer master key (CMK) that was used for the
-	// object.
+	// If present, specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetric customer managed key that was used for
+	// the object.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by HeadObjectOutput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
-	// If the object is stored using server-side encryption either with an AWS KMS
-	// customer master key (CMK) or an Amazon S3-managed encryption key, the response
+	// If the object is stored using server-side encryption either with an Amazon
+	// Web Services KMS key or an Amazon S3-managed encryption key, the response
 	// includes this header with the value of the server-side encryption algorithm
 	// used when storing this object in Amazon S3 (for example, AES256, aws:kms).
 	ServerSideEncryption *string `location:"header" locationName:"x-amz-server-side-encryption" type:"string" enum:"ServerSideEncryption"`
@@ -21681,12 +23188,20 @@ type HeadObjectOutput struct {
 	WebsiteRedirectLocation *string `location:"header" locationName:"x-amz-website-redirect-location" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s HeadObjectOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s HeadObjectOutput) GoString() string {
 	return s.String()
 }
@@ -21881,16 +23396,28 @@ type IndexDocument struct {
 	// with the key name images/index.html) The suffix must not be empty and must
 	// not include a slash character.
 	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
+	//
 	// Suffix is a required field
 	Suffix *string `type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s IndexDocument) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s IndexDocument) GoString() string {
 	return s.String()
 }
@@ -21921,17 +23448,25 @@ type Initiator struct {
 	// Name of the Principal.
 	DisplayName *string `type:"string"`
 
-	// If the principal is an AWS account, it provides the Canonical User ID. If
-	// the principal is an IAM User, it provides a user ARN value.
+	// If the principal is an Amazon Web Services account, it provides the Canonical
+	// User ID. If the principal is an IAM User, it provides a user ARN value.
 	ID *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Initiator) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Initiator) GoString() string {
 	return s.String()
 }
@@ -21966,12 +23501,20 @@ type InputSerialization struct {
 	Parquet *ParquetInput `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InputSerialization) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InputSerialization) GoString() string {
 	return s.String()
 }
@@ -22014,12 +23557,20 @@ type IntelligentTieringAndOperator struct {
 	Tags []*Tag `locationName:"Tag" locationNameList:"Tag" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s IntelligentTieringAndOperator) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s IntelligentTieringAndOperator) GoString() string {
 	return s.String()
 }
@@ -22084,12 +23635,20 @@ type IntelligentTieringConfiguration struct {
 	Tierings []*Tiering `locationName:"Tiering" type:"list" flattened:"true" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s IntelligentTieringConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s IntelligentTieringConfiguration) GoString() string {
 	return s.String()
 }
@@ -22164,18 +23723,30 @@ type IntelligentTieringFilter struct {
 
 	// An object key name prefix that identifies the subset of objects to which
 	// the rule applies.
+	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
 	Prefix *string `type:"string"`
 
 	// A container of a key value name pair.
 	Tag *Tag `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s IntelligentTieringFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s IntelligentTieringFilter) GoString() string {
 	return s.String()
 }
@@ -22220,7 +23791,7 @@ func (s *IntelligentTieringFilter) SetTag(v *Tag) *IntelligentTieringFilter {
 
 // Specifies the inventory configuration for an Amazon S3 bucket. For more information,
 // see GET Bucket inventory (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETInventoryConfig.html)
-// in the Amazon Simple Storage Service API Reference.
+// in the Amazon S3 API Reference.
 type InventoryConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -22261,12 +23832,20 @@ type InventoryConfiguration struct {
 	Schedule *InventorySchedule `type:"structure" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryConfiguration) GoString() string {
 	return s.String()
 }
@@ -22364,12 +23943,20 @@ type InventoryDestination struct {
 	S3BucketDestination *InventoryS3BucketDestination `type:"structure" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryDestination) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryDestination) GoString() string {
 	return s.String()
 }
@@ -22410,12 +23997,20 @@ type InventoryEncryption struct {
 	SSES3 *SSES3 `locationName:"SSE-S3" type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryEncryption) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryEncryption) GoString() string {
 	return s.String()
 }
@@ -22458,12 +24053,20 @@ type InventoryFilter struct {
 	Prefix *string `type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryFilter) GoString() string {
 	return s.String()
 }
@@ -22518,12 +24121,20 @@ type InventoryS3BucketDestination struct {
 	Prefix *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryS3BucketDestination) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventoryS3BucketDestination) GoString() string {
 	return s.String()
 }
@@ -22596,12 +24207,20 @@ type InventorySchedule struct {
 	Frequency *string `type:"string" required:"true" enum:"InventoryFrequency"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventorySchedule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s InventorySchedule) GoString() string {
 	return s.String()
 }
@@ -22633,12 +24252,20 @@ type JSONInput struct {
 	Type *string `type:"string" enum:"JSONType"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s JSONInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s JSONInput) GoString() string {
 	return s.String()
 }
@@ -22658,12 +24285,20 @@ type JSONOutput struct {
 	RecordDelimiter *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s JSONOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s JSONOutput) GoString() string {
 	return s.String()
 }
@@ -22683,12 +24318,20 @@ type KeyFilter struct {
 	FilterRules []*FilterRule `locationName:"FilterRule" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s KeyFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s KeyFilter) GoString() string {
 	return s.String()
 }
@@ -22699,39 +24342,47 @@ func (s *KeyFilter) SetFilterRules(v []*FilterRule) *KeyFilter {
 	return s
 }
 
-// A container for specifying the configuration for AWS Lambda notifications.
+// A container for specifying the configuration for Lambda notifications.
 type LambdaFunctionConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon S3 bucket event for which to invoke the AWS Lambda function. For
-	// more information, see Supported Event Types (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// The Amazon S3 bucket event for which to invoke the Lambda function. For more
+	// information, see Supported Event Types (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Events is a required field
 	Events []*string `locationName:"Event" type:"list" flattened:"true" required:"true"`
 
 	// Specifies object key name filtering rules. For information about key name
 	// filtering, see Configuring Event Notifications (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	Filter *NotificationConfigurationFilter `type:"structure"`
 
 	// An optional unique identifier for configurations in a notification configuration.
 	// If you don't provide one, Amazon S3 will assign an ID.
 	Id *string `type:"string"`
 
-	// The Amazon Resource Name (ARN) of the AWS Lambda function that Amazon S3
-	// invokes when the specified event type occurs.
+	// The Amazon Resource Name (ARN) of the Lambda function that Amazon S3 invokes
+	// when the specified event type occurs.
 	//
 	// LambdaFunctionArn is a required field
 	LambdaFunctionArn *string `locationName:"CloudFunction" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LambdaFunctionConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LambdaFunctionConfiguration) GoString() string {
 	return s.String()
 }
@@ -22786,12 +24437,20 @@ type LifecycleConfiguration struct {
 	Rules []*Rule `locationName:"Rule" type:"list" flattened:"true" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleConfiguration) GoString() string {
 	return s.String()
 }
@@ -22844,12 +24503,20 @@ type LifecycleExpiration struct {
 	ExpiredObjectDeleteMarker *bool `type:"boolean"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleExpiration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleExpiration) GoString() string {
 	return s.String()
 }
@@ -22880,7 +24547,7 @@ type LifecycleRule struct {
 	// that Amazon S3 will wait before permanently removing all parts of the upload.
 	// For more information, see Aborting Incomplete Multipart Uploads Using a Bucket
 	// Lifecycle Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuoverview.html#mpu-abort-incomplete-mpu-lifecycle-config)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	AbortIncompleteMultipartUpload *AbortIncompleteMultipartUpload `type:"structure"`
 
 	// Specifies the expiration for the lifecycle of the object in the form of date,
@@ -22888,7 +24555,8 @@ type LifecycleRule struct {
 	Expiration *LifecycleExpiration `type:"structure"`
 
 	// The Filter is used to identify objects that a Lifecycle Rule applies to.
-	// A Filter must have exactly one of Prefix, Tag, or And specified.
+	// A Filter must have exactly one of Prefix, Tag, or And specified. Filter is
+	// required if the LifecycleRule does not containt a Prefix element.
 	Filter *LifecycleRuleFilter `type:"structure"`
 
 	// Unique identifier for the rule. The value cannot be longer than 255 characters.
@@ -22909,7 +24577,11 @@ type LifecycleRule struct {
 	NoncurrentVersionTransitions []*NoncurrentVersionTransition `locationName:"NoncurrentVersionTransition" type:"list" flattened:"true"`
 
 	// Prefix identifying one or more objects to which the rule applies. This is
-	// No longer used; use Filter instead.
+	// no longer used; use Filter instead.
+	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
 	//
 	// Deprecated: Prefix has been deprecated
 	Prefix *string `deprecated:"true" type:"string"`
@@ -22924,12 +24596,20 @@ type LifecycleRule struct {
 	Transitions []*Transition `locationName:"Transition" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleRule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleRule) GoString() string {
 	return s.String()
 }
@@ -23020,12 +24700,20 @@ type LifecycleRuleAndOperator struct {
 	Tags []*Tag `locationName:"Tag" locationNameList:"Tag" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleRuleAndOperator) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleRuleAndOperator) GoString() string {
 	return s.String()
 }
@@ -23073,18 +24761,30 @@ type LifecycleRuleFilter struct {
 	And *LifecycleRuleAndOperator `type:"structure"`
 
 	// Prefix identifying one or more objects to which the rule applies.
+	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
 	Prefix *string `type:"string"`
 
 	// This tag must exist in the object's tag set in order for the rule to apply.
 	Tag *Tag `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleRuleFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LifecycleRuleFilter) GoString() string {
 	return s.String()
 }
@@ -23139,18 +24839,26 @@ type ListBucketAnalyticsConfigurationsInput struct {
 	// should begin.
 	ContinuationToken *string `location:"querystring" locationName:"continuation-token" type:"string"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketAnalyticsConfigurationsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketAnalyticsConfigurationsInput) GoString() string {
 	return s.String()
 }
@@ -23244,12 +24952,20 @@ type ListBucketAnalyticsConfigurationsOutput struct {
 	NextContinuationToken *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketAnalyticsConfigurationsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketAnalyticsConfigurationsOutput) GoString() string {
 	return s.String()
 }
@@ -23292,12 +25008,20 @@ type ListBucketIntelligentTieringConfigurationsInput struct {
 	ContinuationToken *string `location:"querystring" locationName:"continuation-token" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketIntelligentTieringConfigurationsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketIntelligentTieringConfigurationsInput) GoString() string {
 	return s.String()
 }
@@ -23385,12 +25109,20 @@ type ListBucketIntelligentTieringConfigurationsOutput struct {
 	NextContinuationToken *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketIntelligentTieringConfigurationsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketIntelligentTieringConfigurationsOutput) GoString() string {
 	return s.String()
 }
@@ -23433,18 +25165,26 @@ type ListBucketInventoryConfigurationsInput struct {
 	// that Amazon S3 understands.
 	ContinuationToken *string `location:"querystring" locationName:"continuation-token" type:"string"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketInventoryConfigurationsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketInventoryConfigurationsInput) GoString() string {
 	return s.String()
 }
@@ -23538,12 +25278,20 @@ type ListBucketInventoryConfigurationsOutput struct {
 	NextContinuationToken *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketInventoryConfigurationsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketInventoryConfigurationsOutput) GoString() string {
 	return s.String()
 }
@@ -23586,18 +25334,26 @@ type ListBucketMetricsConfigurationsInput struct {
 	// value that Amazon S3 understands.
 	ContinuationToken *string `location:"querystring" locationName:"continuation-token" type:"string"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketMetricsConfigurationsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketMetricsConfigurationsInput) GoString() string {
 	return s.String()
 }
@@ -23692,12 +25448,20 @@ type ListBucketMetricsConfigurationsOutput struct {
 	NextContinuationToken *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketMetricsConfigurationsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketMetricsConfigurationsOutput) GoString() string {
 	return s.String()
 }
@@ -23730,12 +25494,20 @@ type ListBucketsInput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketsInput) GoString() string {
 	return s.String()
 }
@@ -23750,12 +25522,20 @@ type ListBucketsOutput struct {
 	Owner *Owner `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListBucketsOutput) GoString() string {
 	return s.String()
 }
@@ -23777,20 +25557,20 @@ type ListMultipartUploadsInput struct {
 
 	// The name of the bucket to which the multipart upload was initiated.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
@@ -23813,7 +25593,7 @@ type ListMultipartUploadsInput struct {
 	// keys in the response.
 	EncodingType *string `location:"querystring" locationName:"encoding-type" type:"string" enum:"EncodingType"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -23848,12 +25628,20 @@ type ListMultipartUploadsInput struct {
 	UploadIdMarker *string `location:"querystring" locationName:"upload-id-marker" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListMultipartUploadsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListMultipartUploadsInput) GoString() string {
 	return s.String()
 }
@@ -23959,7 +25747,8 @@ func (s ListMultipartUploadsInput) updateArnableField(v string) (interface{}, er
 type ListMultipartUploadsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the bucket to which the multipart upload was initiated.
+	// The name of the bucket to which the multipart upload was initiated. Does
+	// not return the access point ARN or access point alias if used.
 	Bucket *string `type:"string"`
 
 	// If you specify a delimiter in the request, then the result returns each distinct
@@ -24013,12 +25802,20 @@ type ListMultipartUploadsOutput struct {
 	Uploads []*MultipartUpload `locationName:"Upload" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListMultipartUploadsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListMultipartUploadsOutput) GoString() string {
 	return s.String()
 }
@@ -24125,7 +25922,7 @@ type ListObjectVersionsInput struct {
 	// keys in the response.
 	EncodingType *string `location:"querystring" locationName:"encoding-type" type:"string" enum:"EncodingType"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -24134,7 +25931,7 @@ type ListObjectVersionsInput struct {
 	KeyMarker *string `location:"querystring" locationName:"key-marker" type:"string"`
 
 	// Sets the maximum number of keys returned in the response. By default the
-	// API returns up to 1,000 key names. The response might contain fewer keys
+	// action returns up to 1,000 key names. The response might contain fewer keys
 	// but will never contain more. If additional keys satisfy the search criteria,
 	// but were not returned because max-keys was exceeded, the response contains
 	// <isTruncated>true</isTruncated>. To return the additional keys, see key-marker
@@ -24152,12 +25949,20 @@ type ListObjectVersionsInput struct {
 	VersionIdMarker *string `location:"querystring" locationName:"version-id-marker" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectVersionsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectVersionsInput) GoString() string {
 	return s.String()
 }
@@ -24324,12 +26129,20 @@ type ListObjectVersionsOutput struct {
 	Versions []*ObjectVersion `locationName:"Version" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectVersionsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectVersionsOutput) GoString() string {
 	return s.String()
 }
@@ -24417,20 +26230,20 @@ type ListObjectsInput struct {
 
 	// The name of the bucket containing the objects.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
@@ -24446,16 +26259,17 @@ type ListObjectsInput struct {
 	// keys in the response.
 	EncodingType *string `location:"querystring" locationName:"encoding-type" type:"string" enum:"EncodingType"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 
-	// Specifies the key to start with when listing objects in a bucket.
+	// Marker is where you want Amazon S3 to start listing from. Amazon S3 starts
+	// listing after this specified key. Marker can be any key in the bucket.
 	Marker *string `location:"querystring" locationName:"marker" type:"string"`
 
 	// Sets the maximum number of keys returned in the response. By default the
-	// API returns up to 1,000 key names. The response might contain fewer keys
+	// action returns up to 1,000 key names. The response might contain fewer keys
 	// but will never contain more.
 	MaxKeys *int64 `location:"querystring" locationName:"max-keys" type:"integer"`
 
@@ -24468,12 +26282,20 @@ type ListObjectsInput struct {
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectsInput) GoString() string {
 	return s.String()
 }
@@ -24579,8 +26401,8 @@ func (s ListObjectsInput) updateArnableField(v string) (interface{}, error) {
 type ListObjectsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// All of the keys rolled up in a common prefix count as a single return when
-	// calculating the number of returns.
+	// All of the keys (up to 1,000) rolled up in a common prefix count as a single
+	// return when calculating the number of returns.
 	//
 	// A response can contain CommonPrefixes only if you specify a delimiter.
 	//
@@ -24636,12 +26458,20 @@ type ListObjectsOutput struct {
 	Prefix *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectsOutput) GoString() string {
 	return s.String()
 }
@@ -24711,20 +26541,20 @@ type ListObjectsV2Input struct {
 
 	// Bucket name to list.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
@@ -24740,7 +26570,7 @@ type ListObjectsV2Input struct {
 	// Encoding type used by Amazon S3 to encode object keys in the response.
 	EncodingType *string `location:"querystring" locationName:"encoding-type" type:"string" enum:"EncodingType"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -24751,7 +26581,7 @@ type ListObjectsV2Input struct {
 	FetchOwner *bool `location:"querystring" locationName:"fetch-owner" type:"boolean"`
 
 	// Sets the maximum number of keys returned in the response. By default the
-	// API returns up to 1,000 key names. The response might contain fewer keys
+	// action returns up to 1,000 key names. The response might contain fewer keys
 	// but will never contain more.
 	MaxKeys *int64 `location:"querystring" locationName:"max-keys" type:"integer"`
 
@@ -24768,12 +26598,20 @@ type ListObjectsV2Input struct {
 	StartAfter *string `location:"querystring" locationName:"start-after" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectsV2Input) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectsV2Input) GoString() string {
 	return s.String()
 }
@@ -24891,8 +26729,8 @@ func (s ListObjectsV2Input) updateArnableField(v string) (interface{}, error) {
 type ListObjectsV2Output struct {
 	_ struct{} `type:"structure"`
 
-	// All of the keys rolled up into a common prefix count as a single return when
-	// calculating the number of returns.
+	// All of the keys (up to 1,000) rolled up into a common prefix count as a single
+	// return when calculating the number of returns.
 	//
 	// A response can contain CommonPrefixes only if you specify a delimiter.
 	//
@@ -24936,31 +26774,31 @@ type ListObjectsV2Output struct {
 	IsTruncated *bool `type:"boolean"`
 
 	// KeyCount is the number of keys returned with this request. KeyCount will
-	// always be less than equals to MaxKeys field. Say you ask for 50 keys, your
-	// result will include less than equals 50 keys
+	// always be less than or equals to MaxKeys field. Say you ask for 50 keys,
+	// your result will include less than equals 50 keys
 	KeyCount *int64 `type:"integer"`
 
 	// Sets the maximum number of keys returned in the response. By default the
-	// API returns up to 1,000 key names. The response might contain fewer keys
+	// action returns up to 1,000 key names. The response might contain fewer keys
 	// but will never contain more.
 	MaxKeys *int64 `type:"integer"`
 
 	// The bucket name.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	Name *string `type:"string"`
 
 	// NextContinuationToken is sent when isTruncated is true, which means there
@@ -24976,12 +26814,20 @@ type ListObjectsV2Output struct {
 	StartAfter *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectsV2Output) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListObjectsV2Output) GoString() string {
 	return s.String()
 }
@@ -25063,25 +26909,25 @@ type ListPartsInput struct {
 
 	// The name of the bucket to which the parts are being uploaded.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -25102,7 +26948,7 @@ type ListPartsInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Upload ID identifying the multipart upload whose parts are being listed.
@@ -25111,12 +26957,20 @@ type ListPartsInput struct {
 	UploadId *string `location:"querystring" locationName:"uploadId" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListPartsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListPartsInput) GoString() string {
 	return s.String()
 }
@@ -25241,13 +27095,14 @@ type ListPartsOutput struct {
 	// incomplete multipart uploads.
 	AbortRuleId *string `location:"header" locationName:"x-amz-abort-rule-id" type:"string"`
 
-	// The name of the bucket to which the multipart upload was initiated.
+	// The name of the bucket to which the multipart upload was initiated. Does
+	// not return the access point ARN or access point alias if used.
 	Bucket *string `type:"string"`
 
 	// Container element that identifies who initiated the multipart upload. If
-	// the initiator is an AWS account, this element provides the same information
-	// as the Owner element. If the initiator is an IAM User, this element provides
-	// the user ARN and display name.
+	// the initiator is an Amazon Web Services account, this element provides the
+	// same information as the Owner element. If the initiator is an IAM User, this
+	// element provides the user ARN and display name.
 	Initiator *Initiator `type:"structure"`
 
 	// Indicates whether the returned list of parts is truncated. A true value indicates
@@ -25292,12 +27147,20 @@ type ListPartsOutput struct {
 	UploadId *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListPartsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ListPartsOutput) GoString() string {
 	return s.String()
 }
@@ -25427,12 +27290,20 @@ type Location struct {
 	UserMetadata []*MetadataEntry `locationNameList:"MetadataEntry" type:"list"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Location) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Location) GoString() string {
 	return s.String()
 }
@@ -25524,7 +27395,7 @@ func (s *Location) SetUserMetadata(v []*MetadataEntry) *Location {
 // Describes where logs are stored and the prefix that Amazon S3 assigns to
 // all log object keys for a bucket. For more information, see PUT Bucket logging
 // (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTlogging.html)
-// in the Amazon Simple Storage Service API Reference.
+// in the Amazon S3 API Reference.
 type LoggingEnabled struct {
 	_ struct{} `type:"structure"`
 
@@ -25549,12 +27420,20 @@ type LoggingEnabled struct {
 	TargetPrefix *string `type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LoggingEnabled) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s LoggingEnabled) GoString() string {
 	return s.String()
 }
@@ -25614,12 +27493,20 @@ type MetadataEntry struct {
 	Value *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MetadataEntry) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MetadataEntry) GoString() string {
 	return s.String()
 }
@@ -25651,12 +27538,20 @@ type Metrics struct {
 	Status *string `type:"string" required:"true" enum:"MetricsStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Metrics) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Metrics) GoString() string {
 	return s.String()
 }
@@ -25692,6 +27587,9 @@ func (s *Metrics) SetStatus(v string) *Metrics {
 type MetricsAndOperator struct {
 	_ struct{} `type:"structure"`
 
+	// The access point ARN used when evaluating an AND predicate.
+	AccessPointArn *string `type:"string"`
+
 	// The prefix used when evaluating an AND predicate.
 	Prefix *string `type:"string"`
 
@@ -25699,12 +27597,20 @@ type MetricsAndOperator struct {
 	Tags []*Tag `locationName:"Tag" locationNameList:"Tag" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MetricsAndOperator) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MetricsAndOperator) GoString() string {
 	return s.String()
 }
@@ -25729,6 +27635,12 @@ func (s *MetricsAndOperator) Validate() error {
 	return nil
 }
 
+// SetAccessPointArn sets the AccessPointArn field's value.
+func (s *MetricsAndOperator) SetAccessPointArn(v string) *MetricsAndOperator {
+	s.AccessPointArn = &v
+	return s
+}
+
 // SetPrefix sets the Prefix field's value.
 func (s *MetricsAndOperator) SetPrefix(v string) *MetricsAndOperator {
 	s.Prefix = &v
@@ -25745,15 +27657,14 @@ func (s *MetricsAndOperator) SetTags(v []*Tag) *MetricsAndOperator {
 // by the metrics configuration ID) from an Amazon S3 bucket. If you're updating
 // an existing metrics configuration, note that this is a full replacement of
 // the existing metrics configuration. If you don't include the elements you
-// want to keep, they are erased. For more information, see PUT Bucket metrics
-// (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTMetricConfiguration.html)
-// in the Amazon Simple Storage Service API Reference.
+// want to keep, they are erased. For more information, see PutBucketMetricsConfiguration
+// (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTMetricConfiguration.html).
 type MetricsConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies a metrics configuration filter. The metrics configuration will
 	// only include objects that meet the filter's criteria. A filter must be a
-	// prefix, a tag, or a conjunction (MetricsAndOperator).
+	// prefix, an object tag, an access point ARN, or a conjunction (MetricsAndOperator).
 	Filter *MetricsFilter `type:"structure"`
 
 	// The ID used to identify the metrics configuration.
@@ -25762,12 +27673,20 @@ type MetricsConfiguration struct {
 	Id *string `type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MetricsConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MetricsConfiguration) GoString() string {
 	return s.String()
 }
@@ -25804,9 +27723,13 @@ func (s *MetricsConfiguration) SetId(v string) *MetricsConfiguration {
 
 // Specifies a metrics configuration filter. The metrics configuration only
 // includes objects that meet the filter's criteria. A filter must be a prefix,
-// a tag, or a conjunction (MetricsAndOperator).
+// an object tag, an access point ARN, or a conjunction (MetricsAndOperator).
+// For more information, see PutBucketMetricsConfiguration (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketMetricsConfiguration.html).
 type MetricsFilter struct {
 	_ struct{} `type:"structure"`
+
+	// The access point ARN used when evaluating a metrics filter.
+	AccessPointArn *string `type:"string"`
 
 	// A conjunction (logical AND) of predicates, which is used in evaluating a
 	// metrics filter. The operator must have at least two predicates, and an object
@@ -25820,12 +27743,20 @@ type MetricsFilter struct {
 	Tag *Tag `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MetricsFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MetricsFilter) GoString() string {
 	return s.String()
 }
@@ -25848,6 +27779,12 @@ func (s *MetricsFilter) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAccessPointArn sets the AccessPointArn field's value.
+func (s *MetricsFilter) SetAccessPointArn(v string) *MetricsFilter {
+	s.AccessPointArn = &v
+	return s
 }
 
 // SetAnd sets the And field's value.
@@ -25891,12 +27828,20 @@ type MultipartUpload struct {
 	UploadId *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MultipartUpload) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s MultipartUpload) GoString() string {
 	return s.String()
 }
@@ -25949,16 +27894,24 @@ type NoncurrentVersionExpiration struct {
 	// perform the associated action. For information about the noncurrent days
 	// calculations, see How Amazon S3 Calculates When an Object Became Noncurrent
 	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/intro-lifecycle-rules.html#non-current-days-calculations)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	NoncurrentDays *int64 `type:"integer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NoncurrentVersionExpiration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NoncurrentVersionExpiration) GoString() string {
 	return s.String()
 }
@@ -25983,19 +27936,27 @@ type NoncurrentVersionTransition struct {
 	// perform the associated action. For information about the noncurrent days
 	// calculations, see How Amazon S3 Calculates How Long an Object Has Been Noncurrent
 	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/intro-lifecycle-rules.html#non-current-days-calculations)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	NoncurrentDays *int64 `type:"integer"`
 
 	// The class of storage used to store the object.
 	StorageClass *string `type:"string" enum:"TransitionStorageClass"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NoncurrentVersionTransition) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NoncurrentVersionTransition) GoString() string {
 	return s.String()
 }
@@ -26017,8 +27978,8 @@ func (s *NoncurrentVersionTransition) SetStorageClass(v string) *NoncurrentVersi
 type NotificationConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// Describes the AWS Lambda functions to invoke and the events for which to
-	// invoke them.
+	// Describes the Lambda functions to invoke and the events for which to invoke
+	// them.
 	LambdaFunctionConfigurations []*LambdaFunctionConfiguration `locationName:"CloudFunctionConfiguration" type:"list" flattened:"true"`
 
 	// The Amazon Simple Queue Service queues to publish messages to and the events
@@ -26030,12 +27991,20 @@ type NotificationConfiguration struct {
 	TopicConfigurations []*TopicConfiguration `locationName:"TopicConfiguration" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NotificationConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NotificationConfiguration) GoString() string {
 	return s.String()
 }
@@ -26101,7 +28070,7 @@ func (s *NotificationConfiguration) SetTopicConfigurations(v []*TopicConfigurati
 type NotificationConfigurationDeprecated struct {
 	_ struct{} `type:"structure"`
 
-	// Container for specifying the AWS Lambda notification configuration.
+	// Container for specifying the Lambda notification configuration.
 	CloudFunctionConfiguration *CloudFunctionConfiguration `type:"structure"`
 
 	// This data type is deprecated. This data type specifies the configuration
@@ -26115,12 +28084,20 @@ type NotificationConfigurationDeprecated struct {
 	TopicConfiguration *TopicConfigurationDeprecated `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NotificationConfigurationDeprecated) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NotificationConfigurationDeprecated) GoString() string {
 	return s.String()
 }
@@ -26145,7 +28122,7 @@ func (s *NotificationConfigurationDeprecated) SetTopicConfiguration(v *TopicConf
 
 // Specifies object key name filtering rules. For information about key name
 // filtering, see Configuring Event Notifications (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 type NotificationConfigurationFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -26153,12 +28130,20 @@ type NotificationConfigurationFilter struct {
 	Key *KeyFilter `locationName:"S3Key" type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NotificationConfigurationFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s NotificationConfigurationFilter) GoString() string {
 	return s.String()
 }
@@ -26179,12 +28164,14 @@ type Object struct {
 	// was created and how it is encrypted as described below:
 	//
 	//    * Objects created by the PUT Object, POST Object, or Copy operation, or
-	//    through the AWS Management Console, and are encrypted by SSE-S3 or plaintext,
-	//    have ETags that are an MD5 digest of their object data.
+	//    through the Amazon Web Services Management Console, and are encrypted
+	//    by SSE-S3 or plaintext, have ETags that are an MD5 digest of their object
+	//    data.
 	//
 	//    * Objects created by the PUT Object, POST Object, or Copy operation, or
-	//    through the AWS Management Console, and are encrypted by SSE-C or SSE-KMS,
-	//    have ETags that are not an MD5 digest of their object data.
+	//    through the Amazon Web Services Management Console, and are encrypted
+	//    by SSE-C or SSE-KMS, have ETags that are not an MD5 digest of their object
+	//    data.
 	//
 	//    * If an object is created by either the Multipart Upload or Part Copy
 	//    operation, the ETag is not an MD5 digest, regardless of the method of
@@ -26195,7 +28182,7 @@ type Object struct {
 	// the object.
 	Key *string `min:"1" type:"string"`
 
-	// The date the Object was Last Modified
+	// Creation date of the object.
 	LastModified *time.Time `type:"timestamp"`
 
 	// The owner of the object
@@ -26208,12 +28195,20 @@ type Object struct {
 	StorageClass *string `type:"string" enum:"ObjectStorageClass"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Object) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Object) GoString() string {
 	return s.String()
 }
@@ -26258,7 +28253,11 @@ func (s *Object) SetStorageClass(v string) *Object {
 type ObjectIdentifier struct {
 	_ struct{} `type:"structure"`
 
-	// Key name of the object to delete.
+	// Key name of the object.
+	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
 	//
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
@@ -26267,12 +28266,20 @@ type ObjectIdentifier struct {
 	VersionId *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectIdentifier) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectIdentifier) GoString() string {
 	return s.String()
 }
@@ -26309,19 +28316,31 @@ func (s *ObjectIdentifier) SetVersionId(v string) *ObjectIdentifier {
 type ObjectLockConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether this bucket has an Object Lock configuration enabled.
+	// Indicates whether this bucket has an Object Lock configuration enabled. Enable
+	// ObjectLockEnabled when you apply ObjectLockConfiguration to a bucket.
 	ObjectLockEnabled *string `type:"string" enum:"ObjectLockEnabled"`
 
-	// The Object Lock rule in place for the specified object.
+	// Specifies the Object Lock rule for the specified object. Enable the this
+	// rule when you apply ObjectLockConfiguration to a bucket. Bucket settings
+	// require both a mode and a period. The period can be either Days or Years
+	// but you must select one. You cannot specify Days and Years at the same time.
 	Rule *ObjectLockRule `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectLockConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectLockConfiguration) GoString() string {
 	return s.String()
 }
@@ -26346,12 +28365,20 @@ type ObjectLockLegalHold struct {
 	Status *string `type:"string" enum:"ObjectLockLegalHoldStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectLockLegalHold) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectLockLegalHold) GoString() string {
 	return s.String()
 }
@@ -26373,12 +28400,20 @@ type ObjectLockRetention struct {
 	RetainUntilDate *time.Time `type:"timestamp" timestampFormat:"iso8601"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectLockRetention) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectLockRetention) GoString() string {
 	return s.String()
 }
@@ -26399,17 +28434,27 @@ func (s *ObjectLockRetention) SetRetainUntilDate(v time.Time) *ObjectLockRetenti
 type ObjectLockRule struct {
 	_ struct{} `type:"structure"`
 
-	// The default retention period that you want to apply to new objects placed
-	// in the specified bucket.
+	// The default Object Lock retention mode and period that you want to apply
+	// to new objects placed in the specified bucket. Bucket settings require both
+	// a mode and a period. The period can be either Days or Years but you must
+	// select one. You cannot specify Days and Years at the same time.
 	DefaultRetention *DefaultRetention `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectLockRule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectLockRule) GoString() string {
 	return s.String()
 }
@@ -26450,12 +28495,20 @@ type ObjectVersion struct {
 	VersionId *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectVersion) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ObjectVersion) GoString() string {
 	return s.String()
 }
@@ -26516,12 +28569,20 @@ type OutputLocation struct {
 	S3 *Location `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s OutputLocation) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s OutputLocation) GoString() string {
 	return s.String()
 }
@@ -26558,12 +28619,20 @@ type OutputSerialization struct {
 	JSON *JSONOutput `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s OutputSerialization) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s OutputSerialization) GoString() string {
 	return s.String()
 }
@@ -26591,12 +28660,20 @@ type Owner struct {
 	ID *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Owner) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Owner) GoString() string {
 	return s.String()
 }
@@ -26623,12 +28700,20 @@ type OwnershipControls struct {
 	Rules []*OwnershipControlsRule `locationName:"Rule" type:"list" flattened:"true" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s OwnershipControls) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s OwnershipControls) GoString() string {
 	return s.String()
 }
@@ -26679,12 +28764,20 @@ type OwnershipControlsRule struct {
 	ObjectOwnership *string `type:"string" required:"true" enum:"ObjectOwnership"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s OwnershipControlsRule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s OwnershipControlsRule) GoString() string {
 	return s.String()
 }
@@ -26713,12 +28806,20 @@ type ParquetInput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ParquetInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ParquetInput) GoString() string {
 	return s.String()
 }
@@ -26741,12 +28842,20 @@ type Part struct {
 	Size *int64 `type:"integer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Part) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Part) GoString() string {
 	return s.String()
 }
@@ -26784,12 +28893,20 @@ type PolicyStatus struct {
 	IsPublic *bool `locationName:"IsPublic" type:"boolean"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PolicyStatus) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PolicyStatus) GoString() string {
 	return s.String()
 }
@@ -26814,12 +28931,20 @@ type Progress struct {
 	BytesScanned *int64 `type:"long"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Progress) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Progress) GoString() string {
 	return s.String()
 }
@@ -26850,12 +28975,20 @@ type ProgressEvent struct {
 	Details *Progress `locationName:"Details" type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ProgressEvent) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ProgressEvent) GoString() string {
 	return s.String()
 }
@@ -26899,7 +29032,7 @@ func (s *ProgressEvent) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstr
 // S3 bucket. You can enable the configuration options in any combination. For
 // more information about when Amazon S3 considers a bucket or object public,
 // see The Meaning of "Public" (https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html#access-control-block-public-access-policy-status)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 type PublicAccessBlockConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -26934,8 +29067,8 @@ type PublicAccessBlockConfiguration struct {
 
 	// Specifies whether Amazon S3 should restrict public bucket policies for this
 	// bucket. Setting this element to TRUE restricts access to this bucket to only
-	// AWS service principals and authorized users within this account if the bucket
-	// has a public policy.
+	// Amazon Web Service principals and authorized users within this account if
+	// the bucket has a public policy.
 	//
 	// Enabling this setting doesn't affect previously stored bucket policies, except
 	// that public and cross-account access within any public bucket policy, including
@@ -26943,12 +29076,20 @@ type PublicAccessBlockConfiguration struct {
 	RestrictPublicBuckets *bool `locationName:"RestrictPublicBuckets" type:"boolean"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PublicAccessBlockConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PublicAccessBlockConfiguration) GoString() string {
 	return s.String()
 }
@@ -26990,18 +29131,26 @@ type PutBucketAccelerateConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAccelerateConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAccelerateConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -27081,12 +29230,20 @@ type PutBucketAccelerateConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAccelerateConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAccelerateConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -27105,7 +29262,7 @@ type PutBucketAclInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -27120,19 +29277,30 @@ type PutBucketAclInput struct {
 	// Allows grantee to read the bucket ACL.
 	GrantReadACP *string `location:"header" locationName:"x-amz-grant-read-acp" type:"string"`
 
-	// Allows grantee to create, overwrite, and delete any object in the bucket.
+	// Allows grantee to create new objects in the bucket.
+	//
+	// For the bucket and object owners of existing objects, also allows deletions
+	// and overwrites of those objects.
 	GrantWrite *string `location:"header" locationName:"x-amz-grant-write" type:"string"`
 
 	// Allows grantee to write the ACL for the applicable bucket.
 	GrantWriteACP *string `location:"header" locationName:"x-amz-grant-write-acp" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAclInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAclInput) GoString() string {
 	return s.String()
 }
@@ -27250,12 +29418,20 @@ type PutBucketAclOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAclOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAclOutput) GoString() string {
 	return s.String()
 }
@@ -27273,7 +29449,7 @@ type PutBucketAnalyticsConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -27284,12 +29460,20 @@ type PutBucketAnalyticsConfigurationInput struct {
 	Id *string `location:"querystring" locationName:"id" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAnalyticsConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAnalyticsConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -27383,12 +29567,20 @@ type PutBucketAnalyticsConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAnalyticsConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketAnalyticsConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -27404,23 +29596,31 @@ type PutBucketCorsInput struct {
 	// Describes the cross-origin access configuration for objects in an Amazon
 	// S3 bucket. For more information, see Enabling Cross-Origin Resource Sharing
 	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html) in the Amazon
-	// Simple Storage Service Developer Guide.
+	// S3 User Guide.
 	//
 	// CORSConfiguration is a required field
 	CORSConfiguration *CORSConfiguration `locationName:"CORSConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketCorsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketCorsInput) GoString() string {
 	return s.String()
 }
@@ -27505,12 +29705,20 @@ type PutBucketCorsOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketCorsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketCorsOutput) GoString() string {
 	return s.String()
 }
@@ -27519,15 +29727,15 @@ type PutBucketEncryptionInput struct {
 	_ struct{} `locationName:"PutBucketEncryptionRequest" type:"structure" payload:"ServerSideEncryptionConfiguration"`
 
 	// Specifies default encryption for a bucket using server-side encryption with
-	// Amazon S3-managed keys (SSE-S3) or customer master keys stored in AWS KMS
-	// (SSE-KMS). For information about the Amazon S3 default encryption feature,
-	// see Amazon S3 Default Bucket Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// Amazon S3-managed keys (SSE-S3) or customer managed keys (SSE-KMS). For information
+	// about the Amazon S3 default encryption feature, see Amazon S3 Default Bucket
+	// Encryption (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -27538,12 +29746,20 @@ type PutBucketEncryptionInput struct {
 	ServerSideEncryptionConfiguration *ServerSideEncryptionConfiguration `locationName:"ServerSideEncryptionConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketEncryptionInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketEncryptionInput) GoString() string {
 	return s.String()
 }
@@ -27628,12 +29844,20 @@ type PutBucketEncryptionOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketEncryptionOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketEncryptionOutput) GoString() string {
 	return s.String()
 }
@@ -27658,12 +29882,20 @@ type PutBucketIntelligentTieringConfigurationInput struct {
 	IntelligentTieringConfiguration *IntelligentTieringConfiguration `locationName:"IntelligentTieringConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketIntelligentTieringConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketIntelligentTieringConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -27751,12 +29983,20 @@ type PutBucketIntelligentTieringConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketIntelligentTieringConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketIntelligentTieringConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -27769,7 +30009,7 @@ type PutBucketInventoryConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -27785,12 +30025,20 @@ type PutBucketInventoryConfigurationInput struct {
 	InventoryConfiguration *InventoryConfiguration `locationName:"InventoryConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketInventoryConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketInventoryConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -27884,12 +30132,20 @@ type PutBucketInventoryConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketInventoryConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketInventoryConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -27902,7 +30158,7 @@ type PutBucketLifecycleConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -27911,12 +30167,20 @@ type PutBucketLifecycleConfigurationInput struct {
 	LifecycleConfiguration *BucketLifecycleConfiguration `locationName:"LifecycleConfiguration" type:"structure" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLifecycleConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLifecycleConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -27998,12 +30262,20 @@ type PutBucketLifecycleConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLifecycleConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLifecycleConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -28014,7 +30286,7 @@ type PutBucketLifecycleInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -28023,12 +30295,20 @@ type PutBucketLifecycleInput struct {
 	LifecycleConfiguration *LifecycleConfiguration `locationName:"LifecycleConfiguration" type:"structure" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLifecycleInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLifecycleInput) GoString() string {
 	return s.String()
 }
@@ -28110,12 +30390,20 @@ type PutBucketLifecycleOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLifecycleOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLifecycleOutput) GoString() string {
 	return s.String()
 }
@@ -28133,18 +30421,26 @@ type PutBucketLoggingInput struct {
 	// BucketLoggingStatus is a required field
 	BucketLoggingStatus *BucketLoggingStatus `locationName:"BucketLoggingStatus" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLoggingInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLoggingInput) GoString() string {
 	return s.String()
 }
@@ -28229,12 +30525,20 @@ type PutBucketLoggingOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLoggingOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketLoggingOutput) GoString() string {
 	return s.String()
 }
@@ -28247,7 +30551,7 @@ type PutBucketMetricsConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -28263,12 +30567,20 @@ type PutBucketMetricsConfigurationInput struct {
 	MetricsConfiguration *MetricsConfiguration `locationName:"MetricsConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketMetricsConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketMetricsConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -28362,12 +30674,20 @@ type PutBucketMetricsConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketMetricsConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketMetricsConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -28380,7 +30700,7 @@ type PutBucketNotificationConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -28392,12 +30712,20 @@ type PutBucketNotificationConfigurationInput struct {
 	NotificationConfiguration *NotificationConfiguration `locationName:"NotificationConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketNotificationConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketNotificationConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -28482,12 +30810,20 @@ type PutBucketNotificationConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketNotificationConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketNotificationConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -28500,7 +30836,7 @@ type PutBucketNotificationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -28511,12 +30847,20 @@ type PutBucketNotificationInput struct {
 	NotificationConfiguration *NotificationConfigurationDeprecated `locationName:"NotificationConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketNotificationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketNotificationInput) GoString() string {
 	return s.String()
 }
@@ -28596,12 +30940,20 @@ type PutBucketNotificationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketNotificationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketNotificationOutput) GoString() string {
 	return s.String()
 }
@@ -28614,7 +30966,7 @@ type PutBucketOwnershipControlsInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -28626,12 +30978,20 @@ type PutBucketOwnershipControlsInput struct {
 	OwnershipControls *OwnershipControls `locationName:"OwnershipControls" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketOwnershipControlsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketOwnershipControlsInput) GoString() string {
 	return s.String()
 }
@@ -28716,12 +31076,20 @@ type PutBucketOwnershipControlsOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketOwnershipControlsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketOwnershipControlsOutput) GoString() string {
 	return s.String()
 }
@@ -28738,7 +31106,7 @@ type PutBucketPolicyInput struct {
 	// to change this bucket policy in the future.
 	ConfirmRemoveSelfBucketAccess *bool `location:"header" locationName:"x-amz-confirm-remove-self-bucket-access" type:"boolean"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -28749,12 +31117,20 @@ type PutBucketPolicyInput struct {
 	Policy *string `type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketPolicyInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketPolicyInput) GoString() string {
 	return s.String()
 }
@@ -28840,12 +31216,20 @@ type PutBucketPolicyOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketPolicyOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketPolicyOutput) GoString() string {
 	return s.String()
 }
@@ -28858,7 +31242,7 @@ type PutBucketReplicationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -28873,12 +31257,20 @@ type PutBucketReplicationInput struct {
 	Token *string `location:"header" locationName:"x-amz-bucket-object-lock-token" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketReplicationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketReplicationInput) GoString() string {
 	return s.String()
 }
@@ -28969,12 +31361,20 @@ type PutBucketReplicationOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketReplicationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketReplicationOutput) GoString() string {
 	return s.String()
 }
@@ -28987,7 +31387,7 @@ type PutBucketRequestPaymentInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -28998,12 +31398,20 @@ type PutBucketRequestPaymentInput struct {
 	RequestPaymentConfiguration *RequestPaymentConfiguration `locationName:"RequestPaymentConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketRequestPaymentInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketRequestPaymentInput) GoString() string {
 	return s.String()
 }
@@ -29088,12 +31496,20 @@ type PutBucketRequestPaymentOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketRequestPaymentOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketRequestPaymentOutput) GoString() string {
 	return s.String()
 }
@@ -29106,7 +31522,7 @@ type PutBucketTaggingInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -29117,12 +31533,20 @@ type PutBucketTaggingInput struct {
 	Tagging *Tagging `locationName:"Tagging" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketTaggingInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketTaggingInput) GoString() string {
 	return s.String()
 }
@@ -29207,12 +31631,20 @@ type PutBucketTaggingOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketTaggingOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketTaggingOutput) GoString() string {
 	return s.String()
 }
@@ -29225,7 +31657,7 @@ type PutBucketVersioningInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -29240,12 +31672,20 @@ type PutBucketVersioningInput struct {
 	VersioningConfiguration *VersioningConfiguration `locationName:"VersioningConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketVersioningInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketVersioningInput) GoString() string {
 	return s.String()
 }
@@ -29331,12 +31771,20 @@ type PutBucketVersioningOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketVersioningOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketVersioningOutput) GoString() string {
 	return s.String()
 }
@@ -29349,7 +31797,7 @@ type PutBucketWebsiteInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -29360,12 +31808,20 @@ type PutBucketWebsiteInput struct {
 	WebsiteConfiguration *WebsiteConfiguration `locationName:"WebsiteConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketWebsiteInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketWebsiteInput) GoString() string {
 	return s.String()
 }
@@ -29450,12 +31906,20 @@ type PutBucketWebsiteOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketWebsiteOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutBucketWebsiteOutput) GoString() string {
 	return s.String()
 }
@@ -29473,17 +31937,17 @@ type PutObjectAclInput struct {
 	// The bucket name that contains the object to which you want to attach the
 	// ACL.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -29504,7 +31968,10 @@ type PutObjectAclInput struct {
 	// This action is not supported by Amazon S3 on Outposts.
 	GrantReadACP *string `location:"header" locationName:"x-amz-grant-read-acp" type:"string"`
 
-	// Allows grantee to create, overwrite, and delete any object in the bucket.
+	// Allows grantee to create new objects in the bucket.
+	//
+	// For the bucket and object owners of existing objects, also allows deletions
+	// and overwrites of those objects.
 	GrantWrite *string `location:"header" locationName:"x-amz-grant-write" type:"string"`
 
 	// Allows grantee to write the ACL for the applicable bucket.
@@ -29512,22 +31979,22 @@ type PutObjectAclInput struct {
 	// This action is not supported by Amazon S3 on Outposts.
 	GrantWriteACP *string `location:"header" locationName:"x-amz-grant-write-acp" type:"string"`
 
-	// Key for which the PUT operation was initiated.
+	// Key for which the PUT action was initiated.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Key is a required field
 	Key *string `location:"uri" locationName:"Key" min:"1" type:"string" required:"true"`
@@ -29536,19 +32003,27 @@ type PutObjectAclInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// VersionId used to reference a specific version of the object.
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectAclInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectAclInput) GoString() string {
 	return s.String()
 }
@@ -29694,12 +32169,20 @@ type PutObjectAclOutput struct {
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectAclOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectAclOutput) GoString() string {
 	return s.String()
 }
@@ -29722,22 +32205,22 @@ type PutObjectInput struct {
 	// Object data.
 	Body io.ReadSeeker `type:"blob"`
 
-	// The bucket name to which the PUT operation was initiated.
+	// The bucket name to which the PUT action was initiated.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
@@ -29747,8 +32230,8 @@ type PutObjectInput struct {
 	// to true causes Amazon S3 to use an S3 Bucket Key for object encryption with
 	// SSE-KMS.
 	//
-	// Specifying this header with a PUT operation doesn’t affect bucket-level
-	// settings for S3 Bucket Key.
+	// Specifying this header with a PUT action doesn’t affect bucket-level settings
+	// for S3 Bucket Key.
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Can be used to specify caching behavior along the request/reply chain. For
@@ -29786,7 +32269,7 @@ type PutObjectInput struct {
 	// see http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17 (http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
 	ContentType *string `location:"header" locationName:"Content-Type" type:"string"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -29815,7 +32298,7 @@ type PutObjectInput struct {
 	// This action is not supported by Amazon S3 on Outposts.
 	GrantWriteACP *string `location:"header" locationName:"x-amz-grant-write-acp" type:"string"`
 
-	// Object key for which the PUT operation was initiated.
+	// Object key for which the PUT action was initiated.
 	//
 	// Key is a required field
 	Key *string `location:"uri" locationName:"Key" min:"1" type:"string" required:"true"`
@@ -29830,14 +32313,15 @@ type PutObjectInput struct {
 	// The Object Lock mode that you want to apply to this object.
 	ObjectLockMode *string `location:"header" locationName:"x-amz-object-lock-mode" type:"string" enum:"ObjectLockMode"`
 
-	// The date and time when you want this object's Object Lock to expire.
+	// The date and time when you want this object's Object Lock to expire. Must
+	// be formatted as a timestamp parameter.
 	ObjectLockRetainUntilDate *time.Time `location:"header" locationName:"x-amz-object-lock-retain-until-date" type:"timestamp" timestampFormat:"iso8601"`
 
 	// Confirms that the requester knows that they will be charged for the request.
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Specifies the algorithm to use to when encrypting the object (for example,
@@ -29849,6 +32333,10 @@ type PutObjectInput struct {
 	// S3 does not store the encryption key. The key must be appropriate for use
 	// with the algorithm specified in the x-amz-server-side-encryption-customer-algorithm
 	// header.
+	//
+	// SSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by PutObjectInput's
+	// String and GoString methods.
 	SSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321.
@@ -29856,21 +32344,27 @@ type PutObjectInput struct {
 	// encryption key was transmitted without error.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// Specifies the AWS KMS Encryption Context to use for object encryption. The
-	// value of this header is a base64-encoded UTF-8 string holding JSON with the
-	// encryption context key-value pairs.
+	// Specifies the Amazon Web Services KMS Encryption Context to use for object
+	// encryption. The value of this header is a base64-encoded UTF-8 string holding
+	// JSON with the encryption context key-value pairs.
+	//
+	// SSEKMSEncryptionContext is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by PutObjectInput's
+	// String and GoString methods.
 	SSEKMSEncryptionContext *string `location:"header" locationName:"x-amz-server-side-encryption-context" type:"string" sensitive:"true"`
 
 	// If x-amz-server-side-encryption is present and has the value of aws:kms,
-	// this header specifies the ID of the AWS Key Management Service (AWS KMS)
-	// symmetrical customer managed customer master key (CMK) that was used for
-	// the object.
+	// this header specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetrical customer managed key that was used
+	// for the object. If you specify x-amz-server-side-encryption:aws:kms, but
+	// do not providex-amz-server-side-encryption-aws-kms-key-id, Amazon S3 uses
+	// the Amazon Web Services managed key to protect the data. If the KMS key does
+	// not exist in the same account issuing the command, you must use the full
+	// ARN and not just the ID.
 	//
-	// If the value of x-amz-server-side-encryption is aws:kms, this header specifies
-	// the ID of the symmetric customer managed AWS KMS CMK that will be used for
-	// the object. If you specify x-amz-server-side-encryption:aws:kms, but do not
-	// providex-amz-server-side-encryption-aws-kms-key-id, Amazon S3 uses the AWS
-	// managed CMK in AWS to protect the data.
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by PutObjectInput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
 	// The server-side encryption algorithm used when storing this object in Amazon
@@ -29882,7 +32376,7 @@ type PutObjectInput struct {
 	// Depending on performance needs, you can specify a different Storage Class.
 	// Amazon S3 on Outposts only uses the OUTPOSTS Storage Class. For more information,
 	// see Storage Classes (https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html)
-	// in the Amazon S3 Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	StorageClass *string `location:"header" locationName:"x-amz-storage-class" type:"string" enum:"StorageClass"`
 
 	// The tag-set for the object. The tag-set must be encoded as URL Query parameters.
@@ -29910,12 +32404,20 @@ type PutObjectInput struct {
 	WebsiteRedirectLocation *string `location:"header" locationName:"x-amz-website-redirect-location" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectInput) GoString() string {
 	return s.String()
 }
@@ -30181,17 +32683,17 @@ type PutObjectLegalHoldInput struct {
 	// The bucket name containing the object that you want to place a Legal Hold
 	// on.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -30209,19 +32711,27 @@ type PutObjectLegalHoldInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// The version ID of the object that you want to place a Legal Hold on.
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectLegalHoldInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectLegalHoldInput) GoString() string {
 	return s.String()
 }
@@ -30326,12 +32836,20 @@ type PutObjectLegalHoldOutput struct {
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectLegalHoldOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectLegalHoldOutput) GoString() string {
 	return s.String()
 }
@@ -30350,7 +32868,7 @@ type PutObjectLockConfigurationInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -30362,19 +32880,27 @@ type PutObjectLockConfigurationInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// A token to allow Object Lock to be enabled for an existing bucket.
 	Token *string `location:"header" locationName:"x-amz-bucket-object-lock-token" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectLockConfigurationInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectLockConfigurationInput) GoString() string {
 	return s.String()
 }
@@ -30467,12 +32993,20 @@ type PutObjectLockConfigurationOutput struct {
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectLockConfigurationOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectLockConfigurationOutput) GoString() string {
 	return s.String()
 }
@@ -30487,7 +33021,7 @@ type PutObjectOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates whether the uploaded object uses an S3 Bucket Key for server-side
-	// encryption with AWS KMS (SSE-KMS).
+	// encryption with Amazon Web Services KMS (SSE-KMS).
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Entity tag for the uploaded object.
@@ -30514,19 +33048,27 @@ type PutObjectOutput struct {
 	// verification of the customer-provided encryption key.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// If present, specifies the AWS KMS Encryption Context to use for object encryption.
-	// The value of this header is a base64-encoded UTF-8 string holding JSON with
-	// the encryption context key-value pairs.
+	// If present, specifies the Amazon Web Services KMS Encryption Context to use
+	// for object encryption. The value of this header is a base64-encoded UTF-8
+	// string holding JSON with the encryption context key-value pairs.
+	//
+	// SSEKMSEncryptionContext is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by PutObjectOutput's
+	// String and GoString methods.
 	SSEKMSEncryptionContext *string `location:"header" locationName:"x-amz-server-side-encryption-context" type:"string" sensitive:"true"`
 
 	// If x-amz-server-side-encryption is present and has the value of aws:kms,
-	// this header specifies the ID of the AWS Key Management Service (AWS KMS)
-	// symmetric customer managed customer master key (CMK) that was used for the
-	// object.
+	// this header specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetric customer managed key that was used for
+	// the object.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by PutObjectOutput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
-	// If you specified server-side encryption either with an AWS KMS customer master
-	// key (CMK) or Amazon S3-managed encryption key in your PUT request, the response
+	// If you specified server-side encryption either with an Amazon Web Services
+	// KMS key or Amazon S3-managed encryption key in your PUT request, the response
 	// includes this header. It confirms the encryption algorithm that Amazon S3
 	// used to encrypt the object.
 	ServerSideEncryption *string `location:"header" locationName:"x-amz-server-side-encryption" type:"string" enum:"ServerSideEncryption"`
@@ -30535,12 +33077,20 @@ type PutObjectOutput struct {
 	VersionId *string `location:"header" locationName:"x-amz-version-id" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectOutput) GoString() string {
 	return s.String()
 }
@@ -30611,20 +33161,20 @@ type PutObjectRetentionInput struct {
 	// The bucket name that contains the object you want to apply this Object Retention
 	// configuration to.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// Indicates whether this operation should bypass Governance-mode restrictions.
+	// Indicates whether this action should bypass Governance-mode restrictions.
 	BypassGovernanceRetention *bool `location:"header" locationName:"x-amz-bypass-governance-retention" type:"boolean"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -30639,7 +33189,7 @@ type PutObjectRetentionInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// The container element for the Object Retention configuration.
@@ -30650,12 +33200,20 @@ type PutObjectRetentionInput struct {
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectRetentionInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectRetentionInput) GoString() string {
 	return s.String()
 }
@@ -30766,12 +33324,20 @@ type PutObjectRetentionOutput struct {
 	RequestCharged *string `location:"header" locationName:"x-amz-request-charged" type:"string" enum:"RequestCharged"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectRetentionOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectRetentionOutput) GoString() string {
 	return s.String()
 }
@@ -30787,25 +33353,25 @@ type PutObjectTaggingInput struct {
 
 	// The bucket name containing the object.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -30814,6 +33380,13 @@ type PutObjectTaggingInput struct {
 	//
 	// Key is a required field
 	Key *string `location:"uri" locationName:"Key" min:"1" type:"string" required:"true"`
+
+	// Confirms that the requester knows that they will be charged for the request.
+	// Bucket owners need not specify this parameter in their requests. For information
+	// about downloading objects from requester pays buckets, see Downloading Objects
+	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
+	// in the Amazon S3 User Guide.
+	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Container for the TagSet and Tag elements
 	//
@@ -30824,12 +33397,20 @@ type PutObjectTaggingInput struct {
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectTaggingInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectTaggingInput) GoString() string {
 	return s.String()
 }
@@ -30889,6 +33470,12 @@ func (s *PutObjectTaggingInput) SetKey(v string) *PutObjectTaggingInput {
 	return s
 }
 
+// SetRequestPayer sets the RequestPayer field's value.
+func (s *PutObjectTaggingInput) SetRequestPayer(v string) *PutObjectTaggingInput {
+	s.RequestPayer = &v
+	return s
+}
+
 // SetTagging sets the Tagging field's value.
 func (s *PutObjectTaggingInput) SetTagging(v *Tagging) *PutObjectTaggingInput {
 	s.Tagging = v
@@ -30935,12 +33522,20 @@ type PutObjectTaggingOutput struct {
 	VersionId *string `location:"header" locationName:"x-amz-version-id" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectTaggingOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutObjectTaggingOutput) GoString() string {
 	return s.String()
 }
@@ -30960,7 +33555,7 @@ type PutPublicAccessBlockInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -30969,18 +33564,26 @@ type PutPublicAccessBlockInput struct {
 	// S3 bucket. You can enable the configuration options in any combination. For
 	// more information about when Amazon S3 considers a bucket or object public,
 	// see The Meaning of "Public" (https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html#access-control-block-public-access-policy-status)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	//
 	// PublicAccessBlockConfiguration is a required field
 	PublicAccessBlockConfiguration *PublicAccessBlockConfiguration `locationName:"PublicAccessBlockConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutPublicAccessBlockInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutPublicAccessBlockInput) GoString() string {
 	return s.String()
 }
@@ -31060,12 +33663,20 @@ type PutPublicAccessBlockOutput struct {
 	_ struct{} `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutPublicAccessBlockOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s PutPublicAccessBlockOutput) GoString() string {
 	return s.String()
 }
@@ -31082,7 +33693,7 @@ type QueueConfiguration struct {
 
 	// Specifies object key name filtering rules. For information about key name
 	// filtering, see Configuring Event Notifications (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	Filter *NotificationConfigurationFilter `type:"structure"`
 
 	// An optional unique identifier for configurations in a notification configuration.
@@ -31096,12 +33707,20 @@ type QueueConfiguration struct {
 	QueueArn *string `locationName:"Queue" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s QueueConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s QueueConfiguration) GoString() string {
 	return s.String()
 }
@@ -31158,7 +33777,7 @@ type QueueConfigurationDeprecated struct {
 	// Deprecated: Event has been deprecated
 	Event *string `deprecated:"true" type:"string" enum:"Event"`
 
-	// A collection of bucket events for which to send notifications
+	// A collection of bucket events for which to send notifications.
 	Events []*string `locationName:"Event" type:"list" flattened:"true"`
 
 	// An optional unique identifier for configurations in a notification configuration.
@@ -31170,12 +33789,20 @@ type QueueConfigurationDeprecated struct {
 	Queue *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s QueueConfigurationDeprecated) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s QueueConfigurationDeprecated) GoString() string {
 	return s.String()
 }
@@ -31209,17 +33836,24 @@ type RecordsEvent struct {
 	_ struct{} `locationName:"RecordsEvent" type:"structure" payload:"Payload"`
 
 	// The byte array of partial, one or more result records.
-	//
 	// Payload is automatically base64 encoded/decoded by the SDK.
 	Payload []byte `type:"blob"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RecordsEvent) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RecordsEvent) GoString() string {
 	return s.String()
 }
@@ -31275,20 +33909,36 @@ type Redirect struct {
 	// and in the Redirect set ReplaceKeyPrefixWith to /documents. Not required
 	// if one of the siblings is present. Can be present only if ReplaceKeyWith
 	// is not provided.
+	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
 	ReplaceKeyPrefixWith *string `type:"string"`
 
 	// The specific object key to use in the redirect request. For example, redirect
 	// request to error.html. Not required if one of the siblings is present. Can
 	// be present only if ReplaceKeyPrefixWith is not provided.
+	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
 	ReplaceKeyWith *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Redirect) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Redirect) GoString() string {
 	return s.String()
 }
@@ -31338,12 +33988,20 @@ type RedirectAllRequestsTo struct {
 	Protocol *string `type:"string" enum:"Protocol"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RedirectAllRequestsTo) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RedirectAllRequestsTo) GoString() string {
 	return s.String()
 }
@@ -31391,12 +34049,20 @@ type ReplicaModifications struct {
 	Status *string `type:"string" required:"true" enum:"ReplicaModificationsStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicaModifications) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicaModifications) GoString() string {
 	return s.String()
 }
@@ -31425,10 +34091,10 @@ func (s *ReplicaModifications) SetStatus(v string) *ReplicaModifications {
 type ReplicationConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the AWS Identity and Access Management
-	// (IAM) role that Amazon S3 assumes when replicating objects. For more information,
+	// The Amazon Resource Name (ARN) of the Identity and Access Management (IAM)
+	// role that Amazon S3 assumes when replicating objects. For more information,
 	// see How to Set Up Replication (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-how-setup.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
@@ -31440,12 +34106,20 @@ type ReplicationConfiguration struct {
 	Rules []*ReplicationRule `locationName:"Rule" type:"list" flattened:"true" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationConfiguration) GoString() string {
 	return s.String()
 }
@@ -31515,7 +34189,7 @@ type ReplicationRule struct {
 
 	// Optional configuration to replicate existing source bucket objects. For more
 	// information, see Replicating Existing Objects (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-what-is-isnot-replicated.html#existing-object-replication)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	ExistingObjectReplication *ExistingObjectReplication `type:"structure"`
 
 	// A filter that identifies the subset of objects to which the replication rule
@@ -31529,6 +34203,10 @@ type ReplicationRule struct {
 	// the rule applies. The maximum prefix length is 1,024 characters. To include
 	// all objects in a bucket, specify an empty string.
 	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
+	//
 	// Deprecated: Prefix has been deprecated
 	Prefix *string `deprecated:"true" type:"string"`
 
@@ -31539,14 +34217,15 @@ type ReplicationRule struct {
 	// with the highest priority. The higher the number, the higher the priority.
 	//
 	// For more information, see Replication (https://docs.aws.amazon.com/AmazonS3/latest/dev/replication.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	Priority *int64 `type:"integer"`
 
 	// A container that describes additional filters for identifying the source
 	// objects that you want to replicate. You can choose to enable or disable the
 	// replication of these objects. Currently, Amazon S3 supports only the filter
 	// that you can specify for objects created with server-side encryption using
-	// a customer master key (CMK) stored in AWS Key Management Service (SSE-KMS).
+	// a customer managed key stored in Amazon Web Services Key Management Service
+	// (SSE-KMS).
 	SourceSelectionCriteria *SourceSelectionCriteria `type:"structure"`
 
 	// Specifies whether the rule is enabled.
@@ -31555,12 +34234,20 @@ type ReplicationRule struct {
 	Status *string `type:"string" required:"true" enum:"ReplicationRuleStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationRule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationRule) GoString() string {
 	return s.String()
 }
@@ -31665,7 +34352,7 @@ func (s *ReplicationRule) SetStatus(v string) *ReplicationRule {
 //    an And tag.
 //
 //    * If you specify a filter based on multiple tags, wrap the Tag elements
-//    in an And tag
+//    in an And tag.
 type ReplicationRuleAndOperator struct {
 	_ struct{} `type:"structure"`
 
@@ -31677,12 +34364,20 @@ type ReplicationRuleAndOperator struct {
 	Tags []*Tag `locationName:"Tag" locationNameList:"Tag" type:"list" flattened:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationRuleAndOperator) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationRuleAndOperator) GoString() string {
 	return s.String()
 }
@@ -31737,6 +34432,10 @@ type ReplicationRuleFilter struct {
 
 	// An object key name prefix that identifies the subset of objects to which
 	// the rule applies.
+	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
 	Prefix *string `type:"string"`
 
 	// A container for specifying a tag key and value.
@@ -31745,12 +34444,20 @@ type ReplicationRuleFilter struct {
 	Tag *Tag `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationRuleFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationRuleFilter) GoString() string {
 	return s.String()
 }
@@ -31812,12 +34519,20 @@ type ReplicationTime struct {
 	Time *ReplicationTimeValue `type:"structure" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationTime) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationTime) GoString() string {
 	return s.String()
 }
@@ -31857,16 +34572,24 @@ type ReplicationTimeValue struct {
 
 	// Contains an integer specifying time in minutes.
 	//
-	// Valid values: 15 minutes.
+	// Valid value: 15
 	Minutes *int64 `type:"integer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationTimeValue) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ReplicationTimeValue) GoString() string {
 	return s.String()
 }
@@ -31887,12 +34610,20 @@ type RequestPaymentConfiguration struct {
 	Payer *string `type:"string" required:"true" enum:"Payer"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RequestPaymentConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RequestPaymentConfiguration) GoString() string {
 	return s.String()
 }
@@ -31925,12 +34656,20 @@ type RequestProgress struct {
 	Enabled *bool `type:"boolean"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RequestProgress) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RequestProgress) GoString() string {
 	return s.String()
 }
@@ -31946,30 +34685,30 @@ type RestoreObjectInput struct {
 
 	// The bucket name containing the object to restore.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 
-	// Object key for which the operation was initiated.
+	// Object key for which the action was initiated.
 	//
 	// Key is a required field
 	Key *string `location:"uri" locationName:"Key" min:"1" type:"string" required:"true"`
@@ -31978,7 +34717,7 @@ type RestoreObjectInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Container for restore job parameters.
@@ -31988,12 +34727,20 @@ type RestoreObjectInput struct {
 	VersionId *string `location:"querystring" locationName:"versionId" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RestoreObjectInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RestoreObjectInput) GoString() string {
 	return s.String()
 }
@@ -32107,12 +34854,20 @@ type RestoreObjectOutput struct {
 	RestoreOutputPath *string `location:"header" locationName:"x-amz-restore-output-path" type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RestoreObjectOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RestoreObjectOutput) GoString() string {
 	return s.String()
 }
@@ -32160,12 +34915,20 @@ type RestoreRequest struct {
 	Type *string `type:"string" enum:"RestoreRequestType"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RestoreRequest) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RestoreRequest) GoString() string {
 	return s.String()
 }
@@ -32240,7 +35003,7 @@ func (s *RestoreRequest) SetType(v string) *RestoreRequest {
 // Specifies the redirect behavior and when a redirect is applied. For more
 // information about routing rules, see Configuring advanced conditional redirects
 // (https://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html#advanced-conditional-redirects)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 type RoutingRule struct {
 	_ struct{} `type:"structure"`
 
@@ -32258,12 +35021,20 @@ type RoutingRule struct {
 	Redirect *Redirect `type:"structure" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RoutingRule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s RoutingRule) GoString() string {
 	return s.String()
 }
@@ -32295,8 +35066,8 @@ func (s *RoutingRule) SetRedirect(v *Redirect) *RoutingRule {
 
 // Specifies lifecycle rules for an Amazon S3 bucket. For more information,
 // see Put Bucket Lifecycle Configuration (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTlifecycle.html)
-// in the Amazon Simple Storage Service API Reference. For examples, see Put
-// Bucket Lifecycle Configuration Examples (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycleConfiguration.html#API_PutBucketLifecycleConfiguration_Examples)
+// in the Amazon S3 API Reference. For examples, see Put Bucket Lifecycle Configuration
+// Examples (https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycleConfiguration.html#API_PutBucketLifecycleConfiguration_Examples).
 type Rule struct {
 	_ struct{} `type:"structure"`
 
@@ -32304,7 +35075,7 @@ type Rule struct {
 	// that Amazon S3 will wait before permanently removing all parts of the upload.
 	// For more information, see Aborting Incomplete Multipart Uploads Using a Bucket
 	// Lifecycle Policy (https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuoverview.html#mpu-abort-incomplete-mpu-lifecycle-config)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	AbortIncompleteMultipartUpload *AbortIncompleteMultipartUpload `type:"structure"`
 
 	// Specifies the expiration for the lifecycle of the object.
@@ -32332,6 +35103,10 @@ type Rule struct {
 	// Object key prefix that identifies one or more objects to which this rule
 	// applies.
 	//
+	// Replacement must be made for object keys containing special characters (such
+	// as carriage returns) when using XML requests. For more information, see XML
+	// related object key constraints (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-xml-related-constraints).
+	//
 	// Prefix is a required field
 	Prefix *string `type:"string" required:"true"`
 
@@ -32344,16 +35119,24 @@ type Rule struct {
 	// Specifies when an object transitions to a specified storage class. For more
 	// information about Amazon S3 lifecycle configuration rules, see Transitioning
 	// Objects Using Amazon S3 Lifecycle (https://docs.aws.amazon.com/AmazonS3/latest/dev/lifecycle-transition-general-considerations.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	Transition *Transition `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Rule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Rule) GoString() string {
 	return s.String()
 }
@@ -32426,19 +35209,32 @@ func (s *Rule) SetTransition(v *Transition) *Rule {
 type SSEKMS struct {
 	_ struct{} `locationName:"SSE-KMS" type:"structure"`
 
-	// Specifies the ID of the AWS Key Management Service (AWS KMS) symmetric customer
-	// managed customer master key (CMK) to use for encrypting inventory reports.
+	// Specifies the ID of the Amazon Web Services Key Management Service (Amazon
+	// Web Services KMS) symmetric customer managed key to use for encrypting inventory
+	// reports.
+	//
+	// KeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by SSEKMS's
+	// String and GoString methods.
 	//
 	// KeyId is a required field
 	KeyId *string `type:"string" required:"true" sensitive:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SSEKMS) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SSEKMS) GoString() string {
 	return s.String()
 }
@@ -32467,12 +35263,20 @@ type SSES3 struct {
 	_ struct{} `locationName:"SSE-S3" type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SSES3) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SSES3) GoString() string {
 	return s.String()
 }
@@ -32498,12 +35302,20 @@ type ScanRange struct {
 	Start *int64 `type:"long"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ScanRange) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ScanRange) GoString() string {
 	return s.String()
 }
@@ -32703,7 +35515,7 @@ type SelectObjectContentInput struct {
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -32742,6 +35554,10 @@ type SelectObjectContentInput struct {
 
 	// The SSE Customer Key. For more information, see Server-Side Encryption (Using
 	// Customer-Provided Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
+	//
+	// SSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by SelectObjectContentInput's
+	// String and GoString methods.
 	SSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// The SSE Customer Key MD5. For more information, see Server-Side Encryption
@@ -32767,12 +35583,20 @@ type SelectObjectContentInput struct {
 	ScanRange *ScanRange `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SelectObjectContentInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SelectObjectContentInput) GoString() string {
 	return s.String()
 }
@@ -32930,12 +35754,20 @@ type SelectObjectContentOutput struct {
 	EventStream *SelectObjectContentEventStream
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SelectObjectContentOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SelectObjectContentOutput) GoString() string {
 	return s.String()
 }
@@ -32978,12 +35810,20 @@ type SelectParameters struct {
 	OutputSerialization *OutputSerialization `type:"structure" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SelectParameters) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SelectParameters) GoString() string {
 	return s.String()
 }
@@ -33038,17 +35878,17 @@ func (s *SelectParameters) SetOutputSerialization(v *OutputSerialization) *Selec
 // bucket. If a PUT Object request doesn't specify any server-side encryption,
 // this default encryption will be applied. For more information, see PUT Bucket
 // encryption (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTencryption.html)
-// in the Amazon Simple Storage Service API Reference.
+// in the Amazon S3 API Reference.
 type ServerSideEncryptionByDefault struct {
 	_ struct{} `type:"structure"`
 
-	// AWS Key Management Service (KMS) customer master key ID to use for the default
-	// encryption. This parameter is allowed if and only if SSEAlgorithm is set
-	// to aws:kms.
+	// Amazon Web Services Key Management Service (KMS) customer Amazon Web Services
+	// KMS key ID to use for the default encryption. This parameter is allowed if
+	// and only if SSEAlgorithm is set to aws:kms.
 	//
-	// You can specify the key ID or the Amazon Resource Name (ARN) of the CMK.
+	// You can specify the key ID or the Amazon Resource Name (ARN) of the KMS key.
 	// However, if you are using encryption with cross-account operations, you must
-	// use a fully qualified CMK ARN. For more information, see Using encryption
+	// use a fully qualified KMS key ARN. For more information, see Using encryption
 	// for cross-account operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html#bucket-encryption-update-bucket-policy).
 	//
 	// For example:
@@ -33057,9 +35897,13 @@ type ServerSideEncryptionByDefault struct {
 	//
 	//    * Key ARN: arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	// Amazon S3 only supports symmetric CMKs and not asymmetric CMKs. For more
-	// information, see Using Symmetric and Asymmetric Keys (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
-	// in the AWS Key Management Service Developer Guide.
+	// Amazon S3 only supports symmetric KMS keys and not asymmetric KMS keys. For
+	// more information, see Using symmetric and asymmetric keys (https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html)
+	// in the Amazon Web Services Key Management Service Developer Guide.
+	//
+	// KMSMasterKeyID is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by ServerSideEncryptionByDefault's
+	// String and GoString methods.
 	KMSMasterKeyID *string `type:"string" sensitive:"true"`
 
 	// Server-side encryption algorithm to use for the default encryption.
@@ -33068,12 +35912,20 @@ type ServerSideEncryptionByDefault struct {
 	SSEAlgorithm *string `type:"string" required:"true" enum:"ServerSideEncryption"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ServerSideEncryptionByDefault) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ServerSideEncryptionByDefault) GoString() string {
 	return s.String()
 }
@@ -33114,12 +35966,20 @@ type ServerSideEncryptionConfiguration struct {
 	Rules []*ServerSideEncryptionRule `locationName:"Rule" type:"list" flattened:"true" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ServerSideEncryptionConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ServerSideEncryptionConfiguration) GoString() string {
 	return s.String()
 }
@@ -33168,16 +36028,24 @@ type ServerSideEncryptionRule struct {
 	// S3 to use an S3 Bucket Key. By default, S3 Bucket Key is not enabled.
 	//
 	// For more information, see Amazon S3 Bucket Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	BucketKeyEnabled *bool `type:"boolean"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ServerSideEncryptionRule) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s ServerSideEncryptionRule) GoString() string {
 	return s.String()
 }
@@ -33213,7 +36081,8 @@ func (s *ServerSideEncryptionRule) SetBucketKeyEnabled(v bool) *ServerSideEncryp
 // objects that you want to replicate. You can choose to enable or disable the
 // replication of these objects. Currently, Amazon S3 supports only the filter
 // that you can specify for objects created with server-side encryption using
-// a customer master key (CMK) stored in AWS Key Management Service (SSE-KMS).
+// a customer managed key stored in Amazon Web Services Key Management Service
+// (SSE-KMS).
 type SourceSelectionCriteria struct {
 	_ struct{} `type:"structure"`
 
@@ -33229,17 +36098,25 @@ type SourceSelectionCriteria struct {
 	ReplicaModifications *ReplicaModifications `type:"structure"`
 
 	// A container for filter information for the selection of Amazon S3 objects
-	// encrypted with AWS KMS. If you include SourceSelectionCriteria in the replication
-	// configuration, this element is required.
+	// encrypted with Amazon Web Services KMS. If you include SourceSelectionCriteria
+	// in the replication configuration, this element is required.
 	SseKmsEncryptedObjects *SseKmsEncryptedObjects `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SourceSelectionCriteria) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SourceSelectionCriteria) GoString() string {
 	return s.String()
 }
@@ -33277,23 +36154,32 @@ func (s *SourceSelectionCriteria) SetSseKmsEncryptedObjects(v *SseKmsEncryptedOb
 }
 
 // A container for filter information for the selection of S3 objects encrypted
-// with AWS KMS.
+// with Amazon Web Services KMS.
 type SseKmsEncryptedObjects struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies whether Amazon S3 replicates objects created with server-side encryption
-	// using a customer master key (CMK) stored in AWS Key Management Service.
+	// using an Amazon Web Services KMS key stored in Amazon Web Services Key Management
+	// Service.
 	//
 	// Status is a required field
 	Status *string `type:"string" required:"true" enum:"SseKmsEncryptedObjectsStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SseKmsEncryptedObjects) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s SseKmsEncryptedObjects) GoString() string {
 	return s.String()
 }
@@ -33331,12 +36217,20 @@ type Stats struct {
 	BytesScanned *int64 `type:"long"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Stats) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Stats) GoString() string {
 	return s.String()
 }
@@ -33367,12 +36261,20 @@ type StatsEvent struct {
 	Details *Stats `locationName:"Details" type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s StatsEvent) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s StatsEvent) GoString() string {
 	return s.String()
 }
@@ -33423,12 +36325,20 @@ type StorageClassAnalysis struct {
 	DataExport *StorageClassAnalysisDataExport `type:"structure"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s StorageClassAnalysis) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s StorageClassAnalysis) GoString() string {
 	return s.String()
 }
@@ -33470,12 +36380,20 @@ type StorageClassAnalysisDataExport struct {
 	OutputSchemaVersion *string `type:"string" required:"true" enum:"StorageClassAnalysisSchemaVersion"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s StorageClassAnalysisDataExport) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s StorageClassAnalysisDataExport) GoString() string {
 	return s.String()
 }
@@ -33528,12 +36446,20 @@ type Tag struct {
 	Value *string `type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Tag) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Tag) GoString() string {
 	return s.String()
 }
@@ -33579,12 +36505,20 @@ type Tagging struct {
 	TagSet []*Tag `locationNameList:"Tag" type:"list" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Tagging) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Tagging) GoString() string {
 	return s.String()
 }
@@ -33629,12 +36563,20 @@ type TargetGrant struct {
 	Permission *string `type:"string" enum:"BucketLogsPermission"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s TargetGrant) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s TargetGrant) GoString() string {
 	return s.String()
 }
@@ -33689,12 +36631,20 @@ type Tiering struct {
 	Days *int64 `type:"integer" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Tiering) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Tiering) GoString() string {
 	return s.String()
 }
@@ -33735,14 +36685,14 @@ type TopicConfiguration struct {
 
 	// The Amazon S3 bucket event about which to send notifications. For more information,
 	// see Supported Event Types (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	//
 	// Events is a required field
 	Events []*string `locationName:"Event" type:"list" flattened:"true" required:"true"`
 
 	// Specifies object key name filtering rules. For information about key name
 	// filtering, see Configuring Event Notifications (https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// in the Amazon S3 User Guide.
 	Filter *NotificationConfigurationFilter `type:"structure"`
 
 	// An optional unique identifier for configurations in a notification configuration.
@@ -33756,12 +36706,20 @@ type TopicConfiguration struct {
 	TopicArn *string `locationName:"Topic" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s TopicConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s TopicConfiguration) GoString() string {
 	return s.String()
 }
@@ -33831,12 +36789,20 @@ type TopicConfigurationDeprecated struct {
 	Topic *string `type:"string"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s TopicConfigurationDeprecated) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s TopicConfigurationDeprecated) GoString() string {
 	return s.String()
 }
@@ -33868,7 +36834,7 @@ func (s *TopicConfigurationDeprecated) SetTopic(v string) *TopicConfigurationDep
 // Specifies when an object transitions to a specified storage class. For more
 // information about Amazon S3 lifecycle configuration rules, see Transitioning
 // Objects Using Amazon S3 Lifecycle (https://docs.aws.amazon.com/AmazonS3/latest/dev/lifecycle-transition-general-considerations.html)
-// in the Amazon Simple Storage Service Developer Guide.
+// in the Amazon S3 User Guide.
 type Transition struct {
 	_ struct{} `type:"structure"`
 
@@ -33884,12 +36850,20 @@ type Transition struct {
 	StorageClass *string `type:"string" enum:"TransitionStorageClass"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Transition) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s Transition) GoString() string {
 	return s.String()
 }
@@ -33917,27 +36891,27 @@ type UploadPartCopyInput struct {
 
 	// The bucket name.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
 
 	// Specifies the source object for the copy operation. You specify the value
 	// in one of two formats, depending on whether you want to access the source
-	// object through an access point (https://docs.aws.amazon.com/AmazonS3/latest/dev/access-points.html):
+	// object through an access point (https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points.html):
 	//
 	//    * For objects not accessed through an access point, specify the name of
 	//    the source bucket and key of the source object, separated by a slash (/).
@@ -33952,8 +36926,9 @@ type UploadPartCopyInput struct {
 	//    the URL encoding of arn:aws:s3:us-west-2:123456789012:accesspoint/my-access-point/object/reports/january.pdf.
 	//    The value must be URL encoded. Amazon S3 supports copy operations using
 	//    access points only when the source and destination buckets are in the
-	//    same AWS Region. Alternatively, for objects accessed through Amazon S3
-	//    on Outposts, specify the ARN of the object as accessed in the format arn:aws:s3-outposts:<Region>:<account-id>:outpost/<outpost-id>/object/<key>.
+	//    same Amazon Web Services Region. Alternatively, for objects accessed through
+	//    Amazon S3 on Outposts, specify the ARN of the object as accessed in the
+	//    format arn:aws:s3-outposts:<Region>:<account-id>:outpost/<outpost-id>/object/<key>.
 	//    For example, to copy the object reports/january.pdf through outpost my-outpost
 	//    owned by account 123456789012 in Region us-west-2, use the URL encoding
 	//    of arn:aws:s3-outposts:us-west-2:123456789012:outpost/my-outpost/object/reports/january.pdf.
@@ -33994,6 +36969,10 @@ type UploadPartCopyInput struct {
 	// Specifies the customer-provided encryption key for Amazon S3 to use to decrypt
 	// the source object. The encryption key provided in this header must be one
 	// that was used when the source object was created.
+	//
+	// CopySourceSSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by UploadPartCopyInput's
+	// String and GoString methods.
 	CopySourceSSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-copy-source-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321.
@@ -34001,12 +36980,12 @@ type UploadPartCopyInput struct {
 	// encryption key was transmitted without error.
 	CopySourceSSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-copy-source-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// The account id of the expected destination bucket owner. If the destination
+	// The account ID of the expected destination bucket owner. If the destination
 	// bucket is owned by a different account, the request will fail with an HTTP
 	// 403 (Access Denied) error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
 
-	// The account id of the expected source bucket owner. If the source bucket
+	// The account ID of the expected source bucket owner. If the source bucket
 	// is owned by a different account, the request will fail with an HTTP 403 (Access
 	// Denied) error.
 	ExpectedSourceBucketOwner *string `location:"header" locationName:"x-amz-source-expected-bucket-owner" type:"string"`
@@ -34026,7 +37005,7 @@ type UploadPartCopyInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Specifies the algorithm to use to when encrypting the object (for example,
@@ -34039,6 +37018,10 @@ type UploadPartCopyInput struct {
 	// with the algorithm specified in the x-amz-server-side-encryption-customer-algorithm
 	// header. This must be the same encryption key specified in the initiate multipart
 	// upload request.
+	//
+	// SSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by UploadPartCopyInput's
+	// String and GoString methods.
 	SSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321.
@@ -34052,12 +37035,20 @@ type UploadPartCopyInput struct {
 	UploadId *string `location:"querystring" locationName:"uploadId" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s UploadPartCopyInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s UploadPartCopyInput) GoString() string {
 	return s.String()
 }
@@ -34259,7 +37250,7 @@ type UploadPartCopyOutput struct {
 	_ struct{} `type:"structure" payload:"CopyPartResult"`
 
 	// Indicates whether the multipart upload uses an S3 Bucket Key for server-side
-	// encryption with AWS KMS (SSE-KMS).
+	// encryption with Amazon Web Services KMS (SSE-KMS).
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Container for all response elements.
@@ -34283,9 +37274,13 @@ type UploadPartCopyOutput struct {
 	// verification of the customer-provided encryption key.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// If present, specifies the ID of the AWS Key Management Service (AWS KMS)
-	// symmetric customer managed customer master key (CMK) that was used for the
-	// object.
+	// If present, specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetric customer managed key that was used for
+	// the object.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by UploadPartCopyOutput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
 	// The server-side encryption algorithm used when storing this object in Amazon
@@ -34293,12 +37288,20 @@ type UploadPartCopyOutput struct {
 	ServerSideEncryption *string `location:"header" locationName:"x-amz-server-side-encryption" type:"string" enum:"ServerSideEncryption"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s UploadPartCopyOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s UploadPartCopyOutput) GoString() string {
 	return s.String()
 }
@@ -34359,20 +37362,20 @@ type UploadPartInput struct {
 
 	// The name of the bucket to which the multipart upload was initiated.
 	//
-	// When using this API with an access point, you must direct requests to the
-	// access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
-	// When using this operation with an access point through the AWS SDKs, you
-	// provide the access point ARN in place of the bucket name. For more information
-	// about access point ARNs, see Using Access Points (https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// When using this action with an access point, you must direct requests to
+	// the access point hostname. The access point hostname takes the form AccessPointName-AccountId.s3-accesspoint.Region.amazonaws.com.
+	// When using this action with an access point through the Amazon Web Services
+	// SDKs, you provide the access point ARN in place of the bucket name. For more
+	// information about access point ARNs, see Using access points (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-access-points.html)
+	// in the Amazon S3 User Guide.
 	//
-	// When using this API with Amazon S3 on Outposts, you must direct requests
+	// When using this action with Amazon S3 on Outposts, you must direct requests
 	// to the S3 on Outposts hostname. The S3 on Outposts hostname takes the form
 	// AccessPointName-AccountId.outpostID.s3-outposts.Region.amazonaws.com. When
-	// using this operation using S3 on Outposts through the AWS SDKs, you provide
-	// the Outposts bucket ARN in place of the bucket name. For more information
-	// about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/dev/S3onOutposts.html)
-	// in the Amazon Simple Storage Service Developer Guide.
+	// using this action using S3 on Outposts through the Amazon Web Services SDKs,
+	// you provide the Outposts bucket ARN in place of the bucket name. For more
+	// information about S3 on Outposts ARNs, see Using S3 on Outposts (https://docs.aws.amazon.com/AmazonS3/latest/userguide/S3onOutposts.html)
+	// in the Amazon S3 User Guide.
 	//
 	// Bucket is a required field
 	Bucket *string `location:"uri" locationName:"Bucket" type:"string" required:"true"`
@@ -34386,7 +37389,7 @@ type UploadPartInput struct {
 	// if object lock parameters are specified.
 	ContentMD5 *string `location:"header" locationName:"Content-MD5" type:"string"`
 
-	// The account id of the expected bucket owner. If the bucket is owned by a
+	// The account ID of the expected bucket owner. If the bucket is owned by a
 	// different account, the request will fail with an HTTP 403 (Access Denied)
 	// error.
 	ExpectedBucketOwner *string `location:"header" locationName:"x-amz-expected-bucket-owner" type:"string"`
@@ -34406,7 +37409,7 @@ type UploadPartInput struct {
 	// Bucket owners need not specify this parameter in their requests. For information
 	// about downloading objects from requester pays buckets, see Downloading Objects
 	// in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-	// in the Amazon S3 Developer Guide.
+	// in the Amazon S3 User Guide.
 	RequestPayer *string `location:"header" locationName:"x-amz-request-payer" type:"string" enum:"RequestPayer"`
 
 	// Specifies the algorithm to use to when encrypting the object (for example,
@@ -34419,6 +37422,10 @@ type UploadPartInput struct {
 	// with the algorithm specified in the x-amz-server-side-encryption-customer-algorithm
 	// header. This must be the same encryption key specified in the initiate multipart
 	// upload request.
+	//
+	// SSECustomerKey is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by UploadPartInput's
+	// String and GoString methods.
 	SSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
 	// Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321.
@@ -34432,12 +37439,20 @@ type UploadPartInput struct {
 	UploadId *string `location:"querystring" locationName:"uploadId" type:"string" required:"true"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s UploadPartInput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s UploadPartInput) GoString() string {
 	return s.String()
 }
@@ -34587,7 +37602,7 @@ type UploadPartOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates whether the multipart upload uses an S3 Bucket Key for server-side
-	// encryption with AWS KMS (SSE-KMS).
+	// encryption with Amazon Web Services KMS (SSE-KMS).
 	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
 
 	// Entity tag for the uploaded object.
@@ -34607,8 +37622,13 @@ type UploadPartOutput struct {
 	// verification of the customer-provided encryption key.
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 
-	// If present, specifies the ID of the AWS Key Management Service (AWS KMS)
-	// symmetric customer managed customer master key (CMK) was used for the object.
+	// If present, specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetric customer managed key was used for the
+	// object.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by UploadPartOutput's
+	// String and GoString methods.
 	SSEKMSKeyId *string `location:"header" locationName:"x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
 
 	// The server-side encryption algorithm used when storing this object in Amazon
@@ -34616,12 +37636,20 @@ type UploadPartOutput struct {
 	ServerSideEncryption *string `location:"header" locationName:"x-amz-server-side-encryption" type:"string" enum:"ServerSideEncryption"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s UploadPartOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s UploadPartOutput) GoString() string {
 	return s.String()
 }
@@ -34670,7 +37698,7 @@ func (s *UploadPartOutput) SetServerSideEncryption(v string) *UploadPartOutput {
 
 // Describes the versioning state of an Amazon S3 bucket. For more information,
 // see PUT Bucket versioning (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTVersioningStatus.html)
-// in the Amazon Simple Storage Service API Reference.
+// in the Amazon S3 API Reference.
 type VersioningConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -34683,12 +37711,20 @@ type VersioningConfiguration struct {
 	Status *string `type:"string" enum:"BucketVersioningStatus"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s VersioningConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s VersioningConfiguration) GoString() string {
 	return s.String()
 }
@@ -34724,12 +37760,20 @@ type WebsiteConfiguration struct {
 	RoutingRules []*RoutingRule `locationNameList:"RoutingRule" type:"list"`
 }
 
-// String returns the string representation
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s WebsiteConfiguration) String() string {
 	return awsutil.Prettify(s)
 }
 
-// GoString returns the string representation
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
 func (s WebsiteConfiguration) GoString() string {
 	return s.String()
 }
@@ -34791,6 +37835,472 @@ func (s *WebsiteConfiguration) SetRedirectAllRequestsTo(v *RedirectAllRequestsTo
 func (s *WebsiteConfiguration) SetRoutingRules(v []*RoutingRule) *WebsiteConfiguration {
 	s.RoutingRules = v
 	return s
+}
+
+type WriteGetObjectResponseInput struct {
+	_ struct{} `locationName:"WriteGetObjectResponseRequest" type:"structure" payload:"Body"`
+
+	// Indicates that a range of bytes was specified.
+	AcceptRanges *string `location:"header" locationName:"x-amz-fwd-header-accept-ranges" type:"string"`
+
+	// The object data.
+	//
+	// To use an non-seekable io.Reader for this request wrap the io.Reader with
+	// "aws.ReadSeekCloser". The SDK will not retry request errors for non-seekable
+	// readers. This will allow the SDK to send the reader's payload as chunked
+	// transfer encoding.
+	Body io.ReadSeeker `type:"blob"`
+
+	// Indicates whether the object stored in Amazon S3 uses an S3 bucket key for
+	// server-side encryption with Amazon Web Services KMS (SSE-KMS).
+	BucketKeyEnabled *bool `location:"header" locationName:"x-amz-fwd-header-x-amz-server-side-encryption-bucket-key-enabled" type:"boolean"`
+
+	// Specifies caching behavior along the request/reply chain.
+	CacheControl *string `location:"header" locationName:"x-amz-fwd-header-Cache-Control" type:"string"`
+
+	// Specifies presentational information for the object.
+	ContentDisposition *string `location:"header" locationName:"x-amz-fwd-header-Content-Disposition" type:"string"`
+
+	// Specifies what content encodings have been applied to the object and thus
+	// what decoding mechanisms must be applied to obtain the media-type referenced
+	// by the Content-Type header field.
+	ContentEncoding *string `location:"header" locationName:"x-amz-fwd-header-Content-Encoding" type:"string"`
+
+	// The language the content is in.
+	ContentLanguage *string `location:"header" locationName:"x-amz-fwd-header-Content-Language" type:"string"`
+
+	// The size of the content body in bytes.
+	ContentLength *int64 `location:"header" locationName:"Content-Length" type:"long"`
+
+	// The portion of the object returned in the response.
+	ContentRange *string `location:"header" locationName:"x-amz-fwd-header-Content-Range" type:"string"`
+
+	// A standard MIME type describing the format of the object data.
+	ContentType *string `location:"header" locationName:"x-amz-fwd-header-Content-Type" type:"string"`
+
+	// Specifies whether an object stored in Amazon S3 is (true) or is not (false)
+	// a delete marker.
+	DeleteMarker *bool `location:"header" locationName:"x-amz-fwd-header-x-amz-delete-marker" type:"boolean"`
+
+	// An opaque identifier assigned by a web server to a specific version of a
+	// resource found at a URL.
+	ETag *string `location:"header" locationName:"x-amz-fwd-header-ETag" type:"string"`
+
+	// A string that uniquely identifies an error condition. Returned in the <Code>
+	// tag of the error XML response for a corresponding GetObject call. Cannot
+	// be used with a successful StatusCode header or when the transformed object
+	// is provided in the body. All error codes from S3 are sentence-cased. Regex
+	// value is "^[A-Z][a-zA-Z]+$".
+	ErrorCode *string `location:"header" locationName:"x-amz-fwd-error-code" type:"string"`
+
+	// Contains a generic description of the error condition. Returned in the <Message>
+	// tag of the error XML response for a corresponding GetObject call. Cannot
+	// be used with a successful StatusCode header or when the transformed object
+	// is provided in body.
+	ErrorMessage *string `location:"header" locationName:"x-amz-fwd-error-message" type:"string"`
+
+	// If object stored in Amazon S3 expiration is configured (see PUT Bucket lifecycle)
+	// it includes expiry-date and rule-id key-value pairs providing object expiration
+	// information. The value of the rule-id is URL encoded.
+	Expiration *string `location:"header" locationName:"x-amz-fwd-header-x-amz-expiration" type:"string"`
+
+	// The date and time at which the object is no longer cacheable.
+	Expires *time.Time `location:"header" locationName:"x-amz-fwd-header-Expires" type:"timestamp"`
+
+	// The date and time that the object was last modified.
+	LastModified *time.Time `location:"header" locationName:"x-amz-fwd-header-Last-Modified" type:"timestamp"`
+
+	// A map of metadata to store with the object in S3.
+	Metadata map[string]*string `location:"headers" locationName:"x-amz-meta-" type:"map"`
+
+	// Set to the number of metadata entries not returned in x-amz-meta headers.
+	// This can happen if you create metadata using an API like SOAP that supports
+	// more flexible metadata than the REST API. For example, using SOAP, you can
+	// create metadata whose values are not legal HTTP headers.
+	MissingMeta *int64 `location:"header" locationName:"x-amz-fwd-header-x-amz-missing-meta" type:"integer"`
+
+	// Indicates whether an object stored in Amazon S3 has an active legal hold.
+	ObjectLockLegalHoldStatus *string `location:"header" locationName:"x-amz-fwd-header-x-amz-object-lock-legal-hold" type:"string" enum:"ObjectLockLegalHoldStatus"`
+
+	// Indicates whether an object stored in Amazon S3 has Object Lock enabled.
+	// For more information about S3 Object Lock, see Object Lock (https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html).
+	ObjectLockMode *string `location:"header" locationName:"x-amz-fwd-header-x-amz-object-lock-mode" type:"string" enum:"ObjectLockMode"`
+
+	// The date and time when Object Lock is configured to expire.
+	ObjectLockRetainUntilDate *time.Time `location:"header" locationName:"x-amz-fwd-header-x-amz-object-lock-retain-until-date" type:"timestamp" timestampFormat:"iso8601"`
+
+	// The count of parts this object has.
+	PartsCount *int64 `location:"header" locationName:"x-amz-fwd-header-x-amz-mp-parts-count" type:"integer"`
+
+	// Indicates if request involves bucket that is either a source or destination
+	// in a Replication rule. For more information about S3 Replication, see Replication
+	// (https://docs.aws.amazon.com/AmazonS3/latest/userguide/replication.html).
+	ReplicationStatus *string `location:"header" locationName:"x-amz-fwd-header-x-amz-replication-status" type:"string" enum:"ReplicationStatus"`
+
+	// If present, indicates that the requester was successfully charged for the
+	// request.
+	RequestCharged *string `location:"header" locationName:"x-amz-fwd-header-x-amz-request-charged" type:"string" enum:"RequestCharged"`
+
+	// Route prefix to the HTTP URL generated.
+	//
+	// RequestRoute is a required field
+	RequestRoute *string `location:"header" locationName:"x-amz-request-route" type:"string" required:"true"`
+
+	// A single use encrypted token that maps WriteGetObjectResponse to the end
+	// user GetObject request.
+	//
+	// RequestToken is a required field
+	RequestToken *string `location:"header" locationName:"x-amz-request-token" type:"string" required:"true"`
+
+	// Provides information about object restoration operation and expiration time
+	// of the restored object copy.
+	Restore *string `location:"header" locationName:"x-amz-fwd-header-x-amz-restore" type:"string"`
+
+	// Encryption algorithm used if server-side encryption with a customer-provided
+	// encryption key was specified for object stored in Amazon S3.
+	SSECustomerAlgorithm *string `location:"header" locationName:"x-amz-fwd-header-x-amz-server-side-encryption-customer-algorithm" type:"string"`
+
+	// 128-bit MD5 digest of customer-provided encryption key used in Amazon S3
+	// to encrypt data stored in S3. For more information, see Protecting data using
+	// server-side encryption with customer-provided encryption keys (SSE-C) (https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerSideEncryptionCustomerKeys.html).
+	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-fwd-header-x-amz-server-side-encryption-customer-key-MD5" type:"string"`
+
+	// If present, specifies the ID of the Amazon Web Services Key Management Service
+	// (Amazon Web Services KMS) symmetric customer managed key that was used for
+	// stored in Amazon S3 object.
+	//
+	// SSEKMSKeyId is a sensitive parameter and its value will be
+	// replaced with "sensitive" in string returned by WriteGetObjectResponseInput's
+	// String and GoString methods.
+	SSEKMSKeyId *string `location:"header" locationName:"x-amz-fwd-header-x-amz-server-side-encryption-aws-kms-key-id" type:"string" sensitive:"true"`
+
+	// The server-side encryption algorithm used when storing requested object in
+	// Amazon S3 (for example, AES256, aws:kms).
+	ServerSideEncryption *string `location:"header" locationName:"x-amz-fwd-header-x-amz-server-side-encryption" type:"string" enum:"ServerSideEncryption"`
+
+	// The integer status code for an HTTP response of a corresponding GetObject
+	// request.
+	//
+	// Status Codes
+	//
+	//    * 200 - OK
+	//
+	//    * 206 - Partial Content
+	//
+	//    * 304 - Not Modified
+	//
+	//    * 400 - Bad Request
+	//
+	//    * 401 - Unauthorized
+	//
+	//    * 403 - Forbidden
+	//
+	//    * 404 - Not Found
+	//
+	//    * 405 - Method Not Allowed
+	//
+	//    * 409 - Conflict
+	//
+	//    * 411 - Length Required
+	//
+	//    * 412 - Precondition Failed
+	//
+	//    * 416 - Range Not Satisfiable
+	//
+	//    * 500 - Internal Server Error
+	//
+	//    * 503 - Service Unavailable
+	StatusCode *int64 `location:"header" locationName:"x-amz-fwd-status" type:"integer"`
+
+	// The class of storage used to store object in Amazon S3.
+	StorageClass *string `location:"header" locationName:"x-amz-fwd-header-x-amz-storage-class" type:"string" enum:"StorageClass"`
+
+	// The number of tags, if any, on the object.
+	TagCount *int64 `location:"header" locationName:"x-amz-fwd-header-x-amz-tagging-count" type:"integer"`
+
+	// An ID used to reference a specific version of the object.
+	VersionId *string `location:"header" locationName:"x-amz-fwd-header-x-amz-version-id" type:"string"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s WriteGetObjectResponseInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s WriteGetObjectResponseInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *WriteGetObjectResponseInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "WriteGetObjectResponseInput"}
+	if s.RequestRoute == nil {
+		invalidParams.Add(request.NewErrParamRequired("RequestRoute"))
+	}
+	if s.RequestRoute != nil && len(*s.RequestRoute) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RequestRoute", 1))
+	}
+	if s.RequestToken == nil {
+		invalidParams.Add(request.NewErrParamRequired("RequestToken"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptRanges sets the AcceptRanges field's value.
+func (s *WriteGetObjectResponseInput) SetAcceptRanges(v string) *WriteGetObjectResponseInput {
+	s.AcceptRanges = &v
+	return s
+}
+
+// SetBody sets the Body field's value.
+func (s *WriteGetObjectResponseInput) SetBody(v io.ReadSeeker) *WriteGetObjectResponseInput {
+	s.Body = v
+	return s
+}
+
+// SetBucketKeyEnabled sets the BucketKeyEnabled field's value.
+func (s *WriteGetObjectResponseInput) SetBucketKeyEnabled(v bool) *WriteGetObjectResponseInput {
+	s.BucketKeyEnabled = &v
+	return s
+}
+
+// SetCacheControl sets the CacheControl field's value.
+func (s *WriteGetObjectResponseInput) SetCacheControl(v string) *WriteGetObjectResponseInput {
+	s.CacheControl = &v
+	return s
+}
+
+// SetContentDisposition sets the ContentDisposition field's value.
+func (s *WriteGetObjectResponseInput) SetContentDisposition(v string) *WriteGetObjectResponseInput {
+	s.ContentDisposition = &v
+	return s
+}
+
+// SetContentEncoding sets the ContentEncoding field's value.
+func (s *WriteGetObjectResponseInput) SetContentEncoding(v string) *WriteGetObjectResponseInput {
+	s.ContentEncoding = &v
+	return s
+}
+
+// SetContentLanguage sets the ContentLanguage field's value.
+func (s *WriteGetObjectResponseInput) SetContentLanguage(v string) *WriteGetObjectResponseInput {
+	s.ContentLanguage = &v
+	return s
+}
+
+// SetContentLength sets the ContentLength field's value.
+func (s *WriteGetObjectResponseInput) SetContentLength(v int64) *WriteGetObjectResponseInput {
+	s.ContentLength = &v
+	return s
+}
+
+// SetContentRange sets the ContentRange field's value.
+func (s *WriteGetObjectResponseInput) SetContentRange(v string) *WriteGetObjectResponseInput {
+	s.ContentRange = &v
+	return s
+}
+
+// SetContentType sets the ContentType field's value.
+func (s *WriteGetObjectResponseInput) SetContentType(v string) *WriteGetObjectResponseInput {
+	s.ContentType = &v
+	return s
+}
+
+// SetDeleteMarker sets the DeleteMarker field's value.
+func (s *WriteGetObjectResponseInput) SetDeleteMarker(v bool) *WriteGetObjectResponseInput {
+	s.DeleteMarker = &v
+	return s
+}
+
+// SetETag sets the ETag field's value.
+func (s *WriteGetObjectResponseInput) SetETag(v string) *WriteGetObjectResponseInput {
+	s.ETag = &v
+	return s
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *WriteGetObjectResponseInput) SetErrorCode(v string) *WriteGetObjectResponseInput {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *WriteGetObjectResponseInput) SetErrorMessage(v string) *WriteGetObjectResponseInput {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetExpiration sets the Expiration field's value.
+func (s *WriteGetObjectResponseInput) SetExpiration(v string) *WriteGetObjectResponseInput {
+	s.Expiration = &v
+	return s
+}
+
+// SetExpires sets the Expires field's value.
+func (s *WriteGetObjectResponseInput) SetExpires(v time.Time) *WriteGetObjectResponseInput {
+	s.Expires = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *WriteGetObjectResponseInput) SetLastModified(v time.Time) *WriteGetObjectResponseInput {
+	s.LastModified = &v
+	return s
+}
+
+// SetMetadata sets the Metadata field's value.
+func (s *WriteGetObjectResponseInput) SetMetadata(v map[string]*string) *WriteGetObjectResponseInput {
+	s.Metadata = v
+	return s
+}
+
+// SetMissingMeta sets the MissingMeta field's value.
+func (s *WriteGetObjectResponseInput) SetMissingMeta(v int64) *WriteGetObjectResponseInput {
+	s.MissingMeta = &v
+	return s
+}
+
+// SetObjectLockLegalHoldStatus sets the ObjectLockLegalHoldStatus field's value.
+func (s *WriteGetObjectResponseInput) SetObjectLockLegalHoldStatus(v string) *WriteGetObjectResponseInput {
+	s.ObjectLockLegalHoldStatus = &v
+	return s
+}
+
+// SetObjectLockMode sets the ObjectLockMode field's value.
+func (s *WriteGetObjectResponseInput) SetObjectLockMode(v string) *WriteGetObjectResponseInput {
+	s.ObjectLockMode = &v
+	return s
+}
+
+// SetObjectLockRetainUntilDate sets the ObjectLockRetainUntilDate field's value.
+func (s *WriteGetObjectResponseInput) SetObjectLockRetainUntilDate(v time.Time) *WriteGetObjectResponseInput {
+	s.ObjectLockRetainUntilDate = &v
+	return s
+}
+
+// SetPartsCount sets the PartsCount field's value.
+func (s *WriteGetObjectResponseInput) SetPartsCount(v int64) *WriteGetObjectResponseInput {
+	s.PartsCount = &v
+	return s
+}
+
+// SetReplicationStatus sets the ReplicationStatus field's value.
+func (s *WriteGetObjectResponseInput) SetReplicationStatus(v string) *WriteGetObjectResponseInput {
+	s.ReplicationStatus = &v
+	return s
+}
+
+// SetRequestCharged sets the RequestCharged field's value.
+func (s *WriteGetObjectResponseInput) SetRequestCharged(v string) *WriteGetObjectResponseInput {
+	s.RequestCharged = &v
+	return s
+}
+
+// SetRequestRoute sets the RequestRoute field's value.
+func (s *WriteGetObjectResponseInput) SetRequestRoute(v string) *WriteGetObjectResponseInput {
+	s.RequestRoute = &v
+	return s
+}
+
+// SetRequestToken sets the RequestToken field's value.
+func (s *WriteGetObjectResponseInput) SetRequestToken(v string) *WriteGetObjectResponseInput {
+	s.RequestToken = &v
+	return s
+}
+
+// SetRestore sets the Restore field's value.
+func (s *WriteGetObjectResponseInput) SetRestore(v string) *WriteGetObjectResponseInput {
+	s.Restore = &v
+	return s
+}
+
+// SetSSECustomerAlgorithm sets the SSECustomerAlgorithm field's value.
+func (s *WriteGetObjectResponseInput) SetSSECustomerAlgorithm(v string) *WriteGetObjectResponseInput {
+	s.SSECustomerAlgorithm = &v
+	return s
+}
+
+// SetSSECustomerKeyMD5 sets the SSECustomerKeyMD5 field's value.
+func (s *WriteGetObjectResponseInput) SetSSECustomerKeyMD5(v string) *WriteGetObjectResponseInput {
+	s.SSECustomerKeyMD5 = &v
+	return s
+}
+
+// SetSSEKMSKeyId sets the SSEKMSKeyId field's value.
+func (s *WriteGetObjectResponseInput) SetSSEKMSKeyId(v string) *WriteGetObjectResponseInput {
+	s.SSEKMSKeyId = &v
+	return s
+}
+
+// SetServerSideEncryption sets the ServerSideEncryption field's value.
+func (s *WriteGetObjectResponseInput) SetServerSideEncryption(v string) *WriteGetObjectResponseInput {
+	s.ServerSideEncryption = &v
+	return s
+}
+
+// SetStatusCode sets the StatusCode field's value.
+func (s *WriteGetObjectResponseInput) SetStatusCode(v int64) *WriteGetObjectResponseInput {
+	s.StatusCode = &v
+	return s
+}
+
+// SetStorageClass sets the StorageClass field's value.
+func (s *WriteGetObjectResponseInput) SetStorageClass(v string) *WriteGetObjectResponseInput {
+	s.StorageClass = &v
+	return s
+}
+
+// SetTagCount sets the TagCount field's value.
+func (s *WriteGetObjectResponseInput) SetTagCount(v int64) *WriteGetObjectResponseInput {
+	s.TagCount = &v
+	return s
+}
+
+// SetVersionId sets the VersionId field's value.
+func (s *WriteGetObjectResponseInput) SetVersionId(v string) *WriteGetObjectResponseInput {
+	s.VersionId = &v
+	return s
+}
+
+func (s *WriteGetObjectResponseInput) hostLabels() map[string]string {
+	return map[string]string{
+		"RequestRoute": aws.StringValue(s.RequestRoute),
+	}
+}
+
+type WriteGetObjectResponseOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s WriteGetObjectResponseOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation.
+//
+// API parameter values that are decorated as "sensitive" in the API will not
+// be included in the string output. The member name will be present, but the
+// value will be replaced with "sensitive".
+func (s WriteGetObjectResponseOutput) GoString() string {
+	return s.String()
 }
 
 const (
@@ -35333,6 +38843,9 @@ const (
 
 	// InventoryOptionalFieldIntelligentTieringAccessTier is a InventoryOptionalField enum value
 	InventoryOptionalFieldIntelligentTieringAccessTier = "IntelligentTieringAccessTier"
+
+	// InventoryOptionalFieldBucketKeyStatus is a InventoryOptionalField enum value
+	InventoryOptionalFieldBucketKeyStatus = "BucketKeyStatus"
 )
 
 // InventoryOptionalField_Values returns all elements of the InventoryOptionalField enum
@@ -35349,6 +38862,7 @@ func InventoryOptionalField_Values() []string {
 		InventoryOptionalFieldObjectLockMode,
 		InventoryOptionalFieldObjectLockLegalHoldStatus,
 		InventoryOptionalFieldIntelligentTieringAccessTier,
+		InventoryOptionalFieldBucketKeyStatus,
 	}
 }
 
@@ -35782,7 +39296,7 @@ func RequestCharged_Values() []string {
 // Bucket owners need not specify this parameter in their requests. For information
 // about downloading objects from requester pays buckets, see Downloading Objects
 // in Requestor Pays Buckets (https://docs.aws.amazon.com/AmazonS3/latest/dev/ObjectsinRequesterPaysBuckets.html)
-// in the Amazon S3 Developer Guide.
+// in the Amazon S3 User Guide.
 const (
 	// RequestPayerRequester is a RequestPayer enum value
 	RequestPayerRequester = "requester"

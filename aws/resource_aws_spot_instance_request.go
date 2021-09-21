@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/big"
@@ -9,10 +10,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSpotInstanceRequest() *schema.Resource {
@@ -36,7 +44,7 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 
 			// Everything on a spot instance is ForceNew except tags
 			for k, v := range s {
-				if k == "tags" {
+				if k == "tags" || k == "tags_all" {
 					continue
 				}
 				v.ForceNew = true
@@ -95,11 +103,22 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				ValidateFunc: validation.IntDivisibleBy(60),
 			}
 			s["instance_interruption_behaviour"] = &schema.Schema{
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.InstanceInterruptionBehaviorTerminate,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+				Deprecated:    "Use the parameter \"instance_interruption_behavior\" instead.",
+				ConflictsWith: []string{"instance_interruption_behavior"},
+			}
+			s["instance_interruption_behavior"] = &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true, // Only during `instance_interruption_behaviour` deprecation period
+				// Default:       ec2.InstanceInterruptionBehaviorTerminate,
+				ForceNew:      true,
+				ValidateFunc:  validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+				ConflictsWith: []string{"instance_interruption_behaviour"},
 			}
 			s["valid_from"] = &schema.Schema{
 				Type:         schema.TypeString,
@@ -117,11 +136,32 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 			}
 			return s
 		}(),
+
+		CustomizeDiff: customdiff.All(
+			SetTagsDiff,
+			// This function exists to apply a default value to `instance_interruption_behavior` while
+			// accounting for the deprecated parameter `instance_interruption_behaviour`. It can be removed
+			// in favor of setting a `Default` on the parameter once `instance_interruption_behaviour` is removed.
+			// https://github.com/hashicorp/terraform-provider-aws/issues/20101
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				if v, ok := diff.GetOk("instance_interruption_behavior"); ok && v != "" {
+					return nil
+				}
+				if v, ok := diff.GetOk("instance_interruption_behaviour"); ok && v != "" {
+					diff.SetNew("instance_interruption_behavior", v)
+					return nil
+				}
+				diff.SetNew("instance_interruption_behavior", ec2.InstanceInterruptionBehaviorTerminate)
+				return nil
+			},
+		),
 	}
 }
 
 func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceOpts, err := buildAwsInstanceOpts(d, meta)
 	if err != nil {
@@ -131,8 +171,8 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	spotOpts := &ec2.RequestSpotInstancesInput{
 		SpotPrice:                    aws.String(d.Get("spot_price").(string)),
 		Type:                         aws.String(d.Get("spot_type").(string)),
-		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behaviour").(string)),
-		TagSpecifications:            ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSpotInstancesRequest),
+		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behavior").(string)),
+		TagSpecifications:            ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotInstancesRequest),
 
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
@@ -180,7 +220,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	// Placement GroupName can only be specified when instanceInterruptionBehavior is not set or set to 'terminate'
-	if v, exists := d.GetOkExists("instance_interruption_behaviour"); v.(string) == ec2.InstanceInterruptionBehaviorTerminate || !exists {
+	if v, exists := d.GetOkExists("instance_interruption_behavior"); v.(string) == ec2.InstanceInterruptionBehaviorTerminate || !exists {
 		spotOpts.LaunchSpecification.Placement = instanceOpts.SpotPlacement
 	}
 
@@ -188,7 +228,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Requesting spot bid opts: %s", spotOpts)
 
 	var resp *ec2.RequestSpotInstancesOutput
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
@@ -247,37 +287,63 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 // Update spot state, etc
 func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	req := &ec2.DescribeSpotInstanceRequestsInput{
-		SpotInstanceRequestIds: []*string{aws.String(d.Id())},
-	}
-	resp, err := conn.DescribeSpotInstanceRequests(req)
+	var request *ec2.SpotInstanceRequest
 
-	if err != nil {
-		// If the spot request was not found, return nil so that we can show
-		// that it is gone.
-		if isAWSErr(err, "InvalidSpotInstanceRequestID.NotFound", "") {
-			log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		request, err = finder.SpotInstanceRequestByID(conn, d.Id())
+
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSpotInstanceRequestIDNotFound) {
+			return resource.RetryableError(err)
 		}
 
-		// Some other error, report it
-		return err
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if d.IsNewResource() && request == nil {
+			return resource.RetryableError(&resource.NotFoundError{
+				LastError: fmt.Errorf("EC2 Spot Instance Request (%s) not found", d.Id()),
+			})
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		request, err = finder.SpotInstanceRequestByID(conn, d.Id())
 	}
 
-	// If nothing was found, then return no state
-	if len(resp.SpotInstanceRequests) == 0 {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSpotInstanceRequestIDNotFound) {
 		log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	request := resp.SpotInstanceRequests[0]
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Spot Instance Request (%s): %w", d.Id(), err)
+	}
 
-	// if the request is cancelled or closed, then it is gone
-	if *request.State == ec2.SpotInstanceStateCancelled || *request.State == ec2.SpotInstanceStateClosed {
+	if request == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading EC2 Spot Instance Request (%s): not found after creation", d.Id())
+		}
+
+		log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if aws.StringValue(request.State) == ec2.SpotInstanceStateCancelled || aws.StringValue(request.State) == ec2.SpotInstanceStateClosed {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading EC2 Spot Instance Request (%s): %s after creation", d.Id(), aws.StringValue(request.State))
+		}
+
+		log.Printf("[WARN] EC2 Spot Instance Request (%s) %s, removing from state", d.Id(), aws.StringValue(request.State))
 		d.SetId("")
 		return nil
 	}
@@ -296,10 +362,18 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(request.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.Ec2KeyValueTags(request.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
+	d.Set("instance_interruption_behavior", request.InstanceInterruptionBehavior)
 	d.Set("instance_interruption_behaviour", request.InstanceInterruptionBehavior)
 	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(time.RFC3339))
 	d.Set("valid_until", aws.TimeValue(request.ValidUntil).Format(time.RFC3339))
@@ -398,8 +472,8 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Spot Instance Request (%s) tags: %s", d.Id(), err)

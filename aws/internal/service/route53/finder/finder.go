@@ -5,8 +5,46 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfroute53 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
+
+func HealthCheckByID(conn *route53.Route53, id string) (*route53.HealthCheck, error) {
+	input := &route53.GetHealthCheckInput{
+		HealthCheckId: aws.String(id),
+	}
+
+	output, err := conn.GetHealthCheck(input)
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHealthCheck) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || output.HealthCheck == nil || output.HealthCheck.HealthCheckConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.HealthCheck, nil
+}
+
+func HostedZoneDnssec(conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
+	input := &route53.GetDNSSECInput{
+		HostedZoneId: aws.String(hostedZoneID),
+	}
+
+	output, err := conn.GetDNSSEC(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
 
 func KeySigningKey(conn *route53.Route53, hostedZoneID string, name string) (*route53.KeySigningKey, error) {
 	input := &route53.GetDNSSECInput{

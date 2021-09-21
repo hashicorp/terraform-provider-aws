@@ -14,7 +14,7 @@ Provides an AWS Network Firewall Rule Group Resource
 
 ### Stateful Inspection for denying access to a domain
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -38,7 +38,7 @@ resource "aws_networkfirewall_rule_group" "example" {
 
 ### Stateful Inspection for permitting packets from a source IP address
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity    = 50
   description = "Permits http traffic from source"
@@ -78,7 +78,7 @@ locals {
 
 ### Stateful Inspection for blocking packets from going to an intended destination
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -111,7 +111,7 @@ resource "aws_networkfirewall_rule_group" "example" {
 
 ### Stateful Inspection from rules specifications defined in Suricata flat format
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -125,9 +125,48 @@ resource "aws_networkfirewall_rule_group" "example" {
 }
 ```
 
+### Stateful Inspection from rule group specifications using rule variables and Suricata format rules
+
+```terraform
+resource "aws_networkfirewall_rule_group" "example" {
+  capacity = 100
+  name     = "example"
+  type     = "STATEFUL"
+  rule_group {
+    rule_variables {
+      ip_sets {
+        key = "WEBSERVERS_HOSTS"
+        ip_set {
+          definition = ["10.0.0.0/16", "10.0.1.0/24", "192.168.0.0/16"]
+        }
+      }
+      ip_sets {
+        key = "EXTERNAL_HOST"
+        ip_set {
+          definition = ["1.2.3.4/32"]
+        }
+      }
+      port_sets {
+        key = "HTTP_PORTS"
+        port_set {
+          definition = ["443", "80"]
+        }
+      }
+    }
+    rules_source {
+      rules_string = file("suricata_rules_file")
+    }
+  }
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+}
+```
+
 ### Stateless Inspection with a Custom Action
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   description = "Stateless Rate Limiting Rule"
   capacity    = 100
@@ -198,7 +237,7 @@ The following arguments are supported:
 
 * `rules` - (Optional) The stateful rule group rules specifications in Suricata file format, with one rule per line. Use this to import your existing Suricata compatible rule groups. Required unless `rule_group` is specified.
 
-* `tags` - (Optional) A map of key:value pairs to associate with the resource.
+* `tags` - (Optional) A map of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `type` - (Required) Whether the rule group is stateless (containing stateless rules) or stateful (containing stateful rules). Valid values include: `STATEFUL` or `STATELESS`.
 
@@ -416,6 +455,8 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The Amazon Resource Name (ARN) that identifies the rule group.
 
 * `arn` - The Amazon Resource Name (ARN) that identifies the rule group.
+
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 * `update_token` - A string token used when updating the rule group.
 

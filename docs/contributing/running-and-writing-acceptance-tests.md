@@ -17,6 +17,9 @@
         - [PreChecks](#prechecks)
             - [Standard Provider PreChecks](#standard-provider-prechecks)
             - [Custom PreChecks](#custom-prechecks)
+        - [ErrorChecks](#errorchecks)
+            - [Common ErrorCheck](#common-errorcheck)
+            - [Service-Specific ErrorChecks](#service-specific-errorchecks)
         - [Disappears Acceptance Tests](#disappears-acceptance-tests)
         - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
@@ -35,11 +38,14 @@
         - [Hardcoded AMI IDs](#hardcoded-ami-ids)
         - [Hardcoded Availability Zones](#hardcoded-availability-zones)
         - [Hardcoded Database Versions](#hardcoded-database-versions)
+        - [Hardcoded Direct Connect Locations](#hardcoded-direct-connect-locations)
         - [Hardcoded Instance Types](#hardcoded-instance-types)
         - [Hardcoded Partition DNS Suffix](#hardcoded-partition-dns-suffix)
         - [Hardcoded Partition in ARN](#hardcoded-partition-in-arn)
         - [Hardcoded Region](#hardcoded-region)
         - [Hardcoded Spot Price](#hardcoded-spot-price)
+        - [Hardcoded SSH Keys](#hardcoded-ssh-keys)
+        - [Hardcoded Email Addresses](#hardcoded-email-addresses)
 
 Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
@@ -192,6 +198,7 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
@@ -394,7 +401,7 @@ resource "aws_example_thing" "test" {
 
 These test configurations are typical implementations we have found or allow testing to implement best practices easier, since the Terraform AWS Provider testing is expected to run against various AWS Regions and Partitions.
 
-- `testAccAvailableEc2InstanceTypeForRegion("type1", "type2", ...)`: Typically used to replace hardcoded EC2 Instance Types. Uses `aws_ec2_instance_type_offering` data source to return an available EC2 Instance Type in preferred ordering. Reference the instance type via: `data.aws_ec2_instance_type_offering.available.instance_type`
+- `testAccAvailableEc2InstanceTypeForRegion("type1", "type2", ...)`: Typically used to replace hardcoded EC2 Instance Types. Uses `aws_ec2_instance_type_offering` data source to return an available EC2 Instance Type in preferred ordering. Reference the instance type via: `data.aws_ec2_instance_type_offering.available.instance_type`. Use `testAccAvailableEc2InstanceTypeForRegionNamed("name", "type1", "type2", ...)` to specify a name for the data source
 - `testAccLatestAmazonLinuxHvmEbsAmiConfig()`: Typically used to replace hardcoded EC2 Image IDs (`ami-12345678`). Uses `aws_ami` data source to find the latest Amazon Linux image. Reference the AMI ID via: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`
 
 #### Randomized Naming
@@ -488,6 +495,7 @@ func TestAccAwsExampleThing_basic(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleThingDestroy,
     Steps: []resource.TestStep{
@@ -595,6 +603,59 @@ func testAccPreCheckAwsExample(t *testing.T) {
 }
 ```
 
+#### ErrorChecks
+
+Acceptance test cases have an ErrorCheck. The ErrorCheck provides a chance to take a look at errors before the test fails. While most errors should result in test failure, some should not. For example, an error that indicates an API operation is not supported in a particular region should cause the test to skip instead of fail. Since errors should flow through the ErrorCheck, do not handle the vast majority of failing conditions. Instead, in ErrorCheck, focus on the rare errors that should cause a test to skip, or in other words, be ignored.
+
+##### Common ErrorCheck
+
+In many situations, the common ErrorCheck is sufficient. It will skip tests for several normal occurrences such as when AWS reports a feature is not supported in the current region.
+
+Here is an example of the common ErrorCheck:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    // PreCheck
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
+    // ... additional checks follow ...
+  })
+}
+```
+
+##### Service-Specific ErrorChecks
+
+However, some services have special conditions that aren't caught by the common ErrorCheck. In these cases, you can create a service-specific ErrorCheck.
+
+To add a service-specific ErrorCheck, follow these steps:
+
+1. Make sure there is not already an ErrorCheck for the service you have in mind. For example, search the codebase for `RegisterServiceErrorCheckFunc(service.EndpointsID` replacing "service" with the package name of the service you're working on (e.g., `ec2`). If there is already an ErrorCheck for the service, add to the existing service-specific ErrorCheck.
+2. Create the service-specific ErrorCheck in an `_test.go` file for the service. See the example below.
+3. Register the new service-specific ErrorCheck in the `init()` at the top of the `_test.go` file. See the example below.
+
+An example of adding a service-specific ErrorCheck:
+
+```go
+// just after the imports, create or add to the init() function
+func init() {
+  RegisterServiceErrorCheck(service.EndpointsID, testAccErrorCheckSkipService)
+}
+
+// ... additional code and tests ...
+
+// this is the service-specific ErrorCheck
+func testAccErrorCheckSkipService(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"Error message specific to the service that indicates unsupported features",
+		"You can include from one to many portions of error messages",
+		"Be careful to not inadvertently capture errors that should not be skipped",
+	)
+}
+```
+
 #### Disappears Acceptance Tests
 
 This test is generally implemented second. It is straightforward to setup once the basic test is passing since it can reuse that test configuration. It prevents a common bug report with Terraform resources that error when they can not be found (e.g. deleted outside Terraform).
@@ -610,6 +671,7 @@ func TestAccAwsExampleThing_disappears(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleThingDestroy,
     Steps: []resource.TestStep{
@@ -652,6 +714,7 @@ func TestAccAwsExampleChildThing_disappears_ParentThing(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleChildThingDestroy,
     Steps: []resource.TestStep{
@@ -681,6 +744,7 @@ func TestAccAwsExampleThing_Description(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleThingDestroy,
     Steps: []resource.TestStep{
@@ -741,6 +805,7 @@ func TestAccAwsExample_basic(t *testing.T) {
       testAccPreCheck(t)
       testAccAlternateAccountPreCheck(t)
     },
+    ErrorCheck:        testAccErrorCheck(t, service.EndpointsID),
     ProviderFactories: testAccProviderFactoriesAlternate(&providers),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
     Steps: []resource.TestStep{
@@ -804,6 +869,7 @@ func TestAccAwsExample_basic(t *testing.T) {
       testAccPreCheck(t)
       testAccMultipleRegionPreCheck(t, 2)
     },
+    ErrorCheck:        testAccErrorCheck(t, service.EndpointsID),
     ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 2),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
     Steps: []resource.TestStep{
@@ -1018,6 +1084,7 @@ func TestAccAwsExampleThingDataSource_Name(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleThingDestroy,
     Steps: []resource.TestStep{
@@ -1069,6 +1136,13 @@ To run a specific resource sweeper:
 $ SWEEPARGS=-sweep-run=aws_example_thing make sweep
 ```
 
+To run sweepers with an assumed role, use the following additional environment variables:
+
+* `TF_AWS_ASSUME_ROLE_ARN` - Required.
+* `TF_AWS_ASSUME_ROLE_DURATION` - Optional, defaults to 1 hour (3600).
+* `TF_AWS_ASSUME_ROLE_EXTERNAL_ID` - Optional.
+* `TF_AWS_ASSUME_ROLE_SESSION_NAME` - Optional.
+
 ### Writing Test Sweepers
 
 The first step is to initialize the resource into the test sweeper framework:
@@ -1097,44 +1171,58 @@ func testSweepExampleThings(region string) error {
   }
 
   conn := client.(*AWSClient).exampleconn
-  input := &example.ListThingsInput{}
-  var sweeperErrs *multierror.Error
+  sweepResources := make([]*testSweepResource, 0)
+  var errs *multierror.Error
 
-  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, isLast bool) bool {
+  input := &example.ListThingsInput{}
+
+  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, lastPage bool) bool {
     if page == nil {
-      return !isLast
+      return !lastPage
     }
 
     for _, thing := range page.Things {
+      r := resourceAwsThing()
+      d := r.Data(nil)
+
       id := aws.StringValue(thing.Id)
-      input := &example.DeleteThingInput{
-        Id: thing.Id,
-      }
+      d.SetId(id)
 
-      log.Printf("[INFO] Deleting Example Thing: %s", id)
-      _, err := conn.DeleteThing(input)
+      // Perform resource specific pre-sweep setup.
+      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
+      //
+      // err := r.Read(d, client)             // fill in data
+      // d.Set("skip_final_snapshot", true)   // set an argument in order to delete
 
+      // This "if" is only needed if the pre-sweep setup can produce errors.
+      // Otherwise, do not include it.
       if err != nil {
-        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", sweeperErr)
-        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", err)
+        errs = multierror.Append(errs, err)
         continue
       }
+
+      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
     }
 
-    return !isLast
+    return !lastPage
   })
 
-  if testSweepSkipSweepError(err) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
-    return sweeperErrs.ErrorOrNil()
-  }
-
   if err != nil {
-    sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Things: %w", err))
+    errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
   }
 
-  return sweeperErrs.ErrorOrNil()
+  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+  }
+
+  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
+    return nil
+  }
+
+  return errs.ErrorOrNil()
 }
 ```
 
@@ -1149,37 +1237,37 @@ func testSweepExampleThings(region string) error {
   }
 
   conn := client.(*AWSClient).exampleconn
+  sweepResources := make([]*testSweepResource, 0)
+  var errs *multierror.Error
+
   input := &example.ListThingsInput{}
-  var sweeperErrs *multierror.Error
 
   for {
     output, err := conn.ListThings(input)
 
-    if testSweepSkipSweepError(err) {
-      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
-      return sweeperErrs.ErrorOrNil()
-    }
-
-    if err != nil {
-      sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Thing: %w", err))
-      return sweeperErrs
-    }
-
     for _, thing := range output.Things {
+      r := resourceAwsThing()
+      d := r.Data(nil)
+
       id := aws.StringValue(thing.Id)
-      input := &example.DeleteThingInput{
-        Id: thing.Id,
-      }
+      d.SetId(id)
 
-      log.Printf("[INFO] Deleting Example Thing: %s", id)
-      _, err := conn.DeleteThing(input)
+      // Perform resource specific pre-sweep setup.
+      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
+      //
+      // err := r.Read(d, client)             // fill in data
+      // d.Set("skip_final_snapshot", true)   // set an argument in order to delete
 
+      // This "if" is only needed if the pre-sweep setup can produce errors.
+      // Otherwise, do not include it.
       if err != nil {
-        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", sweeperErr)
-        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", err)
+        errs = multierror.Append(errs, err)
         continue
       }
+
+      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
     }
 
     if aws.StringValue(output.NextToken) == "" {
@@ -1189,7 +1277,16 @@ func testSweepExampleThings(region string) error {
     input.NextToken = output.NextToken
   }
 
-  return sweeperErrs.ErrorOrNil()
+  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+  }
+
+  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
+    return nil
+  }
+
+  return errs.ErrorOrNil()
 }
 ```
 
@@ -1212,9 +1309,11 @@ The below are required items that will be noted during submission review and pre
 - [ ] __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheckAws{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Custom Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
 - [ ] __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `provider_test.go` should be used for multiple account/region or otherwise specialized testing.
 - [ ] __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
+- [ ] __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),`).
 - [ ] __Uses resource.ParallelTest__: Tests should utilize [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
 - [ ] __Uses fmt.Sprintf()__: Test configurations preferably should to be separated into their own functions (typically named `testAccAws{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
 - [ ] __Uses Randomized Infrastructure Naming__: Test configurations that utilize resources where a unique name is required should generate a random name. Typically this is created via `rName := acctest.RandomWithPrefix("tf-acc-test")` in the acceptance test function before generating the configuration.
+- [ ] __Prevents S3 Bucket Deletion Errors__: Test configurations that utilize `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
 
 For resources that support import, the additional item below is required that will be noted during submission review and prevent immediate merging:
 
@@ -1295,9 +1394,9 @@ resource "aws_subnet" "test" {
 }
 ```
 
-#### Hardcoded Versions
+#### Hardcoded Database Versions
 
-- [ ] __Uses Version Data Sources__: Hardcoded versions, e.g. RDS MySQL Engine Version `5.7.42`, should be removed (which means the AWS-defined default version will be used) or replaced with a list of preferred versions using a data source. Because versions change over times and version offerings vary from region to region and partition to partition, using the default version or providing a list of preferences ensures a version will be available. Depending on the situation, there are several data sources for versions, including:
+- [ ] __Uses Database Version Data Sources__: Hardcoded database versions, e.g. RDS MySQL Engine Version `5.7.42`, should be removed (which means the AWS-defined default version will be used) or replaced with a list of preferred versions using a data source. Because versions change over times and version offerings vary from region to region and partition to partition, using the default version or providing a list of preferences ensures a version will be available. Depending on the situation, there are several data sources for versions, including:
     - [`aws_rds_engine_version` data source](https://www.terraform.io/docs/providers/aws/d/rds_engine_version.html),
     - [`aws_docdb_engine_version` data source](https://www.terraform.io/docs/providers/aws/d/docdb_engine_version.html), and
     - [`aws_neptune_engine_version` data source](https://www.terraform.io/docs/providers/aws/d/neptune_engine_version.html).
@@ -1321,6 +1420,23 @@ resource "aws_db_instance" "bar" {
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot  = true
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+}
+```
+
+#### Hardcoded Direct Connect Locations
+
+- [ ] __Uses aws_dx_locations Data Source__: Hardcoded AWS Direct Connect locations, e.g. `EqSe2`, should be replaced with the [`aws_dx_locations` data source](https://www.terraform.io/docs/providers/aws/d/dx_locations.html).
+
+Here's an example using `data.aws_dx_locations.test.location_codes`:
+
+```hcl
+data "aws_dx_locations" "test" {}
+
+resource "aws_dx_lag" "test" {
+  name                  = "Test LAG"
+  connections_bandwidth = "1Gbps"
+  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  force_destroy         = true
 }
 ```
 
@@ -1452,5 +1568,103 @@ data "aws_ec2_spot_price" "current" {
 resource "aws_spot_fleet_request" "test" {
   spot_price      = data.aws_ec2_spot_price.current.spot_price
   target_capacity = 2
+}
+```
+
+#### Hardcoded SSH Keys
+
+- [ ] __Uses acctest.RandSSHKeyPair() or RandSSHKeyPairSize() Functions__: Any hardcoded SSH keys should be replaced with random SSH keys generated by either the acceptance testing framework's function [`RandSSHKeyPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/acctest#RandSSHKeyPair) or the provider function `RandSSHKeyPairSize()`. `RandSSHKeyPair()` generates 1024-bit keys.
+
+Here's an example using `aws_key_pair`
+
+```go
+func TestAccAWSKeyPair_basic(t *testing.T) {
+  ...
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+  resource.ParallelTest(t, resource.TestCase{
+		...
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKeyPairConfig(rName, publicKey),
+        ...
+      },
+    },
+  })
+}
+
+func testAccAWSKeyPairConfig(rName, publicKey string) string {
+	return fmt.Sprintf(`
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
+  public_key = %[2]q
+}
+`, rName, publicKey)
+}
+```
+
+#### Hardcoded Email Addresses
+
+- [ ] __Uses either testAccDefaultEmailAddress Constant or testAccRandomEmailAddress() Function__: Any hardcoded email addresses should replaced with either the constant `testAccDefaultEmailAddress` or the function `testAccRandomEmailAddress()`.
+
+Using `testAccDefaultEmailAddress` is preferred when using a single email address in an acceptance test.
+
+Here's an example using `testAccDefaultEmailAddress`
+
+```go
+func TestAccAWSSNSTopicSubscription_email(t *testing.T) {
+	...
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		...
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicSubscriptionEmailConfig(rName, testAccDefaultEmailAddress),
+				Check: resource.ComposeTestCheckFunc(
+					...
+					resource.TestCheckResourceAttr(resourceName, "endpoint", testAccDefaultEmailAddress),
+				),
+			},
+		},
+	})
+}
+```
+
+Here's an example using `testAccRandomEmailAddress()`
+
+```go
+func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
+	...
+
+	domain := testAccRandomDomainName()
+	address1 := testAccRandomEmailAddress(domain)
+	address2 := testAccRandomEmailAddress(domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		...
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPinpointEmailChannelConfig_FromAddress(domain, address1),
+				Check: resource.ComposeTestCheckFunc(
+					...
+					resource.TestCheckResourceAttr(resourceName, "from_address", address1),
+				),
+			},
+			{
+				Config: testAccAWSPinpointEmailChannelConfig_FromAddress(domain, address2),
+				Check: resource.ComposeTestCheckFunc(
+					...
+					resource.TestCheckResourceAttr(resourceName, "from_address", address2),
+				),
+			},
+		},
+	})
 }
 ```

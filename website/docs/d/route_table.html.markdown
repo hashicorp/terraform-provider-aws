@@ -16,7 +16,7 @@ This resource can prove useful when a module accepts a Subnet ID as an input var
 
 The following example shows how one might accept a Route Table ID as a variable and use this data source to obtain the data necessary to create a route.
 
-```hcl
+```terraform
 variable "subnet_id" {}
 
 data "aws_route_table" "selected" {
@@ -68,6 +68,7 @@ When relevant, routes are also exported with the following attributes:
 For destinations:
 
 * `cidr_block` - CIDR block of the route.
+* `destination_prefix_list_id` - The ID of a [managed prefix list](ec2_managed_prefix_list.html) destination of the route.
 * `ipv6_cidr_block` - IPv6 CIDR block of the route.
 
 For targets:

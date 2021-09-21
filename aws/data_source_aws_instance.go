@@ -93,6 +93,11 @@ func dataSourceAwsInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"ipv6_addresses": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"iam_instance_profile": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -388,7 +393,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// loop through reservations, and remove terminated instances, populate instance slice
 	for _, res := range resp.Reservations {
 		for _, instance := range res.Instances {
-			if instance.State != nil && *instance.State.Name != "terminated" {
+			if instance.State != nil && aws.StringValue(instance.State.Name) != ec2.InstanceStateNameTerminated {
 				filteredInstances = append(filteredInstances, instance)
 			}
 		}
@@ -408,13 +413,13 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		instance = filteredInstances[0]
 	}
 
-	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", *instance.InstanceId)
+	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", aws.StringValue(instance.InstanceId))
 	if err := instanceDescriptionAttributes(d, instance, conn, ignoreTagsConfig); err != nil {
 		return err
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+		passwordData, err := getAwsEc2InstancePasswordData(aws.StringValue(instance.InstanceId), conn)
 		if err != nil {
 			return err
 		}
@@ -475,7 +480,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	// iterate through network interfaces, and set subnet, network_interface, public_addr
 	if len(instance.NetworkInterfaces) > 0 {
 		for _, ni := range instance.NetworkInterfaces {
-			if *ni.Attachment.DeviceIndex == 0 {
+			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
 				d.Set("subnet_id", ni.SubnetId)
 				d.Set("network_interface_id", ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
@@ -489,6 +494,14 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 				if err := d.Set("secondary_private_ips", secondaryIPs); err != nil {
 					return fmt.Errorf("error setting secondary_private_ips: %w", err)
 				}
+
+				ipV6Addresses := make([]string, 0, len(ni.Ipv6Addresses))
+				for _, ip := range ni.Ipv6Addresses {
+					ipV6Addresses = append(ipV6Addresses, aws.StringValue(ip.Ipv6Address))
+				}
+				if err := d.Set("ipv6_addresses", ipV6Addresses); err != nil {
+					return fmt.Errorf("error setting ipv6_addresses: %w", err)
+				}
 			}
 		}
 	} else {
@@ -497,12 +510,12 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 
 	d.Set("ebs_optimized", instance.EbsOptimized)
-	if instance.SubnetId != nil && *instance.SubnetId != "" {
+	if aws.StringValue(instance.SubnetId) != "" {
 		d.Set("source_dest_check", instance.SourceDestCheck)
 	}
 
-	if instance.Monitoring != nil && instance.Monitoring.State != nil {
-		monitoringState := *instance.Monitoring.State
+	if instance.Monitoring != nil {
+		monitoringState := aws.StringValue(instance.Monitoring.State)
 		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
 	}
 
@@ -545,7 +558,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		if attr != nil && attr.UserData != nil && attr.UserData.Value != nil {
 			d.Set("user_data", userDataHashSum(aws.StringValue(attr.UserData.Value)))
 			if d.Get("get_user_data").(bool) {
-				d.Set("user_data_base64", aws.StringValue(attr.UserData.Value))
+				d.Set("user_data_base64", attr.UserData.Value)
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -154,13 +155,18 @@ func resourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading CloudFront Origin Request Policy (%s): %w", d.Id(), err)
 	}
-	d.Set("etag", aws.StringValue(resp.ETag))
 
-	originRequestPolicy := *resp.OriginRequestPolicy.OriginRequestPolicyConfig
-	d.Set("comment", aws.StringValue(originRequestPolicy.Comment))
-	d.Set("name", aws.StringValue(originRequestPolicy.Name))
+	if resp == nil || resp.OriginRequestPolicy == nil || resp.OriginRequestPolicy.OriginRequestPolicyConfig == nil {
+		return fmt.Errorf("error reading CloudFront Origin Request Policy (%s): empty response", d.Id())
+	}
+
+	d.Set("etag", resp.ETag)
+
+	originRequestPolicy := resp.OriginRequestPolicy.OriginRequestPolicyConfig
+	d.Set("comment", originRequestPolicy.Comment)
+	d.Set("name", originRequestPolicy.Name)
 	d.Set("cookies_config", flattenCloudFrontOriginRequestPolicyCookiesConfig(originRequestPolicy.CookiesConfig))
 	d.Set("headers_config", flattenCloudFrontOriginRequestPolicyHeadersConfig(originRequestPolicy.HeadersConfig))
 	d.Set("query_strings_config", flattenCloudFrontOriginRequestPolicyQueryStringsConfig(originRequestPolicy.QueryStringsConfig))

@@ -2,25 +2,24 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
 )
 
 func dataSourceAwsKmsAlias() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsKmsAliasRead,
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateAwsKmsName,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"target_key_arn": {
 				Type:     schema.TypeString,
@@ -36,27 +35,13 @@ func dataSourceAwsKmsAlias() *schema.Resource {
 
 func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
-	params := &kms.ListAliasesInput{}
 
-	target := d.Get("name")
-	var alias *kms.AliasListEntry
-	log.Printf("[DEBUG] Reading KMS Alias: %s", params)
-	err := conn.ListAliasesPages(params, func(page *kms.ListAliasesOutput, lastPage bool) bool {
-		for _, entity := range page.Aliases {
-			if *entity.AliasName == target {
-				alias = entity
-				return false
-			}
-		}
+	target := d.Get("name").(string)
 
-		return true
-	})
+	alias, err := finder.AliasByName(conn, target)
+
 	if err != nil {
-		return fmt.Errorf("Error fetch KMS alias list: %w", err)
-	}
-
-	if alias == nil {
-		return fmt.Errorf("No alias with name %q found in this region.", target)
+		return fmt.Errorf("error reading KMS Alias (%s): %w", target, err)
 	}
 
 	d.SetId(aws.StringValue(alias.AliasArn))
@@ -73,16 +58,14 @@ func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 	//
 	// https://docs.aws.amazon.com/kms/latest/APIReference/API_ListAliases.html
 
-	req := &kms.DescribeKeyInput{
-		KeyId: aws.String(target.(string)),
-	}
-	resp, err := conn.DescribeKey(req)
+	keyMetadata, err := finder.KeyByID(conn, target)
+
 	if err != nil {
-		return fmt.Errorf("Error calling KMS DescribeKey: %w", err)
+		return fmt.Errorf("error reading KMS Key (%s): %w", target, err)
 	}
 
-	d.Set("target_key_arn", resp.KeyMetadata.Arn)
-	d.Set("target_key_id", resp.KeyMetadata.KeyId)
+	d.Set("target_key_arn", keyMetadata.Arn)
+	d.Set("target_key_id", keyMetadata.KeyId)
 
 	return nil
 }

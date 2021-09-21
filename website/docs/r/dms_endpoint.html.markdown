@@ -15,7 +15,7 @@ Provides a DMS (Data Migration Service) endpoint resource. DMS endpoints can be 
 
 ## Example Usage
 
-```hcl
+```terraform
 # Create a new endpoint
 resource "aws_dms_endpoint" "test" {
   certificate_arn             = "arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"
@@ -55,7 +55,7 @@ The following arguments are supported:
 
 * `endpoint_type` - (Required) The type of endpoint. Can be one of `source | target`.
 * `engine_name` - (Required) The type of engine for the endpoint. Can be one of `aurora | aurora-postgresql| azuredb | db2 | docdb | dynamodb | elasticsearch | kafka | kinesis | mariadb | mongodb | mysql | oracle | postgres | redshift | s3 | sqlserver | sybase`.
-* `extra_connection_attributes` - (Optional) Additional attributes associated with the connection. For available attributes see [Using Extra Connection Attributes with AWS Database Migration Service](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Introduction.ConnectionAttributes.html).
+* `extra_connection_attributes` - (Optional) Additional attributes associated with the connection. For available attributes see [Using Extra Connection Attributes with AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 * `kafka_settings` - (Optional) Configuration block with Kafka settings. Detailed below.
 * `kinesis_settings` - (Optional) Configuration block with Kinesis settings. Detailed below.
 * `kms_key_arn` - (Required when `engine_name` is `mongodb`, optional otherwise) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
@@ -66,7 +66,7 @@ The following arguments are supported:
 * `server_name` - (Optional) The host name of the server.
 * `service_access_role` - (Optional) The Amazon Resource Name (ARN) used by the service access IAM role for dynamodb endpoints.
 * `ssl_mode` - (Optional, Default: none) The SSL mode to use for the connection. Can be one of `none | require | verify-ca | verify-full`
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `username` - (Optional) The user name to be used to login to the endpoint database.
 
 ### elasticsearch_settings Arguments
@@ -123,8 +123,13 @@ The `s3_settings` configuration block supports the following arguments:
 * `compression_type` - (Optional) Set to compress target files. Defaults to `NONE`. Valid values are `GZIP` and `NONE`.
 * `csv_delimiter` - (Optional) Delimiter used to separate columns in the source files. Defaults to `,`.
 * `csv_row_delimiter` - (Optional) Delimiter used to separate rows in the source files. Defaults to `\n`.
+* `data_format` - (Optional) The output format for the files that AWS DMS uses to create S3 objects. Defaults to `csv`. Valid values are `csv` and `parquet`.
 * `date_partition_enabled` - (Optional) Partition S3 bucket folders based on transaction commit dates. Defaults to `false`.
+* `encryption_mode` - (Optional) The server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Defaults to `SSE_S3`. Valid values are `SSE_S3` and `SSE_KMS`.
 * `external_table_definition` - (Optional) JSON document that describes how AWS DMS should interpret the data.
+* `parquet_timestamp_in_millisecond` - (Optional) - Specifies the precision of any TIMESTAMP column values written to an S3 object file in .parquet format. Defaults to `false`.
+* `parquet_version` - (Optional) The version of the .parquet file format. Defaults to `parquet-1-0`. Valid values are `parquet-1-0` and `parquet-2-0`.
+* `server_side_encryption_kms_key_id` - (Optional) If you set encryptionMode to `SSE_KMS`, set this parameter to the Amazon Resource Name (ARN) for the AWS KMS key.
 * `service_access_role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role with permissions to read from or write to the S3 Bucket.
 
 ## Attributes Reference
@@ -132,6 +137,7 @@ The `s3_settings` configuration block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `endpoint_arn` - The Amazon Resource Name (ARN) for the endpoint.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

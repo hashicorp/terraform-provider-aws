@@ -7,20 +7,26 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mitchellh/go-homedir"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
+
+const s3BucketObjectCreationTimeout = 2 * time.Minute
 
 func resourceAwsS3BucketObject() *schema.Resource {
 	return &schema.Resource{
@@ -29,7 +35,14 @@ func resourceAwsS3BucketObject() *schema.Resource {
 		Update: resourceAwsS3BucketObjectUpdate,
 		Delete: resourceAwsS3BucketObjectDelete,
 
-		CustomizeDiff: resourceAwsS3BucketObjectCustomizeDiff,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsS3BucketObjectImport,
+		},
+
+		CustomizeDiff: customdiff.Sequence(
+			resourceAwsS3BucketObjectCustomizeDiff,
+			SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -51,6 +64,12 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Default:      s3.ObjectCannedACLPrivate,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
+			},
+
+			"bucket_key_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 			},
 
 			"cache_control": {
@@ -147,7 +166,8 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 
 			"website_redirect": {
 				Type:     schema.TypeString,
@@ -177,12 +197,19 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
+
+			"source_hash": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
 
 func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
 
@@ -241,7 +268,7 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		putInput.Metadata = stringMapToPointers(v.(map[string]interface{}))
+		putInput.Metadata = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("content_encoding"); ok {
@@ -256,6 +283,10 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		putInput.ContentDisposition = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("bucket_key_enabled"); ok {
+		putInput.BucketKeyEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("server_side_encryption"); ok {
 		putInput.ServerSideEncryption = aws.String(v.(string))
 	}
@@ -265,9 +296,9 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		putInput.ServerSideEncryption = aws.String(s3.ServerSideEncryptionAwsKms)
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
-		putInput.Tagging = aws.String(keyvaluetags.New(v).IgnoreAws().UrlEncode())
+		putInput.Tagging = aws.String(tags.IgnoreAws().UrlEncode())
 	}
 
 	if v, ok := d.GetOk("website_redirect"); ok {
@@ -300,28 +331,52 @@ func resourceAwsS3BucketObjectCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 
-	resp, err := s3conn.HeadObject(
-		&s3.HeadObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		})
+	input := &s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+
+	var resp *s3.HeadObjectOutput
+
+	err := resource.Retry(s3BucketObjectCreationTimeout, func() *resource.RetryError {
+		var err error
+
+		resp, err = s3conn.HeadObject(input)
+
+		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		resp, err = s3conn.HeadObject(input)
+	}
+
+	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
-		// If S3 returns a 404 Request Failure, mark the object as destroyed
-		if awsErr, ok := err.(awserr.RequestFailure); ok && awsErr.StatusCode() == 404 {
-			d.SetId("")
-			log.Printf("[WARN] Error Reading Object (%s), object not found (HTTP status 404)", key)
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading S3 Object (%s): %w", d.Id(), err)
 	}
+
 	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
 
+	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
 	d.Set("cache_control", resp.CacheControl)
 	d.Set("content_disposition", resp.ContentDisposition)
 	d.Set("content_encoding", resp.ContentEncoding)
@@ -360,7 +415,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// Retry due to S3 eventual consistency
-	tags, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	tagsRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return keyvaluetags.S3ObjectListTags(s3conn, bucket, key)
 	})
 
@@ -368,8 +423,21 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags, ok := tagsRaw.(keyvaluetags.KeyValueTags)
+
+	if !ok {
+		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -435,8 +503,8 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.S3ObjectUpdateTags(conn, bucket, key, o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
@@ -468,6 +536,25 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	return nil
+}
+
+func resourceAwsS3BucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	id := d.Id()
+	id = strings.TrimPrefix(id, "s3://")
+	parts := strings.Split(id, "/")
+
+	if len(parts) < 2 {
+		return []*schema.ResourceData{d}, fmt.Errorf("id %s should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
+	}
+
+	bucket := parts[0]
+	key := strings.Join(parts[1:], "/")
+
+	d.SetId(key)
+	d.Set("bucket", bucket)
+	d.Set("key", key)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsS3BucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
@@ -507,11 +594,18 @@ func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.Resourc
 	if hasS3BucketObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
+
+	if d.HasChange("source_hash") {
+		d.SetNewComputed("version_id")
+		d.SetNewComputed("etag")
+	}
+
 	return nil
 }
 
 func hasS3BucketObjectContentChanges(d resourceDiffer) bool {
 	for _, key := range []string{
+		"bucket_key_enabled",
 		"cache_control",
 		"content_base64",
 		"content_disposition",
@@ -524,6 +618,7 @@ func hasS3BucketObjectContentChanges(d resourceDiffer) bool {
 		"metadata",
 		"server_side_encryption",
 		"source",
+		"source_hash",
 		"storage_class",
 		"website_redirect",
 	} {

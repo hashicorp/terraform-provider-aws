@@ -8,8 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDxGateway() *schema.Resource {
@@ -17,22 +20,25 @@ func resourceAwsDxGateway() *schema.Resource {
 		Create: resourceAwsDxGatewayCreate,
 		Read:   resourceAwsDxGatewayRead,
 		Delete: resourceAwsDxGatewayDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"amazon_side_asn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateAmazonSideAsn,
 			},
+
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
 			"owner_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -49,36 +55,28 @@ func resourceAwsDxGateway() *schema.Resource {
 func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	req := &directconnect.CreateDirectConnectGatewayInput{
-		DirectConnectGatewayName: aws.String(d.Get("name").(string)),
-	}
-	if asn, ok := d.GetOk("amazon_side_asn"); ok {
-		i, err := strconv.ParseInt(asn.(string), 10, 64)
-		if err != nil {
-			return err
-		}
-		req.AmazonSideAsn = aws.Int64(i)
+	name := d.Get("name").(string)
+	input := &directconnect.CreateDirectConnectGatewayInput{
+		DirectConnectGatewayName: aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect gateway: %#v", req)
-	resp, err := conn.CreateDirectConnectGateway(req)
+	if v, ok := d.Get("amazon_side_asn").(string); ok && v != "" {
+		if v, err := strconv.ParseInt(v, 10, 64); err == nil {
+			input.AmazonSideAsn = aws.Int64(v)
+		}
+	}
+
+	log.Printf("[DEBUG] Creating Direct Connect Gateway: %s", input)
+	resp, err := conn.CreateDirectConnectGateway(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Direct Connect gateway: %s", err)
+		return fmt.Errorf("error creating Direct Connect Gateway (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(resp.DirectConnectGateway.DirectConnectGatewayId))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.GatewayStatePending},
-		Target:     []string{directconnect.GatewayStateAvailable},
-		Refresh:    dxGatewayStateRefresh(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Direct Connect gateway (%s) to become available: %s", d.Id(), err)
+	if _, err := waiter.GatewayCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Direct Connect Gateway (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceAwsDxGatewayRead(d, meta)
@@ -87,20 +85,21 @@ func resourceAwsDxGatewayCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	dxGwRaw, state, err := dxGatewayStateRefresh(conn, d.Id())()
-	if err != nil {
-		return fmt.Errorf("Error reading Direct Connect gateway: %s", err)
-	}
-	if state == directconnect.GatewayStateDeleted {
-		log.Printf("[WARN] Direct Connect gateway (%s) not found, removing from state", d.Id())
+	output, err := finder.GatewayByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	dxGw := dxGwRaw.(*directconnect.Gateway)
-	d.Set("name", aws.StringValue(dxGw.DirectConnectGatewayName))
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(dxGw.AmazonSideAsn), 10))
-	d.Set("owner_account_id", aws.StringValue(dxGw.OwnerAccount))
+	if err != nil {
+		return fmt.Errorf("error reading Direct Connect Gateway (%s): %w", d.Id(), err)
+	}
+
+	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(output.AmazonSideAsn), 10))
+	d.Set("name", output.DirectConnectGatewayName)
+	d.Set("owner_account_id", output.OwnerAccount)
 
 	return nil
 }
@@ -108,58 +107,22 @@ func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsDxGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
+	log.Printf("[DEBUG] Deleting Direct Connect Gateway: %s", d.Id())
 	_, err := conn.DeleteDirectConnectGateway(&directconnect.DeleteDirectConnectGatewayInput{
 		DirectConnectGatewayId: aws.String(d.Id()),
 	})
-	if err != nil {
-		if isAWSErr(err, "DirectConnectClientException", "does not exist") {
-			return nil
-		}
-		return fmt.Errorf("Error deleting Direct Connect gateway: %s", err)
+
+	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {
+		return nil
 	}
 
-	if err := waitForDirectConnectGatewayDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("Error waiting for Direct Connect gateway (%s) to be deleted: %s", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("error deleting Direct Connect Gateway (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waiter.GatewayDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for Direct Connect Gateway (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func dxGatewayStateRefresh(conn *directconnect.DirectConnect, dxgwId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeDirectConnectGateways(&directconnect.DescribeDirectConnectGatewaysInput{
-			DirectConnectGatewayId: aws.String(dxgwId),
-		})
-		if err != nil {
-			return nil, "", err
-		}
-
-		n := len(resp.DirectConnectGateways)
-		switch n {
-		case 0:
-			return "", directconnect.GatewayStateDeleted, nil
-
-		case 1:
-			dxgw := resp.DirectConnectGateways[0]
-			return dxgw, aws.StringValue(dxgw.DirectConnectGatewayState), nil
-
-		default:
-			return nil, "", fmt.Errorf("Found %d Direct Connect gateways for %s, expected 1", n, dxgwId)
-		}
-	}
-}
-
-func waitForDirectConnectGatewayDeletion(conn *directconnect.DirectConnect, gatewayID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.GatewayStatePending, directconnect.GatewayStateAvailable, directconnect.GatewayStateDeleting},
-		Target:     []string{directconnect.GatewayStateDeleted},
-		Refresh:    dxGatewayStateRefresh(conn, gatewayID),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }

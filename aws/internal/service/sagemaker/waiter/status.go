@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -17,10 +18,9 @@ const (
 	SagemakerImageVersionStatusNotFound      = "NotFound"
 	SagemakerImageVersionStatusFailed        = "Failed"
 	SagemakerDomainStatusNotFound            = "NotFound"
-	SagemakerFeatureGroupStatusNotFound      = "NotFound"
-	SagemakerFeatureGroupStatusUnknown       = "Unknown"
 	SagemakerUserProfileStatusNotFound       = "NotFound"
 	SagemakerModelPackageGroupStatusNotFound = "NotFound"
+	SagemakerAppStatusNotFound               = "NotFound"
 )
 
 // NotebookInstanceStatus fetches the NotebookInstance and its Status
@@ -156,20 +156,16 @@ func DomainStatus(conn *sagemaker.SageMaker, domainID string) resource.StateRefr
 	}
 }
 
-// FeatureGroupStatus fetches the Feature Group and its Status
 func FeatureGroupStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.FeatureGroupByName(conn, name)
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return nil, SagemakerFeatureGroupStatusNotFound, nil
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, SagemakerFeatureGroupStatusUnknown, err
-		}
-
-		if output == nil {
-			return nil, SagemakerFeatureGroupStatusNotFound, nil
+			return nil, "", err
 		}
 
 		return output, aws.StringValue(output.FeatureGroupStatus), nil
@@ -196,6 +192,34 @@ func UserProfileStatus(conn *sagemaker.SageMaker, domainID, userProfileName stri
 
 		if output == nil {
 			return nil, SagemakerUserProfileStatusNotFound, nil
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+// AppStatus fetches the App and its Status
+func AppStatus(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &sagemaker.DescribeAppInput{
+			DomainId:        aws.String(domainID),
+			UserProfileName: aws.String(userProfileName),
+			AppType:         aws.String(appType),
+			AppName:         aws.String(appName),
+		}
+
+		output, err := conn.DescribeApp(input)
+
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
+			return nil, SagemakerAppStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, sagemaker.AppStatusFailed, err
+		}
+
+		if output == nil {
+			return nil, SagemakerAppStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil

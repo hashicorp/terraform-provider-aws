@@ -1,13 +1,18 @@
 package waiter
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -252,6 +257,159 @@ func InstanceIamInstanceProfileUpdated(conn *ec2.EC2, instanceID string, expecte
 	return nil, err
 }
 
+const (
+	NetworkAclPropagationTimeout      = 2 * time.Minute
+	NetworkAclEntryPropagationTimeout = 5 * time.Minute
+)
+
+func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) (*ec2.Route, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{RouteStatusReady},
+		Target:                    []string{},
+		Refresh:                   RouteStatus(conn, routeFinder, routeTableID, destination),
+		Timeout:                   PropagationTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Route); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func RouteReady(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) (*ec2.Route, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{RouteStatusReady},
+		Refresh:                   RouteStatus(conn, routeFinder, routeTableID, destination),
+		Timeout:                   PropagationTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Route); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	RouteTableAssociationPropagationTimeout = 5 * time.Minute
+
+	RouteTableAssociationCreatedTimeout = 5 * time.Minute
+	RouteTableAssociationUpdatedTimeout = 5 * time.Minute
+	RouteTableAssociationDeletedTimeout = 5 * time.Minute
+
+	RouteTableReadyTimeout   = 10 * time.Minute
+	RouteTableDeletedTimeout = 5 * time.Minute
+	RouteTableUpdatedTimeout = 5 * time.Minute
+
+	RouteTableNotFoundChecks = 40
+)
+
+func RouteTableReady(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{},
+		Target:         []string{RouteTableStatusReady},
+		Refresh:        RouteTableStatus(conn, id),
+		Timeout:        RouteTableReadyTimeout,
+		NotFoundChecks: RouteTableNotFoundChecks,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func RouteTableDeleted(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{RouteTableStatusReady},
+		Target:  []string{},
+		Refresh: RouteTableStatus(conn, id),
+		Timeout: RouteTableDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func RouteTableAssociationCreated(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.RouteTableAssociationStateCodeAssociating},
+		Target:  []string{ec2.RouteTableAssociationStateCodeAssociated},
+		Refresh: RouteTableAssociationState(conn, id),
+		Timeout: RouteTableAssociationCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTableAssociationState); ok {
+		if state := aws.StringValue(output.State); state == ec2.RouteTableAssociationStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func RouteTableAssociationDeleted(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.RouteTableAssociationStateCodeDisassociating, ec2.RouteTableAssociationStateCodeAssociated},
+		Target:  []string{},
+		Refresh: RouteTableAssociationState(conn, id),
+		Timeout: RouteTableAssociationDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTableAssociationState); ok {
+		if state := aws.StringValue(output.State); state == ec2.RouteTableAssociationStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func RouteTableAssociationUpdated(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.RouteTableAssociationStateCodeAssociating},
+		Target:  []string{ec2.RouteTableAssociationStateCodeAssociated},
+		Refresh: RouteTableAssociationState(conn, id),
+		Timeout: RouteTableAssociationUpdatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTableAssociationState); ok {
+		if state := aws.StringValue(output.State); state == ec2.RouteTableAssociationStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func SecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SecurityGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{SecurityGroupStatusNotFound},
@@ -270,6 +428,7 @@ func SecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2
 }
 
 const (
+	SubnetPropagationTimeout          = 2 * time.Minute
 	SubnetAttributePropagationTimeout = 5 * time.Minute
 )
 
@@ -369,6 +528,49 @@ func TransitGatewayPrefixListReferenceStateUpdated(conn *ec2.EC2, transitGateway
 }
 
 const (
+	TransitGatewayRouteTablePropagationTimeout = 5 * time.Minute
+)
+
+func TransitGatewayRouteTablePropagationStateEnabled(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPropagationStateEnabling},
+		Target:  []string{ec2.TransitGatewayPropagationStateEnabled},
+		Timeout: TransitGatewayRouteTablePropagationTimeout,
+		Refresh: TransitGatewayRouteTablePropagationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTablePropagation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func TransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPropagationStateDisabling},
+		Target:  []string{},
+		Timeout: TransitGatewayRouteTablePropagationTimeout,
+		Refresh: TransitGatewayRouteTablePropagationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+		return nil, nil
+	}
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTablePropagation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	VpcPropagationTimeout          = 2 * time.Minute
 	VpcAttributePropagationTimeout = 5 * time.Minute
 )
 
@@ -487,4 +689,97 @@ func ManagedPrefixListDeleted(conn *ec2.EC2, prefixListId string) error {
 	}
 
 	return nil
+}
+
+func VpcEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfec2.VpcEndpointStatePendingAcceptance},
+		Target:     []string{tfec2.VpcEndpointStateAvailable},
+		Timeout:    timeout,
+		Refresh:    VpcEndpointState(conn, vpcEndpointID),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == tfec2.VpcEndpointStateFailed && lastError != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func VpcEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfec2.VpcEndpointStatePending},
+		Target:     []string{tfec2.VpcEndpointStateAvailable, tfec2.VpcEndpointStatePendingAcceptance},
+		Timeout:    timeout,
+		Refresh:    VpcEndpointState(conn, vpcEndpointID),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == tfec2.VpcEndpointStateFailed && lastError != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func VpcEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfec2.VpcEndpointStateDeleting},
+		Target:     []string{},
+		Timeout:    timeout,
+		Refresh:    VpcEndpointState(conn, vpcEndpointID),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func VpcEndpointRouteTableAssociationDeleted(conn *ec2.EC2, vpcEndpointID, routeTableID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{VpcEndpointRouteTableAssociationStatusReady},
+		Target:                    []string{},
+		Refresh:                   VpcEndpointRouteTableAssociationStatus(conn, vpcEndpointID, routeTableID),
+		Timeout:                   PropagationTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func VpcEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, routeTableID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{VpcEndpointRouteTableAssociationStatusReady},
+		Refresh:                   VpcEndpointRouteTableAssociationStatus(conn, vpcEndpointID, routeTableID),
+		Timeout:                   PropagationTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

@@ -39,6 +39,10 @@ func dataSourceAwsNatGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"connectivity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -121,6 +125,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] NAT Gateway response: %s", ngw)
 
 	d.SetId(aws.StringValue(ngw.NatGatewayId))
+	d.Set("connectivity_type", ngw.ConnectivityType)
 	d.Set("state", ngw.State)
 	d.Set("subnet_id", ngw.SubnetId)
 	d.Set("vpc_id", ngw.VpcId)
@@ -130,7 +135,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	for _, address := range ngw.NatGatewayAddresses {
-		if *address.AllocationId != "" {
+		if aws.StringValue(address.AllocationId) != "" {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)

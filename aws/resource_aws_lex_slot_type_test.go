@@ -2,15 +2,71 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_lex_slot_type", &resource.Sweeper{
+		Name:         "aws_lex_slot_type",
+		F:            testSweepLexSlotTypes,
+		Dependencies: []string{"aws_lex_intent"},
+	})
+}
+
+func testSweepLexSlotTypes(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).lexmodelconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &lexmodelbuildingservice.GetSlotTypesInput{}
+
+	err = conn.GetSlotTypesPages(input, func(page *lexmodelbuildingservice.GetSlotTypesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, slotType := range page.SlotTypes {
+			r := resourceAwsLexSlotType()
+			d := r.Data(nil)
+
+			d.SetId(aws.StringValue(slotType.Name))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Slot Type for %s: %w", region, err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Slot Type for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Lex Slot Type sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAwsLexSlotType_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
@@ -19,6 +75,7 @@ func TestAccAwsLexSlotType_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
@@ -60,6 +117,7 @@ func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
@@ -102,6 +160,7 @@ func TestAccAwsLexSlotType_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
@@ -142,6 +201,7 @@ func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
@@ -188,6 +248,7 @@ func TestAccAwsLexSlotType_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
@@ -228,6 +289,7 @@ func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
@@ -268,6 +330,7 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
 		Steps: []resource.TestStep{
@@ -278,6 +341,59 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsLexSlotType(), rName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexSlotType_computeVersion(t *testing.T) {
+	var v1 lexmodelbuildingservice.GetSlotTypeOutput
+	var v2 lexmodelbuildingservice.GetIntentOutput
+
+	slotTypeResourceName := "aws_lex_slot_type.test"
+	intentResourceName := "aws_lex_intent.test"
+	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	version := "1"
+	updatedVersion := "2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexSlotTypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexSlotTypeConfig_withVersion(testSlotTypeID),
+					testAccAwsLexIntentConfig_slotsWithVersion(testSlotTypeID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexSlotTypeExistsWithVersion(slotTypeResourceName, version, &v1),
+					resource.TestCheckResourceAttr(slotTypeResourceName, "version", version),
+					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, version, &v2),
+					resource.TestCheckResourceAttr(intentResourceName, "version", version),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", version),
+				),
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexSlotTypeUpdateConfig_enumerationValuesWithVersion(testSlotTypeID),
+					testAccAwsLexIntentConfig_slotsWithVersion(testSlotTypeID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexSlotTypeExistsWithVersion(slotTypeResourceName, updatedVersion, &v1),
+					resource.TestCheckResourceAttr(slotTypeResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(slotTypeResourceName, "enumeration_value.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(slotTypeResourceName, "enumeration_value.*", map[string]string{
+						"value": "tulips",
+					}),
+					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Eduardoregelia"),
+					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Podonix"),
+					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, updatedVersion, &v2),
+					resource.TestCheckResourceAttr(intentResourceName, "version", updatedVersion),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", updatedVersion),
+				),
 			},
 		},
 	})
@@ -381,7 +497,8 @@ resource "aws_lex_slot_type" "test" {
 func testAccAwsLexSlotTypeConfig_withVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_slot_type" "test" {
-  name = "%s"
+  create_version = true
+  name           = "%s"
   enumeration_value {
     synonyms = [
       "Lirium",
@@ -389,7 +506,6 @@ resource "aws_lex_slot_type" "test" {
     ]
     value = "lilies"
   }
-  create_version = true
 }
 `, rName)
 }
@@ -413,12 +529,12 @@ resource "aws_lex_slot_type" "test" {
 func testAccAwsLexSlotTypeConfig_enumerationValues(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_slot_type" "test" {
+  name = "%s"
   enumeration_value {
     synonyms = [
       "Lirium",
       "Martagon",
     ]
-
     value = "lilies"
   }
 
@@ -427,11 +543,8 @@ resource "aws_lex_slot_type" "test" {
       "Eduardoregelia",
       "Podonix",
     ]
-
     value = "tulips"
   }
-
-  name = "%s"
 }
 `, rName)
 }
@@ -447,6 +560,30 @@ resource "aws_lex_slot_type" "test" {
       "Martagon",
     ]
     value = "lilies"
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexSlotTypeUpdateConfig_enumerationValuesWithVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_slot_type" "test" {
+  create_version = true
+  name           = "%s"
+  enumeration_value {
+    synonyms = [
+      "Lirium",
+      "Martagon",
+    ]
+    value = "lilies"
+  }
+
+  enumeration_value {
+    synonyms = [
+      "Eduardoregelia",
+      "Podonix",
+    ]
+    value = "tulips"
   }
 }
 `, rName)

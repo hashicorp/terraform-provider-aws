@@ -20,10 +20,10 @@ When working with [Bitbucket](https://bitbucket.org) and [GitHub](https://github
 
 ~> **Note:** Further managing the automatically created Bitbucket/GitHub webhook with the `bitbucket_hook`/`github_repository_webhook` resource is only possible with importing that resource after creation of the `aws_codebuild_webhook` resource. The CodeBuild API does not ever provide the `secret` attribute for the `aws_codebuild_webhook` resource in this scenario.
 
-```hcl
+```terraform
 resource "aws_codebuild_webhook" "example" {
   project_name = aws_codebuild_project.example.name
-
+  build_type   = "BUILD"
   filter_group {
     filter {
       type    = "EVENT"
@@ -44,7 +44,7 @@ When working with [GitHub Enterprise](https://enterprise.github.com/) source Cod
 
 More information creating webhooks with GitHub Enterprise can be found in the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/sample-github-enterprise.html).
 
-```hcl
+```terraform
 resource "aws_codebuild_webhook" "example" {
   project_name = aws_codebuild_project.example.name
 }
@@ -69,6 +69,7 @@ resource "github_repository_webhook" "example" {
 The following arguments are supported:
 
 * `project_name` - (Required) The name of the build project.
+* `build_type` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
 * `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. It is recommended to use `filter_group` over `branch_filter`.
 * `filter_group` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
 

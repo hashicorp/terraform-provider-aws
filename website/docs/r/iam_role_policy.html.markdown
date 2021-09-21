@@ -14,7 +14,7 @@ Provides an IAM role inline policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role_policy" "test_policy" {
   name = "test_policy"
   role = aws_iam_role.test_role.id

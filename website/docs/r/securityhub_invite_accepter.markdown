@@ -6,7 +6,7 @@ description: |-
   Accepts a Security Hub invitation.
 ---
 
-# aws_securityhub_invite_accepter
+# Resource: aws_securityhub_invite_accepter
 
 -> **Note:** AWS accounts can only be associated with a single Security Hub master account. Destroying this resource will disassociate the member account from the master account.
 
@@ -14,7 +14,7 @@ Accepts a Security Hub invitation.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_member" "example" {
@@ -42,7 +42,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `invitation_id` - The ID of the invitation.
 
@@ -51,5 +51,5 @@ The following attributes are exported in addition to the arguments listed above:
 Security Hub invite acceptance can be imported using the account ID, e.g.
 
 ```
-$ terraform import aws_securityhub_invite_acceptor.example 123456789012
+$ terraform import aws_securityhub_invite_accepter.example 123456789012
 ```

@@ -17,6 +17,7 @@ func TestAccAWSLBCookieStickinessPolicy_basic(t *testing.T) {
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -107,6 +108,7 @@ func TestAccAWSLBCookieStickinessPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -129,6 +131,7 @@ func TestAccAWSLBCookieStickinessPolicy_disappears_ELB(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{

@@ -40,7 +40,7 @@ func defaultInitRequestFn(r *request.Request) {
 		// Auto-populate LocationConstraint with current region
 		r.Handlers.Validate.PushFront(populateLocationConstraint)
 	case opCopyObject, opUploadPartCopy, opCompleteMultipartUpload:
-		r.Handlers.Unmarshal.PushFront(copyMultipartStatusOKUnmarhsalError)
+		r.Handlers.Unmarshal.PushFront(copyMultipartStatusOKUnmarshalError)
 		r.Handlers.Unmarshal.PushBackNamed(s3err.RequestFailureWrapperHandler())
 	case opPutObject, opUploadPart:
 		r.Handlers.Build.PushBack(computeBodyHashes)
@@ -48,6 +48,8 @@ func defaultInitRequestFn(r *request.Request) {
 		//	case opGetObject:
 		//		r.Handlers.Build.PushBack(askForTxEncodingAppendMD5)
 		//		r.Handlers.Unmarshal.PushBack(useMD5ValidationReader)
+	case opWriteGetObjectResponse:
+		r.Handlers.Build.PushFront(buildWriteGetObjectResponseEndpoint)
 	}
 }
 

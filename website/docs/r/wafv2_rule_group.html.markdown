@@ -14,7 +14,7 @@ Creates a WAFv2 Rule Group resource.
 
 ### Simple
 
-```hcl
+```terraform
 resource "aws_wafv2_rule_group" "example" {
   name     = "example-rule"
   scope    = "REGIONAL"
@@ -52,7 +52,7 @@ resource "aws_wafv2_rule_group" "example" {
 
 ### Complex
 
-```hcl
+```terraform
 resource "aws_wafv2_ip_set" "test" {
   name               = "test"
   scope              = "REGIONAL"
@@ -64,7 +64,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "test"
   scope = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 }
@@ -290,7 +290,7 @@ The following arguments are supported:
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
-* `tags` - (Optional) An array of key:value pairs to associate with the resource.
+* `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
 
 ### Rules
@@ -307,11 +307,49 @@ Each `rule` supports the following arguments:
 
 The `action` block supports the following arguments:
 
-~> **NOTE**: One of `allow`, `block`, or `count`, expressed as an empty configuration block `{}`, is required when specifying an `action`
+~> **NOTE:** One of `allow`, `block`, or `count`, is required when specifying an `action`.
 
-* `allow` - (Optional) Instructs AWS WAF to allow the web request.
-* `block` - (Optional) Instructs AWS WAF to block the web request.
-* `count` - (Optional) Instructs AWS WAF to count the web request and allow it.
+* `allow` - (Optional) Instructs AWS WAF to allow the web request. See [Allow](#action) below for details.
+* `block` - (Optional) Instructs AWS WAF to block the web request. See [Block](#block) below for details.
+* `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
+
+### Allow
+
+The `allow` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Block
+
+The `block` block supports the following arguments:
+
+* `custom_response` - (Optional) Defines a custom response for the web request. See [Custom Response](#custom-response) below for details.
+
+### Count
+
+The `count` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Custom Request Handling
+
+The `custom_request_handling` block supports the following arguments:
+
+* `insert_header` - (Required) The `insert_header` blocks used to define HTTP headers added to the request. See [Custom HTTP Header](#custom-http-header) below for details.
+
+### Custom Response
+
+The `custom_response` block supports the following arguments:
+
+* `response_code` - (Optional) The HTTP status code to return to the client.
+* `response_header` - (Optional) The `response_header` blocks used to define the HTTP response headers added to the response. See [Custom HTTP Header](#custom-http-header) below for details.
+
+### Custom HTTP Header
+
+Each block supports the following arguments. Duplicate header names are not allowed:
+
+* `name` - The name of the custom header. For custom request header insertion, when AWS WAF inserts the header into the request, it prefixes this name `x-amzn-waf-`, to avoid confusion with the headers that are already in the request. For example, for the header name `sample`, AWS WAF inserts the header `x-amzn-waf-sample`.
+* `value` - The value of the custom header.
 
 ### Statement
 
@@ -429,7 +467,8 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE**: An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
+An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers.
@@ -481,7 +520,7 @@ The `single_query_argument` block supports the following arguments:
 The `text_transformation` block supports the following arguments:
 
 * `priority` - (Required) The relative processing order for multiple transformations that are defined for a rule statement. AWS WAF processes all transformations, from lowest priority to highest, before inspecting the transformed content.
-* `type` - (Required) The transformation to apply, you can specify the following types: `NONE`, `COMPRESS_WHITE_SPACE`, `HTML_ENTITY_DECODE`, `LOWERCASE`, `CMD_LINE`, `URL_DECODE`. See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
+* `type` - (Required) The transformation to apply, please refer to the Text Transformation [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
 
 ### Visibility Configuration
 
@@ -497,6 +536,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF rule group.
 * `arn` - The ARN of the WAF rule group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

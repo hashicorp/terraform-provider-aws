@@ -1,14 +1,17 @@
 package waiter
 
 import (
+	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
-	NotebookInstanceInServiceTimeout  = 10 * time.Minute
+	NotebookInstanceInServiceTimeout  = 60 * time.Minute
 	NotebookInstanceStoppedTimeout    = 10 * time.Minute
 	NotebookInstanceDeletedTimeout    = 10 * time.Minute
 	ModelPackageGroupCompletedTimeout = 10 * time.Minute
@@ -23,6 +26,8 @@ const (
 	FeatureGroupDeletedTimeout        = 10 * time.Minute
 	UserProfileInServiceTimeout       = 10 * time.Minute
 	UserProfileDeletedTimeout         = 10 * time.Minute
+	AppInServiceTimeout               = 10 * time.Minute
+	AppDeletedTimeout                 = 10 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -213,6 +218,7 @@ func DomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker.Des
 		Pending: []string{
 			SagemakerDomainStatusNotFound,
 			sagemaker.DomainStatusPending,
+			sagemaker.DomainStatusUpdating,
 		},
 		Target:  []string{sagemaker.DomainStatusInService},
 		Refresh: DomainStatus(conn, domainID),
@@ -260,6 +266,10 @@ func FeatureGroupCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		if status, reason := aws.StringValue(output.FeatureGroupStatus), aws.StringValue(output.FailureReason); status == sagemaker.FeatureGroupStatusCreateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -278,6 +288,10 @@ func FeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		if status, reason := aws.StringValue(output.FeatureGroupStatus), aws.StringValue(output.FailureReason); status == sagemaker.FeatureGroupStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -320,6 +334,49 @@ func UserProfileDeleted(conn *sagemaker.SageMaker, domainID, userProfileName str
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// AppInService waits for a App to return InService
+func AppInService(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			SagemakerAppStatusNotFound,
+			sagemaker.AppStatusPending,
+		},
+		Target:  []string{sagemaker.AppStatusInService},
+		Refresh: AppStatus(conn, domainID, userProfileName, appType, appName),
+		Timeout: AppInServiceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// AppDeleted waits for a App to return Deleted
+func AppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.AppStatusDeleting,
+		},
+		Target: []string{
+			sagemaker.AppStatusDeleted,
+		},
+		Refresh: AppStatus(conn, domainID, userProfileName, appType, appName),
+		Timeout: AppDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
 		return output, err
 	}
 

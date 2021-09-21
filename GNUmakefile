@@ -1,9 +1,9 @@
-SWEEP?=us-east-1,us-west-2
+SWEEP?=us-east-1,us-east-2,us-west-2
 TEST?=./...
 SWEEP_DIR?=./aws
 PKG_NAME=aws
 TEST_COUNT?=1
-ACCTEST_TIMEOUT?=120m
+ACCTEST_TIMEOUT?=180m
 ACCTEST_PARALLELISM?=20
 
 default: build
@@ -12,7 +12,9 @@ build: fmtcheck
 	go install
 
 gen:
+	rm -f aws/*_gen.go aws/*_gen_test.go
 	rm -f aws/internal/keyvaluetags/*_gen.go
+	rm -f aws/internal/namevaluesfilters/*_gen.go
 	rm -f aws/internal/service/**/lister/*_gen.go
 	go generate ./...
 
@@ -92,6 +94,7 @@ awsproviderlint:
 	@awsproviderlint \
 		-c 1 \
 		-AWSAT006=false \
+		-AWSR002=false \
 		-AWSV001=false \
 		-R001=false \
 		-R010=false \
@@ -99,6 +102,10 @@ awsproviderlint:
 		-R019=false \
 		-V001=false \
 		-V009=false \
+		-V011=false \
+		-V012=false \
+		-V013=false \
+		-V014=false \
 		-XR001=false \
 		-XR002=false \
 		-XR003=false \
@@ -112,14 +119,14 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd awsproviderlint && GO111MODULE=on go install .
-	cd tools && GO111MODULE=on go install github.com/bflad/tfproviderdocs
-	cd tools && GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	cd tools && GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && GO111MODULE=on go install github.com/katbyte/terrafmt
-	cd tools && GO111MODULE=on go install github.com/terraform-linters/tflint
-	cd tools && GO111MODULE=on go install github.com/pavius/impi/cmd/impi
-	cd tools && GO111MODULE=on go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd awsproviderlint && go install .
+	cd tools && go install github.com/bflad/tfproviderdocs
+	cd tools && go install github.com/client9/misspell/cmd/misspell
+	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd tools && go install github.com/katbyte/terrafmt
+	cd tools && go install github.com/terraform-linters/tflint
+	cd tools && go install github.com/pavius/impi/cmd/impi
+	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -154,4 +161,8 @@ website-lint-fix:
 	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
-.PHONY: awsproviderlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck
+semgrep:
+	@echo "==> Running Semgrep static analysis..."
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
+
+.PHONY: awsproviderlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep

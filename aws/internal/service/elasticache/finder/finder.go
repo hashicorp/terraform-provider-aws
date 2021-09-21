@@ -27,7 +27,7 @@ func ReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticach
 
 	if output == nil || len(output.ReplicationGroups) == 0 || output.ReplicationGroups[0] == nil {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			Message:     "empty result",
 			LastRequest: input,
 		}
 	}
@@ -48,7 +48,7 @@ func ReplicationGroupMemberClustersByID(conn *elasticache.ElastiCache, id string
 	}
 	if len(clusters) == 0 {
 		return clusters, &resource.NotFoundError{
-			Message: "No Member Clusters found",
+			Message: fmt.Sprintf("No Member Clusters found in Replication Group (%s)", id),
 		}
 	}
 
@@ -87,7 +87,7 @@ func CacheCluster(conn *elasticache.ElastiCache, input *elasticache.DescribeCach
 
 	if result == nil || len(result.CacheClusters) == 0 || result.CacheClusters[0] == nil {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			Message:     "empty result",
 			LastRequest: input,
 		}
 	}
@@ -176,6 +176,53 @@ func GlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalRepli
 	}
 
 	return nil, &resource.NotFoundError{
-		Message: fmt.Sprintf("Replication Group %q not found in Global Replication Group %q", id, globalReplicationGroupID),
+		Message: fmt.Sprintf("Replication Group (%s) not found in Global Replication Group (%s)", id, globalReplicationGroupID),
+	}
+}
+
+func ElastiCacheUserById(conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
+	input := &elasticache.DescribeUsersInput{
+		UserId: aws.String(userID),
+	}
+	out, err := conn.DescribeUsers(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(out.Users) {
+	case 0:
+		return nil, &resource.NotFoundError{
+			Message: "empty result",
+		}
+	case 1:
+		return out.Users[0], nil
+	default:
+		return nil, &resource.NotFoundError{
+			Message: "too many results",
+		}
+	}
+}
+
+func ElastiCacheUserGroupById(conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
+	input := &elasticache.DescribeUserGroupsInput{
+		UserGroupId: aws.String(groupID),
+	}
+	out, err := conn.DescribeUserGroups(input)
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(out.UserGroups) {
+	case 0:
+		return nil, &resource.NotFoundError{
+			Message: "empty result",
+		}
+	case 1:
+		return out.UserGroups[0], nil
+	default:
+		return nil, &resource.NotFoundError{
+			Message: "too many results",
+		}
 	}
 }

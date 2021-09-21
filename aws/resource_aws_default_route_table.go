@@ -3,12 +3,17 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsDefaultRouteTable() *schema.Resource {
@@ -17,21 +22,27 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 		Read:   resourceAwsDefaultRouteTableRead,
 		Update: resourceAwsRouteTableUpdate,
 		Delete: resourceAwsDefaultRouteTableDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("vpc_id", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
+			State: resourceAwsDefaultRouteTableImport,
 		},
 
+		//
+		// The top-level attributes must be a superset of the aws_route_table resource's attributes as common CRUD handlers are used.
+		//
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"default_route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"vpc_id": {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,6 +61,9 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 				Optional:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						///
+						// Destinations.
+						///
 						"cidr_block": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -58,7 +72,10 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 								validateIpv4CIDRNetworkAddress,
 							),
 						},
-
+						"destination_prefix_list_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"ipv6_cidr_block": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -68,42 +85,40 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 							),
 						},
 
+						//
+						// Targets.
+						// These target attributes are a subset of the aws_route_table resource's target attributes
+						// as there are some targets that are not allowed in the default route table for a VPC.
+						//
 						"egress_only_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"instance_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"nat_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
+						"network_interface_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"transit_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"vpc_endpoint_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"vpc_peering_connection_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -112,79 +127,130 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 				Set: resourceAwsRouteTableHash,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 
-			"owner_id": {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
-	d.SetId(d.Get("default_route_table_id").(string))
-
 	conn := meta.(*AWSClient).ec2conn
-	rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
+	routeTableID := d.Get("default_route_table_id").(string)
+
+	routeTable, err := finder.RouteTableByID(conn, routeTableID)
+
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Default Route Table (%s): %s", d.Id(), err)
-	}
-	if rtRaw == nil {
-		return fmt.Errorf("error reading EC2 Default Route Table (%s): not found", d.Id())
+		return fmt.Errorf("error reading EC2 Default Route Table (%s): %w", routeTableID, err)
 	}
 
-	rt := rtRaw.(*ec2.RouteTable)
+	d.SetId(aws.StringValue(routeTable.RouteTableId))
 
-	d.Set("vpc_id", rt.VpcId)
-
-	// revoke all default and pre-existing routes on the default route table.
-	// In the UPDATE method, we'll apply only the rules in the configuration.
-	log.Printf("[DEBUG] Revoking default routes for Default Route Table for %s", d.Id())
-	if err := revokeAllRouteTableRules(d.Id(), meta); err != nil {
-		return err
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding tags: %s", err)
+	// Remove all existing VGW associations.
+	for _, v := range routeTable.PropagatingVgws {
+		if err := ec2RouteTableDisableVgwRoutePropagation(conn, d.Id(), aws.StringValue(v.GatewayId)); err != nil {
+			return err
 		}
 	}
 
-	return resourceAwsRouteTableUpdate(d, meta)
+	// Delete all existing routes.
+	for _, v := range routeTable.Routes {
+		// you cannot delete the local route
+		if aws.StringValue(v.GatewayId) == "local" {
+			continue
+		}
+
+		if aws.StringValue(v.Origin) == ec2.RouteOriginEnableVgwRoutePropagation {
+			continue
+		}
+
+		if v.DestinationPrefixListId != nil && strings.HasPrefix(aws.StringValue(v.GatewayId), "vpce-") {
+			// Skipping because VPC endpoint routes are handled separately
+			// See aws_vpc_endpoint
+			continue
+		}
+
+		input := &ec2.DeleteRouteInput{
+			RouteTableId: aws.String(d.Id()),
+		}
+
+		var destination string
+		var routeFinder finder.RouteFinder
+
+		if v.DestinationCidrBlock != nil {
+			input.DestinationCidrBlock = v.DestinationCidrBlock
+			destination = aws.StringValue(v.DestinationCidrBlock)
+			routeFinder = finder.RouteByIPv4Destination
+		} else if v.DestinationIpv6CidrBlock != nil {
+			input.DestinationIpv6CidrBlock = v.DestinationIpv6CidrBlock
+			destination = aws.StringValue(v.DestinationIpv6CidrBlock)
+			routeFinder = finder.RouteByIPv6Destination
+		} else if v.DestinationPrefixListId != nil {
+			input.DestinationPrefixListId = v.DestinationPrefixListId
+			destination = aws.StringValue(v.DestinationPrefixListId)
+			routeFinder = finder.RouteByPrefixListIDDestination
+		}
+
+		log.Printf("[DEBUG] Deleting Route: %s", input)
+		_, err := conn.DeleteRoute(input)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteNotFound) {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error deleting Route in EC2 Default Route Table (%s) with destination (%s): %w", d.Id(), destination, err)
+		}
+
+		_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination)
+
+		if err != nil {
+			return fmt.Errorf("error waiting for Route in EC2 Default Route Table (%s) with destination (%s) to delete: %w", d.Id(), destination, err)
+		}
+	}
+
+	// Add new VGW associations.
+	if v, ok := d.GetOk("propagating_vgws"); ok && v.(*schema.Set).Len() > 0 {
+		for _, v := range v.(*schema.Set).List() {
+			v := v.(string)
+
+			if err := ec2RouteTableEnableVgwRoutePropagation(conn, d.Id(), v); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Add new routes.
+	if v, ok := d.GetOk("route"); ok && v.(*schema.Set).Len() > 0 {
+		for _, v := range v.(*schema.Set).List() {
+			v := v.(map[string]interface{})
+
+			if err := ec2RouteTableAddRoute(conn, d.Id(), v); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(tags) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
+			return fmt.Errorf("error adding tags: %w", err)
+		}
+	}
+
+	return resourceAwsDefaultRouteTableRead(d, meta)
 }
 
 func resourceAwsDefaultRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	// look up default route table for VPC
-	filter1 := &ec2.Filter{
-		Name:   aws.String("association.main"),
-		Values: []*string{aws.String("true")},
-	}
-	filter2 := &ec2.Filter{
-		Name:   aws.String("vpc-id"),
-		Values: []*string{aws.String(d.Get("vpc_id").(string))},
-	}
-
-	findOpts := &ec2.DescribeRouteTablesInput{
-		Filters: []*ec2.Filter{filter1, filter2},
-	}
-
-	resp, err := conn.DescribeRouteTables(findOpts)
-	if err != nil {
-		return err
-	}
-
-	if len(resp.RouteTables) < 1 || resp.RouteTables[0] == nil {
-		log.Printf("[WARN] EC2 Default Route Table (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	rt := resp.RouteTables[0]
-
-	d.Set("default_route_table_id", rt.RouteTableId)
-	d.SetId(aws.StringValue(rt.RouteTableId))
+	d.Set("default_route_table_id", d.Id())
 
 	// re-use regular AWS Route Table READ. This is an extra API call but saves us
 	// from trying to manually keep parity
@@ -196,78 +262,16 @@ func resourceAwsDefaultRouteTableDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-// revokeAllRouteTableRules revoke all routes on the Default Route Table
-// This should only be ran once at creation time of this resource
-func revokeAllRouteTableRules(defaultRouteTableId string, meta interface{}) error {
+func resourceAwsDefaultRouteTableImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*AWSClient).ec2conn
-	log.Printf("\n***\nrevokeAllRouteTableRules\n***\n")
 
-	resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
-		RouteTableIds: []*string{aws.String(defaultRouteTableId)},
-	})
+	routeTable, err := finder.MainRouteTableByVpcID(conn, d.Id())
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if len(resp.RouteTables) < 1 || resp.RouteTables[0] == nil {
-		return fmt.Errorf("Default Route table not found")
-	}
+	d.SetId(aws.StringValue(routeTable.RouteTableId))
 
-	rt := resp.RouteTables[0]
-
-	// Remove all Gateway association
-	for _, r := range rt.PropagatingVgws {
-		log.Printf(
-			"[INFO] Deleting VGW propagation from %s: %s",
-			defaultRouteTableId, *r.GatewayId)
-		_, err := conn.DisableVgwRoutePropagation(&ec2.DisableVgwRoutePropagationInput{
-			RouteTableId: aws.String(defaultRouteTableId),
-			GatewayId:    r.GatewayId,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	// Delete all routes
-	for _, r := range rt.Routes {
-		// you cannot delete the local route
-		if r.GatewayId != nil && *r.GatewayId == "local" {
-			continue
-		}
-		if r.DestinationPrefixListId != nil {
-			// Skipping because VPC endpoint routes are handled separately
-			// See aws_vpc_endpoint
-			continue
-		}
-
-		if r.DestinationCidrBlock != nil {
-			log.Printf(
-				"[INFO] Deleting route from %s: %s",
-				defaultRouteTableId, *r.DestinationCidrBlock)
-			_, err := conn.DeleteRoute(&ec2.DeleteRouteInput{
-				RouteTableId:         aws.String(defaultRouteTableId),
-				DestinationCidrBlock: r.DestinationCidrBlock,
-			})
-			if err != nil {
-				return err
-			}
-		}
-
-		if r.DestinationIpv6CidrBlock != nil {
-			log.Printf(
-				"[INFO] Deleting route from %s: %s",
-				defaultRouteTableId, *r.DestinationIpv6CidrBlock)
-			_, err := conn.DeleteRoute(&ec2.DeleteRouteInput{
-				RouteTableId:             aws.String(defaultRouteTableId),
-				DestinationIpv6CidrBlock: r.DestinationIpv6CidrBlock,
-			})
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-
-	return nil
+	return []*schema.ResourceData{d}, nil
 }

@@ -12,7 +12,7 @@ Provides an Athena Workgroup.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_athena_workgroup" "example" {
   name = "example"
 
@@ -40,7 +40,7 @@ The following arguments are supported:
 * `configuration` - (Optional) Configuration block with various settings for the workgroup. Documented below.
 * `description` - (Optional) Description of the workgroup.
 * `state` - (Optional) State of the workgroup. Valid values are `DISABLED` or `ENABLED`. Defaults to `ENABLED`.
-* `tags` - (Optional) Key-value map of resource tags for the workgroup.
+* `tags` - (Optional) Key-value map of resource tags for the workgroup. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `force_destroy` - (Optional) The option to delete the workgroup and its contents even if the workgroup contains any named queries.
 
 ### configuration Argument Reference
@@ -51,6 +51,7 @@ The `configuration` configuration block supports the following arguments:
 * `enforce_workgroup_configuration` - (Optional) Boolean whether the settings for the workgroup override client-side settings. For more information, see [Workgroup Settings Override Client-Side Settings](https://docs.aws.amazon.com/athena/latest/ug/workgroups-settings-override.html). Defaults to `true`.
 * `publish_cloudwatch_metrics_enabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup. Defaults to `true`.
 * `result_configuration` - (Optional) Configuration block with result settings. Documented below.
+* `requester_pays_enabled` - (Optional) If set to true , allows members assigned to a workgroup to reference Amazon S3 Requester Pays buckets in queries. If set to false , workgroup members cannot query data from Requester Pays buckets, and queries that retrieve data from Requester Pays buckets cause an error. The default is false . For more information about Requester Pays buckets, see [Requester Pays Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) in the Amazon Simple Storage Service Developer Guide.
 
 #### result_configuration Argument Reference
 
@@ -72,6 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the workgroup
 * `id` - The workgroup name
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

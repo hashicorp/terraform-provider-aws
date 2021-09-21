@@ -12,7 +12,7 @@ Manages a Direct Connect Gateway Association Proposal, typically for enabling cr
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dx_gateway_association_proposal" "example" {
   dx_gateway_id               = aws_dx_gateway.example.id
   dx_gateway_owner_account_id = aws_dx_gateway.example.owner_account_id
@@ -20,7 +20,7 @@ resource "aws_dx_gateway_association_proposal" "example" {
 }
 ```
 
-A full example of how to create a VPN Gateway in one AWS account, create a Direct Connect Gateway in a second AWS account, and associate the VPN Gateway with the Direct Connect Gateway via the `aws_dx_gateway_association_proposal` and `aws_dx_gateway_association` resources can be found in [the `./examples/dx-gateway-cross-account-vgw-association` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/master/examples/dx-gateway-cross-account-vgw-association).
+A full example of how to create a VPN Gateway in one AWS account, create a Direct Connect Gateway in a second AWS account, and associate the VPN Gateway with the Direct Connect Gateway via the `aws_dx_gateway_association_proposal` and `aws_dx_gateway_association` resources can be found in [the `./examples/dx-gateway-cross-account-vgw-association` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/dx-gateway-cross-account-vgw-association).
 
 ## Argument Reference
 
@@ -41,8 +41,18 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect Gateway Association Proposals can be imported using the proposal ID, e.g.
+Direct Connect Gateway Association Proposals can be imported using either a proposal ID or proposal ID, Direct Connect Gateway ID and associated gateway ID separated by `/`, e.g.
 
 ```
 $ terraform import aws_dx_gateway_association_proposal.example ac90e981-b718-4364-872d-65478c84fafe
 ```
+
+or
+
+```
+$ terraform import aws_dx_gateway_association_proposal.example ac90e981-b718-4364-872d-65478c84fafe/abcd1234-dcba-5678-be23-cdef9876ab45/vgw-12345678
+```
+
+The latter case is useful when a previous proposal has been accepted and deleted by AWS.
+The `aws_dx_gateway_association_proposal` resource will then represent a pseudo-proposal for the same Direct Connect Gateway and associated gateway.
+If no previous proposal is available, use a tool like [`uuidgen`](http://manpages.ubuntu.com/manpages/bionic/man1/uuidgen.1.html) to generate a new random pseudo-proposal ID.

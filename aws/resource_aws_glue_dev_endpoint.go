@@ -14,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGlueDevEndpoint() *schema.Resource {
@@ -24,9 +26,12 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 		Read:   resourceAwsGlueDevEndpointRead,
 		Update: resourceAwsDevEndpointUpdate,
 		Delete: resourceAwsDevEndpointDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arguments": {
@@ -113,7 +118,8 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 				ForceNew:     true,
 				RequiredWith: []string{"security_group_ids"},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"private_address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -159,16 +165,18 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 
 func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
 	input := &glue.CreateDevEndpointInput{
 		EndpointName: aws.String(name),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GlueTags(),
+		Tags:         tags.IgnoreAws().GlueTags(),
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {
-		input.Arguments = stringMapToPointers(v.(map[string]interface{}))
+		input.Arguments = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("extra_jars_s3_path"); ok {
@@ -242,14 +250,14 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Glue Dev Endpoint: %s", err)
+		return fmt.Errorf("error creating Glue Dev Endpoint: %w", err)
 	}
 
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become available", d.Id())
 	if _, err := waiter.GlueDevEndpointCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become available: %s", d.Id(), err)
+		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
 	return resourceAwsGlueDevEndpointRead(d, meta)
@@ -257,27 +265,19 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	request := &glue.GetDevEndpointInput{
-		EndpointName: aws.String(d.Id()),
-	}
+	endpoint, err := finder.DevEndpointByName(conn, d.Id())
 
-	output, err := conn.GetDevEndpoint(request)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			log.Printf("[WARN] Glue Dev Endpoint (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Glue Dev Endpoint (%s): %s", d.Id(), err)
-	}
-
-	endpoint := output.DevEndpoint
-	if endpoint == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Dev Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	endpointARN := arn.ARN{
@@ -289,105 +289,112 @@ func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) er
 	}.String()
 
 	if err := d.Set("arn", endpointARN); err != nil {
-		return fmt.Errorf("error setting arn for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting arn for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("arguments", aws.StringValueMap(endpoint.Arguments)); err != nil {
-		return fmt.Errorf("error setting arguments for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting arguments for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("availability_zone", endpoint.AvailabilityZone); err != nil {
-		return fmt.Errorf("error setting availability_zone for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting availability_zone for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("extra_jars_s3_path", endpoint.ExtraJarsS3Path); err != nil {
-		return fmt.Errorf("error setting extra_jars_s3_path for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting extra_jars_s3_path for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("extra_python_libs_s3_path", endpoint.ExtraPythonLibsS3Path); err != nil {
-		return fmt.Errorf("error setting extra_python_libs_s3_path for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting extra_python_libs_s3_path for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("failure_reason", endpoint.FailureReason); err != nil {
-		return fmt.Errorf("error setting failure_reason for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting failure_reason for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("glue_version", endpoint.GlueVersion); err != nil {
-		return fmt.Errorf("error setting glue_version for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting glue_version for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("name", endpoint.EndpointName); err != nil {
-		return fmt.Errorf("error setting name for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting name for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("number_of_nodes", endpoint.NumberOfNodes); err != nil {
-		return fmt.Errorf("error setting number_of_nodes for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting number_of_nodes for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("number_of_workers", endpoint.NumberOfWorkers); err != nil {
-		return fmt.Errorf("error setting number_of_workers for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting number_of_workers for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("private_address", endpoint.PrivateAddress); err != nil {
-		return fmt.Errorf("error setting private_address for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting private_address for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("public_address", endpoint.PublicAddress); err != nil {
-		return fmt.Errorf("error setting public_address for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting public_address for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("public_key", endpoint.PublicKey); err != nil {
-		return fmt.Errorf("error setting public_key for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting public_key for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("public_keys", flattenStringSet(endpoint.PublicKeys)); err != nil {
-		return fmt.Errorf("error setting public_keys for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting public_keys for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("role_arn", endpoint.RoleArn); err != nil {
-		return fmt.Errorf("error setting role_arn for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting role_arn for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("security_configuration", endpoint.SecurityConfiguration); err != nil {
-		return fmt.Errorf("error setting security_configuration for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting security_configuration for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("security_group_ids", flattenStringSet(endpoint.SecurityGroupIds)); err != nil {
-		return fmt.Errorf("error setting security_group_ids for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting security_group_ids for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("status", endpoint.Status); err != nil {
-		return fmt.Errorf("error setting status for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting status for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("subnet_id", endpoint.SubnetId); err != nil {
-		return fmt.Errorf("error setting subnet_id for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting subnet_id for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("vpc_id", endpoint.VpcId); err != nil {
-		return fmt.Errorf("error setting vpc_id for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting vpc_id for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("worker_type", endpoint.WorkerType); err != nil {
-		return fmt.Errorf("error setting worker_type for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting worker_type for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	tags, err := keyvaluetags.GlueListTags(conn, endpointARN)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Glue Dev Endpoint (%s): %s", endpointARN, err)
+		return fmt.Errorf("error listing tags for Glue Dev Endpoint (%s): %w", endpointARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	if err := d.Set("yarn_endpoint_address", endpoint.YarnEndpointAddress); err != nil {
-		return fmt.Errorf("error setting yarn_endpoint_address for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting yarn_endpoint_address for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("zeppelin_remote_spark_interpreter_port", endpoint.ZeppelinRemoteSparkInterpreterPort); err != nil {
-		return fmt.Errorf("error setting zeppelin_remote_spark_interpreter_port for Glue Dev Endpoint (%s): %s", d.Id(), err)
+		return fmt.Errorf("error setting zeppelin_remote_spark_interpreter_port for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -484,14 +491,14 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating Glue Dev Endpoint: %s", err)
+			return fmt.Errorf("error updating Glue Dev Endpoint: %w", err)
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -501,28 +508,22 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	deleteOpts := &glue.DeleteDevEndpointInput{
+	log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", d.Id())
+	_, err := conn.DeleteDevEndpoint(&glue.DeleteDevEndpointInput{
 		EndpointName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil
 	}
 
-	log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", d.Id())
-
-	_, err := conn.DeleteDevEndpoint(deleteOpts)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
-		}
-
 		return fmt.Errorf("error deleting Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become terminated", d.Id())
 	if _, err := waiter.GlueDevEndpointDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
-		}
-
-		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become terminated: %s", d.Id(), err)
+		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become terminated: %w", d.Id(), err)
 	}
 
 	return nil

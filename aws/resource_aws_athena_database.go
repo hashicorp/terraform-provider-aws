@@ -25,7 +25,7 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "see https://docs.aws.amazon.com/athena/latest/ug/tables-databases-columns-names.html"),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
 			"bucket": {
 				Type:     schema.TypeString,
@@ -112,17 +112,12 @@ func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsAthenaDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
-	input := &athena.StartQueryExecutionInput{
-		QueryString:         aws.String("show databases;"),
-		ResultConfiguration: expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{})),
+	input := &athena.GetDatabaseInput{
+		DatabaseName: aws.String(d.Get("name").(string)),
+		CatalogName:  aws.String("AwsDataCatalog"),
 	}
-
-	resp, err := conn.StartQueryExecution(input)
+	_, err := conn.GetDatabase(input)
 	if err != nil {
-		return err
-	}
-
-	if err := executeAndExpectMatchingRow(*resp.QueryExecutionId, d.Get("name").(string), conn); err != nil {
 		return err
 	}
 	return nil
@@ -170,21 +165,6 @@ func executeAndExpectNoRowsWhenCreate(qeid string, conn *athena.Athena) error {
 	return nil
 }
 
-func executeAndExpectMatchingRow(qeid string, dbName string, conn *athena.Athena) error {
-	rs, err := queryExecutionResult(qeid, conn)
-	if err != nil {
-		return err
-	}
-	for _, row := range rs.Rows {
-		for _, datum := range row.Data {
-			if *datum.VarCharValue == dbName {
-				return nil
-			}
-		}
-	}
-	return fmt.Errorf("Athena not found database: %s, query result: %s", dbName, flattenAthenaResultSet(rs))
-}
-
 func executeAndExpectNoRowsWhenDrop(qeid string, conn *athena.Athena) error {
 	rs, err := queryExecutionResult(qeid, conn)
 	if err != nil {
@@ -229,12 +209,18 @@ func queryExecutionStateRefreshFunc(qeid string, conn *athena.Athena) resource.S
 		if err != nil {
 			return nil, "failed", err
 		}
-		status := out.QueryExecution.Status
-		if *status.State == athena.QueryExecutionStateFailed &&
-			status.StateChangeReason != nil {
-			err = fmt.Errorf("reason: %s", *status.StateChangeReason)
+
+		if out == nil || out.QueryExecution == nil || out.QueryExecution.Status == nil {
+			return nil, "", nil
 		}
-		return out, *out.QueryExecution.Status.State, err
+
+		status := out.QueryExecution.Status
+
+		if aws.StringValue(status.State) == athena.QueryExecutionStateFailed && status.StateChangeReason != nil {
+			err = fmt.Errorf("reason: %s", aws.StringValue(status.StateChangeReason))
+		}
+
+		return out, aws.StringValue(out.QueryExecution.Status.State), err
 	}
 }
 
@@ -242,7 +228,7 @@ func flattenAthenaResultSet(rs *athena.ResultSet) string {
 	ss := make([]string, 0)
 	for _, row := range rs.Rows {
 		for _, datum := range row.Data {
-			ss = append(ss, *datum.VarCharValue)
+			ss = append(ss, aws.StringValue(datum.VarCharValue))
 		}
 	}
 	return strings.Join(ss, "\n")

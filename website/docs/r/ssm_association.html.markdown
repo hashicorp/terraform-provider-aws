@@ -12,7 +12,7 @@ Associates an SSM Document to an instance or EC2 tag.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ssm_association" "example" {
   name = aws_ssm_document.example.name
 

@@ -1,21 +1,22 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceResourceName := "data.aws_eks_cluster.test"
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
@@ -55,11 +56,9 @@ func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 }
 
 func testAccAWSEksClusterDataSourceConfig_Basic(rName string) string {
-	return fmt.Sprintf(`
-%[1]s
-
+	return composeConfig(testAccAWSEksClusterConfig_Logging(rName, []string{"api", "audit"}), `
 data "aws_eks_cluster" "test" {
   name = aws_eks_cluster.test.name
 }
-`, testAccAWSEksClusterConfig_Logging(rName, []string{"api", "audit"}))
+`)
 }

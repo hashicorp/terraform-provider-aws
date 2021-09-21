@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	kmsfinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
 )
 
 func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
@@ -17,6 +18,7 @@ func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEbsDefaultKmsKeyDestroy,
 		Steps: []resource.TestStep{
@@ -93,7 +95,7 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 func testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey() (*arn.ARN, error) {
 	conn := testAccProvider.Meta().(*AWSClient).kmsconn
 
-	alias, err := findKmsAliasByName(conn, "alias/aws/ebs", nil)
+	alias, err := kmsfinder.AliasByName(conn, "alias/aws/ebs")
 	if err != nil {
 		return nil, err
 	}

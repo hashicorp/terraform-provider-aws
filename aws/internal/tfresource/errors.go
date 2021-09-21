@@ -10,7 +10,7 @@ import (
 // Specifically, NotFound returns true if the error or a wrapped error is of type
 // resource.NotFoundError.
 func NotFound(err error) bool {
-	var e *resource.NotFoundError
+	var e *resource.NotFoundError // nosemgrep: is-not-found-error
 	return errors.As(err, &e)
 }
 
@@ -22,4 +22,14 @@ func TimedOut(err error) bool {
 	// This explicitly does *not* match wrapped TimeoutErrors
 	timeoutErr, ok := err.(*resource.TimeoutError) // nolint:errorlint
 	return ok && timeoutErr.LastError == nil
+}
+
+// SetLastError sets the LastError field on the error if supported.
+// If lastErr is nil it is ignored.
+func SetLastError(err, lastErr error) {
+	if te := (*resource.TimeoutError)(nil); errors.As(err, &te) && te.LastError == nil {
+		te.LastError = lastErr
+	} else if use := (*resource.UnexpectedStateError)(nil); errors.As(err, &use) && use.LastError == nil {
+		use.LastError = lastErr
+	}
 }

@@ -81,6 +81,7 @@ func TestAccAwsImageBuilderImagePipeline_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -123,6 +124,7 @@ func TestAccAwsImageBuilderImagePipeline_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -144,6 +146,7 @@ func TestAccAwsImageBuilderImagePipeline_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -177,6 +180,7 @@ func TestAccAwsImageBuilderImagePipeline_DistributionConfigurationArn(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -209,6 +213,7 @@ func TestAccAwsImageBuilderImagePipeline_EnhancedImageMetadataEnabled(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -243,6 +248,7 @@ func TestAccAwsImageBuilderImagePipeline_ImageRecipeArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -275,6 +281,7 @@ func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_ImageTestsEnabl
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -309,6 +316,7 @@ func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_TimeoutMinutes(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -345,6 +353,7 @@ func TestAccAwsImageBuilderImagePipeline_InfrastructureConfigurationArn(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -377,6 +386,7 @@ func TestAccAwsImageBuilderImagePipeline_Schedule_PipelineExecutionStartConditio
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -411,6 +421,7 @@ func TestAccAwsImageBuilderImagePipeline_Schedule_ScheduleExpression(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -445,6 +456,7 @@ func TestAccAwsImageBuilderImagePipeline_Status(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -477,6 +489,7 @@ func TestAccAwsImageBuilderImagePipeline_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{

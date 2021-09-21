@@ -14,7 +14,7 @@ Manages a Glue Crawler. More information can be found in the [AWS Glue Developer
 
 ### DynamoDB Target Example
 
-```hcl
+```terraform
 resource "aws_glue_crawler" "example" {
   database_name = aws_glue_catalog_database.example.name
   name          = "example"
@@ -28,7 +28,7 @@ resource "aws_glue_crawler" "example" {
 
 ### JDBC Target Example
 
-```hcl
+```terraform
 resource "aws_glue_crawler" "example" {
   database_name = aws_glue_catalog_database.example.name
   name          = "example"
@@ -43,7 +43,7 @@ resource "aws_glue_crawler" "example" {
 
 ### S3 Target Example
 
-```hcl
+```terraform
 resource "aws_glue_crawler" "example" {
   database_name = aws_glue_catalog_database.example.name
   name          = "example"
@@ -58,7 +58,7 @@ resource "aws_glue_crawler" "example" {
 
 ### Catalog Target Example
 
-```hcl
+```terraform
 resource "aws_glue_crawler" "example" {
   database_name = aws_glue_catalog_database.example.name
   name          = "example"
@@ -86,7 +86,7 @@ EOF
 
 ### MongoDB Target Example
 
-```hcl
+```terraform
 resource "aws_glue_crawler" "example" {
   database_name = aws_glue_catalog_database.example.name
   name          = "example"
@@ -101,7 +101,7 @@ resource "aws_glue_crawler" "example" {
 
 ### Configuration Settings Example
 
-```hcl
+```terraform
 resource "aws_glue_crawler" "events_crawler" {
   database_name = aws_glue_catalog_database.glue_database.name
   schedule      = "cron(0 1 * * ? *)"
@@ -149,7 +149,7 @@ The following arguments are supported:
 * `recrawl_policy` (Optional)  A policy that specifies whether to crawl the entire dataset again, or to crawl only folders that were added since the last crawler run.. See [Recrawl Policy](#recrawl-policy) below.
 * `security_configuration` (Optional) The name of Security Configuration to be used by the crawler
 * `table_prefix` (Optional) The table prefix used for catalog tables that are created.
-* `tags` - (Optional) Key-value map of resource tags
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Dynamodb Target
 
@@ -168,6 +168,7 @@ The following arguments are supported:
 * `path` - (Required) The path to the Amazon S3 target.
 * `connection_name` - (Optional) The name of a connection which allows crawler to access data in S3 within a VPC.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
+* `sample_size` - (Optional)  Sets the number of files in each leaf folder to be crawled when crawling sample files in a dataset. If not set, all the files are crawled. A valid value is an integer between 1 and 249.
 
 ### Catalog Target
 
@@ -204,6 +205,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Crawler name
 * `arn` - The ARN of the crawler
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

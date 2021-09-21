@@ -41,7 +41,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicy() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"policy_revision": {
 				Type:     schema.TypeString,

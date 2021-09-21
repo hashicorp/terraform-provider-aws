@@ -2,61 +2,39 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
-	"time"
 
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfkms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSKmsAlias_basic(t *testing.T) {
-	rInt := acctest.RandInt()
-	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
+	var alias kms.AliasListEntry
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
+	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsSingleAlias(rInt, kmsAliasTimestamp),
+				Config: testAccAWSKmsAliasConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsAliasExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "target_key_arn"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSKmsSingleAlias_modified(rInt, kmsAliasTimestamp),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsAliasExists(resourceName),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKmsAlias_name_prefix(t *testing.T) {
-	rInt := acctest.RandInt()
-	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
-	resourceName := "aws_kms_alias.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSKmsSingleAlias(rInt, kmsAliasTimestamp),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsAliasExists("aws_kms_alias.name_prefix"),
-					resource.TestCheckResourceAttrSet("aws_kms_alias.name_prefix", "target_key_arn"),
+					testAccCheckAWSKmsAliasExists(resourceName, &alias),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`alias/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", tfkms.AliasNamePrefix+rName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, "id"),
 				),
 			},
 			{
@@ -68,21 +46,46 @@ func TestAccAWSKmsAlias_name_prefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsAlias_no_name(t *testing.T) {
-	rInt := acctest.RandInt()
-	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
+func TestAccAWSKmsAlias_disappears(t *testing.T) {
+	var alias kms.AliasListEntry
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsSingleAlias(rInt, kmsAliasTimestamp),
+				Config: testAccAWSKmsAliasConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsAliasExists("aws_kms_alias.nothing"),
-					resource.TestCheckResourceAttrSet("aws_kms_alias.nothing", "target_key_arn"),
+					testAccCheckAWSKmsAliasExists(resourceName, &alias),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKmsAlias(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKmsAlias_Name_Generated(t *testing.T) {
+	var alias kms.AliasListEntry
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_alias.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsAliasConfigNameGenerated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsAliasExists(resourceName, &alias),
+					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", tfkms.AliasNamePrefix, resource.UniqueIDSuffixLength))),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix),
 				),
 			},
 			{
@@ -94,23 +97,94 @@ func TestAccAWSKmsAlias_no_name(t *testing.T) {
 	})
 }
 
-func TestAccAWSKmsAlias_multiple(t *testing.T) {
-	rInt := acctest.RandInt()
-	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
+func TestAccAWSKmsAlias_NamePrefix(t *testing.T) {
+	var alias kms.AliasListEntry
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsMultipleAliases(rInt, kmsAliasTimestamp),
+				Config: testAccAWSKmsAliasConfigNamePrefix(rName, tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsAliasExists("aws_kms_alias.test"),
-					resource.TestCheckResourceAttrSet("aws_kms_alias.test", "target_key_arn"),
-					testAccCheckAWSKmsAliasExists("aws_kms_alias.test2"),
-					resource.TestCheckResourceAttrSet("aws_kms_alias.test2", "target_key_arn"),
+					testAccCheckAWSKmsAliasExists(resourceName, &alias),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", tfkms.AliasNamePrefix+"tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKmsAlias_UpdateKeyID(t *testing.T) {
+	var alias kms.AliasListEntry
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_alias.test"
+	key1ResourceName := "aws_kms_key.test"
+	key2ResourceName := "aws_kms_key.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsAliasConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsAliasExists(resourceName, &alias),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key1ResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccAWSKmsAliasConfigUpdatedKeyId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsAliasExists(resourceName, &alias),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", key2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", key2ResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKmsAlias_MultipleAliasesForSameKey(t *testing.T) {
+	var alias kms.AliasListEntry
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_kms_alias.test"
+	alias2ResourceName := "aws_kms_alias.test2"
+	keyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsAliasConfigMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsAliasExists(resourceName, &alias),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_arn", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_key_id", keyResourceName, "id"),
+					testAccCheckAWSKmsAliasExists(alias2ResourceName, &alias),
+					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_arn", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(alias2ResourceName, "target_key_id", keyResourceName, "id"),
 				),
 			},
 			{
@@ -123,20 +197,21 @@ func TestAccAWSKmsAlias_multiple(t *testing.T) {
 }
 
 func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
-	rInt := acctest.RandInt()
-	kmsAliasTimestamp := time.Now().Format(time.RFC1123)
+	var alias kms.AliasListEntry
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kms_alias.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsArnDiffSuppress(rInt, kmsAliasTimestamp),
+				Config: testAccAWSKmsAliasConfigDiffSuppress(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsAliasExists("aws_kms_alias.test"),
-					resource.TestCheckResourceAttrSet("aws_kms_alias.test", "target_key_arn"),
+					testAccCheckAWSKmsAliasExists(resourceName, &alias),
+					resource.TestCheckResourceAttrSet(resourceName, "target_key_arn"),
 				),
 			},
 			{
@@ -147,7 +222,7 @@ func TestAccAWSKmsAlias_ArnDiffSuppress(t *testing.T) {
 			{
 				ExpectNonEmptyPlan: false,
 				PlanOnly:           true,
-				Config:             testAccAWSKmsArnDiffSuppress(rInt, kmsAliasTimestamp),
+				Config:             testAccAWSKmsAliasConfigDiffSuppress(rName),
 			},
 		},
 	})
@@ -161,107 +236,136 @@ func testAccCheckAWSKmsAliasDestroy(s *terraform.State) error {
 			continue
 		}
 
-		entry, err := findKmsAliasByName(conn, rs.Primary.ID, nil)
+		_, err := finder.AliasByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
 			return err
 		}
-		if entry != nil {
-			return fmt.Errorf("KMS alias still exists:\n%#v", entry)
-		}
 
-		return nil
+		return fmt.Errorf("KMS Alias %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAWSKmsAliasExists(name string) resource.TestCheckFunc {
+func testAccCheckAWSKmsAliasExists(name string, v *kms.AliasListEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No KMS Alias ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).kmsconn
+
+		output, err := finder.AliasByName(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccAWSKmsSingleAlias(rInt int, timestamp string) string {
+func testAccAWSKmsAliasConfigName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Terraform acc test One %s"
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "test" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.test.id
+}
+`, rName)
+}
+
+func testAccAWSKmsAliasConfigNameGenerated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "test" {
+  target_key_id = aws_kms_key.test.id
+}
+`, rName)
+}
+
+func testAccAWSKmsAliasConfigNamePrefix(rName, namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "test" {
+  name_prefix   = %[2]q
+  target_key_id = aws_kms_key.test.id
+}
+`, rName, namePrefix)
+}
+
+func testAccAWSKmsAliasConfigUpdatedKeyId(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
 resource "aws_kms_key" "test2" {
-  description             = "Terraform acc test Two %s"
+  description             = "%[1]s-2"
   deletion_window_in_days = 7
 }
 
-resource "aws_kms_alias" "name_prefix" {
-  name_prefix   = "alias/tf-acc-key-alias-%d"
-  target_key_id = aws_kms_key.test.key_id
-}
-
-resource "aws_kms_alias" "nothing" {
-  target_key_id = aws_kms_key.test.key_id
-}
-
 resource "aws_kms_alias" "test" {
-  name          = "alias/tf-acc-key-alias-%d"
-  target_key_id = aws_kms_key.test.key_id
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.test2.id
 }
-`, timestamp, timestamp, rInt, rInt)
+`, rName)
 }
 
-func testAccAWSKmsSingleAlias_modified(rInt int, timestamp string) string {
+func testAccAWSKmsAliasConfigMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Terraform acc test One %s"
-  deletion_window_in_days = 7
-}
-
-resource "aws_kms_key" "test2" {
-  description             = "Terraform acc test Two %s"
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
 resource "aws_kms_alias" "test" {
-  name          = "alias/tf-acc-key-alias-%d"
-  target_key_id = aws_kms_key.test2.key_id
-}
-`, timestamp, timestamp, rInt)
-}
-
-func testAccAWSKmsMultipleAliases(rInt int, timestamp string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = "Terraform acc test One %s"
-  deletion_window_in_days = 7
-}
-
-resource "aws_kms_alias" "test" {
-  name          = "alias/tf-acc-alias-test-%d"
+  name          = "alias/%[1]s-1"
   target_key_id = aws_kms_key.test.key_id
 }
 
 resource "aws_kms_alias" "test2" {
-  name          = "alias/tf-acc-alias-test2-%d"
+  name          = "alias/%[1]s-2"
   target_key_id = aws_kms_key.test.key_id
 }
-`, timestamp, rInt, rInt)
+`, rName)
 }
 
-func testAccAWSKmsArnDiffSuppress(rInt int, timestamp string) string {
+func testAccAWSKmsAliasConfigDiffSuppress(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Terraform acc test test %s"
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
 resource "aws_kms_alias" "test" {
-  name          = "alias/tf-acc-key-alias-%d"
+  name          = "alias/%[1]s"
   target_key_id = aws_kms_key.test.arn
 }
-`, timestamp, rInt)
+`, rName)
 }

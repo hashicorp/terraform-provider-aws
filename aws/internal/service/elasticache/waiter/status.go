@@ -15,6 +15,10 @@ const (
 	ReplicationGroupStatusDeleting     = "deleting"
 	ReplicationGroupStatusCreateFailed = "create-failed"
 	ReplicationGroupStatusSnapshotting = "snapshotting"
+
+	UserStatusActive    = "active"
+	UserStatusDeleting  = "deleting"
+	UserStatusModifying = "modifying"
 )
 
 // ReplicationGroupStatus fetches the Replication Group and its Status
@@ -104,5 +108,41 @@ func GlobalReplicationGroupStatus(conn *elasticache.ElastiCache, globalReplicati
 		}
 
 		return grg, aws.StringValue(grg.Status), nil
+	}
+}
+
+const (
+	GlobalReplicationGroupMemberStatusAssociated = "associated"
+)
+
+// GlobalReplicationGroupStatus fetches the Global Replication Group and its Status
+func GlobalReplicationGroupMemberStatus(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		member, err := finder.GlobalReplicationGroupMemberByID(conn, globalReplicationGroupID, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return member, aws.StringValue(member.Status), nil
+	}
+}
+
+// UserStatus fetches the ElastiCache user and its Status
+func UserStatus(conn *elasticache.ElastiCache, userId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		user, err := finder.ElastiCacheUserById(conn, userId)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return user, aws.StringValue(user.Status), nil
 	}
 }

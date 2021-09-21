@@ -27,6 +27,22 @@ func ChangeInfoStatus(conn *route53.Route53, changeID string) resource.StateRefr
 	}
 }
 
+func HostedZoneDnssecStatus(conn *route53.Route53, hostedZoneID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		hostedZoneDnssec, err := finder.HostedZoneDnssec(conn, hostedZoneID)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if hostedZoneDnssec == nil || hostedZoneDnssec.Status == nil {
+			return nil, "", nil
+		}
+
+		return hostedZoneDnssec.Status, aws.StringValue(hostedZoneDnssec.Status.ServeSignature), nil
+	}
+}
+
 func KeySigningKeyStatus(conn *route53.Route53, hostedZoneID string, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		keySigningKey, err := finder.KeySigningKey(conn, hostedZoneID, name)

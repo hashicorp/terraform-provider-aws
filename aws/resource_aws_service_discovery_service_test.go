@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -27,90 +28,42 @@ func testSweepServiceDiscoveryServices(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).sdconn
-	var sweeperErrs *multierror.Error
-
 	input := &servicediscovery.ListServicesInput{}
+	sweepResources := make([]*testSweepResource, 0)
 
-	err = conn.ListServicesPages(input, func(page *servicediscovery.ListServicesOutput, isLast bool) bool {
+	err = conn.ListServicesPages(input, func(page *servicediscovery.ListServicesOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, service := range page.Services {
-			if service == nil {
-				continue
-			}
+			r := resourceAwsServiceDiscoveryService()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(service.Id))
+			d.Set("force_destroy", true)
 
-			serviceID := aws.StringValue(service.Id)
-			input := &servicediscovery.DeleteServiceInput{
-				Id: service.Id,
-			}
-
-			if aws.Int64Value(service.InstanceCount) > 0 {
-				input := &servicediscovery.ListInstancesInput{}
-
-				err := conn.ListInstancesPages(input, func(page *servicediscovery.ListInstancesOutput, isLast bool) bool {
-					if page == nil {
-						return !isLast
-					}
-
-					for _, instance := range page.Instances {
-						if instance == nil {
-							continue
-						}
-
-						instanceID := aws.StringValue(instance.Id)
-						input := &servicediscovery.DeregisterInstanceInput{
-							InstanceId: instance.Id,
-							ServiceId:  service.Id,
-						}
-
-						log.Printf("[INFO] Deregistering Service Discovery Service (%s) Instance: %s", serviceID, instanceID)
-						_, err := conn.DeregisterInstance(input)
-
-						if err != nil {
-							sweeperErr := fmt.Errorf("error deregistering Service Discovery Service (%s) Instance (%s): %w", serviceID, instanceID, err)
-							log.Printf("[ERROR] %s", sweeperErr)
-							sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-							continue
-						}
-					}
-
-					return !isLast
-				})
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error listing Service Discovery Service (%s) Instances: %w", serviceID, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					continue
-				}
-			}
-
-			log.Printf("[INFO] Deleting Service Discovery Service: %s", serviceID)
-			_, err := conn.DeleteService(input)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Service Discovery Service (%s): %w", serviceID, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Services sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Service Discovery Services: %w", err))
+		return fmt.Errorf("error listing Service Discovery Services (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Service Discovery Services (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
@@ -123,6 +76,7 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -130,33 +84,36 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_private(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "5"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "5"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccServiceDiscoveryServiceConfig_private_update(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.1.type", "AAAA"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.1.ttl", "5"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 				),
 			},
 		},
@@ -173,6 +130,7 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -180,40 +138,41 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_public(rName, 5, "/path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "WEIGHTED"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", "5"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.resource_path", "/path"),
-					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "WEIGHTED"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccServiceDiscoveryServiceConfig_public(rName, 3, "/updated-path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.resource_path", "/updated-path"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 				),
 			},
 			{
 				Config: testAccServiceDiscoveryServiceConfig_public_update_noHealthCheckConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -226,6 +185,7 @@ func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -233,15 +193,16 @@ func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
 				Config: testAccServiceDiscoveryServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`service/.+`)),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -253,6 +214,7 @@ func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -274,6 +236,7 @@ func TestAccAWSServiceDiscoveryService_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -286,9 +249,10 @@ func TestAccAWSServiceDiscoveryService_Tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccServiceDiscoveryServiceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -319,18 +283,19 @@ func testAccCheckAwsServiceDiscoveryServiceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &servicediscovery.GetServiceInput{
-			Id: aws.String(rs.Primary.ID),
+		_, err := finder.ServiceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.GetService(input)
 		if err != nil {
-			if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
-				return nil
-			}
 			return err
 		}
+
+		return fmt.Errorf("Service Discovery Service %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
@@ -341,14 +306,19 @@ func testAccCheckAwsServiceDiscoveryServiceExists(name string) resource.TestChec
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sdconn
-
-		input := &servicediscovery.GetServiceInput{
-			Id: aws.String(rs.Primary.ID),
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Service Discovery Service ID is set")
 		}
 
-		_, err := conn.GetService(input)
-		return err
+		conn := testAccProvider.Meta().(*AWSClient).sdconn
+
+		_, err := finder.ServiceByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 }
 

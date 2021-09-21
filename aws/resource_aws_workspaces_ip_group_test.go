@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"testing"
 
@@ -10,17 +11,69 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/lister"
 )
 
-func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
+func init() {
+	resource.AddTestSweepers("aws_workspaces_ip_group", &resource.Sweeper{
+		Name: "aws_workspaces_ip_group",
+		F:    testSweepWorkspacesIpGroups,
+	})
+}
+
+func testSweepWorkspacesIpGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).workspacesconn
+	input := &workspaces.DescribeIpGroupsInput{}
+	sweepResources := make([]*testSweepResource, 0)
+
+	err = lister.DescribeIpGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, ipGroup := range page.Result {
+			r := resourceAwsWorkspacesIpGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(ipGroup.GroupId))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping WorkSpaces Ip Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WorkSpaces Ip Groups (%s): %w", region, err)
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WorkSpaces Ip Groups (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func testAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 	var v workspaces.IpGroup
 	ipGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	ipGroupNewName := acctest.RandomWithPrefix("tf-acc-test-upd")
 	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(acctest.RandString(20)))
 	resourceName := "aws_workspaces_ip_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
@@ -57,13 +110,14 @@ func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesIpGroup_tags(t *testing.T) {
+func testAccAwsWorkspacesIpGroup_tags(t *testing.T) {
 	var v workspaces.IpGroup
 	resourceName := "aws_workspaces_ip_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
@@ -101,14 +155,15 @@ func TestAccAwsWorkspacesIpGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
+func testAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
 	var v workspaces.IpGroup
 	ipGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(acctest.RandString(20)))
 	resourceName := "aws_workspaces_ip_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
@@ -124,23 +179,25 @@ func TestAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
+func testAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
 	var v workspaces.IpGroup
 	var d1, d2 workspaces.WorkspaceDirectory
 
 	ipGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := testAccRandomDomainName()
 
 	resourceName := "aws_workspaces_ip_group.test"
 	directoryResourceName1 := "aws_workspaces_directory.test1"
 	directoryResourceName2 := "aws_workspaces_directory.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWorkspacesIpGroupConfigMultipleDirectories(ipGroupName),
+				Config: testAccAwsWorkspacesIpGroupConfigMultipleDirectories(ipGroupName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
 					testAccCheckAwsWorkspacesDirectoryExists(directoryResourceName1, &d1),
@@ -284,12 +341,12 @@ resource "aws_workspaces_ip_group" "test" {
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAwsWorkspacesIpGroupConfigMultipleDirectories(name string) string {
+func testAccAwsWorkspacesIpGroupConfigMultipleDirectories(name, domain string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(name),
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(name, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_workspaces_directory" "test1" {

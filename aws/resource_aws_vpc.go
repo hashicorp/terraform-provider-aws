@@ -10,12 +10,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsVpc() *schema.Resource {
@@ -28,7 +31,11 @@ func resourceAwsVpc() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsVpcInstanceImport,
 		},
-		CustomizeDiff: resourceAwsVpcCustomizeDiff,
+
+		CustomizeDiff: customdiff.All(
+			resourceAwsVpcCustomizeDiff,
+			SetTagsDiff,
+		),
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsVpcMigrateState,
@@ -120,6 +127,8 @@ func resourceAwsVpc() *schema.Resource {
 
 			"tags": tagsSchema(),
 
+			"tags_all": tagsSchemaComputed(),
+
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -130,13 +139,15 @@ func resourceAwsVpc() *schema.Resource {
 
 func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the VPC
 	createOpts := &ec2.CreateVpcInput{
 		CidrBlock:                   aws.String(d.Get("cidr_block").(string)),
 		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
-		TagSpecifications:           ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeVpc),
+		TagSpecifications:           ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpc),
 	}
 
 	log.Printf("[DEBUG] VPC create config: %#v", *createOpts)
@@ -238,20 +249,57 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	// Refresh the VPC state
-	vpcRaw, _, err := VPCStateRefreshFunc(conn, d.Id())()
-	if err != nil {
-		return err
+	var vpc *ec2.Vpc
+
+	err := resource.Retry(waiter.VpcPropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		vpc, err = finder.VpcByID(conn, d.Id())
+
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidVpcID.NotFound") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if d.IsNewResource() && vpc == nil {
+			return resource.RetryableError(&resource.NotFoundError{
+				LastError: fmt.Errorf("EC2 VPC (%s) not found", d.Id()),
+			})
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		vpc, err = finder.VpcByID(conn, d.Id())
 	}
-	if vpcRaw == nil {
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidVpcID.NotFound") {
+		log.Printf("[WARN] EC2 VPC (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	// VPC stuff
-	vpc := vpcRaw.(*ec2.Vpc)
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPC (%s): %w", d.Id(), err)
+	}
+
+	if vpc == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading EC2 VPC (%s): not found after creation", d.Id())
+		}
+
+		log.Printf("[WARN] EC2 VPC (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	vpcid := d.Id()
 	d.Set("cidr_block", vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
@@ -262,13 +310,20 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		Partition: meta.(*AWSClient).partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: aws.StringValue(vpc.OwnerId),
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %s", err)
 	}
 
 	d.Set("owner_id", vpc.OwnerId)
@@ -311,15 +366,17 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "UnsupportedOperation" {
 			log.Printf("[WARN] VPC Classic Link is not supported in this region")
+		} else if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+			log.Printf("[WARN] VPC Classic Link functionality you requested is not available for this VPC")
 		} else {
 			return err
 		}
 	} else {
 		classiclink_enabled := false
 		for _, v := range respClassiclink.Vpcs {
-			if *v.VpcId == vpcid {
+			if aws.StringValue(v.VpcId) == vpcid {
 				if v.ClassicLinkEnabled != nil {
-					classiclink_enabled = *v.ClassicLinkEnabled
+					classiclink_enabled = aws.BoolValue(v.ClassicLinkEnabled)
 				}
 				break
 			}
@@ -342,9 +399,9 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		classiclinkdns_enabled := false
 		for _, v := range respClassiclinkDnsSupport.Vpcs {
-			if *v.VpcId == vpcid {
+			if aws.StringValue(v.VpcId) == vpcid {
 				if v.ClassicLinkDnsSupported != nil {
-					classiclinkdns_enabled = *v.ClassicLinkDnsSupported
+					classiclinkdns_enabled = aws.BoolValue(v.ClassicLinkDnsSupported)
 				}
 				break
 			}
@@ -513,8 +570,8 @@ func resourceAwsVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)

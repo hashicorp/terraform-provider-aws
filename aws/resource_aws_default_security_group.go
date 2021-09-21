@@ -14,6 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const DefaultSecurityGroupName = "default"
@@ -177,7 +178,8 @@ func resourceAwsDefaultSecurityGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			// This is not implemented. Added to prevent breaking changes.
 			"revoke_rules_on_delete": {
 				Type:     schema.TypeBool,
@@ -185,11 +187,15 @@ func resourceAwsDefaultSecurityGroup() *schema.Resource {
 				Optional: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	securityGroupOpts := &ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -243,8 +249,8 @@ func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interfac
 
 	log.Printf("[INFO] Default Security Group ID: %s", d.Id())
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+	if len(tags) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
 			return fmt.Errorf("error adding EC2 Default Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -258,16 +264,17 @@ func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	group, err := finder.SecurityGroupByID(conn, d.Id())
-	if err != nil {
-		return err
-	}
-	if group == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+	if err != nil {
+		return err
 	}
 
 	remoteIngressRules := resourceAwsSecurityGroupIPPermGather(d.Id(), group.IpPermissions, group.OwnerId)
@@ -303,8 +310,15 @@ func resourceAwsDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting Egress rule set for (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(group.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags for (%s): %w", d.Id(), err)
+	tags := keyvaluetags.Ec2KeyValueTags(group.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -315,31 +329,26 @@ func resourceAwsDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interfac
 
 	group, err := finder.SecurityGroupByID(conn, d.Id())
 	if err != nil {
-		return err
-	}
-	if group == nil {
-		log.Printf("[WARN] Security group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 	}
 
 	err = resourceAwsSecurityGroupUpdateRules(d, "ingress", meta, group)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 	}
 
 	if d.Get("vpc_id") != nil {
 		err = resourceAwsSecurityGroupUpdateRules(d, "egress", meta, group)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags") && !d.IsNewResource() {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") && !d.IsNewResource() {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Security Group (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating Default Security Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 

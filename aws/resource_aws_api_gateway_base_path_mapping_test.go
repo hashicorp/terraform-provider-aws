@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -66,13 +65,14 @@ func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
 func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
-	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	name := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
@@ -95,13 +95,14 @@ func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
 func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
-	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	name := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
@@ -123,13 +124,14 @@ func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
 func TestAccAWSAPIGatewayBasePathMapping_updates(t *testing.T) {
 	var confFirst, conf apigateway.BasePathMapping
 	resourceName := "aws_api_gateway_base_path_mapping.test"
-	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	name := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
@@ -172,7 +174,7 @@ func TestAccAWSAPIGatewayBasePathMapping_updates(t *testing.T) {
 func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
-	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	name := testAccRandomSubdomain()
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 
 	key := tlsRsaPrivateKeyPem(2048)
@@ -180,6 +182,7 @@ func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
