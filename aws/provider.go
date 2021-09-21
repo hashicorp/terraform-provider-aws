@@ -1037,6 +1037,7 @@ func Provider() *schema.Provider {
 			"aws_sagemaker_endpoint":                                  resourceAwsSagemakerEndpoint(),
 			"aws_sagemaker_endpoint_configuration":                    resourceAwsSagemakerEndpointConfiguration(),
 			"aws_sagemaker_feature_group":                             resourceAwsSagemakerFeatureGroup(),
+			"aws_sagemaker_flow_definition":                           resourceAwsSagemakerFlowDefinition(),
 			"aws_sagemaker_image":                                     resourceAwsSagemakerImage(),
 			"aws_sagemaker_image_version":                             resourceAwsSagemakerImageVersion(),
 			"aws_sagemaker_human_task_ui":                             resourceAwsSagemakerHumanTaskUi(),
