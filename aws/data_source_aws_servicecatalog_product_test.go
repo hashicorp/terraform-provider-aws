@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
@@ -11,7 +12,9 @@ import (
 func TestAccAWSServiceCatalogProductDataSource_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 	dataSourceName := "data.aws_servicecatalog_product.test"
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -20,7 +23,7 @@ func TestAccAWSServiceCatalogProductDataSource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductDataSourceConfig_basic(rName, "beskrivning", "supportbeskrivning"),
+				Config: testAccAWSServiceCatalogProductDataSourceConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -45,7 +48,9 @@ func TestAccAWSServiceCatalogProductDataSource_basic(t *testing.T) {
 func TestAccAWSServiceCatalogProductDataSource_physicalID(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 	dataSourceName := "data.aws_servicecatalog_product.test"
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	domain := fmt.Sprintf("http://%s", testAccRandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,7 +59,7 @@ func TestAccAWSServiceCatalogProductDataSource_physicalID(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductDataSourceConfig_physicalID(rName),
+				Config: testAccAWSServiceCatalogProductDataSourceConfig_physicalID(rName, domain, testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -76,16 +81,16 @@ func TestAccAWSServiceCatalogProductDataSource_physicalID(t *testing.T) {
 	})
 }
 
-func testAccAWSServiceCatalogProductDataSourceConfig_basic(rName, description, supportDescription string) string {
-	return composeConfig(testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription), `
+func testAccAWSServiceCatalogProductDataSourceConfig_basic(rName, description, supportDescription, domain, email string) string {
+	return composeConfig(testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription, domain, email), `
 data "aws_servicecatalog_product" "test" {
   id = aws_servicecatalog_product.test.id
 }
 `)
 }
 
-func testAccAWSServiceCatalogProductDataSourceConfig_physicalID(rName string) string {
-	return composeConfig(testAccAWSServiceCatalogProductConfig_physicalID(rName), `
+func testAccAWSServiceCatalogProductDataSourceConfig_physicalID(rName, domain, email string) string {
+	return composeConfig(testAccAWSServiceCatalogProductConfig_physicalID(rName, domain, email), `
 data "aws_servicecatalog_product" "test" {
   id = aws_servicecatalog_product.test.id
 }

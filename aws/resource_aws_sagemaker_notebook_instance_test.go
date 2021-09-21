@@ -92,6 +92,7 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
@@ -435,6 +436,40 @@ func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerNotebookInstance_platform_identifier(t *testing.T) {
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_notebook_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigPlatformIdentifier(rName, "notebook-al2-v1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigPlatformIdentifier(rName, "notebook-al1-v1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -701,6 +736,16 @@ resource "aws_sagemaker_notebook_instance" "test" {
 `, rName, rootAccess)
 }
 
+func testAccAWSSagemakerNotebookInstanceConfigPlatformIdentifier(rName string, platformIdentifier string) string {
+	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "test" {
+  name                = %[1]q
+  role_arn            = aws_iam_role.test.arn
+  instance_type       = "ml.t2.medium"
+  platform_identifier = %[2]q
+}
+`, rName, platformIdentifier)
+}
 func testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(rName string, directInternetAccess string) string {
 	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) +
 		fmt.Sprintf(`

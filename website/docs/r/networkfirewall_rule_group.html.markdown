@@ -125,6 +125,45 @@ resource "aws_networkfirewall_rule_group" "example" {
 }
 ```
 
+### Stateful Inspection from rule group specifications using rule variables and Suricata format rules
+
+```terraform
+resource "aws_networkfirewall_rule_group" "example" {
+  capacity = 100
+  name     = "example"
+  type     = "STATEFUL"
+  rule_group {
+    rule_variables {
+      ip_sets {
+        key = "WEBSERVERS_HOSTS"
+        ip_set {
+          definition = ["10.0.0.0/16", "10.0.1.0/24", "192.168.0.0/16"]
+        }
+      }
+      ip_sets {
+        key = "EXTERNAL_HOST"
+        ip_set {
+          definition = ["1.2.3.4/32"]
+        }
+      }
+      port_sets {
+        key = "HTTP_PORTS"
+        port_set {
+          definition = ["443", "80"]
+        }
+      }
+    }
+    rules_source {
+      rules_string = file("suricata_rules_file")
+    }
+  }
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+}
+```
+
 ### Stateless Inspection with a Custom Action
 
 ```terraform

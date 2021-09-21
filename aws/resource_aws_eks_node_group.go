@@ -1,7 +1,7 @@
 package aws
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"reflect"
 	"time"
@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,10 +23,10 @@ import (
 
 func resourceAwsEksNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEksNodeGroupCreate,
-		Read:   resourceAwsEksNodeGroupRead,
-		Update: resourceAwsEksNodeGroupUpdate,
-		Delete: resourceAwsEksNodeGroupDelete,
+		CreateContext: resourceAwsEksNodeGroupCreate,
+		ReadContext:   resourceAwsEksNodeGroupRead,
+		UpdateContext: resourceAwsEksNodeGroupUpdate,
+		DeleteContext: resourceAwsEksNodeGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -74,7 +75,7 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 				Optional: true,
 			},
 			"instance_types": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -246,6 +247,34 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 					},
 				},
 			},
+			"update_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_unavailable": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 100),
+							ExactlyOneOf: []string{
+								"update_config.0.max_unavailable",
+								"update_config.0.max_unavailable_percentage",
+							},
+						},
+						"max_unavailable_percentage": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 100),
+							ExactlyOneOf: []string{
+								"update_config.0.max_unavailable",
+								"update_config.0.max_unavailable_percentage",
+							},
+						},
+					},
+				},
+			},
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -255,7 +284,7 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).eksconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -284,8 +313,8 @@ func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) err
 		input.DiskSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v := d.Get("instance_types").([]interface{}); len(v) > 0 {
-		input.InstanceTypes = expandStringList(v)
+	if v := d.Get("instance_types").(*schema.Set); v.Len() > 0 {
+		input.InstanceTypes = expandStringSet(v)
 	}
 
 	if v := d.Get("labels").(map[string]interface{}); len(v) > 0 {
@@ -304,12 +333,16 @@ func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) err
 		input.RemoteAccess = expandEksRemoteAccessConfig(v)
 	}
 
-	if v := d.Get("scaling_config").([]interface{}); len(v) > 0 {
-		input.ScalingConfig = expandEksNodegroupScalingConfig(v)
+	if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ScalingConfig = expandEksNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("taint"); ok && v.(*schema.Set).Len() > 0 {
 		input.Taints = expandEksTaints(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("update_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.UpdateConfig = expandEksNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -323,21 +356,21 @@ func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) err
 	_, err := conn.CreateNodegroup(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EKS Node Group (%s): %w", id, err)
+		return diag.Errorf("error creating EKS Node Group (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	_, err = waiter.NodegroupCreated(conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate))
+	_, err = waiter.NodegroupCreated(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EKS Node Groupe (%s) to create: %w", d.Id(), err)
+		return diag.Errorf("error waiting for EKS Node Group (%s) to create: %s", d.Id(), err)
 	}
 
-	return resourceAwsEksNodeGroupRead(d, meta)
+	return resourceAwsEksNodeGroupRead(ctx, d, meta)
 }
 
-func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).eksconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
@@ -345,7 +378,7 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	nodeGroup, err := finder.NodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
@@ -357,7 +390,7 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EKS Node Group (%s): %w", d.Id(), err)
+		return diag.Errorf("error reading EKS Node Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("ami_type", nodeGroup.AmiType)
@@ -367,15 +400,15 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("disk_size", nodeGroup.DiskSize)
 
 	if err := d.Set("instance_types", aws.StringValueSlice(nodeGroup.InstanceTypes)); err != nil {
-		return fmt.Errorf("error setting instance_types: %w", err)
+		return diag.Errorf("error setting instance_types: %s", err)
 	}
 
 	if err := d.Set("labels", aws.StringValueMap(nodeGroup.Labels)); err != nil {
-		return fmt.Errorf("error setting labels: %w", err)
+		return diag.Errorf("error setting labels: %s", err)
 	}
 
 	if err := d.Set("launch_template", flattenEksLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
-		return fmt.Errorf("error setting launch_template: %w", err)
+		return diag.Errorf("error setting launch_template: %s", err)
 	}
 
 	d.Set("node_group_name", nodeGroup.NodegroupName)
@@ -384,25 +417,37 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 
 	if err := d.Set("remote_access", flattenEksRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
-		return fmt.Errorf("error setting remote_access: %w", err)
+		return diag.Errorf("error setting remote_access: %s", err)
 	}
 
 	if err := d.Set("resources", flattenEksNodeGroupResources(nodeGroup.Resources)); err != nil {
-		return fmt.Errorf("error setting resources: %w", err)
+		return diag.Errorf("error setting resources: %s", err)
 	}
 
-	if err := d.Set("scaling_config", flattenEksNodeGroupScalingConfig(nodeGroup.ScalingConfig)); err != nil {
-		return fmt.Errorf("error setting scaling_config: %w", err)
+	if nodeGroup.ScalingConfig != nil {
+		if err := d.Set("scaling_config", []interface{}{flattenEksNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+			return diag.Errorf("error setting scaling_config: %s", err)
+		}
+	} else {
+		d.Set("scaling_config", nil)
 	}
 
 	d.Set("status", nodeGroup.Status)
 
 	if err := d.Set("subnet_ids", aws.StringValueSlice(nodeGroup.Subnets)); err != nil {
-		return fmt.Errorf("error setting subnets: %w", err)
+		return diag.Errorf("error setting subnets: %s", err)
 	}
 
 	if err := d.Set("taint", flattenEksTaints(nodeGroup.Taints)); err != nil {
-		return fmt.Errorf("error setting taint: %w", err)
+		return diag.Errorf("error setting taint: %s", err)
+	}
+
+	if nodeGroup.UpdateConfig != nil {
+		if err := d.Set("update_config", []interface{}{flattenEksNodeGroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
+			return diag.Errorf("error setting update_config: %s", err)
+		}
+	} else {
+		d.Set("update_config", nil)
 	}
 
 	d.Set("version", nodeGroup.Version)
@@ -411,23 +456,23 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("error setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("error setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEksNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).eksconn
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Do any version update first.
@@ -470,67 +515,74 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		output, err := conn.UpdateNodegroupVersion(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating EKS Node Group (%s) version: %w", d.Id(), err)
+			return diag.Errorf("error updating EKS Node Group (%s) version: %s", d.Id(), err)
 		}
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.NodegroupUpdateSuccessful(conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waiter.NodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for EKS Node Group (%s) version update (%s): %w", d.Id(), updateID, err)
+			return diag.Errorf("error waiting for EKS Node Group (%s) version update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
-	if d.HasChanges("labels", "scaling_config", "taint") {
+	if d.HasChanges("labels", "scaling_config", "taint", "update_config") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
+		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
 		input := &eks.UpdateNodegroupConfigInput{
 			ClientRequestToken: aws.String(resource.UniqueId()),
 			ClusterName:        aws.String(clusterName),
 			Labels:             expandEksUpdateLabelsPayload(oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
+			Taints:             expandEksUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List()),
 		}
 
-		if v := d.Get("scaling_config").([]interface{}); len(v) > 0 {
-			input.ScalingConfig = expandEksNodegroupScalingConfig(v)
+		if d.HasChange("scaling_config") {
+			if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ScalingConfig = expandEksNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
-		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
-		input.Taints = expandEksUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List())
+		if d.HasChange("update_config") {
+			if v, ok := d.GetOk("update_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.UpdateConfig = expandEksNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
 
 		output, err := conn.UpdateNodegroupConfig(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating EKS Node Group (%s) config: %w", d.Id(), err)
+			return diag.Errorf("error updating EKS Node Group (%s) config: %s", d.Id(), err)
 		}
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waiter.NodegroupUpdateSuccessful(conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waiter.NodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for EKS Node Group (%s) config update (%s): %w", d.Id(), updateID, err)
+			return diag.Errorf("error waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
 
-	return resourceAwsEksNodeGroupRead(d, meta)
+	return resourceAwsEksNodeGroupRead(ctx, d, meta)
 }
 
-func resourceAwsEksNodeGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEksNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).eksconn
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Node Group: %s", d.Id())
@@ -544,13 +596,13 @@ func resourceAwsEksNodeGroupDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EKS Node Group (%s): %w", d.Id(), err)
+		return diag.Errorf("error deleting EKS Node Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = waiter.NodegroupDeleted(conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.NodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EKS Node Group (%s) to delete: %w", d.Id(), err)
+		return diag.Errorf("error waiting for EKS Node Group (%s) to delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -580,28 +632,26 @@ func expandEksLaunchTemplateSpecification(l []interface{}) *eks.LaunchTemplateSp
 	return config
 }
 
-func expandEksNodegroupScalingConfig(l []interface{}) *eks.NodegroupScalingConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandEksNodegroupScalingConfig(tfMap map[string]interface{}) *eks.NodegroupScalingConfig {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &eks.NodegroupScalingConfig{}
 
-	config := &eks.NodegroupScalingConfig{}
-
-	if v, ok := m["desired_size"].(int); ok {
-		config.DesiredSize = aws.Int64(int64(v))
+	if v, ok := tfMap["desired_size"].(int); ok {
+		apiObject.DesiredSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["max_size"].(int); ok && v != 0 {
-		config.MaxSize = aws.Int64(int64(v))
+	if v, ok := tfMap["max_size"].(int); ok && v != 0 {
+		apiObject.MaxSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["min_size"].(int); ok {
-		config.MinSize = aws.Int64(int64(v))
+	if v, ok := tfMap["min_size"].(int); ok {
+		apiObject.MinSize = aws.Int64(int64(v))
 	}
 
-	return config
+	return apiObject
 }
 
 func expandEksTaints(l []interface{}) []*eks.Taint {
@@ -726,6 +776,24 @@ func expandEksRemoteAccessConfig(l []interface{}) *eks.RemoteAccessConfig {
 	return config
 }
 
+func expandEksNodegroupUpdateConfig(tfMap map[string]interface{}) *eks.NodegroupUpdateConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &eks.NodegroupUpdateConfig{}
+
+	if v, ok := tfMap["max_unavailable"].(int); ok && v != 0 {
+		apiObject.MaxUnavailable = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["max_unavailable_percentage"].(int); ok && v != 0 {
+		apiObject.MaxUnavailablePercentage = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
 func expandEksUpdateLabelsPayload(oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
 	// EKS Labels operate similarly to keyvaluetags
 	oldLabels := keyvaluetags.New(oldLabelsMap)
@@ -804,18 +872,44 @@ func flattenEksNodeGroupResources(resources *eks.NodegroupResources) []map[strin
 	return []map[string]interface{}{m}
 }
 
-func flattenEksNodeGroupScalingConfig(config *eks.NodegroupScalingConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenEksNodeGroupScalingConfig(apiObject *eks.NodegroupScalingConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"desired_size": aws.Int64Value(config.DesiredSize),
-		"max_size":     aws.Int64Value(config.MaxSize),
-		"min_size":     aws.Int64Value(config.MinSize),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DesiredSize; v != nil {
+		tfMap["desired_size"] = aws.Int64Value(v)
 	}
 
-	return []map[string]interface{}{m}
+	if v := apiObject.MaxSize; v != nil {
+		tfMap["max_size"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MinSize; v != nil {
+		tfMap["min_size"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenEksNodeGroupUpdateConfig(apiObject *eks.NodegroupUpdateConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MaxUnavailable; v != nil {
+		tfMap["max_unavailable"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MaxUnavailablePercentage; v != nil {
+		tfMap["max_unavailable_percentage"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }
 
 func flattenEksRemoteAccessConfig(config *eks.RemoteAccessConfig) []map[string]interface{} {

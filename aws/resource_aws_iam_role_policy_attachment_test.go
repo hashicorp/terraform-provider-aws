@@ -90,7 +90,7 @@ func TestAccAWSRolePolicyAttachment_disappears(t *testing.T) {
 
 func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
 	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
-	var role iam.GetRoleOutput
+	var role iam.Role
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	iamRoleResourceName := "aws_iam_role.test"
@@ -109,7 +109,7 @@ func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
 					testAccCheckAWSRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
 					// DeleteConflict: Cannot delete entity, must detach all policies first.
 					testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName),
-					testAccCheckAWSRoleDisappears(&role),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamRole(), iamRoleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

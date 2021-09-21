@@ -40,7 +40,11 @@ func CapacityProviderByARN(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, er
 func ClusterByARN(conn *ecs.ECS, arn string) (*ecs.DescribeClustersOutput, error) {
 	input := &ecs.DescribeClustersInput{
 		Clusters: []*string{aws.String(arn)},
-		Include:  []*string{aws.String(ecs.ClusterFieldTags), aws.String(ecs.ClusterFieldConfigurations)},
+		Include: []*string{
+			aws.String(ecs.ClusterFieldTags),
+			aws.String(ecs.ClusterFieldConfigurations),
+			aws.String(ecs.ClusterFieldSettings),
+		},
 	}
 
 	output, err := conn.DescribeClusters(input)

@@ -22,6 +22,12 @@ resource "aws_guardduty_detector" "example" {
 resource "aws_guardduty_organization_configuration" "example" {
   auto_enable = true
   detector_id = aws_guardduty_detector.example.id
+
+  datasources {
+    s3_logs {
+      auto_enable = true
+    }
+  }
 }
 ```
 
@@ -31,6 +37,16 @@ The following arguments are supported:
 
 * `auto_enable` - (Required) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
 * `detector_id` - (Required) The detector ID of the GuardDuty account.
+* `datasources` - (Optional) Configuration for the collected datasources.
+
+`datasources` supports the following:
+
+* `s3_logs` - (Optional) Configuration for the builds to store logs to S3.
+
+`s3_logs` supports the following:
+
+* `auto_enable` - (Optional) Set to `true` if you want S3 data event logs to be automatically enabled for new members of the organization. Default: `false`
+
 
 ## Attributes Reference
 

@@ -115,7 +115,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	rName := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
@@ -157,12 +157,14 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	domain := testAccRandomDomainName()
+	domainWildcard := fmt.Sprintf("*.%s", domain)
+	rName := fmt.Sprintf("%s.%s", acctest.RandString(8), domain)
 
 	caKey := tlsRsaPrivateKeyPem(2048)
 	caCertificate := tlsRsaX509SelfSignedCaCertificatePem(caKey)
 	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, "*.terraformtest.com")
+	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, domainWildcard)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -192,7 +194,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	rName := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
@@ -222,7 +224,7 @@ func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
 func TestAccAWSAPIGatewayDomainName_Tags(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	rName := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
@@ -270,7 +272,7 @@ func TestAccAWSAPIGatewayDomainName_Tags(t *testing.T) {
 func TestAccAWSAPIGatewayDomainName_disappears(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	rName := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)

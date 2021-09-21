@@ -17,14 +17,10 @@ Manages an AWS Elasticsearch Domain.
 ```terraform
 resource "aws_elasticsearch_domain" "example" {
   domain_name           = "example"
-  elasticsearch_version = "1.5"
+  elasticsearch_version = "7.10"
 
   cluster_config {
     instance_type = "r4.large.elasticsearch"
-  }
-
-  snapshot_options {
-    automated_snapshot_start_hour = 23
   }
 
   tags = {
@@ -163,7 +159,8 @@ resource "aws_elasticsearch_domain" "es" {
   elasticsearch_version = "6.3"
 
   cluster_config {
-    instance_type = "m4.large.elasticsearch"
+    instance_type          = "m4.large.elasticsearch"
+    zone_awareness_enabled = true
   }
 
   vpc_options {
@@ -193,10 +190,6 @@ resource "aws_elasticsearch_domain" "es" {
 }
 CONFIG
 
-  snapshot_options {
-    automated_snapshot_start_hour = 23
-  }
-
   tags = {
     Domain = "TestDomain"
   }
@@ -224,7 +217,7 @@ The following arguments are optional:
 * `encrypt_at_rest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html). Detailed below.
 * `log_publishing_options` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
 * `node_to_node_encryption` - (Optional) Configuration block for node-to-node encryption options. Detailed below.
-* `snapshot_options` - (Optional) Configuration block for snapshot related options. Detailed below.
+* `snapshot_options` - (Optional) Configuration block for snapshot related options. Detailed below. DEPRECATED. For domains running Elasticsearch 5.3 and later, Amazon ES takes hourly automated snapshots, making this setting irrelevant. For domains running earlier versions of Elasticsearch, Amazon ES takes daily automated snapshots.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_options` - (Optional) Configuration block for VPC related options. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)). Detailed below.
 

@@ -17,12 +17,13 @@ variable "workflow_labels" {
     "terraform-0.14"                 = "60dea9", # color:nomad
     "terraform-0.15"                 = "60dea9", # color:nomad
     "prerelease-tf-testing"          = "60dea9", # color:nomad
-    "documentation"                  = "f4ecff", # color:terraform secondary
     "technical-debt"                 = "d1ebff", # color:terraform accent
     "proposal"                       = "d1ebff", # color:terraform accent
+    "documentation"                  = "f4ecff", # color:terraform secondary
     "thinking"                       = "f4ecff", # color:terraform secondary
     "question"                       = "f4ecff", # color:terraform secondary
     "linter"                         = "f4ecff", # color:terraform secondary
+    "sweeper"                        = "f4ecff", # color:terraform secondary
     "size/XS"                        = "62d4dc", # color:lightest-darkest waypoint gradient
     "size/S"                         = "4ec3ce", # color:lightest-darkest waypoint gradient
     "size/M"                         = "3bb3c0", # color:lightest-darkest waypoint gradient

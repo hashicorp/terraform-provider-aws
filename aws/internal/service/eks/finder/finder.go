@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
 )
 
 func AddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
@@ -213,4 +214,36 @@ func NodegroupUpdateByClusterNameNodegroupNameAndID(conn *eks.EKS, clusterName, 
 	}
 
 	return output.Update, nil
+}
+
+func OidcIdentityProviderConfigByClusterNameAndConfigName(ctx context.Context, conn *eks.EKS, clusterName, configName string) (*eks.OidcIdentityProviderConfig, error) {
+	input := &eks.DescribeIdentityProviderConfigInput{
+		ClusterName: aws.String(clusterName),
+		IdentityProviderConfig: &eks.IdentityProviderConfig{
+			Name: aws.String(configName),
+			Type: aws.String(tfeks.IdentityProviderConfigTypeOidc),
+		},
+	}
+
+	output, err := conn.DescribeIdentityProviderConfigWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.IdentityProviderConfig == nil || output.IdentityProviderConfig.Oidc == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.IdentityProviderConfig.Oidc, nil
 }

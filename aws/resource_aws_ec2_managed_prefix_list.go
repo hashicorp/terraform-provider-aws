@@ -69,7 +69,6 @@ func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 			"max_entries": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"name": {
@@ -293,6 +292,11 @@ func resourceAwsEc2ManagedPrefixListUpdate(d *schema.ResourceData, meta interfac
 				//   InvalidRequest: The request received was invalid.
 				input.RemoveEntries = nil
 			}
+		}
+
+		if d.HasChange("max_entries") {
+			input.MaxEntries = aws.Int64(int64(d.Get("max_entries").(int)))
+			wait = true
 		}
 
 		_, err := conn.ModifyManagedPrefixList(input)

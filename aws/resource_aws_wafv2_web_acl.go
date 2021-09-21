@@ -177,7 +177,7 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = conn.CreateWebACL(params)
+		resp, err = conn.CreateWebACL(params)
 	}
 
 	if err != nil {
@@ -359,7 +359,7 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
-				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(),
+				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(level),
 				"not_statement":                         wafv2StatementSchema(level),
 				"or_statement":                          wafv2StatementSchema(level),
 				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
@@ -373,7 +373,7 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func wafv2ManagedRuleGroupStatementSchema() *schema.Schema {
+func wafv2ManagedRuleGroupStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -386,6 +386,7 @@ func wafv2ManagedRuleGroupStatementSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
+				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -626,11 +627,17 @@ func expandWafv2ManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGro
 	}
 
 	m := l[0].(map[string]interface{})
-	return &wafv2.ManagedRuleGroupStatement{
+	r := &wafv2.ManagedRuleGroupStatement{
 		ExcludedRules: expandWafv2ExcludedRules(m["excluded_rule"].([]interface{})),
 		Name:          aws.String(m["name"].(string)),
 		VendorName:    aws.String(m["vendor_name"].(string)),
 	}
+
+	if s, ok := m["scope_down_statement"].([]interface{}); ok && len(s) > 0 && s[0] != nil {
+		r.ScopeDownStatement = expandWafv2Statement(s[0].(map[string]interface{}))
+	}
+
+	return r
 }
 
 func expandWafv2RateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
@@ -818,37 +825,56 @@ func flattenWafv2DefaultAction(a *wafv2.DefaultAction) interface{} {
 	return []interface{}{m}
 }
 
-func flattenWafv2ManagedRuleGroupStatement(r *wafv2.ManagedRuleGroupStatement) interface{} {
-	if r == nil {
+func flattenWafv2ManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement) interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"excluded_rule": flattenWafv2ExcludedRules(r.ExcludedRules),
-		"name":          aws.StringValue(r.Name),
-		"vendor_name":   aws.StringValue(r.VendorName),
+	tfMap := map[string]interface{}{}
+
+	if apiObject.ExcludedRules != nil {
+		tfMap["excluded_rule"] = flattenWafv2ExcludedRules(apiObject.ExcludedRules)
 	}
 
-	return []interface{}{m}
+	if apiObject.Name != nil {
+		tfMap["name"] = aws.StringValue(apiObject.Name)
+	}
+
+	if apiObject.ScopeDownStatement != nil {
+		tfMap["scope_down_statement"] = []interface{}{flattenWafv2Statement(apiObject.ScopeDownStatement)}
+	}
+
+	if apiObject.VendorName != nil {
+		tfMap["vendor_name"] = aws.StringValue(apiObject.VendorName)
+	}
+
+	return []interface{}{tfMap}
 }
 
-func flattenWafv2RateBasedStatement(r *wafv2.RateBasedStatement) interface{} {
-	if r == nil {
+func flattenWafv2RateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"limit":                int(aws.Int64Value(r.Limit)),
-		"aggregate_key_type":   aws.StringValue(r.AggregateKeyType),
-		"forwarded_ip_config":  flattenWafv2ForwardedIPConfig(r.ForwardedIPConfig),
-		"scope_down_statement": nil,
+	tfMap := map[string]interface{}{}
+
+	if apiObject.AggregateKeyType != nil {
+		tfMap["aggregate_key_type"] = aws.StringValue(apiObject.AggregateKeyType)
 	}
 
-	if r.ScopeDownStatement != nil {
-		m["scope_down_statement"] = []interface{}{flattenWafv2Statement(r.ScopeDownStatement)}
+	if apiObject.ForwardedIPConfig != nil {
+		tfMap["forwarded_ip_config"] = flattenWafv2ForwardedIPConfig(apiObject.ForwardedIPConfig)
 	}
 
-	return []interface{}{m}
+	if apiObject.Limit != nil {
+		tfMap["limit"] = int(aws.Int64Value(apiObject.Limit))
+	}
+
+	if apiObject.ScopeDownStatement != nil {
+		tfMap["scope_down_statement"] = []interface{}{flattenWafv2Statement(apiObject.ScopeDownStatement)}
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenWafv2RuleGroupReferenceStatement(r *wafv2.RuleGroupReferenceStatement) interface{} {

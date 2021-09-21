@@ -637,21 +637,42 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		log.Printf("[DEBUG] Finding EC2 VPN Connection Transit Gateway Attachment: %s", input)
-		output, err := conn.DescribeTransitGatewayAttachments(input)
+
+		// At a large number of AWS Transit Gateway Attachments (999+), the AWS API call `DescribeTransitGatewayAttachments` will return
+		// an initial empty response with pagination token even when querying for a unique TGW Attachment.
+		// Thus, to continue iterating through response pages, even if a page is found to be empty (nil),
+		// we've changed the API call to `DescribeTransitGatewayAttachmentsPages`.
+
+		var results []*ec2.TransitGatewayAttachment
+
+		err := conn.DescribeTransitGatewayAttachmentsPages(input, func(page *ec2.DescribeTransitGatewayAttachmentsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, attachment := range page.TransitGatewayAttachments {
+				if attachment == nil {
+					continue
+				}
+				results = append(results, attachment)
+			}
+
+			return !lastPage
+		})
 
 		if err != nil {
 			return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
 		}
 
-		if output == nil || len(output.TransitGatewayAttachments) == 0 || output.TransitGatewayAttachments[0] == nil {
+		if len(results) == 0 || results[0] == nil {
 			return fmt.Errorf("error finding EC2 VPN Connection (%s) Transit Gateway Attachment: empty response", d.Id())
 		}
 
-		if len(output.TransitGatewayAttachments) > 1 {
+		if len(results) > 1 {
 			return fmt.Errorf("error reading EC2 VPN Connection (%s) Transit Gateway Attachment: multiple responses", d.Id())
 		}
 
-		transitGatewayAttachmentID = aws.StringValue(output.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
+		transitGatewayAttachmentID = aws.StringValue(results[0].TransitGatewayAttachmentId)
 	}
 
 	// Set attributes under the user's control.

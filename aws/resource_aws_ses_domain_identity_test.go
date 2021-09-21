@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -68,9 +67,7 @@ func testSweepSesIdentities(region, identityType string) error {
 }
 
 func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandString(10))
+	domain := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
@@ -90,9 +87,7 @@ func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 }
 
 func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandString(10))
+	domain := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
@@ -115,9 +110,7 @@ func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 // TestAccAWSSESDomainIdentity_trailingPeriod updated in 3.0 to account for domain plan-time validation
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
 func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com.",
-		acctest.RandString(10))
+	domain := testAccRandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },

@@ -12,7 +12,6 @@ import (
 )
 
 func testAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
-	callerIdentityName := "data.aws_caller_identity.current"
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
@@ -25,9 +24,9 @@ func testAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
 				Config: testAccAWSLakeFormationDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", callerIdentityName, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "admins.0", callerIdentityName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},
 		},
@@ -56,7 +55,6 @@ func testAccAWSLakeFormationDataLakeSettings_disappears(t *testing.T) {
 }
 
 func testAccAWSLakeFormationDataLakeSettings_withoutCatalogId(t *testing.T) {
-	callerIdentityName := "data.aws_caller_identity.current"
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
@@ -70,7 +68,7 @@ func testAccAWSLakeFormationDataLakeSettings_withoutCatalogId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "admins.0", callerIdentityName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},
 		},
@@ -137,6 +135,10 @@ func testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName string) res
 const testAccAWSLakeFormationDataLakeSettingsConfig_basic = `
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_lakeformation_data_lake_settings" "test" {
   catalog_id = data.aws_caller_identity.current.account_id
 
@@ -150,7 +152,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
     permissions = ["ALL"]
   }
 
-  admins                  = [data.aws_caller_identity.current.arn]
+  admins                  = [data.aws_iam_session_context.current.issuer_arn]
   trusted_resource_owners = [data.aws_caller_identity.current.account_id]
 }
 `
@@ -158,7 +160,11 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 const testAccAWSLakeFormationDataLakeSettingsConfig_withoutCatalogId = `
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_caller_identity.current.arn]
+  admins = [data.aws_iam_session_context.current.issuer_arn]
 }
 `

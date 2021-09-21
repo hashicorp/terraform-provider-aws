@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -18,6 +20,8 @@ const (
 	NfsFileShareStatusUnknown            = "Unknown"
 	SmbFileShareStatusNotFound           = "NotFound"
 	SmbFileShareStatusUnknown            = "Unknown"
+	FileSystemAssociationStatusNotFound  = "NotFound"
+	FileSystemAssociationStatusUnknown   = "Unknown"
 )
 
 func StorageGatewayGatewayStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
@@ -111,27 +115,37 @@ func NfsFileShareStatus(conn *storagegateway.StorageGateway, fileShareArn string
 	}
 }
 
-func SmbFileShareStatus(conn *storagegateway.StorageGateway, fileShareArn string) resource.StateRefreshFunc {
+func SMBFileShareStatus(conn *storagegateway.StorageGateway, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &storagegateway.DescribeSMBFileSharesInput{
-			FileShareARNList: []*string{aws.String(fileShareArn)},
+		output, err := finder.SMBFileShareByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		log.Printf("[DEBUG] Reading Storage Gateway SMB File Share: %s", input)
-		output, err := conn.DescribeSMBFileShares(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-				return nil, SmbFileShareStatusNotFound, nil
-			}
-			return nil, SmbFileShareStatusUnknown, fmt.Errorf("error reading Storage Gateway SMB File Share: %w", err)
+			return nil, "", err
 		}
 
-		if output == nil || len(output.SMBFileShareInfoList) == 0 || output.SMBFileShareInfoList[0] == nil {
-			return nil, SmbFileShareStatusNotFound, nil
+		return output, aws.StringValue(output.FileShareStatus), nil
+	}
+}
+
+func FileSystemAssociationStatus(conn *storagegateway.StorageGateway, fileSystemArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+
+		output, err := finder.FileSystemAssociationByARN(conn, fileSystemArn)
+
+		// there was an unhandled error in the Finder
+		if err != nil {
+			return nil, "", err
 		}
 
-		fileshare := output.SMBFileShareInfoList[0]
+		// no error, and no File System Association found
+		if output == nil {
+			return nil, FileSystemAssociationStatusNotFound, nil
+		}
 
-		return fileshare, aws.StringValue(fileshare.FileShareStatus), nil
+		return output, aws.StringValue(output.FileSystemAssociationStatus), nil
 	}
 }

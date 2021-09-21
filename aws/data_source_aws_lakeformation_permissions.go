@@ -277,6 +277,18 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 {
 		// since perm list could include TableWithColumns, get the right one
 		for _, perm := range cleanPermissions {
+			if perm.Resource == nil {
+				continue
+			}
+
+			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
+				if err := d.Set("table", []interface{}{flattenLakeFormationTableWithColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
+					return fmt.Errorf("error setting table: %w", err)
+				}
+				tableSet = true
+				break
+			}
+
 			if perm.Resource.Table != nil {
 				if err := d.Set("table", []interface{}{flattenLakeFormationTableResource(perm.Resource.Table)}); err != nil {
 					return fmt.Errorf("error setting table: %w", err)

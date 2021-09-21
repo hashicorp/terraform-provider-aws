@@ -18,6 +18,8 @@ func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
 
+	sourceLocation := testAccAWSCodeBuildBitbucketSourceLocationFromEnv()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
@@ -25,7 +27,7 @@ func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_Bitbucket(rName),
+				Config: testAccAWSCodeBuildWebhookConfig_Bitbucket(rName, sourceLocation),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
@@ -114,6 +116,48 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
 					resource.TestMatchResourceAttr(resourceName, "secret", regexp.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, "url", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildWebhook_BuildType(t *testing.T) {
+	var webhook codebuild.Webhook
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_BuildType(rName, "BUILD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "build_type", "BUILD"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_GitHub(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_BuildType(rName, "BUILD_BATCH"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "build_type", "BUILD_BATCH"),
 				),
 			},
 			{
@@ -287,8 +331,10 @@ func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webho
 	}
 }
 
-func testAccAWSCodeBuildWebhookConfig_Bitbucket(rName string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName) + `
+func testAccAWSCodeBuildWebhookConfig_Bitbucket(rName, sourceLocation string) string {
+	return composeConfig(
+		testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName, sourceLocation),
+		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 }
@@ -296,7 +342,9 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccAWSCodeBuildWebhookConfig_GitHub(rName string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
+	return composeConfig(
+		testAccAWSCodeBuildProjectConfig_basic(rName),
+		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 }
@@ -304,9 +352,9 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName string, branchFilter string) string {
-	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  name         = "%s"
+  name         = %[1]q
   service_role = aws_iam_role.test.arn
 
   artifacts {
@@ -327,22 +375,33 @@ resource "aws_codebuild_project" "test" {
 
 resource "aws_codebuild_webhook" "test" {
   project_name  = aws_codebuild_project.test.name
-  branch_filter = "%s"
+  branch_filter = %[2]q
 }
-`, rName, branchFilter)
+`, rName, branchFilter))
+}
+
+func testAccAWSCodeBuildWebhookConfig_BuildType(rName, branchFilter string) string {
+	return composeConfig(testAccAWSCodeBuildProjectConfig_basic(rName), fmt.Sprintf(`
+resource "aws_codebuild_webhook" "test" {
+  build_type   = %[1]q
+  project_name = aws_codebuild_project.test.name
+}
+`, branchFilter))
 }
 
 func testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, branchFilter string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName)+`
+	return composeConfig(testAccAWSCodeBuildProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
-  branch_filter = "%s"
+  branch_filter = %[1]q
   project_name  = aws_codebuild_project.test.name
 }
-`, branchFilter)
+`, branchFilter))
 }
 
 func testAccAWSCodeBuildWebhookConfig_FilterGroup(rName string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
+	return composeConfig(
+		testAccAWSCodeBuildProjectConfig_basic(rName),
+		`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 

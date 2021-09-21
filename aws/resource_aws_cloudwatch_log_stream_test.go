@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -119,6 +120,10 @@ func testAccCheckAWSCloudWatchLogStreamDestroy(s *terraform.State) error {
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
 		_, exists, err := lookupCloudWatchLogStream(conn, rs.Primary.ID, logGroupName, nil)
+
+		if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
+			continue
+		}
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch Log Stream (%s): %w", rs.Primary.ID, err)

@@ -9,7 +9,7 @@ import (
 
 const (
 	PermissionsReadyTimeout       = 1 * time.Minute
-	PermissionsDeleteRetryTimeout = 3 * time.Minute
+	PermissionsDeleteRetryTimeout = 30 * time.Second
 
 	StatusAvailable = "AVAILABLE"
 	StatusNotFound  = "NOT FOUND"

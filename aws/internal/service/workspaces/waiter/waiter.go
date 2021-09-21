@@ -8,6 +8,9 @@ import (
 )
 
 const (
+	DirectoryDeregisterInvalidResourceStateTimeout = 2 * time.Minute
+	DirectoryRegisterInvalidResourceStateTimeout   = 2 * time.Minute
+
 	// Maximum amount of time to wait for a Directory to return Registered
 	DirectoryRegisteredTimeout = 10 * time.Minute
 
@@ -29,9 +32,7 @@ const (
 
 func DirectoryRegistered(conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			workspaces.WorkspaceDirectoryStateRegistering,
-		},
+		Pending: []string{workspaces.WorkspaceDirectoryStateRegistering},
 		Target:  []string{workspaces.WorkspaceDirectoryStateRegistered},
 		Refresh: DirectoryState(conn, directoryID),
 		Timeout: DirectoryRegisteredTimeout,
@@ -53,9 +54,7 @@ func DirectoryDeregistered(conn *workspaces.WorkSpaces, directoryID string) (*wo
 			workspaces.WorkspaceDirectoryStateRegistered,
 			workspaces.WorkspaceDirectoryStateDeregistering,
 		},
-		Target: []string{
-			workspaces.WorkspaceDirectoryStateDeregistered,
-		},
+		Target:  []string{},
 		Refresh: DirectoryState(conn, directoryID),
 		Timeout: DirectoryDeregisteredTimeout,
 	}

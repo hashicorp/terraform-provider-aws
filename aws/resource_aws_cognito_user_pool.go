@@ -1147,8 +1147,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		// IAM roles & policies can take some time to propagate and be attached
 		// to the User Pool.
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
-			var err error
-			_, err = conn.UpdateUserPool(params)
+			_, err := conn.UpdateUserPool(params)
 			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
 				return resource.RetryableError(err)
@@ -1356,6 +1355,10 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 
 	if s.EmailSendingAccount != nil {
 		m["email_sending_account"] = aws.StringValue(s.EmailSendingAccount)
+	}
+
+	if s.ConfigurationSet != nil {
+		m["configuration_set"] = aws.StringValue(s.ConfigurationSet)
 	}
 
 	if len(m) > 0 {

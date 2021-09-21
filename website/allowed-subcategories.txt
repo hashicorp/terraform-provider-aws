@@ -9,6 +9,7 @@ AppConfig
 AppMesh
 App Runner
 AppSync
+AppStream
 Application Autoscaling
 Athena
 Audit Manager
@@ -94,6 +95,7 @@ Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
 MediaStore
+MemoryDB
 Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
@@ -110,6 +112,8 @@ Redshift
 Resource Groups
 Resource Groups Tagging API
 Route53 Domains
+Route53 Recovery Control Config
+Route53 Recovery Readiness
 Route53 Resolver
 Route53
 S3

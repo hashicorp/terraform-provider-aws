@@ -790,7 +790,7 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 
 func TestAccAWSCognitoUserPool_withEmailConfigurationSource(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	replyTo := fmt.Sprintf("tf-acc-reply-%s@terraformtesting.com", rName)
+	replyTo := testAccDefaultEmailAddress
 	resourceName := "aws_cognito_user_pool.test"
 	resourceName2 := "aws_ses_configuration_set.test"
 

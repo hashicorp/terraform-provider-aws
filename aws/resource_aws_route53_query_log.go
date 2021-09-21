@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -19,6 +20,10 @@ func resourceAwsRoute53QueryLog() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cloudwatch_log_group_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -64,12 +69,24 @@ func resourceAwsRoute53QueryLogRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading Route53 query logging configuration: %#v", input)
 	out, err := r53.GetQueryLoggingConfig(input)
 	if err != nil {
+		if isAWSErr(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") || isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+			log.Printf("[WARN] Route53 Query Logging Config (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error reading Route53 query logging configuration: %s", err)
 	}
 	log.Printf("[DEBUG] Route53 query logging configuration received: %#v", out)
 
 	d.Set("cloudwatch_log_group_arn", out.QueryLoggingConfig.CloudWatchLogsLogGroupArn)
 	d.Set("zone_id", out.QueryLoggingConfig.HostedZoneId)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "route53",
+		Resource:  fmt.Sprintf("queryloggingconfig/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }
@@ -82,8 +99,12 @@ func resourceAwsRoute53QueryLogDelete(d *schema.ResourceData, meta interface{}) 
 	}
 	log.Printf("[DEBUG] Deleting Route53 query logging configuration: %#v", input)
 	_, err := r53.DeleteQueryLoggingConfig(input)
+	if isAWSErr(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting Route53 query logging configuration: %s", err)
+		return fmt.Errorf("error deleting Route53 query logging configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil

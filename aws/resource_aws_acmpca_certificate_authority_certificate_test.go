@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/finder"
@@ -14,8 +13,9 @@ import (
 
 func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 	var v acmpca.GetCertificateAuthorityCertificateOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
+
+	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,7 +24,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(rName),
+				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
@@ -43,9 +43,10 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 
 func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) {
 	var v acmpca.GetCertificateAuthorityCertificateOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 	updatedResourceName := "aws_acmpca_certificate_authority_certificate.updated"
+
+	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,7 +55,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) 
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(rName),
+				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
@@ -63,7 +64,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(rName),
+				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(updatedResourceName, &v),
 					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
@@ -77,8 +78,9 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) 
 
 func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T) {
 	var v acmpca.GetCertificateAuthorityCertificateOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
+
+	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -87,7 +89,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T)
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(rName),
+				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
@@ -127,7 +129,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName str
 	}
 }
 
-func testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(rName string) string {
+func testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -158,16 +160,16 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
 
 data "aws_partition" "current" {}
-`, rName)
+`, commonName)
 }
 
-func testAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(rName string) string {
+func testAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "updated" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -198,16 +200,16 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
 
 data "aws_partition" "current" {}
-`, rName)
+`, commonName)
 }
 
-func testAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(rName string) string {
+func testAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -238,7 +240,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "sub.%[1]s.com"
+      common_name = "sub.%[1]s"
     }
   }
 }
@@ -252,7 +254,7 @@ resource "aws_acmpca_certificate_authority" "root" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
@@ -278,5 +280,5 @@ resource "aws_acmpca_certificate" "root" {
 }
 
 data "aws_partition" "current" {}
-`, rName)
+`, commonName)
 }

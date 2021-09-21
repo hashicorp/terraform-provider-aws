@@ -286,6 +286,8 @@ func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 
 func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -361,6 +363,10 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 			params.HealthCheckPort = aws.String(healthCheck["port"].(string))
 			params.HealthCheckProtocol = aws.String(healthCheckProtocol)
 		}
+	}
+
+	if len(tags) > 0 {
+		params.Tags = tags.IgnoreAws().Elbv2Tags()
 	}
 
 	resp, err := conn.CreateTargetGroup(params)

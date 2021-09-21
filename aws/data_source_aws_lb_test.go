@@ -10,10 +10,11 @@ import (
 )
 
 func TestAccDataSourceAWSLB_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandString(10))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_lb.alb_test_with_name"
-	resourceName := "aws_lb.alb_test"
+	dataSourceName3 := "data.aws_lb.alb_test_with_tags"
+	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
@@ -21,14 +22,15 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBConfigBasic(lbName),
+				Config: testAccDataSourceAWSLBConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_groups.#", resourceName, "security_groups.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.TestName", resourceName, "tags.TestName"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "idle_timeout", resourceName, "idle_timeout"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
@@ -42,7 +44,8 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "security_groups.#", resourceName, "security_groups.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.TestName", resourceName, "tags.TestName"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "idle_timeout", resourceName, "idle_timeout"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "vpc_id", resourceName, "vpc_id"),
@@ -51,6 +54,21 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "security_groups.#", resourceName, "security_groups.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.Config", resourceName, "tags.Config"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "idle_timeout", resourceName, "idle_timeout"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "zone_id", resourceName, "zone_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "ip_address_type", resourceName, "ip_address_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 				),
 			},
 		},
@@ -58,9 +76,9 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLB_outpost(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawslb-outpost-%s", acctest.RandString(10))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
-	resourceName := "aws_lb.alb_test"
+	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
@@ -68,14 +86,15 @@ func TestAccDataSourceAWSLB_outpost(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBConfigOutpost(lbName),
+				Config: testAccDataSourceAWSLBConfigOutpost(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_groups.#", resourceName, "security_groups.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.TestName", resourceName, "tags.TestName"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "idle_timeout", resourceName, "idle_timeout"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
@@ -92,10 +111,11 @@ func TestAccDataSourceAWSLB_outpost(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandString(10))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"
-	resourceName := "aws_alb.alb_test"
+	dataSourceName3 := "data.aws_alb.alb_test_with_tags"
+	resourceName := "aws_alb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
@@ -103,14 +123,15 @@ func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBConfigBackardsCompatibility(lbName),
+				Config: testAccDataSourceAWSLBConfigBackwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName1, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "security_groups.#", resourceName, "security_groups.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "tags.TestName", resourceName, "tags.TestName"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "idle_timeout", resourceName, "idle_timeout"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "vpc_id", resourceName, "vpc_id"),
@@ -127,7 +148,8 @@ func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "security_groups.#", resourceName, "security_groups.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.TestName", resourceName, "tags.TestName"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "tags.Config", resourceName, "tags.Config"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "idle_timeout", resourceName, "idle_timeout"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "vpc_id", resourceName, "vpc_id"),
@@ -136,28 +158,47 @@ func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_http2", resourceName, "enable_http2"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "access_logs.#", resourceName, "access_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_http2", resourceName, "enable_http2"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "access_logs.#", resourceName, "access_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "security_groups.#", resourceName, "security_groups.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "tags.Config", resourceName, "tags.Config"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_deletion_protection", resourceName, "enable_deletion_protection"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "idle_timeout", resourceName, "idle_timeout"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "zone_id", resourceName, "zone_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "ip_address_type", resourceName, "ip_address_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_http2", resourceName, "enable_http2"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "access_logs.#", resourceName, "access_logs.#"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAWSLBConfigBasic(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "alb_test" {
-  name            = "%s"
+func testAccDataSourceAWSLBConfigBasic(rName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
-    TestName = "TestAccAWSALB_basic"
+    Name   = %[1]q
+    Config = "Basic"
   }
 }
 
@@ -166,39 +207,30 @@ variable "subnets" {
   type    = list(string)
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-lb-data-source-basic"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-lb-data-source-basic"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -215,21 +247,25 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    TestName = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 data "aws_lb" "alb_test_with_arn" {
-  arn = aws_lb.alb_test.arn
+  arn = aws_lb.test.arn
 }
 
 data "aws_lb" "alb_test_with_name" {
-  name = aws_lb.alb_test.name
-}
-`, lbName)
+  name = aws_lb.test.name
 }
 
-func testAccDataSourceAWSLBConfigOutpost(lbName string) string {
+data "aws_lb" "alb_test_with_tags" {
+  tags = aws_lb.test.tags
+}
+`, rName))
+}
+
+func testAccDataSourceAWSLBConfigOutpost(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -237,43 +273,44 @@ data "aws_outposts_outpost" "test" {
   id = tolist(data.aws_outposts_outposts.test.ids)[0]
 }
 
-resource "aws_lb" "alb_test" {
-  name            = "%s"
+resource "aws_lb" "test" {
+  name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test.id]
+  security_groups = [aws_security_group.test.id]
+  subnets         = [aws_subnet.test.id]
 
   idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
-    TestName = "TestAccAWSALB_outpost"
+    Name   = %[1]q
+    Config = "Outposts"
   }
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-lb-data-source-outpost"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alb_test" {
-  vpc_id            = aws_vpc.alb_test.id
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.0.0/24"
   availability_zone = data.aws_outposts_outpost.test.availability_zone
   outpost_arn       = data.aws_outposts_outpost.test.arn
 
   tags = {
-    Name = "tf-acc-lb-data-source-outpost"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -290,29 +327,30 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    TestName = "TestAccAWSALB_outpost"
+    Name = %[1]q
   }
 }
 
 data "aws_lb" "alb_test_with_arn" {
-  arn = aws_lb.alb_test.arn
+  arn = aws_lb.test.arn
 }
-`, lbName)
+`, rName)
 }
 
-func testAccDataSourceAWSLBConfigBackardsCompatibility(albName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb" "alb_test" {
-  name            = "%s"
+func testAccDataSourceAWSLBConfigBackwardsCompatibility(rName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_alb" "test" {
+  name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
-    TestName = "TestAccAWSALB_basic"
+    Name   = %[1]q
+    Config = "BackwardsCompatibility"
   }
 }
 
@@ -321,39 +359,30 @@ variable "subnets" {
   type    = list(string)
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-lb-data-source-bc"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-lb-data-source-bc"
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -370,16 +399,20 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    TestName = "TestAccAWSALB_basic"
+    Name = %[1]q
   }
 }
 
 data "aws_alb" "alb_test_with_arn" {
-  arn = aws_alb.alb_test.arn
+  arn = aws_alb.test.arn
 }
 
 data "aws_alb" "alb_test_with_name" {
-  name = aws_alb.alb_test.name
+  name = aws_alb.test.name
 }
-`, albName)
+
+data "aws_alb" "alb_test_with_tags" {
+  tags = aws_alb.test.tags
+}
+`, rName))
 }

@@ -58,7 +58,6 @@ func AccessPointDeleted(conn *efs.EFS, accessPointId string) (*efs.AccessPointDe
 	return nil, err
 }
 
-// FileSystemAvailable waits for an Operation to return Available
 func FileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateCreating, efs.LifeCycleStateUpdating},
@@ -78,7 +77,6 @@ func FileSystemAvailable(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDes
 	return nil, err
 }
 
-// FileSystemDeleted waits for an Operation to return Deleted
 func FileSystemDeleted(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting},
