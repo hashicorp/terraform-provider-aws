@@ -13,9 +13,9 @@ const (
 	StackOperationTimeout = 4 * time.Minute
 
 	// FleetStateTimeout Maximum amount of time to wait for the FleetState to be RUNNING or STOPPED
-	FleetStateTimeout = 60 * time.Minute
+	FleetStateTimeout = 180 * time.Minute
 	// FleetOperationTimeout Maximum amount of time to wait for Fleet operation eventual consistency
-	FleetOperationTimeout = 4 * time.Minute
+	FleetOperationTimeout = 15 * time.Minute
 )
 
 // StackStateDeleted waits for a deleted stack

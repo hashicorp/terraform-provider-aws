@@ -311,19 +311,18 @@ resource "aws_appstream_fleet" "test" {
 }
 
 func testAccAwsAppStreamFleetConfigComplete(name, description, fleetType, instanceType string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_vpc" "example" {
-  cidr_block = "192.168.0.0/16"
-}
-
-resource "aws_subnet" "example" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "192.168.0.0/24"
-  vpc_id            = aws_vpc.example.id
+resource "aws_subnet" "test" {
+  count             = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
 }
 
 resource "aws_appstream_fleet" "test" {
@@ -342,26 +341,25 @@ resource "aws_appstream_fleet" "test" {
   max_user_duration_in_seconds       = 1000
 
   vpc_config {
-    subnet_ids = [aws_subnet.example.id]
+    subnet_ids = aws_subnet.test.*.id
   }
 }
-`, name, description, fleetType, instanceType)
+`, name, description, fleetType, instanceType))
 }
 
 func testAccAwsAppStreamFleetConfigCompleteWithoutStopping(name, description, fleetType, instanceType, displayName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_vpc" "example" {
-  cidr_block = "192.168.0.0/16"
-}
-
-resource "aws_subnet" "example" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "192.168.0.0/24"
-  vpc_id            = aws_vpc.example.id
+resource "aws_subnet" "test" {
+  count             = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
 }
 
 resource "aws_appstream_fleet" "test" {
@@ -381,14 +379,27 @@ resource "aws_appstream_fleet" "test" {
   max_user_duration_in_seconds       = 1000
 
   vpc_config {
-    subnet_ids = [aws_subnet.example.id]
+    subnet_ids = aws_subnet.test.*.id
   }
 }
-`, name, description, fleetType, instanceType, displayName)
+`, name, description, fleetType, instanceType, displayName))
 }
 
 func testAccAwsAppStreamFleetConfigWithTags(name, description, fleetType, instanceType, displayName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count             = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+}
+
 resource "aws_appstream_fleet" "test" {
   name       = %[1]q
   image_name = "Amazon-AppStream2-Sample-Image-02-04-2019"
@@ -408,6 +419,10 @@ resource "aws_appstream_fleet" "test" {
   tags = {
     Key = "value"
   }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test.*.id
+  }
 }
-`, name, description, fleetType, instanceType, displayName)
+`, name, description, fleetType, instanceType, displayName))
 }
