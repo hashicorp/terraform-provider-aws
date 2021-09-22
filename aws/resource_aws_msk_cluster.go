@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -39,6 +40,7 @@ func resourceAwsMskCluster() *schema.Resource {
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(string) < old.(string)
 			}),
+			customizeDiffValidateClientAuthentication,
 			SetTagsDiff,
 		),
 		Schema: map[string]*schema.Schema{
@@ -106,50 +108,51 @@ func resourceAwsMskCluster() *schema.Resource {
 			},
 			"client_authentication": {
 				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"sasl": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"scram": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										ForceNew: true,
 									},
 									"iam": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										ForceNew: true,
 									},
 								},
 							},
-							ConflictsWith: []string{"client_authentication.0.tls"},
 						},
 						"tls": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"certificate_authority_arns": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validateArn,
 										},
 									},
+									"enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
 								},
 							},
+						},
+						"unauthenticated": {
+							Type:     schema.TypeBool,
+							Required: true,
 						},
 					},
 				},
@@ -203,14 +206,12 @@ func resourceAwsMskCluster() *schema.Resource {
 							Type:             schema.TypeList,
 							Optional:         true,
 							DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
-							ForceNew:         true,
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_broker": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ForceNew:     true,
 										Default:      kafka.ClientBrokerTls,
 										ValidateFunc: validation.StringInSlice(kafka.ClientBroker_Values(), false),
 									},
@@ -643,6 +644,40 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	if d.HasChanges("encryption_info", "client_authentication") {
+
+		input := &kafka.UpdateSecurityInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+		}
+
+		if d.HasChange("client_authentication") {
+			input.ClientAuthentication = expandMskClusterClientAuthentication(d.Get("client_authentication").([]interface{}))
+		}
+
+		if d.HasChange("encryption_info") {
+			input.EncryptionInfo = expandMskClusterEncryptionInfo(d.Get("encryption_info").([]interface{}))
+		}
+
+		output, err := conn.UpdateSecurity(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating MSK Cluster (%s) security: %w", d.Id(), err)
+		}
+
+		if output == nil {
+			return fmt.Errorf("error updating security for MSK Cluster (%s) kafka security: empty response", d.Id())
+		}
+
+		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -676,6 +711,56 @@ func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error waiting for MSK Cluster (%s) delete: %w", d.Id(), err)
 	}
 
+	return nil
+}
+
+func customizeDiffValidateClientAuthentication(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	iam := diff.Get("client_authentication.0.sasl.0.iam").(bool)
+	scram := diff.Get("client_authentication.0.sasl.0.scram").(bool)
+	mtls := diff.Get("client_authentication.0.tls.0.enabled").(bool)
+	uauth := diff.Get("client_authentication.0.unauthenticated").(bool)
+
+	// at least one authentication option should be enabled
+	if !iam && !scram && !mtls && !uauth {
+		return errors.New(`At least one client-authentication option must be enabled`)
+	}
+
+	arns := diff.Get("client_authentication.0.tls.0.certificate_authority_arns").(*schema.Set)
+
+	// tls must be enabled if certificate arns are provided
+	if !mtls && arns != nil && arns.Len() > 0 {
+		return errors.New(`certificate authority ARNs must be empty to disable client authentication using TLS`)
+	}
+
+	cb := diff.Get("encryption_info.0.encryption_in_transit.0.client_broker").(string)
+	ic := diff.Get("encryption_info.0.encryption_in_transit.0.in_cluster").(bool)
+
+	// tls requires in-cluster encryption and TLS or TLS_PLAINTEXT encryption options
+	if mtls {
+		if !ic {
+			return errors.New(`mTLS authentication requires in-cluster encryption to be enabled`)
+		}
+		if cb != kafka.ClientBrokerTls && cb != kafka.ClientBrokerTlsPlaintext {
+			return errors.New(`mTLS authentication requires TLS or TLS_PLAINTEXT client-broker encryption options`)
+		}
+		if arns == nil || arns.Len() == 0 {
+			return errors.New(`certificate authority ARNs must be specified to enable client authentication using TLS`)
+		}
+	}
+
+	// scram/iam requires in-cluster encryption and TLS encryption
+	if iam || scram {
+		if !ic {
+			return errors.New(`sasl/scram and sasl/iam authentication requires in-cluster encryption to be enabled`)
+		}
+		if cb != kafka.ClientBrokerTls && cb != kafka.ClientBrokerTlsPlaintext  {
+			return errors.New(`sasl/scram authentication requires TLS or TLS_PLAINTEXT client-broker encryption options`)
+		}
+		// SASL with TLS_PLAINTEXT requires unauthenticated option to be enabled
+		if cb == kafka.ClientBrokerTlsPlaintext && !uauth{
+			return errors.New(`sasl/scram authentication with TLS_PLAINTEXT client-broker encryption requires unauthenticated access to be enabled`)
+		}
+	}
 	return nil
 }
 
@@ -716,6 +801,12 @@ func expandMskClusterClientAuthentication(l []interface{}) *kafka.ClientAuthenti
 
 	if v, ok := m["tls"].([]interface{}); ok {
 		ca.Tls = expandMskClusterTls(v)
+	}
+
+	if v, ok := m["unauthenticated"].(bool); ok {
+		ca.Unauthenticated = &kafka.Unauthenticated{
+			Enabled: aws.Bool(v),
+		}
 	}
 
 	return ca
@@ -807,6 +898,7 @@ func expandMskClusterTls(l []interface{}) *kafka.Tls {
 
 	tls := &kafka.Tls{
 		CertificateAuthorityArnList: expandStringSet(m["certificate_authority_arns"].(*schema.Set)),
+		Enabled:                     aws.Bool(m["enabled"].(bool)),
 	}
 
 	return tls
@@ -971,8 +1063,9 @@ func flattenMskClientAuthentication(ca *kafka.ClientAuthentication) []map[string
 	}
 
 	m := map[string]interface{}{
-		"sasl": flattenMskSasl(ca.Sasl),
-		"tls":  flattenMskTls(ca.Tls),
+		"sasl":            flattenMskSasl(ca.Sasl),
+		"tls":             flattenMskTls(ca.Tls),
+		"unauthenticated": flattenMskUnauthenticated(ca.Unauthenticated),
 	}
 
 	return []map[string]interface{}{m}
@@ -1053,9 +1146,18 @@ func flattenMskTls(tls *kafka.Tls) []map[string]interface{} {
 
 	m := map[string]interface{}{
 		"certificate_authority_arns": aws.StringValueSlice(tls.CertificateAuthorityArnList),
+		"enabled":                    aws.BoolValue(tls.Enabled),
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenMskUnauthenticated(uauth *kafka.Unauthenticated) bool {
+	if uauth == nil {
+		return false
+	}
+
+	return aws.BoolValue(uauth.Enabled)
 }
 
 func flattenMskOpenMonitoring(e *kafka.OpenMonitoring) []map[string]interface{} {

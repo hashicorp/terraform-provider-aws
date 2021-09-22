@@ -266,7 +266,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
 				Config: testAccMskClusterConfigClientAuthenticationSaslScram(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster2),
-					testAccCheckMskClusterRecreated(&cluster1, &cluster2),
+					testAccCheckMskClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
@@ -324,7 +324,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 				Config: testAccMskClusterConfigClientAuthenticationSaslIam(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster2),
-					testAccCheckMskClusterRecreated(&cluster1, &cluster2),
+					testAccCheckMskClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
@@ -388,6 +388,63 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 			},
 			{
 				Config: testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam_Sasl_Scram_Tls_Unauthenticated(t *testing.T) {
+	var cluster kafka.ClusterInfo
+	var ca acmpca.CertificateAuthority
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
+	commonName := testAccRandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			// We need to create and activate the CA before creating the MSK cluster.
+			{
+				Config: testAccMskClusterConfigRootCA(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
+				),
+			},
+			{
+				Config: testAccMskClusterConfigClientAuthenticationSaslTlsUnuathenticated(rName, commonName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslScramRegexp),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslIamRegexp),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "true"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+			{
+				Config: testAccMskClusterConfigClientAuthenticationSaslTlsUnuathenticated(rName, commonName),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
@@ -474,7 +531,7 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionAtRestKmsKeyArn(t *testing.T)
 }
 
 func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_ClientBroker(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.ClusterInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_cluster.test"
 
@@ -505,12 +562,26 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_ClientBroker(t *tes
 					"current_version",
 				},
 			},
+			{
+				Config: testAccMskClusterConfigEncryptionInfoEncryptionInTransitClientBroker(rName, "TLS_PLAINTEXT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster2),
+					testAccCheckMskClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS_PLAINTEXT"),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", mskClusterBoostrapBrokersRegexp),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
+					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers"),
+				),
+			},
 		},
 	})
 }
 
 func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_InCluster(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
+	var cluster1, cluster2 kafka.ClusterInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_cluster.test"
 
@@ -536,6 +607,16 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_InCluster(t *testin
 				ImportStateVerifyIgnore: []string{
 					"current_version",
 				},
+			},
+			{
+				Config: testAccMskClusterConfigEncryptionInfoEncryptionInTransitInCluster(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster2),
+					testAccCheckMskClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
+				),
 			},
 		},
 	})
@@ -1059,6 +1140,10 @@ resource "aws_msk_cluster" "test" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
   }
+
+  client_authentication {
+     unauthenticated = true
+  }
 }
 `, rName))
 }
@@ -1076,6 +1161,10 @@ resource "aws_msk_cluster" "test" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
   }
+
+  client_authentication {
+     unauthenticated = true
+  }
 }
 `, rName, ebsVolumeSize))
 }
@@ -1092,6 +1181,10 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = %[2]q
     security_groups = [aws_security_group.example_sg.id]
+  }
+
+  client_authentication {
+     unauthenticated = true
   }
 }
 `, rName, t))
@@ -1136,6 +1229,7 @@ resource "aws_msk_cluster" "test" {
     tls {
       certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
     }
+	unauthenticated = false
   }
 
   encryption_info {
@@ -1165,6 +1259,7 @@ resource "aws_msk_cluster" "test" {
     sasl {
       scram = %[2]t
     }
+   unauthenticated = false
   }
 }
 `, rName, enabled))
@@ -1188,6 +1283,44 @@ resource "aws_msk_cluster" "test" {
     sasl {
       iam = %[2]t
     }
+     unauthenticated = false
+  }
+}
+`, rName, enabled))
+}
+
+func testAccMskClusterConfigClientAuthenticationSaslTlsUnuathenticated(rName, commonName string) string {
+	return composeConfig(testAccMskClusterBaseConfig(rName),
+		testAccMskClusterConfigRootCA(commonName),
+		fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.7.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.example_sg.id]
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
+
+  client_authentication {
+    sasl {
+      iam = true
+    }
+    scram {
+      scram = true
+    }
+    tls {
+      certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
+    }
+    unauthenticated = true
   }
 }
 `, rName, enabled))
@@ -1214,6 +1347,10 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+  }
+
+  client_authentication {
+     unauthenticated = true
   }
 
   configuration_info {
@@ -1254,6 +1391,10 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+  }
+
+  client_authentication {
+     unauthenticated = true
   }
 
   configuration_info {
@@ -1308,6 +1449,10 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 
+  client_authentication {
+     unauthenticated = true
+  }
+
   encryption_info {
     encryption_in_transit {
       client_broker = %[2]q
@@ -1329,6 +1474,10 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+  }
+
+  client_authentication {
+     unauthenticated = true
   }
 
   encryption_info {
@@ -1354,6 +1503,10 @@ resource "aws_msk_cluster" "test" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
   }
+
+  client_authentication {
+     unauthenticated = true
+  }
 }
 `, rName, enhancedMonitoring))
 
@@ -1372,6 +1525,10 @@ resource "aws_msk_cluster" "test" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
   }
+
+  client_authentication {
+     unauthenticated = true
+  }
 }
 `, rName, brokerCount))
 
@@ -1389,6 +1546,10 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+  }
+
+  client_authentication {
+     unauthenticated = true
   }
 
   open_monitoring {
@@ -1527,6 +1688,10 @@ resource "aws_msk_cluster" "test" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
   }
+
+  client_authentication {
+     unauthenticated = true
+  }
 }
 `, rName, kafkaVersion))
 }
@@ -1567,6 +1732,10 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 
+  client_authentication {
+     unauthenticated = true
+  }
+
   configuration_info {
     arn      = aws_msk_configuration.%[3]s.arn
     revision = aws_msk_configuration.%[3]s.latest_revision
@@ -1589,6 +1758,10 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 
+  client_authentication {
+     unauthenticated = true
+  }
+
   tags = {
     %[2]q = %[3]q
   }
@@ -1608,6 +1781,10 @@ resource "aws_msk_cluster" "test" {
     ebs_volume_size = 10
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.example_sg.id]
+  }
+
+  client_authentication {
+     unauthenticated = true
   }
 
   tags = {
