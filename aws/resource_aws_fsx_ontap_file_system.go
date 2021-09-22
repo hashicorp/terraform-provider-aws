@@ -300,17 +300,17 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 		input.Tags = tags.IgnoreAws().FsxTags()
 	}
 
-	log.Printf("[DEBUG] Creating FSx Ontap File System: %s", input)
+	log.Printf("[DEBUG] Creating FSx ONTAP File System: %s", input)
 	result, err := conn.CreateFileSystem(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating FSx Ontap File System: %w", err)
+		return fmt.Errorf("error creating FSx ONTAP File System: %w", err)
 	}
 
 	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 
 	if _, err := waiter.FileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx Ontap File System (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for FSx ONTAP File System (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceAwsFsxOntapFileSystemRead(d, meta)
@@ -324,18 +324,18 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 	filesystem, err := finder.FileSystemByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] FSx Ontap File System (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] FSx ONTAP File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx Ontap File System (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading FSx ONTAP File System (%s): %w", d.Id(), err)
 	}
 
 	ontapConfig := filesystem.OntapConfiguration
 	if ontapConfig == nil {
-		return fmt.Errorf("error describing FSx Ontap File System (%s): empty Ontap configuration", d.Id())
+		return fmt.Errorf("error describing FSx ONTAP File System (%s): empty ONTAP configuration", d.Id())
 	}
 
 	d.Set("arn", filesystem.ResourceARN)
@@ -398,7 +398,7 @@ func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx Ontap File System (%s) tags: %w", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating FSx ONTAP File System (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
@@ -432,11 +432,11 @@ func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{
 		_, err := conn.UpdateFileSystem(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating FSX Ontap File System (%s): %w", d.Id(), err)
+			return fmt.Errorf("error updating FSx ONTAP File System (%s): %w", d.Id(), err)
 		}
 
 		if _, err := waiter.FileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx Ontap File System (%s) to update: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for FSx ONTAP File System (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -446,7 +446,7 @@ func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{
 func resourceAwsFsxOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).fsxconn
 
-	log.Printf("[DEBUG] Deleting FSx Ontap File System: %s", d.Id())
+	log.Printf("[DEBUG] Deleting FSx ONTAP File System: %s", d.Id())
 	_, err := conn.DeleteFileSystem(&fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
@@ -456,11 +456,11 @@ func resourceAwsFsxOntapFileSystemDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting FSx Ontap File System (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting FSx ONTAP File System (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.FileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx Ontap File System (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for FSx ONTAP File System (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
