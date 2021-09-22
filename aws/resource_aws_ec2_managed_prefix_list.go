@@ -15,6 +15,7 @@ import (
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEc2ManagedPrefixList() *schema.Resource {
@@ -115,9 +116,10 @@ func resourceAwsEc2ManagedPrefixListCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, "prefix-list")
+		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePrefixList)
 	}
 
+	log.Printf("[DEBUG] Creating EC2 Managed Prefix List: %s", input)
 	output, err := conn.CreateManagedPrefixList(input)
 
 	if err != nil {
@@ -127,7 +129,7 @@ func resourceAwsEc2ManagedPrefixListCreate(d *schema.ResourceData, meta interfac
 	d.SetId(aws.StringValue(output.PrefixList.PrefixListId))
 
 	if _, err := waiter.ManagedPrefixListCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) creation: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceAwsEc2ManagedPrefixListRead(d, meta)
@@ -140,7 +142,7 @@ func resourceAwsEc2ManagedPrefixListRead(d *schema.ResourceData, meta interface{
 
 	pl, err := finder.ManagedPrefixListByID(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Managed Prefix List %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -150,40 +152,17 @@ func resourceAwsEc2ManagedPrefixListRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", d.Id(), err)
 	}
 
-	if pl == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading EC2 Managed Prefix List (%s): not found", d.Id())
-		}
-
-		log.Printf("[WARN] EC2 Managed Prefix List %s not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	input := &ec2.GetManagedPrefixListEntriesInput{
-		PrefixListId: pl.PrefixListId,
-	}
-	var prefixListEntries []*ec2.PrefixListEntry
-
-	err = conn.GetManagedPrefixListEntriesPages(input, func(page *ec2.GetManagedPrefixListEntriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		prefixListEntries = append(prefixListEntries, page.Entries...)
-
-		return !lastPage
-	})
+	prefixListEntries, err := finder.ManagedPrefixListEntriesByID(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing entries of EC2 Managed Prefix List (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading EC2 Managed Prefix List (%s) Entries: %w", d.Id(), err)
 	}
 
 	d.Set("address_family", pl.AddressFamily)
 	d.Set("arn", pl.PrefixListArn)
 
 	if err := d.Set("entry", flattenEc2PrefixListEntries(prefixListEntries)); err != nil {
-		return fmt.Errorf("error setting attribute entry of managed prefix list %s: %w", d.Id(), err)
+		return fmt.Errorf("error setting entry: %w", err)
 	}
 
 	d.Set("max_entries", pl.MaxEntries)
@@ -340,8 +319,8 @@ func resourceAwsEc2ManagedPrefixListDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error deleting EC2 Managed Prefix List (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.ManagedPrefixListDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) deletion: %w", d.Id(), err)
+	if _, err := waiter.ManagedPrefixListDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

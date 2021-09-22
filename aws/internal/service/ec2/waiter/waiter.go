@@ -638,59 +638,67 @@ const (
 	ManagedPrefixListTimeout = 15 * time.Minute
 )
 
-func ManagedPrefixListCreated(conn *ec2.EC2, prefixListId string) (*ec2.ManagedPrefixList, error) {
+func ManagedPrefixListCreated(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.PrefixListStateCreateInProgress},
 		Target:  []string{ec2.PrefixListStateCreateComplete},
 		Timeout: ManagedPrefixListTimeout,
-		Refresh: ManagedPrefixListState(conn, prefixListId),
+		Refresh: ManagedPrefixListState(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.ManagedPrefixList); ok {
+		if state := aws.StringValue(output.State); state == ec2.PrefixListStateCreateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func ManagedPrefixListModified(conn *ec2.EC2, prefixListId string) (*ec2.ManagedPrefixList, error) {
+func ManagedPrefixListModified(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.PrefixListStateModifyInProgress},
 		Target:  []string{ec2.PrefixListStateModifyComplete},
 		Timeout: ManagedPrefixListTimeout,
-		Refresh: ManagedPrefixListState(conn, prefixListId),
+		Refresh: ManagedPrefixListState(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.ManagedPrefixList); ok {
+		if state := aws.StringValue(output.State); state == ec2.PrefixListStateModifyFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func ManagedPrefixListDeleted(conn *ec2.EC2, prefixListId string) error {
+func ManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.PrefixListStateDeleteInProgress},
-		Target:  []string{ec2.PrefixListStateDeleteComplete},
+		Target:  []string{},
 		Timeout: ManagedPrefixListTimeout,
-		Refresh: ManagedPrefixListState(conn, prefixListId),
+		Refresh: ManagedPrefixListState(conn, id),
 	}
 
-	_, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForState()
 
-	if tfawserr.ErrCodeEquals(err, "InvalidPrefixListID.NotFound") {
-		return nil
+	if output, ok := outputRaw.(*ec2.ManagedPrefixList); ok {
+		if state := aws.StringValue(output.State); state == ec2.PrefixListStateDeleteFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return nil, err
 }
 
 func VpcEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {

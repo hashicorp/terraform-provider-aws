@@ -481,22 +481,19 @@ func VpnGatewayVpcAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) res
 	}
 }
 
-const (
-	managedPrefixListStateNotFound = "NotFound"
-	managedPrefixListStateUnknown  = "Unknown"
-)
-
-func ManagedPrefixListState(conn *ec2.EC2, prefixListId string) resource.StateRefreshFunc {
+func ManagedPrefixListState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		managedPrefixList, err := finder.ManagedPrefixListByID(conn, prefixListId)
-		if err != nil {
-			return nil, managedPrefixListStateUnknown, err
-		}
-		if managedPrefixList == nil {
-			return nil, managedPrefixListStateNotFound, nil
+		output, err := finder.ManagedPrefixListByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
-		return managedPrefixList, aws.StringValue(managedPrefixList.State), nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
