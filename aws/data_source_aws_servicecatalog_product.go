@@ -76,6 +76,30 @@ func dataSourceAwsServiceCatalogProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"provisioning_artifacts": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"created_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -109,6 +133,23 @@ func dataSourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interfa
 	d.Set("support_email", pvs.SupportEmail)
 	d.Set("support_url", pvs.SupportUrl)
 	d.Set("type", pvs.Type)
+
+	provisioningArtifacts := []interface{}{}
+	if output.ProvisioningArtifactSummaries != nil {
+		for _, artifact := range output.ProvisioningArtifactSummaries {
+			pArtifact := map[string]interface{}{
+				"id":           aws.StringValue(artifact.Id),
+				"name":         aws.StringValue(artifact.Name),
+				"description":  aws.StringValue(artifact.Description),
+				"created_time": artifact.CreatedTime.Format(time.RFC3339),
+			}
+			provisioningArtifacts = append(provisioningArtifacts, pArtifact)
+		}
+	}
+
+	if err := d.Set("provisioning_artifacts", provisioningArtifacts); err != nil {
+		return fmt.Errorf("error setting provisioning artifacts: %w", err)
+	}
 
 	d.SetId(aws.StringValue(pvs.ProductId))
 
