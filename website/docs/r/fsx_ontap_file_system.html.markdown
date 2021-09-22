@@ -3,12 +3,13 @@ subcategory: "File System (FSx)"
 layout: "aws"
 page_title: "AWS: aws_fsx_ontap_file_system"
 description: |-
-  Manages a FSx Ontap File System.
+  Manages an Amazon FSx for NetApp ONTAP file system.
 ---
 
 # Resource: aws_fsx_ontap_file_system
 
-Manages a FSx Ontap File System. See the [FSx Ontap Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/what-is-fsx-ontap.html) for more information.
+Manages an Amazon FSx for NetApp ONTAP file system.
+See the [FSx ONTAP User Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/what-is-fsx-ontap.html) for more information.
 
 ## Example Usage
 
@@ -77,6 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 configuration options:
 
 * `create` - (Default `60m`) How long to wait for the file system to be created.
+* `update` - (Default `60m`) How long to wait for the file system to be updated.
 * `delete` - (Default `60m`) How long to wait for the file system to be deleted.
 
 ## Import

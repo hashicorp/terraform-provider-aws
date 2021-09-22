@@ -32,6 +32,7 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
@@ -338,8 +339,8 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	}
 
-	if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx Lustre File System (%s) to be available: %w", d.Id(), err)
+	if _, err := waiter.FileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for FSx Lustre File System (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceAwsFsxLustreFileSystemRead(d, meta)
@@ -392,8 +393,8 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating FSX Lustre File System (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for FSx Lustre File System (%s) to be available: %w", d.Id(), err)
+		if _, err := waiter.FileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx Lustre File System (%s) update: %w", d.Id(), err)
 		}
 	}
 

@@ -32,6 +32,7 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
@@ -283,20 +284,20 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 		input.OntapConfiguration.FsxAdminPassword = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
-		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("route_table_ids"); ok {
 		input.OntapConfiguration.RouteTableIds = expandStringSet(v.(*schema.Set))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().FsxTags()
+	if v, ok := d.GetOk("security_group_ids"); ok {
+		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().FsxTags()
 	}
 
 	log.Printf("[DEBUG] Creating FSx Ontap File System: %s", input)
@@ -308,59 +309,8 @@ func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 
-	if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx Ontap File System (%s) to be available: %w", d.Id(), err)
-	}
-
-	return resourceAwsFsxOntapFileSystemRead(d, meta)
-}
-
-func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).fsxconn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := keyvaluetags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx Ontap File System (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	if d.HasChangesExcept("tags_all", "tags") {
-		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken: aws.String(resource.UniqueId()),
-			FileSystemId:       aws.String(d.Id()),
-			OntapConfiguration: &fsx.UpdateFileSystemOntapConfiguration{},
-		}
-
-		if d.HasChange("weekly_maintenance_start_time") {
-			input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
-		}
-
-		if d.HasChange("automatic_backup_retention_days") {
-			input.OntapConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
-		}
-
-		if d.HasChange("daily_automatic_backup_start_time") {
-			input.OntapConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
-		}
-
-		if d.HasChange("fsx_admin_password") {
-			input.OntapConfiguration.FsxAdminPassword = aws.String(d.Get("fsx_admin_password").(string))
-		}
-
-		if d.HasChange("storage_capacity") {
-			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
-		}
-
-		_, err := conn.UpdateFileSystem(input)
-		if err != nil {
-			return fmt.Errorf("error updating FSX Ontap File System (%s): %w", d.Id(), err)
-		}
-
-		if _, err := waiter.FileSystemAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for FSx Ontap File System (%s) to be available: %w", d.Id(), err)
-		}
+	if _, err := waiter.FileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for FSx Ontap File System (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceAwsFsxOntapFileSystemRead(d, meta)
@@ -372,6 +322,7 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filesystem, err := finder.FileSystemByID(conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Ontap File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -440,15 +391,65 @@ func resourceAwsFsxOntapFileSystemRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
+func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).fsxconn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating FSx Ontap File System (%s) tags: %w", d.Get("arn").(string), err)
+		}
+	}
+
+	if d.HasChangesExcept("tags_all", "tags") {
+		input := &fsx.UpdateFileSystemInput{
+			ClientRequestToken: aws.String(resource.UniqueId()),
+			FileSystemId:       aws.String(d.Id()),
+			OntapConfiguration: &fsx.UpdateFileSystemOntapConfiguration{},
+		}
+
+		if d.HasChange("automatic_backup_retention_days") {
+			input.OntapConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
+		}
+
+		if d.HasChange("daily_automatic_backup_start_time") {
+			input.OntapConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
+		}
+
+		if d.HasChange("fsx_admin_password") {
+			input.OntapConfiguration.FsxAdminPassword = aws.String(d.Get("fsx_admin_password").(string))
+		}
+
+		if d.HasChange("storage_capacity") {
+			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+		}
+
+		if d.HasChange("weekly_maintenance_start_time") {
+			input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
+		}
+
+		_, err := conn.UpdateFileSystem(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating FSX Ontap File System (%s): %w", d.Id(), err)
+		}
+
+		if _, err := waiter.FileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx Ontap File System (%s) to update: %w", d.Id(), err)
+		}
+	}
+
+	return resourceAwsFsxOntapFileSystemRead(d, meta)
+}
+
 func resourceAwsFsxOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).fsxconn
 
-	request := &fsx.DeleteFileSystemInput{
-		FileSystemId: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting FSx Ontap File System: %s", d.Id())
-	_, err := conn.DeleteFileSystem(request)
+	_, err := conn.DeleteFileSystem(&fsx.DeleteFileSystemInput{
+		FileSystemId: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
 		return nil
@@ -459,7 +460,7 @@ func resourceAwsFsxOntapFileSystemDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if _, err := waiter.FileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx Ontap File System (%s) to deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for FSx Ontap File System (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
