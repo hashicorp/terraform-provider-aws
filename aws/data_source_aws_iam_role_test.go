@@ -20,7 +20,7 @@ func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMRoleConfig(roleName),
+				Config: testAccAwsIAMRoleDataSourceConfig(roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "assume_role_policy", resourceName, "assume_role_policy"),
@@ -48,7 +48,7 @@ func TestAccAWSDataSourceIAMRole_tags(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMRoleConfig_tags(roleName),
+				Config: testAccAwsIAMRoleDataSourceConfig_tags(roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "assume_role_policy", resourceName, "assume_role_policy"),
@@ -67,7 +67,7 @@ func TestAccAWSDataSourceIAMRole_tags(t *testing.T) {
 	})
 }
 
-func testAccAwsIAMRoleConfig(roleName string) string {
+func testAccAwsIAMRoleDataSourceConfig(roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -97,7 +97,7 @@ data "aws_iam_role" "test" {
 `, roleName)
 }
 
-func testAccAwsIAMRoleConfig_tags(roleName string) string {
+func testAccAwsIAMRoleDataSourceConfig_tags(roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %q
