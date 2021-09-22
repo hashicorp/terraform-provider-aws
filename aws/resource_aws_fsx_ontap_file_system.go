@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -184,6 +182,7 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1024, 192*1024),
 			},
 			"storage_type": {
@@ -224,25 +223,8 @@ func resourceAwsFsxOntapFileSystem() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			SetTagsDiff,
-			resourceFsxOntapFileSystemSchemaCustomizeDiff,
-		),
+		CustomizeDiff: SetTagsDiff,
 	}
-}
-
-func resourceFsxOntapFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	// we want to force a new resource if the new storage capacity is less than the old one
-	if d.HasChange("storage_capacity") {
-		o, n := d.GetChange("storage_capacity")
-		if n.(int) < o.(int) {
-			if err := d.ForceNew("storage_capacity"); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
 func resourceAwsFsxOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
@@ -419,10 +401,6 @@ func resourceAwsFsxOntapFileSystemUpdate(d *schema.ResourceData, meta interface{
 
 		if d.HasChange("fsx_admin_password") {
 			input.OntapConfiguration.FsxAdminPassword = aws.String(d.Get("fsx_admin_password").(string))
-		}
-
-		if d.HasChange("storage_capacity") {
-			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {

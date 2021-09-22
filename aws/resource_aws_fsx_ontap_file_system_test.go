@@ -302,49 +302,6 @@ func TestAccAWSFsxOntapFileSystem_routeTableIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_storageCapacity(t *testing.T) {
-	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
-	resourceName := "aws_fsx_ontap_file_system.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsFsxOntapFileSystemConfigStorageCapacity(7200),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "7200"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
-			},
-			{
-				Config: testAccAwsFsxOntapFileSystemConfigStorageCapacity(1024),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem2),
-					testAccCheckFsxOntapFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
-				),
-			},
-			{
-				Config: testAccAwsFsxOntapFileSystemConfigStorageCapacity(7200),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem3),
-					testAccCheckFsxOntapFileSystemNotRecreated(&filesystem2, &filesystem3),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "7200"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSFsxOntapFileSystem_tags(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -774,18 +731,6 @@ resource "aws_fsx_ontap_file_system" "test" {
   preferred_subnet_id = aws_subnet.test1.id
 }
 `)
-}
-
-func testAccAwsFsxOntapFileSystemConfigStorageCapacity(storageCapacity int) string {
-	return composeConfig(testAccAwsFsxOntapFileSystemConfigBase(), fmt.Sprintf(`
-resource "aws_fsx_ontap_file_system" "test" {
-  storage_capacity    = %[1]d
-  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
-  deployment_type     = "MULTI_AZ_1"
-  throughput_capacity = 512
-  preferred_subnet_id = aws_subnet.test1.id
-}
-`, storageCapacity))
 }
 
 func testAccAwsFsxOntapFileSystemConfigTags1(tagKey1, tagValue1 string) string {
