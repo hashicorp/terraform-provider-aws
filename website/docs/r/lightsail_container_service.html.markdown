@@ -9,7 +9,7 @@ description: |-
 # Resource: aws_lightsail_container_service
 
 An Amazon Lightsail container service is a highly scalable compute and networking resource on which you can deploy, run,
-and manage containers. For more information, see 
+and manage containers. For more information, see
 [Container services in Amazon Lightsail](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-container-services).
 
 **Note:** For more information about the AWS Regions in which you can create Amazon Lightsail container services,
@@ -44,9 +44,9 @@ resource "aws_lightsail_container_service" "my_container_service" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be 
+* `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
   unique within each AWS Region in your Lightsail account.
-* `power` - (Required) The power specification for the container service. The power specifies the amount of memory, 
+* `power` - (Required) The power specification for the container service. The power specifies the amount of memory,
   the number of vCPUs, and the monthly price of each node of the container service.
 * `scale` - (Required) The scale specification for the container service. The scale specifies the allocated compute
   nodes of the container service.
@@ -62,7 +62,7 @@ The following arguments are supported:
   Defined below.
     * WARNING: You must create and validate an SSL/TLS certificate before you can use public domain names with your
       container service.
-      For more information, see 
+      For more information, see
       [Enabling and managing custom domains for your Amazon Lightsail container services](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-creating-container-services-certificates).
 * `tags` - (Optional) Map of container service tags. To tag at launch, specify the tags in the Launch Template. If
   configured with a provider
@@ -209,5 +209,5 @@ Plus, if you have a deployment, the following attributes are exported under `dep
 
 ## Import
 
-`aws_lightsail_container_service` can be imported using their name, e.g. 
+`aws_lightsail_container_service` can be imported using their name, e.g.
 `$ terraform import aws_lightsail_container_service.my_container_service container-service-1`
