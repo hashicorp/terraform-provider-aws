@@ -18,7 +18,7 @@ data "aws_eks_node_groups" "example" {
 }
 
 data "aws_eks_node_group" "example" {
-  for_each = data.aws_eks_node_group_names.example.names
+  for_each = data.aws_eks_node_groups.example.names
 
   cluster_name    = "example"
   node_group_name = each.value
