@@ -3,11 +3,16 @@
 FEATURES:
 
 * **New Data Source:** `aws_cloudwatch_log_groups` ([#17151](https://github.com/hashicorp/terraform-provider-aws/issues/17151))
+* **New Data Source:** `aws_connect_contact_flow` ([#16854](https://github.com/hashicorp/terraform-provider-aws/issues/16854))
+* **New Data Source:** `aws_connect_instance` ([#16709](https://github.com/hashicorp/terraform-provider-aws/issues/16709))
 * **New Data Source:** `aws_iam_users` ([#20877](https://github.com/hashicorp/terraform-provider-aws/issues/20877))
 * **New Data Source:** `aws_msk_broker_nodes` ([#20615](https://github.com/hashicorp/terraform-provider-aws/issues/20615))
 * **New Data Source:** `aws_msk_kafka_version` ([#20638](https://github.com/hashicorp/terraform-provider-aws/issues/20638))
 * **New Resource:** `aws_appstream_fleet` ([#20543](https://github.com/hashicorp/terraform-provider-aws/issues/20543))
 * **New Resource:** `aws_chime_voice_connector_streaming` ([#20933](https://github.com/hashicorp/terraform-provider-aws/issues/20933))
+* **New Resource:** `aws_connect_contact_flow` ([#16854](https://github.com/hashicorp/terraform-provider-aws/issues/16854))
+* **New Resource:** `aws_connect_instance` ([#16709](https://github.com/hashicorp/terraform-provider-aws/issues/16709))
+* **New Resource:** `aws_ec2_managed_prefix_list_entry` ([#19394](https://github.com/hashicorp/terraform-provider-aws/issues/19394))
 * **New Resource:** `aws_fsx_ontap_filesystem` ([#20951](https://github.com/hashicorp/terraform-provider-aws/issues/20951))
 * **New Resource:** `aws_sagemaker_flow_definition` ([#20825](https://github.com/hashicorp/terraform-provider-aws/issues/20825))
 
@@ -19,6 +24,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_launch_template: Fix `error setting metadata_options` ([#21008](https://github.com/hashicorp/terraform-provider-aws/issues/21008))
 * resource/aws_cognito_user_pool: Fix removal of `lambda_config` ([#20952](https://github.com/hashicorp/terraform-provider-aws/issues/20952))
 * resource/aws_msk_cluster: Don't recreate cluster if order of `broker_node_group_info.client_subnets` or `broker_node_group_info.security_groups` entries change ([#14627](https://github.com/hashicorp/terraform-provider-aws/issues/14627))
 * resource/efs_file_system: Allow multiple lifecycle policies. ([#20971](https://github.com/hashicorp/terraform-provider-aws/issues/20971))
