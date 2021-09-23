@@ -69,6 +69,11 @@ func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"log_delivery_configurations": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     getAwsElasticacheLogDeliveryConfigurationsComputedSchema(),
+			},
 			"snapshot_window": {
 				Type:     schema.TypeString,
 				Computed: true,
