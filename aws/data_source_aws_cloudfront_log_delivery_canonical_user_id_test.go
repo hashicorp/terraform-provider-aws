@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -12,8 +13,9 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_basic(t *testing.T
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck: testAccErrorCheck(t, cloudfront.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserIdConfig(""),
@@ -29,8 +31,9 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_default(t *testing
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck: testAccErrorCheck(t, cloudfront.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserIdConfig(endpoints.UsWest2RegionID),
@@ -46,8 +49,9 @@ func TestAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserId_cn(t *testing.T) {
 	dataSourceName := "data.aws_cloudfront_log_delivery_canonical_user_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck: testAccErrorCheck(t, cloudfront.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCloudFrontLogDeliveryCanonicalUserIdConfig(endpoints.CnNorthwest1RegionID),
