@@ -3,17 +3,17 @@ package aws
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/mitchellh/go-homedir"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
 )
@@ -27,25 +27,13 @@ func resourceAwsConnectContactFlow() *schema.Resource {
 		UpdateContext: resourceAwsConnectContactFlowUpdate,
 		DeleteContext: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(d.Id())
-
-				if err != nil {
-					return nil, err
-				}
-
-				d.Set("instance_id", instanceID)
-				d.Set("contact_flow_id", contactFlowID)
-				d.SetId(fmt.Sprintf("%s:%s", instanceID, contactFlowID))
-
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(waiter.ConnectContactFlowCreateTimeout),
 			Update: schema.DefaultTimeout(waiter.ConnectContactFlowUpdateTimeout),
 		},
-		CustomizeDiff: customdiff.Sequence(SetTagsDiff),
+		CustomizeDiff: SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -70,7 +58,6 @@ func resourceAwsConnectContactFlow() *schema.Resource {
 			"content_hash": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -94,8 +81,8 @@ func resourceAwsConnectContactFlow() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(connect.ContactFlowType_Values(), false),
 				Default:      connect.ContactFlowTypeContactFlow,
+				ValidateFunc: validation.StringInSlice(connect.ContactFlowType_Values(), false),
 			},
 		},
 	}
@@ -108,29 +95,31 @@ func resourceAwsConnectContactFlowCreate(ctx context.Context, d *schema.Resource
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
-	filename, filenameOK := d.GetOk("filename")
-	content, contentOK := d.GetOk("content")
 
 	input := &connect.CreateContactFlowInput{
-		Name:        aws.String(name),
-		InstanceId:  aws.String(instanceID),
-		Description: aws.String(d.Get("description").(string)),
-		Type:        aws.String(d.Get("type").(string)),
+		Name:       aws.String(name),
+		InstanceId: aws.String(instanceID),
+		Type:       aws.String(d.Get("type").(string)),
 	}
 
-	if filenameOK {
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("filename"); ok {
+		filename := v.(string)
 		// Grab an exclusive lock so that we're only reading one contact flow into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
 		awsMutexKV.Lock(awsMutexConnectContactFlowKey)
 		defer awsMutexKV.Unlock(awsMutexConnectContactFlowKey)
-		file, err := resourceAwsConnectContactFlowLoadFileContent(filename.(string))
+		file, err := resourceAwsConnectContactFlowLoadFileContent(filename)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("Unable to load %q: %w", filename.(string), err))
+			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
 		}
 		input.Content = aws.String(file)
-	} else if contentOK {
-		input.Content = aws.String(content.(string))
+	} else if v, ok := d.GetOk("content"); ok {
+		input.Content = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -140,11 +129,14 @@ func resourceAwsConnectContactFlowCreate(ctx context.Context, d *schema.Resource
 	output, err := conn.CreateContactFlowWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow '%s': %w", name, err))
+		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow (%s): %w", name, err))
 	}
-	d.Set("arn", output.ContactFlowArn)
-	d.Set("contact_flow_id", output.ContactFlowId)
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, d.Get("contact_flow_id").(string)))
+
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow (%s): empty output", name))
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.ContactFlowId)))
 
 	return resourceAwsConnectContactFlowRead(ctx, d, meta)
 }
@@ -164,18 +156,24 @@ func resourceAwsConnectContactFlowRead(ctx context.Context, d *schema.ResourceDa
 		ContactFlowId: aws.String(contactFlowID),
 		InstanceId:    aws.String(instanceID),
 	})
-	if isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
+
+	if !d.IsNewResource() && isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Connect Contact Flow (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error getting Connect Contact Flow '%s': %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow (%s): %w", d.Id(), err))
+	}
+
+	if resp == nil || resp.ContactFlow == nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow (%s): empty response", d.Id()))
 	}
 
 	d.Set("arn", resp.ContactFlow.Arn)
 	d.Set("contact_flow_id", resp.ContactFlow.Id)
-
+	d.Set("instance_id", instanceID)
 	d.Set("name", resp.ContactFlow.Name)
 	d.Set("description", resp.ContactFlow.Description)
 	d.Set("type", resp.ContactFlow.Type)
@@ -204,9 +202,6 @@ func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	filename, filenameOK := d.GetOk("filename")
-	content, contentOK := d.GetOk("content")
-
 	if d.HasChanges("name", "description") {
 		updateMetadataInput := &connect.UpdateContactFlowNameInput{
 			ContactFlowId: aws.String(contactFlowID),
@@ -228,19 +223,20 @@ func resourceAwsConnectContactFlowUpdate(ctx context.Context, d *schema.Resource
 			InstanceId:    aws.String(instanceID),
 		}
 
-		if filenameOK {
+		if v, ok := d.GetOk("filename"); ok {
+			filename := v.(string)
 			// Grab an exclusive lock so that we're only reading one contact flow into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
 			awsMutexKV.Lock(awsMutexConnectContactFlowKey)
 			defer awsMutexKV.Unlock(awsMutexConnectContactFlowKey)
-			file, err := resourceAwsConnectContactFlowLoadFileContent(filename.(string))
+			file, err := resourceAwsConnectContactFlowLoadFileContent(filename)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("Unable to load %q: %w", filename.(string), err))
+				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
 			}
 			updateContentInput.Content = aws.String(file)
-		} else if contentOK {
-			updateContentInput.Content = aws.String(content.(string))
+		} else if v, ok := d.GetOk("content"); ok {
+			updateContentInput.Content = aws.String(v.(string))
 		}
 
 		_, updateContentInputErr := conn.UpdateContactFlowContentWithContext(ctx, updateContentInput)
@@ -290,17 +286,20 @@ func resourceAwsConnectContactFlowParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:connectFlowID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:contactFlowID", id)
 	}
 
 	return parts[0], parts[1], nil
 }
 
 func resourceAwsConnectContactFlowLoadFileContent(filename string) (string, error) {
-	fileContent, err := ioutil.ReadFile(filename)
+	filename, err := homedir.Expand(filename)
 	if err != nil {
 		return "", err
 	}
-	content := string(fileContent)
-	return content, nil
+	fileContent, err := os.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+	return string(fileContent), nil
 }

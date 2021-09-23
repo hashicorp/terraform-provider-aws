@@ -12,7 +12,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsConnectContactFlow_basic(t *testing.T) {
+//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
+func TestAccAwsConnectContactFlow_serial(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic":      testAccAwsConnectContactFlow_basic,
+		"filename":   testAccAwsConnectContactFlow_filename,
+		"disappears": testAccAwsConnectContactFlow_disappears_ConnectInstance,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccAwsConnectContactFlow_basic(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
@@ -61,7 +77,7 @@ func TestAccAwsConnectContactFlow_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsConnectContactFlow_filename(t *testing.T) {
+func testAccAwsConnectContactFlow_filename(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
@@ -74,7 +90,7 @@ func TestAccAwsConnectContactFlow_filename(t *testing.T) {
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow.json"),
+				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Created", "testdata/service/connect/connect_contact_flow.json"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -96,7 +112,7 @@ func TestAccAwsConnectContactFlow_filename(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Updated", "test-fixtures/connect_contact_flow_updated.json"),
+				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Updated", "testdata/service/connect/connect_contact_flow_updated.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -113,12 +129,13 @@ func TestAccAwsConnectContactFlow_filename(t *testing.T) {
 }
 
 // Can't delete an contact flow. Test deletion of entire connect instance
-func TestAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
+func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	// var v2 connect.DescribeInstanceOutput
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
-	resourceName := "aws_connect_instance.test"
+	resourceName := "aws_connect_contact_flow.test"
+	instanceResourceName := "aws_connect_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -130,7 +147,7 @@ func TestAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 				Config: testAccAwsConnectContactFlowConfigBasic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsConnectInstance(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsConnectInstance(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -203,7 +220,7 @@ func testAccCheckAwsConnectContactFlowDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsConnectContactFlowConfigBasic(rName, rName2 string, label string) string {
+func testAccAwsConnectContactFlowConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -211,11 +228,17 @@ resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q
   outbound_calls_enabled   = true
 }
+`, rName)
+}
 
+func testAccAwsConnectContactFlowConfigBasic(rName, rName2, label string) string {
+	return composeConfig(
+		testAccAwsConnectContactFlowConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_connect_contact_flow" "test" {
   instance_id = aws_connect_instance.test.id
-  name        = %[2]q
-  description = %[3]q
+  name        = %[1]q
+  description = %[2]q
   type        = "CONTACT_FLOW"
   content     = <<JSON
     {
@@ -231,7 +254,7 @@ resource "aws_connect_contact_flow" "test" {
 					"Conditions": []
 				},
 				"Parameters": {
-					"Text": %[3]q
+					"Text": %[2]q
 				}
 			},
 			{
@@ -245,32 +268,27 @@ resource "aws_connect_contact_flow" "test" {
     JSON
   tags = {
     "Name"   = "Test Contact Flow",
-    "Method" = %[3]q
+    "Method" = %[2]q
   }
 }
-`, rName, rName2, label)
+`, rName2, label))
 }
 
 func testAccAwsConnectContactFlowConfig_filename(rName, rName2 string, label string, filepath string) string {
-	return fmt.Sprintf(`
-resource "aws_connect_instance" "test" {
-  identity_management_type = "CONNECT_MANAGED"
-  inbound_calls_enabled    = true
-  instance_alias           = %[1]q
-  outbound_calls_enabled   = true
-}
-
+	return composeConfig(
+		testAccAwsConnectContactFlowConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_connect_contact_flow" "test" {
   instance_id  = aws_connect_instance.test.id
-  name         = %[2]q
-  description  = %[3]q
+  name         = %[1]q
+  description  = %[2]q
   type         = "CONTACT_FLOW"
-  filename     = "%[4]s"
-  content_hash = filebase64sha256("%[4]s")
+  filename     = %[3]q
+  content_hash = filebase64sha256(%[3]q)
   tags = {
     "Name"   = "Test Contact Flow",
-    "Method" = "%[3]s"
+    "Method" = %[2]q
   }
 }
-`, rName, rName2, label, filepath)
+`, rName2, label, filepath))
 }
