@@ -394,7 +394,11 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
    during scale in events.
 * `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
 <<<<<<< HEAD
+<<<<<<< HEAD
 * `max_instance_lifetime` (Optional) The maximum amount of time, in seconds, that an instance can be in service. Values must be either equal to 0 or between 86400 and 31536000 seconds (inclusive). A value of 0 is used to remove a previously set value.
+=======
+* `max_instance_lifetime` (Optional) The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 86400 and 31536000 seconds.
+>>>>>>> fbb1fa39686c1ac8437c8cff6719912efea99e96
 =======
 * `max_instance_lifetime` (Optional) The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 86400 and 31536000 seconds.
 >>>>>>> fbb1fa39686c1ac8437c8cff6719912efea99e96
