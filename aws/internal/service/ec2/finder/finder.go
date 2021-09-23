@@ -814,13 +814,87 @@ func ManagedPrefixListByID(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, er
 	}
 
 	output, err := conn.DescribeManagedPrefixLists(input)
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.PrefixLists) == 0 {
-		return nil, nil
+	if output == nil || len(output.PrefixLists) == 0 || output.PrefixLists[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.PrefixLists[0], nil
+	if count := len(output.PrefixLists); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	prefixList := output.PrefixLists[0]
+
+	if state := aws.StringValue(prefixList.State); state == ec2.PrefixListStateDeleteComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return prefixList, nil
+}
+
+func ManagedPrefixListEntriesByID(conn *ec2.EC2, id string) ([]*ec2.PrefixListEntry, error) {
+	input := &ec2.GetManagedPrefixListEntriesInput{
+		PrefixListId: aws.String(id),
+	}
+
+	var prefixListEntries []*ec2.PrefixListEntry
+
+	err := conn.GetManagedPrefixListEntriesPages(input, func(page *ec2.GetManagedPrefixListEntriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, entry := range page.Entries {
+			if entry == nil {
+				continue
+			}
+
+			prefixListEntries = append(prefixListEntries, entry)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return prefixListEntries, nil
+}
+
+func ManagedPrefixListEntryByIDAndCIDR(conn *ec2.EC2, id, cidr string) (*ec2.PrefixListEntry, error) {
+	prefixListEntries, err := ManagedPrefixListEntriesByID(conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range prefixListEntries {
+		if aws.StringValue(entry.Cidr) == cidr {
+			return entry, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
 }
