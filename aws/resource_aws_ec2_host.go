@@ -7,11 +7,17 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEc2Host() *schema.Resource {
@@ -20,47 +26,51 @@ func resourceAwsEc2Host() *schema.Resource {
 		Read:   resourceAwsEc2HostRead,
 		Update: resourceAwsEc2HostUpdate,
 		Delete: resourceAwsEc2HostDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		SchemaVersion: 1,
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(20 * time.Minute),
-		},
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auto_placement": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.AutoPlacementOn,
+				ValidateFunc: validation.StringInSlice(ec2.AutoPlacement_Values(), false),
+			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"instance_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"host_recovery": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.HostRecoveryOn,
-					ec2.HostRecoveryOff,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.HostRecoveryOff,
+				ValidateFunc: validation.StringInSlice(ec2.HostRecovery_Values(), false),
 			},
-			"auto_placement": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.AutoPlacementOn,
-					ec2.AutoPlacementOff,
-				}, false),
+			"instance_family": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"instance_family", "instance_type"},
 			},
+			"instance_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"instance_family", "instance_type"},
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
@@ -124,41 +134,51 @@ func resourceAwsEc2HostCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Host ID: %s", *runResp.HostIds[0])
 	d.SetId(*runResp.HostIds[0])
 
-	// Update if we need to
 	return resourceAwsEc2HostRead(d, meta)
 }
 
 func resourceAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeHosts(&ec2.DescribeHostsInput{
-		HostIds: []*string{aws.String(d.Id())},
-	})
-	if err != nil {
-		// If the host was not found, return nil so that we can show
-		// that host is gone.
-		if isAWSErr(err, "InvalidHostID.NotFound", "") {
-			d.SetId("")
-			return nil
-		}
+	host, err := finder.HostByID(conn, d.Id())
 
-		// Some other error, report it
-		return err
-	}
-	if len(resp.Hosts) == 0 {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Host %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-	host := resp.Hosts[0]
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Host (%s): %w", d.Id(), err)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*AWSClient).region,
+		AccountID: aws.StringValue(host.OwnerId),
+		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("auto_placement", host.AutoPlacement)
 	d.Set("availibility_zone", host.AvailabilityZone)
 	d.Set("host_recovery", host.HostRecovery)
+	d.Set("instance_family", host.HostProperties.InstanceFamily)
+	d.Set("instance_type", host.HostProperties.InstanceType)
+	d.Set("owner_id", host.OwnerId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(host.Tags).IgnoreConfig(ignoreTagsConfig).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.Ec2KeyValueTags(host.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
-	// If nothing was found, then return no state
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -169,38 +189,40 @@ func resourceAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
 // https://docs.aws.amazon.com/en_pv/AWSEC2/latest/APIReference/API_ModifyHosts.html
 func resourceAwsEc2HostUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	requestUpdate := false
-	req := &ec2.ModifyHostsInput{
-		HostIds: []*string{aws.String(d.Id())},
-	}
-	if d.HasChange("auto_placement") {
-		req.AutoPlacement = aws.String(d.Get("auto_placement").(string))
-		requestUpdate = true
-	}
-	// Indicates whether to enable or disable host recovery for the Dedicated Host.
-	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html
-	if d.HasChange("host_recovery") {
-		req.HostRecovery = aws.String(d.Get("host_recovery").(string))
-		requestUpdate = true
-	}
-	if requestUpdate {
-		err := resource.Retry(30*time.Second, func() *resource.RetryError {
-			_, err := conn.ModifyHosts(req)
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		requestUpdate := false
+		req := &ec2.ModifyHostsInput{
+			HostIds: []*string{aws.String(d.Id())},
+		}
+		if d.HasChange("auto_placement") {
+			req.AutoPlacement = aws.String(d.Get("auto_placement").(string))
+			requestUpdate = true
+		}
+		// Indicates whether to enable or disable host recovery for the Dedicated Host.
+		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html
+		if d.HasChange("host_recovery") {
+			req.HostRecovery = aws.String(d.Get("host_recovery").(string))
+			requestUpdate = true
+		}
+		if requestUpdate {
+			err := resource.Retry(30*time.Second, func() *resource.RetryError {
+				_, err := conn.ModifyHosts(req)
+				if err != nil {
+					return resource.RetryableError(err)
+				}
+				return nil
+			})
 			if err != nil {
-				return resource.RetryableError(err)
+				return fmt.Errorf("Error modifying host %s: %s", d.Id(), err)
 			}
-			return nil
-		})
-		if err != nil {
-			return fmt.Errorf("Error modifying host %s: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating EC2 Host (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -210,25 +232,25 @@ func resourceAwsEc2HostUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsEc2HostDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	err := awsReleaseHosts(conn, d.Id())
+	log.Printf("[INFO] Deleting EC2 Host: %s", d.Id())
+	output, err := conn.ReleaseHosts(&ec2.ReleaseHostsInput{
+		HostIds: aws.StringSlice([]string{d.Id()}),
+	})
+
+	if err == nil && output != nil {
+		err = tfec2.UnsuccessfulItemsError(output.Unsuccessful)
+	}
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientInvalidHostIDNotFound) {
+		return nil
+	}
 
 	if err != nil {
-		return fmt.Errorf("error terminating EC2 Host (%s): %s", d.Id(), err)
+		return fmt.Errorf("error releasing EC2 Host (%s): %w", d.Id(), err)
 	}
 
-	return nil
-}
-
-func awsReleaseHosts(conn *ec2.EC2, id string) error {
-	log.Printf("[INFO] Terminating host: %s", id)
-	req := &ec2.ReleaseHostsInput{
-		HostIds: []*string{aws.String(id)},
-	}
-	if _, err := conn.ReleaseHosts(req); err != nil {
-		if isAWSErr(err, "InvalidHostID.NotFound", "") {
-			return nil
-		}
-		return err
+	if _, err := waiter.HostDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Host (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
