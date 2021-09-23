@@ -53,7 +53,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   tags = {
-    foo = "bar"
+    key1 = "value1"
   }
 }
 

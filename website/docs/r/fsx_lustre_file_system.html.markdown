@@ -63,6 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 configuration options:
 
 * `create` - (Default `30m`) How long to wait for the file system to be created.
+* `update` - (Default `30m`) How long to wait for the file system to be updated.
 * `delete` - (Default `30m`) How long to wait for the file system to be deleted.
 
 ## Import

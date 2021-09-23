@@ -42,6 +42,13 @@ func TestAccAWSSagemaker_serial(t *testing.T) {
 			"securityGroup":                        testAccAWSSagemakerDomain_securityGroup,
 			"sharingSettings":                      testAccAWSSagemakerDomain_sharingSettings,
 		},
+		"FlowDefinition": {
+			"basic":                          testAccAWSSagemakerFlowDefinition_basic,
+			"disappears":                     testAccAWSSagemakerFlowDefinition_disappears,
+			"HumanLoopConfigPublicWorkforce": testAccAWSSagemakerFlowDefinition_humanLoopConfig_publicWorkforce,
+			"HumanLoopRequestSource":         testAccAWSSagemakerFlowDefinition_humanLoopRequestSource,
+			"Tags":                           testAccAWSSagemakerFlowDefinition_tags,
+		},
 		"UserProfile": {
 			"basic":                           testAccAWSSagemakerUserProfile_basic,
 			"disappears":                      testAccAWSSagemakerUserProfile_tags,

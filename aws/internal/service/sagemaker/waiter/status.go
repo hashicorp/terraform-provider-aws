@@ -172,6 +172,22 @@ func FeatureGroupStatus(conn *sagemaker.SageMaker, name string) resource.StateRe
 	}
 }
 
+func FlowDefinitionStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.FlowDefinitionByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.FlowDefinitionStatus), nil
+	}
+}
+
 // UserProfileStatus fetches the UserProfile and its Status
 func UserProfileStatus(conn *sagemaker.SageMaker, domainID, userProfileName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
