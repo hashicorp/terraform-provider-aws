@@ -114,7 +114,9 @@ resource "aws_elasticache_cluster" "test" {
   }
 }
 ```
+
 ### Redis SLOWLOG configuration with Kinesis Data Firehose delivery stream as destination
+
 ```terraform
 resource "aws_s3_bucket" "b" {
   acl           = "private"
@@ -243,10 +245,12 @@ The `log_delivery_configurations` block allows the streaming of Redis [SLOWLOG](
 The `destination_details` block contains the target delivery stream or log group attribute. Only one of `kinesis_firehose` or `cloudwatch_logs` can be specified at a time.
 
 The `kinesis_firehose` block supports the following:
-  * `delivery_stream` - The name of an existing Kinesis Firehose delivery stream.
+
+* `delivery_stream` - The name of an existing Kinesis Firehose delivery stream.
 
 The `cloudwatch_logs` block supports the following:
-  * `log_group` - The name of an existing CloudWatch Logs log group.
+
+* `log_group` - The name of an existing CloudWatch Logs log group.
 
 ## Attributes Reference
 
