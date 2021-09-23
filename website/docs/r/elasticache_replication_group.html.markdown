@@ -136,6 +136,136 @@ resource "aws_elasticache_replication_group" "primary" {
   number_cache_clusters = 1
 }
 ```
+### Redis SLOWLOG configuration with CloudWatch Logs log group as destination
+
+```terraform
+data "aws_iam_policy_document" "p" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["${aws_cloudwatch_log_group.lg.arn}:log-stream:*"]
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "rp" {
+  policy_document = data.aws_iam_policy_document.p.json
+  policy_name     = "mypolicyname"
+}
+
+resource "aws_cloudwatch_log_group" "lg" {
+  retention_in_days = 1
+  name              = "myloggroup"
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = "myreplicaciongroup"
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+
+  log_delivery_configurations {
+    destination_details {
+      cloudwatch_logs {
+        log_group = aws_cloudwatch_log_group.lg.name
+      }
+    }
+    destination_type = "cloudwatch-logs"
+    log_format       = "text"
+    log_type         = "slow-log"
+  }
+}
+```
+
+### Redis SLOWLOG configuration with Kinesis Data Firehose delivery stream as destination
+```terraform
+resource "aws_s3_bucket" "b" {
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_iam_role" "r" {
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "firehose.amazonaws.com"
+        }
+      },
+    ]
+  })
+  inline_policy {
+    name = "my_inline_s3_policy"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "s3:AbortMultipartUpload",
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:ListBucketMultipartUploads",
+            "s3:PutObject",
+            "s3:PutObjectAcl",
+          ]
+          Effect   = "Allow"
+          Resource = ["${aws_s3_bucket.b.arn}", "${aws_s3_bucket.b.arn}/*"]
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "ds" {
+  name        = "mydeliverystream"
+  destination = "s3"
+  s3_configuration {
+    role_arn   = aws_iam_role.r.arn
+    bucket_arn = aws_s3_bucket.b.arn
+  }
+  lifecycle {
+    ignore_changes = [
+      tags["LogDeliveryEnabled"],
+    ]
+  }
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = "myreplicationgroup"
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+
+  log_delivery_configurations {
+    destination_details {
+      kinesis_firehose {
+        delivery_stream = aws_kinesis_firehose_delivery_stream.ds.name
+      }
+    }
+    destination_type = "kinesis-firehose"
+    log_format       = "json"
+    log_type         = "slow-log"
+  }
+}
+```
 
 ## Argument Reference
 
@@ -158,6 +288,7 @@ The following arguments are optional:
 * `final_snapshot_identifier` - (Optional) The name of your final node group (shard) snapshot. ElastiCache creates the snapshot from the primary node in the cluster. If omitted, no final snapshot will be made.
 * `global_replication_group_id` - (Optional) The ID of the global replication group to which this replication group should belong. If this parameter is specified, the replication group is added to the specified global replication group as a secondary replication group; otherwise, the replication group is not part of any global replication group. If `global_replication_group_id` is set, the `num_node_groups` parameter of the `cluster_mode` block cannot be set.
 * `kms_key_id` - (Optional) The ARN of the key that you wish to use if encrypting at rest. If not supplied, uses service managed encryption. Can be specified only if `at_rest_encryption_enabled = true`.
+* `log_delivery_configurations` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configurations](#log-delivery-configurations) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`
 * `multi_az_enabled` - (Optional) Specifies whether to enable Multi-AZ Support for the replication group. If `true`, `automatic_failover_enabled` must also be enabled. Defaults to `false`.
 * `node_type` - (Optional) The instance class to be used. See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html). Required unless `global_replication_group_id` is set. Cannot be set if `global_replication_group_id` is set.
@@ -179,6 +310,25 @@ The following arguments are optional:
 
 * `num_node_groups` - (Optional) Number of node groups (shards) for this Redis replication group. Changing this number will trigger an online resizing operation before other settings modifications. Required unless `global_replication_group_id` is set.
 * `replicas_per_node_group` - (Required) Number of replica nodes in each node group. Valid values are 0 to 5. Changing this number will trigger an online resizing operation before other settings modifications.
+
+### Log Delivery Configurations
+
+The `log_delivery_configurations` block allows the streaming of Redis [SLOWLOG](https://redis.io/commands/slowlog) to CloudWatch Logs or Kinesis Data Firehose.
+
+* `destination_details` - Destination details of either CloudWatch Logs or Kinesis Data Firehose. See [Log Delivery Configurations - Destination Details](#log-delivery-configurations---destination-details) below for more details.
+* `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
+* `log_format` - Valid values are `json` or `text`
+* `log_type` - (Optional) The only valid value is`slow-log`.
+
+### Log Delivery Configurations - Destination Details
+
+The `destination_details` block contains the target delivery stream or log group attribute. Only one of `kinesis_firehose` or `cloudwatch_logs` can be specified at a time.
+
+The `kinesis_firehose` block supports the following:
+* `delivery_stream` - The name of an existing Kinesis Firehose delivery stream.
+
+The `cloudwatch_logs` block supports the following:
+* `log_group` - The name of an existing CloudWatch Logs log group.
 
 ## Attributes Reference
 
