@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfelasticache "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache"
 )
 
 func getAwsElasticacheLogDeliveryConfigurationsSchema() *schema.Resource {
@@ -227,4 +228,24 @@ func flattenAwsElasticacheKinesisFirehoseDestinationDetails(kinesisFirehoseDesti
 	config["delivery_stream"] = aws.StringValue(kinesisFirehoseDestinationDetails.DeliveryStream)
 	result := []map[string]interface{}{config}
 	return result
+}
+
+func validateAwsElasticacheLogDeliveryConfigurations(d *schema.ResourceData) error {
+	if engine, ok := d.Get("engine").(string); ok && engine == tfelasticache.EngineMemcached {
+		return fmt.Errorf("unsupported engine: `log_delivery_configurations` is supported only for the `engine`: `%s`, got `%s` instead", tfelasticache.EngineRedis, tfelasticache.EngineMemcached)
+	}
+	destinationTypesToKeys := map[string]string{
+		elasticache.DestinationTypeCloudwatchLogs:  "log_delivery_configurations.0.destination_details.0.cloudwatch_logs",
+		elasticache.DestinationTypeKinesisFirehose: "log_delivery_configurations.0.destination_details.0.kinesis_firehose",
+	}
+	destinationTypeKey := "log_delivery_configurations.0.destination_type"
+	for expectedDestinationType, destinationDetailKey := range destinationTypesToKeys {
+		if _, ok := d.GetOk(destinationDetailKey); ok {
+			if receivedDestinationType, ok := d.Get(destinationTypeKey).(string); ok && receivedDestinationType != expectedDestinationType {
+				return fmt.Errorf(
+					"unsupported configuration: when `%s` is defined, `%s` is expected to be `%s`, got `%s` instead", destinationDetailKey, destinationTypeKey, expectedDestinationType, receivedDestinationType)
+			}
+		}
+	}
+	return nil
 }
