@@ -188,7 +188,7 @@ func flattenEcrReplicationConfigurationReplicationConfigurationRules(ec []*ecr.R
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"destination": flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
+			"destination":       flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
 			"repository_filter": flattenEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
 		}
 
