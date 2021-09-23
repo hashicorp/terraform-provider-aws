@@ -2,9 +2,7 @@ package aws
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -23,27 +21,30 @@ func dataSourceAwsConnectContactFlow() *schema.Resource {
 				Computed: true,
 			},
 			"contact_flow_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"contact_flow_id", "name"},
 			},
 			"content": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"instance_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"name", "contact_flow_id"},
 			},
-			"tags": tagsSchema(),
+			"tags": tagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -56,88 +57,88 @@ func dataSourceAwsConnectContactFlowRead(ctx context.Context, d *schema.Resource
 	conn := meta.(*AWSClient).connectconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	var matchedInstance *connect.ContactFlow
+	instanceID := d.Get("instance_id").(string)
 
-	contactFlowID, contactFlowIDOk := d.GetOk("contact_flow_id")
-	instanceID, instanceIDOk := d.GetOk("instance_id")
-	name, nameOk := d.GetOk("name")
-
-	if !instanceIDOk && (!contactFlowIDOk || !nameOk) {
-		return diag.FromErr(errors.New("error instance_id and contact_flow_id or name of must be assigned"))
+	input := &connect.DescribeContactFlowInput{
+		InstanceId: aws.String(instanceID),
 	}
-	if contactFlowIDOk {
-		resp, err := conn.DescribeContactFlow(&connect.DescribeContactFlowInput{
-			ContactFlowId: aws.String(contactFlowID.(string)),
-			InstanceId:    aws.String(instanceID.(string)),
-		})
+
+	if v, ok := d.GetOk("contact_flow_id"); ok {
+		input.ContactFlowId = aws.String(v.(string))
+	} else if v, ok := d.GetOk("name"); ok {
+		name := v.(string)
+		contactFlowSummary, err := dataSourceAwsConnectGetConnectContactFlowSummaryByName(ctx, conn, instanceID, name)
+
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow by contact_flow_id (%s): %s", contactFlowID, err))
-		}
-		matchedInstance = resp.ContactFlow
-	} else if nameOk {
-		connectFlowSummaryList, err := dataSourceAwsConnectGetAllConnectContactFlowSummaries(ctx, conn, instanceID.(string))
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error listing Connect Contact Flows: %s", err))
+			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Summary by name (%s): %w", name, err))
 		}
 
-		for _, connectFlowSummary := range connectFlowSummaryList {
-			log.Printf("[DEBUG] Connect Contact Flow summary: %s", connectFlowSummary)
-			if aws.StringValue(connectFlowSummary.Name) == name.(string) {
-				resp, err := conn.DescribeContactFlow(&connect.DescribeContactFlowInput{
-					ContactFlowId: connectFlowSummary.Id,
-					InstanceId:    aws.String(instanceID.(string)),
-				})
-				if err != nil {
-					return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow by name (%s): %s", name, err))
-				}
-				matchedInstance = resp.ContactFlow
-				break
-			}
+		if contactFlowSummary == nil {
+			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Summary by name (%s): not found", name))
 		}
+
+		input.ContactFlowId = contactFlowSummary.Id
 	}
 
-	if matchedInstance == nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow by name: %s", name))
+	resp, err := conn.DescribeContactFlow(input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow: %w", err))
 	}
 
-	d.Set("arn", matchedInstance.Arn)
+	if resp == nil || resp.ContactFlow == nil {
+		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow: empty response"))
+	}
+
+	contactFlow := resp.ContactFlow
+
+	d.Set("arn", contactFlow.Arn)
 	d.Set("instance_id", instanceID)
-	d.Set("contact_flow_id", matchedInstance.Id)
-	d.Set("name", matchedInstance.Name)
-	d.Set("description", matchedInstance.Description)
-	d.Set("content", matchedInstance.Content)
-	d.Set("type", matchedInstance.Type)
-	if err := d.Set("tags", keyvaluetags.ConnectKeyValueTags(matchedInstance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	d.Set("contact_flow_id", contactFlow.Id)
+	d.Set("name", contactFlow.Name)
+	d.Set("description", contactFlow.Description)
+	d.Set("content", contactFlow.Content)
+	d.Set("type", contactFlow.Type)
+
+	if err := d.Set("tags", keyvaluetags.ConnectKeyValueTags(contactFlow.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
 	}
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, d.Get("contact_flow_id").(string)))
+
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(contactFlow.Id)))
 
 	return nil
 }
 
-func dataSourceAwsConnectGetAllConnectContactFlowSummaries(ctx context.Context, conn *connect.Connect, instanceID string) ([]*connect.ContactFlowSummary, error) {
-	var instances []*connect.ContactFlowSummary
+func dataSourceAwsConnectGetConnectContactFlowSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowSummary, error) {
+	var result *connect.ContactFlowSummary
 
 	input := &connect.ListContactFlowsInput{
 		InstanceId: aws.String(instanceID),
 		MaxResults: aws.Int64(tfconnect.ListContactFlowsMaxResults),
 	}
 
-	log.Printf("[DEBUG] Listing Connect Contact Flows: %s", input)
-	for {
-		output, err := conn.ListContactFlowsWithContext(ctx, input)
-
-		if err != nil {
-			return instances, err
-		}
-		instances = append(instances, output.ContactFlowSummaryList...)
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
+	err := conn.ListContactFlowsPagesWithContext(ctx, input, func(page *connect.ListContactFlowsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		input.NextToken = output.NextToken
+		for _, cf := range page.ContactFlowSummaryList {
+			if cf == nil {
+				continue
+			}
+
+			if aws.StringValue(cf.Name) == name {
+				result = cf
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	return instances, nil
+	return result, nil
 }

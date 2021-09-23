@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsConnectContactFlow_basic(t *testing.T) {
+func TestAccAwsConnectContactFlowDataSource_ContactFlowId(t *testing.T) {
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 	datasourceName := "data.aws_connect_contact_flow.test"
@@ -20,7 +20,7 @@ func TestAccDataSourceAwsConnectContactFlow_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectContactFlowDataSourceConfig_basic(rName, resourceName),
+				Config: testAccAwsConnectContactFlowDataSourceConfig_ContactFlowId(rName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsConnectContactFlow_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsConnectContactFlow_byname(t *testing.T) {
+func TestAccAwsConnectContactFlowDataSource_Name(t *testing.T) {
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
@@ -49,7 +49,7 @@ func TestAccDataSourceAwsConnectContactFlow_byname(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectContactFlowDataSourceConfig_byname(rName, rName2),
+				Config: testAccAwsConnectContactFlowDataSourceConfig_Name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -80,32 +80,7 @@ resource "aws_connect_contact_flow" "test" {
   name        = %[2]q
   description = "Test Contact Flow Description"
   type        = "CONTACT_FLOW"
-  content     = <<JSON
-	{
-		"Version": "2019-10-30",
-		"StartAction": "12345678-1234-1234-1234-123456789012",
-		"Actions": [ 
-			{
-				"Identifier": "12345678-1234-1234-1234-123456789012",
-				"Type": "MessageParticipant",
-				"Transitions": {
-					"NextAction": "abcdef-abcd-abcd-abcd-abcdefghijkl",
-					"Errors": [],
-					"Conditions": []
-				},
-				"Parameters": {
-					"Text": "Thanks for calling the sample flow!"
-				}
-			},
-			{
-				"Identifier": "abcdef-abcd-abcd-abcd-abcdefghijkl",
-				"Type": "DisconnectParticipant",
-				"Transitions": {},
-				"Parameters": {}
-			}
-		]
-	}
-	JSON
+  content     = file("./testdata/service/connect/connect_contact_flow.json")
   tags = {
     "Name"        = "Test Contact Flow",
     "Application" = "Terraform",
@@ -115,7 +90,7 @@ resource "aws_connect_contact_flow" "test" {
 	`, rName, rName2)
 }
 
-func testAccAwsConnectContactFlowDataSourceConfig_basic(rName, rName2 string) string {
+func testAccAwsConnectContactFlowDataSourceConfig_ContactFlowId(rName, rName2 string) string {
 	return fmt.Sprintf(testAccAwsConnectContactFlowDataSourceBaseConfig(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id     = aws_connect_instance.test.id
@@ -124,7 +99,7 @@ data "aws_connect_contact_flow" "test" {
 `)
 }
 
-func testAccAwsConnectContactFlowDataSourceConfig_byname(rName, rName2 string) string {
+func testAccAwsConnectContactFlowDataSourceConfig_Name(rName, rName2 string) string {
 	return fmt.Sprintf(testAccAwsConnectContactFlowDataSourceBaseConfig(rName, rName2) + `
 data "aws_connect_contact_flow" "test" {
   instance_id = aws_connect_instance.test.id
