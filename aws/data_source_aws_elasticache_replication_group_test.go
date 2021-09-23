@@ -105,6 +105,27 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_NonExistent(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsElasticacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_CloudWatch(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, elasticache.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsElasticacheReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configurations.0.log_format", "text"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+				),
+			},
+		},
+	})
+}
 func testAccDataSourceAwsElasticacheReplicationGroupConfig_basic(rName string) string {
 	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -162,6 +183,77 @@ data "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
+func testAccDataSourceAwsElasticacheReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName string, enableLogDelivery bool, enableClusterMode bool) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "p" {
+  count = tobool("%[2]t") ? 1 : 0
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["${aws_cloudwatch_log_group.lg[0].arn}:log-stream:*"]
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "rp" {
+  count           = tobool("%[2]t") ? 1 : 0
+  policy_document = data.aws_iam_policy_document.p[0].json
+  policy_name     = "%[1]s"
+  depends_on = [
+    aws_cloudwatch_log_group.lg[0]
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "lg" {
+  count             = tobool("%[2]t") ? 1 : 0
+  retention_in_days = 1
+  name              = "%[1]s"
+}
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = "%[1]s"
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+  parameter_group_name          = tobool("%[3]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"
+  automatic_failover_enabled    = tobool("%[3]t")
+
+  dynamic "cluster_mode" {
+    for_each = tobool("%[3]t") ? [""] : []
+    content {
+      num_node_groups         = 1
+      replicas_per_node_group = 0
+    }
+  }
+
+  dynamic "log_delivery_configurations" {
+    for_each = tobool("%[2]t") ? [""] : []
+    content {
+      destination_details {
+        cloudwatch_logs {
+          log_group = aws_cloudwatch_log_group.lg[0].name
+        }
+      }
+      destination_type = "cloudwatch-logs"
+      log_format       = "text"
+      log_type         = "slow-log"
+    }
+  }
+}
+
+data "aws_elasticache_replication_group" "test" {
+  replication_group_id = aws_elasticache_replication_group.test.replication_group_id
+}
+`, rName, enableLogDelivery, enableClusterMode)
+}
 const testAccDataSourceAwsElasticacheReplicationGroupConfig_NonExistent = `
 data "aws_elasticache_replication_group" "test" {
   replication_group_id = "tf-acc-test-nonexistent"
