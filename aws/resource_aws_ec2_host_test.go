@@ -10,42 +10,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const testAccAWSDefaultDedicatedHostConfigBasic = `
-resource "aws_dedicated_host" "test" {
-   instance_type = "c5.xlarge"
-   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-   host_recovery = "on"
-   auto_placement = "on"
-	tags = {
-    tag1 = "test-value1"
-    tag2 = "test-value2"
-  }
-}
-`
-const testAccAWSDefaultDedicatedHostConfigBasicUpdate = `
-resource "aws_dedicated_host" "test" {
-   instance_type = "c5.xlarge"
-   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-   host_recovery = "on"
-   auto_placement = "on"
-	tags = {
-    tag1 = "test-value1-%$#!."
-    tag2 = "test-value2-changed"
-	tag3 = "test-value3"
-  }
-}
-`
-
 func init() {
-	resource.AddTestSweepers("aws_dedicated_host", &resource.Sweeper{
-		Name: "aws_dedicated_host",
-		F:    testSweepDedicatedHosts,
+	resource.AddTestSweepers("aws_ec2_host", &resource.Sweeper{
+		Name: "aws_ec2_host",
+		F:    testSweepEc2Hosts,
 	})
 }
-func testSweepDedicatedHosts(region string) error {
+func testSweepEc2Hosts(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -104,19 +79,20 @@ func testSweepDedicatedHosts(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSDedicatedHost_basic(t *testing.T) {
+func TestAccAWSEc2Host_basic(t *testing.T) {
 	var host ec2.Host
-	resourceName := "aws_dedicated_host.test"
+	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckHostDestroy,
+		CheckDestroy: testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultDedicatedHostConfigBasic,
+				Config: testAccAWSDefaultEc2HostConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(resourceName, &host),
+					testAccCheckEc2HostExists(resourceName, &host),
 					resource.TestCheckResourceAttr(resourceName, "host_recovery", "on"),
 					resource.TestCheckResourceAttr(resourceName, "auto_placement", "on"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "c5.xlarge"),
@@ -131,7 +107,45 @@ func TestAccAWSDedicatedHost_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckHostExists(n string, host *ec2.Host) resource.TestCheckFunc {
+func TestAccAWSEc2Host_tags(t *testing.T) {
+	var host ec2.Host
+	resourceName := "aws_ec2_host.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEc2HostDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDefaultEc2HostConfigBasic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2HostExists(resourceName, &host),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDefaultEc2HostConfigBasicUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2HostExists(resourceName, &host),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1-%$#!."),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2-changed"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag3", "test-value3"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckEc2HostExists(n string, host *ec2.Host) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -159,39 +173,65 @@ func testAccCheckHostExists(n string, host *ec2.Host) resource.TestCheckFunc {
 		return nil
 	}
 }
-func TestAccAWSDedicatedHost_tags(t *testing.T) {
-	var host ec2.Host
-	resourceName := "aws_dedicated_host.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckHostDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDefaultDedicatedHostConfigBasic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(resourceName, &host),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSDefaultDedicatedHostConfigBasicUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostExists(resourceName, &host),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1-%$#!."),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2-changed"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag3", "test-value3"),
-				),
-			},
-		},
-	})
+func testAccCheckEc2HostDestroy(s *terraform.State) error {
+	return testAccCheckEc2HostDestroyWithProvider(s, testAccProvider)
 }
+
+func testAccCheckEc2HostDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+	conn := provider.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_ec2_host" {
+			continue
+		}
+
+		// Try to find the resource
+		resp, err := conn.DescribeHosts(&ec2.DescribeHostsInput{
+			HostIds: []*string{aws.String(rs.Primary.ID)},
+		})
+		if err == nil {
+			for _, r := range resp.Hosts {
+				if r.State != nil && *r.State != "released" {
+					return fmt.Errorf("Found unterminated host: %s", r)
+				}
+
+			}
+		}
+
+		// Verify the error is what we want
+		if isAWSErr(err, "InvalidID.NotFound", "") {
+			continue
+		}
+
+		return err
+	}
+
+	return nil
+}
+
+const testAccAWSDefaultEc2HostConfigBasic = `
+resource "aws_ec2_host" "test" {
+   instance_type = "c5.xlarge"
+   availability_zone = "${data.aws_availability_zones.available.names[0]}"
+   host_recovery = "on"
+   auto_placement = "on"
+	tags = {
+    tag1 = "test-value1"
+    tag2 = "test-value2"
+  }
+}
+`
+const testAccAWSDefaultEc2HostConfigBasicUpdate = `
+resource "aws_ec2_host" "test" {
+   instance_type = "c5.xlarge"
+   availability_zone = "${data.aws_availability_zones.available.names[0]}"
+   host_recovery = "on"
+   auto_placement = "on"
+	tags = {
+    tag1 = "test-value1-%$#!."
+    tag2 = "test-value2-changed"
+	tag3 = "test-value3"
+  }
+}
+`

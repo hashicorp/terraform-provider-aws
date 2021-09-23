@@ -1,24 +1,19 @@
 package aws
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSDedicatedHostDataSource_basic(t *testing.T) {
-	dataSourceName := "data.aws_dedicated_host.test_data"
-	resourceName := "aws_dedicated_host.test"
+func TestAccAWSEc2HostDataSource_basic(t *testing.T) {
+	dataSourceName := "data.aws_ec2_host.test"
+	resourceName := "aws_ec2_host.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckHostDestroy,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDedicatedHostDataSourceConfig,
@@ -41,7 +36,7 @@ func TestAccAWSDedicatedHostDataSource_basic(t *testing.T) {
 }
 
 const testAccDedicatedHostDataSourceConfig = `
-resource "aws_dedicated_host" "test" {
+resource "aws_ec2_host" "test" {
    instance_type = "c5.xlarge"
    availability_zone = "${data.aws_availability_zones.available.names[0]}"
    host_recovery = "on"
@@ -53,8 +48,8 @@ resource "aws_dedicated_host" "test" {
 }
 
 
-data "aws_dedicated_host" "test_data" {
-  host_id = "${aws_dedicated_host.test.id}"
+data "aws_ec2_host" "test" {
+  host_id = aws_ec2_host.test.id
 }
 
 data "aws_availability_zones" "available" {
@@ -69,38 +64,3 @@ data "aws_availability_zones" "available" {
 	
 
 `
-
-func testAccCheckHostDestroy(s *terraform.State) error {
-	return testAccCheckHostDestroyWithProvider(s, testAccProvider)
-}
-func testAccCheckHostDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).ec2conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dedicated_host" {
-			continue
-		}
-
-		// Try to find the resource
-		resp, err := conn.DescribeHosts(&ec2.DescribeHostsInput{
-			HostIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err == nil {
-			for _, r := range resp.Hosts {
-				if r.State != nil && *r.State != "released" {
-					return fmt.Errorf("Found unterminated host: %s", r)
-				}
-
-			}
-		}
-
-		// Verify the error is what we want
-		if isAWSErr(err, "InvalidID.NotFound", "") {
-			continue
-		}
-
-		return err
-	}
-
-	return nil
-}

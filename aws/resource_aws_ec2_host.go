@@ -14,12 +14,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func resourceAwsDedicatedHost() *schema.Resource {
+func resourceAwsEc2Host() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDedicatedHostCreate,
-		Read:   resourceAwsDedicatedHostRead,
-		Update: resourceAwsDedicatedHostUpdate,
-		Delete: resourceAwsDedicatedHostDelete,
+		Create: resourceAwsEc2HostCreate,
+		Read:   resourceAwsEc2HostRead,
+		Update: resourceAwsEc2HostUpdate,
+		Delete: resourceAwsEc2HostDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -84,9 +84,9 @@ func buildAwsHostsOpts(d *schema.ResourceData) *awsHostsOpts {
 	return opts
 }
 
-// resourceAwsDedicatedHostCreate allocates a Dedicated Host to your account.
+// resourceAwsEc2HostCreate allocates a Dedicated Host to your account.
 // https://docs.aws.amazon.com/en_pv/AWSEC2/latest/APIReference/API_AllocateHosts.html
-func resourceAwsDedicatedHostCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2HostCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	hostOpts := buildAwsHostsOpts(d)
 
@@ -125,10 +125,10 @@ func resourceAwsDedicatedHostCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(*runResp.HostIds[0])
 
 	// Update if we need to
-	return resourceAwsDedicatedHostRead(d, meta)
+	return resourceAwsEc2HostRead(d, meta)
 }
 
-func resourceAwsDedicatedHostRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
@@ -167,7 +167,7 @@ func resourceAwsDedicatedHostRead(d *schema.ResourceData, meta interface{}) erro
 // When auto-placement is enabled, any instances that you launch with a tenancy of host but without a specific host ID are placed onto any available
 // Dedicated Host in your account that has auto-placement enabled.
 // https://docs.aws.amazon.com/en_pv/AWSEC2/latest/APIReference/API_ModifyHosts.html
-func resourceAwsDedicatedHostUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2HostUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	requestUpdate := false
 	req := &ec2.ModifyHostsInput{
@@ -204,10 +204,10 @@ func resourceAwsDedicatedHostUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsDedicatedHostRead(d, meta)
+	return resourceAwsEc2HostRead(d, meta)
 }
 
-func resourceAwsDedicatedHostDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEc2HostDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	err := awsReleaseHosts(conn, d.Id())

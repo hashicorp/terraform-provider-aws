@@ -11,9 +11,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func dataSourceAwsDedicatedHost() *schema.Resource {
+func dataSourceAwsEc2Host() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAwsDedicatedHostRead,
+		Read: dataSourceAwsAwsEc2HostRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
@@ -58,7 +58,7 @@ func dataSourceAwsDedicatedHost() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAwsDedicatedHostRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	conn := meta.(*AWSClient).ec2conn
 	hostID, hostIDOk := d.GetOk("host_id")
