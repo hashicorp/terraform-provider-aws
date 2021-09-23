@@ -514,6 +514,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 	}
 
 	d.Set("kms_key_id", rgp.KmsKeyId)
+	d.Set("log_delivery_configurations", flattenAwsElasticacheLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
 	if err := d.Set("member_clusters", flattenStringSet(rgp.MemberClusters)); err != nil {
