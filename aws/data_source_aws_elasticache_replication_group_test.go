@@ -126,6 +126,29 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_Engine_Redis_LogDeliveryCon
 		},
 	})
 }
+
+func TestAccDataSourceAwsElasticacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, elasticache.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsElasticacheReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configurations.0.destination_type", "kinesis-firehose"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configurations.0.log_format", "json"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsElasticacheReplicationGroupConfig_basic(rName string) string {
 	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -254,6 +277,108 @@ data "aws_elasticache_replication_group" "test" {
 }
 `, rName, enableLogDelivery, enableClusterMode)
 }
+
+func testAccDataSourceAwsElasticacheReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName string, enableLogDelivery bool, enableClusterMode bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "b" {
+  count         = tobool("%[2]t") ? 1 : 0
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_iam_role" "r" {
+  count = tobool("%[2]t") ? 1 : 0
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "firehose.amazonaws.com"
+        }
+      },
+    ]
+  })
+  inline_policy {
+    name = "my_inline_s3_policy"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "s3:AbortMultipartUpload",
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:ListBucketMultipartUploads",
+            "s3:PutObject",
+            "s3:PutObjectAcl",
+          ]
+          Effect   = "Allow"
+          Resource = ["${aws_s3_bucket.b[0].arn}", "${aws_s3_bucket.b[0].arn}/*"]
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "ds" {
+  count       = tobool("%[2]t") ? 1 : 0
+  name        = "%[1]s"
+  destination = "s3"
+  s3_configuration {
+    role_arn   = aws_iam_role.r[0].arn
+    bucket_arn = aws_s3_bucket.b[0].arn
+  }
+  lifecycle {
+    ignore_changes = [
+      tags["LogDeliveryEnabled"],
+    ]
+  }
+}
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = "%[1]s"
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+  parameter_group_name          = tobool("%[3]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"
+  automatic_failover_enabled    = tobool("%[3]t")
+
+  dynamic "cluster_mode" {
+    for_each = tobool("%[3]t") ? [""] : []
+    content {
+      num_node_groups         = 1
+      replicas_per_node_group = 0
+    }
+  }
+
+  dynamic "log_delivery_configurations" {
+    for_each = tobool("%[2]t") ? [""] : []
+    content {
+      destination_details {
+        kinesis_firehose {
+          delivery_stream = aws_kinesis_firehose_delivery_stream.ds[0].name
+        }
+      }
+      destination_type = "kinesis-firehose"
+      log_format       = "json"
+      log_type         = "slow-log"
+    }
+  }
+}
+
+data "aws_elasticache_replication_group" "test" {
+  replication_group_id = aws_elasticache_replication_group.test.replication_group_id
+}
+`, rName, enableLogDelivery, enableClusterMode)
+}
+
 const testAccDataSourceAwsElasticacheReplicationGroupConfig_NonExistent = `
 data "aws_elasticache_replication_group" "test" {
   replication_group_id = "tf-acc-test-nonexistent"
