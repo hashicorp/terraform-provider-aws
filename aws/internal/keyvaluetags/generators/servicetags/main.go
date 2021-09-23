@@ -123,6 +123,7 @@ var mapServiceNames = []string{
 	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
+	"connect",
 	"dataexchange",
 	"dlm",
 	"eks",

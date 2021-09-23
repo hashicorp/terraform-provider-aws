@@ -6,6 +6,8 @@ const InstanceStatusStatusNotFound = "ResourceNotFoundException"
 
 const (
 	ListInstancesMaxResults = 10
+	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
+	ListContactFlowsMaxResults = 60
 )
 
 func InstanceAttributeMapping() map[string]string {
