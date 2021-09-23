@@ -3057,6 +3057,171 @@ resource "aws_elasticache_replication_group" "primary" {
 `, rName))
 }
 
+func testAccAWSElasticacheReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName string, enableLogDelivery bool, enableClusterMode bool) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "p" {
+  count = tobool("%[2]t") ? 1 : 0
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["${aws_cloudwatch_log_group.lg[0].arn}:log-stream:*"]
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "rp" {
+  count           = tobool("%[2]t") ? 1 : 0
+  policy_document = data.aws_iam_policy_document.p[0].json
+  policy_name     = "%[1]s"
+  depends_on = [
+    aws_cloudwatch_log_group.lg[0]
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "lg" {
+  count             = tobool("%[2]t") ? 1 : 0
+  retention_in_days = 1
+  name              = "%[1]s"
+}
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = "%[1]s"
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+  parameter_group_name          = tobool("%[3]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"
+  automatic_failover_enabled    = tobool("%[3]t")
+
+  dynamic "cluster_mode" {
+    for_each = tobool("%[3]t") ? [""] : []
+    content {
+      num_node_groups         = 1
+      replicas_per_node_group = 0
+    }
+  }
+
+  dynamic "log_delivery_configurations" {
+    for_each = tobool("%[2]t") ? [""] : []
+    content {
+      destination_details {
+        cloudwatch_logs {
+          log_group = aws_cloudwatch_log_group.lg[0].name
+        }
+      }
+      destination_type = "cloudwatch-logs"
+      log_format       = "text"
+      log_type         = "slow-log"
+    }
+  }
+}
+`, rName, enableLogDelivery, enableClusterMode)
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_Engine_Redis_LogDeliveryConfigurations_KinesisFirehose(rName string, enableLogDelivery bool, enableClusterMode bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "b" {
+  count         = tobool("%[2]t") ? 1 : 0
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_iam_role" "r" {
+  count = tobool("%[2]t") ? 1 : 0
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "firehose.amazonaws.com"
+        }
+      },
+    ]
+  })
+  inline_policy {
+    name = "my_inline_s3_policy"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "s3:AbortMultipartUpload",
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:ListBucketMultipartUploads",
+            "s3:PutObject",
+            "s3:PutObjectAcl",
+          ]
+          Effect   = "Allow"
+          Resource = ["${aws_s3_bucket.b[0].arn}", "${aws_s3_bucket.b[0].arn}/*"]
+        },
+      ]
+    })
+  }
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "ds" {
+  count       = tobool("%[2]t") ? 1 : 0
+  name        = "%[1]s"
+  destination = "s3"
+  s3_configuration {
+    role_arn   = aws_iam_role.r[0].arn
+    bucket_arn = aws_s3_bucket.b[0].arn
+  }
+  lifecycle {
+    ignore_changes = [
+      tags["LogDeliveryEnabled"],
+    ]
+  }
+}
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = "%[1]s"
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+  parameter_group_name          = tobool("%[3]t") ? "default.redis6.x.cluster.on" : "default.redis6.x"
+  automatic_failover_enabled    = tobool("%[3]t")
+
+  dynamic "cluster_mode" {
+    for_each = tobool("%[3]t") ? [""] : []
+    content {
+      num_node_groups         = 1
+      replicas_per_node_group = 0
+    }
+  }
+
+  dynamic "log_delivery_configurations" {
+    for_each = tobool("%[2]t") ? [""] : []
+    content {
+      destination_details {
+        kinesis_firehose {
+          delivery_stream = aws_kinesis_firehose_delivery_stream.ds[0].name
+        }
+      }
+      destination_type = "kinesis-firehose"
+      log_format       = "json"
+      log_type         = "slow-log"
+    }
+  }
+}
+`, rName, enableLogDelivery, enableClusterMode)
+}
+
 func resourceAwsElasticacheReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
 	return resourceAwsElasticacheReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId:       aws.String(replicationGroupID),
