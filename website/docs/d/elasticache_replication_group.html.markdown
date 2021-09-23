@@ -32,6 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the created ElastiCache Replication Group.
 * `auth_token_enabled` - Specifies whether an AuthToken (password) is enabled.
 * `automatic_failover_enabled` - A flag whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails.
+* `log_delivery_configurations` - Redis [SLOWLOG](https://redis.io/commands/slowlog) delivery settings.
 * `node_type` – The cluster node type.
 * `number_cache_clusters` – The number of cache clusters that the replication group has.
 * `member_clusters` - The identifiers of all the nodes that are part of this replication group.
