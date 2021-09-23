@@ -1470,7 +1470,9 @@ var resourceAwsRdsClusterDeletePendingStates = []string{
 
 var resourceAwsRdsClusterUpdatePendingStates = []string{
 	"backing-up",
+	"configuring-iam-database-auth",
 	"modifying",
+	"renaming",
 	"resetting-master-credentials",
 	"upgrading",
 }
