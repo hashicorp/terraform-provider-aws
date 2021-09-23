@@ -632,6 +632,15 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 		requestUpdate = true
 	}
 
+	if d.HasChange("log_delivery_configurations") {
+		validateError := validateAwsElasticacheLogDeliveryConfigurations(d)
+		if validateError != nil {
+			return validateError
+		}
+		params.LogDeliveryConfigurations = expandAwsElasticacheLogDeliveryConfigurations(d)
+		requestUpdate = true
+	}
+
 	if d.HasChange("auto_minor_version_upgrade") {
 		params.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
 		requestUpdate = true
