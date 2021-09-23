@@ -68,7 +68,11 @@ func ImageBuilderByName(conn *appstream.AppStream, name string) (*appstream.Imag
 		return nil, err
 	}
 
-	if len(resp.ImageBuilders) > 0 {
+	if len(resp.ImageBuilders) > 1 {
+		return nil, fmt.Errorf("got more than one image builder with the name %s", name)
+	}
+
+	if len(resp.ImageBuilders) == 1 {
 		imageBuilder = resp.ImageBuilders[0]
 	}
 

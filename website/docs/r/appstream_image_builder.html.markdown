@@ -55,28 +55,28 @@ The following arguments are optional:
 
 ### `access_endpoints`
 
-* `endpoint_type` - (Required) The type of interface endpoint.
-* `vpce_id` - (Optional) The identifier (ID) of the VPC in which the interface endpoint is used.
+* `endpoint_type` - (Required) Type of interface endpoint.
+* `vpce_id` - (Optional) Identifier (ID) of the VPC in which the interface endpoint is used.
 
 ### `domain_join_info`
 
-* `directory_name` - (Optional) The fully qualified name of the directory (for example, corp.example.com).
-* `organizational_unit_distinguished_name` - (Optional) The distinguished name of the organizational unit for computer accounts.
+* `directory_name` - (Optional) Fully qualified name of the directory (for example, corp.example.com).
+* `organizational_unit_distinguished_name` - (Optional) Distinguished name of the organizational unit for computer accounts.
 
 ### `vpc_config`
 
-* `security_group_ids` - (Optional) The identifiers of the security groups for the image builder or image builder.
-* `subnet_ids` - (Optional) The identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
+* `security_group_ids` - (Optional) Identifiers of the security groups for the image builder or image builder.
+* `subnet_ids` - (Optional) Identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
 
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Unique identifier (ID) of the appstream image builder.
 * `arn` - ARN of the appstream image builder.
-* `state` - State of the image builder. Can be: `PENDING`, `UPDATING_AGENT`, `RUNNING`, `STOPPING`, `STOPPED`, `REBOOTING`, `SNAPSHOTTING`, `DELETING`, `FAILED`, `UPDATING`, `PENDING_QUALIFICATION`
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
+* `id` - Unique identifier (ID) of the appstream image builder.
+* `state` - State of the image builder. Can be: `PENDING`, `UPDATING_AGENT`, `RUNNING`, `STOPPING`, `STOPPED`, `REBOOTING`, `SNAPSHOTTING`, `DELETING`, `FAILED`, `UPDATING`, `PENDING_QUALIFICATION`
 
 
 ## Import

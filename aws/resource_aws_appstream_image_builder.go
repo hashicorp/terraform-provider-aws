@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/waiter"
 )
@@ -351,139 +349,4 @@ func resourceAwsAppStreamImageBuilderDelete(ctx context.Context, d *schema.Resou
 
 	return nil
 
-}
-
-func expandAccessEndpoint(tfMap map[string]interface{}) *appstream.AccessEndpoint {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &appstream.AccessEndpoint{
-		EndpointType: aws.String(tfMap["endpoint_type"].(string)),
-	}
-	if v, ok := tfMap["vpce_id"]; ok {
-		apiObject.VpceId = aws.String(v.(string))
-	}
-
-	return apiObject
-}
-
-func expandAccessEndpoints(tfList []interface{}) []*appstream.AccessEndpoint {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []*appstream.AccessEndpoint
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandAccessEndpoint(tfMap)
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func flattenAccessEndpoint(apiObject *appstream.AccessEndpoint) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	tfMap["endpoint_type"] = aws.StringValue(apiObject.EndpointType)
-	tfMap["vpce_id"] = aws.StringValue(apiObject.VpceId)
-
-	return tfMap
-}
-
-func flattenAccessEndpoints(apiObjects []*appstream.AccessEndpoint) []map[string]interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []map[string]interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenAccessEndpoint(apiObject))
-	}
-
-	return tfList
-}
-
-func expandDomainJoinInfo(tfList []interface{}) *appstream.DomainJoinInfo {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	apiObject := &appstream.DomainJoinInfo{}
-
-	attr := tfList[0].(map[string]interface{})
-	if v, ok := attr["directory_name"]; ok {
-		apiObject.DirectoryName = aws.String(v.(string))
-	}
-	if v, ok := attr["organizational_unit_distinguished_name"]; ok {
-		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
-	}
-
-	return apiObject
-}
-
-func flattenDomainInfo(apiObject *appstream.DomainJoinInfo) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfList := map[string]interface{}{}
-	tfList["directory_name"] = aws.StringValue(apiObject.DirectoryName)
-	tfList["organizational_unit_distinguished_name"] = aws.StringValue(apiObject.OrganizationalUnitDistinguishedName)
-
-	return []interface{}{tfList}
-}
-
-func expandVpcConfig(tfList []interface{}) *appstream.VpcConfig {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	apiObject := &appstream.VpcConfig{}
-
-	attr := tfList[0].(map[string]interface{})
-	if v, ok := attr["security_group_ids"]; ok {
-		apiObject.SecurityGroupIds = expandStringList(v.([]interface{}))
-	}
-	if v, ok := attr["subnet_ids"]; ok {
-		apiObject.SubnetIds = expandStringList(v.([]interface{}))
-	}
-
-	return apiObject
-}
-
-func flattenVpcConfig(apiObject *appstream.VpcConfig) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfList := map[string]interface{}{}
-	tfList["security_group_ids"] = aws.StringValueSlice(apiObject.SecurityGroupIds)
-	tfList["subnet_ids"] = aws.StringValueSlice(apiObject.SubnetIds)
-
-	return []interface{}{tfList}
-}
-
-func accessEndpointsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["endpoint_type"].(string))
-	buf.WriteString(m["vpce_id"].(string))
-	return hashcode.String(buf.String())
 }
