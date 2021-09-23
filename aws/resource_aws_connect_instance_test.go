@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -30,43 +29,71 @@ func testSweepConnectInstance(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+
 	conn := client.(*AWSClient).connectconn
 	ctx := context.Background()
+	var errs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
+
 	// MaxResults:  Maximum value of 10. https://docs.aws.amazon.com/connect/latest/APIReference/API_ListInstances.html
 	input := &connect.ListInstancesInput{MaxResults: aws.Int64(tfconnect.ListInstancesMaxResults)}
-	var sweeperErrs *multierror.Error
-	for {
-		listOutput, err := conn.ListInstances(input)
-		if err != nil {
-			if testSweepSkipSweepError(err) {
-				log.Printf("[WARN] Skipping Connect Instance sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving Connect Instance: %s", err)
+
+	err = conn.ListInstancesPagesWithContext(ctx, input, func(page *connect.ListInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		for _, instance := range listOutput.InstanceSummaryList {
-			id := aws.StringValue(instance.Id)
+
+		for _, instanceSummary := range page.InstanceSummaryList {
+			if instanceSummary == nil {
+				continue
+			}
+
+			id := aws.StringValue(instanceSummary.Id)
+
+			log.Printf("[INFO] Deleting Connect Instance (%s)", id)
 			r := resourceAwsConnectInstance()
 			d := r.Data(nil)
 			d.SetId(id)
 
-			diags := r.DeleteContext(ctx, d, client)
-			for i := range diags {
-				if diags[i].Severity == diag.Error {
-					log.Printf("[ERROR] %s", diags[i].Summary)
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf(diags[i].Summary))
-					continue
-				}
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
-		if aws.StringValue(listOutput.NextToken) == "" {
-			break
-		}
-		input.NextToken = listOutput.NextToken
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing Connect Instances: %w", err))
 	}
-	return sweeperErrs.ErrorOrNil()
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Connect Instances for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Connect Instances sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
-func TestAccAwsConnectInstance_basic(t *testing.T) {
+
+//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
+func TestAccAwsConnectInstance_serial(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic":     testAccAwsConnectInstance_basic,
+		"directory": testAccAwsConnectInstance_directory,
+		"saml":      testAccAwsConnectInstance_saml,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccAwsConnectInstance_basic(t *testing.T) {
 	var v connect.DescribeInstanceOutput
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
@@ -120,7 +147,7 @@ func TestAccAwsConnectInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsConnectInstance_directory(t *testing.T) {
+func testAccAwsConnectInstance_directory(t *testing.T) {
 	var v connect.DescribeInstanceOutput
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
@@ -149,7 +176,7 @@ func TestAccAwsConnectInstance_directory(t *testing.T) {
 	})
 }
 
-func TestAccAwsConnectInstance_saml(t *testing.T) {
+func testAccAwsConnectInstance_saml(t *testing.T) {
 	var v connect.DescribeInstanceOutput
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"

@@ -121,24 +121,24 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 		OutboundCallsEnabled:   aws.Bool(d.Get("outbound_calls_enabled").(bool)),
 	}
 
-	if _, ok := d.GetOk("directory_id"); ok {
-		input.DirectoryId = aws.String(d.Get("directory_id").(string))
+	if v, ok := d.GetOk("directory_id"); ok {
+		input.DirectoryId = aws.String(v.(string))
 	}
-	if _, ok := d.GetOk("instance_alias"); ok {
-		input.InstanceAlias = aws.String(d.Get("instance_alias").(string))
+	if v, ok := d.GetOk("instance_alias"); ok {
+		input.InstanceAlias = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Connect Instance %s", input)
 	output, err := conn.CreateInstanceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Instance (%s): %s", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error creating Connect Instance (%s): %w", d.Id(), err))
 	}
 
 	d.SetId(aws.StringValue(output.Id))
 
 	if _, err := waiter.InstanceCreated(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Connect instance creation (%s): %s", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error waiting for Connect instance creation (%s): %w", d.Id(), err))
 	}
 
 	for att := range tfconnect.InstanceAttributeMapping() {
@@ -150,7 +150,7 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 			if err != nil && tfawserr.ErrCodeEquals(err, tfconnect.ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, tfconnect.ErrCodeAccessDeniedException, "not authorized to update") {
 				log.Printf("[WARN] error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err)
 			} else if err != nil {
-				return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
+				return diag.FromErr(fmt.Errorf("error setting Connect instance (%s) attribute (%s): %w", d.Id(), att, err))
 			}
 		}
 	}
@@ -187,7 +187,7 @@ func resourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[DEBUG] Reading Connect Instance %s", d.Id())
 	output, err := conn.DescribeInstanceWithContext(ctx, &input)
 
-	if isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Connect Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -230,6 +230,11 @@ func resourceAwsConnectInstanceDelete(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[DEBUG] Deleting Connect Instance %s", d.Id())
 
 	_, err := conn.DeleteInstance(input)
+
+	if isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
+		return nil
+	}
+
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error deleting Connect Instance (%s): %s", d.Id(), err))
 	}

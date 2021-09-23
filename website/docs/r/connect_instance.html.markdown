@@ -56,11 +56,21 @@ The following arguments are supported:
 * `contact_lens_enabled` - (Optional) Specifies whether contact lens is enabled. Defaults to `true`.
 * `directory_id` - (Optional) The identifier for the directory if identity_management_type is `EXISTING_DIRECTORY`.
 * `early_media_enabled` - (Optional) Specifies whether early media for outbound calls is enabled . Defaults to `true` if outbound calls is enabled.
-* `identity_management_type` - Specifies the identity management type attached to the instance. Allowed Values are: `SAML`, `CONNECT_MANAGED`, `EXISTING_DIRECTORY`.
-* `inbound_calls_enabled` - Specifies whether inbound calls are enabled.
-* `instance_alias` - (Optional) Specifies the name of the instance.
-* `outbound_calls_enabled` -  Specifies whether outbound calls are enabled.
+* `identity_management_type` - (Required) Specifies the identity management type attached to the instance. Allowed Values are: `SAML`, `CONNECT_MANAGED`, `EXISTING_DIRECTORY`.
+* `inbound_calls_enabled` - (Required) Specifies whether inbound calls are enabled.
+* `instance_alias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
+* `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
 <!-- * `use_custom_tts_voices` - (Optional) Specifies Whether use custom tts voices is enabled. Defaults to `false` -->
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The identifier of the instance.
+* `arn` - Amazon Resource Name (ARN) of the instance.
+* `created_time` - Specifies when the instance was created.
+* `service_role` - The service role of the instance.
+* `status` - The state of the instance.
 
 ### Timeouts
 
@@ -69,11 +79,10 @@ The following arguments are supported:
 * `create` - (Defaults to 5 mins) Used when creating the instance.
 * `delete` - (Defaults to 5 mins) Used when deleting the instance.
 
-## Attributes Reference
+## Import
 
-In addition to all arguments above, the following attributes are exported:
+Connect instances can be imported using the `id`, e.g.
 
-* `arn` - Amazon Resource Name (ARN) of the instance.
-* `created_time` - Specifies when the instance was created.
-* `service_role` - The service role of the instance.
-* `status` - The state of the instance.
+```
+$ terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
+```
