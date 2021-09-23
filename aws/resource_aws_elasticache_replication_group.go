@@ -393,6 +393,14 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		params.KmsKeyId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("log_delivery_configurations"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		validateError := validateAwsElasticacheLogDeliveryConfigurations(d)
+		if validateError != nil {
+			return validateError
+		}
+		params.LogDeliveryConfigurations = expandAwsElasticacheLogDeliveryConfigurations(d)
+	}
+
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
 		params.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
 	}
