@@ -16,6 +16,8 @@ import (
 
 func TestAccAwsEc2ManagedPrefixListEntry_ipv4(t *testing.T) {
 	var entry ec2.PrefixListEntry
+	resourceName := "aws_ec2_managed_prefix_list_entry.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,17 +29,16 @@ func TestAccAwsEc2ManagedPrefixListEntry_ipv4(t *testing.T) {
 			{
 				Config: testAccAwsEc2ManagedPrefixListEntryIpv4Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2ManagedPrefixListExists("aws_ec2_managed_prefix_list.web", &entry),
-					resource.TestCheckResourceAttrPair(
-						"aws_ec2_managed_prefix_list_entry.entry_1", "prefix_list_id", "aws_ec2_managed_prefix_list.web", "id"),
-					resource.TestCheckResourceAttr(
-						"aws_ec2_managed_prefix_list_entry.entry_1", "cidr", "10.0.0.0/8"),
+					testAccCheckAWSEc2ManagedPrefixListEntryExists(resourceName, &entry),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/8"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 			{
-				ResourceName:      "aws_ec2_managed_prefix_list_entry.entry_1",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAwsEc2ManagedPrefixListEntryImportStateIdFunc("aws_ec2_managed_prefix_list_entry.entry_1"),
+				ImportStateIdFunc: testAccAwsEc2ManagedPrefixListEntryImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -46,8 +47,9 @@ func TestAccAwsEc2ManagedPrefixListEntry_ipv4(t *testing.T) {
 
 func TestAccAwsEc2ManagedPrefixListEntry_ipv6(t *testing.T) {
 	var entry ec2.PrefixListEntry
+	resourceName := "aws_ec2_managed_prefix_list_entry.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	entryName := "aws_ec2_managed_prefix_list_entry.entry_1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
@@ -58,11 +60,17 @@ func TestAccAwsEc2ManagedPrefixListEntry_ipv6(t *testing.T) {
 			{
 				Config: testAccAwsEc2ManagedPrefixListEntryIpv6Config(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2ManagedPrefixListExists("aws_ec2_managed_prefix_list.web", &entry),
-					resource.TestCheckResourceAttrPair(
-						entryName, "prefix_list_id", "aws_ec2_managed_prefix_list.web", "id"),
-					resource.TestCheckResourceAttr("aws_ec2_managed_prefix_list_entry.entry_1", "cidr", "::/0"),
+					testAccCheckAWSEc2ManagedPrefixListEntryExists(resourceName, &entry),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "cidr", "::/0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsEc2ManagedPrefixListEntryImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -108,6 +116,8 @@ func TestAccAwsEc2ManagedPrefixListEntry_expectInvalidCIDR(t *testing.T) {
 
 func TestAccAwsEc2ManagedPrefixListEntry_description(t *testing.T) {
 	var entry ec2.PrefixListEntry
+	resourceName := "aws_ec2_managed_prefix_list_entry.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -119,9 +129,17 @@ func TestAccAwsEc2ManagedPrefixListEntry_description(t *testing.T) {
 			{
 				Config: testAccAwsEc2ManagedPrefixListEntryDescriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2ManagedPrefixListExists("aws_ec2_managed_prefix_list.web", &entry),
-					resource.TestCheckResourceAttr("aws_ec2_managed_prefix_list_entry.entry_1", "description", "TF acceptance test ec2 managed prefix list entry"),
+					testAccCheckAWSEc2ManagedPrefixListEntryExists(resourceName, &entry),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/8"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsEc2ManagedPrefixListEntryImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -129,19 +147,19 @@ func TestAccAwsEc2ManagedPrefixListEntry_description(t *testing.T) {
 
 func TestAccAwsEc2ManagedPrefixListEntry_disappears(t *testing.T) {
 	var entry ec2.PrefixListEntry
-	resourceName := "aws_ec2_managed_prefix_list_entry.entry_1"
+	resourceName := "aws_ec2_managed_prefix_list_entry.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
+		CheckDestroy: testAccCheckAWSEc2ManagedPrefixListEntryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2ManagedPrefixListEntryIpv4Config(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSEc2ManagedPrefixListExists("aws_ec2_managed_prefix_list.web", &entry),
+					testAccCheckAWSEc2ManagedPrefixListEntryExists(resourceName, &entry),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2ManagedPrefixListEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -180,7 +198,7 @@ func testAccCheckAWSEc2ManagedPrefixListEntryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEc2ManagedPrefixListExists(n string, v *ec2.PrefixListEntry) resource.TestCheckFunc {
+func testAccCheckAWSEc2ManagedPrefixListEntryExists(n string, v *ec2.PrefixListEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -227,103 +245,91 @@ func testAccAwsEc2ManagedPrefixListEntryImportStateIdFunc(resourceName string) r
 
 func testAccAwsEc2ManagedPrefixListEntryIpv4Config(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_managed_prefix_list" "web" {
+resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
-resource "aws_ec2_managed_prefix_list_entry" "entry_1" {
+resource "aws_ec2_managed_prefix_list_entry" "test" {
   cidr           = "10.0.0.0/8"
-  prefix_list_id = aws_ec2_managed_prefix_list.web.id
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
 }
 `, rName)
 }
 
 func testAccAwsEc2ManagedPrefixListEntryIpv6Config(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_managed_prefix_list" "web" {
+resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
   address_family = "IPv6"
   max_entries    = 5
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
-resource "aws_ec2_managed_prefix_list_entry" "entry_1" {
+resource "aws_ec2_managed_prefix_list_entry" "test" {
   cidr           = "::/0"
-  prefix_list_id = aws_ec2_managed_prefix_list.web.id
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
 }
 `, rName)
 }
 
 func testAccAwsEc2ManagedPrefixListEntryDescriptionConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_managed_prefix_list" "web" {
+resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
-resource "aws_ec2_managed_prefix_list_entry" "entry_1" {
+resource "aws_ec2_managed_prefix_list_entry" "test" {
   cidr           = "10.0.0.0/8"
-  description    = "TF acceptance test ec2 managed prefix list entry"
-  prefix_list_id = aws_ec2_managed_prefix_list.web.id
+  description    = %[1]q
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
 }
 `, rName)
 }
 
 func testAccAwsEc2ManagedPrefixListEntryExpectInvalidType(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_managed_prefix_list" "web" {
+resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
 }
 
-resource "aws_ec2_managed_prefix_list_entry" "ipv6" {
+resource "aws_ec2_managed_prefix_list_entry" "test" {
   cidr           = "::/244"
-  prefix_list_id = aws_ec2_managed_prefix_list.web.id
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
 }
 `, rName)
 }
 
 func testAccAwsEc2ManagedPrefixListEntryInvalidIPv4CIDR(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_managed_prefix_list" "foo" {
+resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
 }
 
-resource "aws_ec2_managed_prefix_list_entry" "ipv4" {
+resource "aws_ec2_managed_prefix_list_entry" "test" {
   cidr           = "1.2.3.4/33"
-  prefix_list_id = aws_ec2_managed_prefix_list.foo.id
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
 }
 `, rName)
 }
 
 func testAccAwsEc2ManagedPrefixListEntryInvalidIPv6CIDR(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_managed_prefix_list" "foo" {
+resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
   address_family = "IPv6"
   max_entries    = 5
 }
 
-resource "aws_ec2_managed_prefix_list_entry" "ipv6" {
+resource "aws_ec2_managed_prefix_list_entry" "test" {
   cidr           = "::/244"
-  prefix_list_id = aws_ec2_managed_prefix_list.foo.id
+  prefix_list_id = aws_ec2_managed_prefix_list.test.id
 }
 `, rName)
 }
