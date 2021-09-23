@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -52,14 +51,16 @@ func dataSourceAwsConnectInstance() *schema.Resource {
 				Computed: true,
 			},
 			"instance_alias": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"instance_alias", "instance_id"},
 			},
 			"instance_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"instance_id", "instance_alias"},
 			},
 			"outbound_calls_enabled": {
 				Type:     schema.TypeBool,
@@ -86,16 +87,11 @@ func dataSourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceDat
 
 	var matchedInstance *connect.Instance
 
-	instanceId, instanceIdOk := d.GetOk("instance_id")
-	instanceAlias, instanceAliasOk := d.GetOk("instance_alias")
+	if v, ok := d.GetOk("instance_id"); ok {
+		instanceId := v.(string)
 
-	if !instanceIdOk && !instanceAliasOk {
-		return diag.FromErr(errors.New("error one instance_id or instance_alias of must be assigned"))
-	}
-
-	if instanceIdOk {
 		input := connect.DescribeInstanceInput{
-			InstanceId: aws.String(instanceId.(string)),
+			InstanceId: aws.String(instanceId),
 		}
 
 		log.Printf("[DEBUG] Reading Connect Instance by instance_id: %s", input)
@@ -103,39 +99,43 @@ func dataSourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceDat
 		output, err := conn.DescribeInstance(&input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): %s", instanceId, err))
+			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): %w", instanceId, err))
+		}
+
+		if output == nil {
+			return diag.FromErr(fmt.Errorf("error getting Connect Instance by instance_id (%s): empty output", instanceId))
 		}
 
 		matchedInstance = output.Instance
 
-	} else if instanceAliasOk {
-		instanceSummaryList, err := dataSourceAwsConnectGetAllConnectInstanceSummaries(ctx, conn)
+	} else if v, ok := d.GetOk("instance_alias"); ok {
+		instanceAlias := v.(string)
+
+		instanceSummary, err := dataSourceAwsConnectGetConnectInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
+
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error listing Connect Instances: %s", err))
+			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): %w", instanceAlias, err))
 		}
 
-		for _, instanceSummary := range instanceSummaryList {
-			log.Printf("[DEBUG] Connect Instance summary: %s", instanceSummary)
-			if aws.StringValue(instanceSummary.InstanceAlias) == instanceAlias.(string) {
+		if instanceSummary == nil {
+			return diag.FromErr(fmt.Errorf("error finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias))
+		}
 
-				matchedInstance = &connect.Instance{
-					Arn:                    instanceSummary.Arn,
-					CreatedTime:            instanceSummary.CreatedTime,
-					Id:                     instanceSummary.Id,
-					IdentityManagementType: instanceSummary.IdentityManagementType,
-					InboundCallsEnabled:    instanceSummary.InboundCallsEnabled,
-					InstanceAlias:          instanceSummary.InstanceAlias,
-					InstanceStatus:         instanceSummary.InstanceStatus,
-					OutboundCallsEnabled:   instanceSummary.OutboundCallsEnabled,
-					ServiceRole:            instanceSummary.ServiceRole,
-				}
-				break
-			}
+		matchedInstance = &connect.Instance{
+			Arn:                    instanceSummary.Arn,
+			CreatedTime:            instanceSummary.CreatedTime,
+			Id:                     instanceSummary.Id,
+			IdentityManagementType: instanceSummary.IdentityManagementType,
+			InboundCallsEnabled:    instanceSummary.InboundCallsEnabled,
+			InstanceAlias:          instanceSummary.InstanceAlias,
+			InstanceStatus:         instanceSummary.InstanceStatus,
+			OutboundCallsEnabled:   instanceSummary.OutboundCallsEnabled,
+			ServiceRole:            instanceSummary.ServiceRole,
 		}
 	}
 
 	if matchedInstance == nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Instance by instance_alias: %s", instanceAlias))
+		return diag.FromErr(fmt.Errorf("no Connect Instance found for query, try adjusting your search criteria"))
 	}
 
 	d.SetId(aws.StringValue(matchedInstance.Id))
@@ -152,40 +152,45 @@ func dataSourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceDat
 	for att := range tfconnect.InstanceAttributeMapping() {
 		value, err := dataResourceAwsConnectInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error reading Connect instance (%s) attribute (%s): %s", d.Id(), att, err))
+			return diag.FromErr(fmt.Errorf("error reading Connect Instance (%s) attribute (%s): %w", d.Id(), att, err))
 		}
 		d.Set(tfconnect.InstanceAttributeMapping()[att], value)
 	}
+
 	return nil
 }
 
-func dataSourceAwsConnectGetAllConnectInstanceSummaries(ctx context.Context, conn *connect.Connect) ([]*connect.InstanceSummary, error) {
-	var instances []*connect.InstanceSummary
-	var nextToken string
+func dataSourceAwsConnectGetConnectInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {
+	var result *connect.InstanceSummary
 
-	for {
-		input := &connect.ListInstancesInput{
-			MaxResults: aws.Int64(tfconnect.ListInstancesMaxResults),
-		}
-		if nextToken != "" {
-			input.NextToken = aws.String(nextToken)
-		}
-
-		log.Printf("[DEBUG] Listing Connect Instances: %s", input)
-
-		output, err := conn.ListInstancesWithContext(ctx, input)
-		if err != nil {
-			return instances, err
-		}
-		instances = append(instances, output.InstanceSummaryList...)
-
-		if output.NextToken == nil {
-			break
-		}
-		nextToken = aws.StringValue(output.NextToken)
+	input := &connect.ListInstancesInput{
+		MaxResults: aws.Int64(tfconnect.ListInstancesMaxResults),
 	}
 
-	return instances, nil
+	err := conn.ListInstancesPagesWithContext(ctx, input, func(page *connect.ListInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, is := range page.InstanceSummaryList {
+			if is == nil {
+				continue
+			}
+
+			if aws.StringValue(is.InstanceAlias) == instanceAlias {
+				result = is
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func dataResourceAwsConnectInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {
@@ -200,6 +205,6 @@ func dataResourceAwsConnectInstanceReadAttribute(ctx context.Context, conn *conn
 		return false, err
 	}
 
-	result, parseerr := strconv.ParseBool(*out.Attribute.Value)
-	return result, parseerr
+	result, parseErr := strconv.ParseBool(*out.Attribute.Value)
+	return result, parseErr
 }

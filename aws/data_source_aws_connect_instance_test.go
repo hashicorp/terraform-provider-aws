@@ -44,11 +44,6 @@ func TestAccAwsConnectInstanceDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccAwsConnectInstanceDataSourceConfigAlias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
