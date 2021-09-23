@@ -24,7 +24,7 @@ jobs:
         with:
           github_done_column_id: 11513756
           github_release_name: ${{ github.event.release.tag_name }}
-          github_token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
+          github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
   changelog-newversion:
       runs-on: ubuntu-latest
       steps:

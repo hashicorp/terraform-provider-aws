@@ -27,6 +27,24 @@ func TestAccAWSAmplify_serial(t *testing.T) {
 			"disappears":                    testAccAWSAmplifyBackendEnvironment_disappears,
 			"DeploymentArtifacts_StackName": testAccAWSAmplifyBackendEnvironment_DeploymentArtifacts_StackName,
 		},
+		"Branch": {
+			"basic":                testAccAWSAmplifyBranch_basic,
+			"disappears":           testAccAWSAmplifyBranch_disappears,
+			"Tags":                 testAccAWSAmplifyBranch_Tags,
+			"BasicAuthCredentials": testAccAWSAmplifyBranch_BasicAuthCredentials,
+			"EnvironmentVariables": testAccAWSAmplifyBranch_EnvironmentVariables,
+			"OptionalArguments":    testAccAWSAmplifyBranch_OptionalArguments,
+		},
+		"DomainAssociation": {
+			"basic":      testAccAWSAmplifyDomainAssociation_basic,
+			"disappears": testAccAWSAmplifyDomainAssociation_disappears,
+			"update":     testAccAWSAmplifyDomainAssociation_update,
+		},
+		"Webhook": {
+			"basic":      testAccAWSAmplifyWebhook_basic,
+			"disappears": testAccAWSAmplifyWebhook_disappears,
+			"update":     testAccAWSAmplifyWebhook_update,
+		},
 	}
 
 	for group, m := range testCases {

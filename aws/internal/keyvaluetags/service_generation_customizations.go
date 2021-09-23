@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/aws/aws-sdk-go/service/appstream"
@@ -36,6 +37,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/dataexchange"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
@@ -101,8 +103,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -145,6 +149,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(apigateway.New)
 	case "apigatewayv2":
 		funcType = reflect.TypeOf(apigatewayv2.New)
+	case "appconfig":
+		funcType = reflect.TypeOf(appconfig.New)
 	case "appmesh":
 		funcType = reflect.TypeOf(appmesh.New)
 	case "apprunner":
@@ -193,6 +199,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(cognitoidentityprovider.New)
 	case "configservice":
 		funcType = reflect.TypeOf(configservice.New)
+	case "connect":
+		funcType = reflect.TypeOf(connect.New)
 	case "databasemigrationservice":
 		funcType = reflect.TypeOf(databasemigrationservice.New)
 	case "dataexchange":
@@ -323,6 +331,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(resourcegroupstaggingapi.New)
 	case "route53":
 		funcType = reflect.TypeOf(route53.New)
+	case "route53recoveryreadiness":
+		funcType = reflect.TypeOf(route53recoveryreadiness.New)
 	case "route53resolver":
 		funcType = reflect.TypeOf(route53resolver.New)
 	case "sagemaker":
@@ -333,6 +343,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(securityhub.New)
 	case "servicediscovery":
 		funcType = reflect.TypeOf(servicediscovery.New)
+	case "schemas":
+		funcType = reflect.TypeOf(schemas.New)
 	case "sfn":
 		funcType = reflect.TypeOf(sfn.New)
 	case "shield":
@@ -435,6 +447,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	case "resourcegroups":
 		return "GetTags"
+	case "route53recoveryreadiness":
+		return "ListTagsForResources"
 	case "sagemaker":
 		return "ListTags"
 	case "sqs":
@@ -475,7 +489,7 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 	}
 }
 
-// ServiceListTagInputIdentifierRequiresSlice determines if the service list tagging resource field requires a slice.
+// ServiceListTagsInputIdentifierRequiresSlice determines if the service list tagging resource field requires a slice.
 func ServiceListTagsInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
 	case "cloudtrail":
@@ -543,22 +557,45 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 	}
 }
 
-// ServiceResourceNotFoundErrorCode determines the error code of tagable resources when not found
-func ServiceResourceNotFoundErrorCode(serviceName string) string {
-	switch serviceName {
-	default:
-		return "ResourceNotFoundException"
-	}
-}
-
-// ServiceResourceNotFoundErrorCode determines the common substring of error codes of tagable resources when not found
-// This value takes precedence over ServiceResourceNotFoundErrorCode when defined for a service.
-func ServiceResourceNotFoundErrorCodeContains(serviceName string) string {
+// ServiceParentResourceNotFoundError determines additional NotFoundError handling for missing parent resources.
+// Use this to ignore errors returned by the create tags and list tags APIs for missing parent resources.
+//
+// This handling should be in the form of:
+// if CONDITIONAL {
+//     err = &resource.NotFoundError{
+// 	       LastError:   err,
+// 	       LastRequest: input,
+//     }
+// }
+func ServiceParentResourceNotFoundError(serviceName string) string {
 	switch serviceName {
 	case "ec2":
-		return ".NotFound"
+		return `
+if tfawserr.ErrCodeContains(err, ".NotFound") {
+	err = &resource.NotFoundError{
+		LastError:   err,
+		LastRequest: input,
+	}
+}
+`
+	case "ecs":
+		return `
+if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
+	err = &resource.NotFoundError{
+		LastError:   err,
+		LastRequest: input,
+	}
+}
+`
 	default:
-		return ""
+		return `
+if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+	err = &resource.NotFoundError{
+		LastError:   err,
+		LastRequest: input,
+	}
+}
+`
 	}
 }
 

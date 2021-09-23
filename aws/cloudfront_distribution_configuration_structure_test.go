@@ -136,6 +136,13 @@ func customOriginSslProtocolsConf() *schema.Set {
 	return schema.NewSet(schema.HashString, []interface{}{"SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"})
 }
 
+func originShield() map[string]interface{} {
+	return map[string]interface{}{
+		"enabled":              true,
+		"origin_shield_region": "testRegion",
+	}
+}
+
 func s3OriginConf() map[string]interface{} {
 	return map[string]interface{}{
 		"origin_access_identity": "origin-access-identity/cloudfront/E127EXAMPLE51Z",
@@ -151,6 +158,7 @@ func originWithCustomConf() map[string]interface{} {
 		"custom_header":        originCustomHeadersConf(),
 	}
 }
+
 func originWithS3Conf() map[string]interface{} {
 	return map[string]interface{}{
 		"origin_id":        "S3Origin",
@@ -812,6 +820,27 @@ func TestCloudFrontStructure_flattenCustomOriginConfigSSL(t *testing.T) {
 	out := flattenCustomOriginConfigSSL(ocs)
 
 	if !in.Equal(out) {
+		t.Fatalf("Expected out to be %v, got %v", in, out)
+	}
+}
+
+func TestCloudFrontStructure_expandOriginShield(t *testing.T) {
+	data := originShield()
+	o := expandOriginShield(data)
+	if *o.Enabled != true {
+		t.Fatalf("Expected Enabled to be true, got %v", *o.Enabled)
+	}
+	if *o.OriginShieldRegion != "testRegion" {
+		t.Fatalf("Expected OriginShieldRegion to be testRegion, got %v", *o.OriginShieldRegion)
+	}
+}
+
+func TestCloudFrontStructure_flattenOriginShield(t *testing.T) {
+	in := originShield()
+	o := expandOriginShield(in)
+	out := flattenOriginShield(o)
+
+	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }

@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -23,6 +24,7 @@ var serviceNames = []string{
 	"amplify",
 	"apigateway",
 	"apigatewayv2",
+	"appconfig",
 	"appmesh",
 	"apprunner",
 	"appstream",
@@ -47,6 +49,7 @@ var serviceNames = []string{
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"configservice",
+	"connect",
 	"databasemigrationservice",
 	"dataexchange",
 	"datapipeline",
@@ -110,11 +113,13 @@ var serviceNames = []string{
 	"redshift",
 	"resourcegroups",
 	"route53",
+	"route53recoveryreadiness",
 	"route53resolver",
 	"sagemaker",
 	"secretsmanager",
 	"securityhub",
 	"servicediscovery",
+	"schemas",
 	"sfn",
 	"shield",
 	"signer",

@@ -428,6 +428,34 @@ func (tags KeyValueTags) ContainsAll(target KeyValueTags) bool {
 	return true
 }
 
+// Equal returns whether or two sets of key-value tags are equal.
+func (tags KeyValueTags) Equal(other KeyValueTags) bool {
+	if tags == nil && other == nil {
+		return true
+	}
+
+	if tags == nil || other == nil {
+		return false
+	}
+
+	if len(tags) != len(other) {
+		return false
+	}
+
+	for k, v := range tags {
+		o, ok := other[k]
+		if !ok {
+			return false
+		}
+
+		if !v.Equal(o) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Hash returns a stable hash value.
 // The returned value may be negative (i.e. not suitable for a 'Set' function).
 func (tags KeyValueTags) Hash() int {
@@ -498,6 +526,30 @@ func (tags KeyValueTags) UrlEncode() string {
 	}
 
 	return values.Encode()
+}
+
+// UrlQueryString returns the KeyValueTags formatted as URL Query parameters without encoding.
+func (tags KeyValueTags) UrlQueryString() string {
+	keys := make([]string, 0, len(tags))
+	for k, v := range tags {
+		if v == nil || v.Value == nil {
+			continue
+		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var buf strings.Builder
+	for _, k := range keys {
+		if buf.Len() > 0 {
+			buf.WriteByte('&')
+		}
+		buf.WriteString(k)
+		buf.WriteByte('=')
+		buf.WriteString(*tags[k].Value)
+	}
+
+	return buf.String()
 }
 
 // New creates KeyValueTags from common types or returns an empty KeyValueTags.

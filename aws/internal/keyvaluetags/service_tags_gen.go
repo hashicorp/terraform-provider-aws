@@ -137,6 +137,16 @@ func Apigatewayv2KeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// AppconfigTags returns appconfig service tags.
+func (tags KeyValueTags) AppconfigTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// AppconfigKeyValueTags creates KeyValueTags from appconfig service tags.
+func AppconfigKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // AppstreamTags returns appstream service tags.
 func (tags KeyValueTags) AppstreamTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -224,6 +234,16 @@ func (tags KeyValueTags) CognitoidentityproviderTags() map[string]*string {
 
 // CognitoidentityproviderKeyValueTags creates KeyValueTags from cognitoidentityprovider service tags.
 func CognitoidentityproviderKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// ConnectTags returns connect service tags.
+func (tags KeyValueTags) ConnectTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// ConnectKeyValueTags creates KeyValueTags from connect service tags.
+func ConnectKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -444,6 +464,26 @@ func (tags KeyValueTags) ResourcegroupsTags() map[string]*string {
 
 // ResourcegroupsKeyValueTags creates KeyValueTags from resourcegroups service tags.
 func ResourcegroupsKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// Route53recoveryreadinessTags returns route53recoveryreadiness service tags.
+func (tags KeyValueTags) Route53recoveryreadinessTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// Route53recoveryreadinessKeyValueTags creates KeyValueTags from route53recoveryreadiness service tags.
+func Route53recoveryreadinessKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// SchemasTags returns schemas service tags.
+func (tags KeyValueTags) SchemasTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// SchemasKeyValueTags creates KeyValueTags from schemas service tags.
+func SchemasKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 

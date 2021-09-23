@@ -94,7 +94,7 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 127),
-											validation.StringMatch(regexp.MustCompile(`^[-_A-Za-z0-9{][-_A-Za-z0-9\s:{}]+[-_A-Za-z0-9}]$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
+											validation.StringMatch(regexp.MustCompile(`^[-_A-Za-z0-9{][-_A-Za-z0-9\s:{}]+[-_A-Za-z0-9}]$`), "must contain only alphanumeric characters, underscores, and hyphens"),
 										),
 									},
 									"target_account_ids": {

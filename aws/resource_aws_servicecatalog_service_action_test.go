@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 )
 
 // add sweeper to delete known test servicecat service actions
@@ -88,7 +89,7 @@ func TestAccAWSServiceCatalogServiceAction_basic(t *testing.T) {
 				Config: testAccAWSServiceCatalogServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogServiceActionExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.name", "AWS-RestartEC2Instance"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -144,7 +145,7 @@ func TestAccAWSServiceCatalogServiceAction_update(t *testing.T) {
 				Config: testAccAWSServiceCatalogServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogServiceActionExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.name", "AWS-RestartEC2Instance"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -155,7 +156,7 @@ func TestAccAWSServiceCatalogServiceAction_update(t *testing.T) {
 				Config: testAccAWSServiceCatalogServiceActionConfig_update(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogServiceActionExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttrPair(resourceName, "definition.0.assume_role", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),

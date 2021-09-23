@@ -253,6 +253,11 @@ func TestNamePrefixFromName(t *testing.T) {
 			Input:    "terraform-20060102150405000000000001",
 			Expected: strPtr("terraform-"),
 		},
+		{
+			TestName: "KMS alias prefix",
+			Input:    "alias/20210723150229087000000002",
+			Expected: strPtr("alias/"),
+		},
 	}
 
 	for _, testCase := range testCases {

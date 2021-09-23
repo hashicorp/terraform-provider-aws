@@ -30,7 +30,7 @@ func resourceAwsServiceCatalogProductPortfolioAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "en",
+				Default:      tfservicecatalog.AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
 			},
 			"portfolio_id": {

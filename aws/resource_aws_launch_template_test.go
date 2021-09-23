@@ -177,7 +177,7 @@ func TestAccAWSLaunchTemplate_disappears(t *testing.T) {
 				Config: testAccAWSLaunchTemplateConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &launchTemplate),
-					testAccCheckAWSLaunchTemplateDisappears(&launchTemplate),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsLaunchTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -471,7 +471,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_disk_id"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "5"),
 				),
 			},
 			{
@@ -1178,12 +1178,24 @@ func TestAccAWSLaunchTemplate_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_metadataOptionsIpv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "enabled"),
+				),
 			},
 		},
 	})
@@ -1431,20 +1443,6 @@ func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSLaunchTemplateDisappears(launchTemplate *ec2.LaunchTemplate) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		input := &ec2.DeleteLaunchTemplateInput{
-			LaunchTemplateId: launchTemplate.LaunchTemplateId,
-		}
-
-		_, err := conn.DeleteLaunchTemplate(input)
-
-		return err
-	}
 }
 
 func testAccAWSLaunchTemplateConfigName(rName string) string {
@@ -1704,6 +1702,14 @@ resource "aws_launch_template" "test" {
 
   tag_specifications {
     resource_type = "elastic-gpu"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "network-interface"
 
     tags = {
       Name = "test"
@@ -2256,6 +2262,21 @@ resource "aws_launch_template" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
+  }
+}
+`, rName)
+}
+
+func testAccAWSLaunchTemplateConfig_metadataOptionsIpv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+    http_protocol_ipv6          = "enabled"
   }
 }
 `, rName)

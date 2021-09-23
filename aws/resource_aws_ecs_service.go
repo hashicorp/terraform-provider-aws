@@ -179,14 +179,11 @@ func resourceAwsEcsService() *schema.Resource {
 				Computed: true,
 			},
 			"launch_type": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ecs.LaunchTypeEc2,
-					ecs.LaunchTypeFargate,
-				}, false),
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(ecs.LaunchType_Values(), false),
 			},
 			"load_balancer": {
 				Type:     schema.TypeSet,
@@ -1221,8 +1218,6 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 	}
 	// Wait until the ECS service is drained
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		log.Printf("[DEBUG] Trying to delete ECS service %s", input)
-
 		_, err := conn.DeleteService(&input)
 
 		if err != nil {

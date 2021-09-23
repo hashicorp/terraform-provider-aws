@@ -90,7 +90,7 @@ resource "aws_instance" "foo" {
 
 The following arguments are supported:
 
-* `ami` - (Required) AMI to use for the instance.
+* `ami` - (Optional) AMI to use for the instance. Required unless `launch_template` is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting `ami` will override the AMI specified in the Launch Template.
 * `associate_public_ip_address` - (Optional) Whether to associate a public IP address with an instance in a VPC.
 * `availability_zone` - (Optional) AZ to start the instance in.
 * `capacity_reservation_specification` - (Optional) Describes an instance's Capacity Reservation targeting option. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -110,10 +110,12 @@ The following arguments are supported:
 * `host_id` - (Optional) ID of a dedicated host that the instance will be assigned to. Use when an instance is to be launched on a specific dedicated host.
 * `iam_instance_profile` - (Optional) IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile. Ensure your credentials have the correct permission to assign the instance profile according to the [EC2 documentation](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html#roles-usingrole-ec2instance-permissions), notably `iam:PassRole`.
 * `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the instance. Amazon defaults this to `stop` for EBS-backed instances and `terminate` for instance-store instances. Cannot be set on instance-store instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior) for more information.
-* `instance_type` - (Required) Type of instance to start. Updates to this field will trigger a stop/start of the EC2 instance.
+* `instance_type` - (Optional) The instance type to use for the instance. Updates to this field will trigger a stop/start of the EC2 instance.
 * `ipv6_address_count`- (Optional) A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
 * `ipv6_addresses` - (Optional) Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
 * `key_name` - (Optional) Key name of the Key Pair to use for the instance; which can be managed using [the `aws_key_pair` resource](key_pair.html).
+* `launch_template` - (Optional) Specifies a Launch Template to configure the instance. Parameters configured on this resource will override the corresponding parameters in the Launch Template.
+  See [Launch Template Specification](#launch-template-specification) below for more details.
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
 * `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
@@ -249,6 +251,19 @@ Each `network_interface` block supports the following:
 * `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`. Currently, the only valid value is `false`, as this is only supported when creating new network interfaces when launching an instance.
 * `device_index` - (Required) Integer index of the network interface attachment. Limited by instance type.
 * `network_interface_id` - (Required) ID of the network interface to attach.
+
+### Launch Template Specification
+
+-> **Note:** Launch Template parameters will be used only once during instance creation. If you want to update existing instance you need to change parameters
+directly. Updating Launch Template specification will force a new instance.
+
+Any other instance parameters that you specify will override the same parameters in the launch template.
+
+The `launch_template` block supports the following:
+
+* `id` - The ID of the launch template. Conflicts with `name`.
+* `name` - The name of the launch template. Conflicts with `id`.
+* `version` - Template version. Can be a specific version number, `$Latest` or `$Default`. The default value is `$Default`.
 
 ## Attributes Reference
 

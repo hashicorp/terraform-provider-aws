@@ -8,6 +8,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+const (
+	userStateExists = "exists"
+)
+
 func ServerState(conn *transfer.Transfer, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.ServerByID(conn, id)
@@ -21,5 +25,21 @@ func ServerState(conn *transfer.Transfer, id string) resource.StateRefreshFunc {
 		}
 
 		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func UserState(conn *transfer.Transfer, serverID, userName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.UserByServerIDAndUserName(conn, serverID, userName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, userStateExists, nil
 	}
 }

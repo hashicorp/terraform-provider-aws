@@ -5,29 +5,80 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 )
 
-func Rule(conn *events.CloudWatchEvents, eventBusName, ruleName string) (*events.DescribeRuleOutput, error) {
-	input := events.DescribeRuleInput{
-		Name: aws.String(ruleName),
-	}
-	if eventBusName != "" {
-		input.EventBusName = aws.String(eventBusName)
+func ConnectionByName(conn *events.CloudWatchEvents, name string) (*events.DescribeConnectionOutput, error) {
+	input := &events.DescribeConnectionInput{
+		Name: aws.String(name),
 	}
 
-	return conn.DescribeRule(&input)
+	output, err := conn.DescribeConnection(input)
 
-}
+	if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
-func RuleByID(conn *events.CloudWatchEvents, ruleID string) (*events.DescribeRuleOutput, error) {
-	busName, ruleName, err := tfevents.RuleParseID(ruleID)
 	if err != nil {
 		return nil, err
 	}
 
-	return Rule(conn, busName, ruleName)
+	if output == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func RuleByEventBusAndRuleNames(conn *events.CloudWatchEvents, eventBusName, ruleName string) (*events.DescribeRuleOutput, error) {
+	input := events.DescribeRuleInput{
+		Name: aws.String(ruleName),
+	}
+
+	if eventBusName != "" {
+		input.EventBusName = aws.String(eventBusName)
+	}
+
+	output, err := conn.DescribeRule(&input)
+
+	if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func RuleByResourceID(conn *events.CloudWatchEvents, id string) (*events.DescribeRuleOutput, error) {
+	eventBusName, ruleName, err := tfevents.RuleParseResourceID(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return RuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
 }
 
 func Target(conn *events.CloudWatchEvents, busName, ruleName, targetId string) (*events.Target, error) {

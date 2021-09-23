@@ -1824,6 +1824,132 @@ func TestKeyValueTagsContainsAll(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsEqual(t *testing.T) {
+	testCases := []struct {
+		name   string
+		source KeyValueTags
+		target KeyValueTags
+		want   bool
+	}{
+		{
+			name:   "nil",
+			source: nil,
+			target: nil,
+			want:   true,
+		},
+		{
+			name:   "empty",
+			source: New(map[string]string{}),
+			target: New(map[string]string{}),
+			want:   true,
+		},
+		{
+			name:   "source_nil",
+			source: nil,
+			target: New(map[string]string{
+				"key1": "value1",
+			}),
+			want: false,
+		},
+		{
+			name:   "source_empty",
+			source: New(map[string]string{}),
+			target: New(map[string]string{
+				"key1": "value1",
+			}),
+			want: false,
+		},
+		{
+			name: "target_nil",
+			source: New(map[string]string{
+				"key1": "value1",
+			}),
+			target: nil,
+			want:   false,
+		},
+		{
+			name: "target_empty",
+			source: New(map[string]string{
+				"key1": "value1",
+			}),
+			target: New(map[string]string{}),
+			want:   false,
+		},
+		{
+			name: "nil value matches",
+			source: New(map[string]*string{
+				"key1": nil,
+			}),
+			target: New(map[string]*string{
+				"key1": nil,
+			}),
+			want: true,
+		},
+		{
+			name: "exact_match",
+			source: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+			}),
+			target: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+			}),
+			want: true,
+		},
+		{
+			name: "source_contains_all",
+			source: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			target: New(map[string]string{
+				"key1": "value1",
+				"key3": "value3",
+			}),
+			want: false,
+		},
+		{
+			name: "source_does_not_contain_all",
+			source: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			target: New(map[string]string{
+				"key1": "value1",
+				"key4": "value4",
+			}),
+			want: false,
+		},
+		{
+			name: "target_value_neq",
+			source: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			target: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value4",
+			}),
+			want: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.source.Equal(testCase.target)
+
+			if got != testCase.want {
+				t.Errorf("unexpected Equal: %t", got)
+			}
+		})
+	}
+}
+
 func TestKeyValueTagsHash(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -2045,6 +2171,62 @@ func TestKeyValueTagsUrlEncode(t *testing.T) {
 
 			if got != testCase.want {
 				t.Errorf("unexpected URL encoded value: %q", got)
+			}
+		})
+	}
+}
+
+func TestKeyValueTagsUrlQueryString(t *testing.T) {
+	testCases := []struct {
+		name string
+		tags KeyValueTags
+		want string
+	}{
+		{
+			name: "empty",
+			tags: New(map[string]string{}),
+			want: "",
+		},
+		{
+			name: "nil value",
+			tags: New(map[string]*string{
+				"key1": nil,
+			}),
+			want: "",
+		},
+		{
+			name: "single",
+			tags: New(map[string]string{
+				"key1": "value1",
+			}),
+			want: "key1=value1",
+		},
+		{
+			name: "multiple",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			want: "key1=value1&key2=value2&key3=value3",
+		},
+		{
+			name: "multiple_with_encoded",
+			tags: New(map[string]string{
+				"key1":  "value 1",
+				"key@2": "value+:2",
+				"key3":  "value3",
+			}),
+			want: "key1=value 1&key3=value3&key@2=value+:2",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.UrlQueryString()
+
+			if got != testCase.want {
+				t.Errorf("unexpected query string value: %q", got)
 			}
 		})
 	}

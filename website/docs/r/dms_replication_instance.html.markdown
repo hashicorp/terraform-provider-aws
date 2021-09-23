@@ -11,6 +11,7 @@ description: |-
 Provides a DMS (Data Migration Service) replication instance resource. DMS replication instances can be created, updated, deleted, and imported.
 
 ## Example Usage
+Create required roles and then create a DMS instance, setting the depends_on to the required role policy attachments.
 
 ```terraform
 # Database Migration Service requires the below IAM Roles to be created before
@@ -82,6 +83,12 @@ resource "aws_dms_replication_instance" "test" {
 
   vpc_security_group_ids = [
     "sg-12345678",
+  ]
+
+  depends_on = [
+    aws_iam_role_policy_attachment.dms-access-for-endpoint-AmazonDMSRedshiftS3Role,
+    aws_iam_role_policy_attachment.dms-cloudwatch-logs-role-AmazonDMSCloudWatchLogsRole,
+    aws_iam_role_policy_attachment.dms-vpc-role-AmazonDMSVPCManagementRole
   ]
 }
 ```

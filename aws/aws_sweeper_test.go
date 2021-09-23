@@ -1,16 +1,28 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
+
+const (
+	SweepThrottlingRetryTimeout = 10 * time.Minute
+)
+
+const defaultSweeperAssumeRoleDurationSeconds = 3600
 
 // sweeperAwsClients is a shared cache of regional AWSClient
 // This prevents client re-initialization for every resource with no benefit.
@@ -45,10 +57,31 @@ func sharedClientForRegion(region string) (interface{}, error) {
 		Region:     region,
 	}
 
+	if role := os.Getenv(envvar.TfAwsAssumeRoleARN); role != "" {
+		conf.AssumeRoleARN = role
+
+		conf.AssumeRoleDurationSeconds = defaultSweeperAssumeRoleDurationSeconds
+		if v := os.Getenv(envvar.TfAwsAssumeRoleDuration); v != "" {
+			d, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, fmt.Errorf("environment variable %s: %w", envvar.TfAwsAssumeRoleDuration, err)
+			}
+			conf.AssumeRoleDurationSeconds = d
+		}
+
+		if v := os.Getenv(envvar.TfAwsAssumeRoleExternalID); v != "" {
+			conf.AssumeRoleExternalID = v
+		}
+
+		if v := os.Getenv(envvar.TfAwsAssumeRoleSessionName); v != "" {
+			conf.AssumeRoleSessionName = v
+		}
+	}
+
 	// configures a default client for the region, using the above env vars
 	client, err := conf.Client()
 	if err != nil {
-		return nil, fmt.Errorf("error getting AWS client")
+		return nil, fmt.Errorf("error getting AWS client: %w", err)
 	}
 
 	sweeperAwsClients[region] = client
@@ -71,13 +104,36 @@ func NewTestSweepResource(resource *schema.Resource, d *schema.ResourceData, met
 }
 
 func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
+	return testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+}
+
+func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []*testSweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
 	var g multierror.Group
 
 	for _, sweepResource := range sweepResources {
 		sweepResource := sweepResource
 
 		g.Go(func() error {
-			return testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+			err := tfresource.RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
+				err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+
+				if err != nil {
+					if strings.Contains(err.Error(), "Throttling") {
+						log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sweepResource.d.Id(), err)
+						return resource.RetryableError(err)
+					}
+
+					return resource.NonRetryableError(err)
+				}
+
+				return nil
+			})
+
+			if tfresource.TimedOut(err) {
+				err = testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+			}
+
+			return err
 		})
 	}
 
@@ -121,6 +177,14 @@ func testSweepSkipSweepError(err error) bool {
 	}
 	// For example from GovCloud SES.SetActiveReceiptRuleSet.
 	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
+	// For example from us-west-2 Route53 key signing key
+	if isAWSErr(err, "InvalidKeySigningKeyStatus", "cannot be deleted because") {
+		return true
+	}
+	// For example from us-west-2 Route53 zone
+	if isAWSErr(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
 		return true
 	}
 	return false

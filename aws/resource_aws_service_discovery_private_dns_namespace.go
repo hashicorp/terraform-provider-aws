@@ -69,23 +69,18 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate(d *schema.ResourceData
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-	// The CreatorRequestId has a limit of 64 bytes
-	var requestId string
-	if len(name) > (64 - resource.UniqueIDSuffixLength) {
-		requestId = resource.PrefixedUniqueId(name[0:(64 - resource.UniqueIDSuffixLength - 1)])
-	} else {
-		requestId = resource.PrefixedUniqueId(name)
-	}
-
 	input := &servicediscovery.CreatePrivateDnsNamespaceInput{
+		CreatorRequestId: aws.String(resource.UniqueId()),
 		Name:             aws.String(name),
-		Tags:             tags.IgnoreAws().ServicediscoveryTags(),
 		Vpc:              aws.String(d.Get("vpc").(string)),
-		CreatorRequestId: aws.String(requestId),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().ServicediscoveryTags()
 	}
 
 	output, err := conn.CreatePrivateDnsNamespace(input)
@@ -98,17 +93,13 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate(d *schema.ResourceData
 		return fmt.Errorf("error creating Service Discovery Private DNS Namespace (%s): creation response missing Operation ID", name)
 	}
 
-	operationOutput, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId))
+	operation, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Service Discovery Private DNS Namespace (%s) creation: %w", name, err)
 	}
 
-	if operationOutput == nil || operationOutput.Operation == nil {
-		return fmt.Errorf("error creating Service Discovery Private DNS Namespace (%s): operation response missing Operation information", name)
-	}
-
-	namespaceID, ok := operationOutput.Operation.Targets[servicediscovery.OperationTargetTypeNamespace]
+	namespaceID, ok := operation.Targets[servicediscovery.OperationTargetTypeNamespace]
 
 	if !ok {
 		return fmt.Errorf("error creating Service Discovery Private DNS Namespace (%s): operation response missing Namespace ID", name)

@@ -4,6 +4,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // AccessPointLifeCycleState fetches the Access Point and its LifecycleState
@@ -29,25 +31,34 @@ func AccessPointLifeCycleState(conn *efs.EFS, accessPointId string) resource.Sta
 	}
 }
 
-// FileSystemLifeCycleState fetches the Access Point and its LifecycleState
-func FileSystemLifeCycleState(conn *efs.EFS, fileSystemID string) resource.StateRefreshFunc {
+func BackupPolicyStatus(conn *efs.EFS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &efs.DescribeFileSystemsInput{
-			FileSystemId: aws.String(fileSystemID),
-		}
+		output, err := finder.BackupPolicyByID(conn, id)
 
-		output, err := conn.DescribeFileSystems(input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if output == nil || len(output.FileSystems) == 0 || output.FileSystems[0] == nil {
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func FileSystemLifeCycleState(conn *efs.EFS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.FileSystemByID(conn, id)
+
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		mt := output.FileSystems[0]
+		if err != nil {
+			return nil, "", err
+		}
 
-		return mt, aws.StringValue(mt.LifeCycleState), nil
+		return output, aws.StringValue(output.LifeCycleState), nil
 	}
 }

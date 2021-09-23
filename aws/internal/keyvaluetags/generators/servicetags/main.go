@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -112,6 +113,7 @@ var mapServiceNames = []string{
 	"amplify",
 	"apigateway",
 	"apigatewayv2",
+	"appconfig",
 	"appstream",
 	"appsync",
 	"backup",
@@ -121,6 +123,7 @@ var mapServiceNames = []string{
 	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
+	"connect",
 	"dataexchange",
 	"dlm",
 	"eks",
@@ -143,7 +146,9 @@ var mapServiceNames = []string{
 	"qldb",
 	"pinpoint",
 	"resourcegroups",
+	"route53recoveryreadiness",
 	"securityhub",
+	"schemas",
 	"signer",
 	"sqs",
 	"synthetics",

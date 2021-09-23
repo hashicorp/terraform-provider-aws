@@ -98,6 +98,11 @@ func resourceAwsEc2CapacityReservation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -154,6 +159,10 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("instance_match_criteria"); ok {
 		opts.InstanceMatchCriteria = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("outpost_arn"); ok {
+		opts.OutpostArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("tenancy"); ok {
@@ -214,6 +223,7 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	d.Set("instance_match_criteria", reservation.InstanceMatchCriteria)
 	d.Set("instance_platform", reservation.InstancePlatform)
 	d.Set("instance_type", reservation.InstanceType)
+	d.Set("outpost_arn", reservation.OutpostArn)
 	d.Set("owner_id", reservation.OwnerId)
 
 	tags := keyvaluetags.Ec2KeyValueTags(reservation.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)

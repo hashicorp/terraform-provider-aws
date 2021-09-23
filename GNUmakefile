@@ -1,4 +1,4 @@
-SWEEP?=us-east-1,us-west-2
+SWEEP?=us-east-1,us-east-2,us-west-2
 TEST?=./...
 SWEEP_DIR?=./aws
 PKG_NAME=aws
@@ -12,7 +12,9 @@ build: fmtcheck
 	go install
 
 gen:
+	rm -f aws/*_gen.go aws/*_gen_test.go
 	rm -f aws/internal/keyvaluetags/*_gen.go
+	rm -f aws/internal/namevaluesfilters/*_gen.go
 	rm -f aws/internal/service/**/lister/*_gen.go
 	go generate ./...
 
