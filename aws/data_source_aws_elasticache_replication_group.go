@@ -110,6 +110,8 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 		}
 	}
 
+	d.Set("log_delivery_configurations", flattenAwsElasticacheLogDeliveryConfigurations(rg.LogDeliveryConfigurations))
+
 	if rg.MultiAZ != nil {
 		switch strings.ToLower(aws.StringValue(rg.MultiAZ)) {
 		case elasticache.MultiAZStatusEnabled:
