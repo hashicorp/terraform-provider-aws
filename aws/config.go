@@ -86,6 +86,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
@@ -298,6 +299,7 @@ type AWSClient struct {
 	glueconn                            *glue.Glue
 	guarddutyconn                       *guardduty.GuardDuty
 	greengrassconn                      *greengrass.Greengrass
+	healthlakeconn                      *healthlake.HealthLake
 	iamconn                             *iam.IAM
 	identitystoreconn                   *identitystore.IdentityStore
 	IgnoreTagsConfig                    *keyvaluetags.IgnoreConfig
@@ -551,6 +553,7 @@ func (c *Config) Client() (interface{}, error) {
 		glueconn:                            glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glue"])})),
 		guarddutyconn:                       guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["guardduty"])})),
 		greengrassconn:                      greengrass.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["greengrass"])})),
+		healthlakeconn:                      healthlake.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["healthlake"])})),
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
 		identitystoreconn:                   identitystore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["identitystore"])})),
 		IgnoreTagsConfig:                    c.IgnoreTagsConfig,

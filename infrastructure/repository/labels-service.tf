@@ -101,6 +101,7 @@ variable "service_labels" {
     "greengrass",
     "groundstation",
     "guardduty",
+    "healthlake",
     "honeycode",
     "iam",
     "identitystore",

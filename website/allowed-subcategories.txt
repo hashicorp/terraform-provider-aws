@@ -71,6 +71,7 @@ Glacier
 Global Accelerator
 Glue
 GuardDuty
+HealthLake
 IAM
 Identity Store
 Image Builder

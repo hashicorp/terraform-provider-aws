@@ -448,6 +448,10 @@ service/guardduty:
   - 'aws/internal/service/guardduty/**/*'
   - '**/*_guardduty_*'
   - '**/guardduty_*'
+service/healthlake:
+  - 'aws/internal/service/healthlake/**/*'
+  - '**/*_healthlake_*'
+  - '**/healthlake_*'
 service/iam:
   - 'aws/internal/service/iam/**/*'
   - '**/*_iam_*'

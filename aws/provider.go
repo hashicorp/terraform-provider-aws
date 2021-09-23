@@ -1411,6 +1411,7 @@ func init() {
 		"glue",
 		"greengrass",
 		"guardduty",
+        "healthlake",
 		"iam",
 		"identitystore",
 		"imagebuilder",

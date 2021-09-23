@@ -192,6 +192,8 @@ service/greengrass:
   - '((\*|-) ?`?|(data|resource) "?)aws_greengrass_'
 service/guardduty:
   - '((\*|-) ?`?|(data|resource) "?)aws_guardduty_'
+service/healthlake:
+  - '((\*|-) ?`?|(data|resource) "?)aws_healthlake_'
 service/iam:
   - '((\*|-) ?`?|(data|resource) "?)aws_iam_'
 service/identitystore:

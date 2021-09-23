@@ -130,6 +130,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>glue</code></li>
   <li><code>guardduty</code></li>
   <li><code>greengrass</code></li>
+  <li><code>healthlake</code></li>
   <li><code>iam</code></li>
   <li><code>identitystore</code></li>
   <li><code>imagebuilder</code></li>
