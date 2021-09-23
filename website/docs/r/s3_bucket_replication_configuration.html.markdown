@@ -14,7 +14,7 @@ Provides an independent configuration resource for S3 bucket [replication config
 
 ### Using replication configuration
 
-```terraform
+```
 provider "aws" {
   region = "eu-west-1"
 }
@@ -133,7 +133,7 @@ aws_s3_bucket_replication_configuration replication {
 
 ### Bi-Directional Replication
 
-```terraform
+```
 
 #...
 
@@ -203,7 +203,7 @@ aws_s3_bucket_replication_configuration "west_to_east" {
 
 This resource implements the same features that are provided by the `replication_configuration` object of the `aws_s3_bucket` resource.  To avoid conflicts or unexpected apply results a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `replication_configuration` object.  Faliure to add the `lifecycle` configuation to the `aws_s3_bucket` will result in conflicting state results.
 
-```terraform
+```
 lifecycle {
   ignore_changes = [
     replication_configuration
@@ -255,7 +255,7 @@ With the `filter` attribute, you can specify object filters based on the object 
 
 The `existing_object_replication` object supports the following:
 
-```terraform
+```
 existing_object_replication {
   status = "Enabled"
 }
@@ -272,7 +272,7 @@ existing_object_replication {
 
 The `delete_marker_replication` object supports the following:
 
-```terraform
+```
 delete_marker_replication {
   status = "Enabled"
 }
@@ -295,7 +295,7 @@ The `destination` object supports the following:
 
 ### replication_time
 
-```terraform
+```
 replication_time {
   status = "Enabled"
   time {
@@ -311,7 +311,7 @@ The `replication_time` object supports the following:
 
 ### metrics
 
-```terraform
+```
 metrics {
   status = "Enabled"
   event_threshold {
@@ -329,7 +329,7 @@ The `metrics` object supports the following:
 
 The `source_selection_criteria` object supports the following:
 
-```terraform
+```
 source_selection_criteria {
   replica_modification {
     status = "Enabled"
