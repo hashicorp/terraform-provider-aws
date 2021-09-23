@@ -533,6 +533,15 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
+	if d.HasChange("log_delivery_configurations") {
+		validateError := validateAwsElasticacheLogDeliveryConfigurations(d)
+		if validateError != nil {
+			return validateError
+		}
+		req.LogDeliveryConfigurations = expandAwsElasticacheLogDeliveryConfigurations(d)
+		requestUpdate = true
+	}
+
 	if d.HasChange("maintenance_window") {
 		req.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
 		requestUpdate = true
