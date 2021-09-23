@@ -42,10 +42,6 @@ func resourceAwsEc2ManagedPrefixListEntry() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -56,6 +52,7 @@ func resourceAwsEc2ManagedPrefixListEntryCreate(d *schema.ResourceData, meta int
 	cidr := d.Get("cidr").(string)
 	plID := d.Get("prefix_list_id").(string)
 	id := tfec2.ManagedPrefixListEntryCreateID(plID, cidr)
+
 	pl, err := finder.ManagedPrefixListByID(conn, plID)
 
 	if err != nil {
@@ -114,15 +111,8 @@ func resourceAwsEc2ManagedPrefixListEntryRead(d *schema.ResourceData, meta inter
 
 	entry := outputRaw.(*ec2.PrefixListEntry)
 
-	pl, err := finder.ManagedPrefixListByID(conn, plID)
-
-	if err != nil {
-		return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", plID, err)
-	}
-
 	d.Set("cidr", entry.Cidr)
 	d.Set("description", entry.Description)
-	d.Set("version", pl.Version)
 
 	return nil
 }
@@ -136,8 +126,14 @@ func resourceAwsEc2ManagedPrefixListEntryDelete(d *schema.ResourceData, meta int
 		return err
 	}
 
+	pl, err := finder.ManagedPrefixListByID(conn, plID)
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", plID, err)
+	}
+
 	input := &ec2.ModifyManagedPrefixListInput{
-		CurrentVersion: aws.Int64(int64(d.Get("version").(int))),
+		CurrentVersion: pl.Version,
 		PrefixListId:   aws.String(plID),
 		RemoveEntries:  []*ec2.RemovePrefixListEntry{{Cidr: aws.String(cidr)}},
 	}

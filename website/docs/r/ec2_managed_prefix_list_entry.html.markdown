@@ -44,7 +44,7 @@ resource "aws_ec2_managed_prefix_list_entry" "entry_1" {
 The following arguments are supported:
 
 * `cidr` - (Required) CIDR block of this entry.
-* `description` - (Optional) Description of this entry. Due to API limitations, updating only the description of an existing entry requires temporarily removing and re-adding the entry.
+* `description` - (Optional) Description of this entry. Due to API limitations, updating only the description of an entry requires recreating the entry.
 * `prefix_list_id` - (Required) CIDR block of this entry.
 
 ## Attributes Reference
@@ -52,11 +52,10 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the managed prefix list entry.
-* `version` - Latest version of this prefix list entry.
 
 ## Import
 
-Prefix List Entriess can be imported using the `prefix_list_id` and `cidr` separated by a `,`, e.g.
+Prefix List Entries can be imported using the `prefix_list_id` and `cidr` separated by a `,`, e.g.
 
 ```
 $ terraform import aws_ec2_managed_prefix_list_entry.default pl-0570a1d2d725c16be,10.0.3.0/24
