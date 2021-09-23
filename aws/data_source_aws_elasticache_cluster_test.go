@@ -163,9 +163,9 @@ resource "aws_s3_bucket" "b" {
   acl           = "private"
   force_destroy = true
 }
+
 resource "aws_iam_role" "r" {
-  count               = tobool("%[2]t") ? 1 : 0
-  managed_policy_arns = ["arn:aws:iam::aws:policy/AmazonS3FullAccess"]
+  count = tobool("%[2]t") ? 1 : 0
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -179,7 +179,29 @@ resource "aws_iam_role" "r" {
       },
     ]
   })
+  inline_policy {
+    name = "my_inline_s3_policy"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "s3:AbortMultipartUpload",
+            "s3:GetBucketLocation",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:ListBucketMultipartUploads",
+            "s3:PutObject",
+            "s3:PutObjectAcl",
+          ]
+          Effect   = "Allow"
+          Resource = ["${aws_s3_bucket.b[0].arn}", "${aws_s3_bucket.b[0].arn}/*"]
+        },
+      ]
+    })
+  }
 }
+
 resource "aws_kinesis_firehose_delivery_stream" "ds" {
   count       = tobool("%[2]t") ? 1 : 0
   name        = "%[1]s"
@@ -194,6 +216,7 @@ resource "aws_kinesis_firehose_delivery_stream" "ds" {
     ]
   }
 }
+
 resource "aws_elasticache_cluster" "test" {
   cluster_id        = "%[1]s"
   engine            = "redis"
