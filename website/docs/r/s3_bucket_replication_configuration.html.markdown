@@ -133,7 +133,6 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 ### Bi-Directional Replication
 
 ```
-
 # ... other configuration ...
 
 resource "aws_s3_bucket" "east" {
@@ -366,6 +365,6 @@ In addition to all arguments above, the following attributes are exported:
 
 S3 bucket replication configuration can be imported using the `bucket`, e.g.
 
-```
+```sh
 $ terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```
