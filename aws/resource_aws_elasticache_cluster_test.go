@@ -855,6 +855,72 @@ func TestAccAWSElasticacheCluster_Engine_Redis_LogDeliveryConfigurations_Cloudwa
 		},
 	})
 }
+
+func TestAccAWSElasticacheCluster_Engine_Redis_LogDeliveryConfigurations_Cloudwatch_EnableDisable(t *testing.T) {
+	var ec elasticache.CacheCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.destination_type", "cloudwatch-logs"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_format", "text"),
+					resource.TestCheckResourceAttr(resourceName, "log_delivery_configurations.0.log_type", "slow-log"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccAWSElasticacheClusterConfig_Engine_Redis_LogDeliveryConfigurations_Cloudwatch(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.destination_type"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_format"),
+					resource.TestCheckNoResourceAttr(resourceName, "log_delivery_configurations.0.log_type"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+		},
+	})
+}
 func testAccCheckAWSElasticacheClusterAttributes(v *elasticache.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v.NotificationConfiguration == nil {
