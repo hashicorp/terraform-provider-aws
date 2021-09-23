@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfsagemaker "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -16,6 +17,7 @@ func CodeRepositoryByName(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 	}
 
 	output, err := conn.DescribeCodeRepository(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +37,7 @@ func ModelPackageGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker
 	}
 
 	output, err := conn.DescribeModelPackageGroup(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +57,7 @@ func ImageByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeIma
 	}
 
 	output, err := conn.DescribeImage(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +77,7 @@ func ImageVersionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 	}
 
 	output, err := conn.DescribeImageVersion(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +97,8 @@ func DeviceFleetByName(conn *sagemaker.SageMaker, id string) (*sagemaker.Describ
 	}
 
 	output, err := conn.DescribeDeviceFleet(input)
-	if tfawserr.ErrMessageContains(err, "ValidationException", "No devicefleet with name") {
+
+	if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "No devicefleet with name") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -118,6 +124,7 @@ func DomainByName(conn *sagemaker.SageMaker, domainID string) (*sagemaker.Descri
 	}
 
 	output, err := conn.DescribeDomain(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +170,7 @@ func UserProfileByName(conn *sagemaker.SageMaker, domainID, userProfileName stri
 	}
 
 	output, err := conn.DescribeUserProfile(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -182,6 +190,7 @@ func AppImageConfigByName(conn *sagemaker.SageMaker, appImageConfigID string) (*
 	}
 
 	output, err := conn.DescribeAppImageConfig(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -204,6 +213,7 @@ func AppByName(conn *sagemaker.SageMaker, domainID, userProfileName, appType, ap
 	}
 
 	output, err := conn.DescribeApp(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +232,7 @@ func WorkforceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workfor
 
 	output, err := conn.DescribeWorkforce(input)
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "No workforce") {
+	if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "No workforce") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -247,7 +257,7 @@ func WorkteamByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workteam
 
 	output, err := conn.DescribeWorkteam(input)
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "The work team") {
+	if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "The work team") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -297,7 +307,32 @@ func EndpointConfigByName(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 
 	output, err := conn.DescribeEndpointConfig(input)
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "Could not find endpoint configuration") {
+	if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "Could not find endpoint configuration") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FlowDefinitionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+	input := &sagemaker.DescribeFlowDefinitionInput{
+		FlowDefinitionName: aws.String(name),
+	}
+
+	output, err := conn.DescribeFlowDefinition(input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
