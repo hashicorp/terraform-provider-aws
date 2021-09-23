@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -133,4 +135,50 @@ func getAwsElasticacheLogDeliveryConfigurationsComputedSchema() *schema.Resource
 		},
 	}
 
+}
+
+func expandAwsElasticacheLogDeliveryConfigurations(d *schema.ResourceData) []*elasticache.LogDeliveryConfigurationRequest {
+	logDeliveryConfigurationRequest := elasticache.LogDeliveryConfigurationRequest{}
+
+	if _, ok := d.GetOk("log_delivery_configurations"); !ok { // if d.HasChange() removed the block, send a `delete` request to the API.
+		logDeliveryConfigurationRequest.SetEnabled(false)
+		logDeliveryConfigurationRequest.SetLogType(elasticache.LogTypeSlowLog)
+		logDeliveryConfigurations := []*elasticache.LogDeliveryConfigurationRequest{
+			&logDeliveryConfigurationRequest,
+		}
+		return logDeliveryConfigurations
+	}
+
+	if _, ok := d.GetOk("log_delivery_configurations.0.destination_details"); ok {
+		logDeliveryConfigurationRequest.DestinationDetails = expandAwsElasticacheDestinationDetails(d)
+	}
+	if v, ok := d.GetOk("log_delivery_configurations.0.destination_type"); ok {
+		logDeliveryConfigurationRequest.DestinationType = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("log_delivery_configurations.0.log_format"); ok {
+		logDeliveryConfigurationRequest.LogFormat = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("log_delivery_configurations.0.log_type"); ok {
+		logDeliveryConfigurationRequest.LogType = aws.String(v.(string))
+	}
+
+	logDeliveryConfigurations := []*elasticache.LogDeliveryConfigurationRequest{
+		&logDeliveryConfigurationRequest,
+	}
+	return logDeliveryConfigurations
+}
+
+func expandAwsElasticacheDestinationDetails(d *schema.ResourceData) *elasticache.DestinationDetails {
+	destinationDetails := elasticache.DestinationDetails{}
+	if v, ok := d.GetOk("log_delivery_configurations.0.destination_details.0.cloudwatch_logs.0.log_group"); ok {
+		destinationDetails.CloudWatchLogsDetails = &elasticache.CloudWatchLogsDestinationDetails{
+			LogGroup: aws.String(v.(string)),
+		}
+	}
+	if v, ok := d.GetOk("log_delivery_configurations.0.destination_details.0.kinesis_firehose.0.delivery_stream"); ok {
+		destinationDetails.KinesisFirehoseDetails = &elasticache.KinesisFirehoseDestinationDetails{
+			DeliveryStream: aws.String(v.(string)),
+		}
+	}
+	return &destinationDetails
 }
