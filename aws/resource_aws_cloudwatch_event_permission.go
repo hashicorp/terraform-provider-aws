@@ -62,7 +62,7 @@ func resourceAwsCloudWatchEventPermission() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventBusName,
+				ValidateFunc: validateCloudWatchEventBusNameOrARN,
 				Default:      tfevents.DefaultEventBusName,
 			},
 			"principal": {
@@ -100,7 +100,7 @@ func resourceAwsCloudWatchEventPermissionCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("Creating CloudWatch Events permission failed: %w", err)
 	}
 
-	id := tfevents.PermissionCreateID(eventBusName, statementID)
+	id := tfevents.PermissionCreateResourceID(eventBusName, statementID)
 	d.SetId(id)
 
 	return resourceAwsCloudWatchEventPermissionRead(d, meta)
@@ -110,7 +110,7 @@ func resourceAwsCloudWatchEventPermissionCreate(d *schema.ResourceData, meta int
 func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	eventBusName, statementID, err := tfevents.PermissionParseID(d.Id())
+	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading CloudWatch Events permission (%s): %w", d.Id(), err)
 	}
@@ -207,7 +207,7 @@ func getPolicyStatement(output *events.DescribeEventBusOutput, statementID strin
 func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	eventBusName, statementID, err := tfevents.PermissionParseID(d.Id())
+	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error updating CloudWatch Events permission (%s): %w", d.Id(), err)
 	}
@@ -236,7 +236,7 @@ func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta int
 func resourceAwsCloudWatchEventPermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	eventBusName, statementID, err := tfevents.PermissionParseID(d.Id())
+	eventBusName, statementID, err := tfevents.PermissionParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting CloudWatch Events permission (%s): %w", d.Id(), err)
 	}

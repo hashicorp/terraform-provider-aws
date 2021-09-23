@@ -9,9 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfsagemaker "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 )
 
@@ -90,6 +92,7 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
@@ -336,8 +339,13 @@ func testAccCheckAWSSagemakerNotebookInstanceDestroy(s *terraform.State) error {
 			NotebookInstanceName: aws.String(rs.Primary.ID),
 		}
 		notebookInstance, err := conn.DescribeNotebookInstance(describeNotebookInput)
+
+		if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "RecordNotFound") {
+			continue
+		}
+
 		if err != nil {
-			return nil
+			return fmt.Errorf("error reading Sagemaker Notebook Instance (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(notebookInstance.NotebookInstanceName) == rs.Primary.ID {
@@ -422,6 +430,40 @@ func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerNotebookInstance_platform_identifier(t *testing.T) {
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_notebook_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigPlatformIdentifier(rName, "notebook-al2-v1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al2-v1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigPlatformIdentifier(rName, "notebook-al1-v1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
 				),
 			},
 		},
@@ -694,6 +736,16 @@ resource "aws_sagemaker_notebook_instance" "test" {
 `, rName, rootAccess)
 }
 
+func testAccAWSSagemakerNotebookInstanceConfigPlatformIdentifier(rName string, platformIdentifier string) string {
+	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "test" {
+  name                = %[1]q
+  role_arn            = aws_iam_role.test.arn
+  instance_type       = "ml.t2.medium"
+  platform_identifier = %[2]q
+}
+`, rName, platformIdentifier)
+}
 func testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(rName string, directInternetAccess string) string {
 	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) +
 		fmt.Sprintf(`

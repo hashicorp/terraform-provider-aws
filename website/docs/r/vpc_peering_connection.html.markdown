@@ -115,7 +115,7 @@ and use the `aws_vpc_peering_connection_accepter` to manage the accepter side.
 the peering connection (a maximum of one).
 * `requester` (Optional) - A optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that requests
 the peering connection (a maximum of one).
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Accepter and Requester Arguments
 
@@ -123,9 +123,7 @@ the peering connection (a maximum of one).
 must have support for the DNS hostnames enabled. This can be done using the [`enable_dns_hostnames`](vpc.html#enable_dns_hostnames) attribute in the [`aws_vpc`](vpc.html) resource. See [Using DNS with Your VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
 
 * `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
-private IP addresses when queried from instances in the peer VPC. This is
-[not supported](https://docs.aws.amazon.com/vpc/latest/peering/modify-peering-connections.html) for
-inter-region VPC peering.
+private IP addresses when queried from instances in the peer VPC.
 * `allow_classic_link_to_remote_vpc` - (Optional) Allow a local linked EC2-Classic instance to communicate
 with instances in a peer VPC. This enables an outbound communication from the local ClassicLink connection
 to the remote VPC.
@@ -148,7 +146,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC Peering Connection.
 * `accept_status` - The status of the VPC Peering Connection request.
-
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Notes
 

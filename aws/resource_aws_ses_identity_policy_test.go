@@ -12,9 +12,7 @@ import (
 )
 
 func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandString(10))
+	domain := testAccRandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -39,9 +37,8 @@ func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
-	email := fmt.Sprintf(
-		"%s@terraformtesting.com",
-		acctest.RandString(10))
+	emailPrefix := acctest.RandomWithPrefix("tf-acc-test")
+	email := fmt.Sprintf("%s@%s", emailPrefix, testAccRandomDomainName())
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -66,9 +63,7 @@ func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
 }
 
 func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
-	domain := fmt.Sprintf(
-		"%s.terraformtesting.com",
-		acctest.RandString(10))
+	domain := testAccRandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{

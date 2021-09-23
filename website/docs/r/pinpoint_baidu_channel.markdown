@@ -36,6 +36,10 @@ The following arguments are supported:
 * `api_key` - (Required) Platform credential API key from Baidu.
 * `secret_key` - (Required) Platform credential Secret key from Baidu.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Pinpoint Baidu Channel can be imported using the `application-id`, e.g.

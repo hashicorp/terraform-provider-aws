@@ -28,7 +28,7 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 	}
 	conn := client.(*AWSClient).secretsmanagerconn
 
-	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, isLast bool) bool {
+	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if len(page.SecretList) == 0 {
 			log.Print("[DEBUG] No Secrets Manager Secrets to sweep")
 			return true
@@ -51,7 +51,7 @@ func testSweepSecretsManagerSecretPolicies(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -179,7 +179,7 @@ func testAccCheckAwsSecretsManagerSecretPolicyDestroy(s *terraform.State) error 
 
 		var output *secretsmanager.DescribeSecretOutput
 
-		err := resource.Retry(waiter.DeletionPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.DescribeSecret(secretInput)
 

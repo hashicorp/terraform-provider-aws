@@ -86,6 +86,10 @@ The following arguments are supported:
 * `user_name` - (Requirement) The name of the user account that is assigned to one or more servers.
 * `body` - (Requirement) The public key portion of an SSH key pair.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Transfer SSH Public Key can be imported using the `server_id` and `user_name` and `ssh_public_key_id` separated by `/`.

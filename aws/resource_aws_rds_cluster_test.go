@@ -18,6 +18,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(rds.EndpointsID, testAccErrorCheckSkipRDS)
+
 	resource.AddTestSweepers("aws_rds_cluster", &resource.Sweeper{
 		Name: "aws_rds_cluster",
 		F:    testSweepRdsClusters,
@@ -25,6 +27,16 @@ func init() {
 			"aws_db_instance",
 		},
 	})
+}
+
+func testAccErrorCheckSkipRDS(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"engine mode serverless you requested is currently unavailable",
+		"engine mode multimaster you requested is currently unavailable",
+		"requested engine version was not found or does not support parallelquery functionality",
+		"Backtrack is not enabled for the aurora engine",
+		"Read replica DB clusters are not available in this region for engine aurora",
+	)
 }
 
 func testSweepRdsClusters(region string) error {
@@ -192,6 +204,47 @@ func TestAccAWSRDSCluster_AllowMajorVersionUpgrade(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", engine),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_OnlyMajorVersion(t *testing.T) {
+	var dbCluster1 rds.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
+	// either by having a new data source created or implementing the testing similar
+	// to TestAccAWSDmsReplicationInstance_EngineVersion
+	engine := "aurora-postgresql"
+	engineVersion1 := "11"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_MajorVersionOnly(rName, false, engine, engineVersion1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"engine_version",
+				},
 			},
 		},
 	})
@@ -1525,7 +1578,6 @@ func TestAccAWSRDSCluster_Port(t *testing.T) {
 				Config: testAccAWSClusterConfig_Port(rInt, 2345),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
-					testAccCheckAWSClusterRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "port", "2345"),
 				),
 			},
@@ -2513,6 +2565,30 @@ resource "aws_rds_cluster_instance" "test" {
   lifecycle {
     ignore_changes = [engine_version]
   }
+}
+`, allowMajorVersionUpgrade, rName, engine, engineVersion)
+}
+
+func testAccAWSClusterConfig_MajorVersionOnly(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  allow_major_version_upgrade = %[1]t
+  apply_immediately           = true
+  cluster_identifier          = %[2]q
+  engine                      = %[3]q
+  engine_version              = %[4]q
+  master_password             = "mustbeeightcharaters"
+  master_username             = "test"
+  skip_final_snapshot         = true
+}
+
+# Upgrading requires a healthy primary instance
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier = aws_rds_cluster.test.id
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
+  identifier         = %[2]q
+  instance_class     = "db.r4.large"
 }
 `, allowMajorVersionUpgrade, rName, engine, engineVersion)
 }
@@ -4033,10 +4109,11 @@ resource "aws_db_cluster_snapshot" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier      = %[1]q
-  preferred_backup_window = %[2]q
-  skip_final_snapshot     = true
-  snapshot_identifier     = aws_db_cluster_snapshot.test.id
+  cluster_identifier           = %[1]q
+  preferred_backup_window      = %[2]q
+  preferred_maintenance_window = "sun:09:00-sun:09:30"
+  skip_final_snapshot          = true
+  snapshot_identifier          = aws_db_cluster_snapshot.test.id
 }
 `, rName, preferredBackupWindow)
 }

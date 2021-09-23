@@ -43,9 +43,9 @@ func testSweepServiceDiscoveryHttpNamespaces(region string) error {
 		},
 	}
 
-	err = conn.ListNamespacesPages(input, func(page *servicediscovery.ListNamespacesOutput, isLast bool) bool {
+	err = conn.ListNamespacesPages(input, func(page *servicediscovery.ListNamespacesOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, namespace := range page.Namespaces {
@@ -78,7 +78,7 @@ func testSweepServiceDiscoveryHttpNamespaces(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if testSweepSkipSweepError(err) {
@@ -98,7 +98,11 @@ func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			testAccPreCheckAWSServiceDiscovery(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,
@@ -128,7 +132,11 @@ func TestAccAWSServiceDiscoveryHttpNamespace_disappears(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			testAccPreCheckAWSServiceDiscovery(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,
@@ -150,7 +158,11 @@ func TestAccAWSServiceDiscoveryHttpNamespace_Description(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			testAccPreCheckAWSServiceDiscovery(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,
@@ -176,7 +188,11 @@ func TestAccAWSServiceDiscoveryHttpNamespace_Tags(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			testAccPreCheckAWSServiceDiscovery(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,

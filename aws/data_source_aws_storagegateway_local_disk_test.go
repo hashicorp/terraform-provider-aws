@@ -29,7 +29,9 @@ func TestAccAWSStorageGatewayLocalDiskDataSource_DiskNode(t *testing.T) {
 				Config: testAccAWSStorageGatewayLocalDiskDataSourceConfig_DiskNode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSStorageGatewayLocalDiskDataSourceExists(dataSourceName),
-					resource.TestCheckResourceAttrSet(dataSourceName, "disk_id"),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexp.MustCompile(`.+`)),
 				),
 			},
 		},
@@ -54,7 +56,9 @@ func TestAccAWSStorageGatewayLocalDiskDataSource_DiskPath(t *testing.T) {
 				Config: testAccAWSStorageGatewayLocalDiskDataSourceConfig_DiskPath(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSStorageGatewayLocalDiskDataSourceExists(dataSourceName),
-					resource.TestCheckResourceAttrSet(dataSourceName, "disk_id"),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexp.MustCompile(`.+`)),
 				),
 			},
 		},

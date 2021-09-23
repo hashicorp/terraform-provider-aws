@@ -1,10 +1,13 @@
 package waiter
 
 import (
+	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -25,6 +28,8 @@ const (
 	UserProfileDeletedTimeout         = 10 * time.Minute
 	AppInServiceTimeout               = 10 * time.Minute
 	AppDeletedTimeout                 = 10 * time.Minute
+	FlowDefinitionActiveTimeout       = 2 * time.Minute
+	FlowDefinitionDeletedTimeout      = 2 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -263,6 +268,10 @@ func FeatureGroupCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		if status, reason := aws.StringValue(output.FeatureGroupStatus), aws.StringValue(output.FailureReason); status == sagemaker.FeatureGroupStatusCreateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -281,6 +290,10 @@ func FeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		if status, reason := aws.StringValue(output.FeatureGroupStatus), aws.StringValue(output.FailureReason); status == sagemaker.FeatureGroupStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -366,6 +379,50 @@ func AppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, a
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FlowDefinitionActive waits for a FlowDefinition to return Active
+func FlowDefinitionActive(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.FlowDefinitionStatusInitializing},
+		Target:  []string{sagemaker.FlowDefinitionStatusActive},
+		Refresh: FlowDefinitionStatus(conn, name),
+		Timeout: FlowDefinitionActiveTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
+		if status, reason := aws.StringValue(output.FlowDefinitionStatus), aws.StringValue(output.FailureReason); status == sagemaker.FlowDefinitionStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FlowDefinitionDeleted waits for a FlowDefinition to return Deleted
+func FlowDefinitionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.FlowDefinitionStatusDeleting},
+		Target:  []string{},
+		Refresh: FlowDefinitionStatus(conn, name),
+		Timeout: FlowDefinitionDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
+		if status, reason := aws.StringValue(output.FlowDefinitionStatus), aws.StringValue(output.FailureReason); status == sagemaker.FlowDefinitionStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 

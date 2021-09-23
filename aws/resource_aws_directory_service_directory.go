@@ -3,15 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directoryservice/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directoryservice/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDirectoryServiceDirectory() *schema.Resource {
@@ -63,7 +64,8 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"vpc_settings": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -181,6 +183,8 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 				}, false),
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -232,11 +236,14 @@ func buildConnectSettings(d *schema.ResourceData) (connectSettings *directoryser
 	return connectSettings, nil
 }
 
-func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) (directoryId string, err error) {
+func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
 	input := directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DirectoryserviceTags(),
+		Tags:     tags.IgnoreAws().DirectoryserviceTags(),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -267,11 +274,14 @@ func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *sche
 	return *out.DirectoryId, nil
 }
 
-func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) (directoryId string, err error) {
+func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
 	input := directoryservice.CreateDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DirectoryserviceTags(),
+		Tags:     tags.IgnoreAws().DirectoryserviceTags(),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -302,11 +312,14 @@ func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	return *out.DirectoryId, nil
 }
 
-func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) (directoryId string, err error) {
+func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *schema.ResourceData, meta interface{}) (directoryId string, err error) {
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
 	input := directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DirectoryserviceTags(),
+		Tags:     tags.IgnoreAws().DirectoryserviceTags(),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -362,11 +375,11 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 	directoryType := d.Get("type").(string)
 
 	if directoryType == directoryservice.DirectoryTypeAdconnector {
-		directoryId, err = createDirectoryConnector(dsconn, d)
+		directoryId, err = createDirectoryConnector(dsconn, d, meta)
 	} else if directoryType == directoryservice.DirectoryTypeMicrosoftAd {
-		directoryId, err = createActiveDirectoryService(dsconn, d)
+		directoryId, err = createActiveDirectoryService(dsconn, d, meta)
 	} else if directoryType == directoryservice.DirectoryTypeSimpleAd {
-		directoryId, err = createSimpleDirectoryService(dsconn, d)
+		directoryId, err = createSimpleDirectoryService(dsconn, d, meta)
 	}
 
 	if err != nil {
@@ -375,35 +388,10 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 
 	d.SetId(directoryId)
 
-	// Wait for creation
-	log.Printf("[DEBUG] Waiting for DS (%q) to become available", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			directoryservice.DirectoryStageRequested,
-			directoryservice.DirectoryStageCreating,
-			directoryservice.DirectoryStageCreated,
-		},
-		Target: []string{directoryservice.DirectoryStageActive},
-		Refresh: func() (interface{}, string, error) {
-			resp, err := dsconn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
-				DirectoryIds: []*string{aws.String(d.Id())},
-			})
-			if err != nil {
-				log.Printf("Error during creation of DS: %q", err.Error())
-				return nil, "", err
-			}
+	_, err = waiter.DirectoryCreated(dsconn, d.Id())
 
-			ds := resp.DirectoryDescriptions[0]
-			log.Printf("[DEBUG] Creation of DS %q is in following stage: %q.",
-				d.Id(), *ds.Stage)
-			return ds, *ds.Stage, nil
-		},
-		Timeout: 60 * time.Minute,
-	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for Directory Service (%s) to become available: %s",
-			d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("error waiting for Directory Service Directory (%s) to create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("alias"); ok {
@@ -440,8 +428,8 @@ func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DirectoryserviceUpdateTags(dsconn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Directory Service Directory (%s) tags: %s", d.Id(), err)
@@ -453,24 +441,21 @@ func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta int
 
 func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	dsconn := meta.(*AWSClient).dsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := directoryservice.DescribeDirectoriesInput{
-		DirectoryIds: []*string{aws.String(d.Id())},
-	}
-	out, err := dsconn.DescribeDirectories(&input)
-	if err != nil {
-		return err
+	dir, err := finder.DirectoryByID(dsconn, d.Id())
 
-	}
-
-	if len(out.DirectoryDescriptions) == 0 {
-		log.Printf("[WARN] Directory %s not found", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	dir := out.DirectoryDescriptions[0]
+	if err != nil {
+		return fmt.Errorf("error reading Directory Service Directory (%s): %w", d.Id(), err)
+	}
+
 	log.Printf("[DEBUG] Received DS directory: %s", dir)
 
 	d.Set("access_url", dir.AccessUrl)
@@ -499,9 +484,9 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	d.Set("enable_sso", dir.SsoEnabled)
 
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
-		d.Set("security_group_id", aws.StringValue(dir.ConnectSettings.SecurityGroupId))
+		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
 	} else {
-		d.Set("security_group_id", aws.StringValue(dir.VpcSettings.SecurityGroupId))
+		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
 	}
 
 	tags, err := keyvaluetags.DirectoryserviceListTags(dsconn, d.Id())
@@ -510,8 +495,15 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -534,44 +526,11 @@ func resourceAwsDirectoryServiceDirectoryDelete(d *schema.ResourceData, meta int
 		return fmt.Errorf("error deleting Directory Service Directory (%s): %w", d.Id(), err)
 	}
 
-	err = waitForDirectoryServiceDirectoryDeletion(conn, d.Id())
+	_, err = waiter.DirectoryDeleted(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Directory Service (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Directory Service Directory (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func waitForDirectoryServiceDirectoryDeletion(conn *directoryservice.DirectoryService, directoryID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			directoryservice.DirectoryStageActive,
-			directoryservice.DirectoryStageDeleting,
-		},
-		Target: []string{directoryservice.DirectoryStageDeleted},
-		Refresh: func() (interface{}, string, error) {
-			resp, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
-				DirectoryIds: []*string{aws.String(directoryID)},
-			})
-			if err != nil {
-				if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
-					return 42, directoryservice.DirectoryStageDeleted, nil
-				}
-				return nil, "error", err
-			}
-
-			if len(resp.DirectoryDescriptions) == 0 || resp.DirectoryDescriptions[0] == nil {
-				return 42, directoryservice.DirectoryStageDeleted, nil
-			}
-
-			ds := resp.DirectoryDescriptions[0]
-			log.Printf("[DEBUG] Deletion of Directory Service Directory %q is in following stage: %q.", directoryID, aws.StringValue(ds.Stage))
-			return ds, aws.StringValue(ds.Stage), nil
-		},
-		Timeout: 60 * time.Minute,
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
 )
@@ -58,6 +59,35 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSecurityHubOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
+	var providers []*schema.Provider
+
+	resourceName := "aws_securityhub_organization_admin_account.test"
+	altResourceName := "aws_securityhub_organization_admin_account.alternate"
+	thirdResourceName := "aws_securityhub_organization_admin_account.third"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccOrganizationsAccountPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 3)
+		},
+		ErrorCheck:        testAccErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		CheckDestroy:      testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityHubOrganizationAdminAccountConfigMultiRegion(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
+					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(altResourceName),
+					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(thirdResourceName),
+				),
 			},
 		},
 	})
@@ -135,4 +165,43 @@ resource "aws_securityhub_organization_admin_account" "test" {
   admin_account_id = data.aws_caller_identity.current.account_id
 }
 `
+}
+
+func testAccSecurityHubOrganizationAdminAccountConfigMultiRegion() string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = ["securityhub.${data.aws_partition.current.dns_suffix}"]
+  feature_set                   = "ALL"
+}
+
+resource "aws_securityhub_account" "test" {}
+
+resource "aws_securityhub_organization_admin_account" "test" {
+  depends_on = [aws_organizations_organization.test]
+
+  admin_account_id = data.aws_caller_identity.current.account_id
+}
+
+resource "aws_securityhub_organization_admin_account" "alternate" {
+  provider = awsalternate
+
+  depends_on = [aws_organizations_organization.test]
+
+  admin_account_id = data.aws_caller_identity.current.account_id
+}
+
+resource "aws_securityhub_organization_admin_account" "third" {
+  provider = awsthird
+
+  depends_on = [aws_organizations_organization.test]
+
+  admin_account_id = data.aws_caller_identity.current.account_id
+}
+`)
 }

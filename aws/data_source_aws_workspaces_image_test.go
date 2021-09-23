@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
+func testAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
 	var image workspaces.WorkspaceImage
 	imageID := os.Getenv("AWS_WORKSPACES_IMAGE_ID")
 	dataSourceName := "data.aws_workspaces_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccWorkspacesImagePreCheck(t)

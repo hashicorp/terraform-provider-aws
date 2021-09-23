@@ -26,7 +26,7 @@ on:
 
 env:
   AWS_DEFAULT_REGION: us-west-2
-  TERRAFORM_VERSION: "0.12.25"
+  TERRAFORM_VERSION: "0.14.8"
 
 jobs:
   go_mod_download:
@@ -85,7 +85,7 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
       name: go build
-      run: go build -o terraform-plugin-dir/terraform-provider-aws_v99.99.99_x4 .
+      run: go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$(go env GOOS)_$(go env GOARCH)/terraform-provider-aws .
 
   terraform_providers_schema:
     name: terraform providers schema
@@ -309,9 +309,9 @@ jobs:
       run: |
         tfproviderdocs check \
           -allowed-resource-subcategories-file website/allowed-subcategories.txt \
+          -enable-contents-check \
           -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
           -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
-          -ignore-side-navigation-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_kms_secret \
-          -provider-name aws \
+          -provider-source registry.terraform.io/hashicorp/aws \
           -providers-schema-json terraform-providers-schema/schema.json \
           -require-resource-subcategory

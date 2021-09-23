@@ -19,18 +19,41 @@ func TestAccAWSSecurityHub_serial(t *testing.T) {
 			"Description": testAccAwsSecurityHubActionTarget_Description,
 			"Name":        testAccAwsSecurityHubActionTarget_Name,
 		},
+		"Insight": {
+			"basic":            testAccAwsSecurityHubInsight_basic,
+			"disappears":       testAccAwsSecurityHubInsight_disappears,
+			"DateFilters":      testAccAwsSecurityHubInsight_DateFilters,
+			"GroupByAttribute": testAccAwsSecurityHubInsight_GroupByAttribute,
+			"IpFilters":        testAccAwsSecurityHubInsight_IpFilters,
+			"KeywordFilters":   testAccAwsSecurityHubInsight_KeywordFilters,
+			"MapFilters":       testAccAwsSecurityHubInsight_MapFilters,
+			"MultipleFilters":  testAccAwsSecurityHubInsight_MultipleFilters,
+			"Name":             testAccAwsSecurityHubInsight_Name,
+			"NumberFilters":    testAccAwsSecurityHubInsight_NumberFilters,
+			"WorkflowStatus":   testAccAwsSecurityHubInsight_WorkflowStatus,
+		},
 		"InviteAccepter": {
 			"basic": testAccAWSSecurityHubInviteAccepter_basic,
 		},
 		"OrganizationAdminAccount": {
-			"basic":      testAccAwsSecurityHubOrganizationAdminAccount_basic,
-			"disappears": testAccAwsSecurityHubOrganizationAdminAccount_disappears,
+			"basic":       testAccAwsSecurityHubOrganizationAdminAccount_basic,
+			"disappears":  testAccAwsSecurityHubOrganizationAdminAccount_disappears,
+			"MultiRegion": testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion,
+		},
+		"OrganizationConfiguration": {
+			"basic": testAccAwsSecurityHubOrganizationConfiguration_basic,
 		},
 		"ProductSubscription": {
 			"basic": testAccAWSSecurityHubProductSubscription_basic,
 		},
+		"StandardsControl": {
+			"basic":                                 testAccAWSSecurityHubStandardsControl_basic,
+			"DisabledControlStatus":                 testAccAWSSecurityHubStandardsControl_disabledControlStatus,
+			"EnabledControlStatusAndDisabledReason": testAccAWSSecurityHubStandardsControl_enabledControlStatusAndDisabledReason,
+		},
 		"StandardsSubscription": {
-			"basic": testAccAWSSecurityHubStandardsSubscription_basic,
+			"basic":      testAccAWSSecurityHubStandardsSubscription_basic,
+			"disappears": testAccAWSSecurityHubStandardsSubscription_disappears,
 		},
 	}
 

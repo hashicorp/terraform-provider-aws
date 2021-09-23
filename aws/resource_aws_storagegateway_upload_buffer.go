@@ -23,9 +23,18 @@ func resourceAwsStorageGatewayUploadBuffer() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"disk_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"disk_id", "disk_path"},
+			},
+			"disk_path": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"disk_id", "disk_path"},
 			},
 			"gateway_arn": {
 				Type:         schema.TypeString,
@@ -40,21 +49,48 @@ func resourceAwsStorageGatewayUploadBuffer() *schema.Resource {
 func resourceAwsStorageGatewayUploadBufferCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
 
-	diskID := d.Get("disk_id").(string)
-	gatewayARN := d.Get("gateway_arn").(string)
+	input := &storagegateway.AddUploadBufferInput{}
 
-	input := &storagegateway.AddUploadBufferInput{
-		DiskIds:    []*string{aws.String(diskID)},
-		GatewayARN: aws.String(gatewayARN),
+	if v, ok := d.GetOk("disk_id"); ok {
+		input.DiskIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	log.Printf("[DEBUG] Adding Storage Gateway upload buffer: %s", input)
-	_, err := conn.AddUploadBuffer(input)
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17809
+	if v, ok := d.GetOk("disk_path"); ok {
+		input.DiskIds = aws.StringSlice([]string{v.(string)})
+	}
+
+	if v, ok := d.GetOk("gateway_arn"); ok {
+		input.GatewayARN = aws.String(v.(string))
+	}
+
+	output, err := conn.AddUploadBuffer(input)
+
 	if err != nil {
-		return fmt.Errorf("error adding Storage Gateway upload buffer: %s", err)
+		return fmt.Errorf("error adding Storage Gateway upload buffer: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
+	if output == nil {
+		return fmt.Errorf("error adding Storage Gateway upload buffer: empty response")
+	}
+
+	if v, ok := d.GetOk("disk_id"); ok {
+		d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.GatewayARN), v.(string)))
+
+		return resourceAwsStorageGatewayUploadBufferRead(d, meta)
+	}
+
+	disk, err := finder.LocalDiskByDiskPath(conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
+
+	if err != nil {
+		return fmt.Errorf("error listing Storage Gateway Local Disks after creating Upload Buffer: %w", err)
+	}
+
+	if disk == nil {
+		return fmt.Errorf("error listing Storage Gateway Local Disks after creating Upload Buffer: disk not found")
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.GatewayARN), aws.StringValue(disk.DiskId)))
 
 	return resourceAwsStorageGatewayUploadBufferRead(d, meta)
 }
@@ -91,6 +127,20 @@ func resourceAwsStorageGatewayUploadBufferRead(d *schema.ResourceData, meta inte
 
 	d.Set("disk_id", foundDiskID)
 	d.Set("gateway_arn", gatewayARN)
+
+	if _, ok := d.GetOk("disk_path"); !ok {
+		disk, err := finder.LocalDiskByDiskId(conn, gatewayARN, aws.StringValue(foundDiskID))
+
+		if err != nil {
+			return fmt.Errorf("error listing Storage Gateway Local Disks: %w", err)
+		}
+
+		if disk == nil {
+			return fmt.Errorf("error listing Storage Gateway Local Disks: disk not found")
+		}
+
+		d.Set("disk_path", disk.DiskPath)
+	}
 
 	return nil
 }

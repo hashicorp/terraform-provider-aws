@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -251,7 +252,7 @@ func testAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.0.default_resource_spec.0.instance_type", "system"),
 				),
 			},
 			{
@@ -298,8 +299,13 @@ func testAccCheckAWSSagemakerUserProfileDestroy(s *terraform.State) error {
 		userProfileName := rs.Primary.Attributes["user_profile_name"]
 
 		userProfile, err := finder.UserProfileByName(conn, domainID, userProfileName)
+
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			continue
+		}
+
 		if err != nil {
-			return nil
+			return fmt.Errorf("error reading Sagemaker User Profile (%s): %w", rs.Primary.ID, err)
 		}
 
 		userProfileArn := aws.StringValue(userProfile.UserProfileArn)
@@ -382,6 +388,10 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role = aws_iam_role.test.arn
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
   }
 }
 `, rName)
@@ -478,7 +488,7 @@ resource "aws_sagemaker_user_profile" "test" {
 
     jupyter_server_app_settings {
       default_resource_spec {
-        instance_type = "ml.t3.micro"
+        instance_type = "system"
       }
     }
   }

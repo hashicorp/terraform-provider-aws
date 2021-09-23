@@ -147,6 +147,7 @@ func TestAccAWSLaunchTemplateDataSource_metadataOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.#", resourceName, "metadata_options.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_protocol_ipv6", resourceName, "metadata_options.0.http_protocol_ipv6"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_tokens", resourceName, "metadata_options.0.http_tokens"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_put_response_hop_limit", resourceName, "metadata_options.0.http_put_response_hop_limit"),
 				),
@@ -303,7 +304,7 @@ func TestAccAWSLaunchTemplateDataSource_NonExistent(t *testing.T) {
 func testAccAWSLaunchTemplateDataSourceConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = %q
+  name = %[1]q
 }
 
 data "aws_launch_template" "test" {
@@ -315,7 +316,7 @@ data "aws_launch_template" "test" {
 func testAccAWSLaunchTemplateDataSourceConfig_BasicId(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = %q
+  name = %[1]q
 }
 
 data "aws_launch_template" "test" {

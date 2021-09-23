@@ -93,6 +93,11 @@ func dataSourceAwsInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"ipv6_addresses": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"iam_instance_profile": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -489,6 +494,14 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 				if err := d.Set("secondary_private_ips", secondaryIPs); err != nil {
 					return fmt.Errorf("error setting secondary_private_ips: %w", err)
 				}
+
+				ipV6Addresses := make([]string, 0, len(ni.Ipv6Addresses))
+				for _, ip := range ni.Ipv6Addresses {
+					ipV6Addresses = append(ipV6Addresses, aws.StringValue(ip.Ipv6Address))
+				}
+				if err := d.Set("ipv6_addresses", ipV6Addresses); err != nil {
+					return fmt.Errorf("error setting ipv6_addresses: %w", err)
+				}
 			}
 		}
 	} else {
@@ -545,7 +558,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		if attr != nil && attr.UserData != nil && attr.UserData.Value != nil {
 			d.Set("user_data", userDataHashSum(aws.StringValue(attr.UserData.Value)))
 			if d.Get("get_user_data").(bool) {
-				d.Set("user_data_base64", aws.StringValue(attr.UserData.Value))
+				d.Set("user_data_base64", attr.UserData.Value)
 			}
 		}
 	}

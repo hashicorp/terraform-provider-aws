@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfcloudwatchlogs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
 )
 
 func resourceAwsCloudWatchLogGroup() *schema.Resource {
@@ -57,14 +57,18 @@ func resourceAwsCloudWatchLogGroup() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchlogsconn
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudwatchlogsTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var logGroupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -86,7 +90,7 @@ func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags
+		params.Tags = tags.IgnoreAws().CloudwatchlogsTags()
 	}
 
 	_, err := conn.CreateLogGroup(params)
@@ -119,6 +123,7 @@ func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsCloudWatchLogGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchlogsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CloudWatch Log Group: %q", d.Get("name").(string))
@@ -133,7 +138,7 @@ func resourceAwsCloudWatchLogGroupRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	d.Set("arn", strings.TrimSuffix(aws.StringValue(lg.Arn), ":*"))
+	d.Set("arn", tfcloudwatchlogs.TrimLogGroupARNWildcardSuffix(aws.StringValue(lg.Arn)))
 	d.Set("name", lg.LogGroupName)
 	d.Set("kms_key_id", lg.KmsKeyId)
 	d.Set("retention_in_days", lg.RetentionInDays)
@@ -144,8 +149,15 @@ func resourceAwsCloudWatchLogGroupRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error listing tags for CloudWatch Logs Group (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -200,8 +212,8 @@ func resourceAwsCloudWatchLogGroupUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.CloudwatchlogsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating CloudWatch Log Group (%s) tags: %s", d.Id(), err)

@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func TestAccAWSEc2Tag_basic(t *testing.T) {
@@ -16,6 +15,7 @@ func TestAccAWSEc2Tag_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
@@ -42,6 +42,7 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
@@ -63,6 +64,7 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
@@ -89,67 +91,6 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckEc2TagDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_tag" {
-			continue
-		}
-
-		resourceID, key, err := extractResourceIDAndKeyFromEc2TagID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		exists, _, err := keyvaluetags.Ec2GetTag(conn, resourceID, key)
-
-		if err != nil {
-			return err
-		}
-
-		if exists {
-			return fmt.Errorf("Tag (%s) for resource (%s) still exists", key, resourceID)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckEc2TagExists(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		resourceID, key, err := extractResourceIDAndKeyFromEc2TagID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		exists, _, err := keyvaluetags.Ec2GetTag(conn, resourceID, key)
-
-		if err != nil {
-			return err
-		}
-
-		if !exists {
-			return fmt.Errorf("Tag (%s) for resource (%s) not found", key, resourceID)
-		}
-
-		return nil
-	}
 }
 
 func testAccEc2TagConfig(rBgpAsn int, key string, value string) string {

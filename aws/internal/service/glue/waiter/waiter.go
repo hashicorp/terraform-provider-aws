@@ -1,10 +1,14 @@
 package waiter
 
 import (
+	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -14,8 +18,8 @@ const (
 	SchemaAvailableTimeout        = 2 * time.Minute
 	SchemaDeleteTimeout           = 2 * time.Minute
 	SchemaVersionAvailableTimeout = 2 * time.Minute
-	TriggerCreateTimeout          = 2 * time.Minute
-	TriggerDeleteTimeout          = 2 * time.Minute
+	TriggerCreateTimeout          = 5 * time.Minute
+	TriggerDeleteTimeout          = 5 * time.Minute
 )
 
 // MLTransformDeleted waits for an MLTransform to return Deleted
@@ -151,38 +155,42 @@ func TriggerDeleted(conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput
 	return nil, err
 }
 
-// GlueDevEndpointCreated waits for a Glue Dev Endpoint to become available.
-func GlueDevEndpointCreated(conn *glue.Glue, devEndpointId string) (*glue.GetDevEndpointOutput, error) {
+func GlueDevEndpointCreated(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			"PROVISIONING",
-		},
-		Target:  []string{"READY"},
-		Refresh: GlueDevEndpointStatus(conn, devEndpointId),
+		Pending: []string{tfglue.DevEndpointStatusProvisioning},
+		Target:  []string{tfglue.DevEndpointStatusReady},
+		Refresh: GlueDevEndpointStatus(conn, name),
 		Timeout: 15 * time.Minute,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*glue.GetDevEndpointOutput); ok {
+	if output, ok := outputRaw.(*glue.DevEndpoint); ok {
+		if status := aws.StringValue(output.Status); status == tfglue.DevEndpointStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-// GlueDevEndpointDeleted waits for a Glue Dev Endpoint to become terminated.
-func GlueDevEndpointDeleted(conn *glue.Glue, devEndpointId string) (*glue.GetDevEndpointOutput, error) {
+func GlueDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"TERMINATING"},
+		Pending: []string{tfglue.DevEndpointStatusTerminating},
 		Target:  []string{},
-		Refresh: GlueDevEndpointStatus(conn, devEndpointId),
+		Refresh: GlueDevEndpointStatus(conn, name),
 		Timeout: 15 * time.Minute,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*glue.GetDevEndpointOutput); ok {
+	if output, ok := outputRaw.(*glue.DevEndpoint); ok {
+		if status := aws.StringValue(output.Status); status == tfglue.DevEndpointStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
 		return output, err
 	}
 

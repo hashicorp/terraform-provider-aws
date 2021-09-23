@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -113,9 +114,15 @@ func resourceAwsCloudWatchLogStreamDelete(d *schema.ResourceData, meta interface
 		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
 		LogStreamName: aws.String(d.Id()),
 	}
+
 	_, err := conn.DeleteLogStream(params)
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting CloudWatch Log Stream: %s", err)
+		return fmt.Errorf("error deleting CloudWatch Log Stream (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -149,7 +156,7 @@ func lookupCloudWatchLogStream(conn *cloudwatchlogs.CloudWatchLogs,
 	}
 
 	for _, ls := range resp.LogStreams {
-		if *ls.LogStreamName == name {
+		if aws.StringValue(ls.LogStreamName) == name {
 			return ls, true, nil
 		}
 	}

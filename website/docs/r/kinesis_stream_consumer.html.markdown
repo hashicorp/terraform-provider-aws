@@ -16,7 +16,7 @@ For more details, see the [Amazon Kinesis Stream Consumer Documentation][1].
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_kinesis_stream" "example" {
   name        = "example-stream"
   shard_count = 1

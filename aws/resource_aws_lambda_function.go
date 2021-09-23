@@ -315,12 +315,14 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
 			checkHandlerRuntimeForZipFunction,
 			updateComputedAttributesOnPublish,
+			SetTagsDiff,
 		),
 	}
 }
@@ -330,7 +332,7 @@ func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff
 	_, handlerOk := d.GetOk("handler")
 	_, runtimeOk := d.GetOk("runtime")
 
-	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
+	if packageType == lambda.PackageTypeZip && (!handlerOk || !runtimeOk) {
 		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
 	}
 	return nil
@@ -364,7 +366,8 @@ func hasConfigChanges(d resourceDiffer) bool {
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("tracing_config") ||
-		d.HasChange("vpc_config") ||
+		d.HasChange("vpc_config.0.security_group_ids") ||
+		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
 		d.HasChange("environment")
 }
@@ -373,6 +376,8 @@ func hasConfigChanges(d resourceDiffer) bool {
 // CreateFunction in the API / SDK
 func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	functionName := d.Get("function_name").(string)
 	reservedConcurrentExecutions := d.Get("reserved_concurrent_executions").(int)
@@ -421,14 +426,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	packageType := d.Get("package_type")
-	handler, handlerOk := d.GetOk("handler")
-	runtime, runtimeOk := d.GetOk("runtime")
-
-	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
-		return errors.New("handler and runtime must be set when PackageType is Zip")
-	}
-
+	packageType := d.Get("package_type").(string)
 	params := &lambda.CreateFunctionInput{
 		Code:         functionCode,
 		Description:  aws.String(d.Get("description").(string)),
@@ -437,12 +435,12 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		Role:         aws.String(iamRole),
 		Timeout:      aws.Int64(int64(d.Get("timeout").(int))),
 		Publish:      aws.Bool(d.Get("publish").(bool)),
-		PackageType:  aws.String(d.Get("package_type").(string)),
+		PackageType:  aws.String(packageType),
 	}
 
 	if packageType == lambda.PackageTypeZip {
-		params.Handler = aws.String(handler.(string))
-		params.Runtime = aws.String(runtime.(string))
+		params.Handler = aws.String(d.Get("handler").(string))
+		params.Runtime = aws.String(d.Get("runtime").(string))
 	}
 
 	if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -512,8 +510,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		params.KMSKeyArn = aws.String(v.(string))
 	}
 
-	if v, exists := d.GetOk("tags"); exists {
-		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().LambdaTags()
+	if len(tags) > 0 {
+		params.Tags = tags.IgnoreAws().LambdaTags()
 	}
 
 	err := resource.Retry(waiter.LambdaFunctionCreateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
@@ -624,6 +622,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 // GetFunction in the API / SDK
 func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &lambda.GetFunctionInput{
@@ -657,8 +656,15 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// Tagging operations are permitted on Lambda functions only.
 	// Tags on aliases and versions are not supported.
 	if !qualifierExistance {
-		if err := d.Set("tags", keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		tags := keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+		//lintignore:AWSR002
+		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 			return fmt.Errorf("error setting tags: %w", err)
+		}
+
+		if err := d.Set("tags_all", tags.Map()); err != nil {
+			return fmt.Errorf("error setting tags_all: %w", err)
 		}
 	}
 
@@ -824,6 +830,15 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
+	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) region
+	// and returns ambiguous error codes (e.g. AccessDeniedException)
+	// so we cannot just ignore the error as would typically.
+	// We are hardcoding the region here, because go aws sdk endpoints
+	// package does not support Signer service
+	if meta.(*AWSClient).region == endpoints.ApNortheast3RegionID {
+		return nil
+	}
+
 	// Code Signing is only supported on zip packaged lambda functions.
 	var codeSigningConfigArn string
 
@@ -931,8 +946,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.LambdaUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Lambda Function (%s) tags: %w", arn, err)
@@ -997,7 +1012,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 	}
-	if d.HasChange("vpc_config") {
+	if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
 		configReq.VpcConfig = &lambda.VpcConfig{
 			SecurityGroupIds: []*string{},
 			SubnetIds:        []*string{},
@@ -1102,7 +1117,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Lambda Function (%s) update: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 		}
 	}
 
@@ -1142,6 +1157,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		_, err := conn.UpdateFunctionCode(codeReq)
 		if err != nil {
 			return fmt.Errorf("error modifying Lambda Function (%s) Code: %w", d.Id(), err)
+		}
+
+		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Lambda Function (%s) code update: %w", d.Id(), err)
 		}
 	}
 

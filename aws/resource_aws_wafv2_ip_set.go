@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
 )
 
 func resourceAwsWafv2IPSet() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 						for _, ov := range oldAddresses {
 							hasAddress := false
 							for _, nv := range newAddresses {
-								if cidrBlocksEqual(ov.(string), nv.(string)) {
+								if tfnet.CIDRBlocksEqual(ov.(string), nv.(string)) {
 									hasAddress = true
 									break
 								}
@@ -101,13 +102,18 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 					wafv2.ScopeRegional,
 				}, false),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	params := &wafv2.CreateIPSetInput{
 		Addresses:        aws.StringSlice([]string{}),
 		IPAddressVersion: aws.String(d.Get("ip_address_version").(string)),
@@ -123,8 +129,8 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 		params.Description = aws.String(v.(string))
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		params.Tags = keyvaluetags.New(v).IgnoreAws().Wafv2Tags()
+	if len(tags) > 0 {
+		params.Tags = tags.IgnoreAws().Wafv2Tags()
 	}
 
 	resp, err := conn.CreateIPSet(params)
@@ -144,6 +150,7 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &wafv2.GetIPSetInput{
@@ -166,11 +173,11 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error reading WAFv2 IPSet")
 	}
 
-	d.Set("name", aws.StringValue(resp.IPSet.Name))
-	d.Set("description", aws.StringValue(resp.IPSet.Description))
-	d.Set("ip_address_version", aws.StringValue(resp.IPSet.IPAddressVersion))
-	d.Set("arn", aws.StringValue(resp.IPSet.ARN))
-	d.Set("lock_token", aws.StringValue(resp.LockToken))
+	d.Set("name", resp.IPSet.Name)
+	d.Set("description", resp.IPSet.Description)
+	d.Set("ip_address_version", resp.IPSet.IPAddressVersion)
+	d.Set("arn", resp.IPSet.ARN)
+	d.Set("lock_token", resp.LockToken)
 
 	if err := d.Set("addresses", flattenStringSet(resp.IPSet.Addresses)); err != nil {
 		return fmt.Errorf("Error setting addresses: %s", err)
@@ -182,8 +189,15 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error listing tags for WAFv2 IpSet (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("Error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -216,8 +230,8 @@ func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error updating WAFv2 IPSet: %s", err)
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.Wafv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("Error updating tags: %s", err)
 		}
@@ -239,8 +253,7 @@ func resourceAwsWafv2IPSetDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		var err error
-		_, err = conn.DeleteIPSet(params)
+		_, err := conn.DeleteIPSet(params)
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
 				return resource.RetryableError(err)
