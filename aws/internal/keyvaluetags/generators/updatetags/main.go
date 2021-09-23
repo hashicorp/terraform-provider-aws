@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -48,6 +49,7 @@ var serviceNames = []string{
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"configservice",
+	"connect",
 	"databasemigrationservice",
 	"dataexchange",
 	"datapipeline",
@@ -111,6 +113,7 @@ var serviceNames = []string{
 	"redshift",
 	"resourcegroups",
 	"route53",
+	"route53recoveryreadiness",
 	"route53resolver",
 	"sagemaker",
 	"secretsmanager",

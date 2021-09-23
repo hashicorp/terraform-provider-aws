@@ -23,14 +23,20 @@ func init() {
 }
 
 func testSweepCurReportDefinitions(region string) error {
-	client, err := sharedClientForRegion(region)
+	c, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).costandusagereportconn
+	client := c.(*AWSClient)
+	if !testAccRegionSupportsCur(client.region, client.partition) {
+		log.Printf("[WARN] Skipping Cost and Usage Report Definitions sweep for %s: not supported in this region", region)
+		return nil
+	}
+
+	conn := client.costandusagereportconn
+
 	input := &cur.DescribeReportDefinitionsInput{}
 	var sweeperErrs *multierror.Error
-
 	err = conn.DescribeReportDefinitionsPages(input, func(page *cur.DescribeReportDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage

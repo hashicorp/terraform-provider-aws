@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsWorkspaceBundle_basic(t *testing.T) {
+func testAccDataSourceAwsWorkspaceBundle_basic(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
@@ -37,10 +37,10 @@ func TestAccDataSourceAwsWorkspaceBundle_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsWorkspaceBundle_byOwnerName(t *testing.T) {
+func testAccDataSourceAwsWorkspaceBundle_byOwnerName(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
@@ -64,8 +64,8 @@ func TestAccDataSourceAwsWorkspaceBundle_byOwnerName(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsWorkspaceBundle_bundleIDAndNameConflict(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+func testAccDataSourceAwsWorkspaceBundle_bundleIDAndNameConflict(t *testing.T) {
+	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
@@ -78,11 +78,11 @@ func TestAccDataSourceAwsWorkspaceBundle_bundleIDAndNameConflict(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsWorkspaceBundle_privateOwner(t *testing.T) {
+func testAccDataSourceAwsWorkspaceBundle_privateOwner(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 	bundleName := os.Getenv("AWS_WORKSPACES_BUNDLE_NAME")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccWorkspacesBundlePreCheck(t)

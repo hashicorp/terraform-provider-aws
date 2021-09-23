@@ -22,10 +22,10 @@ import (
 
 func resourceAwsEksIdentityProviderConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsEksIdentityProviderConfigCreate,
-		ReadContext:   resourceAwsEksIdentityProviderConfigRead,
-		UpdateContext: resourceAwsEksIdentityProviderConfigUpdate,
-		DeleteContext: resourceAwsEksIdentityProviderConfigDelete,
+		CreateWithoutTimeout: resourceAwsEksIdentityProviderConfigCreate,
+		ReadWithoutTimeout:   resourceAwsEksIdentityProviderConfigRead,
+		UpdateWithoutTimeout: resourceAwsEksIdentityProviderConfigUpdate,
+		DeleteWithoutTimeout: resourceAwsEksIdentityProviderConfigDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -34,8 +34,8 @@ func resourceAwsEksIdentityProviderConfig() *schema.Resource {
 		CustomizeDiff: SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(25 * time.Minute),
-			Delete: schema.DefaultTimeout(25 * time.Minute),
+			Create: schema.DefaultTimeout(40 * time.Minute),
+			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{

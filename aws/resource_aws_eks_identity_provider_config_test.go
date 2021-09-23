@@ -62,6 +62,10 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 				return !lastPage
 			})
 
+			if testSweepSkipSweepError(err) {
+				continue
+			}
+
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Identity Provider Configs (%s): %w", region, err))
 			}

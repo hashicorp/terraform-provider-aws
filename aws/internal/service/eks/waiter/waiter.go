@@ -19,7 +19,7 @@ const (
 
 func AddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
 	stateConf := resource.StateChangeConf{
-		Pending: []string{eks.AddonStatusCreating},
+		Pending: []string{eks.AddonStatusCreating, eks.AddonStatusDegraded},
 		Target:  []string{eks.AddonStatusActive},
 		Refresh: AddonStatus(ctx, conn, clusterName, addonName),
 		Timeout: AddonCreatedTimeout,

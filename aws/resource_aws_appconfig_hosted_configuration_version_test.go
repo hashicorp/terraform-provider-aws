@@ -2,16 +2,126 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_appconfig_hosted_configuration_version", &resource.Sweeper{
+		Name: "aws_appconfig_hosted_configuration_version",
+		F:    testSweepAppConfigHostedConfigurationVersions,
+	})
+}
+
+func testSweepAppConfigHostedConfigurationVersions(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).appconfigconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &appconfig.ListApplicationsInput{}
+
+	err = conn.ListApplicationsPages(input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, item := range page.Items {
+			if item == nil {
+				continue
+			}
+
+			appId := aws.StringValue(item.Id)
+
+			profilesInput := &appconfig.ListConfigurationProfilesInput{
+				ApplicationId: item.Id,
+			}
+
+			err := conn.ListConfigurationProfilesPages(profilesInput, func(page *appconfig.ListConfigurationProfilesOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, item := range page.Items {
+					if item == nil {
+						continue
+					}
+
+					profId := aws.StringValue(item.Id)
+
+					versionInput := &appconfig.ListHostedConfigurationVersionsInput{
+						ApplicationId:          aws.String(appId),
+						ConfigurationProfileId: aws.String(profId),
+					}
+
+					err := conn.ListHostedConfigurationVersionsPages(versionInput, func(page *appconfig.ListHostedConfigurationVersionsOutput, lastPage bool) bool {
+						if page == nil {
+							return !lastPage
+						}
+
+						for _, item := range page.Items {
+							if item == nil {
+								continue
+							}
+
+							id := fmt.Sprintf("%s/%s/%d", appId, profId, aws.Int64Value(item.VersionNumber))
+
+							log.Printf("[INFO] Deleting AppConfig Hosted Configuration Version (%s)", id)
+							r := resourceAwsAppconfigHostedConfigurationVersion()
+							d := r.Data(nil)
+							d.SetId(id)
+
+							sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+						}
+
+						return !lastPage
+					})
+
+					if err != nil {
+						errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Hosted Configuration Versions for Application (%s) and Configuration Profile (%s): %w", appId, profId, err))
+					}
+				}
+
+				return !lastPage
+			})
+
+			if err != nil {
+				errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Configuration Profiles for Application (%s): %w", appId, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Hosted Configuration Versions for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping AppConfig Hosted Configuration Versions sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")

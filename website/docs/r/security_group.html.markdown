@@ -31,22 +31,26 @@ resource "aws_security_group" "allow_tls" {
   description = "Allow TLS inbound traffic"
   vpc_id      = aws_vpc.main.id
 
-  ingress {
-    description      = "TLS from VPC"
-    from_port        = 443
-    to_port          = 443
-    protocol         = "tcp"
-    cidr_blocks      = [aws_vpc.main.cidr_block]
-    ipv6_cidr_blocks = [aws_vpc.main.ipv6_cidr_block]
-  }
+  ingress = [
+    {
+      description      = "TLS from VPC"
+      from_port        = 443
+      to_port          = 443
+      protocol         = "tcp"
+      cidr_blocks      = [aws_vpc.main.cidr_block]
+      ipv6_cidr_blocks = [aws_vpc.main.ipv6_cidr_block]
+    }
+  ]
 
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
+  egress = [
+    {
+      from_port        = 0
+      to_port          = 0
+      protocol         = "-1"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
+  ]
 
   tags = {
     Name = "allow_tls"
@@ -60,13 +64,15 @@ resource "aws_security_group" "allow_tls" {
 resource "aws_security_group" "example" {
   # ... other configuration ...
 
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
+  egress = [
+    {
+      from_port        = 0
+      to_port          = 0
+      protocol         = "-1"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
+  ]
 }
 ```
 
@@ -81,12 +87,14 @@ Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 resource "aws_security_group" "example" {
   # ... other configuration ...
 
-  egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    prefix_list_ids = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
-  }
+  egress = [
+    {
+      from_port       = 0
+      to_port         = 0
+      protocol        = "-1"
+      prefix_list_ids = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
+    }
+  ]
 }
 
 resource "aws_vpc_endpoint" "my_endpoint" {
@@ -111,10 +119,13 @@ The following arguments are supported:
 
 ### ingress
 
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
 The following arguments are required:
 
 * `from_port` - (Required) Start port (or ICMP type number if protocol is `icmp` or `icmpv6`).
 * `to_port` - (Required) End range port (or ICMP code if protocol is `icmp`).
+* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `from_port` and `to_port` equal to 0.  The supported values are defined in the `IpProtocol` argument on the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using with Terraform 0.12.x and above, please make sure that the value of the protocol is specified as lowercase when using with older version of Terraform to avoid an issue during upgrade.
 
 The following arguments are optional:
 
@@ -122,11 +133,12 @@ The following arguments are optional:
 * `description` - (Optional) Description of this ingress rule.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
 * `prefix_list_ids` - (Optional) List of Prefix List IDs.
-* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `from_port` and `to_port` equal to 0.  The supported values are defined in the `IpProtocol` argument on the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using with Terraform 0.12.x and above, please make sure that the value of the protocol is specified as lowercase when using with older version of Terraform to avoid an issue during upgrade.
 * `security_groups` - (Optional) List of security group Group Names if using EC2-Classic, or Group IDs if using a VPC.
 * `self` - (Optional) Whether the security group itself will be added as a source to this ingress rule.
 
 ### egress
+
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 The following arguments are required:
 

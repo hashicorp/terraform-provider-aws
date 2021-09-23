@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -192,8 +193,14 @@ func TestAccAWSLambdaFunction_disappears(t *testing.T) {
 }
 
 func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
-	if testAccGetPartition() == "aws-us-gov" {
-		t.Skip("Lambda code signing config is not supported in GovCloud partition")
+	if got, want := testAccGetPartition(), endpoints.AwsUsGovPartitionID; got == want {
+		t.Skipf("Lambda code signing config is not supported in %s partition", got)
+	}
+
+	// We are hardcoding the region here, because go aws sdk endpoints
+	// package does not support Signer service
+	if got, want := testAccGetRegion(), endpoints.ApNortheast3RegionID; got == want {
+		t.Skipf("Lambda code signing config is not supported in %s region", got)
 	}
 
 	var conf lambda.GetFunctionOutput
@@ -993,8 +1000,8 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 }
 
 func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
-	if testAccGetPartition() == "aws-us-gov" {
-		t.Skip("Lambda tracing config is not supported in GovCloud partition")
+	if got, want := testAccGetPartition(), endpoints.AwsUsGovPartitionID; got == want {
+		t.Skipf("Lambda tracing config is not supported in %s partition", got)
 	}
 
 	var conf lambda.GetFunctionOutput
@@ -1862,6 +1869,31 @@ func TestAccAWSLambdaFunction_runtimes(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps:        steps,
+	})
+}
+
+func TestAccAWSLambdaFunction_zip_validation(t *testing.T) {
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_expect_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_expect_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_expect_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_expect_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLambdaZipConfigWithoutHandler(funcName, policyName, roleName, sgName),
+				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+			},
+			{
+				Config:      testAccAWSLambdaZipConfigWithoutRuntime(funcName, policyName, roleName, sgName),
+				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+			},
+		},
 	})
 }
 
@@ -3303,6 +3335,26 @@ resource "aws_lambda_function" "test" {
   runtime       = %[2]q
 }
 `, rName, runtime))
+}
+
+func testAccAWSLambdaZipConfigWithoutHandler(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  runtime       = "nodejs12.x"
+}
+`, funcName)
+}
+
+func testAccAWSLambdaZipConfigWithoutRuntime(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+}
+`, funcName)
 }
 
 func TestFlattenLambdaImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {

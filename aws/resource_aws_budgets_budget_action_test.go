@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfbudgets "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/budgets/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -87,7 +89,7 @@ func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetActionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetActionExists(resourceName, &conf),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "budgetservice", regexp.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexp.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "action_type", "APPLY_IAM_POLICY"),
@@ -142,35 +144,55 @@ func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Ac
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Budget Action ID is set")
+		}
+
 		conn := testAccProvider.Meta().(*AWSClient).budgetconn
-		out, err := finder.ActionById(conn, rs.Primary.ID)
+
+		accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Describe budget action error: %v", err)
+			return err
 		}
 
-		if out.Action == nil {
-			return fmt.Errorf("No budget Action returned %v in %v", out.Action, out)
+		output, err := finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+
+		if err != nil {
+			return err
 		}
 
-		*out.Action = *config
+		*config = *output
 
 		return nil
 	}
 }
 
 func testAccAWSBudgetsBudgetActionDestroy(s *terraform.State) error {
-	meta := testAccProvider.Meta()
-	conn := meta.(*AWSClient).budgetconn
+	conn := testAccProvider.Meta().(*AWSClient).budgetconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget_action" {
 			continue
 		}
 
-		_, err := finder.ActionById(conn, rs.Primary.ID)
-		if !isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-			return fmt.Errorf("Budget Action '%s' was not deleted properly", rs.Primary.ID)
+		accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
 		}
+
+		_, err = finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Budget Action %s still exists", rs.Primary.ID)
 	}
 
 	return nil

@@ -3,8 +3,62 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
+
+func ConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+	input := &directconnect.DescribeConnectionsInput{
+		ConnectionId: aws.String(id),
+	}
+
+	output, err := conn.DescribeConnections(input)
+
+	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Connections) == 0 || output.Connections[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Connections); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	connection := output.Connections[0]
+
+	if state := aws.StringValue(connection.ConnectionState); state == directconnect.ConnectionStateDeleted || state == directconnect.ConnectionStateRejected {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return connection, nil
+}
+
+func ConnectionAssociationExists(conn *directconnect.DirectConnect, connectionID, lagID string) error {
+	connection, err := ConnectionByID(conn, connectionID)
+
+	if err != nil {
+		return err
+	}
+
+	if lagID != aws.StringValue(connection.LagId) {
+		return &resource.NotFoundError{}
+	}
+
+	return nil
+}
 
 func GatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.Gateway, error) {
 	input := &directconnect.DescribeDirectConnectGatewaysInput{
@@ -18,14 +72,12 @@ func GatewayByID(conn *directconnect.DirectConnect, id string) (*directconnect.G
 	}
 
 	if output == nil || len(output.DirectConnectGateways) == 0 || output.DirectConnectGateways[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+	if count := len(output.DirectConnectGateways); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
 
 	gateway := output.DirectConnectGateways[0]
 
@@ -73,14 +125,12 @@ func GatewayAssociation(conn *directconnect.DirectConnect, input *directconnect.
 	}
 
 	if output == nil || len(output.DirectConnectGatewayAssociations) == 0 || output.DirectConnectGatewayAssociations[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+	if count := len(output.DirectConnectGatewayAssociations); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
 
 	association := output.DirectConnectGatewayAssociations[0]
 
@@ -113,14 +163,12 @@ func GatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string
 	}
 
 	if output == nil || len(output.DirectConnectGatewayAssociationProposals) == 0 || output.DirectConnectGatewayAssociationProposals[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
+	if count := len(output.DirectConnectGatewayAssociationProposals); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
 
 	proposal := output.DirectConnectGatewayAssociationProposals[0]
 
@@ -139,4 +187,74 @@ func GatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string
 	}
 
 	return proposal, nil
+}
+
+func LagByID(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
+	input := &directconnect.DescribeLagsInput{
+		LagId: aws.String(id),
+	}
+
+	output, err := conn.DescribeLags(input)
+
+	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Lag with ID") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Lags) == 0 || output.Lags[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Lags); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	lag := output.Lags[0]
+
+	if state := aws.StringValue(lag.LagState); state == directconnect.LagStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return lag, nil
+}
+
+func LocationByCode(conn *directconnect.DirectConnect, code string) (*directconnect.Location, error) {
+	input := &directconnect.DescribeLocationsInput{}
+
+	locations, err := Locations(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, location := range locations {
+		if aws.StringValue(location.LocationCode) == code {
+			return location, nil
+		}
+	}
+
+	return nil, tfresource.NewEmptyResultError(input)
+}
+
+func Locations(conn *directconnect.DirectConnect, input *directconnect.DescribeLocationsInput) ([]*directconnect.Location, error) {
+	output, err := conn.DescribeLocations(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Locations) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Locations, nil
 }

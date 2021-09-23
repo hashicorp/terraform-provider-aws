@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -20,6 +21,8 @@ import (
 const (
 	SweepThrottlingRetryTimeout = 10 * time.Minute
 )
+
+const defaultSweeperAssumeRoleDurationSeconds = 3600
 
 // sweeperAwsClients is a shared cache of regional AWSClient
 // This prevents client re-initialization for every resource with no benefit.
@@ -54,10 +57,31 @@ func sharedClientForRegion(region string) (interface{}, error) {
 		Region:     region,
 	}
 
+	if role := os.Getenv(envvar.TfAwsAssumeRoleARN); role != "" {
+		conf.AssumeRoleARN = role
+
+		conf.AssumeRoleDurationSeconds = defaultSweeperAssumeRoleDurationSeconds
+		if v := os.Getenv(envvar.TfAwsAssumeRoleDuration); v != "" {
+			d, err := strconv.Atoi(v)
+			if err != nil {
+				return nil, fmt.Errorf("environment variable %s: %w", envvar.TfAwsAssumeRoleDuration, err)
+			}
+			conf.AssumeRoleDurationSeconds = d
+		}
+
+		if v := os.Getenv(envvar.TfAwsAssumeRoleExternalID); v != "" {
+			conf.AssumeRoleExternalID = v
+		}
+
+		if v := os.Getenv(envvar.TfAwsAssumeRoleSessionName); v != "" {
+			conf.AssumeRoleSessionName = v
+		}
+	}
+
 	// configures a default client for the region, using the above env vars
 	client, err := conf.Client()
 	if err != nil {
-		return nil, fmt.Errorf("error getting AWS client")
+		return nil, fmt.Errorf("error getting AWS client: %w", err)
 	}
 
 	sweeperAwsClients[region] = client

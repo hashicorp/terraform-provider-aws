@@ -11,7 +11,7 @@ const (
 	ActionAvailableTimeout = 2 * time.Minute
 )
 
-func ActionAvailable(conn *budgets.Budgets, id string) (*budgets.Action, error) {
+func ActionAvailable(conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			budgets.ActionStatusExecutionInProgress,
@@ -22,7 +22,7 @@ func ActionAvailable(conn *budgets.Budgets, id string) (*budgets.Action, error) 
 			budgets.ActionStatusExecutionFailure,
 			budgets.ActionStatusPending,
 		},
-		Refresh: ActionStatus(conn, id),
+		Refresh: ActionStatus(conn, accountID, actionID, budgetName),
 		Timeout: ActionAvailableTimeout,
 	}
 

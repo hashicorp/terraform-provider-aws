@@ -1996,6 +1996,7 @@ func validateDxConnectionBandWidth() schema.SchemaValidateFunc {
 		"2Gbps",
 		"5Gbps",
 		"10Gbps",
+		"100Gbps",
 		"50Mbps",
 		"100Mbps",
 		"200Mbps",

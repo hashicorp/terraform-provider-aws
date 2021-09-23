@@ -24,6 +24,7 @@ func TestAccAWSRoute53ZoneDataSource_id(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsRoute53ZoneConfigId(fqdn),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),

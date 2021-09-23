@@ -7,11 +7,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -26,32 +28,41 @@ func testSweepMskClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.(*AWSClient).kafkaconn
+	input := &kafka.ListClustersInput{}
+	sweepResources := make([]*testSweepResource, 0)
 
-	out, err := conn.ListClusters(&kafka.ListClustersInput{})
+	err = conn.ListClustersPages(input, func(page *kafka.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cluster := range page.ClusterInfoList {
+			r := resourceAwsMskCluster()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(cluster.ClusterArn))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping MSK Cluster sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] skipping msk cluster domain sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving MSK clusters: %s", err)
+		return fmt.Errorf("error listing MSK Clusters (%s): %w", region, err)
 	}
 
-	for _, cluster := range out.ClusterInfoList {
-		log.Printf("[INFO] Deleting Msk cluster: %s", *cluster.ClusterName)
-		_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
-			ClusterArn: cluster.ClusterArn,
-		})
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete MSK cluster %s: %s", *cluster.ClusterName, err)
-			continue
-		}
-		err = resourceAwsMskClusterDeleteWaiter(conn, *cluster.ClusterArn)
-		if err != nil {
-			log.Printf("[ERROR] failed to wait for deletion of MSK cluster %s: %s", *cluster.ClusterName, err)
-		}
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping MSK Clusters (%s): %w", region, err)
 	}
+
 	return nil
 }
 
@@ -97,12 +108,12 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.0", "aws_subnet.example_subnet_az1", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.1", "aws_subnet.example_subnet_az2", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.2", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.security_groups.0", "aws_security_group.example_sg", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.security_groups.*", "aws_security_group.example_sg", "id"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
@@ -121,6 +132,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
 					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
 					testCheckResourceAttrIsSortedCsv(resourceName, "zookeeper_connect_string"),
+					testCheckResourceAttrIsSortedCsv(resourceName, "zookeeper_connect_string_tls"),
 				),
 			},
 			{
@@ -335,12 +347,11 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 }
 
 func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *testing.T) {
-	TestAccSkip(t, "Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
-
 	var cluster1 kafka.ClusterInfo
+	var ca acmpca.CertificateAuthority
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_cluster.test"
-
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	commonName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -349,13 +360,22 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
+			// We need to create and activate the CA before creating the MSK cluster.
+			{
+				Config: testAccMskClusterConfigRootCA(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
+				),
+			},
 			{
 				Config: testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.0.tls.0.certificate_authority_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
 				),
 			},
 			{
@@ -365,6 +385,14 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 				ImportStateVerifyIgnore: []string{
 					"current_version",
 				},
+			},
+			{
+				Config: testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -571,9 +599,9 @@ func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.0", "aws_subnet.example_subnet_az1", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.1", "aws_subnet.example_subnet_az2", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.2", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
 					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
 				),
@@ -596,9 +624,9 @@ func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.0", "aws_subnet.example_subnet_az1", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.1", "aws_subnet.example_subnet_az2", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.2", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.example_subnet_az3", "id"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "6"),
 					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_tls"),
 				),
@@ -841,7 +869,6 @@ func TestAccAWSMskCluster_KafkaVersionUpgradeWithConfigurationInfo(t *testing.T)
 
 func TestAccAWSMskCluster_Tags(t *testing.T) {
 	var cluster kafka.ClusterInfo
-	var td kafka.ListTagsForResourceOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_cluster.test"
 
@@ -852,20 +879,11 @@ func TestAccAWSMskCluster_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMskClusterConfigTags1(rName),
+				Config: testAccMskClusterConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
-					testAccLoadMskTags(&cluster, &td),
-					testAccCheckMskClusterTags(&td, "foo", "bar"),
-				),
-			},
-			{
-				Config: testAccMskClusterConfigTags2(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMskClusterExists(resourceName, &cluster),
-					testAccLoadMskTags(&cluster, &td),
-					testAccCheckMskClusterTags(&td, "foo", "baz"),
-					testAccCheckMskClusterTags(&td, "new", "type"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -876,33 +894,52 @@ func TestAccAWSMskCluster_Tags(t *testing.T) {
 					"current_version",
 				},
 			},
+			{
+				Config: testAccMskClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccMskClusterConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
 		},
 	})
 }
 
 func testAccCheckMskClusterDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_cluster" {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
-		opts := &kafka.DescribeClusterInput{
-			ClusterArn: aws.String(rs.Primary.ID),
+		_, err := finder.ClusterByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeCluster(opts)
 		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-				continue
-			}
 			return err
 		}
+
+		return fmt.Errorf("MSK Cluster %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
-func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource.TestCheckFunc {
+func testAccCheckMskClusterExists(n string, v *kafka.ClusterInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -910,18 +947,19 @@ func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Cluster arn is set")
+			return fmt.Errorf("No MSK Cluster ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
-		resp, err := conn.DescribeCluster(&kafka.DescribeClusterInput{
-			ClusterArn: aws.String(rs.Primary.ID),
-		})
+
+		output, err := finder.ClusterByARN(conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("Error describing cluster: %s", err.Error())
+			return err
 		}
 
-		*cluster = *resp.ClusterInfo
+		*v = *output
+
 		return nil
 	}
 }
@@ -942,43 +980,6 @@ func testAccCheckMskClusterRecreated(i, j *kafka.ClusterInfo) resource.TestCheck
 			return fmt.Errorf("MSK Cluster (%s) was not recreated", aws.StringValue(i.ClusterArn))
 		}
 
-		return nil
-	}
-}
-
-func testAccLoadMskTags(cluster *kafka.ClusterInfo, td *kafka.ListTagsForResourceOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
-
-		tagOut, err := conn.ListTagsForResource(&kafka.ListTagsForResourceInput{
-			ResourceArn: cluster.ClusterArn,
-		})
-		if err != nil {
-			return err
-		}
-		if tagOut != nil {
-			*td = *tagOut
-			log.Printf("[DEBUG] loaded acceptance test tags: %v (from %v)", td, tagOut)
-		}
-		return nil
-	}
-}
-
-func testAccCheckMskClusterTags(td *kafka.ListTagsForResourceOutput, key string, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		m := keyvaluetags.KafkaKeyValueTags(td.Tags).IgnoreAws().Map()
-		v, ok := m[key]
-		if value != "" && !ok {
-			return fmt.Errorf("Missing tag: %s - (found tags %v)", key, m)
-		} else if value == "" && ok {
-			return fmt.Errorf("Extra tag: %s", key)
-		}
-		if value == "" {
-			return nil
-		}
-		if v != value {
-			return fmt.Errorf("%s: bad value: %s", key, v)
-		}
 		return nil
 	}
 }
@@ -1096,19 +1097,29 @@ resource "aws_msk_cluster" "test" {
 `, rName, t))
 }
 
-func testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName string) string {
-	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
+func testAccMskClusterConfigRootCA(commonName string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = %[2]q
+      common_name = %[1]q
     }
   }
 }
+`, commonName)
+}
 
+func testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName, commonName string) string {
+	return composeConfig(
+		testAccMskClusterBaseConfig(rName),
+		testAccMskClusterConfigRootCA(commonName),
+		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1152,7 +1163,7 @@ resource "aws_msk_cluster" "test" {
 
   client_authentication {
     sasl {
-      scram = %t
+      scram = %[2]t
     }
   }
 }
@@ -1175,7 +1186,7 @@ resource "aws_msk_cluster" "test" {
 
   client_authentication {
     sasl {
-      iam = %t
+      iam = %[2]t
     }
   }
 }
@@ -1564,7 +1575,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, kafkaVersion, configResourceName))
 }
 
-func testAccMskClusterConfigTags1(rName string) string {
+func testAccMskClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1579,13 +1590,13 @@ resource "aws_msk_cluster" "test" {
   }
 
   tags = {
-    foo = "bar"
+    %[2]q = %[3]q
   }
 }
-`, rName))
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccMskClusterConfigTags2(rName string) string {
+func testAccMskClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return composeConfig(testAccMskClusterBaseConfig(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -1600,16 +1611,9 @@ resource "aws_msk_cluster" "test" {
   }
 
   tags = {
-    foo = "baz"
-    new = "type"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName))
-}
-
-func TestSortMskClusterEndpoints(t *testing.T) {
-	testString := "this:123,is:147,just.a.test:443"
-	if "is:147,just.a.test:443,this:123" != sortMskClusterEndpoints(testString) {
-		t.Fail()
-	}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

@@ -332,7 +332,7 @@ func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff
 	_, handlerOk := d.GetOk("handler")
 	_, runtimeOk := d.GetOk("runtime")
 
-	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
+	if packageType == lambda.PackageTypeZip && (!handlerOk || !runtimeOk) {
 		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
 	}
 	return nil
@@ -426,14 +426,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	packageType := d.Get("package_type")
-	handler, handlerOk := d.GetOk("handler")
-	runtime, runtimeOk := d.GetOk("runtime")
-
-	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
-		return errors.New("handler and runtime must be set when PackageType is Zip")
-	}
-
+	packageType := d.Get("package_type").(string)
 	params := &lambda.CreateFunctionInput{
 		Code:         functionCode,
 		Description:  aws.String(d.Get("description").(string)),
@@ -442,12 +435,12 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		Role:         aws.String(iamRole),
 		Timeout:      aws.Int64(int64(d.Get("timeout").(int))),
 		Publish:      aws.Bool(d.Get("publish").(bool)),
-		PackageType:  aws.String(d.Get("package_type").(string)),
+		PackageType:  aws.String(packageType),
 	}
 
 	if packageType == lambda.PackageTypeZip {
-		params.Handler = aws.String(handler.(string))
-		params.Runtime = aws.String(runtime.(string))
+		params.Handler = aws.String(d.Get("handler").(string))
+		params.Runtime = aws.String(d.Get("runtime").(string))
 	}
 
 	if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -834,6 +827,15 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
 	if meta.(*AWSClient).partition != endpoints.AwsPartitionID {
+		return nil
+	}
+
+	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) region
+	// and returns ambiguous error codes (e.g. AccessDeniedException)
+	// so we cannot just ignore the error as would typically.
+	// We are hardcoding the region here, because go aws sdk endpoints
+	// package does not support Signer service
+	if meta.(*AWSClient).region == endpoints.ApNortheast3RegionID {
 		return nil
 	}
 

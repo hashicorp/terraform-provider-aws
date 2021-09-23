@@ -252,7 +252,7 @@ func testAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.jupyter_server_app_settings.0.default_resource_spec.0.instance_type", "system"),
 				),
 			},
 			{
@@ -488,7 +488,7 @@ resource "aws_sagemaker_user_profile" "test" {
 
     jupyter_server_app_settings {
       default_resource_spec {
-        instance_type = "ml.t3.micro"
+        instance_type = "system"
       }
     }
   }

@@ -179,3 +179,50 @@ func GlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalRepli
 		Message: fmt.Sprintf("Replication Group (%s) not found in Global Replication Group (%s)", id, globalReplicationGroupID),
 	}
 }
+
+func ElastiCacheUserById(conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
+	input := &elasticache.DescribeUsersInput{
+		UserId: aws.String(userID),
+	}
+	out, err := conn.DescribeUsers(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(out.Users) {
+	case 0:
+		return nil, &resource.NotFoundError{
+			Message: "empty result",
+		}
+	case 1:
+		return out.Users[0], nil
+	default:
+		return nil, &resource.NotFoundError{
+			Message: "too many results",
+		}
+	}
+}
+
+func ElastiCacheUserGroupById(conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
+	input := &elasticache.DescribeUserGroupsInput{
+		UserGroupId: aws.String(groupID),
+	}
+	out, err := conn.DescribeUserGroups(input)
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(out.UserGroups) {
+	case 0:
+		return nil, &resource.NotFoundError{
+			Message: "empty result",
+		}
+	case 1:
+		return out.UserGroups[0], nil
+	default:
+		return nil, &resource.NotFoundError{
+			Message: "too many results",
+		}
+	}
+}

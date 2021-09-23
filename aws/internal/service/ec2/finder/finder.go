@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // CarrierGatewayByID returns the carrier gateway corresponding to the specified identifier.
@@ -443,17 +444,11 @@ func SecurityGroup(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (*ec2.
 	}
 
 	if result == nil || len(result.SecurityGroups) == 0 || result.SecurityGroups[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	if len(result.SecurityGroups) > 1 {
-		return nil, &resource.NotFoundError{
-			Message:     fmt.Sprintf("too many results: wanted 1, got %d", len(result.SecurityGroups)),
-			LastRequest: input,
-		}
+		return nil, tfresource.NewTooManyResultsError(len(result.SecurityGroups), input)
 	}
 
 	return result.SecurityGroups[0], nil
@@ -554,6 +549,10 @@ func TransitGatewayPrefixListReferenceByID(conn *ec2.EC2, resourceID string) (*e
 }
 
 func TransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	if transitGatewayRouteTableID == "" {
+		return nil, nil
+	}
+
 	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -585,7 +584,11 @@ func TransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTable
 		return !lastPage
 	})
 
-	return result, err
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // VpcAttribute looks up a VPC attribute.
@@ -811,13 +814,87 @@ func ManagedPrefixListByID(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, er
 	}
 
 	output, err := conn.DescribeManagedPrefixLists(input)
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.PrefixLists) == 0 {
-		return nil, nil
+	if output == nil || len(output.PrefixLists) == 0 || output.PrefixLists[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.PrefixLists[0], nil
+	if count := len(output.PrefixLists); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	prefixList := output.PrefixLists[0]
+
+	if state := aws.StringValue(prefixList.State); state == ec2.PrefixListStateDeleteComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return prefixList, nil
+}
+
+func ManagedPrefixListEntriesByID(conn *ec2.EC2, id string) ([]*ec2.PrefixListEntry, error) {
+	input := &ec2.GetManagedPrefixListEntriesInput{
+		PrefixListId: aws.String(id),
+	}
+
+	var prefixListEntries []*ec2.PrefixListEntry
+
+	err := conn.GetManagedPrefixListEntriesPages(input, func(page *ec2.GetManagedPrefixListEntriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, entry := range page.Entries {
+			if entry == nil {
+				continue
+			}
+
+			prefixListEntries = append(prefixListEntries, entry)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return prefixListEntries, nil
+}
+
+func ManagedPrefixListEntryByIDAndCIDR(conn *ec2.EC2, id, cidr string) (*ec2.PrefixListEntry, error) {
+	prefixListEntries, err := ManagedPrefixListEntriesByID(conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range prefixListEntries {
+		if aws.StringValue(entry.Cidr) == cidr {
+			return entry, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
 }

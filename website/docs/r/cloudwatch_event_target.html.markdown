@@ -338,6 +338,7 @@ The following arguments are supported:
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `kinesis_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
+* `redshift_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
 * `http_target` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maximum of 1 is allowed.
 * `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
@@ -386,6 +387,15 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 ### kinesis_target
 
 * `partition_key_path` - (Optional) The JSON path to be extracted from the event and used as the partition key.
+
+### redshift_target
+
+* `database` - (Required) The name of the database.
+* `db_user` - (Optional) The database user name.
+* `secrets_manager_arn` - (Optional) The name or ARN of the secret that enables access to the database.
+* `sql` - (Optional) The SQL statement text to run.
+* `statement_name` - (Optional) The name of the SQL statement.
+* `with_event` - (Optional) Indicates whether to send an event back to EventBridge after the SQL statement runs.
 
 ### sqs_target
 

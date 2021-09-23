@@ -1,0 +1,11 @@
+```release-note:bug
+aws/resource_aws_lex_bot: Fix computed `version` for dependent resources
+```
+
+```release-note:bug
+aws/resource_aws_lex_intent: Fix computed `version` for dependent resources
+```
+
+```release-note:bug
+aws/resource_aws_lex_slot_type: Fix computed `version` for dependent resources
+```

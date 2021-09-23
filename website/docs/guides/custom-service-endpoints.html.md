@@ -159,6 +159,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>mediapackage</code></li>
   <li><code>mediastore</code></li>
   <li><code>mediastoredata</code></li>
+  <li><code>memorydb</code></li>
   <li><code>mq</code></li>
   <li><code>mwaa</code></li>
   <li><code>neptune</code></li>
@@ -180,6 +181,8 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>resourcegroupstaggingapi</code></li>
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
+  <li><code>route53recoverycontrolconfig</code></li>
+  <li><code>route53recoveryreadiness</code></li>
   <li><code>route53resolver</code></li>
   <li><code>s3</code></li>
   <li><code>s3control</code></li>

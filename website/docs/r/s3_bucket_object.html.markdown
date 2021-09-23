@@ -155,3 +155,17 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - `key` of the resource supplied above
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `version_id` - Unique version ID value for the object, if bucket versioning is enabled.
+
+## Import
+
+Objects can be imported using the `id`. The `id` is the bucket name and the key together e.g.
+
+```
+$ terraform import aws_s3_bucket_object.object some-bucket-name/some/key.txt
+```
+
+Additionally, s3 url syntax can be used, e.g.
+
+```
+$ terraform import aws_s3_bucket_object.object s3://some-bucket-name/some/key.txt
+```
