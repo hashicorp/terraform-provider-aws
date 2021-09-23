@@ -1480,8 +1480,8 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
     }
 
     delete_marker_replication {
-	  status = "Enabled"
-	}
+      status = "Enabled"
+    }
 
     destination {
       bucket        = aws_s3_bucket.destination.arn
@@ -1631,8 +1631,8 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
     }
 
     delete_marker_replication {
-	  status = "Enabled"
-	}
+      status = "Enabled"
+    }
 
     destination {
       bucket        = aws_s3_bucket.destination.arn
@@ -1706,8 +1706,8 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
     }
 
     delete_marker_replication {
-	  status = "Enabled"
-	}
+      status = "Enabled"
+    }
 
     destination {
       bucket        = aws_s3_bucket.destination.arn
@@ -1715,7 +1715,5 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
     }
   }
 }
-
-
 `, rName, rNameDestination, rInt)
 }
