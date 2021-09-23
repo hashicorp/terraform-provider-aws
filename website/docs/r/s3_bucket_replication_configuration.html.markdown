@@ -133,7 +133,6 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 ### Bi-Directional Replication
 
 ```terraform
-
 # ... other configuration ...
 
 resource "aws_s3_bucket" "east" {
@@ -202,7 +201,7 @@ resource "aws_s3_bucket_replication_configuration" "west_to_east" {
 
 This resource implements the same features that are provided by the `replication_configuration` object of the `aws_s3_bucket` resource.  To avoid conflicts or unexpected apply results a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `replication_configuration` object.  Failure to add the `lifecycle` configuration to the `aws_s3_bucket` will result in conflicting state results.
 
-```hcl
+```
 lifecycle {
   ignore_changes = [
     replication_configuration
@@ -254,7 +253,7 @@ With the `filter` attribute, you can specify object filters based on the object 
 
 The `existing_object_replication` object supports the following:
 
-```hcl
+```
 existing_object_replication {
   status = "Enabled"
 }
@@ -271,7 +270,7 @@ existing_object_replication {
 
 The `delete_marker_replication` object supports the following:
 
-```hcl
+```
 delete_marker_replication {
   status = "Enabled"
 }
@@ -294,7 +293,7 @@ The `destination` object supports the following:
 
 ### replication_time
 
-```hcl
+```
 replication_time {
   status = "Enabled"
   time {
@@ -310,7 +309,7 @@ The `replication_time` object supports the following:
 
 ### metrics
 
-```hcl
+```
 metrics {
   status = "Enabled"
   event_threshold {
@@ -328,7 +327,7 @@ The `metrics` object supports the following:
 
 The `source_selection_criteria` object supports the following:
 
-```hcl
+```
 source_selection_criteria {
   replica_modification {
     status = "Enabled"
@@ -366,6 +365,6 @@ In addition to all arguments above, the following attributes are exported:
 
 S3 bucket replication configuration can be imported using the `bucket`, e.g.
 
-```
+```sh
 $ terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```
