@@ -408,7 +408,7 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 	if err := elasticacheSetResourceDataFromCacheCluster(d, c); err != nil {
 		return err
 	}
-
+	d.Set("log_delivery_configurations", flattenAwsElasticacheLogDeliveryConfigurations(c.LogDeliveryConfigurations))
 	d.Set("snapshot_window", c.SnapshotWindow)
 	d.Set("snapshot_retention_limit", c.SnapshotRetentionLimit)
 
