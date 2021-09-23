@@ -173,11 +173,11 @@ resource "aws_ecr_replication_configuration" "test" {
         registry_id = data.aws_caller_identity.current.account_id
       }
       repository_filter {
-        filter = "%[2]q"
+        filter = %[2]q
         filter_type = "PREFIX_MATCH"
       }
       repository_filter {
-        filter = "%[3]q"
+        filter = %[3]q
         filter_type = "PREFIX_MATCH"
       }
     }
