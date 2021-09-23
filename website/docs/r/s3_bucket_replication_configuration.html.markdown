@@ -114,9 +114,9 @@ resource "aws_s3_bucket" "source" {
   }
 }
 
-aws_s3_bucket_replication_configuration replication {
+resource "aws_s3_bucket_replication_configuration" "replication" {
   role   = aws_iam_role.replication.arn
-  bucket = aws_s3_bucket.source.id 
+  bucket = aws_s3_bucket.source.id
   rules {
     id     = "foobar"
     prefix = "foo"
@@ -128,14 +128,18 @@ aws_s3_bucket_replication_configuration replication {
     }
   }
 }
-
 ```
 
 ### Bi-Directional Replication
 
+<<<<<<< HEAD
 ```
 
 #...
+=======
+```terraform
+# ... other configuration ...
+>>>>>>> eceb584d360ac3d5121f960dc9a61a4d2fcede0a
 
 resource "aws_s3_bucket" "east" {
   bucket = "tf-test-bucket-east-12345"
@@ -166,9 +170,9 @@ resource "aws_s3_bucket" "west" {
   }
 }
 
-aws_s3_bucket_replication_configuration "east_to_west" {
+resource "aws_s3_bucket_replication_configuration" "east_to_west" {
   role   = aws_iam_role.east_replication.arn
-  bucket = aws_s3_bucket.east.id 
+  bucket = aws_s3_bucket.east.id
   rules {
     id     = "foobar"
     prefix = "foo"
@@ -181,9 +185,9 @@ aws_s3_bucket_replication_configuration "east_to_west" {
   }
 }
 
-aws_s3_bucket_replication_configuration "west_to_east" {
+resource "aws_s3_bucket_replication_configuration" "west_to_east" {
   role   = aws_iam_role.west_replication.arn
-  bucket = aws_s3_bucket.west.id 
+  bucket = aws_s3_bucket.west.id
   rules {
     id     = "foobar"
     prefix = "foo"
@@ -201,7 +205,7 @@ aws_s3_bucket_replication_configuration "west_to_east" {
 
 ~> **NOTE:** To avoid conflicts always add the following lifecycle object to the `aws_s3_bucket` resource of the source bucket.
 
-This resource implements the same features that are provided by the `replication_configuration` object of the `aws_s3_bucket` resource.  To avoid conflicts or unexpected apply results a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `replication_configuration` object.  Faliure to add the `lifecycle` configuation to the `aws_s3_bucket` will result in conflicting state results.
+This resource implements the same features that are provided by the `replication_configuration` object of the `aws_s3_bucket` resource.  To avoid conflicts or unexpected apply results a lifecycle configuration is needed on the `aws_s3_bucket` to ignore changes to the internal `replication_configuration` object.  Failure to add the `lifecycle` configuration to the `aws_s3_bucket` will result in conflicting state results.
 
 ```
 lifecycle {
@@ -357,7 +361,7 @@ The `filter` object supports the following:
 * `tags` - (Optional)  A map of tags that identifies subset of objects to which the rule applies.
 The rule applies only to objects having all the tags in its tagset.
 
-## Attribute Reference 
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
@@ -367,6 +371,6 @@ In addition to all arguments above, the following attributes are exported:
 
 S3 bucket replication configuration can be imported using the `bucket`, e.g.
 
-```
+```sh
 $ terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```
