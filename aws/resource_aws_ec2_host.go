@@ -174,12 +174,12 @@ func resourceAwsEc2HostUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.HostRecovery = aws.String(d.Get("host_recovery").(string))
 		}
 
-		if d.HasChange("instance_family") {
-			input.InstanceFamily = aws.String(d.Get("instance_family").(string))
+		if hasChange, v := d.HasChange("instance_family"), d.Get("instance_family").(string); hasChange && v != "" {
+			input.InstanceFamily = aws.String(v)
 		}
 
-		if d.HasChange("instance_type") {
-			input.InstanceType = aws.String(d.Get("instance_type").(string))
+		if hasChange, v := d.HasChange("instance_type"), d.Get("instance_type").(string); hasChange && v != "" {
+			input.InstanceType = aws.String(v)
 		}
 
 		output, err := conn.ModifyHosts(input)

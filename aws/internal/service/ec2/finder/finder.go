@@ -85,6 +85,22 @@ func HostByID(conn *ec2.EC2, id string) (*ec2.Host, error) {
 		HostIds: aws.StringSlice([]string{id}),
 	}
 
+	return Host(conn, input)
+}
+
+func HostByIDAndFilters(conn *ec2.EC2, id string, filters []*ec2.Filter) (*ec2.Host, error) {
+	input := &ec2.DescribeHostsInput{
+		HostIds: aws.StringSlice([]string{id}),
+	}
+
+	if len(filters) > 0 {
+		input.Filter = filters
+	}
+
+	return Host(conn, input)
+}
+
+func Host(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
 	output, err := conn.DescribeHosts(input)
 
 	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidHostIDNotFound) {
