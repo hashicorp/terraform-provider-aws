@@ -158,6 +158,7 @@ The following arguments are supported:
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. Defined below.
 * `mutual_tls_authentication` - (Optional) The mutual TLS authentication configuration for the domain name. Defined below.
 * `security_policy` - (Optional) The Transport Layer Security (TLS) version + cipher suite for this DomainName. The valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
+* `ownership_verification_certificate_arn` - (Optional) The ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 When referencing an AWS-managed certificate, the following arguments are supported:

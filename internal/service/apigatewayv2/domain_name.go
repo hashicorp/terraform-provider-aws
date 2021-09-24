@@ -81,6 +81,11 @@ func ResourceDomainName() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"ownership_verification_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
 					},
 				},
 			},
@@ -260,9 +265,10 @@ func expandApiGatewayV2DomainNameConfiguration(vDomainNameConfiguration []interf
 	mDomainNameConfiguration := vDomainNameConfiguration[0].(map[string]interface{})
 
 	return []*apigatewayv2.DomainNameConfiguration{{
-		CertificateArn: aws.String(mDomainNameConfiguration["certificate_arn"].(string)),
-		EndpointType:   aws.String(mDomainNameConfiguration["endpoint_type"].(string)),
-		SecurityPolicy: aws.String(mDomainNameConfiguration["security_policy"].(string)),
+		CertificateArn:                      aws.String(mDomainNameConfiguration["certificate_arn"].(string)),
+		EndpointType:                        aws.String(mDomainNameConfiguration["endpoint_type"].(string)),
+		SecurityPolicy:                      aws.String(mDomainNameConfiguration["security_policy"].(string)),
+		OwnershipVerificationCertificateArn: aws.String(mDomainNameConfiguration["ownership_verification_certificate_arn"].(string)),
 	}}
 }
 
@@ -272,11 +278,12 @@ func flattenApiGatewayV2DomainNameConfiguration(domainNameConfiguration *apigate
 	}
 
 	return []interface{}{map[string]interface{}{
-		"certificate_arn":    aws.StringValue(domainNameConfiguration.CertificateArn),
-		"endpoint_type":      aws.StringValue(domainNameConfiguration.EndpointType),
-		"hosted_zone_id":     aws.StringValue(domainNameConfiguration.HostedZoneId),
-		"security_policy":    aws.StringValue(domainNameConfiguration.SecurityPolicy),
-		"target_domain_name": aws.StringValue(domainNameConfiguration.ApiGatewayDomainName),
+		"certificate_arn":                        aws.StringValue(domainNameConfiguration.CertificateArn),
+		"endpoint_type":                          aws.StringValue(domainNameConfiguration.EndpointType),
+		"hosted_zone_id":                         aws.StringValue(domainNameConfiguration.HostedZoneId),
+		"security_policy":                        aws.StringValue(domainNameConfiguration.SecurityPolicy),
+		"target_domain_name":                     aws.StringValue(domainNameConfiguration.ApiGatewayDomainName),
+		"ownership_verification_certificate_arn": aws.StringValue(domainNameConfiguration.OwnershipVerificationCertificateArn),
 	}}
 }
 

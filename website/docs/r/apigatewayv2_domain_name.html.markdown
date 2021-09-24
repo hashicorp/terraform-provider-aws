@@ -73,6 +73,7 @@ Use the [`aws_acm_certificate`](/docs/providers/aws/r/acm_certificate.html) reso
 * `security_policy` - (Required) The Transport Layer Security (TLS) version of the [security policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-custom-domain-tls-version.html) for the domain name. Valid values: `TLS_1_2`.
 * `hosted_zone_id` - (Computed) The Amazon Route 53 Hosted Zone ID of the endpoint.
 * `target_domain_name` - (Computed) The target domain name.
+* `ownership_verification_certificate_arn` - (Optional) The ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
 
 The `mutual_tls_authentication` object supports the following:
 

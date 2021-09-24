@@ -141,6 +141,12 @@ func ResourceDomainName() *schema.Resource {
 				},
 			},
 
+			"ownership_verification_certificate_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
+
 			"regional_certificate_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -221,6 +227,10 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 		params.SecurityPolicy = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("ownership_verification_certificate_arn"); ok {
+		params.OwnershipVerificationCertificateArn = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		params.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -281,6 +291,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cloudfront_zone_id", cloudFrontRoute53ZoneID)
 	d.Set("domain_name", domainName.DomainName)
 	d.Set("security_policy", domainName.SecurityPolicy)
+	d.Set("ownership_verification_certificate_arn", domainName.OwnershipVerificationCertificateArn)
 
 	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %s", err)
