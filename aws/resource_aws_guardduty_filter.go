@@ -40,7 +40,11 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 64),
+				validateFunc: validation.All(
+					validation.StringLenBetween(3, 64),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`),
+						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
+				)
 			},
 			"description": {
 				Type:         schema.TypeString,
