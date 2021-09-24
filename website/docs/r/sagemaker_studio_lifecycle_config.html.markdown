@@ -6,7 +6,7 @@ description: |-
   Provides a Sagemaker Studio Lifecycle Config resource.
 ---
 
-# Resource: aws_sagemaker_image
+# Resource: aws_sagemaker_studio_lifecycle_config
 
 Provides a Sagemaker Studio Lifecycle Config resource.
 
