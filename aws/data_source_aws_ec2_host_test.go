@@ -95,24 +95,24 @@ resource "aws_ec2_host" "test" {
   instance_type     = "a1.large"
 
   tags = {
-    %[1]q = "True" 
+    %[1]q = "True"
   }
 }
 
 data "aws_ec2_host" "test" {
   filter {
     name   = "availability-zone"
-	values = [aws_ec2_host.test.availability_zone]
+    values = [aws_ec2_host.test.availability_zone]
   }
 
   filter {
     name   = "instance-type"
-	values = [aws_ec2_host.test.instance_type]
+    values = [aws_ec2_host.test.instance_type]
   }
 
   filter {
     name   = "tag-key"
-	values = [%[1]q]
+    values = [%[1]q]
   }
 }
 `, rName))
