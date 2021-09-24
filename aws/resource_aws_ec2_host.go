@@ -1,16 +1,13 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -75,64 +72,42 @@ func resourceAwsEc2Host() *schema.Resource {
 	}
 }
 
-type awsHostsOpts struct {
-	AutoPlacement    *string
-	AvailabilityZone *string
-	InstanceType     *string
-	HostRecovery     *string
-}
-
-func buildAwsHostsOpts(d *schema.ResourceData) *awsHostsOpts {
-
-	instanceType := d.Get("instance_type").(string)
-	opts := &awsHostsOpts{
-		AutoPlacement:    aws.String(d.Get("auto_placement").(string)),
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-		InstanceType:     aws.String(instanceType),
-		HostRecovery:     aws.String(d.Get("host_recovery").(string)),
-	}
-	return opts
-}
-
-// resourceAwsEc2HostCreate allocates a Dedicated Host to your account.
-// https://docs.aws.amazon.com/en_pv/AWSEC2/latest/APIReference/API_AllocateHosts.html
 func resourceAwsEc2HostCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	hostOpts := buildAwsHostsOpts(d)
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	tagsSpec := ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeDedicatedHost)
-
-	// Build the creation struct
-	runOpts := &ec2.AllocateHostsInput{
-		AvailabilityZone: hostOpts.AvailabilityZone,
+	input := &ec2.AllocateHostsInput{
+		AutoPlacement:    aws.String(d.Get("auto_placement").(string)),
+		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		HostRecovery:     aws.String(d.Get("host_recovery").(string)),
 		Quantity:         aws.Int64(int64(1)),
-		InstanceType:     hostOpts.InstanceType,
-		HostRecovery:     hostOpts.HostRecovery,
-		AutoPlacement:    hostOpts.AutoPlacement,
 	}
 
-	if len(tagsSpec) > 0 {
-		runOpts.TagSpecifications = tagsSpec
+	if v, ok := d.GetOk("instance_family"); ok {
+		input.InstanceFamily = aws.String(v.(string))
 	}
 
-	var runResp *ec2.AllocateHostsOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
-		var err error
-		runResp, err = conn.AllocateHosts(runOpts)
-		return resource.RetryableError(err)
-	})
-	if isResourceTimeoutError(err) {
-		runResp, err = conn.AllocateHosts(runOpts)
+	if v, ok := d.GetOk("instance_type"); ok {
+		input.InstanceType = aws.String(v.(string))
 	}
+
+	if len(tags) > 0 {
+		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDedicatedHost)
+	}
+
+	log.Printf("[DEBUG] Creating EC2 Host: %s", input)
+	output, err := conn.AllocateHosts(input)
+
 	if err != nil {
-		return fmt.Errorf("Error launching host : %s", err)
-	}
-	if runResp == nil || len(runResp.HostIds) == 0 {
-		return errors.New("Error launching source host: no hosts returned in response")
+		return fmt.Errorf("error allocating EC2 Host: %w", err)
 	}
 
-	log.Printf("[INFO] Host ID: %s", *runResp.HostIds[0])
-	d.SetId(*runResp.HostIds[0])
+	d.SetId(aws.StringValue(output.HostIds[0]))
+
+	if _, err := waiter.HostCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Host (%s) create: %w", d.Id(), err)
+	}
 
 	return resourceAwsEc2HostRead(d, meta)
 }
@@ -163,7 +138,7 @@ func resourceAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", arn)
 	d.Set("auto_placement", host.AutoPlacement)
-	d.Set("availibility_zone", host.AvailabilityZone)
+	d.Set("availability_zone", host.AvailabilityZone)
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
 	d.Set("instance_type", host.HostProperties.InstanceType)
@@ -183,39 +158,42 @@ func resourceAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// resourceAwsDedicatedHostUpdate modifies AWS Host AutoPlacement and HostRecovery settings.
-// When auto-placement is enabled, any instances that you launch with a tenancy of host but without a specific host ID are placed onto any available
-// Dedicated Host in your account that has auto-placement enabled.
-// https://docs.aws.amazon.com/en_pv/AWSEC2/latest/APIReference/API_ModifyHosts.html
 func resourceAwsEc2HostUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		requestUpdate := false
-		req := &ec2.ModifyHostsInput{
-			HostIds: []*string{aws.String(d.Id())},
+		input := &ec2.ModifyHostsInput{
+			HostIds: aws.StringSlice([]string{d.Id()}),
 		}
+
 		if d.HasChange("auto_placement") {
-			req.AutoPlacement = aws.String(d.Get("auto_placement").(string))
-			requestUpdate = true
+			input.AutoPlacement = aws.String(d.Get("auto_placement").(string))
 		}
-		// Indicates whether to enable or disable host recovery for the Dedicated Host.
-		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html
+
 		if d.HasChange("host_recovery") {
-			req.HostRecovery = aws.String(d.Get("host_recovery").(string))
-			requestUpdate = true
+			input.HostRecovery = aws.String(d.Get("host_recovery").(string))
 		}
-		if requestUpdate {
-			err := resource.Retry(30*time.Second, func() *resource.RetryError {
-				_, err := conn.ModifyHosts(req)
-				if err != nil {
-					return resource.RetryableError(err)
-				}
-				return nil
-			})
-			if err != nil {
-				return fmt.Errorf("Error modifying host %s: %s", d.Id(), err)
-			}
+
+		if d.HasChange("instance_family") {
+			input.InstanceFamily = aws.String(d.Get("instance_family").(string))
+		}
+
+		if d.HasChange("instance_type") {
+			input.InstanceType = aws.String(d.Get("instance_type").(string))
+		}
+
+		output, err := conn.ModifyHosts(input)
+
+		if err == nil && output != nil {
+			err = tfec2.UnsuccessfulItemsError(output.Unsuccessful)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error modifying EC2 Host (%s): %w", d.Id(), err)
+		}
+
+		if _, err := waiter.HostUpdated(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for EC2 Host (%s) update: %w", d.Id(), err)
 		}
 	}
 

@@ -657,6 +657,23 @@ func HostCreated(conn *ec2.EC2, id string) (*ec2.Host, error) {
 	return nil, err
 }
 
+func HostUpdated(conn *ec2.EC2, id string) (*ec2.Host, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AllocationStatePending},
+		Target:  []string{ec2.AllocationStateAvailable},
+		Timeout: HostUpdatedTimeout,
+		Refresh: HostState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Host); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func HostDeleted(conn *ec2.EC2, id string) (*ec2.Host, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.AllocationStateAvailable},
