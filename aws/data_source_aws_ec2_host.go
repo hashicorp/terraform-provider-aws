@@ -1,14 +1,15 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func dataSourceAwsEc2Host() *schema.Resource {
@@ -16,18 +17,26 @@ func dataSourceAwsEc2Host() *schema.Resource {
 		Read: dataSourceAwsAwsEc2HostRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
-			"tags":   tagsSchemaComputed(),
-			"host_id": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
+			},
+			"auto_placement": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_type": {
+			"cores": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"filter": dataSourceFiltersSchema(),
+			"host_id": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"host_recovery": {
@@ -38,20 +47,21 @@ func dataSourceAwsEc2Host() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cores": {
+			"instance_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"total_vcpus": {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"sockets": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"auto_placement": {
-				Type:     schema.TypeString,
+			"tags": tagsSchemaComputed(),
+			"total_vcpus": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 		},
@@ -59,92 +69,39 @@ func dataSourceAwsEc2Host() *schema.Resource {
 }
 
 func dataSourceAwsAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	conn := meta.(*AWSClient).ec2conn
-	hostID, hostIDOk := d.GetOk("host_id")
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	filters, filtersOk := d.GetOk("filter")
-	tags, tagsOk := d.GetOk("tags")
+	host, err := finder.HostByIDAndFilters(conn, d.Get("host_id").(string), buildAwsDataSourceFilters(d.Get("filter").(*schema.Set)))
 
-	params := &ec2.DescribeHostsInput{}
-	if hostIDOk {
-		params.HostIds = []*string{aws.String(hostID.(string))}
-	}
-	if filtersOk {
-		params.Filter = buildAwsDataSourceFilters(filters.(*schema.Set))
-	}
-	resp, err := conn.DescribeHosts(params)
 	if err != nil {
-		return err
-	}
-	// If no hosts were returned, return
-	if resp.Hosts == nil || len(resp.Hosts) == 0 {
-		return errors.New("Your query returned no results. Please change your search criteria and try again.")
+		return tfresource.SingularDataSourceReadError("EC2 Host", err)
 	}
 
-	var filteredHosts []*ec2.Host
+	d.SetId(aws.StringValue(host.HostId))
 
-	// loop through reservations, and remove terminated hosts, populate host slice
-	for _, host := range resp.Hosts {
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*AWSClient).region,
+		AccountID: aws.StringValue(host.OwnerId),
+		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("auto_placement", host.AutoPlacement)
+	d.Set("availability_zone", host.AvailabilityZone)
+	d.Set("cores", host.HostProperties.Cores)
+	d.Set("host_id", host.HostId)
+	d.Set("host_recovery", host.HostRecovery)
+	d.Set("instance_family", host.HostProperties.InstanceFamily)
+	d.Set("instance_type", host.HostProperties.InstanceType)
+	d.Set("owner_id", host.OwnerId)
+	d.Set("sockets", host.HostProperties.Sockets)
+	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
-		if host.State != nil && *host.State != "terminated" {
-			filteredHosts = append(filteredHosts, host)
-		}
-
-	}
-	var host *ec2.Host
-	if len(filteredHosts) < 1 {
-		return errors.New("Your query returned no results. Please change your search criteria and try again.")
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(host.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	if len(filteredHosts) > 1 {
-		return errors.New(`Your query returned more than one result. Please try a more 
-			specific search criteria.`)
-	} else {
-		host = filteredHosts[0]
-	}
-	if tagsOk {
-		params.Filter = append(params.Filter, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
-	}
-	log.Printf("[DEBUG] aws_dedicated_host - Single host ID found: %s", *host.HostId)
-	if err := hostDescriptionAttributes(d, host, ignoreTagsConfig); err != nil {
-		return err
-	}
 	return nil
-}
-func hostDescriptionAttributes(d *schema.ResourceData, host *ec2.Host, ignoreTagsConfig *keyvaluetags.IgnoreConfig) error {
-
-	d.SetId(*host.HostId)
-	d.Set("instance_state", host.State)
-
-	if host.AvailabilityZone != nil {
-		d.Set("availability_zone", host.AvailabilityZone)
-	}
-	if host.HostRecovery != nil {
-		d.Set("host_recovery", host.HostRecovery)
-	}
-	if host.AutoPlacement != nil {
-		d.Set("auto_placement", host.AutoPlacement)
-	}
-	if host.HostProperties.InstanceType != nil {
-		d.Set("instance_type", host.HostProperties.InstanceType)
-	}
-	if host.HostProperties.InstanceFamily != nil {
-		d.Set("instance_family", host.HostProperties.InstanceFamily)
-	}
-	if host.HostProperties.Cores != nil {
-		d.Set("cores", host.HostProperties.Cores)
-	}
-	if host.HostProperties.Sockets != nil {
-		d.Set("sockets", host.HostProperties.Sockets)
-	}
-	if host.HostProperties.TotalVCpus != nil {
-		d.Set("total_vcpus", host.HostProperties.TotalVCpus)
-	}
-
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(host.Tags).IgnoreConfig(ignoreTagsConfig).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
-	return nil
-
 }

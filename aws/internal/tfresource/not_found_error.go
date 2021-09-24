@@ -1,6 +1,7 @@
 package tfresource
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -76,4 +77,17 @@ func (e *TooManyResultsError) As(target interface{}) bool {
 	}
 
 	return true
+}
+
+// SingularDataSourceReadError returns a standard error message for a non-nil resource read error.
+func SingularDataSourceReadError(resourceType string, err error) error {
+	if NotFound(err) {
+		if errors.Is(err, &TooManyResultsError{}) {
+			return fmt.Errorf("multiple %[1]ss matched; use additional constraints to reduce matches to a single %[1]s", resourceType)
+		}
+
+		return fmt.Errorf("no matching %[1]s found", resourceType)
+	}
+
+	return fmt.Errorf("error reading %s: %w", resourceType, err)
 }

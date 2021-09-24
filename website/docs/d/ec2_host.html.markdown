@@ -3,46 +3,66 @@ subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_host"
 description: |-
-  Get information on an EC2 host.
+  Get information on an EC2 Host.
 ---
 
 # Data Source: aws_ec2_host
 
-Use this data source to get information about the host when allocating an EC2 Dedicated Host.
+Use this data source to get information about an EC2 Dedicated Host.
 
 ## Example Usage
 
 ```terraform
-# Create a new host with instance type of c5.18xlarge with Auto Placement 
-# and Host Recovery enabled. 
 resource "aws_ec2_host" "test" {
   instance_type     = "c5.18xlarge"
   availability_zone = "us-west-2a"
-  host_recovery     = "on"
-  auto_placement    = "on"
 }
 
-data "aws_ec2_host" "test_data" {
+data "aws_ec2_host" "test" {
   host_id = aws_ec2_host.test.id
+}
+```
+
+### Filter Example
+
+```terraform
+data "aws_ec2_host" "test" {
+  filter {
+    name   = "instance-type"
+    values = ["c5.18xlarge"]
+  }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+The arguments of this data source act as filters for querying the available EC2 Hosts in the current region.
+The given filters must match exactly one host whose data will be exported as attributes.
 
-* `auto_placement` - (Optional) Indicates whether the host accepts any untargeted instance launches that match its instance type configuration, or if it only accepts Host tenancy instance launches that specify its unique host ID.
-* `availability_zone` - (Optional) The AZ to start the host in.
-* `host_recovery` - (Optional) Indicates whether to enable or disable host recovery for the Dedicated Host. Host recovery is disabled by default.
-* `instance_type` - (Optional) Specifies the instance type for which to configure your Dedicated Hosts. When you specify the instance type, that is the only instance type that you can launch onto that host. 
+* `filter` - (Optional) Configuration block. Detailed below.
+* `host_id` - (Optional) The ID of the Dedicated Host.
+
+### filter
+
+This block allows for complex filters. You can use one or more `filter` blocks.
+
+The following arguments are required:
+
+* `name` - (Required) The name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeHosts.html).
+* `values` - (Required) Set of values that are accepted for the given field. A host will be selected if any one of the given values matches.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+In addition to the attributes above, the following attributes are exported:
 
-* `host_id` - The host ID. 
+* `id` - The ID of the Dedicated Host.
+* `arn` - The ARN of the Dedicated Host.
+* `auto_placement` - Whether auto-placement is on or off.
+* `availability_zone` - The Availability Zone of the Dedicated Host.
 * `cores` - The number of cores on the Dedicated Host.
-* `instance_family` - The instance family supported by the Dedicated Host. For example, m5.
-* `instance_type` -The instance type supported by the Dedicated Host. For example, m5.large. If the host supports multiple instance types, no instanceType is returned.
-* `sockets` - The instance family supported by the Dedicated Host. For example, m5.
+* `host_recovery` - Indicates whether host recovery is enabled or disabled for the Dedicated Host.
+* `instance_family` - The instance family supported by the Dedicated Host. For example, "m5".
+* `instance_type` - The instance type supported by the Dedicated Host. For example, "m5.large". If the host supports multiple instance types, no instanceType is returned.
+* `owner_id` - The ID of the AWS account that owns the Dedicated Host.
+* `sockets` - The number of sockets on the Dedicated Host.
 * `total_vcpus` - The total number of vCPUs on the Dedicated Host.

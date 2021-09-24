@@ -89,8 +89,10 @@ func HostByID(conn *ec2.EC2, id string) (*ec2.Host, error) {
 }
 
 func HostByIDAndFilters(conn *ec2.EC2, id string, filters []*ec2.Filter) (*ec2.Host, error) {
-	input := &ec2.DescribeHostsInput{
-		HostIds: aws.StringSlice([]string{id}),
+	input := &ec2.DescribeHostsInput{}
+
+	if id != "" {
+		input.HostIds = aws.StringSlice([]string{id})
 	}
 
 	if len(filters) > 0 {
