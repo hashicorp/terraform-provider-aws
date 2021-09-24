@@ -300,7 +300,7 @@ func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 			ResourceArn: v.Arn,
 		})
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream ImageBuilder (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("error listing tags for AppStream ImageBuilder (%s): %w", d.Id(), err))
 		}
 		tags := keyvaluetags.AppstreamKeyValueTags(tg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
@@ -348,5 +348,4 @@ func resourceAwsAppStreamImageBuilderDelete(ctx context.Context, d *schema.Resou
 	}
 
 	return nil
-
 }
