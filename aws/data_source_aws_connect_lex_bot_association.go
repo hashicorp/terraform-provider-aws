@@ -3,12 +3,12 @@ package aws
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 )
 
 func dataSourceAwsConnectLexBotAssociation() *schema.Resource {
@@ -21,11 +21,12 @@ func dataSourceAwsConnectLexBotAssociation() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"region": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -36,55 +37,53 @@ func dataSourceAwsConnectLexBotAssociationRead(ctx context.Context, d *schema.Re
 	instanceID := d.Get("instance_id")
 	name := d.Get("name")
 
-	var matchedLexBot *connect.LexBot
-
-	lexBots, err := dataSourceAwsConnectGetAllLexBotAssociations(ctx, conn, instanceID.(string))
+	lexBot, err := dataSourceAwsConnectGetLexBotAssociationByName(ctx, conn, instanceID.(string), name.(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing Connect Lex Bots: %s", err))
+		return diag.FromErr(fmt.Errorf("error finding LexBot Association by name (%s): %w", name, err))
 	}
 
-	for _, lexBot := range lexBots {
-		log.Printf("[DEBUG] Connect Lex Bot Association: %s", lexBot)
-		if aws.StringValue(lexBot.Name) == name.(string) {
-			matchedLexBot = lexBot
-			break
-		}
+	if lexBot == nil {
+		return diag.FromErr(fmt.Errorf("error finding LexBot Association by name (%s): not found", name))
 	}
-	d.Set("name", matchedLexBot.Name)
+
+	d.Set("name", lexBot.Name)
 	d.Set("instance_id", instanceID)
-	d.Set("region", matchedLexBot.LexRegion)
+	d.Set("region", lexBot.LexRegion)
 	d.SetId(fmt.Sprintf("%s:%s:%s", instanceID, d.Get("name").(string), d.Get("region").(string)))
 
 	return nil
 }
 
-func dataSourceAwsConnectGetAllLexBotAssociations(ctx context.Context, conn *connect.Connect, instanceID string) ([]*connect.LexBot, error) {
-	var bots []*connect.LexBot
-	var nextToken string
+func dataSourceAwsConnectGetLexBotAssociationByName(ctx context.Context, conn *connect.Connect, instanceID string, name string) (*connect.LexBot, error) {
+	var result *connect.LexBot
 
-	for {
-		input := &connect.ListLexBotsInput{
-			InstanceId: aws.String(instanceID),
-			// MaxResults Valid Range: Minimum value of 1. Maximum value of 60
-			MaxResults: aws.Int64(int64(60)),
-		}
-		if nextToken != "" {
-			input.NextToken = aws.String(nextToken)
-		}
-
-		log.Printf("[DEBUG] Listing Connect Lex Bots: %s", input)
-
-		output, err := conn.ListLexBotsWithContext(ctx, input)
-		if err != nil {
-			return bots, err
-		}
-		bots = append(bots, output.LexBots...)
-
-		if output.NextToken == nil {
-			break
-		}
-		nextToken = aws.StringValue(output.NextToken)
+	input := &connect.ListLexBotsInput{
+		InstanceId: aws.String(instanceID),
+		MaxResults: aws.Int64(tfconnect.ListLexBotsMaxResults),
 	}
 
-	return bots, nil
+	err := conn.ListLexBotsPagesWithContext(ctx, input, func(page *connect.ListLexBotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cf := range page.LexBots {
+			if cf == nil {
+				continue
+			}
+
+			if aws.StringValue(cf.Name) == name {
+				result = cf
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
