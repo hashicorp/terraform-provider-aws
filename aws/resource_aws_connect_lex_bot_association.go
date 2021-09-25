@@ -64,22 +64,21 @@ func resourceAwsConnectLexBotAssociationCreate(ctx context.Context, d *schema.Re
 		Name:      aws.String(d.Get("name").(string)),
 		LexRegion: aws.String(d.Get("region").(string)),
 	}
-
 	input := &connect.AssociateLexBotInput{
 		InstanceId: aws.String(d.Get("instance_id").(string)),
 		LexBot:     botAssociation,
 	}
 
-	log.Printf("[DEBUG] Creating Connect Instance %s", input)
+	lbaId := fmt.Sprintf("%s:%s:%s", d.Get("instance_id").(string), d.Get("name").(string), d.Get("region").(string))
+
+	log.Printf("[DEBUG] Creating Connect Lex Bot Association %s", input)
 
 	_, err := conn.AssociateLexBotWithContext(ctx, input)
-
-	d.SetId(fmt.Sprintf("%s:%s:%s", d.Get("instance_id").(string), d.Get("name").(string), d.Get("region").(string)))
-
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Lex Bot Association (%s): %s", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error creating Connect Lex Bot Association (%s): %s", lbaId, err))
 	}
 
+	d.SetId(lbaId)
 	return resourceAwsConnectLexBotAssociationRead(ctx, d, meta)
 }
 
@@ -121,7 +120,6 @@ func resourceAwsConnectLexBotAssociationDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Lex Bot Association %s", d.Id())
-
 	_, dissErr := conn.DisassociateLexBot(input)
 
 	if dissErr != nil {
