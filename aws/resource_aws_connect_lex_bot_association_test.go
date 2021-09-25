@@ -231,9 +231,12 @@ func testAccAwsConnectLexBotAssociationConfigBasic(rName string, rName2 string) 
 	return composeConfig(
 		testAccAwsConnectLexBotAssociationConfigBase(rName, rName2),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_connect_lex_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   name        = %[1]q
+  region      = "${data.aws_region.current.name}"
 }
 `, rName2))
 }
