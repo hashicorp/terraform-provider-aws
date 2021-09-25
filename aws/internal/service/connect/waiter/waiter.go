@@ -10,12 +10,15 @@ import (
 )
 
 const (
-	ConnectContactFlowCreateTimeout = 5 * time.Minute
-	ConnectContactFlowUpdateTimeout = 5 * time.Minute
-
 	// ConnectInstanceCreateTimeout Timeout for connect instance creation
 	ConnectInstanceCreatedTimeout = 5 * time.Minute
 	ConnectInstanceDeletedTimeout = 5 * time.Minute
+
+	ConnectContactFlowCreateTimeout = 5 * time.Minute
+	ConnectContactFlowUpdateTimeout = 5 * time.Minute
+
+	ConnectLambdaFunctionAssociationCreatedTimeout = 1 * time.Minute
+	ConnectLambdaFunctionAssociationDeletedTimeout = 1 * time.Minute
 
 	ConnectLexBotAssociationCreateTimeout = 5 * time.Minute
 	ConnectLexBotAssociationDeleteTimeout = 5 * time.Minute
