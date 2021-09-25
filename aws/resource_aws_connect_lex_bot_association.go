@@ -49,9 +49,10 @@ func resourceAwsConnectLexBotAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			//Documentation is wrong, this is required.
 			"region": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 		},
 	}
