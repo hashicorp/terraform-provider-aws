@@ -198,16 +198,16 @@ resource "aws_lex_bot" "test" {
       content_type = "PlainText"
     }
   }
-		
+
   clarification_prompt {
     max_attempts = 2
-	
+
     message {
       content      = "I didn't understand you, what would you like to do?"
       content_type = "PlainText"
     }
   }
-	
+
   intent {
     intent_name    = aws_lex_intent.test.name
     intent_version = "1"
