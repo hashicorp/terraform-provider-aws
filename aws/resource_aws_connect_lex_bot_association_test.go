@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
 )
 
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
@@ -100,7 +102,7 @@ func testAccCheckAwsConnectLexBotAssociationExists(resourceName string, function
 
 		conn := testAccProvider.Meta().(*AWSClient).connectconn
 
-		lexBot, err := testAccCheckAwsConnectGetLexBotAssociationByName(conn, instanceID, name)
+		lexBot, err := finder.LexBotAssociationByName(context.Background(), conn, instanceID, name)
 		if err != nil {
 			return fmt.Errorf("error finding LexBot Association by name (%s): %w", name, err)
 		}
@@ -130,7 +132,7 @@ func testAccCheckAwsConnectLexBotAssociationDestroy(s *terraform.State) error {
 
 		conn := testAccProvider.Meta().(*AWSClient).connectconn
 
-		lexBot, err := testAccCheckAwsConnectGetLexBotAssociationByName(conn, instanceID, name)
+		lexBot, err := finder.LexBotAssociationByName(context.Background(), conn, instanceID, name)
 		if err == nil {
 			return fmt.Errorf("error finding LexBot Association by name (%s): still exists", name)
 		}
