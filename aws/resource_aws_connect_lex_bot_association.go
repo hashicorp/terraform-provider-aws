@@ -5,20 +5,13 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
-)
-
-const (
-	// ConnectLexBotAssociationCreateTimeout Timeout for connect flow creation
-	ConnectLexBotAssociationCreateTimeout = 1 * time.Minute
-	// ConnectLexBotAssociationDeleteTimeout Timeout for connect flow deletion
-	ConnectLexBotAssociationDeleteTimeout = 1 * time.Minute
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
 )
 
 func resourceAwsConnectLexBotAssociation() *schema.Resource {
@@ -44,8 +37,8 @@ func resourceAwsConnectLexBotAssociation() *schema.Resource {
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ConnectLexBotAssociationCreateTimeout),
-			Delete: schema.DefaultTimeout(ConnectLexBotAssociationDeleteTimeout),
+			Create: schema.DefaultTimeout(waiter.ConnectLexBotAssociationCreateTimeout),
+			Delete: schema.DefaultTimeout(waiter.ConnectLexBotAssociationDeleteTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"instance_id": {
@@ -62,16 +55,6 @@ func resourceAwsConnectLexBotAssociation() *schema.Resource {
 			},
 		},
 	}
-}
-
-func resourceAwsConnectLexBotAssociationParseID(id string) (string, string, string, error) {
-	parts := strings.SplitN(id, ":", 3)
-
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:name:region", id)
-	}
-
-	return parts[0], parts[1], parts[2], nil
 }
 
 func resourceAwsConnectLexBotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -179,4 +162,14 @@ func resourceAwsConnectGetLexBotAssociationByName(ctx context.Context, conn *con
 	}
 
 	return result, nil
+}
+
+func resourceAwsConnectLexBotAssociationParseID(id string) (string, string, string, error) {
+	parts := strings.SplitN(id, ":", 3)
+
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:name:region", id)
+	}
+
+	return parts[0], parts[1], parts[2], nil
 }
