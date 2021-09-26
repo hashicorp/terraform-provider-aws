@@ -34,6 +34,8 @@ func TestAccAwsConnectLexBotAssociationDataSource_Name(t *testing.T) {
 
 func testAccAwsConnectLexBotAssociationDataSourceBaseConfig(rName string, rName2 string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_lex_intent" "test" {
   create_version = true
   name           = %[1]q
@@ -52,10 +54,10 @@ resource "aws_lex_bot" "test" {
 	  content_type = "PlainText"
 	}
   }
-	
+
   clarification_prompt {
     max_attempts = 2
-	
+
     message {
       content      = "I didn't understand you, what would you like to do?"
       content_type = "PlainText"
@@ -82,8 +84,9 @@ resource "aws_connect_instance" "test" {
 resource "aws_connect_lex_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   name        = %[1]q
+  region      = "${data.aws_region.current.name}"
 }
-	`, rName, rName2)
+`, rName, rName2)
 }
 
 func testAccAwsConnectLexBotAssociationDataSourceConfig_Name(rName string, rName2 string) string {
