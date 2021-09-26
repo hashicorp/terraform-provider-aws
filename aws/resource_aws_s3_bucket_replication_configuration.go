@@ -628,6 +628,19 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(d *schema.ResourceData, m
 }
 
 func resourceAwsS3BucketReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+	s3conn := meta.(*AWSClient).s3conn
+	bucket := d.Get("bucket").(string)
+
+	log.Printf("[DEBUG] S3 Delete Bucket Replication: %s", d.Id())
+
+	dbri := &s3.DeleteBucketReplicationInput{
+		Bucket: aws.String(bucket),
+	}
+
+	_, err := s3conn.DeleteBucketReplication(dbri)
+	if err != nil {
+		return fmt.Errorf("Error removing S3 bucket replication: %s", err)
+	}
 
 	return nil
 }
