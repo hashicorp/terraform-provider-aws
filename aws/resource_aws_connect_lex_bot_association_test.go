@@ -30,7 +30,7 @@ func TestAccAwsConnectLexBotAssociation_serial(t *testing.T) {
 func testAccAwsConnectLexBotAssociation_basic(t *testing.T) {
 	var v connect.LexBot
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource_test_terraform")
+	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_lex_bot_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -60,7 +60,7 @@ func testAccAwsConnectLexBotAssociation_basic(t *testing.T) {
 func testAccAwsConnectLexBotAssociation_disappears(t *testing.T) {
 	var v connect.LexBot
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource_test_terraform")
+	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_lex_bot_association.test"
 	instanceResourceName := "aws_connect_lex_bot_association.test"
 
