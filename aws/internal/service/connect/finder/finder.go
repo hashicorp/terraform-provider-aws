@@ -20,24 +20,19 @@ func LexBotAssociationByName(ctx context.Context, conn *connect.Connect, instanc
 		if page == nil {
 			return !lastPage
 		}
-
 		for _, cf := range page.LexBots {
 			if cf == nil {
 				continue
 			}
-
 			if aws.StringValue(cf.Name) == name {
 				result = cf
 				return false
 			}
 		}
-
 		return !lastPage
 	})
-
 	if err != nil {
 		return nil, err
 	}
-
 	return result, nil
 }

@@ -15,9 +15,9 @@ Allows the specified Amazon Connect instance to access the specified Amazon Lex 
 ### Basic
 ```hcl
 resource "aws_connect_lex_bot_association" "test" {
+  bot_name    = "Test"
   instance_id = aws_connect_instance.test.id
-  name        = "Test"
-  region      = "us-west-2"
+  lex_region  = "us-west-2"
 }
 ```
 
@@ -44,16 +44,13 @@ resource "aws_lex_bot" "test" {
       content_type = "PlainText"
     }
   }
-
   clarification_prompt {
     max_attempts = 2
-
     message {
       content      = "I didn't understand you, what would you like to do?"
       content_type = "PlainText"
     }
   }
-
   intent {
     intent_name    = aws_lex_intent.test.name
     intent_version = "1"
@@ -65,17 +62,17 @@ resource "aws_lex_bot" "test" {
 }
 
 resource "aws_connect_lex_bot_association" "test" {
+  bot_name    = "connect_lex_bot"
   instance_id = aws_connect_instance.test.id
-  name        = "connect_lex_bot"
-  region      = "${data.aws_region.current.name}"
+  lex_region  = "${data.aws_region.current.name}"
 }
 ```
 ## Argument Reference
 
 The following arguments are supported:
+* `bot_name` - (Required) The name of the Amazon Lex bot.
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
-* `name` - (Required) The name of the Amazon Lex bot.
-* `region` - (Required) The Region in which the Amazon Lex bot has been created.
+* `lex_region` - (Required) The Region in which the Amazon Lex bot has been created.
 
 ### Timeouts
 

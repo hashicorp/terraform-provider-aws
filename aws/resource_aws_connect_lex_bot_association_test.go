@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
 )
 
@@ -32,7 +30,7 @@ func TestAccAwsConnectLexBotAssociation_serial(t *testing.T) {
 func testAccAwsConnectLexBotAssociation_basic(t *testing.T) {
 	var v connect.LexBot
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix("resource_test_terraform")
 	resourceName := "aws_connect_lex_bot_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,7 +60,7 @@ func testAccAwsConnectLexBotAssociation_basic(t *testing.T) {
 func testAccAwsConnectLexBotAssociation_disappears(t *testing.T) {
 	var v connect.LexBot
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix("resource_test_terraform")
 	resourceName := "aws_connect_lex_bot_association.test"
 	instanceResourceName := "aws_connect_lex_bot_association.test"
 
@@ -144,40 +142,6 @@ func testAccCheckAwsConnectLexBotAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsConnectGetLexBotAssociationByName(conn *connect.Connect, instanceID string, name string) (*connect.LexBot, error) {
-	var result *connect.LexBot
-
-	input := &connect.ListLexBotsInput{
-		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(tfconnect.ListLexBotsMaxResults),
-	}
-
-	err := conn.ListLexBotsPages(input, func(page *connect.ListLexBotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, cf := range page.LexBots {
-			if cf == nil {
-				continue
-			}
-
-			if aws.StringValue(cf.Name) == name {
-				result = cf
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
 func testAccAwsConnectLexBotAssociationConfigBase(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
@@ -198,7 +162,6 @@ resource "aws_lex_bot" "test" {
       content_type = "PlainText"
     }
   }
-
   clarification_prompt {
     max_attempts = 2
 
@@ -207,7 +170,6 @@ resource "aws_lex_bot" "test" {
       content_type = "PlainText"
     }
   }
-
   intent {
     intent_name    = aws_lex_intent.test.name
     intent_version = "1"
@@ -235,8 +197,8 @@ data "aws_region" "current" {}
 
 resource "aws_connect_lex_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
-  name        = %[1]q
-  region      = "${data.aws_region.current.name}"
+  bot_name    = %[1]q
+  lex_region  = "${data.aws_region.current.name}"
 }
-`, rName2))
+`, rName))
 }

@@ -24,14 +24,13 @@ func resourceAwsConnectLexBotAssociation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				instanceID, name, region, err := resourceAwsConnectLexBotAssociationParseID(d.Id())
-
 				if err != nil {
 					return nil, err
 				}
 
+				d.Set("bot_name", name)
 				d.Set("instance_id", instanceID)
-				d.Set("name", name)
-				d.Set("region", name)
+				d.Set("lex_region", name)
 				d.SetId(fmt.Sprintf("%s:%s:%s", instanceID, name, region))
 
 				return []*schema.ResourceData{d}, nil
@@ -42,17 +41,17 @@ func resourceAwsConnectLexBotAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(waiter.ConnectLexBotAssociationDeleteTimeout),
 		},
 		Schema: map[string]*schema.Schema{
-			"instance_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"name": {
+			"bot_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(2, 50),
 			},
+			"instance_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			//Documentation is wrong, this is required.
-			"region": {
+			"lex_region": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -64,15 +63,15 @@ func resourceAwsConnectLexBotAssociationCreate(ctx context.Context, d *schema.Re
 	conn := meta.(*AWSClient).connectconn
 
 	botAssociation := &connect.LexBot{
-		Name:      aws.String(d.Get("name").(string)),
-		LexRegion: aws.String(d.Get("region").(string)),
+		Name:      aws.String(d.Get("bot_name").(string)),
+		LexRegion: aws.String(d.Get("lex_region").(string)),
 	}
 	input := &connect.AssociateLexBotInput{
 		InstanceId: aws.String(d.Get("instance_id").(string)),
 		LexBot:     botAssociation,
 	}
 
-	lbaId := fmt.Sprintf("%s:%s:%s", d.Get("instance_id").(string), d.Get("name").(string), d.Get("region").(string))
+	lbaId := fmt.Sprintf("%s:%s:%s", d.Get("instance_id").(string), d.Get("bot_name").(string), d.Get("lex_region").(string))
 
 	log.Printf("[DEBUG] Creating Connect Lex Bot Association %s", input)
 
@@ -88,7 +87,7 @@ func resourceAwsConnectLexBotAssociationCreate(ctx context.Context, d *schema.Re
 func resourceAwsConnectLexBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).connectconn
 	instanceID := d.Get("instance_id")
-	name := d.Get("name")
+	name := d.Get("bot_name")
 
 	lexBot, err := finder.LexBotAssociationByName(ctx, conn, instanceID.(string), name.(string))
 	if err != nil {
@@ -99,10 +98,10 @@ func resourceAwsConnectLexBotAssociationRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(fmt.Errorf("error finding LexBot Association by name (%s): not found", name))
 	}
 
-	d.Set("name", lexBot.Name)
+	d.Set("bot_name", lexBot.Name)
 	d.Set("instance_id", instanceID)
-	d.Set("region", lexBot.LexRegion)
-	d.SetId(fmt.Sprintf("%s:%s:%s", instanceID, d.Get("name").(string), d.Get("region").(string)))
+	d.Set("lex_region", lexBot.LexRegion)
+	d.SetId(fmt.Sprintf("%s:%s:%s", instanceID, d.Get("bot_name").(string), d.Get("lex_region").(string)))
 
 	return nil
 }

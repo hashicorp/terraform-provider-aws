@@ -24,8 +24,8 @@ func TestAccAwsConnectLexBotAssociationDataSource_Name(t *testing.T) {
 				Config: testAccAwsConnectLexBotAssociationDataSourceConfig_Name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "region", resourceName, "region"),
+					resource.TestCheckResourceAttrPair(datasourceName, "bot_name", resourceName, "bot_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "lex_region", resourceName, "lex_region"),
 				),
 			},
 		},
@@ -50,25 +50,21 @@ resource "aws_lex_intent" "test" {
 resource "aws_lex_bot" "test" {
   abort_statement {
     message {
-	  content      = "Sorry, I am not able to assist at this time"
-	  content_type = "PlainText"
-	}
+      content      = "Sorry, I am not able to assist at this time"
+      content_type = "PlainText"
+    }
   }
-
   clarification_prompt {
     max_attempts = 2
-
     message {
       content      = "I didn't understand you, what would you like to do?"
       content_type = "PlainText"
     }
   }
-
   intent {
     intent_name    = aws_lex_intent.test.name
     intent_version = "1"
   }
-
   child_directed   = false
   name             = %[1]q
   process_behavior = "BUILD"
@@ -83,8 +79,8 @@ resource "aws_connect_instance" "test" {
 
 resource "aws_connect_lex_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
-  name        = %[1]q
-  region      = "${data.aws_region.current.name}"
+  bot_name    = %[1]q
+  lex_region  = "${data.aws_region.current.name}"
 }
 `, rName, rName2)
 }
@@ -93,7 +89,7 @@ func testAccAwsConnectLexBotAssociationDataSourceConfig_Name(rName string, rName
 	return fmt.Sprintf(testAccAwsConnectLexBotAssociationDataSourceBaseConfig(rName, rName2) + `
 data "aws_connect_lex_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
-  name        = aws_connect_lex_bot_association.test.name
+  bot_name    = aws_connect_lex_bot_association.test.name
 }
 `)
 }

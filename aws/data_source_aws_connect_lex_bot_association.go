@@ -14,16 +14,16 @@ func dataSourceAwsConnectLexBotAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceAwsConnectLexBotAssociationRead,
 		Schema: map[string]*schema.Schema{
-			"instance_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"name": {
+			"bot_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(2, 50),
 			},
-			"region": {
+			"instance_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"lex_region": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -35,7 +35,7 @@ func dataSourceAwsConnectLexBotAssociation() *schema.Resource {
 func dataSourceAwsConnectLexBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).connectconn
 	instanceID := d.Get("instance_id")
-	name := d.Get("name")
+	name := d.Get("bot_name")
 
 	lexBot, err := finder.LexBotAssociationByName(ctx, conn, instanceID.(string), name.(string))
 	if err != nil {
@@ -46,10 +46,10 @@ func dataSourceAwsConnectLexBotAssociationRead(ctx context.Context, d *schema.Re
 		return diag.FromErr(fmt.Errorf("error finding LexBot Association by name (%s): not found", name))
 	}
 
-	d.Set("name", lexBot.Name)
+	d.Set("bot_name", lexBot.Name)
 	d.Set("instance_id", instanceID)
-	d.Set("region", lexBot.LexRegion)
-	d.SetId(fmt.Sprintf("%s:%s:%s", instanceID, d.Get("name").(string), d.Get("region").(string)))
+	d.Set("lex_region", lexBot.LexRegion)
+	d.SetId(fmt.Sprintf("%s:%s:%s", instanceID, d.Get("bot_name").(string), d.Get("lex_region").(string)))
 
 	return nil
 }
