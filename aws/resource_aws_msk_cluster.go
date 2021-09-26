@@ -107,9 +107,9 @@ func resourceAwsMskCluster() *schema.Resource {
 				},
 			},
 			"client_authentication": {
-				Type:     schema.TypeList,
+				Type:             schema.TypeList,
 				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
-				MaxItems: 1,
+				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"sasl": {
@@ -753,11 +753,11 @@ func customizeDiffValidateClientAuthentication(_ context.Context, diff *schema.R
 		if !ic {
 			return errors.New(`sasl/scram and sasl/iam authentication requires in-cluster encryption to be enabled`)
 		}
-		if cb != kafka.ClientBrokerTls && cb != kafka.ClientBrokerTlsPlaintext  {
+		if cb != kafka.ClientBrokerTls && cb != kafka.ClientBrokerTlsPlaintext {
 			return errors.New(`sasl/scram authentication requires TLS or TLS_PLAINTEXT client-broker encryption options`)
 		}
 		// SASL with TLS_PLAINTEXT requires unauthenticated option to be enabled
-		if cb == kafka.ClientBrokerTlsPlaintext && !uauth{
+		if cb == kafka.ClientBrokerTlsPlaintext && !uauth {
 			return errors.New(`sasl/scram authentication with TLS_PLAINTEXT client-broker encryption requires unauthenticated access to be enabled`)
 		}
 	}
