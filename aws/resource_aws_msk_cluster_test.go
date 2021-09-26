@@ -1142,7 +1142,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 }
 `, rName))
@@ -1163,7 +1163,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 }
 `, rName, ebsVolumeSize))
@@ -1184,7 +1184,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 }
 `, rName, t))
@@ -1229,7 +1229,7 @@ resource "aws_msk_cluster" "test" {
     tls {
       certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
     }
-	unauthenticated = false
+    unauthenticated = false
   }
 
   encryption_info {
@@ -1259,7 +1259,7 @@ resource "aws_msk_cluster" "test" {
     sasl {
       scram = %[2]t
     }
-   unauthenticated = false
+    unauthenticated = false
   }
 }
 `, rName, enabled))
@@ -1351,7 +1351,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 
   configuration_info {
@@ -1395,7 +1395,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 
   configuration_info {
@@ -1451,7 +1451,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 
   encryption_info {
@@ -1478,7 +1478,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 
   encryption_info {
@@ -1506,7 +1506,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 }
 `, rName, enhancedMonitoring))
@@ -1550,7 +1550,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 
   open_monitoring {
@@ -1691,7 +1691,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 }
 `, rName, kafkaVersion))
@@ -1734,7 +1734,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 
   configuration_info {
@@ -1760,7 +1760,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 
   tags = {
@@ -1785,7 +1785,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 
   tags = {
