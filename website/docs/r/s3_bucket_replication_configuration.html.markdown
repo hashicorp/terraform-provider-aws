@@ -132,14 +132,8 @@ resource "aws_s3_bucket_replication_configuration" "replication" {
 
 ### Bi-Directional Replication
 
-<<<<<<< HEAD
 ```
-
-#...
-=======
-```terraform
 # ... other configuration ...
->>>>>>> eceb584d360ac3d5121f960dc9a61a4d2fcede0a
 
 resource "aws_s3_bucket" "east" {
   bucket = "tf-test-bucket-east-12345"
