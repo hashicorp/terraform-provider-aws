@@ -108,6 +108,7 @@ func resourceAwsMskCluster() *schema.Resource {
 			},
 			"client_authentication": {
 				Type:             schema.TypeList,
+				Required:         true,
 				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{

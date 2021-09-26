@@ -1323,7 +1323,7 @@ resource "aws_msk_cluster" "test" {
     unauthenticated = true
   }
 }
-`, rName, enabled))
+`, rName))
 }
 
 func testAccMskClusterConfigConfigurationInfoRevision1(rName string) string {
