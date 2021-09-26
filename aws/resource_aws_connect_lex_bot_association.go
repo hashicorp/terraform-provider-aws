@@ -125,7 +125,7 @@ func resourceAwsConnectLexBotAssociationDelete(ctx context.Context, d *schema.Re
 	_, dissErr := conn.DisassociateLexBot(input)
 
 	if dissErr != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Connect Lex Bot Association (%s): %s", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error deleting Connect Lex Bot Association (%s): %s", instanceID, err))
 	}
 	return nil
 }

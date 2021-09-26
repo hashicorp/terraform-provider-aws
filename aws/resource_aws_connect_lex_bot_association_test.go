@@ -44,8 +44,8 @@ func testAccAwsConnectLexBotAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectLexBotAssociationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "region"),
+					resource.TestCheckResourceAttrSet(resourceName, "bot_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "lex_region"),
 				),
 			},
 			{
