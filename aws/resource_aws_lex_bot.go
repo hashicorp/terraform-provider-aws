@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -440,16 +441,15 @@ func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetBotVersionsInput) (string, error) {
-	version := LexBotVersionLatest
-
+	version := 0
 	for {
 		page, err := conn.GetBotVersions(input)
+
 		if err != nil {
 			return "", err
 		}
-
-		// At least 1 version will always be returned.
-		if len(page.Bots) == 1 {
+		// Only test for more than one item in response on the first page
+		if len(page.Bots) == 1 && input.NextToken == nil {
 			break
 		}
 
@@ -457,8 +457,16 @@ func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingServic
 			if *bot.Version == LexBotVersionLatest {
 				continue
 			}
-			if *bot.Version > version {
-				version = *bot.Version
+
+			// Convert the string version to integer for compare
+			compareVersion, err := strconv.Atoi(*bot.Version)
+
+			if err != nil {
+				return "", err
+			}
+
+			if compareVersion > version {
+				version = compareVersion
 			}
 		}
 
@@ -467,8 +475,11 @@ func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingServic
 		}
 		input.NextToken = page.NextToken
 	}
-
-	return version, nil
+	if version > 0 {
+		returnVersion := strconv.Itoa(version)
+		return returnVersion, nil
+	}
+	return LexBotVersionLatest, nil
 }
 
 func flattenLexIntents(intents []*lexmodelbuildingservice.Intent) (flattenedIntents []map[string]interface{}) {
