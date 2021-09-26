@@ -421,7 +421,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam_Sasl_Scram_Tls_Unauthent
 				),
 			},
 			{
-				Config: testAccMskClusterConfigClientAuthenticationSaslTlsUnuathenticated(rName, commonName),
+				Config: testAccMskClusterConfigClientAuthenticationSaslTlsUnauthenticated(rName, commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
@@ -444,7 +444,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam_Sasl_Scram_Tls_Unauthent
 				},
 			},
 			{
-				Config: testAccMskClusterConfigClientAuthenticationSaslTlsUnuathenticated(rName, commonName),
+				Config: testAccMskClusterConfigClientAuthenticationSaslTlsUnauthenticated(rName, commonName),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
@@ -1289,7 +1289,7 @@ resource "aws_msk_cluster" "test" {
 `, rName, enabled))
 }
 
-func testAccMskClusterConfigClientAuthenticationSaslTlsUnuathenticated(rName, commonName string) string {
+func testAccMskClusterConfigClientAuthenticationSaslTlsUnauthenticated(rName, commonName string) string {
 	return composeConfig(testAccMskClusterBaseConfig(rName),
 		testAccMskClusterConfigRootCA(commonName),
 		fmt.Sprintf(`
@@ -1309,6 +1309,7 @@ resource "aws_msk_cluster" "test" {
     encryption_in_transit {
       client_broker = "TLS_PLAINTEXT"
     }
+  }
 
   client_authentication {
     sasl {
