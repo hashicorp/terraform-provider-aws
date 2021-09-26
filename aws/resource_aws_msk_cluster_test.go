@@ -1283,7 +1283,7 @@ resource "aws_msk_cluster" "test" {
     sasl {
       iam = %[2]t
     }
-     unauthenticated = false
+    unauthenticated = false
   }
 }
 `, rName, enabled))
@@ -1528,7 +1528,7 @@ resource "aws_msk_cluster" "test" {
   }
 
   client_authentication {
-     unauthenticated = true
+    unauthenticated = true
   }
 }
 `, rName, brokerCount))
