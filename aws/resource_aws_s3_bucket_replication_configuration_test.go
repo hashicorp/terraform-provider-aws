@@ -906,6 +906,68 @@ func TestAccAWSS3BucketReplicationConfig_existingObjectReplication(t *testing.T)
 	})
 }
 
+func TestAccAWSS3BucketReplicationConfig_delete(t *testing.T) {
+	rInt := acctest.RandInt()
+	partition := testAccGetPartition()
+	iamRoleResourceName := "aws_iam_role.role"
+	resourceName := "aws_s3_bucket_replication_configuration.replication"
+
+	testDeleted := func(r string) resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			_, ok := s.RootModule().Resources[r]
+			if ok {
+				return fmt.Errorf("Replication resource configuration %q should have been deleted.", r)
+			}
+			return nil
+		}
+	}
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketReplicationConfig(rInt, "STANDARD"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
+					testAccCheckAWSS3BucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("foobar"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									StorageClass: aws.String(s3.StorageClassStandard),
+								},
+								Prefix: aws.String("foo"),
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+							},
+						},
+					),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSS3BucketReplicationConfigBasic(rInt),
+				Check:  resource.ComposeTestCheckFunc(testDeleted(resourceName)),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSS3BucketReplicationRules(n string, rules []*s3.ReplicationRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
