@@ -2704,7 +2704,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccKinesisFirehoseDeliveryStreamRedshiftConfigBase(rName string, rInt int) string {
 	return composeConfig(
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt),
-		testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"),
+		testAccAvailableAZsNoOptInExcludeConfig("usw2-az2", "usgw1-az2"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
