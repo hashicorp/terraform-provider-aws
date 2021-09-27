@@ -30,6 +30,5 @@ data "aws_kinesis_firehose_delivery_stream" "stream" {
 are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the Kinesis Stream (same as id).
-* `name` - The name of the Kinesis Stream.
 
 [1]: https://aws.amazon.com/documentation/firehose/
