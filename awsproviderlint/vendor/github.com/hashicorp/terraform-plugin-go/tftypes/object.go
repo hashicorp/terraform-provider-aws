@@ -40,21 +40,8 @@ type Object struct {
 
 // Equal returns true if the two Objects are exactly equal. Unlike Is, passing
 // in an Object with no AttributeTypes will always return false.
-func (o Object) Equal(other Object) bool {
-	return o.equals(other, true)
-}
-
-// Is returns whether `t` is an Object type or not. If `t` is an instance of
-// the Object type and its AttributeTypes property is not nil, it will only
-// return true the AttributeTypes are considered the same. To be considered
-// equal, the same set of keys must be present in each, and each key's value
-// needs to be considered the same type between the two Objects.
-func (o Object) Is(t Type) bool {
-	return o.equals(t, false)
-}
-
-func (o Object) equals(t Type, exact bool) bool {
-	v, ok := t.(Object)
+func (o Object) Equal(other Type) bool {
+	v, ok := other.(Object)
 	if !ok {
 		return false
 	}
@@ -62,17 +49,7 @@ func (o Object) equals(t Type, exact bool) bool {
 		// when doing exact comparisons, we can't compare types that
 		// don't have attribute types set, so we just consider them not
 		// equal
-		//
-		// when doing inexact comparisons, the absence of an attribute
-		// type just means "is this a Object?" We know it is, so return
-		// true if and only if o has AttributeTypes and t doesn't. This
-		// behavior only makes sense if the user is trying to see if a
-		// proper type is a object, so we want to ensure that the
-		// method receiver always has attribute types.
-		if exact {
-			return false
-		}
-		return o.AttributeTypes != nil
+		return false
 	}
 
 	// if the don't have the exact same optional attributes, they're not
@@ -95,11 +72,54 @@ func (o Object) equals(t Type, exact bool) bool {
 		if _, ok := v.AttributeTypes[k]; !ok {
 			return false
 		}
-		if !typ.equals(v.AttributeTypes[k], exact) {
+		if !typ.Equal(v.AttributeTypes[k]) {
 			return false
 		}
 	}
 	return true
+}
+
+// UsableAs returns whether the two Objects are type compatible.
+//
+// If the other type is DynamicPseudoType, it will return true.
+// If the other type is not a Object, it will return false.
+// If the other Object does not have matching AttributeTypes length, it will
+// return false.
+// If the other Object does not have a type compatible ElementType for every
+// nested attribute, it will return false.
+//
+// If the current type contains OptionalAttributes, it will panic.
+func (o Object) UsableAs(other Type) bool {
+	if other.Is(DynamicPseudoType) {
+		return true
+	}
+	v, ok := other.(Object)
+	if !ok {
+		return false
+	}
+	if len(o.OptionalAttributes) > 0 {
+		panic("Objects with OptionalAttributes cannot be used.")
+	}
+	if len(v.AttributeTypes) != len(o.AttributeTypes) {
+		return false
+	}
+	for k, typ := range o.AttributeTypes {
+		otherTyp, ok := v.AttributeTypes[k]
+		if !ok {
+			return false
+		}
+		if !typ.UsableAs(otherTyp) {
+			return false
+		}
+	}
+	return true
+}
+
+// Is returns whether `t` is an Object type or not. It does not perform any
+// AttributeTypes checks.
+func (o Object) Is(t Type) bool {
+	_, ok := t.(Object)
+	return ok
 }
 
 func (o Object) attrIsOptional(attr string) bool {
@@ -138,15 +158,6 @@ func (o Object) supportedGoTypes() []string {
 	return []string{"map[string]tftypes.Value"}
 }
 
-func valueCanBeObject(val interface{}) bool {
-	switch val.(type) {
-	case map[string]Value:
-		return true
-	default:
-		return false
-	}
-}
-
 func valueFromObject(types map[string]Type, optionalAttrs map[string]struct{}, in interface{}) (Value, error) {
 	switch value := in.(type) {
 	case map[string]Value:
@@ -169,9 +180,13 @@ func valueFromObject(types map[string]Type, optionalAttrs map[string]struct{}, i
 				if !ok {
 					return Value{}, fmt.Errorf("can't set a value on %q in tftypes.NewValue, key not part of the object type %s", k, Object{AttributeTypes: types})
 				}
-				err := useTypeAs(v.Type(), typ, NewAttributePath().WithAttributeName(k))
-				if err != nil {
-					return Value{}, err
+				if v.Type() == nil {
+					return Value{}, NewAttributePath().WithAttributeName(k).NewErrorf("missing value type")
+				}
+				if v.Type().Is(DynamicPseudoType) && v.IsKnown() {
+					return Value{}, NewAttributePath().WithAttributeName(k).NewErrorf("invalid value %s for %s", v, v.Type())
+				} else if !v.Type().Is(DynamicPseudoType) && !v.Type().UsableAs(typ) {
+					return Value{}, NewAttributePath().WithAttributeName(k).NewErrorf("can't use %s as %s", v.Type(), typ)
 				}
 			}
 		}

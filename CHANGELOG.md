@@ -1,7 +1,9 @@
-## 3.60.0 (Unreleased)
+## 3.61.0 (Unreleased)
+## 3.60.0 (September 23, 2021)
 
 FEATURES:
 
+* **New Data Source:** `aws_cloudfront_log_delivery_canonical_user_id` ([#15167](https://github.com/hashicorp/terraform-provider-aws/issues/15167))
 * **New Data Source:** `aws_cloudwatch_log_groups` ([#17151](https://github.com/hashicorp/terraform-provider-aws/issues/17151))
 * **New Data Source:** `aws_connect_contact_flow` ([#16854](https://github.com/hashicorp/terraform-provider-aws/issues/16854))
 * **New Data Source:** `aws_connect_instance` ([#16709](https://github.com/hashicorp/terraform-provider-aws/issues/16709))

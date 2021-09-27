@@ -80,6 +80,62 @@ func ClientVpnRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRo
 	return ClientVpnRoute(conn, endpointID, targetSubnetID, destinationCidr)
 }
 
+func HostByID(conn *ec2.EC2, id string) (*ec2.Host, error) {
+	input := &ec2.DescribeHostsInput{
+		HostIds: aws.StringSlice([]string{id}),
+	}
+
+	return Host(conn, input)
+}
+
+func HostByIDAndFilters(conn *ec2.EC2, id string, filters []*ec2.Filter) (*ec2.Host, error) {
+	input := &ec2.DescribeHostsInput{}
+
+	if id != "" {
+		input.HostIds = aws.StringSlice([]string{id})
+	}
+
+	if len(filters) > 0 {
+		input.Filter = filters
+	}
+
+	return Host(conn, input)
+}
+
+func Host(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
+	output, err := conn.DescribeHosts(input)
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidHostIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Hosts) == 0 || output.Hosts[0] == nil || output.Hosts[0].HostProperties == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Hosts); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	host := output.Hosts[0]
+
+	if state := aws.StringValue(host.State); state == ec2.AllocationStateReleased || state == ec2.AllocationStateReleasedPermanentFailure {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return host, nil
+}
+
 // InstanceByID looks up a Instance by ID. When not found, returns nil and potentially an API error.
 func InstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
 	input := &ec2.DescribeInstancesInput{
