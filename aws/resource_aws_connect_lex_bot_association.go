@@ -8,11 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsConnectLexBotAssociation() *schema.Resource {
@@ -74,8 +77,22 @@ func resourceAwsConnectLexBotAssociationCreate(ctx context.Context, d *schema.Re
 	lbaId := fmt.Sprintf("%s:%s:%s", d.Get("instance_id").(string), d.Get("bot_name").(string), d.Get("lex_region").(string))
 
 	log.Printf("[DEBUG] Creating Connect Lex Bot Association %s", input)
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		_, err := conn.AssociateLexBotWithContext(ctx, input)
 
-	_, err := conn.AssociateLexBotWithContext(ctx, input)
+		// Wait for the lex bot to finish building until then the connect will not see the bot
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeInvalidRequestException) {
+			return resource.RetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) { // nosemgrep: helper-schema-TimeoutError-check-doesnt-return-output
+		// surface the actual error on timeout
+		_, err = conn.AssociateLexBotWithContext(ctx, input)
+	}
+
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating Connect Lex Bot Association (%s): %s", lbaId, err))
 	}

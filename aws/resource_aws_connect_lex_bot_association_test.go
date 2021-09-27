@@ -123,7 +123,6 @@ func testAccCheckAwsConnectLexBotAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("Connect Lex Bot Association ID not set")
 		}
 		instanceID, name, _, err := resourceAwsConnectLexBotAssociationParseID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -131,8 +130,9 @@ func testAccCheckAwsConnectLexBotAssociationDestroy(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).connectconn
 
 		lexBot, err := finder.LexBotAssociationByName(context.Background(), conn, instanceID, name)
-		if err == nil {
-			return fmt.Errorf("error finding LexBot Association by name (%s): still exists", name)
+
+		if err != nil {
+			return fmt.Errorf("error finding LexBot Association by name (%s) potentially still exists: %w", name, err)
 		}
 
 		if lexBot != nil {
@@ -192,13 +192,14 @@ resource "aws_connect_instance" "test" {
 func testAccAwsConnectLexBotAssociationConfigBasic(rName string, rName2 string) string {
 	return composeConfig(
 		testAccAwsConnectLexBotAssociationConfigBase(rName, rName2),
-		fmt.Sprintf(`
+		`
 data "aws_region" "current" {}
 
 resource "aws_connect_lex_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
-  bot_name    = %[1]q
-  lex_region  = "${data.aws_region.current.name}"
+  bot_name    = aws_lex_bot.test.name
+  lex_region  = data.aws_region.current.name
+  depends_on  = [aws_lex_bot_alias.test]
 }
-`, rName))
+`)
 }
