@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `auth` - Configuration(s) with authorization mechanisms to connect to the associated instance or cluster.
+* `auth` - The configuration(s) with authorization mechanisms to connect to the associated instance or cluster.
 * `debug_logging` - Whether the proxy includes detailed information about SQL statements in its logs.
 * `endpoint` - The endpoint that you can use to connect to the DB proxy.
 * `engine_family` - The kinds of databases that the proxy can connect to.
