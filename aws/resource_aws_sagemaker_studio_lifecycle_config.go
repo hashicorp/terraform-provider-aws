@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -29,15 +30,6 @@ func resourceAwsSagemakerStudioLifecycleConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"studio_lifecycle_config_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
 			"studio_lifecycle_config_app_type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -50,9 +42,19 @@ func resourceAwsSagemakerStudioLifecycleConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 16384),
 			},
+			"studio_lifecycle_config_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 63),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+				),
+			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
+
 		CustomizeDiff: SetTagsDiff,
 	}
 }
@@ -68,13 +70,16 @@ func resourceAwsSagemakerStudioLifecycleConfigCreate(d *schema.ResourceData, met
 		StudioLifecycleConfigAppType: aws.String(d.Get("studio_lifecycle_config_app_type").(string)),
 		StudioLifecycleConfigContent: aws.String(d.Get("studio_lifecycle_config_content").(string)),
 	}
+
 	if len(tags) > 0 {
 		input.Tags = tags.IgnoreAws().SagemakerTags()
 	}
 
+	log.Printf("[DEBUG] Creating SageMaker Studio Lifecycle Config : %s", input)
 	_, err := conn.CreateStudioLifecycleConfig(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Studio Lifecycle Config %s: %w", name, err)
+		return fmt.Errorf("error creating SageMaker Studio Lifecycle Config (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -88,6 +93,7 @@ func resourceAwsSagemakerStudioLifecycleConfigRead(d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	image, err := finder.StudioLifecycleConfigByName(conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Studio Lifecycle Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -107,7 +113,7 @@ func resourceAwsSagemakerStudioLifecycleConfigRead(d *schema.ResourceData, meta 
 	tags, err := keyvaluetags.SagemakerListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker User Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Studio Lifecycle Config (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -131,7 +137,7 @@ func resourceAwsSagemakerStudioLifecycleConfigUpdate(d *schema.ResourceData, met
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker UserProfile (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating Studio Lifecycle Config (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -145,10 +151,12 @@ func resourceAwsSagemakerStudioLifecycleConfigDelete(d *schema.ResourceData, met
 		StudioLifecycleConfigName: aws.String(d.Id()),
 	}
 
+	log.Printf("[DEBUG] Deleting SageMaker Studio Lifecycle Config: (%s)", d.Id())
 	if _, err := conn.DeleteStudioLifecycleConfig(input); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
+
 		return fmt.Errorf("error deleting SageMaker Studio Lifecycle Config (%s): %w", d.Id(), err)
 	}
 
