@@ -2704,16 +2704,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccKinesisFirehoseDeliveryStreamRedshiftConfigBase(rName string, rInt int) string {
 	return composeConfig(
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt),
+		testAccAvailableAZsNoOptInExcludeConfig("usw2-az2"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
