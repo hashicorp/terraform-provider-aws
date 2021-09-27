@@ -12,13 +12,14 @@ Creates and manages an AWS IoT Authorizer.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iot_authorizer" "example" {
   name                    = "example"
   authorizer_function_arn = aws_lambda_function.example.arn
   signing_disabled        = false
   status                  = "ACTIVE"
   token_key_name          = "Token-Header"
+
   token_signing_public_keys = {
     Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
   }
