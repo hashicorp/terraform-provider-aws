@@ -305,11 +305,10 @@ func resourceAwsEc2ManagedPrefixListUpdate(d *schema.ResourceData, meta interfac
 func resourceAwsEc2ManagedPrefixListDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	input := &ec2.DeleteManagedPrefixListInput{
+	log.Printf("[INFO] Deleting EC2 Managed Prefix List: %s", d.Id())
+	_, err := conn.DeleteManagedPrefixList(&ec2.DeleteManagedPrefixListInput{
 		PrefixListId: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteManagedPrefixList(input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
 		return nil

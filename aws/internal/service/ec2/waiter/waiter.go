@@ -635,6 +635,63 @@ func VpnGatewayVpcAttachmentDetached(conn *ec2.EC2, vpnGatewayID, vpcID string) 
 }
 
 const (
+	HostCreatedTimeout = 10 * time.Minute
+	HostUpdatedTimeout = 10 * time.Minute
+	HostDeletedTimeout = 20 * time.Minute
+)
+
+func HostCreated(conn *ec2.EC2, id string) (*ec2.Host, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AllocationStatePending},
+		Target:  []string{ec2.AllocationStateAvailable},
+		Timeout: HostCreatedTimeout,
+		Refresh: HostState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Host); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func HostUpdated(conn *ec2.EC2, id string) (*ec2.Host, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AllocationStatePending},
+		Target:  []string{ec2.AllocationStateAvailable},
+		Timeout: HostUpdatedTimeout,
+		Refresh: HostState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Host); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func HostDeleted(conn *ec2.EC2, id string) (*ec2.Host, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AllocationStateAvailable},
+		Target:  []string{},
+		Timeout: HostDeletedTimeout,
+		Refresh: HostState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Host); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	ManagedPrefixListTimeout = 15 * time.Minute
 )
 
