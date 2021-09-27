@@ -977,6 +977,20 @@ func validateLogGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+// https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+func validateS3BucketName() schema.SchemaValidateFunc {
+	// skipped due to ease of implementation:
+	// - must not be formatted as an IP(v4?) address
+	return validation.All(
+		// length
+		validation.StringLenBetween(3, 63),
+		// allowable characters, and alphanumeric start + end
+		validation.StringMatch(regexp.MustCompile(`^[a-z0-9][a-z0-9.-]+[a-z0-9]$`), ""),
+		validation.StringDoesNotMatch(regexp.MustCompile("^xn--")),
+		validation.StringDoesNotMatch(regexp.MustCompile("-s3alias$")),
+	)
+}
+
 func validateS3BucketLifecycleTimestamp(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", value))
