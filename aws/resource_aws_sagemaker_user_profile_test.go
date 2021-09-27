@@ -234,6 +234,37 @@ func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings(t *testing.T) {
 	})
 }
 
+func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
+	var domain sagemaker.DescribeUserProfileOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_user_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerUserProfileConfigKernelGatewayAppSettingsLifecycleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerUserProfileExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -509,6 +540,33 @@ resource "aws_sagemaker_user_profile" "test" {
       default_resource_spec {
         instance_type = "ml.t3.micro"
       }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerUserProfileConfigKernelGatewayAppSettingsLifecycleConfig(rName string) string {
+	return testAccAWSSagemakerUserProfileConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_studio_lifecycle_config" "test" {
+  studio_lifecycle_config_name     = %[1]q
+  studio_lifecycle_config_app_type = "JupyterServer"
+  studio_lifecycle_config_content  = base64encode("echo Hello")
+}
+
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = %[1]q
+
+  user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    kernel_gateway_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+
+      lifecycle_config_arns = [aws_sagemaker_studio_lifecycle_config.test.arn]
     }
   }
 }

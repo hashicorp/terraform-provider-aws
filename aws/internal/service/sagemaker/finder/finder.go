@@ -349,3 +349,28 @@ func FlowDefinitionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 
 	return output, nil
 }
+
+func StudioLifecycleConfigByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeStudioLifecycleConfigOutput, error) {
+	input := &sagemaker.DescribeStudioLifecycleConfigInput{
+		StudioLifecycleConfigName: aws.String(name),
+	}
+
+	output, err := conn.DescribeStudioLifecycleConfig(input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
