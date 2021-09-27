@@ -2,15 +2,16 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"log"
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iot/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsIoTAuthorizer() *schema.Resource {
@@ -25,6 +26,15 @@ func resourceAwsIoTAuthorizer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"authorizer_function_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -33,23 +43,15 @@ func resourceAwsIoTAuthorizer() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[\w=,@-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
 			},
-			"authorizer_function_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateArn,
-			},
 			"signing_disabled": {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  iot.AuthorizerStatusActive,
-				ValidateFunc: validation.StringInSlice([]string{
-					iot.AuthorizerStatusActive,
-					iot.AuthorizerStatusInactive,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      iot.AuthorizerStatusActive,
+				ValidateFunc: validation.StringInSlice(iot.AuthorizerStatus_Values(), false),
 			},
 			"token_key_name": {
 				Type:     schema.TypeString,
@@ -72,27 +74,27 @@ func resourceAwsIoTAuthorizer() *schema.Resource {
 func resourceAwsIotAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
-	tokenSigningPublicKeys := make(map[string]string)
-	for k, v := range d.Get("token_signing_public_keys").(map[string]interface{}) {
-		tokenSigningPublicKeys[k] = v.(string)
-	}
-
-	input := iot.CreateAuthorizerInput{
+	name := d.Get("name").(string)
+	input := &iot.CreateAuthorizerInput{
 		AuthorizerFunctionArn:  aws.String(d.Get("authorizer_function_arn").(string)),
-		AuthorizerName:         aws.String(d.Get("name").(string)),
+		AuthorizerName:         aws.String(name),
 		SigningDisabled:        aws.Bool(d.Get("signing_disabled").(bool)),
 		Status:                 aws.String(d.Get("status").(string)),
-		TokenKeyName:           aws.String(d.Get("token_key_name").(string)),
-		TokenSigningPublicKeys: aws.StringMap(tokenSigningPublicKeys),
+		TokenSigningPublicKeys: expandStringMap(d.Get("token_signing_public_keys").(map[string]interface{})),
+	}
+
+	if v, ok := d.GetOk("token_key_name"); ok {
+		input.TokenKeyName = aws.String(v.(string))
 	}
 
 	log.Printf("[INFO] Creating IoT Authorizer: %s", input)
-	out, err := conn.CreateAuthorizer(&input)
+	output, err := conn.CreateAuthorizer(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating IoT Authorizer: %w", err)
+		return fmt.Errorf("error creating IoT Authorizer (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.AuthorizerName))
+	d.SetId(aws.StringValue(output.AuthorizerName))
 
 	return resourceAwsIotAuthorizerRead(d, meta)
 }
@@ -100,31 +102,25 @@ func resourceAwsIotAuthorizerCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsIotAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
-	log.Printf("[INFO] Reading IoT Authorizer %s", d.Id())
-	input := iot.DescribeAuthorizerInput{
-		AuthorizerName: aws.String(d.Id()),
+	authorizer, err := finder.AuthorizerByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IoT Authorizer (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	authorizerDescription, err := conn.DescribeAuthorizer(&input)
 	if err != nil {
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] No IoT Authorizer (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading IoT Authorizer (%s): %w", d.Id(), err)
 	}
-	authorizer := authorizerDescription.AuthorizerDescription
-	log.Printf("[DEBUG] Received IoT Authorizer: %s", authorizer)
 
+	d.Set("arn", authorizer.AuthorizerArn)
 	d.Set("authorizer_function_arn", authorizer.AuthorizerFunctionArn)
+	d.Set("name", authorizer.AuthorizerName)
 	d.Set("signing_disabled", authorizer.SigningDisabled)
 	d.Set("status", authorizer.Status)
 	d.Set("token_key_name", authorizer.TokenKeyName)
-	d.Set("name", authorizer.AuthorizerName)
-	if err := d.Set("token_signing_public_keys", authorizer.TokenSigningPublicKeys); err != nil {
-		return fmt.Errorf("Error setting token signing keys for IoT Authrozer: %s", err)
-	}
+	d.Set("token_signing_public_keys", aws.StringValueMap(authorizer.TokenSigningPublicKeys))
 
 	return nil
 }
@@ -132,23 +128,31 @@ func resourceAwsIotAuthorizerRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsIotAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
-	tokenSigningPublicKeys := make(map[string]string)
-	for k, v := range d.Get("token_signing_public_keys").(map[string]interface{}) {
-		tokenSigningPublicKeys[k] = v.(string)
+	input := iot.UpdateAuthorizerInput{
+		AuthorizerName: aws.String(d.Id()),
 	}
 
-	input := iot.UpdateAuthorizerInput{
-		AuthorizerFunctionArn:  aws.String(d.Get("authorizer_function_arn").(string)),
-		AuthorizerName:         aws.String(d.Id()),
-		Status:                 aws.String(d.Get("status").(string)),
-		TokenKeyName:           aws.String(d.Get("token_key_name").(string)),
-		TokenSigningPublicKeys: aws.StringMap(tokenSigningPublicKeys),
+	if d.HasChange("authorizer_function_arn") {
+		input.AuthorizerFunctionArn = aws.String(d.Get("authorizer_function_arn").(string))
+	}
+
+	if d.HasChange("status") {
+		input.Status = aws.String(d.Get("status").(string))
+	}
+
+	if d.HasChange("token_key_name") {
+		input.TokenKeyName = aws.String(d.Get("token_key_name").(string))
+	}
+
+	if d.HasChange("token_signing_public_keys") {
+		input.TokenSigningPublicKeys = expandStringMap(d.Get("token_signing_public_keys").(map[string]interface{}))
 	}
 
 	log.Printf("[INFO] Updating IoT Authorizer: %s", input)
 	_, err := conn.UpdateAuthorizer(&input)
+
 	if err != nil {
-		return fmt.Errorf("Updating IoT Authorizer failed: %w", err)
+		return fmt.Errorf("error updating IoT Authorizer (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsIotAuthorizerRead(d, meta)
@@ -156,52 +160,57 @@ func resourceAwsIotAuthorizerUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsIotAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
-	input := iot.DeleteAuthorizerInput{
-		AuthorizerName: aws.String(d.Id()),
-	}
-
-	status := d.Get("status").(string)
 
 	// In order to delete an IoT Authorizer, you must set it inactive first.
-	if status == iot.AuthorizerStatusActive {
-		setInactiveError := d.Set("status", iot.AuthorizerStatusInactive)
+	if d.Get("status").(string) == iot.AuthorizerStatusActive {
+		log.Printf("[INFO] Deactivating IoT Authorizer: %s", d.Id())
+		_, err := conn.UpdateAuthorizer(&iot.UpdateAuthorizerInput{
+			AuthorizerName: aws.String(d.Id()),
+			Status:         aws.String(iot.AuthorizerStatusInactive),
+		})
 
-		if setInactiveError != nil {
-			return fmt.Errorf("Setting IoT Authorizer to INACTIVE failed: %w", setInactiveError)
-
-		}
-		updateErr := resourceAwsIotAuthorizerUpdate(d, meta)
-
-		if updateErr != nil {
-			return fmt.Errorf("Updating IoT Authorizer to INACTIVE failed: %w", updateErr)
+		if err != nil {
+			return fmt.Errorf("error deactivating IoT Authorizer (%s): %w", d.Id(), err)
 		}
 	}
 
-	log.Printf("[INFO] Deleting IoT Authorizer: %s", input)
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteAuthorizer(&input)
+	log.Printf("[INFO] Deleting IoT Authorizer: %s", d.Id())
+	_, err := conn.DeleteAuthorizer(&iot.DeleteAuthorizerInput{
+		AuthorizerName: aws.String(d.Id()),
+	})
 
-		if err != nil {
-			if isAWSErr(err, iot.ErrCodeInvalidRequestException, "") {
-				return resource.RetryableError(err)
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	/*
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			_, err := conn.DeleteAuthorizer(&input)
+
+			if err != nil {
+				if isAWSErr(err, iot.ErrCodeInvalidRequestException, "") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+					return nil
+				}
+
+				return resource.NonRetryableError(err)
 			}
+
+			return nil
+		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.DeleteAuthorizer(&input)
 			if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
-
-			return resource.NonRetryableError(err)
 		}
+	*/
 
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteAuthorizer(&input)
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-	}
 	if err != nil {
-		return fmt.Errorf("Error deleting IOT Authorizer: %s", err)
+		return fmt.Errorf("error deleting IOT Authorizer (%s): %w", d.Id(), err)
 	}
+
 	return nil
 }

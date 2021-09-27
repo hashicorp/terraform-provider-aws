@@ -2,23 +2,24 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/iot"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iot/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
-	var conf iot.DescribeAuthorizerOutput
+	var conf iot.AuthorizerDescription
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -49,12 +50,13 @@ func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
 }
 
 func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
-	var conf iot.DescribeAuthorizerOutput
+	var conf iot.AuthorizerDescription
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -70,7 +72,7 @@ func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSIoTAuthorizerExists(n string, res *iot.DescribeAuthorizerOutput) resource.TestCheckFunc {
+func testAccCheckAWSIoTAuthorizerExists(n string, v *iot.AuthorizerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -83,15 +85,13 @@ func testAccCheckAWSIoTAuthorizerExists(n string, res *iot.DescribeAuthorizerOut
 
 		conn := testAccProvider.Meta().(*AWSClient).iotconn
 
-		req := &iot.DescribeAuthorizerInput{
-			AuthorizerName: aws.String(rs.Primary.ID),
-		}
-		describe, err := conn.DescribeAuthorizer(req)
+		output, err := finder.AuthorizerByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *describe
+		*v = *output
 
 		return nil
 	}
@@ -105,24 +105,17 @@ func testAccCheckAWSIoTAuthorizerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		req := &iot.DescribeAuthorizerInput{
-			AuthorizerName: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.DescribeAuthorizer(req)
+		_, err := finder.AuthorizerByName(conn, rs.Primary.ID)
 
-		if err == nil {
-			return fmt.Errorf("IoT Authorizer still exists")
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		aws2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if aws2err.Code() != iot.ErrCodeResourceNotFoundException {
+		if err != nil {
 			return err
 		}
 
-		return nil
+		return fmt.Errorf("IoT Authorizer %s still exists", rs.Primary.ID)
 	}
 
 	return nil
