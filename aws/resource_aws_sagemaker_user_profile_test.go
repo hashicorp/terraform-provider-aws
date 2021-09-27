@@ -251,7 +251,7 @@ func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *
 					testAccCheckAWSSagemakerUserProfileExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
