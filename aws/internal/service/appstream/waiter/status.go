@@ -3,6 +3,7 @@ package waiter
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/finder"
@@ -21,5 +22,22 @@ func StackState(ctx context.Context, conn *appstream.AppStream, name string) res
 		}
 
 		return stack, "AVAILABLE", nil
+	}
+}
+
+//FleetState fetches the fleet and its state
+func FleetState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		fleet, err := finder.FleetByName(ctx, conn, name)
+
+		if err != nil {
+			return nil, "Unknown", err
+		}
+
+		if fleet == nil {
+			return fleet, "NotFound", nil
+		}
+
+		return fleet, aws.StringValue(fleet.State), nil
 	}
 }

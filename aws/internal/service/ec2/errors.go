@@ -22,6 +22,11 @@ const (
 )
 
 const (
+	ErrCodeClientInvalidHostIDNotFound = "Client.InvalidHostID.NotFound"
+	ErrCodeInvalidHostIDNotFound       = "InvalidHostID.NotFound"
+)
+
+const (
 	ErrCodeInvalidNetworkInterfaceIDNotFound = "InvalidNetworkInterfaceID.NotFound"
 )
 
