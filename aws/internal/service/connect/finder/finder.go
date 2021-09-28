@@ -8,6 +8,40 @@ import (
 	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 )
 
+func LambdaFunctionAssociationByFunctionArn(ctx context.Context, conn *connect.Connect, instanceID string, functionArn string) (string, error) {
+	var result string
+
+	input := &connect.ListLambdaFunctionsInput{
+		InstanceId: aws.String(instanceID),
+		MaxResults: aws.Int64(tfconnect.ListLambdaFunctionsMaxResults),
+	}
+
+	err := conn.ListLambdaFunctionsPagesWithContext(ctx, input, func(page *connect.ListLambdaFunctionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cf := range page.LambdaFunctions {
+			if cf == nil {
+				continue
+			}
+
+			if aws.StringValue(cf) == functionArn {
+				result = functionArn
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
 func LexBotAssociationByName(ctx context.Context, conn *connect.Connect, instanceID string, name string) (*connect.LexBot, error) {
 	var result *connect.LexBot
 
