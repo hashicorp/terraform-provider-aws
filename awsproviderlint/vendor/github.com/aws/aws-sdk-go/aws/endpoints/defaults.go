@@ -1345,6 +1345,7 @@ var awsPartition = partition{
 				"ap-east-1":      endpoint{},
 				"ap-northeast-1": endpoint{},
 				"ap-northeast-2": endpoint{},
+				"ap-northeast-3": endpoint{},
 				"ap-south-1":     endpoint{},
 				"ap-southeast-1": endpoint{},
 				"ap-southeast-2": endpoint{},
@@ -5585,6 +5586,25 @@ var awsPartition = partition{
 				"us-west-2": endpoint{},
 			},
 		},
+		"quicksight": service{
+
+			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{},
+				"ap-northeast-2": endpoint{},
+				"ap-south-1":     endpoint{},
+				"ap-southeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"api":            endpoint{},
+				"ca-central-1":   endpoint{},
+				"eu-central-1":   endpoint{},
+				"eu-west-1":      endpoint{},
+				"eu-west-2":      endpoint{},
+				"sa-east-1":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-2":      endpoint{},
+			},
+		},
 		"ram": service{
 
 			Endpoints: endpoints{
@@ -5932,7 +5952,9 @@ var awsPartition = partition{
 		"runtime-v2-lex": service{
 
 			Endpoints: endpoints{
+				"af-south-1":     endpoint{},
 				"ap-northeast-1": endpoint{},
+				"ap-northeast-2": endpoint{},
 				"ap-southeast-1": endpoint{},
 				"ap-southeast-2": endpoint{},
 				"ca-central-1":   endpoint{},
@@ -9951,6 +9973,18 @@ var awsusgovPartition = partition{
 				},
 			},
 		},
+		"identitystore": service{
+
+			Endpoints: endpoints{
+				"fips-us-gov-west-1": endpoint{
+					Hostname: "identitystore.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
+				"us-gov-west-1": endpoint{},
+			},
+		},
 		"inspector": service{
 
 			Endpoints: endpoints{
@@ -10329,6 +10363,13 @@ var awsusgovPartition = partition{
 						Region: "us-gov-west-1",
 					},
 				},
+				"us-gov-west-1": endpoint{},
+			},
+		},
+		"quicksight": service{
+
+			Endpoints: endpoints{
+				"api":           endpoint{},
 				"us-gov-west-1": endpoint{},
 			},
 		},
