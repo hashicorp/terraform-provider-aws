@@ -92,3 +92,42 @@ func FileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 
 	return filesystems[0], nil
 }
+
+func StorageVirtualMachineByID(conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
+	input := &fsx.DescribeStorageVirtualMachinesInput{
+		StorageVirtualMachineIds: []*string{aws.String(id)},
+	}
+
+	var svms []*fsx.StorageVirtualMachine
+
+	err := conn.DescribeStorageVirtualMachinesPages(input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		svms = append(svms, page.StorageVirtualMachines...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeStorageVirtualMachineNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(svms) == 0 || svms[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(svms); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return svms[0], nil
+}

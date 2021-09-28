@@ -136,3 +136,47 @@ func FileSystemDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Fi
 
 	return nil, err
 }
+
+func StorageVirtualMachineCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.StorageVirtualMachineLifecycleCreating, fsx.StorageVirtualMachineLifecyclePending},
+		Target:  []string{fsx.StorageVirtualMachineLifecycleCreated},
+		Refresh: StorageVirtualMachineStatus(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.StorageVirtualMachineLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func StorageVirtualMachineDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleDeleting},
+		Target:  []string{},
+		Refresh: StorageVirtualMachineStatus(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.StorageVirtualMachineLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
