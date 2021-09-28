@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
 )
 
 func resourceAwsDbEventSubscription() *schema.Resource {
@@ -377,10 +378,14 @@ func resourceAwsDbEventSubscriptionDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error deleting RDS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	err = waitForRdsEventSubscriptionDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.EventSubscriptionDeleted(conn, d.Id())
+
+	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+		return nil
+	}
 
 	if err != nil {
-		return fmt.Errorf("error waiting for RDS Event Subscription (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for RDS Event Subscription (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -405,19 +410,4 @@ func resourceAwsDbEventSubscriptionRefreshFunc(name string, conn *rds.RDS) resou
 
 		return sub, aws.StringValue(sub.Status), nil
 	}
-}
-
-func waitForRdsEventSubscriptionDeletion(conn *rds.RDS, name string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{},
-		Refresh:    resourceAwsDbEventSubscriptionRefreshFunc(name, conn),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }

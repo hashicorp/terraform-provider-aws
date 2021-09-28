@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -321,7 +320,13 @@ func testAccCheckAWSDBEventSubscriptionDisappears(eventSubscription *rds.EventSu
 			return err
 		}
 
-		return waitForRdsEventSubscriptionDeletion(conn, aws.StringValue(eventSubscription.CustSubscriptionId), 10*time.Minute)
+		_, err = waiter.EventSubscriptionDeleted(conn, aws.StringValue(eventSubscription.CustSubscriptionId))
+
+		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+			return nil
+		}
+
+		return err
 	}
 }
 
