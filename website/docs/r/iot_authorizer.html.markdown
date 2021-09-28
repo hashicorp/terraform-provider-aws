@@ -37,7 +37,7 @@ resource "aws_iot_authorizer" "example" {
 
 ## Attributes Reference
 
-In addition to the arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the authorizer.
 
