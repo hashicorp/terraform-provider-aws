@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -25,6 +27,8 @@ func resourceAwsIoTAuthorizer() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: resourceAwsIotAuthorizerCustomizeDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -45,7 +49,8 @@ func resourceAwsIoTAuthorizer() *schema.Resource {
 			},
 			"signing_disabled": {
 				Type:     schema.TypeBool,
-				Required: true,
+				Optional: true,
+				Default:  false,
 			},
 			"status": {
 				Type:         schema.TypeString,
@@ -63,7 +68,7 @@ func resourceAwsIoTAuthorizer() *schema.Resource {
 			},
 			"token_signing_public_keys": {
 				Type:      schema.TypeMap,
-				Required:  true,
+				Optional:  true,
 				Elem:      &schema.Schema{Type: schema.TypeString},
 				Sensitive: true,
 			},
@@ -76,15 +81,18 @@ func resourceAwsIotAuthorizerCreate(d *schema.ResourceData, meta interface{}) er
 
 	name := d.Get("name").(string)
 	input := &iot.CreateAuthorizerInput{
-		AuthorizerFunctionArn:  aws.String(d.Get("authorizer_function_arn").(string)),
-		AuthorizerName:         aws.String(name),
-		SigningDisabled:        aws.Bool(d.Get("signing_disabled").(bool)),
-		Status:                 aws.String(d.Get("status").(string)),
-		TokenSigningPublicKeys: expandStringMap(d.Get("token_signing_public_keys").(map[string]interface{})),
+		AuthorizerFunctionArn: aws.String(d.Get("authorizer_function_arn").(string)),
+		AuthorizerName:        aws.String(name),
+		SigningDisabled:       aws.Bool(d.Get("signing_disabled").(bool)),
+		Status:                aws.String(d.Get("status").(string)),
 	}
 
 	if v, ok := d.GetOk("token_key_name"); ok {
 		input.TokenKeyName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("token_signing_public_keys"); ok {
+		input.TokenSigningPublicKeys = expandStringMap(v.(map[string]interface{}))
 	}
 
 	log.Printf("[INFO] Creating IoT Authorizer: %s", input)
@@ -183,33 +191,21 @@ func resourceAwsIotAuthorizerDelete(d *schema.ResourceData, meta interface{}) er
 		return nil
 	}
 
-	/*
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteAuthorizer(&input)
-
-			if err != nil {
-				if isAWSErr(err, iot.ErrCodeInvalidRequestException, "") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
-					return nil
-				}
-
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-		if isResourceTimeoutError(err) {
-			_, err = conn.DeleteAuthorizer(&input)
-			if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
-		}
-	*/
-
 	if err != nil {
 		return fmt.Errorf("error deleting IOT Authorizer (%s): %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceAwsIotAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if !diff.Get("signing_disabled").(bool) {
+		if _, ok := diff.GetOk("token_key_name"); !ok {
+			return errors.New(`"token_key_name" is required when signing is enabled`)
+		}
+		if _, ok := diff.GetOk("token_signing_public_keys"); !ok {
+			return errors.New(`"token_signing_public_keys" is required when signing is enabled`)
+		}
 	}
 
 	return nil

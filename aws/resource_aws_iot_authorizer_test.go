@@ -24,26 +24,22 @@ func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIoTAuthorizerConfig(rName),
+				Config: testAccAWSIoTAuthorizerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-				),
-			},
-			{
-				Config: testAccAWSIoTAuthorizerConfig_defaultStatus(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", iot.AuthorizerStatusActive),
-				),
-			},
-			{
-				Config: testAccAWSIoTAuthorizerConfig_update(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", iot.AuthorizerStatusInactive),
+					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-1"),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -61,12 +57,86 @@ func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIoTAuthorizerConfig(rName),
+				Config: testAccAWSIoTAuthorizerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsIoTAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIoTAuthorizer_SigningDisabled(t *testing.T) {
+	var conf iot.AuthorizerDescription
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iot_authorizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTAuthorizerConfigSigningDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "status", "INACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "token_key_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIoTAuthorizer_Update(t *testing.T) {
+	var conf iot.AuthorizerDescription
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iot_authorizer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTAuthorizerConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-1"),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
+				),
+			},
+			{
+				Config: testAccAWSIoTAuthorizerConfigUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "status", "INACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-2"),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
+					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key2"),
+				),
 			},
 		},
 	})
@@ -123,8 +193,8 @@ func testAccCheckAWSIoTAuthorizerDestroy(s *terraform.State) error {
 
 func testAccAWSIoTAuthorizerConfigBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "lambda" {
-  name = "%[1]s-lambda"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -147,54 +217,51 @@ resource "aws_lambda_function" "test" {
   filename         = "test-fixtures/lambdatest.zip"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   function_name    = %[1]q
-  role             = aws_iam_role.lambda.arn
+  role             = aws_iam_role.test.arn
   handler          = "exports.example"
   runtime          = "nodejs12.x"
 }
 `, rName)
 }
 
-func testAccAWSIoTAuthorizerConfig(rName string) string {
-	return testAccAWSIoTAuthorizerConfigBase(rName) + fmt.Sprintf(`
+func testAccAWSIoTAuthorizerConfigBasic(rName string) string {
+	return composeConfig(testAccAWSIoTAuthorizerConfigBase(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
-  name                      = %[1]q
-  authorizer_function_arn   = aws_lambda_function.test.arn
-  signing_disabled          = false
-  status                    = "ACTIVE"
-  token_key_name            = "Token-Header"
+  name                    = %[1]q
+  authorizer_function_arn = aws_lambda_function.test.arn
+  token_key_name          = "Token-Header-1"
+
   token_signing_public_keys = {
     Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccAWSIoTAuthorizerConfig_update(rName string) string {
-	return testAccAWSIoTAuthorizerConfigBase(rName) + fmt.Sprintf(`
+func testAccAWSIoTAuthorizerConfigUpdated(rName string) string {
+	return composeConfig(testAccAWSIoTAuthorizerConfigBase(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
-  name                      = %[1]q
-  authorizer_function_arn   = aws_lambda_function.test.arn
-  signing_disabled          = false
-  token_key_name            = "Token-Header"
-  status                    = "INACTIVE"
+  name                    = %[1]q
+  authorizer_function_arn = aws_lambda_function.test.arn
+  signing_disabled        = false
+  token_key_name          = "Token-Header-2"
+  status                  = "INACTIVE"
+
   token_signing_public_keys = {
     Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
     Key2 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccAWSIoTAuthorizerConfig_defaultStatus(rName string) string {
-	return testAccAWSIoTAuthorizerConfigBase(rName) + fmt.Sprintf(`
+func testAccAWSIoTAuthorizerConfigSigningDisabled(rName string) string {
+	return composeConfig(testAccAWSIoTAuthorizerConfigBase(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
-  name                      = %[1]q
-  authorizer_function_arn   = aws_lambda_function.test.arn
-  signing_disabled          = false
-  token_key_name            = "Token-Header"
-  token_signing_public_keys = {
-    Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
-  }
+  name                    = %[1]q
+  authorizer_function_arn = aws_lambda_function.test.arn
+  signing_disabled        = true
+  status                  = "INACTIVE"
 }
-`, rName)
+`, rName))
 }

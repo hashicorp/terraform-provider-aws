@@ -28,12 +28,12 @@ resource "aws_iot_authorizer" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the authorizer.
 * `authorizer_function_arn` - (Required) The ARN of the authorizer's Lambda function.
-* `signing_disabled` - (Required) Specifies whether AWS IoT validates the token signature in an authorization request.
-* `status` - (Optional) The status of Authorizer request at creation. This must be either `ACTIVE` or `INACTIVE` defaults to `ACTIVE`.
-* `token_key_name` - (Required) The name of the token key used to extract the token from the HTTP headers.
-* `token_signing_public_keys` - (Required) The public keys used to verify the digital signature returned by your custom authentication service.
+* `name` - (Required) The name of the authorizer.
+* `signing_disabled` - (Optional) Specifies whether AWS IoT validates the token signature in an authorization request. Default: `false`.
+* `status` - (Optional) The status of Authorizer request at creation. Valid values: `ACTIVE`, `INACTIVE`. Default: `ACTIVE`.
+* `token_key_name` - (Optional) The name of the token key used to extract the token from the HTTP headers. This value is required if signing is enabled in your authorizer.
+* `token_signing_public_keys` - (Optional) The public keys used to verify the digital signature returned by your custom authentication service. This value is required if signing is enabled in your authorizer.
 
 ## Attributes Reference
 
