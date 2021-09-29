@@ -511,7 +511,7 @@ resource "aws_redshift_scheduled_action" "test" {
   target_action {
     resize_cluster {
       cluster_identifier = "tf-test-identifier"
-      classic            = %[3]t 
+      classic            = %[3]t
       cluster_type       = %[4]q
       node_type          = %[5]q
       number_of_nodes    = %[6]d
