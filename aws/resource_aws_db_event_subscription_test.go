@@ -133,6 +133,34 @@ func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBEventSubscription_Name_Generated(t *testing.T) {
+	var v rds.EventSubscription
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_event_subscription.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBEventSubscriptionConfigNameGenerated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBEventSubscription_NamePrefix(t *testing.T) {
 	var v rds.EventSubscription
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -315,6 +343,27 @@ resource "aws_db_event_subscription" "test" {
   }
 }
 `, rInt)
+}
+
+func testAccAWSDBEventSubscriptionConfigNameGenerated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_db_event_subscription" "test" {
+  sns_topic   = aws_sns_topic.test.arn
+  source_type = "db-instance"
+
+  event_categories = [
+    "availability",
+    "backup",
+    "creation",
+    "deletion",
+    "maintenance",
+  ]
+}
+`, rName)
 }
 
 func testAccAWSDBEventSubscriptionConfigNamePrefix(rName, namePrefix string) string {

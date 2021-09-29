@@ -15,10 +15,48 @@ const (
 	DBClusterRoleAssociationDeletedTimeout = 5 * time.Minute
 )
 
+func EventSubscriptionCreated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfrds.EventSubscriptionStatusCreating},
+		Target:     []string{tfrds.EventSubscriptionStatusActive},
+		Refresh:    EventSubscriptionStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func EventSubscriptionDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{tfrds.EventSubscriptionStatusDeleting},
 		Target:     []string{},
+		Refresh:    EventSubscriptionStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func EventSubscriptionUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfrds.EventSubscriptionStatusModifying},
+		Target:     []string{tfrds.EventSubscriptionStatusActive},
 		Refresh:    EventSubscriptionStatus(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
