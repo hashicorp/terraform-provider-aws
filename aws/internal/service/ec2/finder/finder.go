@@ -80,6 +80,62 @@ func ClientVpnRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRo
 	return ClientVpnRoute(conn, endpointID, targetSubnetID, destinationCidr)
 }
 
+func HostByID(conn *ec2.EC2, id string) (*ec2.Host, error) {
+	input := &ec2.DescribeHostsInput{
+		HostIds: aws.StringSlice([]string{id}),
+	}
+
+	return Host(conn, input)
+}
+
+func HostByIDAndFilters(conn *ec2.EC2, id string, filters []*ec2.Filter) (*ec2.Host, error) {
+	input := &ec2.DescribeHostsInput{}
+
+	if id != "" {
+		input.HostIds = aws.StringSlice([]string{id})
+	}
+
+	if len(filters) > 0 {
+		input.Filter = filters
+	}
+
+	return Host(conn, input)
+}
+
+func Host(conn *ec2.EC2, input *ec2.DescribeHostsInput) (*ec2.Host, error) {
+	output, err := conn.DescribeHosts(input)
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidHostIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Hosts) == 0 || output.Hosts[0] == nil || output.Hosts[0].HostProperties == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Hosts); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	host := output.Hosts[0]
+
+	if state := aws.StringValue(host.State); state == ec2.AllocationStateReleased || state == ec2.AllocationStateReleasedPermanentFailure {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return host, nil
+}
+
 // InstanceByID looks up a Instance by ID. When not found, returns nil and potentially an API error.
 func InstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
 	input := &ec2.DescribeInstancesInput{
@@ -549,6 +605,10 @@ func TransitGatewayPrefixListReferenceByID(conn *ec2.EC2, resourceID string) (*e
 }
 
 func TransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	if transitGatewayRouteTableID == "" {
+		return nil, nil
+	}
+
 	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
 		Filters: []*ec2.Filter{
 			{
@@ -580,7 +640,11 @@ func TransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTable
 		return !lastPage
 	})
 
-	return result, err
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // VpcAttribute looks up a VPC attribute.
@@ -806,13 +870,87 @@ func ManagedPrefixListByID(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, er
 	}
 
 	output, err := conn.DescribeManagedPrefixLists(input)
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.PrefixLists) == 0 {
-		return nil, nil
+	if output == nil || len(output.PrefixLists) == 0 || output.PrefixLists[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.PrefixLists[0], nil
+	if count := len(output.PrefixLists); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	prefixList := output.PrefixLists[0]
+
+	if state := aws.StringValue(prefixList.State); state == ec2.PrefixListStateDeleteComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return prefixList, nil
+}
+
+func ManagedPrefixListEntriesByID(conn *ec2.EC2, id string) ([]*ec2.PrefixListEntry, error) {
+	input := &ec2.GetManagedPrefixListEntriesInput{
+		PrefixListId: aws.String(id),
+	}
+
+	var prefixListEntries []*ec2.PrefixListEntry
+
+	err := conn.GetManagedPrefixListEntriesPages(input, func(page *ec2.GetManagedPrefixListEntriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, entry := range page.Entries {
+			if entry == nil {
+				continue
+			}
+
+			prefixListEntries = append(prefixListEntries, entry)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return prefixListEntries, nil
+}
+
+func ManagedPrefixListEntryByIDAndCIDR(conn *ec2.EC2, id, cidr string) (*ec2.PrefixListEntry, error) {
+	prefixListEntries, err := ManagedPrefixListEntriesByID(conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range prefixListEntries {
+		if aws.StringValue(entry.Cidr) == cidr {
+			return entry, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
 }

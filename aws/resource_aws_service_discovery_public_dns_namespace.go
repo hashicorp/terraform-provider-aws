@@ -56,22 +56,17 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-	// The CreatorRequestId has a limit of 64 bytes
-	var requestId string
-	if len(name) > (64 - resource.UniqueIDSuffixLength) {
-		requestId = resource.PrefixedUniqueId(name[0:(64 - resource.UniqueIDSuffixLength - 1)])
-	} else {
-		requestId = resource.PrefixedUniqueId(name)
-	}
-
 	input := &servicediscovery.CreatePublicDnsNamespaceInput{
+		CreatorRequestId: aws.String(resource.UniqueId()),
 		Name:             aws.String(name),
-		Tags:             tags.IgnoreAws().ServicediscoveryTags(),
-		CreatorRequestId: aws.String(requestId),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().ServicediscoveryTags()
 	}
 
 	output, err := conn.CreatePublicDnsNamespace(input)

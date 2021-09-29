@@ -205,6 +205,7 @@ type Config struct {
 	Endpoints         map[string]string
 	IgnoreTagsConfig  *keyvaluetags.IgnoreConfig
 	Insecure          bool
+	HTTPProxy         string
 
 	SkipCredsValidation     bool
 	SkipGetEC2Platforms     bool
@@ -435,6 +436,7 @@ func (c *Config) Client() (interface{}, error) {
 		DebugLogging:                logging.IsDebugOrHigher(),
 		IamEndpoint:                 c.Endpoints["iam"],
 		Insecure:                    c.Insecure,
+		HTTPProxy:                   c.HTTPProxy,
 		MaxRetries:                  c.MaxRetries,
 		Profile:                     c.Profile,
 		Region:                      c.Region,
@@ -728,6 +730,16 @@ func (c *Config) Client() (interface{}, error) {
 	client.appsyncconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name == "CreateGraphqlApi" {
 			if isAWSErr(r.Error, appsync.ErrCodeConcurrentModificationException, "a GraphQL API creation is already in progress") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
+	client.chimeconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// When calling CreateVoiceConnector across multiple resources,
+		// the API can randomly return a BadRequestException without explanation
+		if r.Operation.Name == "CreateVoiceConnector" {
+			if tfawserr.ErrMessageContains(r.Error, chime.ErrCodeBadRequestException, "Service received a bad request") {
 				r.Retryable = aws.Bool(true)
 			}
 		}

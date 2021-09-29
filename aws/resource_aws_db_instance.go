@@ -1598,6 +1598,10 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
 		requestUpdate = true
 	}
+	if d.HasChange("license_model") {
+		req.LicenseModel = aws.String(d.Get("license_model").(string))
+		requestUpdate = true
+	}
 	if d.HasChange("deletion_protection") {
 		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		requestUpdate = true

@@ -212,7 +212,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"lambda_config": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -1355,6 +1354,10 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 
 	if s.EmailSendingAccount != nil {
 		m["email_sending_account"] = aws.StringValue(s.EmailSendingAccount)
+	}
+
+	if s.ConfigurationSet != nil {
+		m["configuration_set"] = aws.StringValue(s.ConfigurationSet)
 	}
 
 	if len(m) > 0 {

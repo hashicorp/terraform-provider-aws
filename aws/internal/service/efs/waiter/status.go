@@ -47,25 +47,18 @@ func BackupPolicyStatus(conn *efs.EFS, id string) resource.StateRefreshFunc {
 	}
 }
 
-// FileSystemLifeCycleState fetches the Access Point and its LifecycleState
-func FileSystemLifeCycleState(conn *efs.EFS, fileSystemID string) resource.StateRefreshFunc {
+func FileSystemLifeCycleState(conn *efs.EFS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &efs.DescribeFileSystemsInput{
-			FileSystemId: aws.String(fileSystemID),
-		}
+		output, err := finder.FileSystemByID(conn, id)
 
-		output, err := conn.DescribeFileSystems(input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if output == nil || len(output.FileSystems) == 0 || output.FileSystems[0] == nil {
-			return nil, "", nil
-		}
-
-		mt := output.FileSystems[0]
-
-		return mt, aws.StringValue(mt.LifeCycleState), nil
+		return output, aws.StringValue(output.LifeCycleState), nil
 	}
 }

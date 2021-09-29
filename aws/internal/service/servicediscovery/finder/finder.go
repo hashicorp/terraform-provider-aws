@@ -8,6 +8,32 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+func InstanceByServiceIDAndInstanceID(conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) (*servicediscovery.Instance, error) {
+	input := &servicediscovery.GetInstanceInput{
+		InstanceId: aws.String(instanceID),
+		ServiceId:  aws.String(serviceID),
+	}
+
+	output, err := conn.GetInstance(input)
+
+	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeInstanceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Instance == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Instance, nil
+}
+
 func OperationByID(conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Operation, error) {
 	input := &servicediscovery.GetOperationInput{
 		OperationId: aws.String(id),

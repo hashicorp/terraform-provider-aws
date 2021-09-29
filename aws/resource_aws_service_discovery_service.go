@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -144,7 +145,8 @@ func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta inter
 
 	name := d.Get("name").(string)
 	input := &servicediscovery.CreateServiceInput{
-		Name: aws.String(name),
+		CreatorRequestId: aws.String(resource.UniqueId()),
+		Name:             aws.String(name),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -172,13 +174,13 @@ func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Creating Service Discovery Service: %s", input)
-	resp, err := conn.CreateService(input)
+	output, err := conn.CreateService(input)
 
 	if err != nil {
 		return fmt.Errorf("error creating Service Discovery Service (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.Service.Id))
+	d.SetId(aws.StringValue(output.Service.Id))
 
 	return resourceAwsServiceDiscoveryServiceRead(d, meta)
 }
@@ -491,7 +493,7 @@ func deregisterServiceDiscoveryInstance(conn *servicediscovery.ServiceDiscovery,
 
 	if output != nil && output.OperationId != nil {
 		if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
-			return fmt.Errorf("error waiting for Service Discovery Service (%s) Instance (%s) delete: %w", serviceID, instanceID, err)
+			return fmt.Errorf("error waiting for Service Discovery Service (%s) Instance (%s) deregister: %w", serviceID, instanceID, err)
 		}
 	}
 

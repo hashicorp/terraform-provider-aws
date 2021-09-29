@@ -628,3 +628,13 @@ rules:
       - pattern-regex: 'ssh-rsa [A-Za-z0-9/]+'
       - pattern-inside: '($X : string)'
     severity: WARNING
+
+  - id: non-tags-change-detection
+    languages: [go]
+    message: Incorrect form of non-tags change detection. https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/contribution-checklists.md#resource-tagging-code-implementation
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern: 'if d.HasChangeExcept("tags_all") {...}'
+    severity: WARNING
