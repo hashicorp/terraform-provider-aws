@@ -9,12 +9,6 @@ import (
 )
 
 const (
-	// EventSubscription NotFound
-	EventSubscriptionStatusNotFound = "NotFound"
-
-	// EventSubscription Unknown
-	EventSubscriptionStatusUnknown = "Unknown"
-
 	// ProxyEndpoint NotFound
 	ProxyEndpointStatusNotFound = "NotFound"
 
@@ -23,23 +17,19 @@ const (
 )
 
 // EventSubscriptionStatus fetches the EventSubscription and its Status
-func EventSubscriptionStatus(conn *rds.RDS, subscriptionName string) resource.StateRefreshFunc {
+func EventSubscriptionStatus(conn *rds.RDS, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &rds.DescribeEventSubscriptionsInput{
-			SubscriptionName: aws.String(subscriptionName),
-		}
+		output, err := finder.EventSubscriptionByName(conn, name)
 
-		output, err := conn.DescribeEventSubscriptions(input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
-			return nil, EventSubscriptionStatusUnknown, err
+			return nil, "", err
 		}
 
-		if len(output.EventSubscriptionsList) == 0 {
-			return nil, EventSubscriptionStatusNotFound, nil
-		}
-
-		return output.EventSubscriptionsList[0], aws.StringValue(output.EventSubscriptionsList[0].Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
 )
 
@@ -46,6 +47,7 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateDbEventSubscriptionName,
@@ -93,14 +95,8 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).rdsconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.UniqueId()
-	}
+
+	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	sourceIdsSet := d.Get("source_ids").(*schema.Set)
 	sourceIds := make([]*string, sourceIdsSet.Len())
@@ -178,15 +174,12 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("arn", sub.EventSubscriptionArn)
-	if err := d.Set("name", sub.CustSubscriptionId); err != nil {
-		return err
-	}
-	if err := d.Set("sns_topic", sub.SnsTopicArn); err != nil {
-		return err
-	}
-	if err := d.Set("source_type", sub.SourceType); err != nil {
-		return err
-	}
+	d.Set("customer_aws_id", sub.CustomerAwsId)
+	d.Set("name", sub.CustSubscriptionId)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(sub.CustSubscriptionId)))
+	d.Set("sns_topic", sub.SnsTopicArn)
+	d.Set("source_type", sub.SourceType)
+
 	if err := d.Set("enabled", sub.Enabled); err != nil {
 		return err
 	}
@@ -196,14 +189,11 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 	if err := d.Set("event_categories", flattenStringList(sub.EventCategoriesList)); err != nil {
 		return err
 	}
-	if err := d.Set("customer_aws_id", sub.CustomerAwsId); err != nil {
-		return err
-	}
 
 	tags, err := keyvaluetags.RdsListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS Event Subscription (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("error listing tags for RDS Event Subscription (%s): %w", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -378,7 +368,7 @@ func resourceAwsDbEventSubscriptionDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error deleting RDS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	_, err = waiter.EventSubscriptionDeleted(conn, d.Id())
+	_, err = waiter.EventSubscriptionDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 		return nil
