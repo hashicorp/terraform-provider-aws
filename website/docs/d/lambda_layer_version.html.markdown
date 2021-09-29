@@ -49,4 +49,4 @@ In addition to all arguments above, the following attributes are exported:
 * `version` - This Lamba Layer version.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleRuntimes
-
+[2]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleArchitectures
