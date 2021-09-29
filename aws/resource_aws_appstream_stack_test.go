@@ -1,16 +1,79 @@
 package aws
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/lister"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_appstream_stack", &resource.Sweeper{
+		Name: "aws_appstream_stack",
+		F:    testSweepAppStreamStack,
+	})
+}
+
+func testSweepAppStreamStack(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).appstreamconn
+
+	var sweeperErrs *multierror.Error
+
+	input := &appstream.DescribeStacksInput{}
+
+	err = lister.DescribeStacksPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, directory := range page.Stacks {
+			id := aws.StringValue(directory.Name)
+
+			r := resourceAwsAppStreamStack()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			err := r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting AppStream Stack (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppStream Stack sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErr := fmt.Errorf("error listing AppStream Stacks: %w", err)
+		log.Printf("[ERROR] %s", sweeperErr)
+		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAwsAppStreamStack_basic(t *testing.T) {
 	var stackOutput appstream.Stack
