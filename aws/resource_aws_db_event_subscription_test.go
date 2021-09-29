@@ -103,7 +103,7 @@ func TestAccAWSDBEventSubscription_basic(t *testing.T) {
 
 func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 	var eventSubscription rds.EventSubscription
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -113,7 +113,7 @@ func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBEventSubscriptionConfig(rInt),
+				Config: testAccAWSDBEventSubscriptionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsDbEventSubscription(), resourceName),
@@ -175,6 +175,51 @@ func TestAccAWSDBEventSubscription_NamePrefix(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSDBEventSubscription_Tags(t *testing.T) {
+	var eventSubscription rds.EventSubscription
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_event_subscription.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBEventSubscriptionConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDBEventSubscriptionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSDBEventSubscriptionConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -400,16 +445,7 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_db_event_subscription" "test" {
-  sns_topic   = aws_sns_topic.test.arn
-  source_type = "db-instance"
-
-  event_categories = [
-    "availability",
-    "backup",
-    "creation",
-    "deletion",
-    "maintenance",
-  ]
+  sns_topic = aws_sns_topic.test.arn
 }
 `, rName)
 }
@@ -423,17 +459,43 @@ resource "aws_sns_topic" "test" {
 resource "aws_db_event_subscription" "test" {
   name_prefix = %[2]q
   sns_topic   = aws_sns_topic.test.arn
-  source_type = "db-instance"
-
-  event_categories = [
-    "availability",
-    "backup",
-    "creation",
-    "deletion",
-    "maintenance",
-  ]
 }
 `, rName, namePrefix)
+}
+
+func testAccAWSDBEventSubscriptionConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_db_event_subscription" "test" {
+  name        = %[1]q
+  sns_topic   = aws_sns_topic.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSDBEventSubscriptionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_db_event_subscription" "test" {
+  name        = %[1]q
+  sns_topic   = aws_sns_topic.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdate(rInt int) string {
