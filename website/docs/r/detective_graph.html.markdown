@@ -27,7 +27,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Unique identifier (ID) of the Detective Graph.
-* `created_time` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Detective Graph was created.
+* `created_time` - Date and time, in UTC and extended RFC 3339 format, when the Amazon Detective Graph was created.
 
 ## Import
 

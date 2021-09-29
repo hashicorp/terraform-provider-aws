@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func testAccAwsDetectiveGraph_basic(t *testing.T) {
+func TestAccAwsDetectiveGraph_basic(t *testing.T) {
 	var graphOutput detective.Graph
 	resourceName := "aws_detective_graph.test"
 
@@ -37,7 +37,7 @@ func testAccAwsDetectiveGraph_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsDetectiveGraph_WithTags(t *testing.T) {
+func TestAccAwsDetectiveGraph_WithTags(t *testing.T) {
 	var graphOutput detective.Graph
 	resourceName := "aws_detective_graph.test"
 
@@ -80,7 +80,7 @@ func testAccAwsDetectiveGraph_WithTags(t *testing.T) {
 	})
 }
 
-func testAccAwsDetectiveGraph_disappears(t *testing.T) {
+func TestAccAwsDetectiveGraph_disappears(t *testing.T) {
 	var graphOutput detective.Graph
 	resourceName := "aws_detective_graph.test"
 
