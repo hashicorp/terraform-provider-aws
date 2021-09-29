@@ -34,7 +34,7 @@ func testAccAwsConnectContactFlow_basic(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
@@ -83,7 +83,7 @@ func testAccAwsConnectContactFlow_filename(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
@@ -137,7 +137,7 @@ func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 	resourceName := "aws_connect_contact_flow.test"
 	instanceResourceName := "aws_connect_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
