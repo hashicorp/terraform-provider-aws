@@ -63,6 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
 [2]: https://docs.aws.amazon.com/lambda/latest/dg/API_PublishLayerVersion.html#SSS-PublishLayerVersion-request-CompatibleRuntimes
 [3]: https://docs.aws.amazon.com/lambda/latest/dg/API_PublishLayerVersion.html#SSS-PublishLayerVersion-request-LicenseInfo
+[4]: https://docs.aws.amazon.com/lambda/latest/dg/API_PublishLayerVersion.html#SSS-PublishLayerVersion-request-CompatibleArchitectures
 
 ## Import
 
