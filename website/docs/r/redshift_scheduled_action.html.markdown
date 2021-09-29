@@ -115,19 +115,25 @@ The following arguments are supported:
 
 ### `pause_cluster`
 
-* `cluster_identifier` - (Required) The target identifier for the redshift cluster of the scheduled action.
+* `cluster_identifier` - (Required) The identifier of the cluster to be paused.
 
 ### `resize_cluster`
 
-* `cluster_identifier` - (Required) The target identifier for the redshift cluster of the scheduled action.
-* `classic` - (Optional) Indicate resize operation is using the classic resize process. Default is `false`.
+* `cluster_identifier` - (Required) The unique identifier for the cluster to resize.
+* `classic` - (Optional) A boolean value indicating whether the resize operation is using the classic resize process. Default: `false`.
 * `cluster_type` - (Optional)　The new cluster type for the specified cluster.
-* `node_type` - (Optional) The new node type for the nodes you are addingThe new node type for the nodes you are adding.
+* `node_type` - (Optional) The new node type for the nodes you are adding.
 * `number_of_nodes` - (Optional) The new number of nodes for the cluster.
 
 ### `resume_cluster`
 
-* `cluster_identifier` - (Required) The target identifier for the redshift cluster of the scheduled action.
+* `cluster_identifier` - (Required) The identifier of the cluster to be resumed.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The Redshift Scheduled Action name.
 
 ## Import
 
