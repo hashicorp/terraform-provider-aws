@@ -2,10 +2,14 @@ package waiter
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -16,10 +20,9 @@ const (
 	FleetStateTimeout = 180 * time.Minute
 	// FleetOperationTimeout Maximum amount of time to wait for Fleet operation eventual consistency
 	FleetOperationTimeout = 15 * time.Minute
-	// ImageBuilderStateTimeout Maximum amount of time to wait for the ImageBuilderState to be RUNNING or STOPPED
+	// ImageBuilderStateTimeout Maximum amount of time to wait for the ImageBuilderState to be RUNNING
+	// or for the ImageBuilder to be deleted
 	ImageBuilderStateTimeout = 60 * time.Minute
-	// ImageBuilderOperationTimeout Maximum amount of time to wait for ImageBuilder operation eventual consistency
-	ImageBuilderOperationTimeout = 4 * time.Minute
 )
 
 // StackStateDeleted waits for a deleted stack
@@ -80,31 +83,23 @@ func ImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream, na
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.ImageBuilderStatePending},
 		Target:  []string{appstream.ImageBuilderStateRunning},
-		Refresh: ImageBuilderState(conn, name),
+		Refresh: ImageBuilderState(ctx, conn, name),
 		Timeout: ImageBuilderStateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appstream.ImageBuilder); ok {
-		return output, err
-	}
+		if state, errors := aws.StringValue(output.State), output.ImageBuilderErrors; state == appstream.ImageBuilderStateFailed && len(errors) > 0 {
+			var errs *multierror.Error
 
-	return nil, err
-}
+			for _, err := range errors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
+			}
 
-// ImageBuilderStateStopped waits for a ImageBuilder stopped
-func ImageBuilderStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{appstream.ImageBuilderStatePending, appstream.ImageBuilderStateStopping},
-		Target:  []string{appstream.ImageBuilderStateStopped},
-		Refresh: ImageBuilderState(conn, name),
-		Timeout: ImageBuilderStateTimeout,
-	}
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*appstream.ImageBuilder); ok {
 		return output, err
 	}
 
@@ -115,14 +110,24 @@ func ImageBuilderStateStopped(ctx context.Context, conn *appstream.AppStream, na
 func ImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.ImageBuilderStatePending, appstream.ImageBuilderStateDeleting},
-		Target:  []string{"NotFound"},
-		Refresh: ImageBuilderState(conn, name),
+		Target:  []string{},
+		Refresh: ImageBuilderState(ctx, conn, name),
 		Timeout: ImageBuilderStateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appstream.ImageBuilder); ok {
+		if state, errors := aws.StringValue(output.State), output.ImageBuilderErrors; state == appstream.ImageBuilderStateFailed && len(errors) > 0 {
+			var errs *multierror.Error
+
+			for _, err := range errors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
+			}
+
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
 		return output, err
 	}
 

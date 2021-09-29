@@ -2,11 +2,9 @@ package waiter
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/finder"
 )
@@ -45,25 +43,16 @@ func FleetState(ctx context.Context, conn *appstream.AppStream, name string) res
 }
 
 //ImageBuilderState fetches the ImageBuilder and its state
-func ImageBuilderState(conn *appstream.AppStream, name string) resource.StateRefreshFunc {
+func ImageBuilderState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		imageBuilder, err := finder.ImageBuilderByName(conn, name)
+		imageBuilder, err := finder.ImageBuilderByName(ctx, conn, name)
+
 		if err != nil {
-			return nil, "Unknown", err
+			return nil, "", err
 		}
 
 		if imageBuilder == nil {
-			return imageBuilder, "NotFound", nil
-		}
-
-		if imageBuilder != nil {
-			if len(imageBuilder.ImageBuilderErrors) > 0 {
-				var errs *multierror.Error
-				for _, err := range imageBuilder.ImageBuilderErrors {
-					errs = multierror.Append(errs, fmt.Errorf(err.String()))
-				}
-				return imageBuilder, "ImageBuilderError", errs
-			}
+			return nil, "", nil
 		}
 
 		return imageBuilder, aws.StringValue(imageBuilder.State), nil
