@@ -338,7 +338,7 @@ resource "aws_appstream_image_builder" "test" {
 
   tags = {
     %[3]q = %[4]q
-	%[5]q = %[6]q
+    %[5]q = %[6]q
   }
 }
 `, instanceType, name, key1, value1, key2, value2)
