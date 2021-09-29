@@ -10,8 +10,8 @@ description: |-
 
 ## Example Pause Cluster
 
-```hcl
-resource "aws_iam_role" "redshift_scheduled_action" {
+```terraform
+resource "aws_iam_role" "example" {
   name               = "redshift_scheduled_action"
   assume_role_policy = <<EOF
 {
@@ -32,7 +32,7 @@ resource "aws_iam_role" "redshift_scheduled_action" {
 EOF
 }
 
-resource "aws_iam_policy" "redshift_scheduled_action" {
+resource "aws_iam_policy" "example" {
   name   = "redshift_scheduled_action"
   policy = <<EOF
 {
@@ -53,38 +53,39 @@ resource "aws_iam_policy" "redshift_scheduled_action" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "redshift_scheduled_action" {
-  policy_arn = aws_iam_policy.redshift_scheduled_action.arn
-  role       = aws_iam_role.redshift_scheduled_action.name
+resource "aws_iam_role_policy_attachment" "example" {
+  policy_arn = aws_iam_policy.example.arn
+  role       = aws_iam_role.example.name
 }
 
-resource "aws_redshift_scheduled_action" "default" {
+resource "aws_redshift_scheduled_action" "example" {
   name     = "tf-redshift-scheduled-action"
   schedule = "cron(00 23 * * ? *)"
-  iam_role = aws_iam_role.redshift_scheduled_action.arn
+  iam_role = aws_iam_role.example.arn
 
   target_action {
-    action             = "PauseCluster"
-    cluster_identifier = "tf-redshift001"
+    pause_cluster {
+      cluster_identifier = "tf-redshift001"
+    }
   }
 }
 ```
 
 ## Example Resize Cluster
 
-```hcl
-resource "aws_redshift_scheduled_action" "default" {
+```terraform
+resource "aws_redshift_scheduled_action" "example" {
   name     = "tf-redshift-scheduled-action"
   schedule = "cron(00 23 * * ? *)"
-  iam_role = aws_iam_role.redshift_scheduled_action.arn
+  iam_role = aws_iam_role.example.arn
 
   target_action {
-    action             = "ResizeCluster"
-    cluster_identifier = "tf-redshift001"
-    classic            = false
-    cluster_type       = "multi-node"
-    node_type          = "dc1.large"
-    number_of_nodes    = 2
+    resize_cluster {
+      cluster_identifier = "tf-redshift001"
+      cluster_type       = "multi-node"
+      node_type          = "dc1.large"
+      number_of_nodes    = 2
+    }
   }
 }
 ```
@@ -93,30 +94,43 @@ resource "aws_redshift_scheduled_action" "default" {
 
 The following arguments are supported:
 
-* `name` - (Required, Forces new resource) The scheduled action name.
+* `name` - (Required) The scheduled action name.
 * `description` - (Optional) The description of the scheduled action.
-* `active` - (Optional) Whether to enable the scheduled action. Default is `true` .
+* `enable` - (Optional) Whether to enable the scheduled action. Default is `true` .
 * `start_time` - (Optional) The start time in UTC when the schedule is active, in UTC RFC3339 format(for example, YYYY-MM-DDTHH:MM:SSZ).
 * `end_time` - (Optional) The end time in UTC when the schedule is active, in UTC RFC3339 format(for example, YYYY-MM-DDTHH:MM:SSZ).
 * `schedule` - (Required) The schedule of action. The schedule is defined format of "at expression" or "cron expression", for example `at(2016-03-04T17:27:00)` or `cron(0 10 ? * MON *)`. See [Scheduled Action](https://docs.aws.amazon.com/redshift/latest/APIReference/API_ScheduledAction.html) for more information.
 * `iam_role` - (Required) The IAM role to assume to run the scheduled action.
-* `target_action` - (Required) Target action, documented below.
+* `target_action` - (Required) Target action. Documented below.
 
 ### Nested Blocks
 
 #### `target_action`
 
-* `action` - (Required) The action type of the scheduled action. Possible values are `PauseCluster`,  `ResumeCluster` and `ResizeCluster`.
+* `pause_cluster` - (Optional) An action that runs a `PauseCluster` API operation. Documented below.
+* `resize_cluster` - (Optional) An action that runs a `ResizeCluster` API operation. Documented below.
+* `resume_cluster` - (Optional) An action that runs a `ResumeCluster` API operation. Documented below.
+
+### `pause_cluster`
+
+* `cluster_identifier` - (Required) The target identifier for the redshift cluster of the scheduled action.
+
+### `resize_cluster`
+
 * `cluster_identifier` - (Required) The target identifier for the redshift cluster of the scheduled action.
 * `classic` - (Optional) Indicate resize operation is using the classic resize process. Default is `false`.
 * `cluster_type` - (Optional)　The new cluster type for the specified cluster.
 * `node_type` - (Optional) The new node type for the nodes you are addingThe new node type for the nodes you are adding.
 * `number_of_nodes` - (Optional) The new number of nodes for the cluster.
 
+### `resume_cluster`
+
+* `cluster_identifier` - (Required) The target identifier for the redshift cluster of the scheduled action.
+
 ## Import
 
 Redshift Scheduled Action can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_redshift_scheduled_action.default tf-redshift-scheduled-action
+$ terraform import aws_redshift_scheduled_action.example tf-redshift-scheduled-action
 ```
