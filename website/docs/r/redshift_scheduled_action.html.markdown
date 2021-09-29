@@ -8,7 +8,9 @@ description: |-
 
 # Resource: aws_redshift_scheduled_action
 
-## Example Pause Cluster
+## Example Usage
+
+### Pause Cluster Action
 
 ```terraform
 resource "aws_iam_role" "example" {
@@ -71,7 +73,7 @@ resource "aws_redshift_scheduled_action" "example" {
 }
 ```
 
-## Example Resize Cluster
+### Resize Cluster Action
 
 ```terraform
 resource "aws_redshift_scheduled_action" "example" {
