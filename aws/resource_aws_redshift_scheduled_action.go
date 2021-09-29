@@ -2,13 +2,17 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
-	"time"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/redshift/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsRedshiftScheduledAction() *schema.Resource {
@@ -17,42 +21,43 @@ func resourceAwsRedshiftScheduledAction() *schema.Resource {
 		Read:   resourceAwsRedshiftScheduledActionRead,
 		Update: resourceAwsRedshiftScheduledActionUpdate,
 		Delete: resourceAwsRedshiftScheduledActionDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"active": {
+			"enable": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
-			},
-			"start_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
 			},
 			"end_time": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
+			"iam_role": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"schedule": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"iam_role": {
-				Type:     schema.TypeString,
-				Required: true,
+			"start_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsRFC3339Time,
 			},
 			"target_action": {
 				Type:     schema.TypeList,
@@ -60,34 +65,76 @@ func resourceAwsRedshiftScheduledAction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								redshift.ScheduledActionTypeValuesResumeCluster,
-								redshift.ScheduledActionTypeValuesPauseCluster,
-								redshift.ScheduledActionTypeValuesResizeCluster,
-							}, false),
-						},
-						"cluster_identifier": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"classic": {
-							Type:     schema.TypeBool,
+						"pause_cluster": {
+							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cluster_identifier": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+							ExactlyOneOf: []string{
+								"target_action.0.pause_cluster",
+								"target_action.0.resize_cluster",
+								"target_action.0.resume_cluster",
+							},
 						},
-						"cluster_type": {
-							Type:     schema.TypeString,
+						"resize_cluster": {
+							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"classic": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"cluster_identifier": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"cluster_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"node_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"number_of_nodes": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+								},
+							},
+							ExactlyOneOf: []string{
+								"target_action.0.pause_cluster",
+								"target_action.0.resize_cluster",
+								"target_action.0.resume_cluster",
+							},
 						},
-						"node_type": {
-							Type:     schema.TypeString,
+						"resume_cluster": {
+							Type:     schema.TypeList,
 							Optional: true,
-						},
-						"number_of_nodes": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cluster_identifier": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+							ExactlyOneOf: []string{
+								"target_action.0.pause_cluster",
+								"target_action.0.resize_cluster",
+								"target_action.0.resume_cluster",
+							},
 						},
 					},
 				},
@@ -149,29 +196,23 @@ func resourceAwsRedshiftScheduledActionCreate(d *schema.ResourceData, meta inter
 
 func resourceAwsRedshiftScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
-	name := d.Id()
 
-	descOpts := &redshift.DescribeScheduledActionsInput{
-		ScheduledActionName: aws.String(name),
-	}
+	scheduledAction, err := finder.ScheduledActionByName(conn, d.Id())
 
-	resp, err := conn.DescribeScheduledActions(descOpts)
-	if err != nil {
-		return fmt.Errorf("Error describing Redshift Scheduled Action %s: %s", d.Id(), err)
-	}
-
-	if resp.ScheduledActions == nil || len(resp.ScheduledActions) != 1 {
-		log.Printf("[WARN] Unable to find Redshift Scheduled Action (%s)", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Redshift Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	scheduledAction := resp.ScheduledActions[0]
+	if err != nil {
+		return fmt.Errorf("error reading Redshift Scheduled Action (%s): %w", d.Id(), err)
+	}
 
-	d.Set("name", scheduledAction.ScheduledActionName)
 	d.Set("description", scheduledAction.ScheduledActionDescription)
-	d.Set("schedule", scheduledAction.Schedule)
 	d.Set("iam_role", scheduledAction.IamRole)
+	d.Set("name", scheduledAction.ScheduledActionName)
+	d.Set("schedule", scheduledAction.Schedule)
 
 	if aws.StringValue(scheduledAction.State) == redshift.ScheduledActionStateActive {
 		d.Set("active", true)
@@ -242,14 +283,17 @@ func resourceAwsRedshiftScheduledActionUpdate(d *schema.ResourceData, meta inter
 func resourceAwsRedshiftScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
 
-	deleteOpts := &redshift.DeleteScheduledActionInput{
+	log.Printf("[DEBUG] Deleting Redshift Scheduled Action: %s", d.Id())
+	_, err := conn.DeleteScheduledAction(&redshift.DeleteScheduledActionInput{
 		ScheduledActionName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeScheduledActionNotFoundFault) {
+		return nil
 	}
 
-	log.Printf("[DEBUG] Deleting Redshift Scheduled Action: %s", deleteOpts)
-	_, err := conn.DeleteScheduledAction(deleteOpts)
 	if err != nil {
-		return fmt.Errorf("error deleting Redshift Scheduled Action (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Redshift Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	return nil
