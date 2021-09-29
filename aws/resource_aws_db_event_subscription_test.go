@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -253,17 +255,13 @@ func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription
 
 		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
-		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
+		output, err := finder.EventSubscriptionByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if eventSubscription == nil {
-			return fmt.Errorf("RDS Event Subscription not found")
-		}
-
-		*v = *eventSubscription
+		*v = *output
 
 		return nil
 	}
@@ -277,9 +275,9 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
+		_, err := finder.EventSubscriptionByID(conn, rs.Primary.ID)
 
-		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -287,9 +285,7 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if eventSubscription != nil {
-			return fmt.Errorf("RDS Event Subscription (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("RDS Event Subscription %s still exists", rs.Primary.ID)
 	}
 
 	return nil

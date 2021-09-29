@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
@@ -69,8 +71,9 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 				ValidateFunc:  validateDbEventSubscriptionName,
 			},
 			"sns_topic": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 			"source_ids": {
 				Type:     schema.TypeSet,
@@ -78,8 +81,9 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"source_type": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(rds.SourceType_Values(), false),
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -153,7 +157,7 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	sub, err := finder.EventSubscriptionByName(conn, d.Id())
+	sub, err := finder.EventSubscriptionByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Event Subscription (%s) not found, removing from state", d.Id())
@@ -340,28 +344,24 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 
 func resourceAwsDbEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
-	deleteOpts := rds.DeleteEventSubscriptionInput{
+
+	log.Printf("[DEBUG] Deleting RDS Event Subscription: (%s)", d.Id())
+	_, err := conn.DeleteEventSubscription(&rds.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteEventSubscription(&deleteOpts)
-
-	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeSubscriptionNotFoundFault) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting RDS Event Subscription (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting RDS Event Subscription (%s): %w", d.Id(), err)
 	}
 
 	_, err = waiter.EventSubscriptionDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
-	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error waiting for RDS Event Subscription (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for RDS Event Subscription (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

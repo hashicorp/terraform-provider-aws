@@ -15,11 +15,11 @@ const (
 	DBClusterRoleAssociationDeletedTimeout = 5 * time.Minute
 )
 
-func EventSubscriptionDeleted(conn *rds.RDS, name string, timeout time.Duration) (*rds.EventSubscription, error) {
+func EventSubscriptionDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{tfrds.EventSubscriptionStatusDeleting},
 		Target:     []string{},
-		Refresh:    EventSubscriptionStatus(conn, name),
+		Refresh:    EventSubscriptionStatus(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

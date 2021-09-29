@@ -16,10 +16,9 @@ const (
 	ProxyEndpointStatusUnknown = "Unknown"
 )
 
-// EventSubscriptionStatus fetches the EventSubscription and its Status
-func EventSubscriptionStatus(conn *rds.RDS, name string) resource.StateRefreshFunc {
+func EventSubscriptionStatus(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.EventSubscriptionByName(conn, name)
+		output, err := finder.EventSubscriptionByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -119,9 +119,9 @@ func DBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
 	return dbCluster, nil
 }
 
-func EventSubscriptionByName(conn *rds.RDS, name string) (*rds.EventSubscription, error) {
+func EventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription, error) {
 	input := &rds.DescribeEventSubscriptionsInput{
-		SubscriptionName: aws.String(name),
+		SubscriptionName: aws.String(id),
 	}
 
 	output, err := conn.DescribeEventSubscriptions(input)
