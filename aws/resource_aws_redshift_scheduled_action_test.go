@@ -72,6 +72,7 @@ func TestAccAWSRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
@@ -127,6 +128,7 @@ func TestAccAWSRedshiftScheduledAction_PauseClusterWithOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
@@ -163,6 +165,7 @@ func TestAccAWSRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
@@ -216,6 +219,7 @@ func TestAccAWSRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
@@ -269,6 +273,7 @@ func TestAccAWSRedshiftScheduledAction_ResizeClusterWithOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
@@ -309,6 +314,7 @@ func TestAccAWSRedshiftScheduledAction_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
