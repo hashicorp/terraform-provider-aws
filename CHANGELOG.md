@@ -18,6 +18,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_dx_connection: Mark `provider_name` as Computed to avoid resource recreation with pre-v3.56.0 configurations ([#21085](https://github.com/hashicorp/terraform-provider-aws/issues/21085))
+* resource/aws_dx_lag: Mark `provider_name` as Computed to avoid resource recreation with pre-v3.56.0 configurations ([#21085](https://github.com/hashicorp/terraform-provider-aws/issues/21085))
 * resource/aws_route_table_association: Wait for up to 40 not found checks when creating a new route table association ([#21062](https://github.com/hashicorp/terraform-provider-aws/issues/21062))
 
 ## 3.60.0 (September 23, 2021)
