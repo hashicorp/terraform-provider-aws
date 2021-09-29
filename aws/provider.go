@@ -106,6 +106,12 @@ func Provider() *schema.Provider {
 				},
 			},
 
+			"http_proxy": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["http_proxy"],
+			},
+
 			"endpoints": endpointsSchema(),
 
 			"ignore_tags": {
@@ -1326,9 +1332,12 @@ func init() {
 			"being executed. If the API request still fails, an error is\n" +
 			"thrown.",
 
+		"http_proxy": "The address of an HTTP proxy to use when accessing the AWS API. " +
+			"Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
+
 		"endpoint": "Use this to override the default service endpoint URL",
 
-		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted," +
+		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted, " +
 			"default value is `false`",
 
 		"skip_credentials_validation": "Skip the credentials validation via STS API. " +
@@ -1530,6 +1539,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		MaxRetries:              d.Get("max_retries").(int),
 		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                d.Get("insecure").(bool),
+		HTTPProxy:               d.Get("http_proxy").(string),
 		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:     d.Get("skip_get_ec2_platforms").(bool),
 		SkipRegionValidation:    d.Get("skip_region_validation").(bool),
