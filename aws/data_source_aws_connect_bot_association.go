@@ -10,7 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
 )
 
-func dataSourceAwsConnectLexBotAssociation() *schema.Resource {
+func dataSourceAwsConnectBotAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceAwsConnectLexBotAssociationRead,
 		Schema: map[string]*schema.Schema{
@@ -37,13 +37,13 @@ func dataSourceAwsConnectLexBotAssociationRead(ctx context.Context, d *schema.Re
 	instanceID := d.Get("instance_id")
 	name := d.Get("bot_name")
 
-	lexBot, err := finder.LexBotAssociationByName(ctx, conn, instanceID.(string), name.(string))
+	lexBot, err := finder.BotAssociationV1ByNameWithContext(ctx, conn, instanceID.(string), name.(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding LexBot Association by name (%s): %w", name, err))
+		return diag.FromErr(fmt.Errorf("error finding Connect Bot V1 Association by name (%s): %w", name, err))
 	}
 
 	if lexBot == nil {
-		return diag.FromErr(fmt.Errorf("error finding LexBot Association by name (%s): not found", name))
+		return diag.FromErr(fmt.Errorf("error finding Connect Bot V1 Association by name (%s): not found", name))
 	}
 
 	d.Set("bot_name", lexBot.Name)

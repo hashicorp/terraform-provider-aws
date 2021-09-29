@@ -9,7 +9,11 @@ const (
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 1000
 	ListContactFlowsMaxResults = 60
 	// MaxResults Valid Range: Minimum value of 1. Maximum value of 25
-	ListLexBotsMaxResults = 25
+	ListBotsMaxResults = 25
+	// LexBot V1 Version
+	LexBotV1Version = "V1"
+	// LexBot V2 Version
+	LexBotV2Version = "V2"
 )
 
 func InstanceAttributeMapping() map[string]string {

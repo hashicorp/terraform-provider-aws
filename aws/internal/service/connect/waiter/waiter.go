@@ -17,8 +17,8 @@ const (
 	ConnectInstanceCreatedTimeout = 5 * time.Minute
 	ConnectInstanceDeletedTimeout = 5 * time.Minute
 
-	ConnectLexBotAssociationCreateTimeout = 5 * time.Minute
-	ConnectLexBotAssociationDeleteTimeout = 5 * time.Minute
+	ConnectBotAssociationCreateTimeout = 5 * time.Minute
+	ConnectBotAssociationDeleteTimeout = 5 * time.Minute
 )
 
 func InstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
