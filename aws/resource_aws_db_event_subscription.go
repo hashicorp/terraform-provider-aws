@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDbEventSubscription() *schema.Resource {
@@ -20,21 +22,35 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 		Read:   resourceAwsDbEventSubscriptionRead,
 		Update: resourceAwsDbEventSubscriptionUpdate,
 		Delete: resourceAwsDbEventSubscriptionDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("name", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
+			State: schema.ImportStatePassthrough,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"customer_aws_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"event_categories": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -56,32 +72,14 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"event_categories": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
 			"source_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				// ValidateFunc: validateDbEventSubscriptionSourceIds,
-				// requires source_type to be set, does not seem to be a way to validate this
 			},
 			"source_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"customer_aws_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -155,45 +153,33 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	sub, err := resourceAwsDbEventSubscriptionRetrieve(d.Id(), conn)
+	sub, err := finder.EventSubscriptionByName(conn, d.Id())
 
-	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
-		log.Printf("[WARN] RDS Event Subscription (%s) not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving RDS Event Subscription (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading RDS Event Subscription (%s): %w", d.Id(), err)
 	}
 
-	if sub == nil {
-		log.Printf("[WARN] RDS Event Subscription (%s) not found - removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("arn", sub.EventSubscriptionArn)
+	arn := aws.StringValue(sub.EventSubscriptionArn)
+	d.Set("arn", arn)
 	d.Set("customer_aws_id", sub.CustomerAwsId)
+	d.Set("enabled", sub.Enabled)
+	d.Set("event_categories", aws.StringValueSlice(sub.EventCategoriesList))
 	d.Set("name", sub.CustSubscriptionId)
 	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(sub.CustSubscriptionId)))
 	d.Set("sns_topic", sub.SnsTopicArn)
+	d.Set("source_ids", aws.StringValueSlice(sub.SourceIdsList))
 	d.Set("source_type", sub.SourceType)
 
-	if err := d.Set("enabled", sub.Enabled); err != nil {
-		return err
-	}
-	if err := d.Set("source_ids", flattenStringList(sub.SourceIdsList)); err != nil {
-		return err
-	}
-	if err := d.Set("event_categories", flattenStringList(sub.EventCategoriesList)); err != nil {
-		return err
-	}
-
-	tags, err := keyvaluetags.RdsListTags(conn, d.Get("arn").(string))
+	tags, err := keyvaluetags.RdsListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS Event Subscription (%s): %w", d.Get("arn").(string), err)
+		return fmt.Errorf("error listing tags for RDS Event Subscription (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
