@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 	"time"
 
@@ -12,17 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/redshift/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_redshift_scheduled_action", &resource.Sweeper{
 		Name: "aws_redshift_scheduled_action",
-		Dependencies: []string{
-			"aws_iam_role",
-			"aws_iam_policy",
-			"aws_iam_role_policy_attachment",
-		},
-		F: testSweepRedshiftScheduledActions,
+		F:    testSweepRedshiftScheduledActions,
 	})
 }
 
@@ -32,60 +28,47 @@ func testSweepRedshiftScheduledActions(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).redshiftconn
+	input := &redshift.DescribeScheduledActionsInput{}
+	sweepResources := make([]*testSweepResource, 0)
 
-	req := &redshift.DescribeScheduledActionsInput{}
-
-	resp, err := conn.DescribeScheduledActions(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Redshift Regional Scheduled Actions sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeScheduledActionsPages(input, func(page *redshift.DescribeScheduledActionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error describing Redshift Regional Scheduled Actions: %s", err)
-	}
 
-	if len(resp.ScheduledActions) == 0 {
-		log.Print("[DEBUG] No AWS Redshift Regional Scheduled Actions to sweep")
+		for _, scheduledAction := range page.ScheduledActions {
+			r := resourceAwsRedshiftScheduledAction()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(scheduledAction.ScheduledActionName))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Redshift Scheduled Action sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, ScheduledActions := range resp.ScheduledActions {
-		identifier := aws.StringValue(ScheduledActions.ScheduledActionName)
+	if err != nil {
+		return fmt.Errorf("error listing Redshift Scheduled Actions (%s): %w", region, err)
+	}
 
-		hasPrefix := false
-		prefixes := []string{"tf-test-"}
+	err = testSweepResourceOrchestrator(sweepResources)
 
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(identifier, prefix) {
-				hasPrefix = true
-				break
-			}
-		}
-
-		if !hasPrefix {
-			log.Printf("[INFO] Skipping Delete Redshift Scheduled Action: %s", identifier)
-			continue
-		}
-
-		_, err := conn.DeleteScheduledAction(&redshift.DeleteScheduledActionInput{
-			ScheduledActionName: ScheduledActions.ScheduledActionName,
-		})
-		if isAWSErr(err, redshift.ErrCodeScheduledActionNotFoundFault, "") {
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("Error deleting Redshift Scheduled Action %s: %s", identifier, err)
-		}
+	if err != nil {
+		return fmt.Errorf("error sweeping Redshift Scheduled Actions (%s): %w", region, err)
 	}
 
 	return nil
 }
 
-func TestAccAWSRedshiftScheduledActionPauseCluster_basic(t *testing.T) {
+func TestAccAWSRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 	var v redshift.ScheduledAction
-
-	rName := acctest.RandString(8)
-	resourceName := "aws_redshift_scheduled_action.default"
+	resourceName := "aws_redshift_scheduled_action.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -96,41 +79,49 @@ func TestAccAWSRedshiftScheduledActionPauseCluster_basic(t *testing.T) {
 				Config: testAccAWSRedshiftScheduledActionConfigPauseCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-test-%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "name", resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(00 23 * * ? *)"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.action", "PauseCluster"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.cluster_identifier", "tf-test-identifier"),
-				),
-			},
-			{
-				Config: testAccAWSRedshiftScheduledActionConfigPauseCluster(rName, "at(2060-03-04T17:27:00)"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-test-%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "name", resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "at(2060-03-04T17:27:00)"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.action", "PauseCluster"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.cluster_identifier", "tf-test-identifier"),
+					resource.TestCheckResourceAttr(resourceName, "start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.0.cluster_identifier", "tf-test-identifier"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"active",
-				},
+			},
+			{
+				Config: testAccAWSRedshiftScheduledActionConfigPauseCluster(rName, "at(2060-03-04T17:27:00)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "schedule", "at(2060-03-04T17:27:00)"),
+					resource.TestCheckResourceAttr(resourceName, "start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.0.cluster_identifier", "tf-test-identifier"),
+				),
 			},
 		},
 	})
 }
 
-func TestAccAWSRedshiftScheduledActionPauseCluster_WithOptions(t *testing.T) {
+func TestAccAWSRedshiftScheduledAction_PauseClusterWithOptions(t *testing.T) {
 	var v redshift.ScheduledAction
-
-	rName := acctest.RandString(8)
-	resourceName := "aws_redshift_scheduled_action.default"
+	resourceName := "aws_redshift_scheduled_action.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	startTime := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
 	endTime := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
 
@@ -140,33 +131,35 @@ func TestAccAWSRedshiftScheduledActionPauseCluster_WithOptions(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftScheduledActionConfigPauseClusterWithFullOption(rName, "cron(00 * * * ? *)", "This is test action", "true", startTime, endTime),
+				Config: testAccAWSRedshiftScheduledActionConfigPauseClusterWithFullOptions(rName, "cron(00 * * * ? *)", "This is test action", true, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-test-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is test action"),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
+					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(00 * * * ? *)"),
+					resource.TestCheckResourceAttr(resourceName, "start_time", startTime),
+					resource.TestCheckResourceAttr(resourceName, "target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.0.cluster_identifier", "tf-test-identifier"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"active",
-				},
 			},
 		},
 	})
 }
 
-func TestAccAWSRedshiftScheduledActionResumeCluster_basic(t *testing.T) {
+func TestAccAWSRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 	var v redshift.ScheduledAction
-
-	rName := acctest.RandString(8)
-	resourceName := "aws_redshift_scheduled_action.default"
+	resourceName := "aws_redshift_scheduled_action.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -177,41 +170,49 @@ func TestAccAWSRedshiftScheduledActionResumeCluster_basic(t *testing.T) {
 				Config: testAccAWSRedshiftScheduledActionConfigResumeCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-test-%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "name", resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(00 23 * * ? *)"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.action", "ResumeCluster"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.cluster_identifier", "tf-test-identifier"),
-				),
-			},
-			{
-				Config: testAccAWSRedshiftScheduledActionConfigResumeCluster(rName, "at(2060-03-04T17:27:00)"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-test-%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "name", resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "at(2060-03-04T17:27:00)"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.action", "ResumeCluster"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.cluster_identifier", "tf-test-identifier"),
+					resource.TestCheckResourceAttr(resourceName, "start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.0.cluster_identifier", "tf-test-identifier"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"active",
-				},
+			},
+			{
+				Config: testAccAWSRedshiftScheduledActionConfigResumeCluster(rName, "at(2060-03-04T17:27:00)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "schedule", "at(2060-03-04T17:27:00)"),
+					resource.TestCheckResourceAttr(resourceName, "start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.0.cluster_identifier", "tf-test-identifier"),
+				),
 			},
 		},
 	})
 }
 
-func TestAccAWSRedshiftScheduledActionResizeCluster_basic(t *testing.T) {
+func TestAccAWSRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 	var v redshift.ScheduledAction
-
-	rName := acctest.RandString(8)
-	resourceName := "aws_redshift_scheduled_action.default"
+	resourceName := "aws_redshift_scheduled_action.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -222,41 +223,49 @@ func TestAccAWSRedshiftScheduledActionResizeCluster_basic(t *testing.T) {
 				Config: testAccAWSRedshiftScheduledActionConfigResizeClusterBasic(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-test-%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "name", resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(00 23 * * ? *)"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.action", "ResizeCluster"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.cluster_identifier", "tf-test-identifier"),
-				),
-			},
-			{
-				Config: testAccAWSRedshiftScheduledActionConfigResizeClusterBasic(rName, "at(2060-03-04T17:27:00)"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-test-%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "name", resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "at(2060-03-04T17:27:00)"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.action", "ResizeCluster"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.cluster_identifier", "tf-test-identifier"),
+					resource.TestCheckResourceAttr(resourceName, "start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_identifier", "tf-test-identifier"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"active",
-				},
+			},
+			{
+				Config: testAccAWSRedshiftScheduledActionConfigResizeClusterBasic(rName, "at(2060-03-04T17:27:00)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "schedule", "at(2060-03-04T17:27:00)"),
+					resource.TestCheckResourceAttr(resourceName, "start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_identifier", "tf-test-identifier"),
+				),
 			},
 		},
 	})
 }
 
-func TestAccAWSRedshiftScheduledActionResizeCluster_WithOptions(t *testing.T) {
+func TestAccAWSRedshiftScheduledAction_ResizeClusterWithOptions(t *testing.T) {
 	var v redshift.ScheduledAction
-
-	rName := acctest.RandString(8)
-	resourceName := "aws_redshift_scheduled_action.default"
+	resourceName := "aws_redshift_scheduled_action.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -264,55 +273,76 @@ func TestAccAWSRedshiftScheduledActionResizeCluster_WithOptions(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftScheduledActionConfigResizeClusterWithFullOption(rName, "cron(00 23 * * ? *)", "true", "multi-node", "dc1.large", "2"),
+				Config: testAccAWSRedshiftScheduledActionConfigResizeClusterWithFullOptions(rName, "cron(00 23 * * ? *)", true, "multi-node", "dc1.large", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-test-%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "name", resourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.classic", "true"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.cluster_type", "multi-node"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.node_type", "dc1.large"),
-					resource.TestCheckResourceAttr(resourceName, "target_action.0.number_of_nodes", "2"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(00 23 * * ? *)"),
+					resource.TestCheckResourceAttr(resourceName, "start_time", ""),
+					resource.TestCheckResourceAttr(resourceName, "target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.pause_cluster.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resume_cluster.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.classic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_identifier", "tf-test-identifier"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.cluster_type", "multi-node"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.node_type", "dc1.large"),
+					resource.TestCheckResourceAttr(resourceName, "target_action.0.resize_cluster.0.number_of_nodes", "2"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"active",
-				},
+			},
+		},
+	})
+}
+
+func TestAccAWSRedshiftScheduledAction_disappears(t *testing.T) {
+	var v redshift.ScheduledAction
+	resourceName := "aws_redshift_scheduled_action.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRedshiftScheduledActionConfigPauseCluster(rName, "cron(00 23 * * ? *)"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRedshiftScheduledAction(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
 func testAccCheckAWSRedshiftScheduledActionDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_scheduled_action" {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
-		resp, err := conn.DescribeScheduledActions(&redshift.DescribeScheduledActionsInput{
-			ScheduledActionName: aws.String(rs.Primary.ID),
-		})
+		_, err := finder.ScheduledActionByName(conn, rs.Primary.ID)
 
-		if isAWSErr(err, "ScheduledActionNotFound", "was not found.") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		if err == nil {
-			if len(resp.ScheduledActions) != 0 {
-				for _, s := range resp.ScheduledActions {
-					if *s.ScheduledActionName == rs.Primary.ID {
-						return fmt.Errorf("Redshift Cluster Scheduled Action %s still exists", rs.Primary.ID)
-					}
-				}
-			}
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("Redshift Scheduled Action %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -326,33 +356,28 @@ func testAccCheckAWSRedshiftScheduledActionExists(n string, v *redshift.Schedule
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Cluster Scheduled Action ID is set")
+			return fmt.Errorf("No Redshift Scheduled Action ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
-		resp, err := conn.DescribeScheduledActions(&redshift.DescribeScheduledActionsInput{
-			ScheduledActionName: aws.String(rs.Primary.ID),
-		})
+
+		output, err := finder.ScheduledActionByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		for _, s := range resp.ScheduledActions {
-			if *s.ScheduledActionName == rs.Primary.ID {
-				*v = *s
-				return nil
-			}
-		}
+		*v = *output
 
-		return fmt.Errorf("Redshift Scheduled Action (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
-func testAccAWSRedshiftScheduledActionConfigDependentResource(rName string) string {
+func testAccAWSRedshiftScheduledActionConfigBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "default" {
-  name = "tf-test-%s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -373,8 +398,9 @@ resource "aws_iam_role" "default" {
 EOF
 }
 
-resource "aws_iam_policy" "default" {
-  name = "tf-test-%s"
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -394,102 +420,97 @@ resource "aws_iam_policy" "default" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "default" {
-  policy_arn = aws_iam_policy.default.arn
-  role = aws_iam_role.default.name
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = aws_iam_policy.test.arn
+  role       = aws_iam_role.test.name
 }
-	`, rName, rName)
+`, rName, rName)
 }
 
 func testAccAWSRedshiftScheduledActionConfigPauseCluster(rName, schedule string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAWSRedshiftScheduledActionConfigBase(rName), fmt.Sprintf(`
+resource "aws_redshift_scheduled_action" "test" {
+  name     = %[1]q
+  schedule = %[2]q
+  iam_role = aws_iam_role.test.arn
 
-%s
-
-resource "aws_redshift_scheduled_action" "default" {
-	name = "tf-test-%s"
-    schedule = "%s"
-    iam_role = aws_iam_role.default.arn
-    target_action {
-      action = "PauseCluster"
+  target_action {
+    pause_cluster {
       cluster_identifier = "tf-test-identifier"
     }
+  }
 }
-	`, testAccAWSRedshiftScheduledActionConfigDependentResource(rName), rName, schedule)
+`, rName, schedule))
 }
 
-func testAccAWSRedshiftScheduledActionConfigPauseClusterWithFullOption(rName, schedule, description, active, startTime, endTime string) string {
-	return fmt.Sprintf(`
+func testAccAWSRedshiftScheduledActionConfigPauseClusterWithFullOptions(rName, schedule, description string, enable bool, startTime, endTime string) string {
+	return composeConfig(testAccAWSRedshiftScheduledActionConfigBase(rName), fmt.Sprintf(`
+resource "aws_redshift_scheduled_action" "test" {
+  name        = %[1]q
+  description = %[2]q
+  enable      = %[3]t
+  start_time  = %[4]q
+  end_time    = %[5]q
+  schedule    = %[6]q
+  iam_role    = aws_iam_role.test.arn
 
-%s
-
-resource "aws_redshift_scheduled_action" "default" {
-	name = "tf-test-%s"
-    description = "%s"
-    active = %s
-    start_time = "%s"
-    end_time = "%s"
-    schedule = "%s"
-    iam_role = aws_iam_role.default.arn
-    target_action {
-      action = "PauseCluster"
+  target_action {
+    pause_cluster {
       cluster_identifier = "tf-test-identifier"
     }
+  }
 }
-	`, testAccAWSRedshiftScheduledActionConfigDependentResource(rName), rName, description, active, startTime, endTime, schedule)
+`, rName, description, enable, startTime, endTime, schedule))
 }
 
 func testAccAWSRedshiftScheduledActionConfigResumeCluster(rName, schedule string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAWSRedshiftScheduledActionConfigBase(rName), fmt.Sprintf(`
+resource "aws_redshift_scheduled_action" "test" {
+  name     = %[1]q
+  schedule = %[2]q
+  iam_role = aws_iam_role.test.arn
 
-%s
-
-resource "aws_redshift_scheduled_action" "default" {
-	name = "tf-test-%s"
-    schedule = "%s"
-    iam_role = aws_iam_role.default.arn
-    target_action {
-      action = "ResumeCluster"
+  target_action {
+    resume_cluster {
       cluster_identifier = "tf-test-identifier"
     }
+  }
 }
-	`, testAccAWSRedshiftScheduledActionConfigDependentResource(rName), rName, schedule)
+`, rName, schedule))
 }
 
 func testAccAWSRedshiftScheduledActionConfigResizeClusterBasic(rName, schedule string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAWSRedshiftScheduledActionConfigBase(rName), fmt.Sprintf(`
+resource "aws_redshift_scheduled_action" "test" {
+  name     = %[1]q
+  schedule = %[2]q
+  iam_role = aws_iam_role.test.arn
 
-%s
-
-resource "aws_redshift_scheduled_action" "default" {
-	name = "tf-test-%s"
-    schedule = "%s"
-    iam_role = aws_iam_role.default.arn
-    target_action {
-      action = "ResizeCluster"
+  target_action {
+    resize_cluster {
       cluster_identifier = "tf-test-identifier"
     }
+  }
 }
-	`, testAccAWSRedshiftScheduledActionConfigDependentResource(rName), rName, schedule)
+`, rName, schedule))
 }
 
-func testAccAWSRedshiftScheduledActionConfigResizeClusterWithFullOption(rName, schedule, classic, clusterType, nodeType, numberOfNodes string) string {
-	return fmt.Sprintf(`
+func testAccAWSRedshiftScheduledActionConfigResizeClusterWithFullOptions(rName, schedule string, classic bool, clusterType, nodeType string, numberOfNodes int) string {
+	return composeConfig(testAccAWSRedshiftScheduledActionConfigBase(rName), fmt.Sprintf(`
+resource "aws_redshift_scheduled_action" "test" {
+  name     = %[1]q
+  schedule = %[2]q
+  iam_role = aws_iam_role.test.arn
 
-%s
-
-resource "aws_redshift_scheduled_action" "default" {
-	name = "tf-test-%s"
-    schedule = "%s"
-    iam_role = aws_iam_role.default.arn
-    target_action {
-      action = "ResizeCluster"
+  target_action {
+    resize_cluster {
       cluster_identifier = "tf-test-identifier"
-	  classic = %s 
-	  cluster_type = "%s"
-	  node_type = "%s"
-	  number_of_nodes = %s
+      classic            = %[3]t 
+      cluster_type       = %[4]q
+      node_type          = %[5]q
+      number_of_nodes    = %[6]d
     }
+  }
 }
-	`, testAccAWSRedshiftScheduledActionConfigDependentResource(rName), rName, schedule, classic, clusterType, nodeType, numberOfNodes)
+`, rName, schedule, classic, clusterType, nodeType, numberOfNodes))
 }
