@@ -211,6 +211,26 @@ func TestAccDataSourceAWSLambdaFunction_imageConfig(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAWSLambdaFunction_architectures(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAWSLambdaFunctionConfigArchitectures(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "architectures", resourceName, "architectures"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAWSLambdaFunctionConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "lambda" {
@@ -547,6 +567,23 @@ data "aws_lambda_function" "test" {
   function_name = aws_lambda_function.test.function_name
 }
 `, imageID, rName))
+}
+
+func testAccDataSourceAWSLambdaFunctionConfigArchitectures(rName string) string {
+	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs12.x"
+  architectures = ["arm64"]
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName)
 }
 
 func testAccDataSourceLambdaImagePreCheck(t *testing.T) {

@@ -481,6 +481,22 @@ func VpnGatewayVpcAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) res
 	}
 }
 
+func HostState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.HostByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
 func ManagedPrefixListState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.ManagedPrefixListByID(conn, id)
@@ -499,7 +515,7 @@ func ManagedPrefixListState(conn *ec2.EC2, id string) resource.StateRefreshFunc 
 
 func VpcEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		vpcEndpoint, err := finder.VpcEndpointByID(conn, id)
+		output, err := finder.VpcEndpointByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -509,7 +525,7 @@ func VpcEndpointState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 			return nil, "", err
 		}
 
-		return vpcEndpoint, aws.StringValue(vpcEndpoint.State), nil
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
