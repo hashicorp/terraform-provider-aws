@@ -247,7 +247,6 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 			"column_groups": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 1,
 				MaxItems: 8,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -259,7 +258,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 									"columns": {
 										Type:     schema.TypeList,
 										Required: true,
-										Elem:     schema.TypeString,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 
 									"country_code": {
@@ -285,22 +284,19 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 			"column_level_permission_rules": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"column_names": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 
 						"principals": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
 							MaxItems: 100,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -309,7 +305,6 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 			"data_set_usage_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 1,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -329,7 +324,6 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 			"field_folders": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				MinItems: 1,
 				MaxItems: 1000,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -337,7 +331,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 5000,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 
 						"description": {
@@ -374,7 +368,6 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 									"join_instruction": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MinItems: 1,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -404,7 +397,6 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 												"left_join_key_properties": {
 													Type:     schema.TypeList,
 													Optional: true,
-													MinItems: 1,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -419,7 +411,6 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 												"right_join_key_properties": {
 													Type:     schema.TypeList,
 													Optional: true,
-													MinItems: 1,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -445,17 +436,15 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 						"data_transforms": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
 							MaxItems: 2048,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cast_column_type_operation": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MinItems: 1,
 										MaxItems: 1,
 										Elem: &schema.Resource{
-											Schema: ap[string] * schema.Schema{
+											Schema: map[string]*schema.Schema{
 												"column_name": {
 													Type:         schema.TypeString,
 													Required:     true,
@@ -470,7 +459,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 													}, true),
 												},
 
-												"fomrat": {
+												"format": {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -481,7 +470,6 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 									"create_columns_operation": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MinItems: 1,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -516,13 +504,94 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 									"filter_operation": {
 										Type:     schema.TypeList,
 										Optional: true,
-										MinItems: 1,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"condition_expression": {
 													Type:     schema.TypeString,
 													Required: true,
+												},
+											},
+										},
+									},
+
+									"project_operation": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"projected_columns": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 2000,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+
+									"rename_column_operation": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"column_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+
+												"new_column_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+
+									"tag_column_operation": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"column_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+
+												"tag_names": {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													ValidateFunc: validation.StringInSlice([]string{
+														"COLUMN_GEOGRAPHIC_ROLE", "COLUMN_DESCRIPTION",
+													}, true),
+												},
+											},
+										},
+									},
+
+									"untag_column_operation": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"column_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+
+												"tag_names": {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+													ValidateFunc: validation.StringInSlice([]string{
+														"COLUMN_GEOGRAPHIC_ROLE", "COLUMN_DESCRIPTION",
+													}, true),
 												},
 											},
 										},
@@ -534,18 +603,20 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 				},
 			},
 
-			"permission": {
+			"permissions": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 1,
+				MaxItems: 64,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"actions": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
+							MinItems: 1,
+							MaxItems: 16,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
+
 						"principal": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -555,42 +626,98 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 				},
 			},
 
-			"ssl_properties": {
+			"row_level_permission_data_set": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"disable_ssl": {
-							Type:     schema.TypeBool,
+						"arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+
+						"permission_policy": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"GRANT_ACCESS", "DENY_ACCESS",
+							}, true),
+						},
+
+						"format_version": {
+							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"VERSION_1", "VERSION_2",
+							}, true),
+						},
+
+						"namespace": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"status": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ENABLED", "DISABLED",
+							}, true),
+						},
+					},
+				},
+			},
+
+			"row_level_permission_tag_configurations": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tag_rules": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"column_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+
+									"tag_key": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+
+									"match_all_value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"tag_multi_value_delimiter": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+
+						"status": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ENABLED", "DISABLED",
+							}, true),
 						},
 					},
 				},
 			},
 
 			"tags": tagsSchema(),
-
-			// This will be inferred from the passed `parameters` value
-			"type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"vpc_connection_properties": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"vpc_connection_arn": {
-							Type:         schema.TypeBool,
-							Optional:     true,
-							ValidateFunc: validateArn,
-						},
-					},
-				},
-			},
 		},
 	}
 }
