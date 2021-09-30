@@ -417,8 +417,8 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_db_event_subscription" "test" {
-  name        = %[1]q
-  sns_topic   = aws_sns_topic.test.arn
+  name      = %[1]q
+  sns_topic = aws_sns_topic.test.arn
 
   tags = {
     %[2]q = %[3]q
@@ -434,8 +434,8 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_db_event_subscription" "test" {
-  name        = %[1]q
-  sns_topic   = aws_sns_topic.test.arn
+  name      = %[1]q
+  sns_topic = aws_sns_topic.test.arn
 
   tags = {
     %[2]q = %[3]q
@@ -523,7 +523,7 @@ resource "aws_db_event_subscription" "test" {
 
   source_ids = [
     aws_db_parameter_group.test1.id,
-	aws_db_parameter_group.test2.id,
+    aws_db_parameter_group.test2.id,
   ]
 }
 `, rName))
