@@ -431,6 +431,7 @@ func Provider() *schema.Provider {
 			"aws_sqs_queue":                                  dataSourceAwsSqsQueue(),
 			"aws_ssm_document":                               dataSourceAwsSsmDocument(),
 			"aws_ssm_parameter":                              dataSourceAwsSsmParameter(),
+			"aws_ssm_parameters_by_path":                     dataSourceAwsSsmParametersByPath(),
 			"aws_ssm_patch_baseline":                         dataSourceAwsSsmPatchBaseline(),
 			"aws_ssoadmin_instances":                         dataSourceAwsSsoAdminInstances(),
 			"aws_ssoadmin_permission_set":                    dataSourceAwsSsoAdminPermissionSet(),
