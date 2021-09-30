@@ -31,8 +31,6 @@ Full, comprehensive documentation is available on the Terraform website:
 
 https://terraform.io/docs/providers/aws/index.html
 
-Developing the Provider
----------------------------
 
 ## Roadmap
 
