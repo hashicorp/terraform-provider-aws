@@ -2,11 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -15,10 +13,6 @@ func dataSourceAwsSsmParametersByPath() *schema.Resource {
 		Read: dataSourceAwsSsmParametersReadByPath,
 
 		Schema: map[string]*schema.Schema{
-			"path": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -28,6 +22,10 @@ func dataSourceAwsSsmParametersByPath() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"path": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"types": {
 				Type:     schema.TypeList,
@@ -53,61 +51,40 @@ func dataSourceAwsSsmParametersReadByPath(d *schema.ResourceData, meta interface
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	path := d.Get("path").(string)
+	input := &ssm.GetParametersByPathInput{
+		Path:           aws.String(path),
+		WithDecryption: aws.Bool(d.Get("with_decryption").(bool)),
+	}
 
 	arns := make([]string, 0)
 	names := make([]string, 0)
 	types := make([]string, 0)
 	values := make([]string, 0)
 
-	for {
-		paramInput := &ssm.GetParametersByPathInput{
-			Path:           aws.String(path),
-			WithDecryption: aws.Bool(d.Get("with_decryption").(bool)),
+	err := ssmconn.GetParametersByPathPages(input, func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		log.Printf("[DEBUG] Reading SSM Parameters by path: %s", paramInput)
-		resp, err := ssmconn.GetParametersByPath(paramInput)
-
-		if err != nil {
-			return fmt.Errorf("Error reading SSM parameters by path: %s", err)
+		for _, param := range page.Parameters {
+			arns = append(arns, aws.StringValue(param.ARN))
+			names = append(names, aws.StringValue(param.Name))
+			types = append(types, aws.StringValue(param.Type))
+			values = append(values, aws.StringValue(param.Value))
 		}
 
-		params := resp.Parameters
+		return !lastPage
+	})
 
-		for _, param := range params {
-			arns = append(arns, *param.ARN)
-			names = append(names, *param.Name)
-			types = append(types, *param.Type)
-			values = append(values, *param.Value)
-		}
-
-		if resp.NextToken == nil {
-			break
-		}
-		paramInput.NextToken = resp.NextToken
+	if err != nil {
+		return fmt.Errorf("error getting SSM parameters by path (%s): %w", path, err)
 	}
 
 	d.SetId(path)
-
-	err := d.Set("arns", arns)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("names", names)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("types", types)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("values", values)
-	if err != nil {
-		return err
-	}
+	d.Set("arns", arns)
+	d.Set("names", names)
+	d.Set("types", types)
+	d.Set("values", values)
 
 	return nil
 }
