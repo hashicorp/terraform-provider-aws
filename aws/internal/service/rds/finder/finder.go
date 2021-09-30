@@ -119,6 +119,27 @@ func DBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
 	return dbCluster, nil
 }
 
+func DBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
+	input := &rds.DescribeDBProxiesInput{
+		DBProxyName: aws.String(name),
+	}
+
+	output, err := conn.DescribeDBProxies(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBProxies) == 0 || output.DBProxies[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DBProxies[0], nil
+}
+
 func EventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription, error) {
 	input := &rds.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(id),
