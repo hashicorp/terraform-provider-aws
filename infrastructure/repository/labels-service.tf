@@ -32,6 +32,7 @@ variable "service_labels" {
     "budgets",
     "chime",
     "cloud9",
+    "cloudcontrolapi",
     "clouddirectory",
     "cloudformation",
     "cloudfront",

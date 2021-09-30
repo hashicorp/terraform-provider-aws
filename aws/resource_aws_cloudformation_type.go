@@ -14,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfcloudformation "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudFormationType() *schema.Resource {
@@ -131,10 +133,12 @@ func resourceAwsCloudFormationType() *schema.Resource {
 
 func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cfconn
+
 	typeName := d.Get("type_name").(string)
 	input := &cloudformation.RegisterTypeInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
-		TypeName:           aws.String(typeName),
+		ClientRequestToken:   aws.String(resource.UniqueId()),
+		SchemaHandlerPackage: aws.String(d.Get("schema_handler_package").(string)),
+		TypeName:             aws.String(typeName),
 	}
 
 	if v, ok := d.GetOk("execution_role_arn"); ok {
@@ -143,10 +147,6 @@ func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.Resource
 
 	if v, ok := d.GetOk("logging_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LoggingConfig = expandCloudformationLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("schema_handler_package"); ok {
-		input.SchemaHandlerPackage = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("type"); ok {
@@ -160,13 +160,13 @@ func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if output == nil || output.RegistrationToken == nil {
-		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type (%s): empty response", typeName))
+		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type (%s): empty result", typeName))
 	}
 
 	registrationOutput, err := waiter.TypeRegistrationProgressStatusComplete(ctx, conn, aws.StringValue(output.RegistrationToken))
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for CloudFormation Type (%s) registration: %w", typeName, err))
+		return diag.FromErr(fmt.Errorf("error waiting for CloudFormation Type (%s) register: %w", typeName, err))
 	}
 
 	// Type Version ARN is not available until after registration is complete
@@ -178,13 +178,9 @@ func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.Resource
 func resourceAwsCloudFormationTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cfconn
 
-	input := &cloudformation.DescribeTypeInput{
-		Arn: aws.String(d.Id()),
-	}
+	output, err := finder.TypeByARN(ctx, conn, d.Id())
 
-	output, err := conn.DescribeTypeWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeTypeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFormation Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -192,20 +188,6 @@ func resourceAwsCloudFormationTypeRead(ctx context.Context, d *schema.ResourceDa
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading CloudFormation Type (%s): %w", d.Id(), err))
-	}
-
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Type (%s): empty response", d.Id()))
-	}
-
-	if aws.StringValue(output.DeprecatedStatus) == cloudformation.DeprecatedStatusDeprecated {
-		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading CloudFormation Type (%s): deprecated after creation", d.Id()))
-		}
-
-		log.Printf("[WARN] CloudFormation Type (%s) %s, removing from state", d.Id(), aws.StringValue(output.DeprecatedStatus))
-		d.SetId("")
-		return nil
 	}
 
 	typeARN, versionID, err := tfcloudformation.TypeVersionARNToTypeARNAndVersionID(d.Id())
