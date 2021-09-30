@@ -29,7 +29,10 @@ Please note: We take Terraform's security and our users' trust very seriously. I
 
 Full, comprehensive documentation is available on the Terraform website:
 
-https://terraform.io/docs/providers/aws/index.html
+*Note:* You will need to remove the previously downloaded and cached version of the plugin from the `./terraform/plugins/` if you previouslt used the standard version of plugin on your project.
+
+Developing the Provider
+---------------------------
 
 ## Roadmap
 
