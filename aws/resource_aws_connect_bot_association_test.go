@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -137,7 +138,7 @@ func testAccCheckAwsConnectBotAssociationDestroy(s *terraform.State) error {
 
 		lexBot, err := finder.BotAssociationV1ByNameWithContext(context.Background(), conn, instanceID, name)
 
-		if errors.Is(err, tfresource.ErrEmptyResult) {
+		if isAWSErr(err, tfconnect.BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
 			log.Printf("[DEBUG] Connect Bot V1 Association (%s) not found, has been removed from state", name)
 			return nil
 		}

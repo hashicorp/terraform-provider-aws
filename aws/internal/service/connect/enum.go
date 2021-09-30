@@ -3,6 +3,7 @@ package connect
 import "github.com/aws/aws-sdk-go/service/connect"
 
 const InstanceStatusStatusNotFound = "ResourceNotFoundException"
+const BotAssociationStatusNotFound = "ResourceNotFoundException"
 
 const (
 	ListInstancesMaxResults = 10

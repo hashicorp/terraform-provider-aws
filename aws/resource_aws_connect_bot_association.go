@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -140,18 +141,13 @@ func resourceAwsConnectBotAssociationRead(ctx context.Context, d *schema.Resourc
 
 	lexBot, err := finder.BotAssociationV1ByNameWithContext(ctx, conn, instanceID.(string), name.(string))
 
-	if errors.Is(err, tfresource.ErrEmptyResult) {
+	if isAWSErr(err, tfconnect.BotAssociationStatusNotFound, "") || errors.Is(err, tfresource.ErrEmptyResult) {
 		log.Printf("[WARN] Connect Bot V1 Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Bot V1 Association by name (%s): %w", name, err))
-	}
-
-	if lexBot == nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Bot V1 Association by name (%s): not found", name))
 	}
 
 	d.Set("bot_name", lexBot.Name)
