@@ -15,6 +15,16 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+func init() {
+	RegisterServiceErrorCheckFunc(cloudcontrolapi.EndpointsID, testAccErrorCheckSkipCloudControlAPI)
+}
+
+func testAccErrorCheckSkipCloudControlAPI(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"UnsupportedActionException",
+	)
+}
+
 func TestAccAwsCloudControlApiResource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
