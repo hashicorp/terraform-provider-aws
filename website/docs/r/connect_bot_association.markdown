@@ -69,7 +69,7 @@ resource "aws_lex_bot" "test" {
 resource "aws_connect_bot_association" "test" {
   bot_name    = "connect_lex_bot"
   instance_id = aws_connect_instance.test.id
-  lex_region  = "${data.aws_region.current.name}"
+  lex_region  = data.aws_region.current.name
 }
 ```
 
