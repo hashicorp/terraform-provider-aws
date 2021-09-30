@@ -17,6 +17,7 @@ Allows the specified Amazon Connect instance to access the specified Amazon V1 L
 
 ## Example Usage
 ### Basic
+
 ```hcl
 resource "aws_connect_bot_association" "test" {
   bot_name    = "Test"
@@ -71,9 +72,11 @@ resource "aws_connect_bot_association" "test" {
   lex_region  = "${data.aws_region.current.name}"
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
+
 * `bot_name` - (Required) The name of the Amazon V1 Lex bot.
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 * `lex_region` - (Required) The Region in which the Amazon V1 Lex bot has been created.
