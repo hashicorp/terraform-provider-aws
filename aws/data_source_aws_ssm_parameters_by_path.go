@@ -87,7 +87,7 @@ func dataSourceAwsSsmParametersReadByPath(d *schema.ResourceData, meta interface
 		paramInput.NextToken = resp.NextToken
 	}
 
-	d.SetId(resource.UniqueId())
+	d.SetId(path)
 
 	err := d.Set("arns", arns)
 	if err != nil {
