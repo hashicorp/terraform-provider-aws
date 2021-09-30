@@ -218,6 +218,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stay the same.
 * `code_signing_config_arn` - (Optional) To enable code signing for this function, specify the ARN of a code-signing configuration. A code-signing configuration includes a set of signing profiles, which define the trusted publishers for this function.
 * `dead_letter_config` - (Optional) Configuration block. Detailed below.
 * `description` - (Optional) Description of what your Lambda Function does.

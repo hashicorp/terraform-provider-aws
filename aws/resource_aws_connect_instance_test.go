@@ -98,7 +98,7 @@ func testAccAwsConnectInstance_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
@@ -152,7 +152,7 @@ func testAccAwsConnectInstance_directory(t *testing.T) {
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
@@ -181,7 +181,7 @@ func testAccAwsConnectInstance_saml(t *testing.T) {
 	rName := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
