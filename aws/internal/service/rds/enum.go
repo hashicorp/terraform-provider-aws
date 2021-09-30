@@ -5,3 +5,10 @@ const (
 	DBClusterRoleStatusDeleted = "DELETED"
 	DBClusterRoleStatusPending = "PENDING"
 )
+
+const (
+	EventSubscriptionStatusActive    = "active"
+	EventSubscriptionStatusCreating  = "creating"
+	EventSubscriptionStatusDeleting  = "deleting"
+	EventSubscriptionStatusModifying = "modifying"
+)
