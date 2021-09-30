@@ -4,17 +4,17 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
 )
 
 func dataSourceAwsDbProxy() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsDbProxyRead,
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"auth": {
 				Type:     schema.TypeSet,
@@ -40,10 +40,6 @@ func dataSourceAwsDbProxy() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"debug_logging": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -59,6 +55,10 @@ func dataSourceAwsDbProxy() *schema.Resource {
 			"idle_client_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"require_tls": {
 				Type:     schema.TypeBool,
@@ -89,20 +89,16 @@ func dataSourceAwsDbProxy() *schema.Resource {
 func dataSourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	opts := &rds.DescribeDBProxiesInput{
-		DBProxyName: aws.String(d.Get("name").(string)),
-	}
+	name := d.Get("name").(string)
+	dbProxy, err := finder.DBProxyByName(conn, name)
 
-	resp, err := conn.DescribeDBProxies(opts)
 	if err != nil {
-		return fmt.Errorf("error reading DB proxies: %w", err)
+		return fmt.Errorf("error reading RDS DB Proxy (%s): %w", name, err)
 	}
 
-	dbProxy := resp.DBProxies[0]
-
-	d.SetId(d.Get("name").(string))
-	d.Set("auth", flattenDbProxyAuths(dbProxy.Auth))
+	d.SetId(name)
 	d.Set("arn", dbProxy.DBProxyArn)
+	d.Set("auth", flattenDbProxyAuths(dbProxy.Auth))
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("endpoint", dbProxy.Endpoint)
 	d.Set("engine_family", dbProxy.EngineFamily)

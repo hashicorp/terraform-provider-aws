@@ -20,10 +20,10 @@ func TestAccAWSDBProxyDataSource_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyDataSourceConfigBase(rName),
+				Config: testAccAWSDBProxyDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "auth", resourceName, "auth"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "auth", resourceName, "auth"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "debug_logging", resourceName, "debug_logging"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint", resourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_family", resourceName, "engine_family"),
@@ -39,12 +39,12 @@ func TestAccAWSDBProxyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSDBProxyDataSourceConfigBase(rName string) string {
+func testAccAWSDBProxyDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 # Secrets Manager setup
 
 resource "aws_secretsmanager_secret" "test" {
-  name                    = "%[1]s"
+  name                    = %[1]q
   recovery_window_in_days = 0
 }
 
@@ -56,7 +56,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 # IAM setup
 
 resource "aws_iam_role" "test" {
-  name               = "%[1]s"
+  name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.assume.json
 }
 
@@ -106,13 +106,17 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "%[1]s"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name   = "%[1]s"
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -122,7 +126,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "%[1]s-${count.index}"
+    Name = %[1]q
   }
 }
 
@@ -132,7 +136,7 @@ resource "aws_db_proxy" "test" {
     aws_iam_role_policy.test
   ]
 
-  name                   = "%[1]s"
+  name                   = %[1]q
   debug_logging          = false
   engine_family          = "MYSQL"
   idle_client_timeout    = 1800
@@ -149,15 +153,12 @@ resource "aws_db_proxy" "test" {
   }
 
   tags = {
-    Name = "%[1]s"
+    Name = %[1]q
   }
 }
 
 data "aws_db_proxy" "test" {
-  depends_on = [
-    aws_db_proxy.test
-  ]
-  name = "%[1]s"
+  name = aws_db_proxy.test.name
 }
 `, rName)
 }
