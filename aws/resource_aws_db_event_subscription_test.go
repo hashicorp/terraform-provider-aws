@@ -225,6 +225,65 @@ func TestAccAWSDBEventSubscription_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBEventSubscription_Categories(t *testing.T) {
+	var v rds.EventSubscription
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_event_subscription.test"
+	snsTopicResourceName := "aws_sns_topic.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBEventSubscriptionConfigCategories(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
+					testAccCheckResourceAttrAccountID(resourceName, "customer_aws_id"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "availability"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "backup"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "maintenance"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDBEventSubscriptionConfigCategoriesUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("es:%s", rName)),
+					testAccCheckResourceAttrAccountID(resourceName, "customer_aws_id"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_type", "db-cluster"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBEventSubscription_Update(t *testing.T) {
 	var v rds.EventSubscription
 	rInt := acctest.RandInt()
@@ -496,6 +555,48 @@ resource "aws_db_event_subscription" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSDBEventSubscriptionConfigCategories(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_db_event_subscription" "test" {
+  name        = %[1]q
+  sns_topic   = aws_sns_topic.test.arn
+  enabled     = false
+  source_type = "db-instance"
+
+  event_categories = [
+    "availability",
+    "backup",
+    "creation",
+    "deletion",
+    "maintenance",
+  ]
+}
+`, rName)
+}
+
+func testAccAWSDBEventSubscriptionConfigCategoriesUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_db_event_subscription" "test" {
+  name        = %[1]q
+  sns_topic   = aws_sns_topic.test.arn
+  enabled     = true
+  source_type = "db-cluster"
+
+  event_categories = [
+    "creation",
+  ]
+}
+`, rName)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdate(rInt int) string {
