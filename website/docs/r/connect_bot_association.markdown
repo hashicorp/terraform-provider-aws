@@ -89,3 +89,5 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 * `delete` - (Defaults to 5 mins) Used when creating the association.
 
 ## Attributes Reference
+
+No additional attributes are exported.

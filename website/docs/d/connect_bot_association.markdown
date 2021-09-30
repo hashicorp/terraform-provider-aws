@@ -28,3 +28,7 @@ The following arguments are supported:
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `lex_region` - (Required) The Region in which the Amazon V1 Lex bot has been created.
