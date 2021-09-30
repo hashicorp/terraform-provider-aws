@@ -11,8 +11,9 @@ import (
 )
 
 func TestAccAWSCloudFrontDataSourceResponseHeadersPolicy_basic(t *testing.T) {
-	rInt := sdkacctest.RandInt()
+	rName := fmt.Sprintf("test-policy%d", sdkacctest.RandInt())
 	dataSourceName := "data.aws_cloudfront_response_headers_policy.example"
+	resourceName := "aws_cloudfront_response_headers_policy.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
@@ -21,9 +22,9 @@ func TestAccAWSCloudFrontDataSourceResponseHeadersPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontResponseHeadersPolicyDataSourceNameConfig(rInt),
+				Config: testAccAWSCloudFrontResponseHeadersPolicyDataSourceNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("test-policy%[1]d", rInt)),
+					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(dataSourceName, "cors_config.0.access_control_allow_credentials", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "cors_config.0.access_control_allow_headers.0.items.0", "test"),
@@ -33,7 +34,7 @@ func TestAccAWSCloudFrontDataSourceResponseHeadersPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "aws_cloudfront_response_headers_policy.example",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{},
@@ -42,28 +43,28 @@ func TestAccAWSCloudFrontDataSourceResponseHeadersPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudFrontResponseHeadersPolicyDataSourceNameConfig(rInt int) string {
+func testAccAWSCloudFrontResponseHeadersPolicyDataSourceNameConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_cloudfront_response_headers_policy" "example" {
-	name = aws_cloudfront_response_headers_policy.example.name
+  name = aws_cloudfront_response_headers_policy.example.name
 }
 
 resource "aws_cloudfront_response_headers_policy" "example" {
-	name        = "test-policy%[1]d"
-	comment = "test comment"
-	cors_config {
-	access_control_allow_credentials = true
-	access_control_allow_headers {
-		items = ["test"]
-	}
-	access_control_allow_methods {
-		items = ["GET"]
-	}
-	access_control_allow_origins {
-		items = ["test.example.comtest"]
-	}
-	origin_override = true
-	}
+  name    = %[1]q
+  comment = "test comment"
+  cors_config {
+    access_control_allow_credentials = true
+    access_control_allow_headers {
+      items = ["test"]
+    }
+    access_control_allow_methods {
+      items = ["GET"]
+    }
+    access_control_allow_origins {
+      items = ["test.example.comtest"]
+    }
+    origin_override = true
+  }
 }
-`, rInt)
+`, rName)
 }
