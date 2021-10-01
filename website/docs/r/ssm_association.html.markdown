@@ -27,7 +27,7 @@ resource "aws_ssm_association" "example" {
 
 ### Create an association for all managed instances in an AWS account
 
-To target all instances in an AWS account, set the `key` as `"InstanceIds"` with `values` set as `["*"]`. This example also illustrates how to use an Amazon owned SSM document named `AmazonCloudWatch-ManageAgent`.
+To target all managed instances in an AWS account, set the `key` as `"InstanceIds"` with `values` set as `["*"]`. This example also illustrates how to use an Amazon owned SSM document named `AmazonCloudWatch-ManageAgent`.
 
 ```terraform
 resource "aws_ssm_association" "example" {
