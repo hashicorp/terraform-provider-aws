@@ -11,17 +11,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
+func testAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
 	var image workspaces.WorkspaceImage
 	imageID := os.Getenv("AWS_WORKSPACES_IMAGE_ID")
 	dataSourceName := "data.aws_workspaces_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccWorkspacesImagePreCheck(t)
 		},
-		Providers: testAccProviders,
+		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsWorkspacesImageConfig(imageID),
@@ -64,10 +65,10 @@ func testAccCheckWorkspacesImageExists(n string, image *workspaces.WorkspaceImag
 		if err != nil {
 			return fmt.Errorf("Failed describe workspaces images: %w", err)
 		}
-		if len(resp.Images) == 0 {
+		if resp == nil || len(resp.Images) == 0 || resp.Images[0] == nil {
 			return fmt.Errorf("Workspace image %s was not found", rs.Primary.ID)
 		}
-		if *resp.Images[0].ImageId != rs.Primary.ID {
+		if aws.StringValue(resp.Images[0].ImageId) != rs.Primary.ID {
 			return fmt.Errorf("Workspace image ID mismatch - existing: %q, state: %q", *resp.Images[0].ImageId, rs.Primary.ID)
 		}
 

@@ -32,9 +32,9 @@ func testSweepSnsPlatformApplications(region string) error {
 	conn := client.(*AWSClient).snsconn
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListPlatformApplicationsPages(&sns.ListPlatformApplicationsInput{}, func(page *sns.ListPlatformApplicationsOutput, isLast bool) bool {
+	err = conn.ListPlatformApplicationsPages(&sns.ListPlatformApplicationsInput{}, func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, platformApplication := range page.PlatformApplications {
@@ -55,7 +55,7 @@ func testSweepSnsPlatformApplications(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if testSweepSkipSweepError(err) {
@@ -211,25 +211,10 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:     func() { testAccPreCheck(t) },
+				ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
 				Providers:    testAccProviders,
 				CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 				Steps: []resource.TestStep{
-					{
-						Config: testAccAwsSnsPlatformApplicationConfig_basic(name, &testAccAwsSnsPlatformApplicationPlatform{
-							Name:       "APNS",
-							Credential: strconv.Quote("NOTEMPTY"),
-							Principal:  strconv.Quote(""),
-						}),
-						ExpectError: regexp.MustCompile(`platform_principal is required when platform =`),
-					},
-					{
-						Config: testAccAwsSnsPlatformApplicationConfig_basic(name, &testAccAwsSnsPlatformApplicationPlatform{
-							Name:       "APNS_SANDBOX",
-							Credential: strconv.Quote("NOTEMPTY"),
-							Principal:  strconv.Quote(""),
-						}),
-						ExpectError: regexp.MustCompile(`platform_principal is required when platform =`),
-					},
 					{
 						Config: testAccAwsSnsPlatformApplicationConfig_basic(name, platform),
 						Check: resource.ComposeTestCheckFunc(
@@ -277,6 +262,7 @@ func TestAccAWSSnsPlatformApplication_basicAttributes(t *testing.T) {
 
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { testAccPreCheck(t) },
+						ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
@@ -327,6 +313,7 @@ func TestAccAWSSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { testAccPreCheck(t) },
+						ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
@@ -379,6 +366,7 @@ func TestAccAWSSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
 
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { testAccPreCheck(t) },
+						ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
 						Steps: []resource.TestStep{

@@ -6,12 +6,11 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
@@ -20,6 +19,7 @@ func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -43,6 +43,14 @@ func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config:       testAccAwsEc2ManagedPrefixListConfigUpdated(rName),
+				ResourceName: resourceName,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAwsEc2ManagedPrefixListExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", "2"),
+				),
+			},
 		},
 	})
 }
@@ -53,6 +61,7 @@ func TestAccAwsEc2ManagedPrefixList_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -74,6 +83,7 @@ func TestAccAwsEc2ManagedPrefixList_AddressFamily_IPv6(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -94,17 +104,18 @@ func TestAccAwsEc2ManagedPrefixList_AddressFamily_IPv6(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ManagedPrefixList_Entry(t *testing.T) {
+func TestAccAwsEc2ManagedPrefixList_Entry_Cidr(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_Entry1(rName),
+				Config:       testAccAwsEc2ManagedPrefixListConfig_Entry_Cidr1(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName),
@@ -126,7 +137,7 @@ func TestAccAwsEc2ManagedPrefixList_Entry(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_Entry2(rName),
+				Config:       testAccAwsEc2ManagedPrefixListConfig_Entry_Cidr2(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName),
@@ -151,6 +162,59 @@ func TestAccAwsEc2ManagedPrefixList_Entry(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ManagedPrefixList_Entry_Description(t *testing.T) {
+	resourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:       testAccAwsEc2ManagedPrefixListConfig_Entry_Description(rName, "description1"),
+				ResourceName: resourceName,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAwsEc2ManagedPrefixListExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
+						"cidr":        "1.0.0.0/8",
+						"description": "description1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
+						"cidr":        "2.0.0.0/8",
+						"description": "description1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:       testAccAwsEc2ManagedPrefixListConfig_Entry_Description(rName, "description2"),
+				ResourceName: resourceName,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAwsEc2ManagedPrefixListExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
+						"cidr":        "1.0.0.0/8",
+						"description": "description2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
+						"cidr":        "2.0.0.0/8",
+						"description": "description2",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "version", "3"), // description-only updates require two operations
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsEc2ManagedPrefixList_Name(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
@@ -158,6 +222,7 @@ func TestAccAwsEc2ManagedPrefixList_Name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -194,6 +259,7 @@ func TestAccAwsEc2ManagedPrefixList_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -242,19 +308,17 @@ func testAccCheckAwsEc2ManagedPrefixListDestroy(s *terraform.State) error {
 			continue
 		}
 
-		pl, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
+		_, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPrefixListIDNotFound) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if pl != nil {
-			return fmt.Errorf("EC2 Managed Prefix List (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("EC2 Managed Prefix List %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -263,25 +327,20 @@ func testAccCheckAwsEc2ManagedPrefixListDestroy(s *terraform.State) error {
 func testAccAwsEc2ManagedPrefixListExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
-
 		if !ok {
-			return fmt.Errorf("resource %s not found", resourceName)
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource %s has not set its id", resourceName)
+			return fmt.Errorf("No EC2 Managed Prefix List ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		pl, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
+		_, err := finder.ManagedPrefixListByID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", rs.Primary.ID, err)
-		}
-
-		if pl == nil {
-			return fmt.Errorf("EC2 Managed Prefix List (%s) not found", rs.Primary.ID)
+			return err
 		}
 
 		return nil
@@ -314,7 +373,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName, addressFamily)
 }
 
-func testAccAwsEc2ManagedPrefixListConfig_Entry1(rName string) string {
+func testAccAwsEc2ManagedPrefixListConfig_Entry_Cidr1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
@@ -334,7 +393,7 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName)
 }
 
-func testAccAwsEc2ManagedPrefixListConfig_Entry2(rName string) string {
+func testAccAwsEc2ManagedPrefixListConfig_Entry_Cidr2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
@@ -354,11 +413,41 @@ resource "aws_ec2_managed_prefix_list" "test" {
 `, rName)
 }
 
+func testAccAwsEc2ManagedPrefixListConfig_Entry_Description(rName string, description string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 5
+  name           = %[1]q
+
+  entry {
+    cidr        = "1.0.0.0/8"
+    description = %[2]q
+  }
+
+  entry {
+    cidr        = "2.0.0.0/8"
+    description = %[2]q
+  }
+}
+`, rName, description)
+}
+
 func testAccAwsEc2ManagedPrefixListConfig_Name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
   max_entries    = 1
+  name           = %[1]q
+}
+`, rName)
+}
+
+func testAccAwsEc2ManagedPrefixListConfigUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 2
   name           = %[1]q
 }
 `, rName)

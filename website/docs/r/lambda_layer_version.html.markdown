@@ -14,7 +14,7 @@ For information about Lambda Layers and how to use them, see [AWS Lambda Layers]
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lambda_layer_version" "lambda_layer" {
   filename   = "lambda_layer_payload.zip"
   layer_name = "lambda_layer_name"
@@ -43,6 +43,7 @@ large files efficiently.
 * `s3_key` - (Optional) The S3 key of an object containing the function's deployment package. Conflicts with `filename`.
 * `s3_object_version` - (Optional) The object version containing the function's deployment package. Conflicts with `filename`.
 * `compatible_runtimes` - (Optional) A list of [Runtimes][2] this layer is compatible with. Up to 5 runtimes can be specified.
+* `compatible_architectures` - (Optional) A list of [Architectures][4] this layer is compatible with. Currently `x86_64` and `arm64` can be specified.
 * `description` - (Optional) Description of what your Lambda Layer does.
 * `license_info` - (Optional) License info for your Lambda Layer. See [License Info][3].
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
@@ -57,11 +58,12 @@ In addition to all arguments above, the following attributes are exported:
 * `signing_job_arn` - The Amazon Resource Name (ARN) of a signing job.
 * `signing_profile_version_arn` - The Amazon Resource Name (ARN) for a signing profile version.
 * `source_code_size` - The size in bytes of the function .zip file.
-* `version` - This Lamba Layer version.
+* `version` - This Lambda Layer version.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
 [2]: https://docs.aws.amazon.com/lambda/latest/dg/API_PublishLayerVersion.html#SSS-PublishLayerVersion-request-CompatibleRuntimes
 [3]: https://docs.aws.amazon.com/lambda/latest/dg/API_PublishLayerVersion.html#SSS-PublishLayerVersion-request-LicenseInfo
+[4]: https://docs.aws.amazon.com/lambda/latest/dg/API_PublishLayerVersion.html#SSS-PublishLayerVersion-request-CompatibleArchitectures
 
 ## Import
 

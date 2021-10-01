@@ -12,7 +12,7 @@ Provides information about a Launch Template.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_launch_template" "default" {
   name = "my-launch-template"
 }
@@ -20,7 +20,7 @@ data "aws_launch_template" "default" {
 
 ### Filter
 
-```hcl
+```terraform
 data "aws_launch_template" "test" {
   filter {
     name   = "launch-template-name"
@@ -76,6 +76,7 @@ In addition to all arguments above, the following attributes are exported:
     * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
+    * `http_protocol_ipv6` - The state of IPv6 endpoint for the instance metadata service: `enabled`, `disabled`.
 * `monitoring` - The monitoring option for the instance.
 * `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network
   Interfaces](#network-interfaces) below for more details.

@@ -18,6 +18,7 @@ func TestAccAWSGluePartition_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGluePartitionDestroy,
 		Steps: []resource.TestStep{
@@ -50,6 +51,7 @@ func TestAccAWSGluePartition_multipleValues(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGluePartitionDestroy,
 		Steps: []resource.TestStep{
@@ -78,6 +80,7 @@ func TestAccAWSGluePartition_parameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGluePartitionDestroy,
 		Steps: []resource.TestStep{
@@ -122,6 +125,7 @@ func TestAccAWSGluePartition_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGluePartitionDestroy,
 		Steps: []resource.TestStep{
@@ -130,6 +134,29 @@ func TestAccAWSGluePartition_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsGluePartition(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGluePartition_disappears_table(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	parValue := acctest.RandString(10)
+	resourceName := "aws_glue_partition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGluePartitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGluePartitionBasicConfig(rName, parValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGluePartitionExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogTable(), "aws_glue_catalog_table.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

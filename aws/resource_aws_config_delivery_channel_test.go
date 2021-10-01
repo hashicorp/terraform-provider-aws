@@ -79,6 +79,7 @@ func testAccConfigDeliveryChannel_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
@@ -104,6 +105,7 @@ func testAccConfigDeliveryChannel_allParams(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
@@ -115,6 +117,7 @@ func testAccConfigDeliveryChannel_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_name", expectedBucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "one/two/three"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_kms_key_arn", "aws_kms_key.k", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.t", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_delivery_properties.0.delivery_frequency", "Six_Hours"),
 				),
@@ -129,6 +132,7 @@ func testAccConfigDeliveryChannel_importBasic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
@@ -317,6 +321,14 @@ resource "aws_iam_role_policy" "p" {
         "${aws_s3_bucket.b.arn}",
         "${aws_s3_bucket.b.arn}/*"
       ]
+    },
+    {
+        "Effect": "Allow",
+        "Action": [
+            "kms:Decrypt",
+            "kms:GenerateDataKey"
+            ],
+            "Resource": "${aws_kms_key.k.arn}"
     }
   ]
 }
@@ -332,10 +344,34 @@ resource "aws_sns_topic" "t" {
   name = "tf-acc-test-%d"
 }
 
+resource "aws_kms_key" "k" {
+  description             = "tf-acc-test-awsconfig-%d"
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "tf-acc-test-awsconfig-%d",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
 resource "aws_config_delivery_channel" "foo" {
   name           = "tf-acc-test-awsconfig-%d"
   s3_bucket_name = aws_s3_bucket.b.bucket
   s3_key_prefix  = "one/two/three"
+  s3_kms_key_arn = aws_kms_key.k.arn
   sns_topic_arn  = aws_sns_topic.t.arn
 
   snapshot_delivery_properties {
@@ -344,5 +380,5 @@ resource "aws_config_delivery_channel" "foo" {
 
   depends_on = [aws_config_configuration_recorder.foo]
 }
-`, randInt, randInt, randInt, randInt, randInt, randInt)
+`, randInt, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }

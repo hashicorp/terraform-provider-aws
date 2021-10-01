@@ -27,6 +27,10 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"bucket_key_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"cache_control": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -157,6 +161,7 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(uniqueId)
 
+	d.Set("bucket_key_enabled", out.BucketKeyEnabled)
 	d.Set("cache_control", out.CacheControl)
 	d.Set("content_disposition", out.ContentDisposition)
 	d.Set("content_encoding", out.ContentEncoding)
@@ -175,7 +180,7 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("metadata", pointersMapToStringList(out.Metadata))
 	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", out.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenS3ObjectLockRetainUntilDate(out.ObjectLockRetainUntilDate))
+	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(out.ObjectLockRetainUntilDate))
 	d.Set("server_side_encryption", out.ServerSideEncryption)
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	d.Set("version_id", out.VersionId)
@@ -216,7 +221,7 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 		if out.ContentType == nil {
 			contentType = "<EMPTY>"
 		} else {
-			contentType = *out.ContentType
+			contentType = aws.StringValue(out.ContentType)
 		}
 
 		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q", uniqueId, contentType)

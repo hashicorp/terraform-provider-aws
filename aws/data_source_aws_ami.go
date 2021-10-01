@@ -132,6 +132,18 @@ func dataSourceAwsAmi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"usage_operation": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"platform_details": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ena_support": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			// Complex computed values
 			"block_device_mappings": {
 				Type:     schema.TypeSet,
@@ -287,6 +299,10 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	}
 	d.Set("state", image.State)
 	d.Set("virtualization_type", image.VirtualizationType)
+	d.Set("usage_operation", image.UsageOperation)
+	d.Set("platform_details", image.PlatformDetails)
+	d.Set("ena_support", image.EnaSupport)
+
 	// Complex types get their own functions
 	if err := d.Set("block_device_mappings", amiBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
 		return err
@@ -305,7 +321,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 	}.String()
 
 	d.Set("arn", imageArn)

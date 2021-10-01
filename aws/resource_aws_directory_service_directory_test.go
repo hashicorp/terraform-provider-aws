@@ -21,7 +21,9 @@ func init() {
 		F:    testSweepDirectoryServiceDirectories,
 		Dependencies: []string{
 			"aws_db_instance",
+			"aws_ec2_client_vpn_endpoint",
 			"aws_fsx_windows_file_system",
+			"aws_transfer_server",
 			"aws_workspaces_directory",
 		},
 	})
@@ -89,6 +91,7 @@ func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -121,6 +124,7 @@ func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -169,6 +173,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
+		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -197,6 +202,7 @@ func TestAccAWSDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
+		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -229,6 +235,7 @@ func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -263,6 +270,7 @@ func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -341,6 +349,7 @@ func TestAccAWSDirectoryServiceDirectory_disappears(t *testing.T) {
 			testAccPreCheckAWSDirectoryService(t)
 			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, directoryservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{

@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 package main
@@ -9,7 +10,6 @@ import (
 	"go/ast"
 	"go/format"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"os"
 	"sort"
@@ -72,7 +72,7 @@ func main() {
 
 	src := g.format()
 
-	err := ioutil.WriteFile(outputName, src, 0644)
+	err := os.WriteFile(outputName, src, 0644)
 	if err != nil {
 		log.Fatalf("error writing output: %s", err)
 	}

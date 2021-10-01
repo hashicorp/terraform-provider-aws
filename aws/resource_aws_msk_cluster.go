@@ -8,11 +8,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfkafka "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsMskCluster() *schema.Resource {
@@ -24,10 +28,18 @@ func resourceAwsMskCluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(120 * time.Minute),
+			Update: schema.DefaultTimeout(120 * time.Minute),
+			Delete: schema.DefaultTimeout(120 * time.Minute),
+		},
+
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(string) < old.(string)
 			}),
+			SetTagsDiff,
 		),
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -35,6 +47,10 @@ func resourceAwsMskCluster() *schema.Resource {
 				Computed: true,
 			},
 			"bootstrap_brokers": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,16 +70,14 @@ func resourceAwsMskCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"az_distribution": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Default:  kafka.BrokerAZDistributionDefault,
-							ValidateFunc: validation.StringInSlice([]string{
-								kafka.BrokerAZDistributionDefault,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      kafka.BrokerAZDistributionDefault,
+							ValidateFunc: validation.StringInSlice(kafka.BrokerAZDistribution_Values(), false),
 						},
 						"client_subnets": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
 							Elem: &schema.Schema{
@@ -73,10 +87,9 @@ func resourceAwsMskCluster() *schema.Resource {
 						"instance_type": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"security_groups": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
 							Elem: &schema.Schema{
@@ -106,6 +119,11 @@ func resourceAwsMskCluster() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"scram": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+									},
+									"iam": {
 										Type:     schema.TypeBool,
 										Optional: true,
 										ForceNew: true,
@@ -347,8 +365,13 @@ func resourceAwsMskCluster() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"zookeeper_connect_string": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"zookeeper_connect_string_tls": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -358,11 +381,14 @@ func resourceAwsMskCluster() *schema.Resource {
 
 func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterInput{
 		BrokerNodeGroupInfo:  expandMskClusterBrokerNodeGroupInfo(d.Get("broker_node_group_info").([]interface{})),
 		ClientAuthentication: expandMskClusterClientAuthentication(d.Get("client_authentication").([]interface{})),
-		ClusterName:          aws.String(d.Get("cluster_name").(string)),
+		ClusterName:          aws.String(name),
 		ConfigurationInfo:    expandMskClusterConfigurationInfo(d.Get("configuration_info").([]interface{})),
 		EncryptionInfo:       expandMskClusterEncryptionInfo(d.Get("encryption_info").([]interface{})),
 		EnhancedMonitoring:   aws.String(d.Get("enhanced_monitoring").(string)),
@@ -370,132 +396,103 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 		NumberOfBrokerNodes:  aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
 		OpenMonitoring:       expandMskOpenMonitoring(d.Get("open_monitoring").([]interface{})),
 		LoggingInfo:          expandMskLoggingInfo(d.Get("logging_info").([]interface{})),
-		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().KafkaTags(),
+		Tags:                 tags.IgnoreAws().KafkaTags(),
 	}
 
-	out, err := conn.CreateCluster(input)
+	output, err := conn.CreateCluster(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating MSK cluster: %s", err)
+		return fmt.Errorf("error creating MSK Cluster (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.ClusterArn))
+	d.SetId(aws.StringValue(output.ClusterArn))
 
-	log.Printf("[DEBUG] Waiting for MSK cluster %q to be created", d.Id())
-	err = waitForMskClusterCreation(conn, d.Id())
+	_, err = waiter.ClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
 	if err != nil {
-		return fmt.Errorf("error waiting for MSK cluster creation (%s): %s", d.Id(), err)
+		return fmt.Errorf("error waiting for MSK Cluster (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceAwsMskClusterRead(d, meta)
 }
 
-func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
-	input := &kafka.DescribeClusterInput{
-		ClusterArn: aws.String(arn),
-	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeCluster(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if out.ClusterInfo != nil {
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateFailed {
-				return resource.NonRetryableError(fmt.Errorf("Cluster creation failed with cluster state %q", kafka.ClusterStateFailed))
-			}
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateActive {
-				return nil
-			}
-		}
-		return resource.RetryableError(fmt.Errorf("%q: cluster still creating", arn))
-	})
-	if isResourceTimeoutError(err) {
-		out, err := conn.DescribeCluster(input)
-		if err != nil {
-			return fmt.Errorf("Error describing MSK cluster state: %s", err)
-		}
-		if out.ClusterInfo != nil {
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateFailed {
-				return fmt.Errorf("Cluster creation failed with cluster state %q", kafka.ClusterStateFailed)
-			}
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateActive {
-				return nil
-			}
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for MSK cluster creation: %s", err)
-	}
-	return nil
-}
-
 func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	out, err := conn.DescribeCluster(&kafka.DescribeClusterInput{
-		ClusterArn: aws.String(d.Id()),
-	})
-	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("failed lookup cluster %s: %s", d.Id(), err)
+	cluster, err := finder.ClusterByARN(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	brokerOut, err := conn.GetBootstrapBrokers(&kafka.GetBootstrapBrokersInput{
-		ClusterArn: aws.String(d.Id()),
-	})
 	if err != nil {
-		return fmt.Errorf("failed requesting bootstrap broker info for %q : %s", d.Id(), err)
+		return fmt.Errorf("error reading MSK Cluster (%s): %w", d.Id(), err)
 	}
 
-	cluster := out.ClusterInfo
+	output, err := conn.GetBootstrapBrokers(&kafka.GetBootstrapBrokersInput{
+		ClusterArn: aws.String(d.Id()),
+	})
 
-	d.Set("arn", aws.StringValue(cluster.ClusterArn))
-	d.Set("bootstrap_brokers", aws.StringValue(brokerOut.BootstrapBrokerString))
-	d.Set("bootstrap_brokers_sasl_scram", aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram))
-	d.Set("bootstrap_brokers_tls", aws.StringValue(brokerOut.BootstrapBrokerStringTls))
+	if err != nil {
+		return fmt.Errorf("error reading MSK Cluster (%s) bootstrap brokers: %w", d.Id(), err)
+	}
+
+	d.Set("arn", cluster.ClusterArn)
+	d.Set("bootstrap_brokers", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_iam", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
-		return fmt.Errorf("error setting broker_node_group_info: %s", err)
+		return fmt.Errorf("error setting broker_node_group_info: %w", err)
 	}
 
 	if err := d.Set("client_authentication", flattenMskClientAuthentication(cluster.ClientAuthentication)); err != nil {
-		return fmt.Errorf("error setting configuration_info: %s", err)
+		return fmt.Errorf("error setting configuration_info: %w", err)
 	}
 
-	d.Set("cluster_name", aws.StringValue(cluster.ClusterName))
+	d.Set("cluster_name", cluster.ClusterName)
 
 	if err := d.Set("configuration_info", flattenMskConfigurationInfo(cluster.CurrentBrokerSoftwareInfo)); err != nil {
-		return fmt.Errorf("error setting configuration_info: %s", err)
+		return fmt.Errorf("error setting configuration_info: %w", err)
 	}
 
-	d.Set("current_version", aws.StringValue(cluster.CurrentVersion))
-	d.Set("enhanced_monitoring", aws.StringValue(cluster.EnhancedMonitoring))
+	d.Set("current_version", cluster.CurrentVersion)
+	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
 
 	if err := d.Set("encryption_info", flattenMskEncryptionInfo(cluster.EncryptionInfo)); err != nil {
-		return fmt.Errorf("error setting encryption_info: %s", err)
+		return fmt.Errorf("error setting encryption_info: %w", err)
 	}
 
-	d.Set("kafka_version", aws.StringValue(cluster.CurrentBrokerSoftwareInfo.KafkaVersion))
-	d.Set("number_of_broker_nodes", aws.Int64Value(cluster.NumberOfBrokerNodes))
-
-	if err := d.Set("tags", keyvaluetags.KafkaKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("open_monitoring", flattenMskOpenMonitoring(cluster.OpenMonitoring)); err != nil {
-		return fmt.Errorf("error setting open_monitoring: %s", err)
-	}
+	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 
 	if err := d.Set("logging_info", flattenMskLoggingInfo(cluster.LoggingInfo)); err != nil {
-		return fmt.Errorf("error setting logging_info: %s", err)
+		return fmt.Errorf("error setting logging_info: %w", err)
 	}
 
-	d.Set("zookeeper_connect_string", aws.StringValue(cluster.ZookeeperConnectString))
+	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
+
+	if err := d.Set("open_monitoring", flattenMskOpenMonitoring(cluster.OpenMonitoring)); err != nil {
+		return fmt.Errorf("error setting open_monitoring: %w", err)
+	}
+
+	d.Set("zookeeper_connect_string", tfkafka.SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string_tls", tfkafka.SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
+
+	tags := keyvaluetags.KafkaKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -518,17 +515,37 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		output, err := conn.UpdateBrokerStorage(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker storage: empty response", d.Id())
+			return fmt.Errorf("error updating MSK Cluster (%s) broker storage: %w", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
+		}
+	}
+
+	if d.HasChange("broker_node_group_info.0.instance_type") {
+		input := &kafka.UpdateBrokerTypeInput{
+			ClusterArn:         aws.String(d.Id()),
+			CurrentVersion:     aws.String(d.Get("current_version").(string)),
+			TargetInstanceType: aws.String(d.Get("broker_node_group_info.0.instance_type").(string)),
+		}
+
+		output, err := conn.UpdateBrokerType(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating MSK Cluster (%s) broker type: %w", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -542,17 +559,15 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		output, err := conn.UpdateBrokerCount(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker count: %s", d.Id(), err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) broker count: empty response", d.Id())
+			return fmt.Errorf("error updating MSK Cluster (%s) broker count: %w", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -568,17 +583,15 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		output, err := conn.UpdateMonitoring(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) monitoring: empty response", d.Id())
+			return fmt.Errorf("error updating MSK Cluster (%s) monitoring: %w", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -592,17 +605,15 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		output, err := conn.UpdateClusterConfiguration(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) configuration: %s", d.Id(), err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) configuration: empty response", d.Id())
+			return fmt.Errorf("error updating MSK Cluster (%s) configuration: %w", d.Id(), err)
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
-			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -623,27 +634,49 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error updating MSK Cluster (%s) kafka version: %w", d.Id(), err)
 		}
 
-		if output == nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) kafka version: empty response", d.Id())
-		}
-
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
+		_, err = waiter.ClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.KafkaUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating MSK Cluster (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating MSK Cluster (%s) tags: %w", d.Id(), err)
 		}
 	}
 
 	return resourceAwsMskClusterRead(d, meta)
+}
 
+func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).kafkaconn
+
+	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
+	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
+		ClusterArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting MSK Cluster (%s): %w", d.Id(), err)
+	}
+
+	_, err = waiter.ClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return fmt.Errorf("error waiting for MSK Cluster (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroupInfo {
@@ -655,9 +688,9 @@ func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroup
 
 	bngi := &kafka.BrokerNodeGroupInfo{
 		BrokerAZDistribution: aws.String(m["az_distribution"].(string)),
-		ClientSubnets:        expandStringList(m["client_subnets"].([]interface{})),
+		ClientSubnets:        expandStringSet(m["client_subnets"].(*schema.Set)),
 		InstanceType:         aws.String(m["instance_type"].(string)),
-		SecurityGroups:       expandStringList(m["security_groups"].([]interface{})),
+		SecurityGroups:       expandStringSet(m["security_groups"].(*schema.Set)),
 		StorageInfo: &kafka.StorageInfo{
 			EbsStorageInfo: &kafka.EBSStorageInfo{
 				VolumeSize: aws.Int64(int64(m["ebs_volume_size"].(int))),
@@ -675,9 +708,14 @@ func expandMskClusterClientAuthentication(l []interface{}) *kafka.ClientAuthenti
 
 	m := l[0].(map[string]interface{})
 
-	ca := &kafka.ClientAuthentication{
-		Sasl: expandMskClusterScram(m["sasl"].([]interface{})),
-		Tls:  expandMskClusterTls(m["tls"].([]interface{})),
+	ca := &kafka.ClientAuthentication{}
+
+	if v, ok := m["sasl"].([]interface{}); ok {
+		ca.Sasl = expandMskClusterSasl(v)
+	}
+
+	if v, ok := m["tls"].([]interface{}); ok {
+		ca.Tls = expandMskClusterTls(v)
 	}
 
 	return ca
@@ -733,7 +771,7 @@ func expandMskClusterEncryptionInTransit(l []interface{}) *kafka.EncryptionInTra
 	return eit
 }
 
-func expandMskClusterScram(l []interface{}) *kafka.Sasl {
+func expandMskClusterSasl(l []interface{}) *kafka.Sasl {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -743,10 +781,18 @@ func expandMskClusterScram(l []interface{}) *kafka.Sasl {
 		return nil
 	}
 
-	sasl := &kafka.Sasl{
-		Scram: &kafka.Scram{
-			Enabled: aws.Bool(tfMap["scram"].(bool)),
-		},
+	sasl := &kafka.Sasl{}
+
+	if v, ok := tfMap["scram"].(bool); ok {
+		sasl.Scram = &kafka.Scram{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	if v, ok := tfMap["iam"].(bool); ok {
+		sasl.Iam = &kafka.Iam{
+			Enabled: aws.Bool(v),
+		}
 	}
 
 	return sasl
@@ -907,9 +953,9 @@ func flattenMskBrokerNodeGroupInfo(b *kafka.BrokerNodeGroupInfo) []map[string]in
 
 	m := map[string]interface{}{
 		"az_distribution": aws.StringValue(b.BrokerAZDistribution),
-		"client_subnets":  flattenStringList(b.ClientSubnets),
+		"client_subnets":  aws.StringValueSlice(b.ClientSubnets),
 		"instance_type":   aws.StringValue(b.InstanceType),
-		"security_groups": flattenStringList(b.SecurityGroups),
+		"security_groups": aws.StringValueSlice(b.SecurityGroups),
 	}
 	if b.StorageInfo != nil {
 		if b.StorageInfo.EbsStorageInfo != nil {
@@ -977,18 +1023,27 @@ func flattenMskSasl(sasl *kafka.Sasl) []map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"scram": flattenMskScram(sasl.Scram),
+		"scram": flattenMskSaslScram(sasl.Scram),
+		"iam":   flattenMskSaslIam(sasl.Iam),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskScram(scram *kafka.Scram) bool {
+func flattenMskSaslScram(scram *kafka.Scram) bool {
 	if scram == nil {
 		return false
 	}
 
 	return aws.BoolValue(scram.Enabled)
+}
+
+func flattenMskSaslIam(iam *kafka.Iam) bool {
+	if iam == nil {
+		return false
+	}
+
+	return aws.BoolValue(iam.Enabled)
 }
 
 func flattenMskTls(tls *kafka.Tls) []map[string]interface{} {
@@ -1116,93 +1171,4 @@ func flattenMskLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
 	}
 
 	return []map[string]interface{}{m}
-}
-
-func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
-
-	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
-	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
-		ClusterArn: aws.String(d.Id()),
-	})
-	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
-	}
-
-	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
-
-	return resourceAwsMskClusterDeleteWaiter(conn, d.Id())
-}
-
-func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
-	input := &kafka.DescribeClusterInput{
-		ClusterArn: aws.String(arn),
-	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		_, err := conn.DescribeCluster(input)
-
-		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-				return nil
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.RetryableError(fmt.Errorf("timeout while waiting for the cluster %q to be deleted", arn))
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DescribeCluster(input)
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for MSK cluster to be deleted: %s", err)
-	}
-	return nil
-}
-
-func mskClusterOperationRefreshFunc(conn *kafka.Kafka, clusterOperationARN string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &kafka.DescribeClusterOperationInput{
-			ClusterOperationArn: aws.String(clusterOperationARN),
-		}
-
-		output, err := conn.DescribeClusterOperation(input)
-
-		if err != nil {
-			return nil, "UPDATE_FAILED", fmt.Errorf("error describing MSK Cluster Operation (%s): %s", clusterOperationARN, err)
-		}
-
-		if output == nil || output.ClusterOperationInfo == nil {
-			return nil, "UPDATE_FAILED", fmt.Errorf("error describing MSK Cluster Operation (%s): empty response", clusterOperationARN)
-		}
-
-		state := aws.StringValue(output.ClusterOperationInfo.OperationState)
-
-		if state == "UPDATE_FAILED" && output.ClusterOperationInfo.ErrorInfo != nil {
-			errorInfo := output.ClusterOperationInfo.ErrorInfo
-			err := fmt.Errorf("error code: %s, error string: %s", aws.StringValue(errorInfo.ErrorCode), aws.StringValue(errorInfo.ErrorString))
-			return output.ClusterOperationInfo, state, err
-		}
-
-		return output.ClusterOperationInfo, state, nil
-	}
-}
-
-func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "UPDATE_IN_PROGRESS"},
-		Target:  []string{"UPDATE_COMPLETE"},
-		Refresh: mskClusterOperationRefreshFunc(conn, clusterOperationARN),
-		Timeout: 2 * time.Hour,
-	}
-
-	log.Printf("[DEBUG] Waiting for MSK Cluster Operation (%s) completion", clusterOperationARN)
-	_, err := stateConf.WaitForState()
-
-	return err
 }

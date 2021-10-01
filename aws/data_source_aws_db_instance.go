@@ -230,14 +230,14 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	if len(resp.DBInstances) < 1 {
+	if resp == nil || len(resp.DBInstances) < 1 || resp.DBInstances[0] == nil {
 		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
 	}
 	if len(resp.DBInstances) > 1 {
 		return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria.")
 	}
 
-	dbInstance := *resp.DBInstances[0]
+	dbInstance := resp.DBInstances[0]
 
 	d.SetId(d.Get("db_instance_identifier").(string))
 

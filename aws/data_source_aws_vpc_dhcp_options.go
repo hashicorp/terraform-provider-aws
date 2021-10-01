@@ -111,7 +111,7 @@ func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) e
 
 		switch key {
 		case "domain-name":
-			d.Set(tfKey, aws.StringValue(dhcpConfiguration.Values[0].Value))
+			d.Set(tfKey, dhcpConfiguration.Values[0].Value)
 		case "domain-name-servers":
 			if err := d.Set(tfKey, flattenEc2AttributeValues(dhcpConfiguration.Values)); err != nil {
 				return fmt.Errorf("error setting %s: %w", tfKey, err)
@@ -121,7 +121,7 @@ func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) e
 				return fmt.Errorf("error setting %s: %w", tfKey, err)
 			}
 		case "netbios-node-type":
-			d.Set(tfKey, aws.StringValue(dhcpConfiguration.Values[0].Value))
+			d.Set(tfKey, dhcpConfiguration.Values[0].Value)
 		case "ntp-servers":
 			if err := d.Set(tfKey, flattenEc2AttributeValues(dhcpConfiguration.Values)); err != nil {
 				return fmt.Errorf("error setting %s: %w", tfKey, err)
@@ -136,9 +136,9 @@ func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) e
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: aws.StringValue(output.DhcpOptions[0].OwnerId),
 		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
 	}.String()
 

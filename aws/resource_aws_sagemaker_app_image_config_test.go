@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -46,14 +47,12 @@ func testSweepSagemakerAppImageConfigs(region string) error {
 		}
 
 		for _, config := range output.AppImageConfigs {
+
 			name := aws.StringValue(config.AppImageConfigName)
-			input := &sagemaker.DeleteAppImageConfigInput{
-				AppImageConfigName: aws.String(name),
-			}
-
-			log.Printf("[INFO] Deleting SageMaker App Image Config: %s", name)
-			_, err := conn.DeleteAppImageConfig(input)
-
+			r := resourceAwsSagemakerAppImageConfig()
+			d := r.Data(nil)
+			d.SetId(name)
+			err = r.Delete(d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -79,6 +78,7 @@ func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
 		Steps: []resource.TestStep{
@@ -108,6 +108,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
 		Steps: []resource.TestStep{
@@ -150,6 +151,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_fileSystemConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
 		Steps: []resource.TestStep{
@@ -188,6 +190,51 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_fileSystemConfig
 	})
 }
 
+func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
+	var app sagemaker.DescribeAppImageConfigOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_app_image_config.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerAppConfigImageConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerAppConfigImageConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerAppConfigImageConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
 	var config sagemaker.DescribeAppImageConfigOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -195,6 +242,7 @@ func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
 		Steps: []resource.TestStep{
@@ -219,8 +267,13 @@ func testAccCheckAWSSagemakerAppImageConfigDestroy(s *terraform.State) error {
 		}
 
 		config, err := finder.AppImageConfigByName(conn, rs.Primary.ID)
+
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			continue
+		}
+
 		if err != nil {
-			return nil
+			return fmt.Errorf("error reading Sagemaker App Image Config (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(config.AppImageConfigName) == rs.Primary.ID {
@@ -325,4 +378,29 @@ resource "aws_sagemaker_app_image_config" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSSagemakerAppConfigImageConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSSagemakerAppConfigImageConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

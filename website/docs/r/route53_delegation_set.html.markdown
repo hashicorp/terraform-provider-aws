@@ -12,7 +12,7 @@ Provides a [Route53 Delegation Set](https://docs.aws.amazon.com/Route53/latest/A
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_route53_delegation_set" "main" {
   reference_name = "DynDNS"
 }
@@ -39,6 +39,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The Amazon Resource Name (ARN) of the Delegation Set.
 * `id` - The delegation set ID
 * `name_servers` - A list of authoritative name servers for the hosted zone
   (effectively a list of NS records).

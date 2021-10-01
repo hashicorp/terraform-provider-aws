@@ -24,6 +24,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckApigatewayEdgeDomainName(t) },
+		ErrorCheck:        testAccErrorCheck(t, apigateway.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSAPIGatewayEdgeDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -85,6 +86,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -113,13 +115,14 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	rName := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -154,15 +157,18 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	domain := testAccRandomDomainName()
+	domainWildcard := fmt.Sprintf("*.%s", domain)
+	rName := fmt.Sprintf("%s.%s", acctest.RandString(8), domain)
 
 	caKey := tlsRsaPrivateKeyPem(2048)
 	caCertificate := tlsRsaX509SelfSignedCaCertificatePem(caKey)
 	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, "*.terraformtest.com")
+	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, domainWildcard)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -188,13 +194,14 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	rName := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -217,13 +224,14 @@ func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
 func TestAccAWSAPIGatewayDomainName_Tags(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	rName := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -264,13 +272,14 @@ func TestAccAWSAPIGatewayDomainName_Tags(t *testing.T) {
 func TestAccAWSAPIGatewayDomainName_disappears(t *testing.T) {
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+	rName := testAccRandomSubdomain()
 
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -298,6 +307,7 @@ func TestAccAWSAPIGatewayDomainName_MutualTlsAuthentication(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{

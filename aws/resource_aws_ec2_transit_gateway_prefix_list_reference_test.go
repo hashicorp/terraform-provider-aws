@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,18 +13,19 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
-func TestAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
+func testAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
 	managedPrefixListResourceName := "aws_ec2_managed_prefix_list.test"
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
@@ -47,16 +49,17 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
+func testAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
@@ -72,17 +75,18 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t *testing.T) {
+func testAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
@@ -98,18 +102,19 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t 
 	})
 }
 
-func TestAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId(t *testing.T) {
+func testAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayVpcAttachmentResourceName1 := "aws_ec2_transit_gateway_vpc_attachment.test.0"
 	transitGatewayVpcAttachmentResourceName2 := "aws_ec2_transit_gateway_vpc_attachment.test.1"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccPreCheckEc2ManagedPrefixList(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{

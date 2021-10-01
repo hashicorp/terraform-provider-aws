@@ -122,8 +122,8 @@ type volumeSort []*ec2.Volume
 func (a volumeSort) Len() int      { return len(a) }
 func (a volumeSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a volumeSort) Less(i, j int) bool {
-	itime := *a[i].CreateTime
-	jtime := *a[j].CreateTime
+	itime := aws.TimeValue(a[i].CreateTime)
+	jtime := aws.TimeValue(a[j].CreateTime)
 	return itime.Unix() < jtime.Unix()
 }
 
@@ -140,7 +140,7 @@ func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volu
 	arn := arn.ARN{
 		Partition: client.partition,
 		Region:    client.region,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		AccountID: client.accountid,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}

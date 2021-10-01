@@ -20,7 +20,7 @@ Using this data source to generate policy documents is *optional*. It is also va
 
 ### Basic Example
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "example" {
   statement {
     sid = "1"
@@ -79,7 +79,7 @@ resource "aws_iam_policy" "example" {
 
 You can specify multiple principal blocks with different types. You can also use this data source to generate an assume-role policy.
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "event_stream_bucket_role_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -104,7 +104,7 @@ data "aws_iam_policy_document" "event_stream_bucket_role_assume_role_policy" {
 
 ### Example Using A Source Document
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "source" {
   statement {
     actions   = ["ec2:*"]
@@ -162,7 +162,7 @@ data "aws_iam_policy_document" "source_json_example" {
 
 ### Example Using An Override Document
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "override" {
   statement {
     sid = "SidToOverride"
@@ -219,7 +219,7 @@ data "aws_iam_policy_document" "override_json_example" {
 
 You can also combine `source_json` and `override_json` in the same document.
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "source" {
   statement {
     sid       = "OverridePlaceholder"
@@ -262,7 +262,7 @@ data "aws_iam_policy_document" "politik" {
 
 Multiple documents can be combined using the `source_policy_documents` or `override_policy_documents` attributes. `source_policy_documents` requires that all documents have unique Sids, while `override_policy_documents` will iteratively override matching Sids.
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "source_one" {
   statement {
     actions   = ["ec2:*"]
@@ -335,7 +335,7 @@ data "aws_iam_policy_document" "combined" {
 
 ### Example of Merging Override Documents
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "policy_one" {
   statement {
     sid    = "OverridePlaceHolderOne"
@@ -467,7 +467,7 @@ The `principals` and `not_principals` arguments define to whom a statement appli
 The following arguments are required:
 
 * `identifiers` (Required) List of identifiers for principals. When `type` is `AWS`, these are IAM principal ARNs, e.g. `arn:aws:iam::12345678901:role/yak-role`.  When `type` is `Service`, these are AWS Service roles, e.g. `lambda.amazonaws.com`. When `type` is `Federated`, these are web identity users or SAML provider ARNs, e.g. `accounts.google.com` or `arn:aws:iam::12345678901:saml-provider/yak-saml-provider`. When `type` is `CanonicalUser`, these are [canonical user IDs](https://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html#FindingCanonicalId), e.g. `79a59df900b949e55d96a1e698fbacedfd6e09d98eacf8f8d5218e7cd47ef2be`.
-* `type` (Required) Type of principal. Valid values include `AWS`, `Service`, `Federated`, and `CanonicalUser`.
+* `type` (Required) Type of principal. Valid values include `AWS`, `Service`, `Federated`, `CanonicalUser` and `*`.
 
 ## Attributes Reference
 

@@ -30,7 +30,7 @@ const (
 	AwsAlternateAccessKeyId = "AWS_ALTERNATE_ACCESS_KEY_ID"
 
 	// For tests using an alternate AWS account, the equivalent of AWS_PROFILE for that account
-	AwsAlternateProfile = "AWS_PROFILE"
+	AwsAlternateProfile = "AWS_ALTERNATE_PROFILE"
 
 	// For tests using an alternate AWS region, the equivalent of AWS_DEFAULT_REGION for that account
 	AwsAlternateRegion = "AWS_ALTERNATE_REGION"
@@ -47,4 +47,20 @@ const (
 	// For tests requiring restricted IAM permissions, an existing IAM Role to assume
 	// An inline assume role policy is then used to deny actions for the test
 	TfAccAssumeRoleArn = "TF_ACC_ASSUME_ROLE_ARN"
+)
+
+// Custom environment variables used for assuming a role with resource sweepers
+const (
+	// The ARN of the IAM Role to assume
+	TfAwsAssumeRoleARN = "TF_AWS_ASSUME_ROLE_ARN"
+
+	// The duration in seconds the IAM role will be assumed.
+	// Defaults to 1 hour (3600) instead of the SDK default of 15 minutes.
+	TfAwsAssumeRoleDuration = "TF_AWS_ASSUME_ROLE_DURATION"
+
+	// An External ID to pass to the assumed role
+	TfAwsAssumeRoleExternalID = "TF_AWS_ASSUME_ROLE_EXTERNAL_ID"
+
+	// A session name for the assumed role
+	TfAwsAssumeRoleSessionName = "TF_AWS_ASSUME_ROLE_SESSION_NAME"
 )

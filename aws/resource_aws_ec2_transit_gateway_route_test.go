@@ -9,14 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSEc2TransitGatewayRoute_basic(t *testing.T) {
+func testAccAWSEc2TransitGatewayRoute_basic(t *testing.T) {
 	var transitGatewayRoute1 ec2.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -39,14 +40,15 @@ func TestAccAWSEc2TransitGatewayRoute_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayRoute_basic_ipv6(t *testing.T) {
+func testAccAWSEc2TransitGatewayRoute_basic_ipv6(t *testing.T) {
 	var transitGatewayRoute1 ec2.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test_ipv6"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -69,13 +71,14 @@ func TestAccAWSEc2TransitGatewayRoute_basic_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayRoute_blackhole(t *testing.T) {
+func testAccAWSEc2TransitGatewayRoute_blackhole(t *testing.T) {
 	var transitGatewayRoute1 ec2.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test_blackhole"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -98,14 +101,15 @@ func TestAccAWSEc2TransitGatewayRoute_blackhole(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayRoute_disappears(t *testing.T) {
+func testAccAWSEc2TransitGatewayRoute_disappears(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	var transitGatewayRoute1 ec2.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -122,7 +126,7 @@ func TestAccAWSEc2TransitGatewayRoute_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T) {
+func testAccAWSEc2TransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	var transitGatewayRoute1 ec2.TransitGatewayRoute
 	var transitGatewayVpcAttachment1 ec2.TransitGatewayVpcAttachment
@@ -130,8 +134,9 @@ func TestAccAWSEc2TransitGatewayRoute_disappears_TransitGatewayAttachment(t *tes
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
 		Steps: []resource.TestStep{

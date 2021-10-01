@@ -79,7 +79,7 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
+func testAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -87,12 +87,13 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayResourceNamePeer := "aws_ec2_transit_gateway.peer"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -117,18 +118,19 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
+func testAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -144,18 +146,19 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T) {
+func testAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +198,7 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T)
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
+func testAccAWSEc2TransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -203,13 +206,14 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_differentAccount(t *testing.T)
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayResourceNamePeer := "aws_ec2_transit_gateway.peer"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 			testAccMultipleRegionPreCheck(t, 2)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{

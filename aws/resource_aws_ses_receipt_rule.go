@@ -37,7 +37,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z._-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
 					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z]`), "must begin with a alphanumeric character"),
 					validation.StringMatch(regexp.MustCompile(`[0-9a-zA-Z]$`), "must end with a alphanumeric character"),
 				),
@@ -188,7 +188,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"invocation_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ses.InvocationTypeEvent,
 							ValidateFunc: validation.StringInSlice(ses.InvocationType_Values(), false),
 						},
 
@@ -285,6 +285,12 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"encoding": {
+							Type:         schema.TypeString,
+							Default:      ses.SNSActionEncodingUtf8,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ses.SNSActionEncoding_Values(), false),
+						},
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -300,6 +306,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["encoding"].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
 					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
 
@@ -560,6 +567,7 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 		if element.SNSAction != nil {
 			snsAction := map[string]interface{}{
 				"topic_arn": aws.StringValue(element.SNSAction.TopicArn),
+				"encoding":  aws.StringValue(element.SNSAction.Encoding),
 				"position":  i + 1,
 			}
 
@@ -771,6 +779,7 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 
 			snsAction := &ses.SNSAction{
 				TopicArn: aws.String(elem["topic_arn"].(string)),
+				Encoding: aws.String(elem["encoding"].(string)),
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{

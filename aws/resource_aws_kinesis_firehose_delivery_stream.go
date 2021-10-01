@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -15,11 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/firehose/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/firehose/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
-)
-
-const (
-	firehoseDeliveryStreamStatusDeleted = "DESTROYED"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -813,6 +811,8 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			},
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsKinesisFirehoseMigrateState,
 		Schema: map[string]*schema.Schema{
@@ -824,6 +824,8 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"tags_all": tagsSchemaComputed(),
 
 			"server_side_encryption": {
 				Type:             schema.TypeList,
@@ -1798,7 +1800,7 @@ func expandFirehoseOpenXJsonSerDe(l []interface{}) *firehose.OpenXJsonSerDe {
 
 	return &firehose.OpenXJsonSerDe{
 		CaseInsensitive:                    aws.Bool(m["case_insensitive"].(bool)),
-		ColumnToJsonKeyMappings:            stringMapToPointers(m["column_to_json_key_mappings"].(map[string]interface{})),
+		ColumnToJsonKeyMappings:            expandStringMap(m["column_to_json_key_mappings"].(map[string]interface{})),
 		ConvertDotsInJsonKeysToUnderscores: aws.Bool(m["convert_dots_in_json_keys_to_underscores"].(bool)),
 	}
 }
@@ -2463,6 +2465,8 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 	}
 
 	conn := meta.(*AWSClient).firehoseconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	sn := d.Get("name").(string)
 
@@ -2513,8 +2517,8 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		}
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		createInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().FirehoseTags()
+	if len(tags) > 0 {
+		createInput.Tags = tags.IgnoreAws().FirehoseTags()
 	}
 
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
@@ -2554,9 +2558,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		return fmt.Errorf("error creating Kinesis Firehose Delivery Stream: %s", err)
 	}
 
-	s, err := waitForKinesisFirehoseDeliveryStreamCreation(conn, sn)
+	s, err := waiter.DeliveryStreamCreated(conn, sn)
+
 	if err != nil {
-		return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) creation: %s", sn, err)
+		return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) create: %w", sn, err)
 	}
 
 	d.SetId(aws.StringValue(s.DeliveryStreamARN))
@@ -2569,12 +2574,13 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		}
 
 		_, err := conn.StartDeliveryStreamEncryption(startInput)
+
 		if err != nil {
-			return fmt.Errorf("error starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
+			return fmt.Errorf("error starting Kinesis Firehose Delivery Stream (%s) encryption: %w", sn, err)
 		}
 
-		if err := waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn, sn); err != nil {
-			return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption to be enabled: %s", sn, err)
+		if _, err := waiter.DeliveryStreamEncryptionEnabled(conn, sn); err != nil {
+			return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption enable: %w", sn, err)
 		}
 	}
 
@@ -2704,8 +2710,8 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 			sn, err)
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.FirehoseUpdateTags(conn, sn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Firehose Delivery Stream (%s) tags: %s", sn, err)
@@ -2718,12 +2724,13 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 			_, err := conn.StopDeliveryStreamEncryption(&firehose.StopDeliveryStreamEncryptionInput{
 				DeliveryStreamName: aws.String(sn),
 			})
+
 			if err != nil {
-				return fmt.Errorf("error stopping Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
+				return fmt.Errorf("error stopping Kinesis Firehose Delivery Stream (%s) encryption: %w", sn, err)
 			}
 
-			if err := waitForKinesisFirehoseDeliveryStreamSSEDisabled(conn, sn); err != nil {
-				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption to be disabled: %s", sn, err)
+			if _, err := waiter.DeliveryStreamEncryptionDisabled(conn, sn); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption disable: %w", sn, err)
 			}
 		} else {
 			startInput := &firehose.StartDeliveryStreamEncryptionInput{
@@ -2735,12 +2742,11 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 
 			if err != nil {
 				return fmt.Errorf(
-					"error starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
+					"error starting Kinesis Firehose Delivery Stream (%s) encryption: %w", sn, err)
 			}
 
-			if err := waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn, sn); err != nil {
-				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) "+
-					"encryption to be enabled: %s", sn, err)
+			if _, err := waiter.DeliveryStreamEncryptionEnabled(conn, sn); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption enable: %w", sn, err)
 			}
 		}
 	}
@@ -2750,24 +2756,24 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 
 func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).firehoseconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	sn := d.Get("name").(string)
-	resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
-		DeliveryStreamName: aws.String(sn),
-	})
+	s, err := finder.DeliveryStreamByName(conn, sn)
 
-	if err != nil {
-		if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Kinesis Firehose Delivery Stream (%s) not found, removing from state", sn)
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Kinesis Firehose Delivery Stream: %s", err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Kinesis Firehose Delivery Stream (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	s := resp.DeliveryStreamDescription
+	if err != nil {
+		return fmt.Errorf("error reading Kinesis Firehose Delivery Stream (%s): %w", sn, err)
+	}
+
 	err = flattenKinesisFirehoseDeliveryStream(d, s)
+
 	if err != nil {
 		return err
 	}
@@ -2775,11 +2781,18 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	tags, err := keyvaluetags.FirehoseListTags(conn, sn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %s", sn, err)
+		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %w", sn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -2789,110 +2802,26 @@ func resourceAwsKinesisFirehoseDeliveryStreamDelete(d *schema.ResourceData, meta
 	conn := meta.(*AWSClient).firehoseconn
 
 	sn := d.Get("name").(string)
+	log.Printf("[DEBUG] Deleting Kinesis Firehose Delivery Stream: (%s)", sn)
 	_, err := conn.DeleteDeliveryStream(&firehose.DeleteDeliveryStreamInput{
 		DeliveryStreamName: aws.String(sn),
 	})
-	if err != nil {
-		return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", sn, err)
+
+	if tfawserr.ErrCodeEquals(err, firehose.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, sn); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) deletion: %s", sn, err)
+	if err != nil {
+		return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %w", sn, err)
+	}
+
+	_, err = waiter.DeliveryStreamDeleted(conn, sn)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) delete: %w", sn, err)
 	}
 
 	return nil
-}
-
-func firehoseDeliveryStreamStateRefreshFunc(conn *firehose.Firehose, sn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
-			DeliveryStreamName: aws.String(sn),
-		})
-		if err != nil {
-			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
-				return &firehose.DeliveryStreamDescription{}, firehoseDeliveryStreamStatusDeleted, nil
-			}
-			return nil, "", err
-		}
-
-		return resp.DeliveryStreamDescription, aws.StringValue(resp.DeliveryStreamDescription.DeliveryStreamStatus), nil
-	}
-}
-
-func firehoseDeliveryStreamSSEStateRefreshFunc(conn *firehose.Firehose, sn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
-			DeliveryStreamName: aws.String(sn),
-		})
-		if err != nil {
-			return nil, "", err
-		}
-
-		return resp.DeliveryStreamDescription, aws.StringValue(resp.DeliveryStreamDescription.DeliveryStreamEncryptionConfiguration.Status), nil
-	}
-}
-
-func waitForKinesisFirehoseDeliveryStreamCreation(conn *firehose.Firehose, deliveryStreamName string) (*firehose.DeliveryStreamDescription, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{firehose.DeliveryStreamStatusCreating},
-		Target:     []string{firehose.DeliveryStreamStatusActive},
-		Refresh:    firehoseDeliveryStreamStateRefreshFunc(conn, deliveryStreamName),
-		Timeout:    20 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	v, err := stateConf.WaitForState()
-	if err != nil {
-		return nil, err
-	}
-
-	return v.(*firehose.DeliveryStreamDescription), nil
-}
-
-func waitForKinesisFirehoseDeliveryStreamDeletion(conn *firehose.Firehose, deliveryStreamName string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{firehose.DeliveryStreamStatusDeleting},
-		Target:     []string{firehoseDeliveryStreamStatusDeleted},
-		Refresh:    firehoseDeliveryStreamStateRefreshFunc(conn, deliveryStreamName),
-		Timeout:    20 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn *firehose.Firehose, deliveryStreamName string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{firehose.DeliveryStreamEncryptionStatusEnabling},
-		Target:     []string{firehose.DeliveryStreamEncryptionStatusEnabled},
-		Refresh:    firehoseDeliveryStreamSSEStateRefreshFunc(conn, deliveryStreamName),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForKinesisFirehoseDeliveryStreamSSEDisabled(conn *firehose.Firehose, deliveryStreamName string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{firehose.DeliveryStreamEncryptionStatusDisabling},
-		Target:     []string{firehose.DeliveryStreamEncryptionStatusDisabled},
-		Refresh:    firehoseDeliveryStreamSSEStateRefreshFunc(conn, deliveryStreamName),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }
 
 func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {

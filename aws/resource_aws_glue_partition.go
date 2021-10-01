@@ -46,7 +46,10 @@ func resourceAwsGluePartition() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
 			},
 			"storage_descriptor": {
 				Type:     schema.TypeList,
@@ -314,7 +317,7 @@ func expandGluePartitionInput(d *schema.ResourceData) *glue.PartitionInput {
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		tableInput.Parameters = stringMapToPointers(v.(map[string]interface{}))
+		tableInput.Parameters = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("partition_values"); ok && len(v.([]interface{})) > 0 {

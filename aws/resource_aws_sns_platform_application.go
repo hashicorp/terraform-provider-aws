@@ -1,24 +1,18 @@
 package aws
 
 import (
-	"context"
 	"crypto/sha256"
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
-
-var snsPlatformRequiresPlatformPrincipal = map[string]bool{
-	"APNS":         true,
-	"APNS_SANDBOX": true,
-}
 
 func resourceAwsSnsPlatformApplication() *schema.Resource {
 	return &schema.Resource{
@@ -29,11 +23,6 @@ func resourceAwsSnsPlatformApplication() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
-		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-			return validateAwsSnsPlatformApplication(diff)
-		},
-
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -180,7 +169,7 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 		Attributes:             attributes,
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := snsconn.SetPlatformApplicationAttributes(req)
 		if err != nil {
 			if isAWSErr(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {
@@ -321,19 +310,4 @@ func isChangeSha256Removal(oldRaw, newRaw interface{}) bool {
 	}
 
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(new))) == old
-}
-
-func validateAwsSnsPlatformApplication(d *schema.ResourceDiff) error {
-	platform := d.Get("platform").(string)
-	if snsPlatformRequiresPlatformPrincipal[platform] {
-		if v, ok := d.GetOk("platform_principal"); ok {
-			value := v.(string)
-			if len(value) == 0 {
-				return fmt.Errorf("platform_principal must be non-empty when platform = %s", platform)
-			}
-			return nil
-		}
-		return fmt.Errorf("platform_principal is required when platform = %s", platform)
-	}
-	return nil
 }

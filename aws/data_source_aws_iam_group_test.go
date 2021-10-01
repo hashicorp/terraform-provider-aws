@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -12,11 +13,12 @@ func TestAccAWSDataSourceIAMGroup_basic(t *testing.T) {
 	groupName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMGroupConfig(groupName),
+				Config: testAccAwsIAMGroupDataSourceConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
@@ -35,11 +37,12 @@ func TestAccAWSDataSourceIAMGroup_users(t *testing.T) {
 	userCount := 101
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIAMGroupConfigWithUser(groupName, userName, groupMemberShipName, userCount),
+				Config: testAccAwsIAMGroupDataSourceConfigWithUser(groupName, userName, groupMemberShipName, userCount),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
@@ -56,7 +59,7 @@ func TestAccAWSDataSourceIAMGroup_users(t *testing.T) {
 	})
 }
 
-func testAccAwsIAMGroupConfig(name string) string {
+func testAccAwsIAMGroupDataSourceConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"
@@ -69,7 +72,7 @@ data "aws_iam_group" "test" {
 `, name)
 }
 
-func testAccAwsIAMGroupConfigWithUser(groupName, userName, membershipName string, userCount int) string {
+func testAccAwsIAMGroupDataSourceConfigWithUser(groupName, userName, membershipName string, userCount int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"

@@ -14,7 +14,7 @@ Provides an AWS Config Delivery Channel.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_config_delivery_channel" "foo" {
   name           = "example"
   s3_bucket_name = aws_s3_bucket.b.bucket
@@ -82,6 +82,7 @@ The following arguments are supported:
 * `name` - (Optional) The name of the delivery channel. Defaults to `default`. Changing it recreates the resource.
 * `s3_bucket_name` - (Required) The name of the S3 bucket used to store the configuration history.
 * `s3_key_prefix` - (Optional) The prefix for the specified S3 bucket.
+* `s3_kms_key_arn` - (Optional) The ARN of the AWS KMS key used to encrypt objects delivered by AWS Config. Must belong to the same Region as the destination S3 bucket.
 * `sns_topic_arn` - (Optional) The ARN of the SNS topic that AWS Config delivers notifications to.
 * `snapshot_delivery_properties` - (Optional) Options for how AWS Config delivers configuration snapshots. See below
 

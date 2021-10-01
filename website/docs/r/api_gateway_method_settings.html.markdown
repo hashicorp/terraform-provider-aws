@@ -16,7 +16,7 @@ Manages API Gateway Stage Method Settings. For example, CloudWatch logging and m
 
 An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
@@ -103,6 +103,10 @@ The following arguments are supported:
 * `cache_data_encrypted` - (Optional) Specifies whether the cached responses are encrypted.
 * `require_authorization_for_cache_control` - (Optional) Specifies whether authorization is required for a cache invalidation request.
 * `unauthorized_cache_control_header_strategy` - (Optional) Specifies how to handle unauthorized requests for cache invalidation. The available values are `FAIL_WITH_403`, `SUCCEED_WITH_RESPONSE_HEADER`, `SUCCEED_WITHOUT_RESPONSE_HEADER`.
+
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 

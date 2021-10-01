@@ -52,8 +52,8 @@ func dataSourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) 
 
 	err := conn.ListStateMachinesPages(params, func(page *sfn.ListStateMachinesOutput, lastPage bool) bool {
 		for _, sm := range page.StateMachines {
-			if *sm.Name == target {
-				arns = append(arns, *sm.StateMachineArn)
+			if aws.StringValue(sm.Name) == target {
+				arns = append(arns, aws.StringValue(sm.StateMachineArn))
 			}
 		}
 		return true

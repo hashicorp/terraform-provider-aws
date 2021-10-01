@@ -21,6 +21,7 @@ func TestAccAWSEc2TrafficMirrorFilter_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
@@ -70,6 +71,7 @@ func TestAccAWSEc2TrafficMirrorFilter_tags(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
@@ -117,6 +119,7 @@ func TestAccAWSEc2TrafficMirrorFilter_disappears(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{

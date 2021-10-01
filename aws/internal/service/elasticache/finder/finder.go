@@ -1,6 +1,8 @@
 package finder
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -12,7 +14,7 @@ func ReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticach
 	input := &elasticache.DescribeReplicationGroupsInput{
 		ReplicationGroupId: aws.String(id),
 	}
-	result, err := conn.DescribeReplicationGroups(input)
+	output, err := conn.DescribeReplicationGroups(input)
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
@@ -23,23 +25,21 @@ func ReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticach
 		return nil, err
 	}
 
-	if result == nil || len(result.ReplicationGroups) == 0 || result.ReplicationGroups[0] == nil {
+	if output == nil || len(output.ReplicationGroups) == 0 || output.ReplicationGroups[0] == nil {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			Message:     "empty result",
 			LastRequest: input,
 		}
 	}
 
-	return result.ReplicationGroups[0], nil
+	return output.ReplicationGroups[0], nil
 }
 
 // ReplicationGroupMemberClustersByID retrieves all of an ElastiCache Replication Group's MemberClusters by the id of the Replication Group.
 func ReplicationGroupMemberClustersByID(conn *elasticache.ElastiCache, id string) ([]*elasticache.CacheCluster, error) {
-	var results []*elasticache.CacheCluster
-
 	rg, err := ReplicationGroupByID(conn, id)
 	if err != nil {
-		return results, err
+		return nil, err
 	}
 
 	clusters, err := CacheClustersByID(conn, aws.StringValueSlice(rg.MemberClusters))
@@ -48,7 +48,7 @@ func ReplicationGroupMemberClustersByID(conn *elasticache.ElastiCache, id string
 	}
 	if len(clusters) == 0 {
 		return clusters, &resource.NotFoundError{
-			Message: "No Member Clusters found",
+			Message: fmt.Sprintf("No Member Clusters found in Replication Group (%s)", id),
 		}
 	}
 
@@ -87,7 +87,7 @@ func CacheCluster(conn *elasticache.ElastiCache, input *elasticache.DescribeCach
 
 	if result == nil || len(result.CacheClusters) == 0 || result.CacheClusters[0] == nil {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			Message:     "empty result",
 			LastRequest: input,
 		}
 	}
@@ -124,4 +124,105 @@ func CacheClustersByID(conn *elasticache.ElastiCache, idList []string) ([]*elast
 	})
 
 	return results, err
+}
+
+// GlobalReplicationGroupByID() retrieves an ElastiCache Global Replication Group by id.
+func GlobalReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticache.GlobalReplicationGroup, error) {
+	input := &elasticache.DescribeGlobalReplicationGroupsInput{
+		GlobalReplicationGroupId: aws.String(id),
+		ShowMemberInfo:           aws.Bool(true),
+	}
+	output, err := conn.DescribeGlobalReplicationGroups(input)
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.GlobalReplicationGroups) == 0 || output.GlobalReplicationGroups[0] == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.GlobalReplicationGroups[0], nil
+}
+
+// GlobalReplicationGroupMemberByID retrieves a member Replication Group by id from a Global Replication Group.
+func GlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalReplicationGroupID string, id string) (*elasticache.GlobalReplicationGroupMember, error) {
+	globalReplicationGroup, err := GlobalReplicationGroupByID(conn, globalReplicationGroupID)
+	if err != nil {
+		return nil, &resource.NotFoundError{
+			Message:   "unable to retrieve enclosing Global Replication Group",
+			LastError: err,
+		}
+	}
+
+	if globalReplicationGroup == nil || len(globalReplicationGroup.Members) == 0 {
+		return nil, &resource.NotFoundError{
+			Message: "empty result",
+		}
+	}
+
+	for _, member := range globalReplicationGroup.Members {
+		if aws.StringValue(member.ReplicationGroupId) == id {
+			return member, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{
+		Message: fmt.Sprintf("Replication Group (%s) not found in Global Replication Group (%s)", id, globalReplicationGroupID),
+	}
+}
+
+func ElastiCacheUserById(conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
+	input := &elasticache.DescribeUsersInput{
+		UserId: aws.String(userID),
+	}
+	out, err := conn.DescribeUsers(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(out.Users) {
+	case 0:
+		return nil, &resource.NotFoundError{
+			Message: "empty result",
+		}
+	case 1:
+		return out.Users[0], nil
+	default:
+		return nil, &resource.NotFoundError{
+			Message: "too many results",
+		}
+	}
+}
+
+func ElastiCacheUserGroupById(conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
+	input := &elasticache.DescribeUserGroupsInput{
+		UserGroupId: aws.String(groupID),
+	}
+	out, err := conn.DescribeUserGroups(input)
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(out.UserGroups) {
+	case 0:
+		return nil, &resource.NotFoundError{
+			Message: "empty result",
+		}
+	case 1:
+		return out.UserGroups[0], nil
+	default:
+		return nil, &resource.NotFoundError{
+			Message: "too many results",
+		}
+	}
 }

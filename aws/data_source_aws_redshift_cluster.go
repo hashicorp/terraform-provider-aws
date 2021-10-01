@@ -185,11 +185,11 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error describing Redshift Cluster: %s, error: %w", cluster, err)
 	}
 
-	if resp.Clusters == nil || len(resp.Clusters) == 0 {
+	if resp.Clusters == nil || len(resp.Clusters) == 0 || resp.Clusters[0] == nil {
 		return fmt.Errorf("Error describing Redshift Cluster: %s, cluster information not found", cluster)
 	}
 
-	rsc := *resp.Clusters[0]
+	rsc := resp.Clusters[0]
 
 	d.SetId(cluster)
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)

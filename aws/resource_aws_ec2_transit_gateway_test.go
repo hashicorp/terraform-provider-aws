@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 func init() {
@@ -108,12 +109,97 @@ func testSweepEc2TransitGateways(region string) error {
 	return nil
 }
 
-func TestAccAWSEc2TransitGateway_basic(t *testing.T) {
+func TestAccAWSEc2TransitGateway_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"Gateway": {
+			"basic":                       testAccAWSEc2TransitGateway_basic,
+			"disappears":                  testAccAWSEc2TransitGateway_disappears,
+			"AmazonSideASN":               testAccAWSEc2TransitGateway_AmazonSideASN,
+			"AutoAcceptSharedAttachments": testAccAWSEc2TransitGateway_AutoAcceptSharedAttachments,
+			"DefaultRouteTableAssociationAndPropagationDisabled": testAccAWSEc2TransitGateway_DefaultRouteTableAssociationAndPropagationDisabled,
+			"DefaultRouteTableAssociation":                       testAccAWSEc2TransitGateway_DefaultRouteTableAssociation,
+			"DefaultRouteTablePropagation":                       testAccAWSEc2TransitGateway_DefaultRouteTablePropagation,
+			"Description":                                        testAccAWSEc2TransitGateway_Description,
+			"DnsSupport":                                         testAccAWSEc2TransitGateway_DnsSupport,
+			"Tags":                                               testAccAWSEc2TransitGateway_Tags,
+			"VpnEcmpSupport":                                     testAccAWSEc2TransitGateway_VpnEcmpSupport,
+		},
+		"PeeringAttachment": {
+			"basic":            testAccAWSEc2TransitGatewayPeeringAttachment_basic,
+			"disappears":       testAccAWSEc2TransitGatewayPeeringAttachment_disappears,
+			"DifferentAccount": testAccAWSEc2TransitGatewayPeeringAttachment_differentAccount,
+			"TagsSameAccount":  testAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount,
+		},
+		"PeeringAttachmentAccepter": {
+			"basicSameAccount":      testAccAWSEc2TransitGatewayPeeringAttachmentAccepter_basic_sameAccount,
+			"TagsSameAccount":       testAccAWSEc2TransitGatewayPeeringAttachmentAccepter_Tags_sameAccount,
+			"basicDifferentAccount": testAccAWSEc2TransitGatewayPeeringAttachmentAccepter_basic_differentAccount,
+		},
+		"PrefixListReference": {
+			"basic":                      testAccAwsEc2TransitGatewayPrefixListReference_basic,
+			"disappears":                 testAccAwsEc2TransitGatewayPrefixListReference_disappears,
+			"disappearsTransitGateway":   testAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway,
+			"TransitGatewayAttachmentId": testAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId,
+		},
+		"Route": {
+			"basic":                              testAccAWSEc2TransitGatewayRoute_basic,
+			"basicIpv6":                          testAccAWSEc2TransitGatewayRoute_basic_ipv6,
+			"blackhole":                          testAccAWSEc2TransitGatewayRoute_blackhole,
+			"disappears":                         testAccAWSEc2TransitGatewayRoute_disappears,
+			"disappearsTransitGatewayAttachment": testAccAWSEc2TransitGatewayRoute_disappears_TransitGatewayAttachment,
+		},
+		"RouteTable": {
+			"basic":                    testAccAWSEc2TransitGatewayRouteTable_basic,
+			"disappears":               testAccAWSEc2TransitGatewayRouteTable_disappears,
+			"disappearsTransitGateway": testAccAWSEc2TransitGatewayRouteTable_disappears_TransitGateway,
+			"Tags":                     testAccAWSEc2TransitGatewayRouteTable_Tags,
+		},
+		"RouteTableAssociation": {
+			"basic": testAccAWSEc2TransitGatewayRouteTableAssociation_basic,
+		},
+		"RouteTablePropagation": {
+			"basic": testAccAWSEc2TransitGatewayRouteTablePropagation_basic,
+		},
+		"VpcAttachment": {
+			"basic":                testAccAWSEc2TransitGatewayVpcAttachment_basic,
+			"disappears":           testAccAWSEc2TransitGatewayVpcAttachment_disappears,
+			"ApplianceModeSupport": testAccAWSEc2TransitGatewayVpcAttachment_ApplianceModeSupport,
+			"DnsSupport":           testAccAWSEc2TransitGatewayVpcAttachment_DnsSupport,
+			"Ipv6Support":          testAccAWSEc2TransitGatewayVpcAttachment_Ipv6Support,
+			"SharedTransitGateway": testAccAWSEc2TransitGatewayVpcAttachment_SharedTransitGateway,
+			"SubnetIds":            testAccAWSEc2TransitGatewayVpcAttachment_SubnetIds,
+			"Tags":                 testAccAWSEc2TransitGatewayVpcAttachment_Tags,
+			"TransitGatewayDefaultRouteTableAssociation":                       testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAssociation,
+			"TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled": testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAssociationAndPropagationDisabled,
+			"TransitGatewayDefaultRouteTablePropagation":                       testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTablePropagation,
+		},
+		"VpcAttachmentAccepter": {
+			"basic": testAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic,
+			"Tags":  testAccAWSEc2TransitGatewayVpcAttachmentAccepter_Tags,
+			"TransitGatewayDefaultRouteTableAssociationAndPropagation": testAccAWSEc2TransitGatewayVpcAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
+func testAccAWSEc2TransitGateway_basic(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -144,12 +230,13 @@ func TestAccAWSEc2TransitGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_disappears(t *testing.T) {
+func testAccAWSEc2TransitGateway_disappears(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -165,12 +252,13 @@ func TestAccAWSEc2TransitGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_AmazonSideASN(t *testing.T) {
+func testAccAWSEc2TransitGateway_AmazonSideASN(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -198,12 +286,13 @@ func TestAccAWSEc2TransitGateway_AmazonSideASN(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
+func testAccAWSEc2TransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -231,12 +320,13 @@ func TestAccAWSEc2TransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociationAndPropagationDisabled(t *testing.T) {
+func testAccAWSEc2TransitGateway_DefaultRouteTableAssociationAndPropagationDisabled(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -257,12 +347,13 @@ func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociationAndPropagationDisab
 	})
 }
 
-func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociation(t *testing.T) {
+func testAccAWSEc2TransitGateway_DefaultRouteTableAssociation(t *testing.T) {
 	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -298,12 +389,13 @@ func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociation(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_DefaultRouteTablePropagation(t *testing.T) {
+func testAccAWSEc2TransitGateway_DefaultRouteTablePropagation(t *testing.T) {
 	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -339,12 +431,13 @@ func TestAccAWSEc2TransitGateway_DefaultRouteTablePropagation(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_DnsSupport(t *testing.T) {
+func testAccAWSEc2TransitGateway_DnsSupport(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -372,12 +465,13 @@ func TestAccAWSEc2TransitGateway_DnsSupport(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_VpnEcmpSupport(t *testing.T) {
+func testAccAWSEc2TransitGateway_VpnEcmpSupport(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -405,12 +499,13 @@ func TestAccAWSEc2TransitGateway_VpnEcmpSupport(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_Description(t *testing.T) {
+func testAccAWSEc2TransitGateway_Description(t *testing.T) {
 	var transitGateway1, transitGateway2 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -438,12 +533,13 @@ func TestAccAWSEc2TransitGateway_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGateway_Tags(t *testing.T) {
+func testAccAWSEc2TransitGateway_Tags(t *testing.T) {
 	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -612,7 +708,7 @@ func testAccCheckAWSEc2TransitGatewayPropagationDefaultRouteTableVpcAttachmentNo
 
 		attachmentID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := ec2DescribeTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+		propagation, err := finder.TransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err
@@ -632,7 +728,7 @@ func testAccCheckAWSEc2TransitGatewayPropagationDefaultRouteTableVpcAttachmentPr
 
 		attachmentID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		propagation, err := ec2DescribeTransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
+		propagation, err := finder.TransitGatewayRouteTablePropagation(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err

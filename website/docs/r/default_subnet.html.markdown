@@ -16,7 +16,7 @@ The `aws_default_subnet` resource allows you to manage a region's default VPC su
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_default_subnet" "default_az1" {
   availability_zone = "us-west-2a"
 

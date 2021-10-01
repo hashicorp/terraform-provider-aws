@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
+func testAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"
@@ -20,12 +20,13 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
 	callerIdentityDatasourceName := "data.aws_caller_identity.creator"
 	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", acctest.RandString(8))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_Tags(t *testing.T) {
+func testAccAWSEc2TransitGatewayVpcAttachmentAccepter_Tags(t *testing.T) {
 	var providers []*schema.Provider
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"
@@ -66,12 +67,13 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_Tags(t *testing.T) {
 	callerIdentityDatasourceName := "data.aws_caller_identity.creator"
 	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", acctest.RandString(8))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -127,7 +129,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation(t *testing.T) {
+func testAccAWSEc2TransitGatewayVpcAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation(t *testing.T) {
 	var providers []*schema.Provider
 	var transitGateway ec2.TransitGateway
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
@@ -135,12 +137,13 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_TransitGatewayDefaultRoute
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", acctest.RandString(8))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{

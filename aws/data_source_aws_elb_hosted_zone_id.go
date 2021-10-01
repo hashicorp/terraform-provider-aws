@@ -14,7 +14,7 @@ var elbHostedZoneIdPerRegionMap = map[string]string{
 	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
 	endpoints.ApNortheast1RegionID: "Z14GRHDCWA56QT",
 	endpoints.ApNortheast2RegionID: "ZWKZPGTI48KDX",
-	"ap-northeast-3":               "Z5LXEXXYW11ES", //lintignore:AWSAT003 // https://github.com/aws/aws-sdk-go/issues/1863
+	endpoints.ApNortheast3RegionID: "Z5LXEXXYW11ES",
 	endpoints.ApSouth1RegionID:     "ZP97RAFLXTNZK",
 	endpoints.ApSoutheast1RegionID: "Z1LMS91P8CMLE5",
 	endpoints.ApSoutheast2RegionID: "Z1GM3OXH4ZPM65",

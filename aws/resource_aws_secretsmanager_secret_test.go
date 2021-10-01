@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
 )
@@ -28,7 +29,7 @@ func testSweepSecretsManagerSecrets(region string) error {
 	}
 	conn := client.(*AWSClient).secretsmanagerconn
 
-	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, isLast bool) bool {
+	err = conn.ListSecretsPages(&secretsmanager.ListSecretsInput{}, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if len(page.SecretList) == 0 {
 			log.Print("[DEBUG] No Secrets Manager Secrets to sweep")
 			return true
@@ -52,7 +53,7 @@ func testSweepSecretsManagerSecrets(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -71,6 +72,7 @@ func TestAccAwsSecretsManagerSecret_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -87,13 +89,14 @@ func TestAccAwsSecretsManagerSecret_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rotation_lambda_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -106,6 +109,7 @@ func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -121,7 +125,7 @@ func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "name_prefix", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -134,6 +138,7 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -155,7 +160,68 @@ func TestAccAwsSecretsManagerSecret_Description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
+			},
+		},
+	})
+}
+
+func TestAccAwsSecretsManagerSecret_basicReplica(t *testing.T) {
+	var providers []*schema.Provider
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t); testAccMultipleRegionPreCheck(t, 2) },
+		ErrorCheck:        testAccErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 2),
+		CheckDestroy:      testAccCheckAwsSecretsManagerSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_basicReplica(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsSecretsManagerSecret_overwriteReplica(t *testing.T) {
+	var providers []*schema.Provider
+	var secret secretsmanager.DescribeSecretOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t); testAccMultipleRegionPreCheck(t, 3) },
+		ErrorCheck:        testAccErrorCheck(t, secretsmanager.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		CheckDestroy:      testAccCheckAwsSecretsManagerSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "true"),
+				),
+			},
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_overwriteReplicaUpdate(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "true"),
+				),
+			},
+			{
+				Config: testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
+				),
 			},
 		},
 	})
@@ -168,6 +234,7 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -189,7 +256,7 @@ func TestAccAwsSecretsManagerSecret_KmsKeyID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -202,6 +269,7 @@ func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -224,7 +292,7 @@ func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -238,6 +306,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -268,7 +337,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 			// Test removing rotation on resource update
 			{
@@ -289,6 +358,7 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -321,7 +391,7 @@ func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 			// Test removing rotation rules on resource update
 			{
@@ -342,6 +412,7 @@ func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -382,7 +453,7 @@ func TestAccAwsSecretsManagerSecret_Tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 		},
 	})
@@ -395,6 +466,7 @@ func TestAccAwsSecretsManagerSecret_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
@@ -439,7 +511,7 @@ func testAccCheckAwsSecretsManagerSecretDestroy(s *terraform.State) error {
 
 		var output *secretsmanager.DescribeSecretOutput
 
-		err := resource.Retry(waiter.DeletionPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.DescribeSecret(input)
 
@@ -526,6 +598,84 @@ resource "aws_secretsmanager_secret" "test" {
   name        = "%s"
 }
 `, description, rName)
+}
+
+func testAccAwsSecretsManagerSecretConfig_basicReplica(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(2),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+
+  replica {
+    region = data.aws_region.alternate.name
+  }
+}
+`, rName))
+}
+
+func testAccAwsSecretsManagerSecretConfig_overwriteReplica(rName string, force_overwrite_replica_secret bool) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  provider                = awsalternate
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "test2" {
+  provider                = awsthird
+  deletion_window_in_days = 7
+}
+
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                           = %[1]q
+  force_overwrite_replica_secret = %[2]t
+
+  replica {
+    kms_key_id = aws_kms_key.test.key_id
+    region     = data.aws_region.alternate.name
+  }
+}
+`, rName, force_overwrite_replica_secret))
+}
+
+func testAccAwsSecretsManagerSecretConfig_overwriteReplicaUpdate(rName string, force_overwrite_replica_secret bool) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  provider                = awsalternate
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "test2" {
+  provider                = awsthird
+  deletion_window_in_days = 7
+}
+
+data "aws_region" "third" {
+  provider = awsthird
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                           = %[1]q
+  force_overwrite_replica_secret = %[2]t
+
+  replica {
+    kms_key_id = aws_kms_key.test2.key_id
+    region     = data.aws_region.third.name
+  }
+}
+`, rName, force_overwrite_replica_secret))
 }
 
 func testAccAwsSecretsManagerSecretConfig_Name(rName string) string {

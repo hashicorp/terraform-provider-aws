@@ -4,21 +4,25 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfig(acctest.RandString(5)),
+				Config: testAccDxConnectionAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxConnectionAssociationExists("aws_dx_connection_association.test"),
 				),
@@ -28,13 +32,16 @@ func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
 }
 
 func TestAccAWSDxConnectionAssociation_multiConns(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionAssociationConfig_multiConns(acctest.RandString(5)),
+				Config: testAccDxConnectionAssociationConfig_multiConns(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxConnectionAssociationExists("aws_dx_connection_association.test1"),
 					testAccCheckAwsDxConnectionAssociationExists("aws_dx_connection_association.test2"),
@@ -52,28 +59,39 @@ func testAccCheckAwsDxConnectionAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &directconnect.DescribeConnectionsInput{
-			ConnectionId: aws.String(rs.Primary.ID),
+		err := finder.ConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		resp, err := conn.DescribeConnections(input)
 		if err != nil {
 			return err
 		}
-		for _, v := range resp.Connections {
-			if *v.ConnectionId == rs.Primary.ID && v.LagId != nil {
-				return fmt.Errorf("Dx Connection (%s) is not dissociated with Lag", rs.Primary.ID)
-			}
-		}
+
+		return fmt.Errorf("Direct Connect Connection (%s) LAG (%s) Association still exists", rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 	}
+
 	return nil
 }
 
 func testAccCheckAwsDxConnectionAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		conn := testAccProvider.Meta().(*AWSClient).dxconn
+
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		err := finder.ConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
+
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -82,16 +100,18 @@ func testAccCheckAwsDxConnectionAssociationExists(name string) resource.TestChec
 
 func testAccDxConnectionAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_dx_locations" "test" {}
+
 resource "aws_dx_connection" "test" {
-  name      = "tf-dx-%s"
+  name      = %[1]q
   bandwidth = "1Gbps"
-  location  = "EqSe2-EQ"
+  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
 }
 
 resource "aws_dx_lag" "test" {
-  name                  = "tf-dx-%s"
+  name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2-EQ"
+  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
   force_destroy         = true
 }
 
@@ -99,27 +119,29 @@ resource "aws_dx_connection_association" "test" {
   connection_id = aws_dx_connection.test.id
   lag_id        = aws_dx_lag.test.id
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccDxConnectionAssociationConfig_multiConns(rName string) string {
 	return fmt.Sprintf(`
+data "aws_dx_locations" "test" {}
+
 resource "aws_dx_connection" "test1" {
-  name      = "tf-dxconn1-%s"
+  name      = "%[1]s-1"
   bandwidth = "1Gbps"
-  location  = "EqSe2-EQ"
+  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
 }
 
 resource "aws_dx_connection" "test2" {
-  name      = "tf-dxconn2-%s"
+  name      = "%[1]s-2"
   bandwidth = "1Gbps"
-  location  = "EqSe2-EQ"
+  location  = tolist(data.aws_dx_locations.test.location_codes)[0]
 }
 
 resource "aws_dx_lag" "test" {
-  name                  = "tf-dx-%s"
+  name                  = %[1]q
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2-EQ"
+  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
   force_destroy         = true
 }
 
@@ -132,5 +154,5 @@ resource "aws_dx_connection_association" "test2" {
   connection_id = aws_dx_connection.test2.id
   lag_id        = aws_dx_lag.test.id
 }
-`, rName, rName, rName)
+`, rName)
 }

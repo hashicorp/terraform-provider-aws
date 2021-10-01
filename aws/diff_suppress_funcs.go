@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/url"
-	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
 )
 
 func suppressEquivalentAwsPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
@@ -41,32 +42,6 @@ func suppressMissingOptionalConfigurationBlock(k, old, new string, d *schema.Res
 	return old == "1" && new == "0"
 }
 
-// Suppresses minor version changes to the db_instance engine_version attribute
-func suppressAwsDbEngineVersionDiffs(k, old, new string, d *schema.ResourceData) bool {
-	// First check if the old/new values are nil.
-	// If both are nil, we have no state to compare the values with, so register a diff.
-	// This populates the attribute field during a plan/apply with fresh state, allowing
-	// the attribute to still be used in future resources.
-	// See https://github.com/hashicorp/terraform/issues/11881
-	if old == "" && new == "" {
-		return false
-	}
-
-	if v, ok := d.GetOk("auto_minor_version_upgrade"); ok {
-		if v.(bool) {
-			// If we're set to auto upgrade minor versions
-			// ignore a minor version diff between versions
-			if strings.HasPrefix(old, new) {
-				log.Printf("[DEBUG] Ignoring minor version diff")
-				return true
-			}
-		}
-	}
-
-	// Throw a diff by default
-	return false
-}
-
 func suppressEquivalentJsonDiffs(k, old, new string, d *schema.ResourceData) bool {
 	ob := bytes.NewBufferString("")
 	if err := json.Compact(ob, []byte(old)); err != nil {
@@ -79,6 +54,18 @@ func suppressEquivalentJsonDiffs(k, old, new string, d *schema.ResourceData) boo
 	}
 
 	return jsonBytesEqual(ob.Bytes(), nb.Bytes())
+}
+
+func suppressEquivalentJsonEmptyNilDiffs(k, old, new string, d *schema.ResourceData) bool {
+	if old == "[]" && new == "" {
+		return true
+	}
+
+	if old == "" && new == "[]" {
+		return true
+	}
+
+	return suppressEquivalentJsonDiffs(k, old, new, d)
 }
 
 func suppressOpenIdURL(k, old, new string, d *schema.ResourceData) bool {
@@ -118,5 +105,21 @@ func suppressEquivalentJsonOrYamlDiffs(k, old, new string, d *schema.ResourceDat
 // suppressEqualCIDRBlockDiffs provides custom difference suppression for CIDR blocks
 // that have different string values but represent the same CIDR.
 func suppressEqualCIDRBlockDiffs(k, old, new string, d *schema.ResourceData) bool {
-	return cidrBlocksEqual(old, new)
+	return tfnet.CIDRBlocksEqual(old, new)
+}
+
+// suppressEquivalentTime suppresses differences for time values that represent the same
+// instant in different timezones.
+func suppressEquivalentTime(k, old, new string, d *schema.ResourceData) bool {
+	oldTime, err := time.Parse(time.RFC3339, old)
+	if err != nil {
+		return false
+	}
+
+	newTime, err := time.Parse(time.RFC3339, new)
+	if err != nil {
+		return false
+	}
+
+	return oldTime.Equal(newTime)
 }

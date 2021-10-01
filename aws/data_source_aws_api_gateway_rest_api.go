@@ -148,7 +148,7 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 
 	err = conn.GetResourcesPages(resourceParams, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
 		for _, item := range page.Items {
-			if *item.Path == "/" {
+			if aws.StringValue(item.Path) == "/" {
 				d.Set("root_resource_id", item.Id)
 				return false
 			}

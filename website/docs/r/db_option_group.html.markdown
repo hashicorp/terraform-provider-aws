@@ -17,7 +17,7 @@ Provides an RDS DB option group resource. Documentation of the available options
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_option_group" "example" {
   name                     = "option-group-test-terraform"
   option_group_description = "Terraform Option Group"
@@ -48,7 +48,15 @@ resource "aws_db_option_group" "example" {
 }
 ```
 
-~> **Note**: Any modifications to the `db_option_group` are set to happen immediately as we default to applying immediately.
+~> **Note**: Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
+
+~> **WARNING:** You can perform a destroy on a `aws_db_option_group`, as long as it is not associated with any Amazon RDS resource. An option group can be associated with a DB instance, a manual DB snapshot, or an automated DB snapshot.
+
+If you try to delete an option group that is associated with an Amazon RDS resource, an error similar to the following is returned:
+
+> An error occurred (InvalidOptionGroupStateFault) when calling the DeleteOptionGroup operation: The option group 'optionGroupName' cannot be deleted because it is in use.
+
+More information about this can be found [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithOptionGroups.html#USER_WorkingWithOptionGroups.Delete).
 
 ## Argument Reference
 
@@ -60,7 +68,7 @@ The following arguments are supported:
 * `engine_name` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `major_engine_version` - (Required) Specifies the major version of the engine that this option group should be associated with.
 * `option` - (Optional) A list of Options to apply.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Option blocks support the following:
 
@@ -82,6 +90,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The db option group name.
 * `arn` - The ARN of the db option group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -95,5 +104,5 @@ In addition to all arguments above, the following attributes are exported:
 DB Option groups can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_db_option_group.bar mysql-option-group
+$ terraform import aws_db_option_group.example mysql-option-group
 ```

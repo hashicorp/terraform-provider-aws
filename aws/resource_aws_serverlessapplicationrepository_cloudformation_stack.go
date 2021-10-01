@@ -82,8 +82,11 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Res
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -123,14 +126,17 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackCreate(d *sche
 func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
 	serverlessConn := meta.(*AWSClient).serverlessapplicationrepositoryconn
 	cfConn := meta.(*AWSClient).cfconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	stack, err := cffinder.Stack(cfConn, d.Id())
+	stack, err := cffinder.StackByID(cfConn, d.Id())
+
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", d.Id(), err)
 	}
@@ -154,8 +160,15 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema
 		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), serverlessApplicationRepositoryCloudFormationStackTagSemanticVersion)
 	}
 
-	if err = d.Set("tags", tags.IgnoreServerlessApplicationRepository().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags = tags.IgnoreServerlessApplicationRepository().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("failed to set tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("failed to set tags_all: %w", err)
 	}
 
 	if err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs)); err != nil {
@@ -274,7 +287,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 	}
 
 	cfConn := meta.(*AWSClient).cfconn
-	stack, err := cffinder.Stack(cfConn, stackID)
+	stack, err := cffinder.StackByID(cfConn, stackID)
 	if err != nil {
 		return nil, fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
 	}
@@ -287,13 +300,15 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.ResourceData, client *AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
 	serverlessConn := client.serverlessapplicationrepositoryconn
 	cfConn := client.cfconn
+	defaultTagsConfig := client.DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	stackName := d.Get("name").(string)
 	changeSetRequest := serverlessrepository.CreateCloudFormationChangeSetRequest{
 		StackName:     aws.String(stackName),
 		ApplicationId: aws.String(d.Get("application_id").(string)),
 		Capabilities:  expandStringSet(d.Get("capabilities").(*schema.Set)),
-		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreServerlessApplicationRepository().ServerlessapplicationrepositoryTags(),
+		Tags:          tags.IgnoreServerlessApplicationRepository().ServerlessapplicationrepositoryTags(),
 	}
 	if v, ok := d.GetOk("semantic_version"); ok {
 		changeSetRequest.SemanticVersion = aws.String(v.(string))

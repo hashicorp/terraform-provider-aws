@@ -12,7 +12,7 @@ Manages a Security Hub administrator account for an organization. The AWS accoun
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_organizations_organization" "example" {
   aws_service_access_principals = ["securityhub.amazonaws.com"]
   feature_set                   = "ALL"
@@ -24,6 +24,11 @@ resource "aws_securityhub_organization_admin_account" "example" {
   depends_on = [aws_organizations_organization.example]
 
   admin_account_id = "123456789012"
+}
+
+# Auto enable security hub in organization member accounts
+resource "aws_securityhub_organization_configuration" "example" {
+  auto_enable = true
 }
 ```
 

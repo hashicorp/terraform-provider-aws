@@ -17,19 +17,19 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
-
-	shareName := fmt.Sprintf("tf-%s", acctest.RandString(10))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamResourceShareAccepterBasic(shareName),
+				Config: testAccAwsRamResourceShareAccepterBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
@@ -38,12 +38,77 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
 					testAccCheckResourceAttrAccountID(resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexp.MustCompile(`\d{12}`)),
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareName),
+					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
 				),
 			},
 			{
-				Config:            testAccAwsRamResourceShareAccepterBasic(shareName),
+				Config:            testAccAwsRamResourceShareAccepterBasic(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
+	var providers []*schema.Provider
+	resourceName := "aws_ram_resource_share_accepter.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRamResourceShareAccepterBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRamResourceShareAccepter(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsRamResourceShareAccepter_resourceAssociation(t *testing.T) {
+	var providers []*schema.Provider
+	resourceName := "aws_ram_resource_share_accepter.test"
+	principalAssociationResourceName := "aws_ram_principal_association.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRamResourceShareAccepterResourceAssociation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
+					testAccMatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", uuidRegexPattern))),
+					resource.TestMatchResourceAttr(resourceName, "share_id", regexp.MustCompile(fmt.Sprintf(`^rs-%s$`, uuidRegexPattern))),
+					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
+					testAccCheckResourceAttrAccountID(resourceName, "receiver_account_id"),
+					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexp.MustCompile(`\d{12}`)),
+					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
+				),
+			},
+			{
+				Config:            testAccAwsRamResourceShareAccepterResourceAssociation(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -105,7 +170,7 @@ func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestChe
 	}
 }
 
-func testAccAwsRamResourceShareAccepterBasic(shareName string) string {
+func testAccAwsRamResourceShareAccepterBasic(rName string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_ram_resource_share_accepter" "test" {
   share_arn = aws_ram_principal_association.test.resource_share_arn
@@ -130,5 +195,77 @@ resource "aws_ram_principal_association" "test" {
 }
 
 data "aws_caller_identity" "receiver" {}
-`, shareName)
+`, rName)
+}
+
+func testAccAwsRamResourceShareAccepterResourceAssociation(rName string) string {
+	return composeConfig(testAccAwsRamResourceShareAccepterBasic(rName), fmt.Sprintf(`
+resource "aws_ram_resource_association" "test" {
+  provider = "awsalternate"
+
+  resource_arn       = aws_codebuild_project.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_codebuild_project" "test" {
+  provider = "awsalternate"
+
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  provider = "awsalternate"
+
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "codebuild.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  provider = "awsalternate"
+
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Resource = ["*"]
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+    }]
+  })
+}
+`, rName))
 }

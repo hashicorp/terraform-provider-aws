@@ -4,21 +4,25 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
+func testAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
 	rName := acctest.RandString(8)
+	domain := testAccRandomDomainName()
+
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		Providers: testAccProviders,
+	resource.Test(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName),
+				Config: testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
@@ -40,17 +44,20 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T) {
+func testAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T) {
 	rName := acctest.RandString(8)
+	domain := testAccRandomDomainName()
+
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		Providers: testAccProviders,
+	resource.Test(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName),
+				Config: testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bundle_id", resourceName, "bundle_id"),
@@ -72,10 +79,11 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T
 	})
 }
 
-func TestAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		Providers: testAccProviders,
+func testAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWorkspacesWorkspaceConfig_workspaceIDAndDirectoryIDConflict(),
@@ -85,9 +93,9 @@ func TestAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t
 	})
 }
 
-func testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName string) string {
+func testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName, domain string) string {
 	return composeConfig(
-		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName, domain),
 		`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
@@ -113,9 +121,9 @@ data "aws_workspaces_workspace" "test" {
 `)
 }
 
-func testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName string) string {
+func testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName, domain string) string {
 	return composeConfig(
-		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName, domain),
 		`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id

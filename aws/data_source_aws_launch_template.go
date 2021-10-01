@@ -220,6 +220,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"http_protocol_ipv6": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"http_tokens": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -315,6 +319,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"interface_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -336,6 +344,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Computed: true,
 						},
 						"host_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"host_resource_group_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -457,7 +469,7 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),

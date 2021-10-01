@@ -139,7 +139,7 @@ func lookupCloudWatchLogDestination(conn *cloudwatchlogs.CloudWatchLogs,
 	}
 
 	for _, destination := range resp.Destinations {
-		if *destination.DestinationName == name {
+		if aws.StringValue(destination.DestinationName) == name {
 			return destination, true, nil
 		}
 	}

@@ -311,7 +311,7 @@ func dataSourceAwsIamPolicyDocumentMakeConditions(in []interface{}, version stri
 			Variable: item["variable"].(string),
 		}
 		out[i].Values, err = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
-			aws.StringValueSlice(expandStringList(item["values"].([]interface{}))),
+			aws.StringValueSlice(expandStringListKeepEmpty(item["values"].([]interface{}))),
 			version,
 		)
 		if err != nil {

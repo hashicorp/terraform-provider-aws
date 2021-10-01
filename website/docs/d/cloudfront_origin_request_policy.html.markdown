@@ -12,7 +12,7 @@ description: |-
 
 The following example below creates a CloudFront origin request policy.
 
-```hcl
+```terraform
 data "aws_cloudfront_origin_request_policy" "example" {
   name = "example-policy"
 }

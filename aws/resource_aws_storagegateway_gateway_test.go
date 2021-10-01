@@ -27,7 +27,7 @@ func testSweepStorageGatewayGateways(region string) error {
 	}
 	conn := client.(*AWSClient).storagegatewayconn
 
-	err = conn.ListGatewaysPages(&storagegateway.ListGatewaysInput{}, func(page *storagegateway.ListGatewaysOutput, isLast bool) bool {
+	err = conn.ListGatewaysPages(&storagegateway.ListGatewaysInput{}, func(page *storagegateway.ListGatewaysOutput, lastPage bool) bool {
 		if len(page.Gateways) == 0 {
 			log.Print("[DEBUG] No Storage Gateway Gateways to sweep")
 			return true
@@ -50,7 +50,7 @@ func testSweepStorageGatewayGateways(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -69,6 +69,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Cached(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -103,6 +104,47 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Cached(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayGateway_GatewayType_FileFsxSmb(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_GatewayType_FileFsxSmb(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_type", "FILE_FSX_SMB"),
+					resource.TestCheckResourceAttr(resourceName, "medium_changer_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
+					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_network_interface.0.ipv4_address", "aws_instance.test", "private_ip"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayGateway_GatewayType_FileS3(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -110,6 +152,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_FileS3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -150,6 +193,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Stored(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -190,6 +234,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Vtl(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -228,6 +273,7 @@ func TestAccAWSStorageGatewayGateway_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -275,6 +321,7 @@ func TestAccAWSStorageGatewayGateway_GatewayName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -310,6 +357,7 @@ func TestAccAWSStorageGatewayGateway_CloudWatchLogs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -337,6 +385,7 @@ func TestAccAWSStorageGatewayGateway_GatewayTimezone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -372,6 +421,7 @@ func TestAccAWSStorageGatewayGateway_GatewayVpcEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -396,18 +446,20 @@ func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
+	domainName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName),
+				Config: testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", "terraformtesting.com"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.username", "Administrator"),
 					resource.TestCheckResourceAttrSet(resourceName, "smb_active_directory_settings.0.active_directory_status"),
 				),
@@ -426,18 +478,84 @@ func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings_timeout(t *testi
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
+	domainName := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsTimeout(rName, 50),
+				Config: testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsTimeout(rName, domainName, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", "terraformtesting.com"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", "50"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address", "smb_active_directory_settings"},
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewayGateway_SmbMicrosoftActiveDirectorySettings(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+	domainName := testAccRandomDomainName()
+	username := "Admin"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettings(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.username", username),
+					resource.TestCheckResourceAttrSet(resourceName, "smb_active_directory_settings.0.active_directory_status"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address", "smb_active_directory_settings"},
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewayGateway_SmbMicrosoftActiveDirectorySettings_timeout(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+	domainName := testAccRandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettingsTimeout(rName, domainName, 50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", "50"),
 				),
 			},
@@ -458,6 +576,7 @@ func TestAccAWSStorageGatewayGateway_SmbGuestPassword(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -492,6 +611,7 @@ func TestAccAWSStorageGatewayGateway_SMBSecurityStrategy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -500,6 +620,7 @@ func TestAccAWSStorageGatewayGateway_SMBSecurityStrategy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "smb_security_strategy", "ClientSpecified"),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", "false"),
 				),
 			},
 			{
@@ -519,6 +640,48 @@ func TestAccAWSStorageGatewayGateway_SMBSecurityStrategy(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayGateway_SMBVisibility(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigSMBVisibility(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigSMBVisibility(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", "false"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigSMBVisibility(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayGateway_disappears(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -526,6 +689,7 @@ func TestAccAWSStorageGatewayGateway_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -548,6 +712,7 @@ func TestAccAWSStorageGatewayGateway_bandwidthUpload(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -589,6 +754,7 @@ func TestAccAWSStorageGatewayGateway_bandwidthDownload(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -630,6 +796,7 @@ func TestAccAWSStorageGatewayGateway_bandwidthAll(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -848,6 +1015,17 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName)
 }
 
+func testAccAWSStorageGatewayGatewayConfig_GatewayType_FileFsxSmb(rName string) string {
+	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address = aws_instance.test.public_ip
+  gateway_name       = %q
+  gateway_timezone   = "GMT"
+  gateway_type       = "FILE_FSX_SMB"
+}
+`, rName)
+}
+
 func testAccAWSStorageGatewayGatewayConfig_GatewayType_FileS3(rName string) string {
 	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
@@ -932,6 +1110,47 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName)
 }
 
+func testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName, domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  size     = "Small"
+
+  vpc_settings {
+    subnet_ids = aws_subnet.test[*].id
+    vpc_id     = aws_vpc.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+`, rName, domainName)
+}
+
+func testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName, domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_directory_service_directory" "test" {
+  edition  = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    subnet_ids = aws_subnet.test[*].id
+    vpc_id     = aws_vpc.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+`, rName, domainName)
+}
+
 func testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName string) string {
 	return composeConfig(
 		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
@@ -995,21 +1214,6 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_directory_service_directory" "test" {
-  name     = "terraformtesting.com"
-  password = "SuperSecretPassw0rd"
-  size     = "Small"
-
-  vpc_settings {
-    subnet_ids = aws_subnet.test[*].id
-    vpc_id     = aws_vpc.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_vpc_dhcp_options" "test" {
   domain_name         = aws_directory_service_directory.test.name
   domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
@@ -1045,9 +1249,10 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName string) string {
+func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName, domainName string) string {
 	return composeConfig(
 		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName, domainName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
@@ -1064,9 +1269,10 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName))
 }
 
-func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsTimeout(rName string, timeout int) string {
+func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsTimeout(rName, domainName string, timeout int) string {
 	return composeConfig(
 		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceSimpleDirectory(rName, domainName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
@@ -1078,6 +1284,47 @@ resource "aws_storagegateway_gateway" "test" {
     domain_name        = aws_directory_service_directory.test.name
     password           = aws_directory_service_directory.test.password
     username           = "Administrator"
+    timeout_in_seconds = %[2]d
+  }
+}
+`, rName, timeout))
+}
+
+func testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettings(rName, domainName string) string {
+	return composeConfig(
+		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName, domainName),
+		fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address = aws_instance.test.public_ip
+  gateway_name       = %[1]q
+  gateway_timezone   = "GMT"
+  gateway_type       = "FILE_S3"
+
+  smb_active_directory_settings {
+    domain_name = aws_directory_service_directory.test.name
+    password    = aws_directory_service_directory.test.password
+    username    = "Admin"
+  }
+}
+`, rName))
+}
+
+func testAccAWSStorageGatewayGatewayConfig_SmbMicrosoftActiveDirectorySettingsTimeout(rName, domainName string, timeout int) string {
+	return composeConfig(
+		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		testAccAWSStorageGatewayGatewayConfig_DirectoryServiceMicrosoftAD(rName, domainName),
+		fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address = aws_instance.test.public_ip
+  gateway_name       = %[1]q
+  gateway_timezone   = "GMT"
+  gateway_type       = "FILE_S3"
+
+  smb_active_directory_settings {
+    domain_name        = aws_directory_service_directory.test.name
+    password           = aws_directory_service_directory.test.password
+    username           = "Admin"
     timeout_in_seconds = %[2]d
   }
 }
@@ -1106,6 +1353,18 @@ resource "aws_storagegateway_gateway" "test" {
   smb_security_strategy = %q
 }
 `, rName, strategy)
+}
+
+func testAccAWSStorageGatewayGatewayConfigSMBVisibility(rName string, visible bool) string {
+	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address        = aws_instance.test.public_ip
+  gateway_name              = %[1]q
+  gateway_timezone          = "GMT"
+  gateway_type              = "FILE_S3"
+  smb_file_share_visibility = %[2]t
+}
+`, rName, visible)
 }
 
 func testAccAWSStorageGatewayGatewayConfigTags1(rName, tagKey1, tagValue1 string) string {

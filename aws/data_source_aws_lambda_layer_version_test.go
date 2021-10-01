@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -14,8 +15,9 @@ func TestAccDataSourceAWSLambdaLayerVersion_basic(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaLayerVersionConfigBasic(rName),
@@ -44,8 +46,9 @@ func TestAccDataSourceAWSLambdaLayerVersion_version(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaLayerVersionConfigVersion(rName),
@@ -64,14 +67,57 @@ func TestAccDataSourceAWSLambdaLayerVersion_runtime(t *testing.T) {
 	resourceName := "aws_lambda_layer_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLambdaLayerVersionConfigRuntimes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAWSLambdaLayerVersion_architectures(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lambda_layer_version.test"
+	resourceName := "aws_lambda_layer_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesX86(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
+				),
+			},
+			{
+				Config: testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesARM(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
+				),
+			},
+			{
+				Config: testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesX86ARM(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
+				),
+			},
+			{
+				Config: testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesNone(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "layer_name", resourceName, "layer_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compatible_architectures", resourceName, "compatible_architectures"),
 				),
 			},
 		},
@@ -130,6 +176,69 @@ resource "aws_lambda_layer_version" "test_two" {
 data "aws_lambda_layer_version" "test" {
   layer_name         = aws_lambda_layer_version.test_two.layer_name
   compatible_runtime = "go1.x"
+}
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesX86(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "test" {
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = %[1]q
+  compatible_runtimes      = ["nodejs12.x"]
+  compatible_architectures = ["x86_64"]
+}
+
+data "aws_lambda_layer_version" "test" {
+  layer_name              = aws_lambda_layer_version.test.layer_name
+  compatible_architecture = "x86_64"
+}
+
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesARM(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "test" {
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = %[1]q
+  compatible_runtimes      = ["nodejs12.x"]
+  compatible_architectures = ["arm64"]
+}
+
+data "aws_lambda_layer_version" "test" {
+  layer_name              = aws_lambda_layer_version.test.layer_name
+  compatible_architecture = "arm64"
+}
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesX86ARM(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "test" {
+  filename                 = "test-fixtures/lambdatest.zip"
+  layer_name               = %[1]q
+  compatible_runtimes      = ["nodejs12.x"]
+  compatible_architectures = ["x86_64", "arm64"]
+}
+
+data "aws_lambda_layer_version" "test" {
+  layer_name              = aws_lambda_layer_version.test.layer_name
+  compatible_architecture = "arm64"
+}
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaLayerVersionConfigArchitecturesNone(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_layer_version" "test" {
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = %[1]q
+  compatible_runtimes = ["nodejs12.x"]
+}
+
+data "aws_lambda_layer_version" "test" {
+  layer_name = aws_lambda_layer_version.test.layer_name
 }
 `, rName)
 }

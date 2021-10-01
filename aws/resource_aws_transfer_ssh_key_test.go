@@ -11,27 +11,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSTransferSshKey_basic(t *testing.T) {
+func testAccAWSTransferSshKey_basic(t *testing.T) {
 	var conf transfer.SshPublicKey
-	rName := acctest.RandString(5)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resourceName := "aws_transfer_ssh_key.test"
+
+	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferSshKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferSshKeyConfig_basic(rName),
+				Config: testAccAWSTransferSshKeyConfig_basic(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferSshKeyExists("aws_transfer_ssh_key.foo", &conf),
-					resource.TestCheckResourceAttrPair(
-						"aws_transfer_ssh_key.foo", "server_id", "aws_transfer_server.foo", "id"),
-					resource.TestCheckResourceAttrPair(
-						"aws_transfer_ssh_key.foo", "user_name", "aws_transfer_user.foo", "user_name"),
+					testAccCheckAWSTransferSshKeyExists(resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_transfer_user.test", "user_name"),
+					resource.TestCheckResourceAttr(resourceName, "body", publicKey),
 				),
 			},
 			{
-				ResourceName:      "aws_transfer_user.foo",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -85,7 +92,7 @@ func testAccCheckAWSTransferSshKeyDestroy(s *terraform.State) error {
 		}
 		serverID, userName, sshKeyID, err := decodeTransferSshKeyId(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
+			return fmt.Errorf("error parsing Transfer SSH Public Key ID: %w", err)
 		}
 
 		describe, err := conn.DescribeUser(&transfer.DescribeUserInput{
@@ -111,14 +118,14 @@ func testAccCheckAWSTransferSshKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSTransferSshKeyConfig_basic(rName string) string {
+func testAccAWSTransferSshKeyConfig_basic(rName, publicKey string) string {
 	return fmt.Sprintf(`
-resource "aws_transfer_server" "foo" {
+resource "aws_transfer_server" "test" {
   identity_provider_type = "SERVICE_MANAGED"
 }
 
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -136,9 +143,9 @@ resource "aws_iam_role" "foo" {
 EOF
 }
 
-resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
-  role = aws_iam_role.foo.id
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
 
   policy = <<POLICY
 {
@@ -157,16 +164,16 @@ resource "aws_iam_role_policy" "foo" {
 POLICY
 }
 
-resource "aws_transfer_user" "foo" {
-  server_id = aws_transfer_server.foo.id
+resource "aws_transfer_user" "test" {
+  server_id = aws_transfer_server.test.id
   user_name = "tftestuser"
-  role      = aws_iam_role.foo.arn
+  role      = aws_iam_role.test.arn
 }
 
-resource "aws_transfer_ssh_key" "foo" {
-  server_id = aws_transfer_server.foo.id
-  user_name = aws_transfer_user.foo.user_name
-  body      = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
+resource "aws_transfer_ssh_key" "test" {
+  server_id = aws_transfer_server.test.id
+  user_name = aws_transfer_user.test.user_name
+  body      = "%[2]s"
 }
-`, rName, rName)
+`, rName, publicKey)
 }

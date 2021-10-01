@@ -14,7 +14,7 @@ Provides an SES event destination
 
 ### CloudWatch Destination
 
-```hcl
+```terraform
 resource "aws_ses_event_destination" "cloudwatch" {
   name                   = "event-destination-cloudwatch"
   configuration_set_name = aws_ses_configuration_set.example.name
@@ -31,7 +31,7 @@ resource "aws_ses_event_destination" "cloudwatch" {
 
 ### Kinesis Destination
 
-```hcl
+```terraform
 resource "aws_ses_event_destination" "kinesis" {
   name                   = "event-destination-kinesis"
   configuration_set_name = aws_ses_configuration_set.example.name
@@ -47,7 +47,7 @@ resource "aws_ses_event_destination" "kinesis" {
 
 ### SNS Destination
 
-```hcl
+```terraform
 resource "aws_ses_event_destination" "sns" {
   name                   = "event-destination-sns"
   configuration_set_name = aws_ses_configuration_set.example.name
@@ -91,7 +91,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-In addition to the arguments, which are exported, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The SES event destination name.
 * `arn` - The SES event destination ARN.

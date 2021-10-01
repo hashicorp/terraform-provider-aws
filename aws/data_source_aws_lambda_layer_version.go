@@ -74,6 +74,19 @@ func dataSourceAwsLambdaLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"compatible_architecture": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validation.StringInSlice(lambda.Architecture_Values(), false),
+				ConflictsWith: []string{"version"},
+			},
+			"compatible_architectures": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -92,6 +105,10 @@ func dataSourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{
 		}
 		if v, ok := d.GetOk("compatible_runtime"); ok {
 			listInput.CompatibleRuntime = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("compatible_architecture"); ok {
+			listInput.CompatibleArchitecture = aws.String(v.(string))
 		}
 
 		log.Printf("[DEBUG] Looking up latest version for lambda layer %s", layerName)
@@ -123,11 +140,14 @@ func dataSourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error getting Lambda Layer Version (%s, version %d): empty response", layerName, version)
 	}
 
-	if err := d.Set("version", int(aws.Int64Value(output.Version))); err != nil {
+	if err := d.Set("version", output.Version); err != nil {
 		return fmt.Errorf("error setting lambda layer version: %w", err)
 	}
 	if err := d.Set("compatible_runtimes", flattenStringList(output.CompatibleRuntimes)); err != nil {
 		return fmt.Errorf("error setting lambda layer compatible runtimes: %w", err)
+	}
+	if err := d.Set("compatible_architectures", flattenStringList(output.CompatibleArchitectures)); err != nil {
+		return fmt.Errorf("Error setting lambda layer compatible architectures: %w", err)
 	}
 	if err := d.Set("description", output.Description); err != nil {
 		return fmt.Errorf("error setting lambda layer description: %w", err)

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsConfigDeliveryChannel() *schema.Resource {
@@ -39,6 +40,11 @@ func resourceAwsConfigDeliveryChannel() *schema.Resource {
 			"s3_key_prefix": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"s3_kms_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"sns_topic_arn": {
 				Type:         schema.TypeString,
@@ -75,6 +81,9 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("s3_key_prefix"); ok {
 		channel.S3KeyPrefix = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("s3_kms_key_arn"); ok {
+		channel.S3KmsKeyArn = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("sns_topic_arn"); ok {
 		channel.SnsTopicARN = aws.String(v.(string))
 	}
@@ -92,7 +101,7 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 
 	input := configservice.PutDeliveryChannelInput{DeliveryChannel: &channel}
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutDeliveryChannel(&input)
 		if err == nil {
 			return nil
@@ -150,6 +159,7 @@ func resourceAwsConfigDeliveryChannelRead(d *schema.ResourceData, meta interface
 	d.Set("name", channel.Name)
 	d.Set("s3_bucket_name", channel.S3BucketName)
 	d.Set("s3_key_prefix", channel.S3KeyPrefix)
+	d.Set("s3_kms_key_arn", channel.S3KmsKeyArn)
 	d.Set("sns_topic_arn", channel.SnsTopicARN)
 
 	if channel.ConfigSnapshotDeliveryProperties != nil {
