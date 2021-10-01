@@ -12,6 +12,8 @@ Associates an SSM Document to an instance or EC2 tag.
 
 ## Example Usage
 
+### Create an association for a specific instance
+
 ```terraform
 resource "aws_ssm_association" "example" {
   name = aws_ssm_document.example.name
@@ -19,6 +21,21 @@ resource "aws_ssm_association" "example" {
   targets {
     key    = "InstanceIds"
     values = [aws_instance.example.id]
+  }
+}
+```
+
+### Create an association for all managed instances in an AWS account
+
+To target all instances in an AWS account, set the `key` as `"InstanceIds"` with `values` set as `["*"]`.
+
+```terraform
+resource "aws_ssm_association" "example" {
+  name = "AmazonCloudWatch-ManageAgent"
+
+  targets {
+    key    = "InstanceIds"
+    values = ["*"]
   }
 }
 ```
@@ -50,20 +67,6 @@ Targets specify what instance IDs or tags to apply the document to and has these
 
 * `key` - (Required) Either `InstanceIds` or `tag:Tag Name` to specify an EC2 tag.
 * `values` - (Required) A list of instance IDs or tag values. AWS currently limits this list size to one value.
-
--> **Note:** To target all instances in an AWS account, set the `key` as `"InstanceIds"` with `values` set as `["*"]`.
-Example:
-
-```terraform
-resource "aws_ssm_association" "example" {
-  name = "AmazonCloudWatch-ManageAgent"
-
-  targets {
-    key    = "InstanceIds"
-    values = ["*"]
-  }
-}
-```
 
 ## Attributes Reference
 
