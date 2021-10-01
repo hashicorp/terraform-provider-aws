@@ -51,6 +51,19 @@ Targets specify what instance IDs or tags to apply the document to and has these
 * `key` - (Required) Either `InstanceIds` or `tag:Tag Name` to specify an EC2 tag.
 * `values` - (Required) A list of instance IDs or tag values. AWS currently limits this list size to one value.
 
+-> **Note:** To target all instances in an AWS account, set the `key` as `"InstanceIds"` with `values` set as `["*"]`.
+Example:
+```terraform
+resource "aws_ssm_association" "example" {
+  name = "AmazonCloudWatch-ManageAgent"
+
+  targets {
+    key    = "InstanceIds"
+    values = ["*"]
+  }
+}
+```
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
