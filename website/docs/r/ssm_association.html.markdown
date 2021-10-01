@@ -40,6 +40,21 @@ resource "aws_ssm_association" "example" {
 }
 ```
 
+### Create an association for a specific tag
+
+This example shows how to target all managed instances that are assigned a tag key of `Environment` and value of `Development`.
+
+```terraform
+resource "aws_ssm_association" "example" {
+  name = "AmazonCloudWatch-ManageAgent"
+
+  targets {
+    key    = "tag:Environment"
+    values = ["Development"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
