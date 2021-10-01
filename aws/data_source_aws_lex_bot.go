@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
 )
 
 func dataSourceAwsLexBot() *schema.Resource {
@@ -75,7 +76,7 @@ func dataSourceAwsLexBot() *schema.Resource {
 			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      LexBotVersionLatest,
+				Default:      tflex.LexBotVersionLatest,
 				ValidateFunc: validateLexBotVersion,
 			},
 			"voice_id": {

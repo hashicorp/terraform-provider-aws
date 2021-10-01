@@ -14,15 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
-)
-
-const (
-	LexBotCreateTimeout = 1 * time.Minute
-	LexBotUpdateTimeout = 1 * time.Minute
-	LexBotDeleteTimeout = 5 * time.Minute
-	LexBotVersionLatest = "$LATEST"
 )
 
 func resourceAwsLexBot() *schema.Resource {
@@ -43,9 +37,9 @@ func resourceAwsLexBot() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(LexBotCreateTimeout),
-			Update: schema.DefaultTimeout(LexBotUpdateTimeout),
-			Delete: schema.DefaultTimeout(LexBotDeleteTimeout),
+			Create: schema.DefaultTimeout(tflex.LexBotCreateTimeout),
+			Update: schema.DefaultTimeout(tflex.LexBotUpdateTimeout),
+			Delete: schema.DefaultTimeout(tflex.LexBotDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -268,11 +262,7 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if tfresource.TimedOut(err) { // nosemgrep: helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.PutBot(input)
-	}
-
-	if err != nil {
+	if _, err = waiter.LexBotCreated(conn, name, tflex.LexBotVersionLatest, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error creating bot %s: %w", name, err)
 	}
 
@@ -286,7 +276,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(d.Id()),
-		VersionOrAlias: aws.String(LexBotVersionLatest),
+		VersionOrAlias: aws.String(tflex.LexBotVersionLatest),
 	})
 	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Bot (%s) not found, removing from state", d.Id())
@@ -426,21 +416,15 @@ func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteBot(input)
-	}
-
-	if err != nil {
+	if _, err = waiter.LexBotDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error deleting bot %s: %w", d.Id(), err)
 	}
 
-	_, err = waiter.LexBotDeleted(conn, d.Id())
-
-	return err
+	return nil
 }
 
 func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetBotVersionsInput) (string, error) {
-	version := LexBotVersionLatest
+	version := tflex.LexBotVersionLatest
 
 	for {
 		page, err := conn.GetBotVersions(input)
@@ -454,7 +438,7 @@ func getLatestLexBotVersion(conn *lexmodelbuildingservice.LexModelBuildingServic
 		}
 
 		for _, bot := range page.Bots {
-			if *bot.Version == LexBotVersionLatest {
+			if *bot.Version == tflex.LexBotVersionLatest {
 				continue
 			}
 			if *bot.Version > version {

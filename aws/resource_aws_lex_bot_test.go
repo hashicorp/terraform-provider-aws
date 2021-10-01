@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
 )
 
 func init() {
@@ -107,7 +108,7 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0"),
 					resource.TestCheckResourceAttr(rName, "process_behavior", "SAVE"),
 					resource.TestCheckResourceAttr(rName, "status", "NOT_BUILT"),
-					resource.TestCheckResourceAttr(rName, "version", LexBotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflex.LexBotVersionLatest),
 					resource.TestCheckNoResourceAttr(rName, "voice_id"),
 				),
 			},
@@ -156,19 +157,7 @@ func testAccAwsLexBot_createVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexBotExists(rName, &v1),
 					testAccCheckAwsLexBotNotExists(testBotID, "1"),
-					resource.TestCheckResourceAttr(rName, "version", LexBotVersionLatest),
-					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
-				),
-			},
-			{
-				Config: composeConfig(
-					testAccAwsLexBotConfig_intent(testBotID),
-					testAccAwsLexBotConfig_createVersion(testBotID),
-				),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotExists(rName, &v2),
-					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v2),
-					resource.TestCheckResourceAttr(rName, "version", "1"),
+					resource.TestCheckResourceAttr(rName, "version", tflex.LexBotVersionLatest),
 					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 				),
 			},
@@ -176,6 +165,17 @@ func testAccAwsLexBot_createVersion(t *testing.T) {
 				ResourceName:      rName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_createVersion(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v2),
+					resource.TestCheckResourceAttr(rName, "version", "1"),
+					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
+				),
 			},
 		},
 	})
@@ -757,7 +757,7 @@ func testAccCheckAwsLexBotExistsWithVersion(rName, botVersion string, output *le
 }
 
 func testAccCheckAwsLexBotExists(rName string, output *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
-	return testAccCheckAwsLexBotExistsWithVersion(rName, LexBotVersionLatest, output)
+	return testAccCheckAwsLexBotExistsWithVersion(rName, tflex.LexBotVersionLatest, output)
 }
 
 func testAccCheckAwsLexBotNotExists(botName, botVersion string) resource.TestCheckFunc {

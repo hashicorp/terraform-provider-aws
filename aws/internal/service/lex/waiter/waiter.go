@@ -5,24 +5,35 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
 )
 
-const (
-	LexBotDeleteTimeout      = 5 * time.Minute
-	LexIntentDeleteTimeout   = 5 * time.Minute
-	LexSlotTypeDeleteTimeout = 5 * time.Minute
-)
-
-func LexBotDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, botId string) (*lexmodelbuildingservice.GetBotVersionsOutput, error) {
+func LexBotCreated(conn *lexmodelbuildingservice.LexModelBuildingService, botId, version string, timeout time.Duration) (*lexmodelbuildingservice.GetBotOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{LexModelBuildingServiceStatusCreated},
-		Target:  []string{}, // An empty slice indicates that the resource is gone
-		Refresh: LexBotStatus(conn, botId),
-		Timeout: LexBotDeleteTimeout,
+		Pending: []string{LexModeBuildingServicesStatusBuilding},
+		Target:  []string{LexModeBuildingServicesStatusFailed, LexModeBuildingServicesStatusNotBuilt, LexModeBuildingServicesStatusReady, LexModeBuildingServicesStatusReadyBasicTesting},
+		Refresh: LexBotStatus(conn, botId, version),
+		Timeout: timeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
 
-	if v, ok := outputRaw.(*lexmodelbuildingservice.GetBotVersionsOutput); ok {
+	if v, ok := outputRaw.(*lexmodelbuildingservice.GetBotOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func LexBotDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, botId string, timeout time.Duration) (*lexmodelbuildingservice.GetBotOutput, error) {
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: lexmodelbuildingservice.StatusType_Values(),
+		Target:  []string{}, // An empty slice indicates that the resource is gone
+		Refresh: LexBotStatus(conn, botId, tflex.LexBotVersionLatest),
+		Timeout: timeout,
+	}
+	outputRaw, err := stateChangeConf.WaitForState()
+
+	if v, ok := outputRaw.(*lexmodelbuildingservice.GetBotOutput); ok {
 		return v, err
 	}
 
@@ -34,7 +45,7 @@ func LexBotAliasDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, b
 		Pending: []string{LexModelBuildingServiceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
 		Refresh: LexBotAliasStatus(conn, botAliasName, botName),
-		Timeout: LexBotDeleteTimeout,
+		Timeout: tflex.LexBotDeleteTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
 
@@ -50,7 +61,7 @@ func LexIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, int
 		Pending: []string{LexModelBuildingServiceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
 		Refresh: LexIntentStatus(conn, intentId),
-		Timeout: LexIntentDeleteTimeout,
+		Timeout: tflex.LexIntentDeleteTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
 
@@ -66,7 +77,7 @@ func LexSlotTypeDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, s
 		Pending: []string{LexModelBuildingServiceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
 		Refresh: LexSlotTypeStatus(conn, slotTypeId),
-		Timeout: LexSlotTypeDeleteTimeout,
+		Timeout: tflex.LexSlotTypeDeleteTimeout,
 	}
 	outputRaw, err := stateChangeConf.WaitForState()
 

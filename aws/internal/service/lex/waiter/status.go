@@ -8,9 +8,16 @@ import (
 )
 
 const (
-	LexModelBuildingServiceStatusCreated  = "Created"
-	LexModelBuildingServiceStatusNotFound = "NotFound"
-	LexModelBuildingServiceStatusUnknown  = "Unknown"
+	//Lex Bot Statuses
+	LexModeBuildingServicesStatusBuilding          = "BUILDING"
+	LexModeBuildingServicesStatusFailed            = "FAILED"
+	LexModeBuildingServicesStatusNotBuilt          = "NOT_BUILT"
+	LexModeBuildingServicesStatusReady             = "READY"
+	LexModeBuildingServicesStatusReadyBasicTesting = "READY_BASIC_TESTING"
+
+	LexModelBuildingServiceStatusCreated  = "CREATED"
+	LexModelBuildingServiceStatusNotFound = "NOTFOUND"
+	LexModelBuildingServiceStatusUnknown  = "UNKNOWN"
 )
 
 func LexSlotTypeStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
@@ -53,10 +60,11 @@ func LexIntentStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id s
 	}
 }
 
-func LexBotStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+func LexBotStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id, version string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := conn.GetBotVersions(&lexmodelbuildingservice.GetBotVersionsInput{
-			Name: aws.String(id),
+		output, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
+			Name:           aws.String(id),
+			VersionOrAlias: aws.String(version),
 		})
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 			return nil, LexModelBuildingServiceStatusNotFound, nil
@@ -64,12 +72,11 @@ func LexBotStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id stri
 		if err != nil {
 			return nil, LexModelBuildingServiceStatusUnknown, err
 		}
-
-		if output == nil || len(output.Bots) == 0 {
+		if output == nil {
 			return nil, LexModelBuildingServiceStatusNotFound, nil
 		}
 
-		return output, LexModelBuildingServiceStatusCreated, nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
@@ -85,7 +92,6 @@ func LexBotAliasStatus(conn *lexmodelbuildingservice.LexModelBuildingService, bo
 		if err != nil {
 			return nil, LexModelBuildingServiceStatusUnknown, err
 		}
-
 		if output == nil {
 			return nil, LexModelBuildingServiceStatusNotFound, nil
 		}
