@@ -152,6 +152,11 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 			Required: true,
 		},
 
+		"region": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+
 		"use_ebs_optimized_instances": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -302,6 +307,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", layer.Name)
 	d.Set("system_packages", flattenStringList(layer.Packages))
 	d.Set("stack_id", layer.StackId)
+	d.Set("region", "us-west-1")
 	d.Set("use_ebs_optimized_instances", layer.UseEbsOptimizedInstances)
 
 	if lt.CustomShortName {
@@ -412,6 +418,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 
 	layerId := *resp.LayerId
 	d.SetId(layerId)
+	d.Set("region", "us-west-1")
 
 	loadBalancer := aws.String(d.Get("elastic_load_balancer").(string))
 	if loadBalancer != nil && *loadBalancer != "" {
@@ -427,7 +434,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Region:    d.Get("region").(string),
 		Service:   "opsworks",
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("layer/%s", d.Id()),
