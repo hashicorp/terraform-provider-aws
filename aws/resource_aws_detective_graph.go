@@ -83,7 +83,7 @@ func resourceDetectiveAccountRead(ctx context.Context, d *schema.ResourceData, m
 
 	resp, err := getDetectiveGraphArn(conn, ctx, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) || resp == nil {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) || resp == nil {
 		d.SetId("")
 		return nil
 	}
