@@ -13,12 +13,12 @@ Provides a resource to manage an [AWS Detective Graph](https://docs.aws.amazon.c
 ## Example Usage
 
 ```terraform
-resource "aws_detective_graph" "test" {}
+resource "aws_detective_graph" "example" {}
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are optional:
 
 * `tags` -  (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
