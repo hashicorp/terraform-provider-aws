@@ -67,14 +67,14 @@ func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum", resourceName, "checksum"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "child_directed", resourceName, "child_directed"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "detect_sentiment", resourceName, "detect_sentiment"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enable_model_improvements", resourceName, "enable_model_improvements"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "failure_reason", resourceName, "failure_reason"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "idle_session_ttl_in_seconds", resourceName, "idle_session_ttl_in_seconds"),
-					//Removed due to race condition when bots build/read/not_rady. Modified the bot status to read true status:
+					//Removed due to race condition when bots build/read/not_ready. Modified the bot status to read true status:
 					//https://github.com/hashicorp/terraform-provider-aws/issues/21107
+					//resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
 					//resource.TestCheckResourceAttrPair(dataSourceName, "last_updated_date", resourceName, "last_updated_date"),
 					//resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "locale", resourceName, "locale"),

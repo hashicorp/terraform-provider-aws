@@ -261,6 +261,9 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutBot(input)
+	}
 
 	if _, err = waiter.LexBotCreated(conn, name, tflex.LexBotVersionLatest, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error creating bot %s: %w", name, err)
@@ -415,7 +418,9 @@ func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteBot(input)
+	}
 	if _, err = waiter.LexBotDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error deleting bot %s: %w", d.Id(), err)
 	}
