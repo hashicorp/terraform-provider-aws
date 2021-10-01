@@ -539,6 +539,18 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 										Default:      90,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
+									"checkpoint_delay": {
+										Type:         nullable.TypeNullableInt,
+										Optional:     true,
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+									},
+									"checkpoint_percentages": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeInt,
+										},
+									},
 								},
 							},
 						},
@@ -2207,6 +2219,19 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 
 	if v, ok := m["min_healthy_percentage"]; ok {
 		refreshPreferences.MinHealthyPercentage = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := m["checkpoint_delay"]; ok {
+		refreshPreferences.CheckpointDelay = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := m["checkpoint_percentages"]; ok {
+		l := v.([]interface{})
+		p := make([]*int64, len(l))
+		for i, v := range l {
+			p[i] = aws.Int64(int64(v.(int)))
+		}
+		refreshPreferences.CheckpointPercentages = p
 	}
 
 	return refreshPreferences
