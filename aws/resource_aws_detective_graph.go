@@ -123,23 +123,7 @@ func resourceDetectiveAccountDelete(ctx context.Context, d *schema.ResourceData,
 		GraphArn: aws.String(d.Id()),
 	}
 
-	err := resource.RetryContext(ctx, waiter.DetectiveOperationTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteGraphWithContext(ctx, input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-				return nil
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteGraphWithContext(ctx, input)
-	}
-
+	_, err := conn.DeleteGraphWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 			return nil
