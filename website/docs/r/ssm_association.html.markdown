@@ -53,6 +53,7 @@ Targets specify what instance IDs or tags to apply the document to and has these
 
 -> **Note:** To target all instances in an AWS account, set the `key` as `"InstanceIds"` with `values` set as `["*"]`.
 Example:
+
 ```terraform
 resource "aws_ssm_association" "example" {
   name = "AmazonCloudWatch-ManageAgent"
