@@ -577,7 +577,7 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Region:    d.Get("region").(string),
 		Service:   "opsworks",
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
