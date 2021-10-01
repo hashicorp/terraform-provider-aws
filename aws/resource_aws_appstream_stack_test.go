@@ -31,8 +31,8 @@ func testSweepAppStreamStack(region string) error {
 	}
 
 	conn := client.(*AWSClient).appstreamconn
-
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
 
 	input := &appstream.DescribeStacksInput{}
 
@@ -41,38 +41,37 @@ func testSweepAppStreamStack(region string) error {
 			return !lastPage
 		}
 
-		for _, directory := range page.Stacks {
-			id := aws.StringValue(directory.Name)
+		for _, stack := range page.Stacks {
+			if stack == nil {
+				continue
+			}
 
-			r := resourceAwsAppStreamStack()
+			id := aws.StringValue(stack.Name)
+
+			r := resourceAwsAppStreamImageBuilder()
 			d := r.Data(nil)
 			d.SetId(id)
 
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting AppStream Stack (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping AppStream Stack sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
 	if err != nil {
-		sweeperErr := fmt.Errorf("error listing AppStream Stacks: %w", err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		errs = multierror.Append(errs, fmt.Errorf("error listing AppStream Stacks: %w", err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppStream Stacks for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppStream Stacks sweep for %s: %s", region, err)
+		return nil // In case we have completed some pages, but had errors
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAwsAppStreamStack_basic(t *testing.T) {

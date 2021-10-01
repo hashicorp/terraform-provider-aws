@@ -36,8 +36,8 @@ func testSweepAppStreamFleet(region string) error {
 	}
 
 	conn := client.(*AWSClient).appstreamconn
-
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
 
 	input := &appstream.DescribeFleetsInput{}
 
@@ -46,38 +46,37 @@ func testSweepAppStreamFleet(region string) error {
 			return !lastPage
 		}
 
-		for _, directory := range page.Fleets {
-			id := aws.StringValue(directory.Name)
+		for _, fleet := range page.Fleets {
+			if fleet == nil {
+				continue
+			}
 
-			r := resourceAwsAppStreamFleet()
+			id := aws.StringValue(fleet.Name)
+
+			r := resourceAwsAppStreamImageBuilder()
 			d := r.Data(nil)
 			d.SetId(id)
 
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting AppStream Fleet (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping AppStream Fleet sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
 	if err != nil {
-		sweeperErr := fmt.Errorf("error listing AppStream Fleets: %w", err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		errs = multierror.Append(errs, fmt.Errorf("error listing AppStream Fleets: %w", err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppStream Fleets for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppStream Fleets sweep for %s: %s", region, err)
+		return nil // In case we have completed some pages, but had errors
+	}
+
+	return errs.ErrorOrNil()
 }
 
 // testAccErrorCheckSkipAppStream skips AppStream tests that have error messages indicating unsupported features
