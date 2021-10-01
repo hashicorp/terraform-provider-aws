@@ -36,6 +36,16 @@ func StackStateDeleted(ctx context.Context, conn *appstream.AppStream, name stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appstream.Stack); ok {
+		if errors := output.StackErrors; len(errors) > 0 {
+			var errs *multierror.Error
+
+			for _, err := range errors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
+			}
+
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
 		return output, err
 	}
 
@@ -54,6 +64,16 @@ func FleetStateRunning(ctx context.Context, conn *appstream.AppStream, name stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appstream.Fleet); ok {
+		if errors := output.FleetErrors; len(errors) > 0 {
+			var errs *multierror.Error
+
+			for _, err := range errors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
+			}
+
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
 		return output, err
 	}
 
@@ -72,6 +92,16 @@ func FleetStateStopped(ctx context.Context, conn *appstream.AppStream, name stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appstream.Fleet); ok {
+		if errors := output.FleetErrors; len(errors) > 0 {
+			var errs *multierror.Error
+
+			for _, err := range errors {
+				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
+			}
+
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
 		return output, err
 	}
 
