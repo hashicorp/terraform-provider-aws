@@ -21,6 +21,7 @@ ENHANCEMENTS:
 * data-source/aws_lambda_function: Add support for Graviton2 with `architectures` attribute ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
 * data-source/aws_lambda_layer_version: Add support for Graviton2 with `compatible_architectures` attribute ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
 * provider: Add parameter `http_proxy` to provider configuration ([#21077](https://github.com/hashicorp/terraform-provider-aws/issues/21077))
+* resource/aws_lb_target_group: Support `alb` value for `target_type` argument ([#21069](https://github.com/hashicorp/terraform-provider-aws/issues/21069))
 * resource/aws_lambda_function: Add support for Graviton2 with `architectures` argument ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
 * resource/aws_lambda_layer_version: Add support for Graviton2 with `compatible_architectures` argument ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
 * resource/aws_sagemaker_app_image_config: Add tagging support. ([#21037](https://github.com/hashicorp/terraform-provider-aws/issues/21037))
