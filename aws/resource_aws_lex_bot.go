@@ -248,6 +248,8 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VoiceId = aws.String(v.(string))
 	}
 
+	var output *lexmodelbuildingservice.PutBotOutput
+
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		output, err := conn.PutBot(input)
 
@@ -261,18 +263,21 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.PutBot(input)
+	if tfresource.TimedOut(err) {
+		output, err = conn.PutBot(input)
 	}
 	if err != nil {
 		return fmt.Errorf("error creating bot %s: %w", name, err)
 	}
-
-	if _, err = waiter.LexBotCreated(conn, name, tflex.LexBotVersionLatest, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error creating bot %s: %w", name, err)
+	if output == nil {
+		return fmt.Errorf("error creating bot %s: empty output", name)
 	}
 
 	d.SetId(name)
+
+	if output, err := waiter.LexBotCreated(conn, name, tflex.LexBotVersionLatest, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for bot %s to have valid status. Current status: %s: %w", name, aws.StringValue(output.Status), err)
+	}
 
 	return resourceAwsLexBotRead(d, meta)
 }
@@ -350,6 +355,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
+	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutBotInput{
 		Checksum:                     aws.String(d.Get("checksum").(string)),
@@ -378,10 +384,13 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.VoiceId = aws.String(v.(string))
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		_, err := conn.PutBot(input)
+	var output *lexmodelbuildingservice.PutBotOutput
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		output, err := conn.PutBot(input)
+
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
+			input.Checksum = output.Checksum
 			return resource.RetryableError(fmt.Errorf("%q: bot still updating", d.Id()))
 		}
 		if err != nil {
@@ -392,11 +401,17 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutBot(input)
+		output, err = conn.PutBot(input)
 	}
-
 	if err != nil {
 		return fmt.Errorf("error updating bot %s: %w", d.Id(), err)
+	}
+	if output == nil {
+		return fmt.Errorf("error updating bot %s: empty output", name)
+	}
+
+	if output, err := waiter.LexBotCreated(conn, name, tflex.LexBotVersionLatest, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for bot %s to have valid status. Current status: %s: %w", name, aws.StringValue(output.Status), err)
 	}
 
 	return resourceAwsLexBotRead(d, meta)
