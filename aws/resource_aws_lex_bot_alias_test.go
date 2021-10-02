@@ -160,9 +160,10 @@ func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"created_date"},
 			},
 			{
 				Config: composeConfig(
@@ -176,9 +177,10 @@ func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"created_date"},
 			},
 		},
 	})
