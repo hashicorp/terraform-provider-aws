@@ -98,6 +98,72 @@ func TestAccAWSFsxStorageVirtualMachine_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxStorageVirtualMachine_rootVolumeSecurityStyle(t *testing.T) {
+	var svm fsx.StorageVirtualMachine
+	resourceName := "aws_fsx_storage_virtual_machine.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxStorageVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxStorageVirtualMachineConfigRootVolumeSecurityStyle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxStorageVirtualMachineExists(resourceName, &svm),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_security_style", "UNIX"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxStorageVirtualMachine_svmAdminPassword(t *testing.T) {
+	var svm fsx.StorageVirtualMachine
+	resourceName := "aws_fsx_storage_virtual_machine.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	passUpdated := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, fsx.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxStorageVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxStorageVirtualMachineConfigSvmAdminPassword(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxStorageVirtualMachineExists(resourceName, &svm),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "svm_admin_password", rName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccAwsFsxStorageVirtualMachineConfigSvmAdminPassword(rName, passUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxStorageVirtualMachineExists(resourceName, &svm),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "svm_admin_password", passUpdated),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSFsxStorageVirtualMachine_disappears(t *testing.T) {
 	var svm fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_storage_virtual_machine.test"
@@ -248,6 +314,26 @@ resource "aws_fsx_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
 }
 `, rName))
+}
+
+func testAccAwsFsxStorageVirtualMachineConfigRootVolumeSecurityStyle(rName string) string {
+	return composeConfig(testAccAwsFsxStorageVirtualMachineConfigBase(), fmt.Sprintf(`
+resource "aws_fsx_storage_virtual_machine" "test" {
+  name                       = %[1]q
+  file_system_id             = aws_fsx_ontap_file_system.test.id
+  root_volume_security_style = "UNIX"
+}
+`, rName))
+}
+
+func testAccAwsFsxStorageVirtualMachineConfigSvmAdminPassword(rName, pass string) string {
+	return composeConfig(testAccAwsFsxStorageVirtualMachineConfigBase(), fmt.Sprintf(`
+resource "aws_fsx_storage_virtual_machine" "test" {
+  name               = %[1]q
+  file_system_id     = aws_fsx_ontap_file_system.test.id
+  svm_admin_password = %[2]q
+}
+`, rName, pass))
 }
 
 func testAccAwsFsxStorageVirtualMachineConfigTags1(rName, tagKey1, tagValue1 string) string {
