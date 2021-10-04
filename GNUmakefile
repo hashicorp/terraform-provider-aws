@@ -83,7 +83,7 @@ docscheck:
 	@misspell -error -source text CHANGELOG.md .changelog
 
 # lint: golangci-lint providerlint importlint
-lint: ;
+lint: importlint
 
 golangci-lint:
 	@golangci-lint run ./$(PKG_NAME)/...

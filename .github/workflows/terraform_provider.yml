@@ -26,7 +26,7 @@ on:
 
 env:
   AWS_DEFAULT_REGION: us-west-2
-  TERRAFORM_VERSION: "0.14.8"
+  TERRAFORM_VERSION: "1.0.6"
 
 jobs:
   go_mod_download:
@@ -55,37 +55,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    # - uses: actions/cache@v2
-    #   continue-on-error: true
-    #   id: cache-terraform-plugin-dir
-    #   timeout-minutes: 2
-    #   with:
-    #     path: terraform-plugin-dir
-    #     key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
-    # # See also: https://github.com/actions/setup-go/pull/62
-    # - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-    # - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-    #   uses: actions/setup-go@v2
-    #   with:
-    #     go-version: ${{ env.GO_VERSION }}
-    # # See also: https://github.com/actions/setup-go/issues/54
-    # - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-    #   name: go env
-    #   run: |
-    #     echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-    # - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-    #   uses: actions/cache@v2
-    #   with:
-    #     path: ${{ env.GOCACHE }}
-    #     key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
-    # - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-    #   uses: actions/cache@v2
-    #   with:
-    #     path: ~/go/pkg/mod
-    #     key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    # - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-    #   name: go build
-    #   run: go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$(go env GOOS)_$(go env GOARCH)/terraform-provider-aws .
+    - uses: actions/cache@v2
+      continue-on-error: true
+      id: cache-terraform-plugin-dir
+      timeout-minutes: 2
+      with:
+        path: terraform-plugin-dir
+        key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+    # See also: https://github.com/actions/setup-go/pull/62
+    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
+    - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    # See also: https://github.com/actions/setup-go/issues/54
+    - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
+      name: go env
+      run: |
+        echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+    - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.GOCACHE }}
+        key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+    - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+    - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
+      name: go build
+      run: go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$(go env GOOS)_$(go env GOARCH)/terraform-provider-aws .
 
   # terraform_providers_schema:
   #   name: terraform providers schema
@@ -245,34 +245,34 @@ jobs:
   #   - run: golangci-lint run ./internal/...
   #   - run: cd providerlint && golangci-lint run ./...
 
-  # importlint:
-  #   needs: [go_build]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   # See also: https://github.com/actions/setup-go/pull/62
-  #   - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-  #   - uses: actions/setup-go@v2
-  #     with:
-  #       go-version: ${{ env.GO_VERSION }}
-  #   # See also: https://github.com/actions/setup-go/issues/54
-  #   - name: go env
-  #     run: |
-  #       echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-  #   - uses: actions/cache@v2
-  #     continue-on-error: true
-  #     timeout-minutes: 2
-  #     with:
-  #       path: ${{ env.GOCACHE }}
-  #       key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
-  #   - uses: actions/cache@v2
-  #     continue-on-error: true
-  #     timeout-minutes: 2
-  #     with:
-  #       path: ~/go/pkg/mod
-  #       key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-  #   - run: cd tools && go install github.com/pavius/impi/cmd/impi
-  #   - run: impi --local . --scheme stdThirdPartyLocal ./...
+  importlint:
+    needs: [go_build]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    # See also: https://github.com/actions/setup-go/pull/62
+    - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    # See also: https://github.com/actions/setup-go/issues/54
+    - name: go env
+      run: |
+        echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+    - uses: actions/cache@v2
+      continue-on-error: true
+      timeout-minutes: 2
+      with:
+        path: ${{ env.GOCACHE }}
+        key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
+    - uses: actions/cache@v2
+      continue-on-error: true
+      timeout-minutes: 2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+    - run: cd tools && go install github.com/pavius/impi/cmd/impi
+    - run: impi --local . --scheme stdThirdPartyLocal ./...
 
   semgrep:
     runs-on: ubuntu-latest
