@@ -730,7 +730,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheck{Service}TagExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAws{Service}Tag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAws{Service}Tag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

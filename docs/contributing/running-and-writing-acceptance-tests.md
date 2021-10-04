@@ -220,7 +220,7 @@ When executing the test, the following steps are taken for each `TestStep`:
    responsible for configuring the resource under test, and any dependencies it
    may have. For example, to test the `aws_cloudwatch_dashboard` resource, a valid configuration with the requisite fields is required. This results in configuration which looks like this:
 
-    ```hcl
+    ```terraform
     resource "aws_cloudwatch_dashboard" "foobar" {
       dashboard_name = "terraform-test-dashboard-%d"
       dashboard_body = <<EOF
@@ -253,7 +253,7 @@ When executing the test, the following steps are taken for each `TestStep`:
           return fmt.Errorf("Not found: %s", n)
         }
 
-        conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+        conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
         params := cloudwatch.GetDashboardInput{
           DashboardName: aws.String(rs.Primary.ID),
         }
@@ -289,7 +289,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
     ```go
     func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
-      conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+      conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
 
       for _, rs := range s.RootModule().Resources {
         if rs.Type != "aws_cloudwatch_dashboard" {
@@ -363,7 +363,7 @@ Please also note that the newline on the first line of the configuration (before
 
 #### Combining Test Configurations
 
-We include a helper function, `composeConfig()` for iteratively building and chaining test configurations together. It accepts any number of configurations to combine them. This simplifies a single resource's testing by allowing the creation of a "base" test configuration for all the other test configurations (if necessary) and also allows the maintainers to curate common configurations. Each of these is described in more detail in below sections.
+We include a helper function, `acctest.ConfigCompose()` for iteratively building and chaining test configurations together. It accepts any number of configurations to combine them. This simplifies a single resource's testing by allowing the creation of a "base" test configuration for all the other test configurations (if necessary) and also allows the maintainers to curate common configurations. Each of these is described in more detail in below sections.
 
 Please note that we do discourage _excessive_ chaining of configurations such as implementing multiple layers of "base" configurations. Usually these configurations are harder for maintainers and other future readers to understand due to the multiple levels of indirection.
 
@@ -387,7 +387,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 func testAccAwsExampleThingConfig() string {
-  return composeConfig(
+  return acctest.ConfigCompose(
     testAccAwsExampleThingConfigBase(),
     `
 resource "aws_example_thing" "test" {
@@ -401,8 +401,8 @@ resource "aws_example_thing" "test" {
 
 These test configurations are typical implementations we have found or allow testing to implement best practices easier, since the Terraform AWS Provider testing is expected to run against various AWS Regions and Partitions.
 
-- `testAccAvailableEc2InstanceTypeForRegion("type1", "type2", ...)`: Typically used to replace hardcoded EC2 Instance Types. Uses `aws_ec2_instance_type_offering` data source to return an available EC2 Instance Type in preferred ordering. Reference the instance type via: `data.aws_ec2_instance_type_offering.available.instance_type`. Use `testAccAvailableEc2InstanceTypeForRegionNamed("name", "type1", "type2", ...)` to specify a name for the data source
-- `testAccLatestAmazonLinuxHvmEbsAmiConfig()`: Typically used to replace hardcoded EC2 Image IDs (`ami-12345678`). Uses `aws_ami` data source to find the latest Amazon Linux image. Reference the AMI ID via: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`
+- `acctest.AvailableEC2InstanceTypeForRegion("type1", "type2", ...)`: Typically used to replace hardcoded EC2 Instance Types. Uses `aws_ec2_instance_type_offering` data source to return an available EC2 Instance Type in preferred ordering. Reference the instance type via: `data.aws_ec2_instance_type_offering.available.instance_type`. Use `acctest.AvailableEC2InstanceTypeForRegionNamed("name", "type1", "type2", ...)` to specify a name for the data source
+- `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()`: Typically used to replace hardcoded EC2 Image IDs (`ami-12345678`). Uses `aws_ami` data source to find the latest Amazon Linux image. Reference the AMI ID via: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`
 
 #### Randomized Naming
 
@@ -455,7 +455,7 @@ func TestAccAwsExampleThing_basic(t *testing.T) {
         // ... omitted for brevity ...
         Check: resource.ComposeTestCheckFunc(
           testAccCheckAwsExampleThingExists(resourceName),
-          testAccCheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
+          acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
         ),
@@ -503,7 +503,7 @@ func TestAccAwsExampleThing_basic(t *testing.T) {
         Config: testAccAwsExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckAwsExampleThingExists(resourceName),
-          testAccCheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
+          acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
         ),
@@ -554,12 +554,12 @@ If you add a new test that has preconditions which are checked by an existing pr
 
 These are some of the standard provider PreChecks:
 
-* `testAccPartitionHasServicePreCheck(serviceId string, t *testing.T)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
-* `testAccOrganizationsAccountPreCheck(t *testing.T)` checks whether the current account can perform AWS Organizations tests.
-* `testAccAlternateAccountPreCheck(t *testing.T)` checks whether the environment is set up for tests across accounts.
-* `testAccMultipleRegionPreCheck(t *testing.T, regions int)` checks whether the environment is set up for tests across regions.
+* `acctest.PreCheckPartitionHasService(serviceId string, t *testing.T)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
+* `acctest.PreCheckOrganizationsAccount(t *testing.T)` checks whether the current account can perform AWS Organizations tests.
+* `acctest.PreCheckAlternateAccount(t *testing.T)` checks whether the environment is set up for tests across accounts.
+* `acctest.PreCheckMultipleRegion(t *testing.T, regions int)` checks whether the environment is set up for tests across regions.
 
-This is an example of using a standard PreCheck function. For an established service, such as WAF or FSx, use `testAccPartitionHasServicePreCheck()` and the service endpoint ID to check that a partition supports the service.
+This is an example of using a standard PreCheck function. For an established service, such as WAF or FSx, use `acctest.PreCheckPartitionHasService()` and the service endpoint ID to check that a partition supports the service.
 
 ```go
 func TestAccAwsExampleThing_basic(t *testing.T) {
@@ -567,7 +567,7 @@ func TestAccAwsExampleThing_basic(t *testing.T) {
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
-    PreCheck:     func() { acctest.PreCheck(t); testAccPartitionHasServicePreCheck(waf.EndpointsID, t) },
+    PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
     // ... additional checks follow ...
   })
 }
@@ -577,7 +577,7 @@ func TestAccAwsExampleThing_basic(t *testing.T) {
 
 In situations where standard PreChecks do not test for the required preconditions, create a custom PreCheck.
 
-Below is an example of adding a custom PreCheck function. For a new or preview service that AWS does not include in the partition service list yet, you can verify the existence of the service with a simple read-only request (e.g., list all X service things). (For acceptance tests of established services, use `testAccPartitionHasServicePreCheck()` instead.)
+Below is an example of adding a custom PreCheck function. For a new or preview service that AWS does not include in the partition service list yet, you can verify the existence of the service with a simple read-only request (e.g., list all X service things). (For acceptance tests of established services, use `acctest.PreCheckPartitionHasService()` instead.)
 
 ```go
 func TestAccAwsExampleThing_basic(t *testing.T) {
@@ -591,7 +591,7 @@ func TestAccAwsExampleThing_basic(t *testing.T) {
 }
 
 func testAccPreCheckAwsExample(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).exampleconn
+	conn := acctest.Provider.Meta().(*AWSClient).exampleconn
 	input := &example.ListThingsInput{}
 	_, err := conn.ListThings(input)
 	if testAccPreCheckSkipError(err) {
@@ -632,7 +632,7 @@ However, some services have special conditions that aren't caught by the common 
 
 To add a service-specific ErrorCheck, follow these steps:
 
-1. Make sure there is not already an ErrorCheck for the service you have in mind. For example, search the codebase for `RegisterServiceErrorCheckFunc(service.EndpointsID` replacing "service" with the package name of the service you're working on (e.g., `ec2`). If there is already an ErrorCheck for the service, add to the existing service-specific ErrorCheck.
+1. Make sure there is not already an ErrorCheck for the service you have in mind. For example, search the codebase for `acctest.RegisterServiceErrorCheckFunc(service.EndpointsID` replacing "service" with the package name of the service you're working on (e.g., `ec2`). If there is already an ErrorCheck for the service, add to the existing service-specific ErrorCheck.
 2. Create the service-specific ErrorCheck in an `_test.go` file for the service. See the example below.
 3. Register the new service-specific ErrorCheck in the `init()` at the top of the `_test.go` file. See the example below.
 
@@ -641,14 +641,14 @@ An example of adding a service-specific ErrorCheck:
 ```go
 // just after the imports, create or add to the init() function
 func init() {
-  RegisterServiceErrorCheck(service.EndpointsID, testAccErrorCheckSkipService)
+  acctest.RegisterServiceErrorCheck(service.EndpointsID, testAccErrorCheckSkipService)
 }
 
 // ... additional code and tests ...
 
 // this is the service-specific ErrorCheck
 func testAccErrorCheckSkipService(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Error message specific to the service that indicates unsupported features",
 		"You can include from one to many portions of error messages",
 		"Be careful to not inadvertently capture errors that should not be skipped",
@@ -679,7 +679,7 @@ func TestAccAwsExampleThing_disappears(t *testing.T) {
         Config: testAccAwsExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckAwsExampleThingExists(resourceName, &job),
-          acctest.CheckResourceDisappears(testAccProvider, resourceAwsExampleThing(), resourceName),
+          acctest.CheckResourceDisappears(acctest.Provider, resourceAwsExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
       },
@@ -722,7 +722,7 @@ func TestAccAwsExampleChildThing_disappears_ParentThing(t *testing.T) {
         Config: testAccAwsExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckAwsExampleThingExists(resourceName),
-          acctest.CheckResourceDisappears(testAccProvider, resourceAwsExampleParentThing(), parentResourceName),
+          acctest.CheckResourceDisappears(acctest.Provider, resourceAwsExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
       },
@@ -787,10 +787,10 @@ resource "aws_example_thing" "test" {
 
 When testing requires AWS infrastructure in a second AWS account, the below changes to the normal setup will allow the management or reference of resources and data sources across accounts:
 
-- In the `PreCheck` function, include `testAccAlternateAccountPreCheck(t)` to ensure a standardized set of information is required for cross-account testing credentials
+- In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(t)` to ensure a standardized set of information is required for cross-account testing credentials
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: testAccProviderFactoriesAlternate(&providers)`
-- Add `testAccAlternateAccountProviderConfig()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
+- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: acctest.FactoriesAlternate(&providers)`
+- Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -803,10 +803,10 @@ func TestAccAwsExample_basic(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck: func() {
       acctest.PreCheck(t)
-      testAccAlternateAccountPreCheck(t)
+      acctest.PreCheckOrganizationsAccount(t)
     },
     ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+    ProviderFactories: acctest.FactoriesAlternate(&providers),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
     Steps: []resource.TestStep{
       {
@@ -827,7 +827,7 @@ func TestAccAwsExample_basic(t *testing.T) {
 }
 
 func testAccAwsExampleConfig() string {
-  return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+  return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 # Cross account resources should be handled by the cross account provider.
 # The standardized provider block to use is awsalternate as seen below.
 resource "aws_cross_account_example" "test" {
@@ -845,16 +845,16 @@ resource "aws_example" "test" {
 }
 ```
 
-Searching for usage of `testAccAlternateAccountPreCheck` in the codebase will yield real world examples of this setup in action.
+Searching for usage of `acctest.PreCheckOrganizationsAccount` in the codebase will yield real world examples of this setup in action.
 
 #### Cross-Region Acceptance Tests
 
 When testing requires AWS infrastructure in a second or third AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
 
-- In the `PreCheck` function, include `testAccMultipleRegionPreCheck(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
+- In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(t)`
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
-- Add `testAccMultipleRegionProviderConfig(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
+- Switch usage of `Providers: acctest.Providers` to `ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
+- Add `acctest.ConfigMultipleRegionProvider(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `acctest.ConfigAlternateAccountAlternateRegionProvider()` instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -867,10 +867,10 @@ func TestAccAwsExample_basic(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck: func() {
       acctest.PreCheck(t)
-      testAccMultipleRegionPreCheck(t, 2)
+      acctest.PreCheckMultipleRegion(t, 2)
     },
     ErrorCheck:        acctest.ErrorCheck(t, service.EndpointsID),
-    ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 2),
+    ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
     Steps: []resource.TestStep{
       {
@@ -891,7 +891,7 @@ func TestAccAwsExample_basic(t *testing.T) {
 }
 
 func testAccAwsExampleConfig() string {
-  return testAccMultipleRegionProviderConfig(2) + fmt.Sprintf(`
+  return acctest.ConfigMultipleRegionProvider(2) + fmt.Sprintf(`
 # Cross region resources should be handled by the cross region provider.
 # The standardized provider is awsalternate as seen below.
 resource "aws_cross_region_example" "test" {
@@ -909,13 +909,13 @@ resource "aws_example" "test" {
 }
 ```
 
-Searching for usage of `testAccMultipleRegionPreCheck` in the codebase will yield real world examples of this setup in action.
+Searching for usage of `acctest.PreCheckMultipleRegion` in the codebase will yield real world examples of this setup in action.
 
 #### Service-Specific Region Acceptance Testing
 
 Certain AWS service APIs are only available in specific AWS regions. For example as of this writing, the `pricing` service is available in `ap-south-1` and `us-east-1`, but no other regions or partitions. When encountering these types of services, the acceptance testing can be setup to automatically detect the correct region(s), while skipping the testing in unsupported partitions.
 
-To prepare the shared service functionality, create a file named `aws/{SERVICE}_test.go`. A starting example with the Pricing service (`aws/pricing_test.go`):
+To prepare the shared service functionality, create a file named `internal/service/{SERVICE}/acc_test.go`. A starting example with the Pricing service (`internal/service/pricing/acc_test.go`):
 
 ```go
 package aws
@@ -930,6 +930,8 @@ import (
   "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
   "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
   "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+  "github.com/hashicorp/terraform-provider-aws/internal/acctest"
+  "github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // testAccPricingRegion is the chosen Pricing testing region
@@ -950,12 +952,12 @@ var testAccProviderPricingConfigure sync.Once
 
 // testAccPreCheckPricing verifies AWS credentials and that Pricing is supported
 func testAccPreCheckPricing(t *testing.T) {
-  testAccPartitionHasServicePreCheck(pricing.EndpointsID, t)
+  acctest.PreCheckPartitionHasService(pricing.EndpointsID, t)
 
   // Since we are outside the scope of the Terraform configuration we must
   // call Configure() to properly initialize the provider configuration.
   testAccProviderPricingConfigure.Do(func() {
-    testAccProviderPricing = Provider()
+    testAccProviderPricing = provider.Provider()
 
     config := map[string]interface{}{
       "region": testAccGetPricingRegion(),
@@ -978,7 +980,7 @@ func testAccPreCheckPricing(t *testing.T) {
 // Testing Pricing assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
 func testAccPricingRegionProviderConfig() string {
-  return testAccRegionalProviderConfig(testAccGetPricingRegion())
+  return acctest.ConfigRegionalProvider(testAccGetPricingRegion())
 }
 
 // testAccGetPricingRegion returns the Pricing region for testing
@@ -1003,15 +1005,15 @@ func testAccGetPricingRegion() string {
 
 For the resource or data source acceptance tests, the key items to adjust are:
 
-* Ensure `TestCase` uses `ProviderFactories: testAccProviderFactories` instead of `Providers: acctest.Providers`
-* Add the call for the new `PreCheck` function (keeping `acctest.PreCheck(t)`), e.g., `PreCheck: func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },`
-* If the testing is for a managed resource with a `CheckDestroy` function, ensure it uses the new provider instance, e.g., `testAccProviderPricing`, instead of `testAccProvider`.
-* If the testing is for a managed resource with a `Check...Exists` function, ensure it uses the new provider instance, e.g., `testAccProviderPricing`, instead of `testAccProvider`.
+* Ensure `TestCase` uses `ProviderFactories: acctest.ProviderFactories` instead of `Providers: acctest.Providers`
+* Add the call for the new `PreCheck` function (keeping `acctest.PreCheck(t)`), e.g. `PreCheck: func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },`
+* If the testing is for a managed resource with a `CheckDestroy` function, ensure it uses the new provider instance, e.g. `testAccProviderPricing`, instead of `acctest.Provider`.
+* If the testing is for a managed resource with a `Check...Exists` function, ensure it uses the new provider instance, e.g. `testAccProviderPricing`, instead of `acctest.Provider`.
 * In each `TestStep` configuration, ensure the new provider configuration function is called, e.g.
 
 ```go
 func testAccDataSourceAwsPricingProductConfigRedshift() string {
-  return composeConfig(
+  return acctest.ConfigCompose(
     testAccPricingRegionProviderConfig(),
     `
 # ... test configuration ...
@@ -1031,7 +1033,7 @@ To convert to serialized (one test at a time) acceptance testing:
 
 - Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSagemakerDomain_basic` becomes `testAccSagemakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
     - In each of these test functions, convert `resource.ParallelTest` to `resource.Test`
-- Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `aws/{Service}_test.go`. The contents of this test can be setup like the following:
+- Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `internal/service/{SERVICE}/{SERVICE}_test.go`. The contents of this test can be setup like the following:
 
 ```go
 func TestAccAwsExampleThing_serial(t *testing.T) {
@@ -1070,7 +1072,7 @@ Writing acceptance testing for data sources is similar to resources, with the bi
 - Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
 - The usage of an additional `dataSourceName` variable to store a data source reference, e.g., `data.aws_example_thing.test`
 
-Data sources testing should still utilize the `CheckDestroy` function of the resource, just to continue verifying that there are no dangling AWS resources after a test is ran.
+Data sources testing should still use the `CheckDestroy` function of the resource, just to continue verifying that there are no dangling AWS resources after a test is run.
 
 Please note that we do not recommend re-using test configurations between resources and their associated data source as it is harder to discover testing regressions. Authors are encouraged to potentially implement similar "base" configurations though.
 
@@ -1164,7 +1166,7 @@ Then add the actual implementation. Preferably, if a paginated SDK call is avail
 
 ```go
 func testSweepExampleThings(region string) error {
-  client, err := sharedClientForRegion(region)
+  client, err := acctest.SharedRegionalSweeperClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
@@ -1230,7 +1232,7 @@ Otherwise, if no paginated SDK call is available:
 
 ```go
 func testSweepExampleThings(region string) error {
-  client, err := sharedClientForRegion(region)
+  client, err := acctest.SharedRegionalSweeperClient(region)
 
   if err != nil {
     return fmt.Errorf("error getting client: %w", err)
@@ -1310,10 +1312,10 @@ The below are required items that will be noted during submission review and pre
 - [ ] __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `provider_test.go` should be used for multiple account/region or otherwise specialized testing.
 - [ ] __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
 - [ ] __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),`).
-- [ ] __Uses resource.ParallelTest__: Tests should utilize [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
+- [ ] __Uses resource.ParallelTest__: Tests should use [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
 - [ ] __Uses fmt.Sprintf()__: Test configurations preferably should to be separated into their own functions (typically named `testAccAws{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
-- [ ] __Uses Randomized Infrastructure Naming__: Test configurations that utilize resources where a unique name is required should generate a random name. Typically this is created via `rName := acctest.RandomWithPrefix("tf-acc-test")` in the acceptance test function before generating the configuration.
-- [ ] __Prevents S3 Bucket Deletion Errors__: Test configurations that utilize `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
+- [ ] __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := acctest.RandomWithPrefix("tf-acc-test")` in the acceptance test function before generating the configuration.
+- [ ] __Prevents S3 Bucket Deletion Errors__: Test configurations that use `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
 
 For resources that support import, the additional item below is required that will be noted during submission review and prevent immediate merging:
 
@@ -1321,10 +1323,10 @@ For resources that support import, the additional item below is required that wi
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
 
-- [ ] __Uses Builtin Check Functions__: Tests should utilize already available check functions, e.g., `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Builtin Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/teststep.html#builtin-check-functions).
-- [ ] __Uses TestCheckResoureAttrPair() for Data Sources__: Tests should utilize [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
+- [ ] __Uses Builtin Check Functions__: Tests should use already available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify values in the Terraform state over creating custom `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Builtin Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/teststep.html#builtin-check-functions).
+- [ ] __Uses TestCheckResoureAttrPair() for Data Sources__: Tests should use [`resource.TestCheckResourceAttrPair()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#TestCheckResourceAttrPair) to verify values in the Terraform state for data sources attributes to compare them with their expected resource attributes.
 - [ ] __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
-- [ ] __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAccAws{SERVICE}{RESOURCE}_basic`) should utilize available check functions, e.g., `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
+- [ ] __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAccAws{SERVICE}{RESOURCE}_basic`) should use available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
 
 ### Avoid Hard Coding
 
@@ -1338,12 +1340,12 @@ Avoid hard coding values in acceptance test checks and configurations for consis
     - [`aws_billing_service_account` data source](https://www.terraform.io/docs/providers/aws/d/billing_service_account.html), and
     - [`aws_sagemaker_prebuilt_ecr_image` data source](https://www.terraform.io/docs/providers/aws/d/sagemaker_prebuilt_ecr_image.html).
 - [ ] __Uses Account Test Checks__: Any check required to verify an AWS Account ID of the current testing account or another account should use one of the following available helper functions over the usage of `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:
-    - `testAccCheckResourceAttrAccountID()`: Validates the state value equals the AWS Account ID of the current account running the test. This is the most common implementation.
-    - `testAccMatchResourceAttrAccountID()`: Validates the state value matches any AWS Account ID (e.g., a 12 digit number). This is typically only used in data source testing of AWS managed components.
+    - `acctest.CheckResourceAttrAccountID()`: Validates the state value equals the AWS Account ID of the current account running the test. This is the most common implementation.
+    - `acctest.MatchResourceAttrAccountID()`: Validates the state value matches any AWS Account ID (e.g. a 12 digit number). This is typically only used in data source testing of AWS managed components.
 
 Here's an example of using `aws_caller_identity`:
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 resource "aws_backup_selection" "test" {
@@ -1356,17 +1358,17 @@ resource "aws_backup_selection" "test" {
 #### Hardcoded AMI IDs
 
 - [ ] __Uses aws_ami Data Source__: Any hardcoded AMI ID configuration, e.g. `ami-12345678`, should be replaced with the [`aws_ami` data source](https://www.terraform.io/docs/providers/aws/d/ami.html) pointing to an Amazon Linux image. The package `internal/acctest` includes test configuration helper functions to simplify these lookups:
-    - `ConfigLatestAmazonLinuxHVMEBSAMI()`: The recommended AMI for most situations, using Amazon Linux, HVM virtualization, and EBS storage. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`.
-    - `ConfigLatestAmazonLinuxHvmInstanceStoreAmi()`: AMI lookup using Amazon Linux, HVM virtualization, and Instance Store storage. Should only be used in testing that requires Instance Store storage rather than EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-instance-store.id`.
-    - `ConfigLatestAmazonLinuxPvEbsAmi()`: AMI lookup using Amazon Linux, Paravirtual virtualization, and EBS storage. Should only be used in testing that requires Paravirtual over Hardware Virtual Machine (HVM) virtualization. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-ebs.id`.
-    - `ConfigLatestAmazonLinuxPvInstanceStoreAmi`: AMI lookup using Amazon Linux, Paravirtual virtualization, and Instance Store storage. Should only be used in testing that requires Paravirtual virtualization over HVM and Instance Store storage over EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-instance-store.id`.
-    - `ConfigLatestWindowsServer2016CoreAmi()`: AMI lookup using Windows Server 2016 Core, HVM virtualization, and EBS storage. Should only be used in testing that requires Windows. To reference the AMI ID in the test configuration: `data.aws_ami.win2016core-ami.id`.
+    - `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()`: The recommended AMI for most situations, using Amazon Linux, HVM virtualization, and EBS storage. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`.
+    - `acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi()`: AMI lookup using Amazon Linux, HVM virtualization, and Instance Store storage. Should only be used in testing that requires Instance Store storage rather than EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-instance-store.id`.
+    - `acctest.ConfigLatestAmazonLinuxPvEbsAmi()`: AMI lookup using Amazon Linux, Paravirtual virtualization, and EBS storage. Should only be used in testing that requires Paravirtual over Hardware Virtual Machine (HVM) virtualization. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-ebs.id`.
+    - `acctest.ConfigLatestAmazonLinuxPvInstanceStoreAmi`: AMI lookup using Amazon Linux, Paravirtual virtualization, and Instance Store storage. Should only be used in testing that requires Paravirtual virtualization over HVM and Instance Store storage over EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-instance-store.id`.
+    - `acctest.ConfigLatestWindowsServer2016CoreAmi()`: AMI lookup using Windows Server 2016 Core, HVM virtualization, and EBS storage. Should only be used in testing that requires Windows. To reference the AMI ID in the test configuration: `data.aws_ami.win2016core-ami.id`.
 
-Here's an example of using `ConfigLatestAmazonLinuxHVMEBSAMI()` and `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`:
+Here's an example of using `acctest.ConfigLatestAmazonLinuxHVMEBSAMI()` and `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`:
 
 ```go
 func testAccLaunchConfigurationDataSourceConfig_basic(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
@@ -1380,13 +1382,15 @@ resource "aws_launch_configuration" "test" {
 
 #### Hardcoded Availability Zones
 
-- [ ] __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g., `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://www.terraform.io/docs/providers/aws/d/availability_zones.html). Use the convenience function called `testAccAvailableAZsNoOptInConfig()` (defined in `resource_aws_instance_test.go`) to declare `data "aws_availability_zones" "available" {...}`. You can then reference the data source via `data.aws_availability_zones.available.names[0]` or `data.aws_availability_zones.available.names[count.index]` in resources utilizing `count`.
+- [ ] __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g. `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://www.terraform.io/docs/providers/aws/d/availability_zones.html). Use the convenience function called `acctest.ConfigAvailableAZsNoOptIn()` (defined in `internal/acctest/acctest.go`) to declare `data "aws_availability_zones" "available" {...}`. You can then reference the data source via `data.aws_availability_zones.available.names[0]` or `data.aws_availability_zones.available.names[count.index]` in resources using `count`.
 
-Here's an example of using `testAccAvailableAZsNoOptInConfig()` and `data.aws_availability_zones.available.names[0]`:
+Here's an example of using `acctest.ConfigAvailableAZsNoOptIn()` and `data.aws_availability_zones.available.names[0]`:
 
 ```go
 func testAccAwsInstanceVpcConfigBasic(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
@@ -1405,7 +1409,7 @@ resource "aws_subnet" "test" {
 
 Here's an example of using `aws_rds_engine_version` and `data.aws_rds_engine_version.default.version`:
 
-```hcl
+```terraform
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
 }
@@ -1431,7 +1435,7 @@ resource "aws_db_instance" "bar" {
 
 Here's an example using `data.aws_dx_locations.test.location_codes`:
 
-```hcl
+```terraform
 data "aws_dx_locations" "test" {}
 
 resource "aws_dx_lag" "test" {
@@ -1446,17 +1450,18 @@ resource "aws_dx_lag" "test" {
 
 - [ ] __Uses Instance Type Data Source__: Singular hardcoded instance types and classes, e.g., `t2.micro` and `db.t2.micro`, should be replaced with a list of preferences using a data source. Because offerings vary from region to region and partition to partition, providing a list of preferences dramatically improves the likelihood that one of the options will be available. Depending on the situation, there are several data sources for instance types and classes, including:
     - [`aws_ec2_instance_type_offering` data source](https://www.terraform.io/docs/providers/aws/d/ec2_instance_type_offering.html) - Convenience functions declare configurations that are referenced with `data.aws_ec2_instance_type_offering.available` including:
-        - The `testAccAvailableEc2InstanceTypeForAvailabilityZone()` function for test configurations using an EC2 Subnet which is inherently within a single Availability Zone
-        - The `testAccAvailableEc2InstanceTypeForRegion()` function for test configurations that do not include specific Availability Zones
+        - The `acctest.AvailableEC2InstanceTypeForAvailabilityZone()` function for test configurations using an EC2 Subnet which is inherently within a single Availability Zone
+        - The `acctest.AvailableEC2InstanceTypeForRegion()` function for test configurations that do not include specific Availability Zones
     - [`aws_rds_orderable_db_instance` data source](https://www.terraform.io/docs/providers/aws/d/rds_orderable_db_instance.html),
     - [`aws_neptune_orderable_db_instance` data source](https://www.terraform.io/docs/providers/aws/d/neptune_orderable_db_instance.html), and
     - [`aws_docdb_orderable_db_instance` data source](https://www.terraform.io/docs/providers/aws/d/docdb_orderable_db_instance.html).
 
-Here's an example of using `testAccAvailableEc2InstanceTypeForRegion()` and `data.aws_ec2_instance_type_offering.available.instance_type`:
+Here's an example of using `acctest.AvailableEC2InstanceTypeForRegion()` and `data.aws_ec2_instance_type_offering.available.instance_type`:
 
 ```go
 func testAccAWSSpotInstanceRequestConfig(rInt int) string {
-	return composeConfig(testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+	return acctest.ConfigCompose(
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
@@ -1469,7 +1474,7 @@ resource "aws_spot_instance_request" "test" {
 
 Here's an example of using `aws_rds_orderable_db_instance` and `data.aws_rds_orderable_db_instance.test.instance_class`:
 
-```hcl
+```terraform
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = "mysql"
   engine_version             = "5.7.31"
@@ -1491,7 +1496,7 @@ resource "aws_db_instance" "test" {
 
 Here's an example of using `aws_partition` and `data.aws_partition.current.dns_suffix`:
 
-```hcl
+```terraform
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -1515,17 +1520,22 @@ POLICY
 
 #### Hardcoded Partition in ARN
 
-- [ ] __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g., the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`.
-- [ ] __Uses Builtin ARN Check Functions__: Tests should utilize available ARN check functions to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:
+- [ ] __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g. the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`.
+- [ ] __Uses Builtin ARN Check Functions__: Tests should use available ARN check functions to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:
 
-    - `testAccCheckResourceAttrRegionalARN()` verifies an ARN matches the account ID and region of the test execution and an exact resource value
-    - `testAccMatchResourceAttrRegionalARN()` verifies an ARN matches the account ID and region of the test execution and a regular expression of the resource value
-    - `testAccCheckResourceAttrGlobalARN()` verifies an ARN matches the account ID of the test execution and an exact resource value
-    - `testAccMatchResourceAttrGlobalARN()` verifies an ARN matches the account ID of the test execution and a regular expression of the resource value
+    - `acctest.CheckResourceAttrRegionalARN()` verifies that an ARN matches the account ID and region of the test execution with an exact resource value
+    - `acctest.MatchResourceAttrRegionalARN()` verifies that an ARN matches the account ID and region of the test execution with a regular expression of the resource value
+    - `acctest.CheckResourceAttrGlobalARN()` verifies that an ARN matches the account ID of the test execution with an exact resource value
+    - `acctest.MatchResourceAttrGlobalARN()` verifies that an ARN matches the account ID of the test execution with a regular expression of the resource value
+    - `acctest.CheckResourceAttrRegionalARNNoAccount()` verifies than an ARN has no account ID and matches the current region of the test execution with an exact resource value
+    - `acctest.CheckResourceAttrGlobalARNNoAccount()` verifies than an ARN has no account ID and matches an exact resource value
+    - `acctest.CheckResourceAttrRegionalARNAccountID()` verifies than an ARN matches a specific account ID and the current region of the test execution with an exact resource value
+    - `acctest.CheckResourceAttrGlobalARNAccountID()` verifies than an ARN matches a specific account ID with an exact resource value
+
 
 Here's an example of using `aws_partition` and `data.aws_partition.current.partition`:
 
-```hcl
+```terraform
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -1540,7 +1550,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 Here's an example of using `aws_region` and `data.aws_region.current.name`:
 
-```hcl
+```terraform
 data "aws_region" "current" {}
 
 resource "aws_route53_zone" "test" {
@@ -1557,7 +1567,7 @@ resource "aws_route53_zone" "test" {
 
 Here's an example of using `aws_ec2_spot_price` and `data.aws_ec2_spot_price.current.spot_price`:
 
-```hcl
+```terraform
 data "aws_ec2_spot_price" "current" {
   instance_type = "t3.medium"
 
@@ -1584,7 +1594,7 @@ func TestAccKeyPair_basic(t *testing.T) {
   ...
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	publicKey, _, err := acctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey, _, err := acctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -1612,11 +1622,11 @@ resource "aws_key_pair" "test" {
 
 #### Hardcoded Email Addresses
 
-- [ ] __Uses either testAccDefaultEmailAddress Constant or testAccRandomEmailAddress() Function__: Any hardcoded email addresses should replaced with either the constant `testAccDefaultEmailAddress` or the function `testAccRandomEmailAddress()`.
+- [ ] __Uses either acctest.DefaultEmailAddress Constant or acctest.RandomEmailAddress() Function__: Any hardcoded email addresses should replaced with either the constant `acctest.DefaultEmailAddress` or the function `acctest.RandomEmailAddress()`.
 
-Using `testAccDefaultEmailAddress` is preferred when using a single email address in an acceptance test.
+Using `acctest.DefaultEmailAddress` is preferred when using a single email address in an acceptance test.
 
-Here's an example using `testAccDefaultEmailAddress`
+Here's an example using `acctest.DefaultEmailAddress`
 
 ```go
 func TestAccSNSTopicSubscription_email(t *testing.T) {
@@ -1628,10 +1638,10 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 		...
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionEmailConfig(rName, testAccDefaultEmailAddress),
+				Config: testAccAWSSNSTopicSubscriptionEmailConfig(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					...
-					resource.TestCheckResourceAttr(resourceName, "endpoint", testAccDefaultEmailAddress),
+					resource.TestCheckResourceAttr(resourceName, "endpoint", acctest.DefaultEmailAddress),
 				),
 			},
 		},
@@ -1639,15 +1649,15 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 }
 ```
 
-Here's an example using `testAccRandomEmailAddress()`
+Here's an example using `acctest.RandomEmailAddress()`
 
 ```go
 func TestAccPinpointEmailChannel_basic(t *testing.T) {
 	...
 
-	domain := testAccRandomDomainName()
-	address1 := testAccRandomEmailAddress(domain)
-	address2 := testAccRandomEmailAddress(domain)
+	domain := acctest.RandomDomainName()
+	address1 := acctest.RandomEmailAddress(domain)
+	address2 := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		...
