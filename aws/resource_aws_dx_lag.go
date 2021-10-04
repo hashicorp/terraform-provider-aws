@@ -65,6 +65,7 @@ func resourceAwsDxLag() *schema.Resource {
 			"provider_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"tags":     tagsSchema(),

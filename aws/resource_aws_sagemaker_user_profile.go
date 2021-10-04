@@ -152,6 +152,14 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 											},
 										},
 									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateArn,
+										},
+									},
 								},
 							},
 						},
@@ -179,6 +187,14 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 													ValidateFunc: validateArn,
 												},
 											},
+										},
+									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateArn,
 										},
 									},
 									"custom_image": {

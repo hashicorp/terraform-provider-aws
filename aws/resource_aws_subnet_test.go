@@ -39,6 +39,7 @@ func init() {
 			"aws_elb",
 			"aws_emr_cluster",
 			"aws_fsx_lustre_file_system",
+			"aws_fsx_ontap_file_system",
 			"aws_fsx_windows_file_system",
 			"aws_lambda_function",
 			"aws_lb",
