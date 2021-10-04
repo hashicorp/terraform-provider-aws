@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsVolumeAttachment() *schema.Resource {
@@ -211,7 +212,7 @@ func resourceAwsVolumeAttachmentDelete(d *schema.ResourceData, meta interface{})
 			return fmt.Errorf("error stopping instance (%s): %s", iID, err)
 		}
 
-		if err := waitForInstanceStopping(conn, iID, 10*time.Minute); err != nil {
+		if err := waitForInstanceStopping(conn, iID, waiter.InstanceStopTimeout); err != nil {
 			return err
 		}
 	}
