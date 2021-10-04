@@ -153,80 +153,6 @@ func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{})
 	return resourceAwsVolumeAttachmentRead(d, meta)
 }
 
-func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		request := &ec2.DescribeVolumesInput{
-			VolumeIds: []*string{aws.String(volumeID)},
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("attachment.device"),
-					Values: []*string{aws.String(name)},
-				},
-				{
-					Name:   aws.String("attachment.instance-id"),
-					Values: []*string{aws.String(instanceID)},
-				},
-			},
-		}
-
-		resp, err := conn.DescribeVolumes(request)
-		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				return nil, "failed", fmt.Errorf("code: %s, message: %s", awsErr.Code(), awsErr.Message())
-			}
-			return nil, "failed", err
-		}
-
-		if len(resp.Volumes) > 0 {
-			v := resp.Volumes[0]
-			for _, a := range v.Attachments {
-				if aws.StringValue(a.InstanceId) == instanceID {
-					return a, aws.StringValue(a.State), nil
-				}
-			}
-		}
-		// assume detached if volume count is 0
-		return 42, ec2.VolumeAttachmentStateDetached, nil
-	}
-}
-
-// InstanceStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// an EC2 instance.
-func instanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-			InstanceIds: []*string{aws.String(instanceID)},
-		})
-		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
-				// Set this to nil as if we didn't find anything.
-				resp = nil
-			} else {
-				log.Printf("Error on InstanceStateRefresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		if resp == nil || len(resp.Reservations) == 0 || len(resp.Reservations[0].Instances) == 0 {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		i := resp.Reservations[0].Instances[0]
-		state := *i.State.Name
-
-		for _, failState := range failStates {
-			if state == failState {
-				return i, state, fmt.Errorf("Failed to reach target state. Reason: %s",
-					stringifyStateReason(i.StateReason))
-			}
-		}
-
-		return i, state, nil
-	}
-}
-
 func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
@@ -278,25 +204,15 @@ func resourceAwsVolumeAttachmentDelete(d *schema.ResourceData, meta interface{})
 	iID := d.Get("instance_id").(string)
 
 	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
-		opts := &ec2.StopInstancesInput{
+		_, err := conn.StopInstances(&ec2.StopInstancesInput{
 			InstanceIds: []*string{aws.String(iID)},
-		}
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"pending", "running", "shutting-down", "stopping"},
-			Target:     []string{"stopped"},
-			Refresh:    instanceStateRefreshFunc(conn, iID, []string{}),
-			Timeout:    5 * time.Minute,
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-		log.Printf("[Debug] Stopping target instance (%s) before detaching Volume (%s)", iID, vID)
-		_, err := conn.StopInstances(opts)
+		})
 		if err != nil {
-			return fmt.Errorf("Error stopping Instance (%s)", iID)
+			return fmt.Errorf("error stopping instance (%s): %s", iID, err)
 		}
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("Error waiting Instance (%s) to stop", iID)
+
+		if err := waitForInstanceStopping(conn, iID, 10*time.Minute); err != nil {
+			return err
 		}
 	}
 
@@ -330,6 +246,43 @@ func resourceAwsVolumeAttachmentDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return nil
+}
+
+func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		request := &ec2.DescribeVolumesInput{
+			VolumeIds: []*string{aws.String(volumeID)},
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("attachment.device"),
+					Values: []*string{aws.String(name)},
+				},
+				{
+					Name:   aws.String("attachment.instance-id"),
+					Values: []*string{aws.String(instanceID)},
+				},
+			},
+		}
+
+		resp, err := conn.DescribeVolumes(request)
+		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok {
+				return nil, "failed", fmt.Errorf("code: %s, message: %s", awsErr.Code(), awsErr.Message())
+			}
+			return nil, "failed", err
+		}
+
+		if len(resp.Volumes) > 0 {
+			v := resp.Volumes[0]
+			for _, a := range v.Attachments {
+				if aws.StringValue(a.InstanceId) == instanceID {
+					return a, aws.StringValue(a.State), nil
+				}
+			}
+		}
+		// assume detached if volume count is 0
+		return 42, ec2.VolumeAttachmentStateDetached, nil
+	}
 }
 
 func volumeAttachmentID(name, volumeID, instanceID string) string {
