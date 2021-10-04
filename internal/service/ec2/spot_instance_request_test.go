@@ -1038,7 +1038,7 @@ resource "aws_security_group" "test" {
 
 func testAccSpotInstanceRequestConfig_getPasswordData(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		testAccLatestWindowsServer2016CoreAmiConfig(),
+		acctest.ConfigLatestWindowsServer2016CoreAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {

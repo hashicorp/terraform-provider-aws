@@ -2788,7 +2788,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestLaunchSpecificationWithInstanceStoreAMI(rName, publicKey, validUntil string) string {
-	return testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig() +
+	return acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi() +
 		testAccSpotFleetRequestBaseConfig(rName, publicKey) +
 		fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {

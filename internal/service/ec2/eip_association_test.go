@@ -419,7 +419,7 @@ resource "aws_eip_association" "test" {
 func testAccEIPAssociationConfig_ec2Classic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
-		testAccLatestAmazonLinuxPvEbsAmiConfig(),
+		acctest.ConfigLatestAmazonLinuxPvEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
 		`
 resource "aws_eip" "test" {}

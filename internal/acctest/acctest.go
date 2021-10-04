@@ -2241,6 +2241,89 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 `
 }
 
+// ConfigLatestAmazonLinuxHvmInstanceStoreAmi returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
+// The data source is named 'amzn-ami-minimal-hvm-instance-store'.
+func ConfigLatestAmazonLinuxHvmInstanceStoreAmi() string {
+	return `
+data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["instance-store"]
+  }
+}
+`
+}
+
+// ConfigLatestAmazonLinuxPvEbsAmi returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using PV virtualization and an EBS root device.
+// The data source is named 'amzn-ami-minimal-pv-ebs'.
+func ConfigLatestAmazonLinuxPvEbsAmi() string {
+	return `
+data "aws_ami" "amzn-ami-minimal-pv-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-pv-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+`
+}
+
+// ConfigLatestAmazonLinuxPvInstanceStoreAmi returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
+// The data source is named 'amzn-ami-minimal-pv-ebs'.
+func ConfigLatestAmazonLinuxPvInstanceStoreAmi() string {
+	return `
+data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-pv-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["instance-store"]
+  }
+}
+`
+}
+
+// ConfigLatestWindowsServer2016CoreAmi returns the configuration for a data source that
+// describes the latest Microsoft Windows Server 2016 Core AMI.
+// The data source is named 'win2016core-ami'.
+func ConfigLatestWindowsServer2016CoreAmi() string {
+	return `
+data "aws_ami" "win2016core-ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["Windows_Server-2016-English-Core-Base-*"]
+  }
+}
+`
+}
+
 func ConfigLambdaBase(policyName, roleName, sgName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}

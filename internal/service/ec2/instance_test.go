@@ -4016,7 +4016,7 @@ resource "aws_instance" "test" {
 
 func testAccInstanceConfigAtLeastOneOtherEbsVolume(rName string) string {
 	return acctest.ConfigCompose(
-		testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig(),
+		acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi(),
 		testAccInstanceVPCConfig(rName, false),
 		fmt.Sprintf(`
 # Ensure that there is at least 1 EBS volume in the current region.
@@ -4129,7 +4129,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfigRootInstanceStore() string {
-	return acctest.ConfigCompose(testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmInstanceStoreAmi(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
 
@@ -5757,7 +5757,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfig_getPasswordData(rName, publicKey string, val bool) string {
-	return acctest.ConfigCompose(testAccLatestWindowsServer2016CoreAmiConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestWindowsServer2016CoreAmi(), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -5952,89 +5952,6 @@ resource "aws_instance" "test" {
   user_data     = ""
 }
 `)
-}
-
-// testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
-// The data source is named 'amzn-ami-minimal-hvm-instance-store'.
-func testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["instance-store"]
-  }
-}
-`
-}
-
-// testAccLatestAmazonLinuxPvEbsAmiConfig returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using PV virtualization and an EBS root device.
-// The data source is named 'amzn-ami-minimal-pv-ebs'.
-func testAccLatestAmazonLinuxPvEbsAmiConfig() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-pv-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-pv-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-`
-}
-
-// testAccLatestAmazonLinuxPvInstanceStoreAmiConfig returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
-// The data source is named 'amzn-ami-minimal-pv-ebs'.
-func testAccLatestAmazonLinuxPvInstanceStoreAmiConfig() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-pv-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["instance-store"]
-  }
-}
-`
-}
-
-// testAccLatestWindowsServer2016CoreAmiConfig returns the configuration for a data source that
-// describes the latest Microsoft Windows Server 2016 Core AMI.
-// The data source is named 'win2016core-ami'.
-func testAccLatestWindowsServer2016CoreAmiConfig() string {
-	return `
-data "aws_ami" "win2016core-ami" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["Windows_Server-2016-English-Core-Base-*"]
-  }
-}
-`
 }
 
 // testAccInstanceVPCConfig returns the configuration for tests that create
@@ -6258,7 +6175,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceDynamicEBSBlockDevicesConfig() string {
-	return acctest.ConfigCompose(testAccLatestAmazonLinuxPvEbsAmiConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxPvEbsAmi(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-pv-ebs.id
   # tflint-ignore: aws_instance_previous_type

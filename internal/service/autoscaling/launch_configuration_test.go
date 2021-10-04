@@ -663,7 +663,7 @@ func testAccCheckLaunchConfigurationExists(n string, res *autoscaling.LaunchConf
 }
 
 func testAccLaunchConfigurationWithInstanceStoreAMIConfig(rName string) string {
-	return acctest.ConfigCompose(testAccLatestAmazonLinuxPvInstanceStoreAmiConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxPvInstanceStoreAmi(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name     = %[1]q
   image_id = data.aws_ami.amzn-ami-minimal-pv-instance-store.id
@@ -1035,28 +1035,6 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 		*ami = *resp.Images[0]
 		return nil
 	}
-}
-
-// testAccLatestAmazonLinuxPvInstanceStoreAmiConfig returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
-// The data source is named 'amzn-ami-minimal-pv-ebs'.
-func testAccLatestAmazonLinuxPvInstanceStoreAmiConfig() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-pv-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["instance-store"]
-  }
-}
-`
 }
 
 func testAccCheckSecurityGroupExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
