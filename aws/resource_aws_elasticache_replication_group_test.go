@@ -1420,6 +1420,8 @@ func TestAccAWSElasticacheReplicationGroup_tags(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
+	clusterDataSourceName0 :="data.aws_elasticache_cluster.test.0"
+	clusterDataSourceName1 :="data.aws_elasticache_cluster.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1433,6 +1435,10 @@ func TestAccAWSElasticacheReplicationGroup_tags(t *testing.T) {
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(clusterDataSourceName0, "tags.%", "1"),
+					resource.TestCheckResourceAttr(clusterDataSourceName0, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(clusterDataSourceName1, "tags.%", "1"),
+					resource.TestCheckResourceAttr(clusterDataSourceName1, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -1448,6 +1454,12 @@ func TestAccAWSElasticacheReplicationGroup_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(clusterDataSourceName0, "tags.%", "2"),
+					resource.TestCheckResourceAttr(clusterDataSourceName0, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(clusterDataSourceName0, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(clusterDataSourceName1, "tags.%", "2"),
+					resource.TestCheckResourceAttr(clusterDataSourceName1, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(clusterDataSourceName1, "tags.key2", "value2"),
 				),
 			},
 			{
@@ -1456,6 +1468,10 @@ func TestAccAWSElasticacheReplicationGroup_tags(t *testing.T) {
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(clusterDataSourceName0, "tags.%", "1"),
+					resource.TestCheckResourceAttr(clusterDataSourceName0, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(clusterDataSourceName1, "tags.%", "1"),
+					resource.TestCheckResourceAttr(clusterDataSourceName1, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -2762,12 +2778,15 @@ resource "aws_elasticache_replication_group" "test" {
 }
 
 func testAccAWSElasticacheReplicationGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
+	const clusterCount = 2
+	return composeConfig(
+		testAccAWSElasticacheReplicationGroupClusterData(clusterCount),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
-  number_cache_clusters         = 2
+  number_cache_clusters         = %[2]d
   port                          = 6379
   apply_immediately             = true
   auto_minor_version_upgrade    = false
@@ -2775,19 +2794,23 @@ resource "aws_elasticache_replication_group" "test" {
   snapshot_window               = "01:00-02:00"
 
   tags = {
-    %[2]q = %[3]q
+    %[3]q = %[4]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, clusterCount, tagKey1, tagValue1),
+	)
 }
 
 func testAccAWSElasticacheReplicationGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+	const clusterCount = 2
+	return composeConfig(
+		testAccAWSElasticacheReplicationGroupClusterData(clusterCount),
+		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
-  number_cache_clusters         = 2
+  number_cache_clusters         = %[2]d
   port                          = 6379
   apply_immediately             = true
   auto_minor_version_upgrade    = false
@@ -2795,11 +2818,22 @@ resource "aws_elasticache_replication_group" "test" {
   snapshot_window               = "01:00-02:00"
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[3]q = %[4]q
+    %[5]q = %[6]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, clusterCount, tagKey1, tagValue1, tagKey2, tagValue2),
+	)
+}
+
+func testAccAWSElasticacheReplicationGroupClusterData(count int) string {
+	return fmt.Sprintf(`
+data "aws_elasticache_cluster" "test" {
+  count = %[1]d
+
+  cluster_id = tolist(aws_elasticache_replication_group.test.member_clusters)[count.index]
+}
+`, count)
 }
 
 func testAccAWSElasticacheReplicationGroupConfigFinalSnapshot(rName string) string {
@@ -3081,6 +3115,19 @@ func resourceAwsElasticacheReplicationGroupSetPrimaryClusterID(conn *elasticache
 		ApplyImmediately:   aws.Bool(true),
 		PrimaryClusterId:   aws.String(primaryClusterID),
 	})
+}
+
+func resourceAwsElasticacheReplicationGroupModify(conn *elasticache.ElastiCache, timeout time.Duration, input *elasticache.ModifyReplicationGroupInput) error {
+	_, err := conn.ModifyReplicationGroup(input)
+	if err != nil {
+		return fmt.Errorf("error requesting modification: %w", err)
+	}
+
+	_, err = waiter.ReplicationGroupAvailable(conn, aws.StringValue(input.ReplicationGroupId), timeout)
+	if err != nil {
+		return fmt.Errorf("error waiting for modification: %w", err)
+	}
+	return nil
 }
 
 func formatReplicationGroupClusterID(replicationGroupID string, clusterID int) string {
