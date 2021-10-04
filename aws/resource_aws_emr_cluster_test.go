@@ -370,6 +370,89 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_BidPrice(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_CoreInstanceGroup_Market(t *testing.T) {
+	var cluster1, cluster2 emr.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigCoreInstanceGroupMarket(rName, "ON_DEMAND"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.market", "ON_DEMAND"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccAWSEmrClusterConfigCoreInstanceGroupMarket(rName, "SPOT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEmrClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.market", "SPOT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_MasterInstanceGroup_Market(t *testing.T) {
+	var cluster1, cluster2 emr.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigMasterInstanceGroupMarket(rName, "ON_DEMAND"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.market", "ON_DEMAND"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccAWSEmrClusterConfigMasterInstanceGroupMarket(rName, "SPOT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEmrClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.market", "SPOT"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSEMRCluster_CoreInstanceGroup_InstanceCount(t *testing.T) {
 	var cluster1, cluster2, cluster3 emr.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2488,6 +2571,68 @@ resource "aws_emr_cluster" "test" {
   depends_on = [aws_route_table_association.test]
 }
 `, rName, bidPrice),
+	)
+}
+
+func testAccAWSEmrClusterConfigCoreInstanceGroupMarket(rName, market string) string {
+	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.12.0"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+  }
+
+  core_instance_group {
+	market        = %[2]q
+    instance_type = "m4.large"
+  }
+
+  depends_on = [aws_route_table_association.test]
+}
+`, rName, market),
+	)
+}
+
+func testAccAWSEmrClusterConfigMasterInstanceGroupMarket(rName, market string) string {
+	return testAccAWSEmrComposeConfig(false, fmt.Sprintf(`
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.12.0"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+	market        = %[2]q
+  }
+
+  core_instance_group {
+    instance_type = "m4.large"
+  }
+
+  depends_on = [aws_route_table_association.test]
+}
+`, rName, market),
 	)
 }
 

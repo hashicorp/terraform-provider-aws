@@ -268,6 +268,16 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"market": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								emr.MarketTypeOnDemand,
+								emr.MarketTypeSpot,
+								"",
+							}, false),
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -337,6 +347,15 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						"market": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								emr.MarketTypeOnDemand,
+								emr.MarketTypeSpot,
+							}, false),
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -733,8 +752,15 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeMaster),
 			InstanceType:  aws.String(m["instance_type"].(string)),
-			Market:        aws.String(emr.MarketTypeOnDemand),
 			Name:          aws.String(m["name"].(string)),
+		}
+
+		if v, ok := m["market"]; ok {
+			if v.(string) == "SPOT" {
+				instanceGroup.Market = aws.String(emr.MarketTypeSpot)
+			} else {
+				instanceGroup.Market = aws.String(emr.MarketTypeOnDemand)
+			}
 		}
 
 		if v, ok := m["bid_price"]; ok && v.(string) != "" {
@@ -754,7 +780,6 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeCore),
 			InstanceType:  aws.String(m["instance_type"].(string)),
-			Market:        aws.String(emr.MarketTypeOnDemand),
 			Name:          aws.String(m["name"].(string)),
 		}
 
@@ -766,6 +791,14 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			}
 
 			instanceGroup.AutoScalingPolicy = autoScalingPolicy
+		}
+
+		if v, ok := m["market"]; ok {
+			if v.(string) == "SPOT" {
+				instanceGroup.Market = aws.String(emr.MarketTypeSpot)
+			} else {
+				instanceGroup.Market = aws.String(emr.MarketTypeOnDemand)
+			}
 		}
 
 		if v, ok := m["bid_price"]; ok && v.(string) != "" {
