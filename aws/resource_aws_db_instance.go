@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tfrds "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -160,19 +161,8 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"agent",
-						"alert",
-						"audit",
-						"error",
-						"general",
-						"listener",
-						"slowquery",
-						"trace",
-						"postgresql",
-						"upgrade",
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(tfrds.ExportableLogType_Values(), false),
 				},
 			},
 			"endpoint": {
@@ -347,12 +337,9 @@ func resourceAwsDbInstance() *schema.Resource {
 				Default:  false,
 			},
 			"replica_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"mounted",
-					"open-read-only",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(rds.ReplicaMode_Values(), false),
 			},
 			"replicas": {
 				Type:     schema.TypeList,
