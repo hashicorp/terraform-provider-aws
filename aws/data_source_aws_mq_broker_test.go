@@ -119,7 +119,7 @@ resource "aws_security_group" "test" {
 resource "aws_mq_configuration" "test" {
   name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  engine_version = "5.15.12"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -140,7 +140,7 @@ resource "aws_mq_broker" "test" {
 
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.0"
+  engine_version     = "5.15.12"
   host_instance_type = "mq.t2.micro"
 
   maintenance_window_start_time {
