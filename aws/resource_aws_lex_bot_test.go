@@ -17,6 +17,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(lexmodelbuildingservice.EndpointsID, testAccErrorCheckSkipLex)
+
 	resource.AddTestSweepers("aws_lex_bot", &resource.Sweeper{
 		Name:         "aws_lex_bot",
 		F:            testSweepLexBots,
@@ -68,6 +70,12 @@ func testSweepLexBots(region string) error {
 	}
 
 	return errs.ErrorOrNil()
+}
+
+func testAccErrorCheckSkipLex(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"You can't set the enableModelImprovements field to false",
+	)
 }
 
 func TestAccAwsLexBot_basic(t *testing.T) {
