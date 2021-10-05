@@ -1,4 +1,9 @@
 ## 3.62.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_volume_attachment: Add `stop_instance_before_detaching` argument ([#21144](https://github.com/hashicorp/terraform-provider-aws/issues/21144))
+
 ## 3.61.0 (October 01, 2021)
 
 FEATURES:
