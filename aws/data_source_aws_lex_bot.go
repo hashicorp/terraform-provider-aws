@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/finder"
 )
 
 func dataSourceAwsLexBot() *schema.Resource {
@@ -75,7 +75,7 @@ func dataSourceAwsLexBot() *schema.Resource {
 			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      LexBotVersionLatest,
+				Default:      tflex.LexBotVersionLatest,
 				ValidateFunc: validateLexBotVersion,
 			},
 			"voice_id": {
@@ -89,13 +89,12 @@ func dataSourceAwsLexBot() *schema.Resource {
 func dataSourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
-	botName := d.Get("name").(string)
-	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
-		Name:           aws.String(botName),
-		VersionOrAlias: aws.String(d.Get("version").(string)),
-	})
+	name := d.Get("name").(string)
+	version := d.Get("version").(string)
+	output, err := finder.BotVersionByName(conn, name, version)
+
 	if err != nil {
-		return fmt.Errorf("error reading bot %s: %w", botName, err)
+		return fmt.Errorf("error reading Lex Bot (%s/%s): %w", name, version, err)
 	}
 
 	arn := arn.ARN{
@@ -103,27 +102,26 @@ func dataSourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 		Region:    meta.(*AWSClient).region,
 		Service:   "lex",
 		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("bot:%s", d.Get("name").(string)),
+		Resource:  fmt.Sprintf("bot:%s", name),
 	}
 	d.Set("arn", arn.String())
+	d.Set("checksum", output.Checksum)
+	d.Set("child_directed", output.ChildDirected)
+	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set("description", output.Description)
+	d.Set("detect_sentiment", output.DetectSentiment)
+	d.Set("enable_model_improvements", output.EnableModelImprovements)
+	d.Set("failure_reason", output.FailureReason)
+	d.Set("idle_session_ttl_in_seconds", output.IdleSessionTTLInSeconds)
+	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("locale", output.Locale)
+	d.Set("name", output.Name)
+	d.Set("nlu_intent_confidence_threshold", output.NluIntentConfidenceThreshold)
+	d.Set("status", output.Status)
+	d.Set("version", output.Version)
+	d.Set("voice_id", output.VoiceId)
 
-	d.Set("checksum", resp.Checksum)
-	d.Set("child_directed", resp.ChildDirected)
-	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
-	d.Set("description", resp.Description)
-	d.Set("detect_sentiment", resp.DetectSentiment)
-	d.Set("enable_model_improvements", resp.EnableModelImprovements)
-	d.Set("failure_reason", resp.FailureReason)
-	d.Set("idle_session_ttl_in_seconds", resp.IdleSessionTTLInSeconds)
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("locale", resp.Locale)
-	d.Set("name", resp.Name)
-	d.Set("nlu_intent_confidence_threshold", resp.NluIntentConfidenceThreshold)
-	d.Set("status", resp.Status)
-	d.Set("version", resp.Version)
-	d.Set("voice_id", resp.VoiceId)
-
-	d.SetId(botName)
+	d.SetId(name)
 
 	return nil
 }
