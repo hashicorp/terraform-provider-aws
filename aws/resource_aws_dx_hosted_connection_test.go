@@ -44,35 +44,6 @@ func TestAccAWSDxHostedConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "owner_account_id", env.OwnerAccountId),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "100Mbps"),
 					resource.TestCheckResourceAttr(resourceName, "vlan", "4094"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDxHostedConnection_tags(t *testing.T) {
-	env, err := testAccCheckAwsDxHostedConnectionEnv()
-	if err != nil {
-		TestAccSkip(t, err.Error())
-	}
-
-	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
-	resourceName := "aws_dx_hosted_connection.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxHostedConnectionDestroy(testAccDxHostedConnectionProvider),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDxHostedConnectionConfig_tags(connectionName, env.ConnectionId, env.OwnerAccountId),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedConnectionExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Origin", "Acceptance Test"),
 				),
 			},
 		},
@@ -150,22 +121,6 @@ resource "aws_dx_hosted_connection" "test" {
   owner_account_id = "%s"
   bandwidth        = "100Mbps"
   vlan             = 4094
-}
-`, name, connectionId, ownerAccountId)
-}
-
-func testAccDxHostedConnectionConfig_tags(name, connectionId, ownerAccountId string) string {
-	return fmt.Sprintf(`
-resource "aws_dx_hosted_connection" "test" {
-  name             = "%s"
-  connection_id    = "%s"
-  owner_account_id = "%s"
-  bandwidth        = "100Mbps"
-  vlan             = 4093
-
-  tags = {
-    Origin = "Acceptance Test"
-  }
 }
 `, name, connectionId, ownerAccountId)
 }
