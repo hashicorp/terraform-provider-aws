@@ -29,7 +29,7 @@ resource "aws_chime_voice_connector_termination" "default" {
 }
 
 resource "aws_chime_voice_connector_termination_credentials" "default" {
-  voice_connector_id  = aws_chime_voice_connector.default.id
+  voice_connector_id = aws_chime_voice_connector.default.id
 
   credentials {
     username = "test"
