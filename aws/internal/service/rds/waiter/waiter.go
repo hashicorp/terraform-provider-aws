@@ -13,6 +13,8 @@ const (
 
 	DBClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	DBClusterRoleAssociationDeletedTimeout = 5 * time.Minute
+
+	ReplicaClusterPropagationTimeout = 2 * time.Minute
 )
 
 func EventSubscriptionCreated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
