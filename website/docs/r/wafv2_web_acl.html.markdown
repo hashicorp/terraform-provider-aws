@@ -77,15 +77,16 @@ resource "aws_wafv2_web_acl" "example" {
 ```
 
 ### Rate Based
+Rate-limit US and NL-based clients to 10,000 requests for every 5 minutes.
 
 ```terraform
 resource "aws_wafv2_web_acl" "example" {
   name        = "rate-based-example"
-  description = "Example of a rate based statement."
-  scope       = "REGIONAL"
+  description = "Example of a Cloudfront rate based statement."
+  scope       = "CLOUDFRONT"
 
   default_action {
-    block {}
+    allow {}
   }
 
   rule {
@@ -93,7 +94,7 @@ resource "aws_wafv2_web_acl" "example" {
     priority = 1
 
     action {
-      count {}
+      block {}
     }
 
     statement {
