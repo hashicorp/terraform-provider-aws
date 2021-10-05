@@ -935,7 +935,8 @@ func validateSecurityGroupRuleImportString(importStr string) ([]string, error) {
 		}
 	}
 
-	if protocolForValue(protocol) == "icmp" {
+	protocolName := protocolForValue(protocol)
+	if protocolName == "icmp" || protocolName == "icmpv6" {
 		if itype, err := strconv.Atoi(fromPort); err != nil || itype < -1 || itype > 255 {
 			return nil, fmt.Errorf(errStr, importStr, "invalid icmp type")
 		} else if icode, err := strconv.Atoi(toPort); err != nil || icode < -1 || icode > 255 {
