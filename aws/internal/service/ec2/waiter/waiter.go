@@ -264,12 +264,12 @@ const (
 	NetworkAclEntryPropagationTimeout = 5 * time.Minute
 )
 
-func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) (*ec2.Route, error) {
+func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{RouteStatusReady},
 		Target:                    []string{},
 		Refresh:                   RouteStatus(conn, routeFinder, routeTableID, destination),
-		Timeout:                   PropagationTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -282,12 +282,12 @@ func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, d
 	return nil, err
 }
 
-func RouteReady(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) (*ec2.Route, error) {
+func RouteReady(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{RouteStatusReady},
 		Refresh:                   RouteStatus(conn, routeFinder, routeTableID, destination),
-		Timeout:                   PropagationTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 

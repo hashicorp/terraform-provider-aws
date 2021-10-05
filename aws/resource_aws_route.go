@@ -49,6 +49,7 @@ func resourceAwsRoute() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -244,7 +245,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
@@ -385,7 +386,7 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
@@ -460,7 +461,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination)
+	_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to delete: %w", routeTableID, destination, err)

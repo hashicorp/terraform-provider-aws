@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -25,6 +26,10 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDefaultRouteTableImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
 		},
 
 		//
@@ -211,7 +216,7 @@ func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("error deleting Route in EC2 Default Route Table (%s) with destination (%s): %w", d.Id(), destination, err)
 		}
 
-		_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination)
+		_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for Route in EC2 Default Route Table (%s) with destination (%s) to delete: %w", d.Id(), destination, err)
