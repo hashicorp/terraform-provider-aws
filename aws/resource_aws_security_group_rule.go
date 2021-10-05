@@ -935,9 +935,8 @@ func validateSecurityGroupRuleImportString(importStr string) ([]string, error) {
 		}
 	}
 
-	// the value -1 means 'disabled' in AWS for icmp code
 	if protocolForValue(protocol) == "icmp" {
-		if itype, err := strconv.Atoi(fromPort); err != nil || itype < 0 || itype > 255 {
+		if itype, err := strconv.Atoi(fromPort); err != nil || itype < -1 || itype > 255 {
 			return nil, fmt.Errorf(errStr, importStr, "invalid icmp type")
 		} else if icode, err := strconv.Atoi(toPort); err != nil || icode < -1 || icode > 255 {
 			return nil, fmt.Errorf(errStr, importStr, "invalid icmp code")
