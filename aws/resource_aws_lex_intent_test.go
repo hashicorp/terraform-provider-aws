@@ -659,12 +659,14 @@ func TestAccAwsLexIntent_computeVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccAwsLexIntentConfig_createVersion(testIntentID),
+					testAccAwsLexBotConfig_intent(testIntentID),
 					testAccAwsLexBotConfig_createVersion(testIntentID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, version, &v1),
 					resource.TestCheckResourceAttr(intentResourceName, "version", version),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would like to pick up flowers"),
 					testAccCheckAwsLexBotExistsWithVersion(botResourceName, version, &v2),
 					resource.TestCheckResourceAttr(botResourceName, "version", version),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", version),
@@ -679,7 +681,7 @@ func TestAccAwsLexIntent_computeVersion(t *testing.T) {
 					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, updatedVersion, &v1),
 					resource.TestCheckResourceAttr(intentResourceName, "version", updatedVersion),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
-					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would like to pick up flowers"),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would not like to pick up flowers"),
 					testAccCheckAwsLexBotExistsWithVersion(botResourceName, updatedVersion, &v2),
 					resource.TestCheckResourceAttr(botResourceName, "version", updatedVersion),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", updatedVersion),
@@ -1162,7 +1164,7 @@ resource "aws_lex_intent" "test" {
     type = "ReturnIntent"
   }
   sample_utterances = [
-    "I would like to pick up flowers",
+    "I would not like to pick up flowers",
   ]
 }
 `, rName)
