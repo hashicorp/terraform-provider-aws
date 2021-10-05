@@ -77,3 +77,44 @@ func LatestBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingServic
 
 	return strconv.Itoa(latestVersion), nil
 }
+
+// LatestIntentVersionByName returns the latest published version of an intent or $LATEST if the intent has never been published.
+// See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
+func LatestIntentVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
+	input := &lexmodelbuildingservice.GetIntentVersionsInput{
+		Name: aws.String(name),
+	}
+	var latestVersion int
+
+	err := conn.GetIntentVersionsPages(input, func(page *lexmodelbuildingservice.GetIntentVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, intent := range page.Intents {
+			version := aws.StringValue(intent.Version)
+
+			if version == tflex.LexIntentVersionLatest {
+				continue
+			}
+
+			if version, err := strconv.Atoi(version); err != nil {
+				continue
+			} else if version > latestVersion {
+				latestVersion = version
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if latestVersion == 0 {
+		return tflex.LexIntentVersionLatest, nil
+	}
+
+	return strconv.Itoa(latestVersion), nil
+}

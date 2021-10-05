@@ -1,5 +1,6 @@
 package lex
 
 const (
-	LexBotVersionLatest = "$LATEST"
+	LexBotVersionLatest    = "$LATEST"
+	LexIntentVersionLatest = "$LATEST"
 )

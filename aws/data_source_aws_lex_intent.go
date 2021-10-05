@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
 )
 
 func dataSourceAwsLexIntent() *schema.Resource {
@@ -52,7 +53,7 @@ func dataSourceAwsLexIntent() *schema.Resource {
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  LexIntentVersionLatest,
+				Default:  tflex.LexIntentVersionLatest,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
