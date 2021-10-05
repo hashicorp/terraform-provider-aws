@@ -1,3 +1,7 @@
 ```release-note:new-resource
 aws_dx_hosted_connection
 ```
+
+```release-note:new-resource
+aws_dx_connection_confirmation
+```

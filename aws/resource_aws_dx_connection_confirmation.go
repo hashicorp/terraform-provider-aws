@@ -3,12 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDxConnectionConfirmation() *schema.Resource {
@@ -30,45 +31,40 @@ func resourceAwsDxConnectionConfirmation() *schema.Resource {
 func resourceAwsDxConnectionConfirmationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	id := d.Get("connection_id").(string)
+	connectionID := d.Get("connection_id").(string)
+	input := &directconnect.ConfirmConnectionInput{
+		ConnectionId: aws.String(connectionID),
+	}
 
-	log.Printf("[DEBUG] Confirming Direct Connect connection: %s", id)
-	_, err := conn.ConfirmConnection(&directconnect.ConfirmConnectionInput{
-		ConnectionId: aws.String(id),
-	})
+	log.Printf("[DEBUG] Confirming Direct Connect Connection: %s", input)
+	_, err := conn.ConfirmConnection(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error confirming Direct Connection Connection (%s): %w", connectionID, err)
 	}
 
-	availableStateConf := &resource.StateChangeConf{
-		Pending:    []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateRequested},
-		Target:     []string{directconnect.ConnectionStateAvailable},
-		Refresh:    dxConnectionRefreshStateFunc(dxConnectionDescribe(conn, id)),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, err = availableStateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Direct Connect connection (%s) to be available: %s", id, err)
-	}
+	d.SetId(connectionID)
 
-	d.SetId(id)
+	if _, err := waiter.ConnectionConfirmed(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Direct Connection Connection (%s) confirm: %w", d.Id(), err)
+	}
 
 	return nil
 }
 
 func resourceAwsDxConnectionConfirmationRead(d *schema.ResourceData, meta interface{}) error {
-	dxconn := meta.(*AWSClient).dxconn
+	conn := meta.(*AWSClient).dxconn
 
-	conn, err := dxConnectionDescribe(dxconn, d.Id())()
-	if err != nil {
-		return err
-	}
-	if conn == nil {
-		log.Printf("[WARN] Direct Connect connection (%s) not found, removing confirmation from state", d.Id())
+	_, err := finder.ConnectionByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Direct Connect Connection (%s): %w", d.Id(), err)
 	}
 
 	return nil

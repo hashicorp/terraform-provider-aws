@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
 )
 
 func TestAccAWSDxConnectionConfirmation_basic(t *testing.T) {
@@ -31,6 +32,7 @@ func TestAccAWSDxConnectionConfirmation_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxHostedConnectionDestroy(altProviderFunc),
 		Steps: []resource.TestStep{
@@ -50,28 +52,23 @@ func testAccCheckAwsDxConnectionConfirmationExists(name string, providerFunc fun
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No Connection ID is set")
+			return errors.New("No Direct Connect Connection ID is set")
 		}
 
 		provider := providerFunc()
 		conn := provider.Meta().(*AWSClient).dxconn
-		input := &directconnect.DescribeConnectionsInput{
-			ConnectionId: aws.String(rs.Primary.ID),
-		}
 
-		resp, err := conn.DescribeConnections(input)
+		connection, err := finder.ConnectionByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		for _, c := range resp.Connections {
-			if c.ConnectionId != nil && *c.ConnectionId == rs.Primary.ID &&
-				c.ConnectionState != nil && *c.ConnectionState == directconnect.ConnectionStateAvailable {
-				return nil
-			}
+		if state := aws.StringValue(connection.ConnectionState); state != directconnect.ConnectionStateAvailable {
+			return fmt.Errorf("Direct Connect Connection %s in unexpected state: %s", rs.Primary.ID, state)
 		}
 
-		return errors.New("Connection Confirmation not found")
+		return nil
 	}
 }
 
