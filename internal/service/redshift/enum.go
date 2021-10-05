@@ -30,7 +30,7 @@ const (
 	clusterTypeSingleNode = "single-node"
 )
 
-//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
+//nolint:deadcode // These constants are missing from the AWS SDK
 func clusterType_Values() []string {
 	return []string{
 		clusterTypeMultiNode,

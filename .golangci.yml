@@ -30,7 +30,7 @@ linters:
     - structcheck
     - unconvert
     # - unparam
-    # - varcheck
+    - varcheck
     - vet
 
 linters-settings:
