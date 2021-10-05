@@ -1338,6 +1338,7 @@ func protocolForValue(v string) string {
 // supports "tcp", "udp", "icmp", and "all"
 func sgProtocolIntegers() map[string]int {
 	return map[string]int{
+		"icmpv6":  58,
 		"udp":  17,
 		"tcp":  6,
 		"icmp": 1,
