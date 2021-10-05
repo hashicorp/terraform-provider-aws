@@ -935,10 +935,21 @@ func validateSecurityGroupRuleImportString(importStr string) ([]string, error) {
 		}
 	}
 
-	if p1, err := strconv.Atoi(fromPort); err != nil {
-		return nil, fmt.Errorf(errStr, importStr, "invalid port")
-	} else if p2, err := strconv.Atoi(toPort); err != nil || p2 < p1 {
-		return nil, fmt.Errorf(errStr, importStr, "invalid port")
+	// the value -1 means 'disabled' in AWS for icmp code
+	if protocolForValue(protocol) == "icmp" {
+		if itype, err := strconv.Atoi(fromPort); err != nil || itype < 0 || itype > 255 {
+			return nil, fmt.Errorf(errStr, importStr, "invalid icmp type")
+		} else if icode, err := strconv.Atoi(toPort); err != nil || icode < -1 || icode > 255 {
+			return nil, fmt.Errorf(errStr, importStr, "invalid icmp code")
+		}
+	} else {
+		if p1, err := strconv.Atoi(fromPort); err != nil {
+			return nil, fmt.Errorf(errStr, importStr, "invalid from_port")
+		} else if p2, err := strconv.Atoi(toPort); err != nil {
+			return nil, fmt.Errorf(errStr, importStr, "invalid to_port")
+		} else if p2 < p1 {
+			return nil, fmt.Errorf(errStr, importStr, "to_port lower than from_port")
+		}
 	}
 
 	for _, source := range sources {
