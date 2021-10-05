@@ -107,7 +107,7 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.LagId))
 
 	// Delete unmanaged connection.
-	err = deleteDirectConnectConnection(conn, aws.StringValue(output.Connections[0].ConnectionId))
+	err = deleteDirectConnectConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waiter.ConnectionDeleted)
 
 	if err != nil {
 		return err
@@ -209,7 +209,7 @@ func resourceAwsDxLagDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for _, connection := range lag.Connections {
-			err = deleteDirectConnectConnection(conn, aws.StringValue(connection.ConnectionId))
+			err = deleteDirectConnectConnection(conn, aws.StringValue(connection.ConnectionId), waiter.ConnectionDeleted)
 
 			if err != nil {
 				return err

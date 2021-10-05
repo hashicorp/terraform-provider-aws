@@ -6,12 +6,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/directconnect/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 type testAccDxHostedConnectionEnv struct {
@@ -30,6 +31,7 @@ func TestAccAWSDxHostedConnection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxHostedConnectionDestroy(testAccDxHostedConnectionProvider),
 		Steps: []resource.TestStep{
@@ -60,6 +62,7 @@ func TestAccAWSDxHostedConnection_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxHostedConnectionDestroy(testAccDxHostedConnectionProvider),
 		Steps: []resource.TestStep{
@@ -99,58 +102,43 @@ func testAccCheckAwsDxHostedConnectionDestroy(providerFunc func() *schema.Provid
 				continue
 			}
 
-			input := &directconnect.DescribeHostedConnectionsInput{
-				ConnectionId: aws.String(rs.Primary.Attributes["connection_id"]),
+			_, err := finder.HostedConnectionByID(conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			resp, err := conn.DescribeHostedConnections(input)
 			if err != nil {
 				return err
 			}
-			for _, c := range resp.Connections {
-				if c.ConnectionId != nil && *c.ConnectionId == rs.Primary.ID &&
-					c.ConnectionState != nil && *c.ConnectionState != directconnect.ConnectionStateDeleted {
-					return fmt.Errorf("[DESTROY ERROR] Dx Hosted Connection (%s) not deleted", rs.Primary.ID)
-				}
-			}
+
+			return fmt.Errorf("Direct Connect Hosted Connection %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
 func testAccCheckAwsDxHostedConnectionExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).dxconn
+
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No Hosted Connection ID is set")
+			return errors.New("No Direct Connect Hosted Connection ID is set")
 		}
 
-		connectionId := rs.Primary.Attributes["connection_id"]
-		if connectionId == "" {
-			return errors.New("No Connection (Interconnect or LAG) ID is set")
-		}
+		_, err := finder.HostedConnectionByID(conn, rs.Primary.ID)
 
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
-		input := &directconnect.DescribeHostedConnectionsInput{
-			ConnectionId: aws.String(connectionId),
-		}
-
-		resp, err := conn.DescribeHostedConnections(input)
 		if err != nil {
 			return err
 		}
 
-		for _, c := range resp.Connections {
-			if c.ConnectionId != nil && *c.ConnectionId == rs.Primary.ID {
-				return nil
-			}
-		}
-
-		return errors.New("Hosted Connection not found")
+		return nil
 	}
 }
 

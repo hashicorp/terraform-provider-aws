@@ -12,7 +12,7 @@ Provides a hosted connection on the specified interconnect or a link aggregation
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dx_hosted_connection" "hosted" {
   connection_id    = "dxcon-ffabc123"
   bandwidth        = "100Mbps"
@@ -31,7 +31,6 @@ The following arguments are supported:
 * `connection_id` - (Required) The ID of the interconnect or LAG.
 * `owner_account_id` - (Required) The ID of the AWS account of the customer for the connection.
 * `vlan` - (Required) The dedicated VLAN provisioned to the hosted connection.
-* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 
