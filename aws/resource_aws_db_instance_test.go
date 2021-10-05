@@ -6480,7 +6480,7 @@ data "aws_rds_orderable_db_instance" "test" {
 }
 
 resource "aws_db_instance" "source" {
-  allocated_storage       = 5
+  allocated_storage       = 20
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
