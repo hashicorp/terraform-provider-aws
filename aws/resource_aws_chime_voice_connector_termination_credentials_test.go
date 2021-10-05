@@ -111,7 +111,7 @@ resource "aws_chime_voice_connector_termination" "t" {
 }
 
 func testAccAWSChimeVoiceConnectorTerminationCredentialsConfig(name string) string {
-	return testAccAWSChimeVoiceConnectorTerminationCredentialsConfigBase(name) + fmt.Sprintf(`
+	return testAccAWSChimeVoiceConnectorTerminationCredentialsConfigBase(name) + `
 resource "aws_chime_voice_connector_termination_credentials" "test" {
   voice_connector_id = aws_chime_voice_connector.chime.id
 
@@ -122,11 +122,11 @@ resource "aws_chime_voice_connector_termination_credentials" "test" {
 
   depends_on = [aws_chime_voice_connector_termination.t]
 }
-`)
+`
 }
 
 func testAccAWSChimeVoiceConnectorTerminationCredentialsConfigUpdated(name string) string {
-	return testAccAWSChimeVoiceConnectorTerminationCredentialsConfigBase(name) + fmt.Sprintf(`
+	return testAccAWSChimeVoiceConnectorTerminationCredentialsConfigBase(name) + `
 resource "aws_chime_voice_connector_termination_credentials" "test" {
   voice_connector_id = aws_chime_voice_connector.chime.id
 
@@ -142,7 +142,7 @@ resource "aws_chime_voice_connector_termination_credentials" "test" {
 
   depends_on = [aws_chime_voice_connector_termination.t]
 }
-`)
+`
 }
 
 func testAccCheckAWSChimeVoiceConnectorTerminationCredentialsExists(name string) resource.TestCheckFunc {
