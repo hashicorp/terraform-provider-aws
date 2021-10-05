@@ -34,6 +34,7 @@ package eks
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -310,7 +311,8 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 	response, err := v.client.Do(req)
 	if err != nil {
 		// special case to avoid printing the full URL if possible
-		if urlErr, ok := err.(*url.Error); ok { // nolint:errorlint
+		var urlErr *url.Error
+		if errors.As(err, &urlErr) {
 			return nil, NewSTSError(fmt.Sprintf("error during GET: %v", urlErr.Err))
 		}
 		return nil, NewSTSError(fmt.Sprintf("error during GET: %v", err))
