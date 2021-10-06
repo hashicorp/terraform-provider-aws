@@ -3,7 +3,6 @@ package waiter
 import (
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"time"
 
@@ -22,6 +21,9 @@ const (
 
 	// General timeout for EC2 resource creations to propagate
 	PropagationTimeout = 2 * time.Minute
+
+	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
+	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
 )
 
 const (
@@ -315,7 +317,7 @@ func RouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Rout
 		Target:         []string{RouteTableStatusReady},
 		Refresh:        RouteTableStatus(conn, id),
 		Timeout:        timeout,
-		NotFoundChecks: math.MaxInt32,
+		NotFoundChecks: RouteTableNotFoundChecks,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -350,7 +352,7 @@ func RouteTableAssociationCreated(conn *ec2.EC2, id string) (*ec2.RouteTableAsso
 		Target:         []string{ec2.RouteTableAssociationStateCodeAssociated},
 		Refresh:        RouteTableAssociationState(conn, id),
 		Timeout:        RouteTableAssociationCreatedTimeout,
-		NotFoundChecks: math.MaxInt32,
+		NotFoundChecks: RouteTableAssociationCreatedNotFoundChecks,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
