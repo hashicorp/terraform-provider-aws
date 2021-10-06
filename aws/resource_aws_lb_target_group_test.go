@@ -138,6 +138,39 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_attrsOnCreate(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
