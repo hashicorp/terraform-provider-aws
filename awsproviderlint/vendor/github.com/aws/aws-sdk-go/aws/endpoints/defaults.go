@@ -1258,7 +1258,7 @@ var awsPartition = partition{
 				"us-west-2":      endpoint{},
 			},
 		},
-		"cloudcontrol": service{
+		"cloudcontrolapi": service{
 
 			Endpoints: endpoints{
 				"af-south-1":     endpoint{},
@@ -4007,6 +4007,7 @@ var awsPartition = partition{
 			Endpoints: endpoints{
 				"ap-northeast-1": endpoint{},
 				"ap-northeast-2": endpoint{},
+				"ap-south-1":     endpoint{},
 				"ap-southeast-1": endpoint{},
 				"ap-southeast-2": endpoint{},
 				"eu-central-1":   endpoint{},
@@ -4030,6 +4031,12 @@ var awsPartition = partition{
 					Hostname: "data.iotevents.ap-northeast-2.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "ap-northeast-2",
+					},
+				},
+				"ap-south-1": endpoint{
+					Hostname: "data.iotevents.ap-south-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-south-1",
 					},
 				},
 				"ap-southeast-1": endpoint{
@@ -9376,7 +9383,7 @@ var awsusgovPartition = partition{
 				"us-gov-west-1": endpoint{},
 			},
 		},
-		"cloudcontrol": service{
+		"cloudcontrolapi": service{
 
 			Endpoints: endpoints{
 				"fips-us-gov-east-1": endpoint{
