@@ -378,7 +378,111 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		return errors.New("error creating LB Target Group: no groups returned in response")
 	}
 	d.SetId(aws.StringValue(resp.TargetGroups[0].TargetGroupArn))
-	return resourceAwsLbTargetGroupUpdate(d, meta)
+
+	var attrs []*elbv2.TargetGroupAttribute
+
+	switch d.Get("target_type").(string) {
+	case elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp:
+		if v, ok := d.GetOk("deregistration_delay"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("deregistration_delay.timeout_seconds"),
+				Value: aws.String(fmt.Sprintf("%d", v.(int))),
+			})
+		}
+
+		if v, ok := d.GetOk("load_balancing_algorithm_type"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("load_balancing.algorithm.type"),
+				Value: aws.String(v.(string)),
+			})
+		}
+
+		if v, ok := d.GetOk("preserve_client_ip"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("preserve_client_ip.enabled"),
+				Value: aws.String(v.(string)),
+			})
+		}
+
+		if v, ok := d.GetOk("proxy_protocol_v2"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("proxy_protocol_v2.enabled"),
+				Value: aws.String(strconv.FormatBool(v.(bool))),
+			})
+		}
+
+		if v, ok := d.GetOk("slow_start"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("slow_start.duration_seconds"),
+				Value: aws.String(fmt.Sprintf("%d", v.(int))),
+			})
+		}
+
+		if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 {
+			stickinessBlocks := v.([]interface{})
+			stickiness := stickinessBlocks[0].(map[string]interface{})
+
+			if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
+				log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
+			} else {
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.enabled"),
+						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.type"),
+						Value: aws.String(stickiness["type"].(string)),
+					})
+
+				switch d.Get("protocol").(string) {
+				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+					switch stickiness["type"].(string) {
+					case "lb_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							})
+					case "app_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							},
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.cookie_name"),
+								Value: aws.String(stickiness["cookie_name"].(string)),
+							})
+					default:
+						log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
+					}
+				}
+			}
+		}
+	case elbv2.TargetTypeEnumLambda:
+		if v, ok := d.GetOk("lambda_multi_value_headers_enabled"); ok {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("lambda.multi_value_headers.enabled"),
+				Value: aws.String(strconv.FormatBool(v.(bool))),
+			})
+		}
+	}
+
+	if len(attrs) > 0 {
+		params := &elbv2.ModifyTargetGroupAttributesInput{
+			TargetGroupArn: aws.String(d.Id()),
+			Attributes:     attrs,
+		}
+
+		_, err := conn.ModifyTargetGroupAttributes(params)
+
+		if err != nil {
+			return fmt.Errorf("error modifying Target Group Attributes: %w", err)
+		}
+	}
+
+	return resourceAwsLbTargetGroupRead(d, meta)
 }
 
 func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
