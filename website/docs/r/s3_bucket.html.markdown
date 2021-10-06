@@ -277,12 +277,22 @@ resource "aws_s3_bucket" "source" {
 
     rules {
       id     = "foobar"
-      prefix = "foo"
       status = "Enabled"
 
+      filter {
+        tags = {}
+      }
       destination {
         bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
+        replication_time {
+          status = "Enabled"
+          minutes = 15
+        }
+      }
+      metrics {
+        status = "Enabled"
+        minutes = 15
       }
     }
   }
@@ -452,6 +462,18 @@ The `destination` object supports the following:
   `sse_kms_encrypted_objects` source selection criteria.
 * `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with `account_id` owner override configuration.
 * `account_id` - (Optional) The Account ID to use for overriding the object owner on replication. Must be used in conjunction with `access_control_translation` override configuration.
+* `replication_time` - (Optional) Enables S3 Replication Time Control (S3 RTC) (documented below).
+* `metrics` - (Optional) Enables replication metrics (required for S3 RTC) (documented below).
+
+The `replication_time` object supports the following:
+
+* `status` - (Optional) The status of RTC. Either `Enabled` or `Disabled`.
+* `minutes` - (Optional) Threshold within which objects are to be replicated. The only valid value is `15`.
+
+The `metrics` object supports the following:
+
+* `status` - (Optional) The status of replication metrics. Either `Enabled` or `Disabled`.
+* `minutes` - (Optional) Threshold within which objects are to be replicated. The only valid value is `15`.
 
 The `source_selection_criteria` object supports the following:
 
