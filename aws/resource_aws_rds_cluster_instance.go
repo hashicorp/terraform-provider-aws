@@ -623,7 +623,7 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())
 	_, err := tfresource.RetryWhen(
-		waiter.ReplicaClusterPropagationTimeout,
+		d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteDBInstance(input)
 		},
