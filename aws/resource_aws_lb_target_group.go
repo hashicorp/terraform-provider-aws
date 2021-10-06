@@ -377,7 +377,32 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 	if len(resp.TargetGroups) == 0 {
 		return errors.New("error creating LB Target Group: no groups returned in response")
 	}
+
 	d.SetId(aws.StringValue(resp.TargetGroups[0].TargetGroupArn))
+
+	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		_, err = finder.TargetGroupByARN(conn, d.Id())
+
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = finder.TargetGroupByARN(conn, d.Id())
+	}
+
+	if err != nil {
+		return fmt.Errorf("error waiting for ELBv2 Target Group to create before setting attributes (%s): %w", d.Id(), err)
+	}
 
 	var attrs []*elbv2.TargetGroupAttribute
 
