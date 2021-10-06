@@ -1,7 +1,14 @@
 ## 3.62.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_dx_connection_confirmation` ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
+* **New Resource:** `aws_dx_hosted_connection` ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
+
 ENHANCEMENTS:
 
+* resource/aws_dx_lag: Add `connection_id` argument ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
+* resource/aws_emr_cluster: Add `log_encryption_kms_key_id` argument ([#17706](https://github.com/hashicorp/terraform-provider-aws/issues/17706))
 * resource/aws_lex_bot: Added waiter support to account for `BUILDING` status ([#21122](https://github.com/hashicorp/terraform-provider-aws/issues/21122))
 * resource/aws_volume_attachment: Add `stop_instance_before_detaching` argument ([#21144](https://github.com/hashicorp/terraform-provider-aws/issues/21144))
 
@@ -11,6 +18,7 @@ BUG FIXES:
 * aws/resource_aws_lex_intent: Correctly determine `version` attribute ([#20383](https://github.com/hashicorp/terraform-provider-aws/issues/20383))
 * resource/aws_appstream_fleet: More error validation in waiter ([#21125](https://github.com/hashicorp/terraform-provider-aws/issues/21125))
 * resource/aws_appstream_stack:  More error validation in waiter ([#21125](https://github.com/hashicorp/terraform-provider-aws/issues/21125))
+* resource/aws_autoscalingplans_scaling_plan: Fix updates to `scaling_instruction` argument ([#17987](https://github.com/hashicorp/terraform-provider-aws/issues/17987))
 
 ## 3.61.0 (October 01, 2021)
 
