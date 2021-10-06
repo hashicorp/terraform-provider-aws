@@ -238,7 +238,7 @@ func testAccCheckAwsDxConnectionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Direct Connect connection %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Direct Connect Connection %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -254,7 +254,7 @@ func testAccCheckAwsDxConnectionExists(name string, v *directconnect.Connection)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No Direct Connect Connection ID is set")
 		}
 
 		connection, err := finder.ConnectionByID(conn, rs.Primary.ID)
