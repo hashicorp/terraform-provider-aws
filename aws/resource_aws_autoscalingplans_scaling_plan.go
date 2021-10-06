@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfautoscalingplans "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -335,7 +336,7 @@ func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta i
 	}
 
 	scalingPlanVersion := int(aws.Int64Value(output.ScalingPlanVersion))
-	d.SetId(autoScalingPlansScalingPlanId(scalingPlanName, scalingPlanVersion))
+	d.SetId(tfautoscalingplans.ScalingPlanCreateResourceID(scalingPlanName, scalingPlanVersion))
 	d.Set("scaling_plan_version", scalingPlanVersion)
 
 	_, err = waiter.ScalingPlanCreated(conn, scalingPlanName, scalingPlanVersion)
@@ -350,7 +351,13 @@ func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta i
 func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingplansconn
 
-	scalingPlan, err := finder.ScalingPlanByNameAndVersion(conn, d.Get("name").(string), d.Get("scaling_plan_version").(int))
+	scalingPlanName, scalingPlanVersion, err := tfautoscalingplans.ScalingPlanParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	scalingPlan, err := finder.ScalingPlanByNameAndVersion(conn, scalingPlanName, scalingPlanVersion)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Scaling Plan (%s) not found, removing from state", d.Id())
@@ -379,8 +386,12 @@ func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta int
 func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingplansconn
 
-	scalingPlanName := d.Get("name").(string)
-	scalingPlanVersion := d.Get("scaling_plan_version").(int)
+	scalingPlanName, scalingPlanVersion, err := tfautoscalingplans.ScalingPlanParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
 	input := &autoscalingplans.UpdateScalingPlanInput{
 		ApplicationSource:   expandAutoScalingPlansApplicationSource(d.Get("application_source").([]interface{})),
 		ScalingInstructions: expandAutoScalingPlansScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
@@ -389,7 +400,7 @@ func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Updating Auto Scaling Scaling Plan: %s", input)
-	_, err := conn.UpdateScalingPlan(input)
+	_, err = conn.UpdateScalingPlan(input)
 
 	if err != nil {
 		return fmt.Errorf("error updating Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
@@ -407,11 +418,14 @@ func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta i
 func resourceAwsAutoScalingPlansScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingplansconn
 
-	scalingPlanName := d.Get("name").(string)
-	scalingPlanVersion := d.Get("scaling_plan_version").(int)
+	scalingPlanName, scalingPlanVersion, err := tfautoscalingplans.ScalingPlanParseResourceID(d.Id())
+
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Scaling Plan: %s", d.Id())
-	_, err := conn.DeleteScalingPlan(&autoscalingplans.DeleteScalingPlanInput{
+	_, err = conn.DeleteScalingPlan(&autoscalingplans.DeleteScalingPlanInput{
 		ScalingPlanName:    aws.String(scalingPlanName),
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
 	})
@@ -437,16 +451,11 @@ func resourceAwsAutoScalingPlansScalingPlanImport(d *schema.ResourceData, meta i
 	scalingPlanName := d.Id()
 	scalingPlanVersion := 1
 
-	d.SetId(autoScalingPlansScalingPlanId(scalingPlanName, scalingPlanVersion))
+	d.SetId(tfautoscalingplans.ScalingPlanCreateResourceID(scalingPlanName, scalingPlanVersion))
 	d.Set("name", scalingPlanName)
 	d.Set("scaling_plan_version", scalingPlanVersion)
 
 	return []*schema.ResourceData{d}, nil
-}
-
-// Terraform resource ID.
-func autoScalingPlansScalingPlanId(scalingPlanName string, scalingPlanVersion int) string {
-	return fmt.Sprintf("%s/%d", scalingPlanName, scalingPlanVersion)
 }
 
 //
