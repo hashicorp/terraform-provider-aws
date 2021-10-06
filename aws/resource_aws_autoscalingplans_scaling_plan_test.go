@@ -10,11 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/lister"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -27,24 +28,18 @@ func init() {
 func testSweepAutoScalingPlansScalingPlans(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).autoscalingplansconn
 	input := &autoscalingplans.DescribeScalingPlansInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
 
-	for {
-		output, err := conn.DescribeScalingPlans(input)
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Auto Scaling Scaling Plans sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Auto Scaling Scaling Plans: %w", err))
-			return sweeperErrs.ErrorOrNil()
+	err = lister.DescribeScalingPlansPages(conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, scalingPlan := range output.ScalingPlans {
+		for _, scalingPlan := range page.ScalingPlans {
 			scalingPlanName := aws.StringValue(scalingPlan.ScalingPlanName)
 			scalingPlanVersion := int(aws.Int64Value(scalingPlan.ScalingPlanVersion))
 
@@ -53,22 +48,29 @@ func testSweepAutoScalingPlansScalingPlans(region string) error {
 			d.SetId("????????????????") // ID not used in Delete.
 			d.Set("name", scalingPlanName)
 			d.Set("scaling_plan_version", scalingPlanVersion)
-			err = r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Auto Scaling Scaling Plan sweep for %s: %s", region, err)
+		return nil
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing Auto Scaling Scaling Plans (%s): %w", region, err)
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Auto Scaling Scaling Plans (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
@@ -418,17 +420,17 @@ func testAccCheckAutoScalingPlansScalingPlanDestroy(s *terraform.State) error {
 		}
 
 		scalingPlanVersion, err := strconv.Atoi(rs.Primary.Attributes["scaling_plan_version"])
+
 		if err != nil {
 			return err
 		}
 
-		scalingPlan, err := finder.ScalingPlan(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
-		if err != nil {
-			return err
-		}
-		if scalingPlan == nil {
+		_, err = finder.ScalingPlanByNameAndVersion(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		return fmt.Errorf("Auto Scaling Scaling Plan %s still exists", rs.Primary.ID)
 	}
 
@@ -443,21 +445,21 @@ func testAccCheckAutoScalingPlansScalingPlanExists(name string, v *autoscalingpl
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Auto Scaling Scaling Plan ID is set")
 		}
 
 		scalingPlanVersion, err := strconv.Atoi(rs.Primary.Attributes["scaling_plan_version"])
+
 		if err != nil {
 			return err
 		}
 
-		scalingPlan, err := finder.ScalingPlan(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+		scalingPlan, err := finder.ScalingPlanByNameAndVersion(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+
 		if err != nil {
 			return err
-		}
-		if scalingPlan == nil {
-			return fmt.Errorf("Auto Scaling Scaling Plan %s not found", rs.Primary.ID)
 		}
 
 		*v = *scalingPlan
