@@ -2459,7 +2459,7 @@ resource "aws_elasticache_replication_group" "test" {
   }
 
   tags = {
-	  key = "value"
+    key = "value"
   }
 }
 `, rName, numNodeGroups, replicasPerNodeGroup),
@@ -2757,8 +2757,8 @@ resource "aws_elasticache_replication_group" "test" {
   subnet_group_name             = aws_elasticache_subnet_group.test.name
 
   tags = {
-	key = "value"
-}
+    key = "value"
+  }
 }
 `, rName, numberCacheClusters),
 	)
