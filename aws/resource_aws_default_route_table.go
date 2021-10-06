@@ -30,6 +30,7 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
 		},
 
 		//
@@ -228,7 +229,7 @@ func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(string)
 
-			if err := ec2RouteTableEnableVgwRoutePropagation(conn, d.Id(), v); err != nil {
+			if err := ec2RouteTableEnableVgwRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
 		}
@@ -239,7 +240,7 @@ func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(map[string]interface{})
 
-			if err := ec2RouteTableAddRoute(conn, d.Id(), v); err != nil {
+			if err := ec2RouteTableAddRoute(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
 		}

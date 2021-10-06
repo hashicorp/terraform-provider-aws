@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
@@ -426,34 +425,20 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Route: %s", input)
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err = conn.DeleteRoute(input)
-
-		if err == nil {
-			return nil
-		}
-
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteNotFound) {
-			return nil
-		}
-
-		// Local routes (which may have been imported) cannot be deleted. Remove from state.
-		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidParameterValue, "cannot remove local route") {
-			return nil
-		}
-
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException) {
-			return resource.RetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteRoute(input)
-	}
+	_, err = tfresource.RetryWhenAwsErrCodeEquals(
+		d.Timeout(schema.TimeoutDelete),
+		func() (interface{}, error) {
+			return conn.DeleteRoute(input)
+		},
+		tfec2.ErrCodeInvalidParameterException,
+	)
 
 	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteNotFound) {
+		return nil
+	}
+
+	// Local routes (which may have been imported) cannot be deleted. Remove from state.
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidParameterValue, "cannot remove local route") {
 		return nil
 	}
 

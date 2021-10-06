@@ -3,6 +3,7 @@ package waiter
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 
@@ -306,22 +307,15 @@ const (
 	RouteTableAssociationCreatedTimeout = 5 * time.Minute
 	RouteTableAssociationUpdatedTimeout = 5 * time.Minute
 	RouteTableAssociationDeletedTimeout = 5 * time.Minute
-
-	RouteTableReadyTimeout   = 10 * time.Minute
-	RouteTableDeletedTimeout = 5 * time.Minute
-	RouteTableUpdatedTimeout = 5 * time.Minute
-
-	RouteTableNotFoundChecks                   = 40
-	RouteTableAssociationCreatedNotFoundChecks = 40
 )
 
-func RouteTableReady(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
+func RouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{},
 		Target:         []string{RouteTableStatusReady},
 		Refresh:        RouteTableStatus(conn, id),
-		Timeout:        RouteTableReadyTimeout,
-		NotFoundChecks: RouteTableNotFoundChecks,
+		Timeout:        timeout,
+		NotFoundChecks: math.MaxInt32,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -333,12 +327,12 @@ func RouteTableReady(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 	return nil, err
 }
 
-func RouteTableDeleted(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
+func RouteTableDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{RouteTableStatusReady},
 		Target:  []string{},
 		Refresh: RouteTableStatus(conn, id),
-		Timeout: RouteTableDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -356,7 +350,7 @@ func RouteTableAssociationCreated(conn *ec2.EC2, id string) (*ec2.RouteTableAsso
 		Target:         []string{ec2.RouteTableAssociationStateCodeAssociated},
 		Refresh:        RouteTableAssociationState(conn, id),
 		Timeout:        RouteTableAssociationCreatedTimeout,
-		NotFoundChecks: RouteTableAssociationCreatedNotFoundChecks,
+		NotFoundChecks: math.MaxInt32,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
