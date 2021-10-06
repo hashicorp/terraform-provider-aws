@@ -23,6 +23,9 @@ const (
 
 	// General timeout for EC2 resource creations to propagate
 	PropagationTimeout = 2 * time.Minute
+
+	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
+	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
 )
 
 const (
@@ -266,12 +269,12 @@ const (
 	NetworkAclEntryPropagationTimeout = 5 * time.Minute
 )
 
-func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) (*ec2.Route, error) {
+func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{RouteStatusReady},
 		Target:                    []string{},
 		Refresh:                   RouteStatus(conn, routeFinder, routeTableID, destination),
-		Timeout:                   PropagationTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -284,12 +287,12 @@ func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, d
 	return nil, err
 }
 
-func RouteReady(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) (*ec2.Route, error) {
+func RouteReady(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{RouteStatusReady},
 		Refresh:                   RouteStatus(conn, routeFinder, routeTableID, destination),
-		Timeout:                   PropagationTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -308,21 +311,14 @@ const (
 	RouteTableAssociationCreatedTimeout = 5 * time.Minute
 	RouteTableAssociationUpdatedTimeout = 5 * time.Minute
 	RouteTableAssociationDeletedTimeout = 5 * time.Minute
-
-	RouteTableReadyTimeout   = 10 * time.Minute
-	RouteTableDeletedTimeout = 5 * time.Minute
-	RouteTableUpdatedTimeout = 5 * time.Minute
-
-	RouteTableNotFoundChecks                   = 40
-	RouteTableAssociationCreatedNotFoundChecks = 40
 )
 
-func RouteTableReady(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
+func RouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{},
 		Target:         []string{RouteTableStatusReady},
 		Refresh:        RouteTableStatus(conn, id),
-		Timeout:        RouteTableReadyTimeout,
+		Timeout:        timeout,
 		NotFoundChecks: RouteTableNotFoundChecks,
 	}
 
@@ -335,12 +331,12 @@ func RouteTableReady(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 	return nil, err
 }
 
-func RouteTableDeleted(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
+func RouteTableDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{RouteTableStatusReady},
 		Target:  []string{},
 		Refresh: RouteTableStatus(conn, id),
-		Timeout: RouteTableDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

@@ -398,10 +398,7 @@ func RouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.RouteT
 	}
 
 	if output == nil || len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.RouteTables[0], nil
@@ -426,7 +423,9 @@ func RouteByIPv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string)
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &resource.NotFoundError{
+		LastError: fmt.Errorf("Route in Route Table (%s) with IPv4 destination (%s) not found", routeTableID, destinationCidr),
+	}
 }
 
 // RouteByIPv6Destination returns the route corresponding to the specified IPv6 destination.
@@ -444,7 +443,9 @@ func RouteByIPv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr str
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &resource.NotFoundError{
+		LastError: fmt.Errorf("Route in Route Table (%s) with IPv6 destination (%s) not found", routeTableID, destinationIpv6Cidr),
+	}
 }
 
 // RouteByPrefixListIDDestination returns the route corresponding to the specified prefix list destination.
@@ -461,7 +462,9 @@ func RouteByPrefixListIDDestination(conn *ec2.EC2, routeTableID, prefixListID st
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &resource.NotFoundError{
+		LastError: fmt.Errorf("Route in Route Table (%s) with Prefix List ID destination (%s) not found", routeTableID, prefixListID),
+	}
 }
 
 // SecurityGroupByID looks up a security group by ID. Returns a resource.NotFoundError if not found.
@@ -758,10 +761,7 @@ func VpcEndpoint(conn *ec2.EC2, input *ec2.DescribeVpcEndpointsInput) (*ec2.VpcE
 	}
 
 	if output == nil || len(output.VpcEndpoints) == 0 || output.VpcEndpoints[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.VpcEndpoints[0], nil
@@ -801,7 +801,7 @@ func VpcEndpointSubnetAssociationExists(conn *ec2.EC2, vpcEndpointID string, sub
 	}
 
 	return &resource.NotFoundError{
-		LastError: fmt.Errorf("VPC Endpoint Subnet Association (%s/%s) not found", vpcEndpointID, subnetID),
+		LastError: fmt.Errorf("VPC Endpoint (%s) Subnet (%s) Association not found", vpcEndpointID, subnetID),
 	}
 }
 
@@ -822,6 +822,25 @@ func VpcPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConnecti
 	}
 
 	return output.VpcPeeringConnections[0], nil
+}
+
+// VpnGatewayRoutePropagationExists returns NotFoundError if no route propagation for the specified VPN gateway is found.
+func VpnGatewayRoutePropagationExists(conn *ec2.EC2, routeTableID, gatewayID string) error {
+	routeTable, err := RouteTableByID(conn, routeTableID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range routeTable.PropagatingVgws {
+		if aws.StringValue(v.GatewayId) == gatewayID {
+			return nil
+		}
+	}
+
+	return &resource.NotFoundError{
+		LastError: fmt.Errorf("Route Table (%s) VPN Gateway (%s) route propagation not found", routeTableID, gatewayID),
+	}
 }
 
 // VpnGatewayVpcAttachment returns the attachment between the specified VPN gateway and VPC.
