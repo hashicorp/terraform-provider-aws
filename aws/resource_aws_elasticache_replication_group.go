@@ -428,7 +428,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 	}
 	resp, err := conn.CreateReplicationGroup(params)
 	if err != nil {
-		return fmt.Errorf("Error creating ElastiCache Replication Group (%s): %w", d.Get("replication_group_id").(string), err)
+		return fmt.Errorf("error creating ElastiCache Replication Group (%s): %w", d.Get("replication_group_id").(string), err)
 	}
 
 	d.SetId(aws.StringValue(resp.ReplicationGroup.ReplicationGroupId))
@@ -511,6 +511,11 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set("arn", rgp.ARN)
 
+	// Tags cannot be read when the replication group is not Available
+	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %w", aws.StringValue(rgp.ARN), err)
+	}
 	tags, err := keyvaluetags.ElasticacheListTags(conn, aws.StringValue(rgp.ARN))
 
 	if err != nil {
