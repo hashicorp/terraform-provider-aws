@@ -58,7 +58,7 @@ func waitRegistryDeleted(conn *glue.Glue, registryID string) (*glue.GetRegistryO
 }
 
 // waitSchemaAvailable waits for a Schema to return Available
-func waitSchemaAvailable(conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) {
+func waitSchemaAvailable(conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.SchemaStatusPending},
 		Target:  []string{glue.SchemaStatusAvailable},
@@ -112,7 +112,7 @@ func waitSchemaVersionAvailable(conn *glue.Glue, registryID string) (*glue.GetSc
 }
 
 // waitTriggerCreated waits for a Trigger to return Created
-func waitTriggerCreated(conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) {
+func waitTriggerCreated(conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			glue.TriggerStateActivating,

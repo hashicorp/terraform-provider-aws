@@ -60,7 +60,7 @@ func waitDeliveryStreamDeleted(conn *firehose.Firehose, name string) (*firehose.
 	return nil, err
 }
 
-func waitDeliveryStreamEncryptionEnabled(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
+func waitDeliveryStreamEncryptionEnabled(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamEncryptionStatusEnabling},
 		Target:  []string{firehose.DeliveryStreamEncryptionStatusEnabled},

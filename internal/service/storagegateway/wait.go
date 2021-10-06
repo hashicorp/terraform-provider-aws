@@ -40,7 +40,7 @@ func waitStorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gat
 	}
 }
 
-func waitStorageGatewayGatewayJoinDomainJoined(conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) {
+func waitStorageGatewayGatewayJoinDomainJoined(conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{storagegateway.ActiveDirectoryStatusJoining},
 		Target:  []string{storagegateway.ActiveDirectoryStatusJoined},
@@ -76,7 +76,7 @@ func waitStorediSCSIVolumeAvailable(conn *storagegateway.StorageGateway, volumeA
 }
 
 // waitNFSFileShareAvailable waits for a NFS File Share to return Available
-func waitNFSFileShareAvailable(conn *storagegateway.StorageGateway, fileShareArn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
+func waitNFSFileShareAvailable(conn *storagegateway.StorageGateway, fileShareArn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"BOOTSTRAPPING", "CREATING", "RESTORING", "UPDATING"},
 		Target:  []string{"AVAILABLE"},
@@ -169,7 +169,7 @@ func waitSMBFileShareUpdated(conn *storagegateway.StorageGateway, arn string, ti
 }
 
 // waitFileSystemAssociationAvailable waits for a File System Association to return Available
-func waitFileSystemAssociationAvailable(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) {
+func waitFileSystemAssociationAvailable(conn *storagegateway.StorageGateway, fileSystemArn string, timeout time.Duration) (*storagegateway.FileSystemAssociationInfo, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: fileSystemAssociationStatusAvailableStatusPending(),
 		Target:  fileSystemAssociationStatusAvailableStatusTarget(),
