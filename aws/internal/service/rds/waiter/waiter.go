@@ -178,3 +178,26 @@ func DBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DB
 
 	return nil, err
 }
+
+func DBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			tfrds.DBInstanceStatusConfiguringLogExports,
+			tfrds.DBInstanceStatusDeleting,
+			tfrds.DBInstanceStatusModifying,
+		},
+		Target:     []string{},
+		Refresh:    DBInstanceStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}

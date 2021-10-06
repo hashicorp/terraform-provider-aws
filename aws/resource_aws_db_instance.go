@@ -1527,19 +1527,7 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] Deleting DB Instance: %s", d.Id())
-	_, err := tfresource.RetryWhen(
-		waiter.ReplicaClusterPropagationTimeout,
-		func() (interface{}, error) {
-			return conn.DeleteDBInstance(input)
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "Delete the replica cluster before deleting") {
-				return true, err
-			}
-
-			return false, err
-		},
-	)
+	_, err := conn.DeleteDBInstance(input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil
