@@ -50,11 +50,11 @@ variable "workflow_labels" {
     },
     "breaking-change" = {
       color       = "ec585d", # color:boundary
-      description = "Introduces a breaking change in current functionality; breaking changes are usually deferred to the next major release."
+      description = "Introduces a breaking change in current functionality; usually deferred to the next major release."
     },
     "regression" = {
       color       = "ec585d", # color:boundary
-      description = "Pertains to a degraded workflow resulting from an upstream patch or internal enhancement; usually categorized as a bug."
+      description = "Pertains to a degraded workflow resulting from an upstream patch or internal enhancement."
     },
     "waiting-response" = {
       color       = "d3353f", # color:darker boundary
@@ -62,7 +62,7 @@ variable "workflow_labels" {
     },
     "tests" = {
       color       = "60dea9", # color:nomad
-      description = "On a PR this indicates expanded test coverage. On an Issue this proposes expanded coverage or enhancement to test infrastructure."
+      description = "PRs: expanded test coverage. Issues: expanded coverage, enhancements to test infrastructure."
     },
     "prerelease-tf-testing" = {
       color       = "60dea9", # color:nomad
@@ -82,7 +82,7 @@ variable "workflow_labels" {
     },
     "question" = {
       color       = "f4ecff", # color:terraform secondary
-      description = "Includes a question about existing functionality; most questions will be re-routed to discuss.hashicorp.com."
+      description = "A question about existing functionality; most questions are re-routed to discuss.hashicorp.com."
     },
     "linter" = {
       color       = "f4ecff", # color:terraform secondary
@@ -146,7 +146,7 @@ variable "workflow_labels" {
     },
     "repository" = {
       color       = "828a90", # color:stale grey
-      description = "Repository level modifications, i.e. GitHub Actions, developer documentation, issue templates, codeowners, changelog"
+      description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
     },
   }
   description = "Name-color-description mapping of workflow issues."
