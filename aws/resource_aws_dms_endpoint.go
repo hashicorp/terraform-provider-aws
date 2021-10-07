@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -393,7 +395,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			resourceAwsDmsEndpointCustomizeDiff,
+			SetTagsDiff,
+		),
 	}
 }
 
@@ -410,46 +415,26 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	switch d.Get("engine_name").(string) {
-	// if dynamodb then add required params
-	case "dynamodb":
+	case tfdms.EngineNameDynamodb:
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
 		}
-	case "elasticsearch":
+	case tfdms.EngineNameElasticsearch:
 		request.ElasticsearchSettings = &dms.ElasticsearchSettings{
 			ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
 			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
 			ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
 			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
 		}
-	case "kafka":
-		request.KafkaSettings = &dms.KafkaSettings{
-			Broker:                      aws.String(d.Get("kafka_settings.0.broker").(string)),
-			IncludeControlDetails:       aws.Bool(d.Get("kafka_settings.0.include_control_details").(bool)),
-			IncludeNullAndEmpty:         aws.Bool(d.Get("kafka_settings.0.include_null_and_empty").(bool)),
-			IncludePartitionValue:       aws.Bool(d.Get("kafka_settings.0.include_partition_value").(bool)),
-			IncludeTableAlterOperations: aws.Bool(d.Get("kafka_settings.0.include_table_alter_operations").(bool)),
-			IncludeTransactionDetails:   aws.Bool(d.Get("kafka_settings.0.include_transaction_details").(bool)),
-			MessageFormat:               aws.String(d.Get("kafka_settings.0.message_format").(string)),
-			MessageMaxBytes:             aws.Int64(int64(d.Get("kafka_settings.0.message_max_bytes").(int))),
-			NoHexPrefix:                 aws.Bool(d.Get("kafka_settings.0.no_hex_prefix").(bool)),
-			PartitionIncludeSchemaTable: aws.Bool(d.Get("kafka_settings.0.partition_include_schema_table").(bool)),
-			SaslPassword:                aws.String(d.Get("kafka_settings.0.sasl_password").(string)),
-			SaslUsername:                aws.String(d.Get("kafka_settings.0.sasl_username").(string)),
-			SecurityProtocol:            aws.String(d.Get("kafka_settings.0.security_protocol").(string)),
-			SslCaCertificateArn:         aws.String(d.Get("kafka_settings.0.ssl_ca_certificate_arn").(string)),
-			SslClientCertificateArn:     aws.String(d.Get("kafka_settings.0.ssl_client_certificate_arn").(string)),
-			SslClientKeyArn:             aws.String(d.Get("kafka_settings.0.ssl_client_key_arn").(string)),
-			SslClientKeyPassword:        aws.String(d.Get("kafka_settings.0.ssl_client_key_password").(string)),
-			Topic:                       aws.String(d.Get("kafka_settings.0.topic").(string)),
-		}
-	case "kinesis":
+	case tfdms.EngineNameKafka:
+		request.KafkaSettings = expandDmsKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
+	case tfdms.EngineNameKinesis:
 		request.KinesisSettings = &dms.KinesisSettings{
 			MessageFormat:        aws.String(d.Get("kinesis_settings.0.message_format").(string)),
 			ServiceAccessRoleArn: aws.String(d.Get("kinesis_settings.0.service_access_role_arn").(string)),
 			StreamArn:            aws.String(d.Get("kinesis_settings.0.stream_arn").(string)),
 		}
-	case "mongodb":
+	case tfdms.EngineNameMongodb:
 		request.MongoDbSettings = &dms.MongoDbSettings{
 			Username:     aws.String(d.Get("username").(string)),
 			Password:     aws.String(d.Get("password").(string)),
@@ -472,7 +457,7 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		request.ServerName = aws.String(d.Get("server_name").(string))
 		request.Port = aws.Int64(int64(d.Get("port").(int)))
 		request.DatabaseName = aws.String(d.Get("database_name").(string))
-	case "s3":
+	case tfdms.EngineNameS3:
 		request.S3Settings = &dms.S3Settings{
 			BucketFolder:                  aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
 			BucketName:                    aws.String(d.Get("s3_settings.0.bucket_name").(string)),
@@ -639,15 +624,15 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	switch d.Get("engine_name").(string) {
-	case "dynamodb":
+	switch engineName := d.Get("engine_name").(string); engineName {
+	case tfdms.EngineNameDynamodb:
 		if d.HasChange("service_access_role") {
 			request.DynamoDbSettings = &dms.DynamoDbSettings{
 				ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
 			}
 			hasChanges = true
 		}
-	case "elasticsearch":
+	case tfdms.EngineNameElasticsearch:
 		if d.HasChanges(
 			"elasticsearch_settings.0.endpoint_uri",
 			"elasticsearch_settings.0.error_retry_duration",
@@ -659,53 +644,16 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
 				FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
 			}
-			request.EngineName = aws.String(d.Get("engine_name").(string))
+			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
-	case "kafka":
-		if d.HasChanges(
-			"kafka_settings.0.broker",
-			"kafka_settings.0.topic",
-			"kafka_settings.0.message_format",
-			"kafka_settings.0.include_transaction_details",
-			"kafka_settings.0.include_partition_value",
-			"kafka_settings.0.partition_include_schema_table",
-			"kafka_settings.0.include_table_alter_operations",
-			"kafka_settings.0.include_control_details",
-			"kafka_settings.0.message_max_bytes",
-			"kafka_settings.0.include_null_and_empty",
-			"kafka_settings.0.security_protocol",
-			"kafka_settings.0.ssl_client_certificate_arn",
-			"kafka_settings.0.ssl_client_key_arn",
-			"kafka_settings.0.ssl_client_key_password",
-			"kafka_settings.0.ssl_ca_certificate_arn",
-			"kafka_settings.0.sasl_username",
-			"kafka_settings.0.sasl_password",
-			"kafka_settings.0.no_hex_prefix") {
-			request.KafkaSettings = &dms.KafkaSettings{
-				Broker:                      aws.String(d.Get("kafka_settings.0.broker").(string)),
-				IncludeControlDetails:       aws.Bool(d.Get("kafka_settings.0.include_control_details").(bool)),
-				IncludeNullAndEmpty:         aws.Bool(d.Get("kafka_settings.0.include_null_and_empty").(bool)),
-				IncludePartitionValue:       aws.Bool(d.Get("kafka_settings.0.include_partition_value").(bool)),
-				IncludeTableAlterOperations: aws.Bool(d.Get("kafka_settings.0.include_table_alter_operations").(bool)),
-				IncludeTransactionDetails:   aws.Bool(d.Get("kafka_settings.0.include_transaction_details").(bool)),
-				MessageFormat:               aws.String(d.Get("kafka_settings.0.message_format").(string)),
-				MessageMaxBytes:             aws.Int64(int64(d.Get("kafka_settings.0.message_max_bytes").(int))),
-				NoHexPrefix:                 aws.Bool(d.Get("kafka_settings.0.no_hex_prefix").(bool)),
-				PartitionIncludeSchemaTable: aws.Bool(d.Get("kafka_settings.0.partition_include_schema_table").(bool)),
-				SaslPassword:                aws.String(d.Get("kafka_settings.0.sasl_password").(string)),
-				SaslUsername:                aws.String(d.Get("kafka_settings.0.sasl_username").(string)),
-				SecurityProtocol:            aws.String(d.Get("kafka_settings.0.security_protocol").(string)),
-				SslCaCertificateArn:         aws.String(d.Get("kafka_settings.0.ssl_ca_certificate_arn").(string)),
-				SslClientCertificateArn:     aws.String(d.Get("kafka_settings.0.ssl_client_certificate_arn").(string)),
-				SslClientKeyArn:             aws.String(d.Get("kafka_settings.0.ssl_client_key_arn").(string)),
-				SslClientKeyPassword:        aws.String(d.Get("kafka_settings.0.ssl_client_key_password").(string)),
-				Topic:                       aws.String(d.Get("kafka_settings.0.topic").(string)),
-			}
-			request.EngineName = aws.String(d.Get("engine_name").(string))
+	case tfdms.EngineNameKafka:
+		if d.HasChange("kafka_settings") {
+			request.KafkaSettings = expandDmsKafkaSettings(d.Get("kafka_settings").([]interface{})[0].(map[string]interface{}))
+			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
-	case "kinesis":
+	case tfdms.EngineNameKinesis:
 		if d.HasChanges(
 			"kinesis_settings.0.service_access_role_arn",
 			"kinesis_settings.0.stream_arn") {
@@ -716,10 +664,10 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				ServiceAccessRoleArn: aws.String(d.Get("kinesis_settings.0.service_access_role_arn").(string)),
 				StreamArn:            aws.String(d.Get("kinesis_settings.0.stream_arn").(string)),
 			}
-			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 'kinesis')
+			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
-	case "mongodb":
+	case tfdms.EngineNameMongodb:
 		if d.HasChanges(
 			"username", "password", "server_name", "port", "database_name", "mongodb_settings.0.auth_type",
 			"mongodb_settings.0.auth_mechanism", "mongodb_settings.0.nesting_level", "mongodb_settings.0.extract_doc_id",
@@ -739,7 +687,7 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
 				AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
 			}
-			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 'mongodb')
+			request.EngineName = aws.String(engineName)
 
 			// Update connection info in top-level namespace as well
 			request.Username = aws.String(d.Get("username").(string))
@@ -750,7 +698,7 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			hasChanges = true
 		}
-	case "s3":
+	case tfdms.EngineNameS3:
 		if d.HasChanges(
 			"s3_settings.0.service_access_role_arn", "s3_settings.0.external_table_definition",
 			"s3_settings.0.csv_row_delimiter", "s3_settings.0.csv_delimiter", "s3_settings.0.bucket_folder",
@@ -771,7 +719,7 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				ServerSideEncryptionKmsKeyId:  aws.String(d.Get("s3_settings.0.server_side_encryption_kms_key_id").(string)),
 				ServiceAccessRoleArn:          aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
 			}
-			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 's3')
+			request.EngineName = aws.String(engineName)
 			hasChanges = true
 		}
 	default:
@@ -832,6 +780,33 @@ func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return err
+}
+
+func resourceAwsDmsEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	switch engineName := diff.Get("engine_name").(string); engineName {
+	case tfdms.EngineNameElasticsearch:
+		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+			return fmt.Errorf("elasticsearch_settings must be set when engine_name = %q", engineName)
+		}
+	case tfdms.EngineNameKafka:
+		if v, ok := diff.GetOk("kafka_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+			return fmt.Errorf("kafka_settings must be set when engine_name = %q", engineName)
+		}
+	case tfdms.EngineNameKinesis:
+		if v, ok := diff.GetOk("kinesis_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+			return fmt.Errorf("kinesis_settings must be set when engine_name = %q", engineName)
+		}
+	case tfdms.EngineNameMongodb:
+		if v, ok := diff.GetOk("mongodb_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+			return fmt.Errorf("mongodb_settings must be set when engine_name = %q", engineName)
+		}
+	case tfdms.EngineNameS3:
+		if v, ok := diff.GetOk("s3_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+			return fmt.Errorf("s3_settings must be set when engine_name = %q", engineName)
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) error {
@@ -910,6 +885,88 @@ func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandDmsKafkaSettings(tfMap map[string]interface{}) *dms.KafkaSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &dms.KafkaSettings{}
+
+	if v, ok := tfMap["broker"].(string); ok && v != "" {
+		apiObject.Broker = aws.String(v)
+	}
+
+	if v, ok := tfMap["include_control_details"].(bool); ok {
+		apiObject.IncludeControlDetails = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["include_null_and_empty"].(bool); ok {
+		apiObject.IncludeNullAndEmpty = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["include_partition_value"].(bool); ok {
+		apiObject.IncludePartitionValue = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["include_table_alter_operations"].(bool); ok {
+		apiObject.IncludeTableAlterOperations = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["include_transaction_details"].(bool); ok {
+		apiObject.IncludeTransactionDetails = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["message_format"].(string); ok && v != "" {
+		apiObject.MessageFormat = aws.String(v)
+	}
+
+	if v, ok := tfMap["message_max_bytes"].(int); ok && v != 0 {
+		apiObject.MessageMaxBytes = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["no_hex_prefix"].(bool); ok {
+		apiObject.NoHexPrefix = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["partition_include_schema_table"].(bool); ok {
+		apiObject.PartitionIncludeSchemaTable = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["sasl_password"].(string); ok && v != "" {
+		apiObject.SaslPassword = aws.String(v)
+	}
+
+	if v, ok := tfMap["sasl_username"].(string); ok && v != "" {
+		apiObject.SaslUsername = aws.String(v)
+	}
+
+	if v, ok := tfMap["security_protocol"].(string); ok && v != "" {
+		apiObject.SecurityProtocol = aws.String(v)
+	}
+
+	if v, ok := tfMap["ssl_ca_certificate_arn"].(string); ok && v != "" {
+		apiObject.SslCaCertificateArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["ssl_client_certificate_arn"].(string); ok && v != "" {
+		apiObject.SslClientCertificateArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["ssl_client_key_arn"].(string); ok && v != "" {
+		apiObject.SslClientKeyArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["ssl_client_key_password"].(string); ok && v != "" {
+		apiObject.SslClientKeyPassword = aws.String(v)
+	}
+
+	if v, ok := tfMap["topic"].(string); ok && v != "" {
+		apiObject.Topic = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func flattenDmsKafkaSettings(settings *dms.KafkaSettings) []map[string]interface{} {

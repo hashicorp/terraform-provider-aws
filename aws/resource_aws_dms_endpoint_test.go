@@ -304,8 +304,9 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 }
 
 func TestAccAwsDmsEndpoint_Kafka(t *testing.T) {
+	domainName := testAccRandomSubdomain()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dms_endpoint.test"
-	randId := acctest.RandString(8) + "-kafka"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -314,7 +315,7 @@ func TestAccAwsDmsEndpoint_Kafka(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointKafkaConfig(randId),
+				Config: dmsEndpointKafkaConfig(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
@@ -340,7 +341,7 @@ func TestAccAwsDmsEndpoint_Kafka(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointKafkaConfigUpdate(randId),
+				Config: dmsEndpointKafkaConfigUpdate(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
@@ -1144,42 +1145,36 @@ resource "aws_dms_endpoint" "test" {
 `, rName, fullLoadErrorPercentage))
 }
 
-func dmsEndpointKafkaConfig(randId string) string {
+func dmsEndpointKafkaConfig(rName, domainName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "target"
-  engine_name                 = "kafka"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "kafka"
+  ssl_mode      = "none"
 
   kafka_settings {
-    broker                 = "ec2-12-345-678-901.compute-1.${data.aws_partition.current.dns_suffix}:2345"
+    broker                 = "%[2]s:2345"
     include_null_and_empty = false
     security_protocol      = "plaintext"
-    sasl_username          = "tftest"
-    sasl_password          = "tftest"
+    // sasl_username          = "tftest"
+    // sasl_password          = "tftest"
     no_hex_prefix          = false
   }
 }
-`, randId)
+`, rName, domainName)
 }
 
-func dmsEndpointKafkaConfigUpdate(randId string) string {
+func dmsEndpointKafkaConfigUpdate(rName, domainName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type               = "target"
-  engine_name                 = "kafka"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "kafka"
+  ssl_mode      = "none"
 
   kafka_settings {
-    broker                         = "ec2-12-345-678-901.compute-1.${data.aws_partition.current.dns_suffix}:2345"
+    broker                         = "%[2]s:2345"
     topic                          = "topic1"
     message_format                 = "JSON_UNFORMATTED"
     include_transaction_details    = true
@@ -1195,7 +1190,7 @@ resource "aws_dms_endpoint" "test" {
     no_hex_prefix                  = true
   }
 }
-`, randId)
+`, rName, domainName)
 }
 
 func dmsEndpointKinesisConfig(randId string) string {
