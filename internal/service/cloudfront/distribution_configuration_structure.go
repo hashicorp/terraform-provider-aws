@@ -1238,7 +1238,7 @@ func flattenRestrictions(r *cloudfront.Restrictions) []interface{} {
 
 func ExpandGeoRestriction(m map[string]interface{}) *cloudfront.GeoRestriction {
 	gr := &cloudfront.GeoRestriction{
-		Quantity:        aws.Int64(int64(0)),
+		Quantity:        aws.Int64(0),
 		RestrictionType: aws.String(m["restriction_type"].(string)),
 	}
 

@@ -174,7 +174,7 @@ func GetWebhook(conn *codepipeline.CodePipeline, arn string) (*codepipeline.List
 
 	for {
 		input := &codepipeline.ListWebhooksInput{
-			MaxResults: aws.Int64(int64(60)),
+			MaxResults: aws.Int64(60),
 		}
 		if nextToken != "" {
 			input.NextToken = aws.String(nextToken)

@@ -744,8 +744,8 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		Ipv6Addresses:                     instanceOpts.Ipv6Addresses,
 		KeyName:                           instanceOpts.KeyName,
 		LaunchTemplate:                    instanceOpts.LaunchTemplate,
-		MaxCount:                          aws.Int64(int64(1)),
-		MinCount:                          aws.Int64(int64(1)),
+		MaxCount:                          aws.Int64(1),
+		MinCount:                          aws.Int64(1),
 		NetworkInterfaces:                 instanceOpts.NetworkInterfaces,
 		Placement:                         instanceOpts.Placement,
 		PrivateIpAddress:                  instanceOpts.PrivateIPAddress,
@@ -2182,7 +2182,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 		// to avoid: Network interfaces and an instance-level security groups may not be specified on
 		// the same request
 		ni := &ec2.InstanceNetworkInterfaceSpecification{
-			DeviceIndex: aws.Int64(int64(0)),
+			DeviceIndex: aws.Int64(0),
 			SubnetId:    aws.String(subnet.(string)),
 			Groups:      groups,
 		}

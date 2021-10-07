@@ -138,7 +138,7 @@ func testAccCheckSnapshotCopyGrantExists(name string) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 		input := redshift.DescribeSnapshotCopyGrantsInput{
-			MaxRecords:            aws.Int64(int64(100)),
+			MaxRecords:            aws.Int64(100),
 			SnapshotCopyGrantName: aws.String(rs.Primary.ID),
 		}
 

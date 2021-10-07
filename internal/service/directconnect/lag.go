@@ -97,9 +97,9 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("connection_id"); ok {
 		connectionIDSpecified = true
 		input.ConnectionId = aws.String(v.(string))
-		input.NumberOfConnections = aws.Int64(int64(1))
+		input.NumberOfConnections = aws.Int64(1)
 	} else {
-		input.NumberOfConnections = aws.Int64(int64(1))
+		input.NumberOfConnections = aws.Int64(1)
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {

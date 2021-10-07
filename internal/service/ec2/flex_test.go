@@ -12,7 +12,7 @@ import (
 func TestFlattenAttachment(t *testing.T) {
 	expanded := &ec2.NetworkInterfaceAttachment{
 		InstanceId:   aws.String("i-00001"),
-		DeviceIndex:  aws.Int64(int64(1)),
+		DeviceIndex:  aws.Int64(1),
 		AttachmentId: aws.String("at-002"),
 	}
 
@@ -37,7 +37,7 @@ func TestFlattenAttachment(t *testing.T) {
 
 func TestFlattenAttachmentWhenNoInstanceId(t *testing.T) {
 	expanded := &ec2.NetworkInterfaceAttachment{
-		DeviceIndex:  aws.Int64(int64(1)),
+		DeviceIndex:  aws.Int64(1),
 		AttachmentId: aws.String("at-002"),
 	}
 
@@ -107,7 +107,7 @@ func TestExpandIPPerms(t *testing.T) {
 	expected := []ec2.IpPermission{
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(int64(1)),
+			FromPort:   aws.Int64(1),
 			ToPort:     aws.Int64(int64(-1)),
 			IpRanges: []*ec2.IpRange{
 				{
@@ -129,7 +129,7 @@ func TestExpandIPPerms(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(int64(1)),
+			FromPort:   aws.Int64(1),
 			ToPort:     aws.Int64(int64(-1)),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				{
@@ -216,8 +216,8 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 	expected := []ec2.IpPermission{
 		{
 			IpProtocol: aws.String("-1"),
-			FromPort:   aws.Int64(int64(0)),
-			ToPort:     aws.Int64(int64(0)),
+			FromPort:   aws.Int64(0),
+			ToPort:     aws.Int64(0),
 			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				{
@@ -312,7 +312,7 @@ func TestExpandIPPerms_nonVPC(t *testing.T) {
 	expected := []ec2.IpPermission{
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(int64(1)),
+			FromPort:   aws.Int64(1),
 			ToPort:     aws.Int64(int64(-1)),
 			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
@@ -326,7 +326,7 @@ func TestExpandIPPerms_nonVPC(t *testing.T) {
 		},
 		{
 			IpProtocol: aws.String("icmp"),
-			FromPort:   aws.Int64(int64(1)),
+			FromPort:   aws.Int64(1),
 			ToPort:     aws.Int64(int64(-1)),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
 				{
