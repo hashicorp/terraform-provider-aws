@@ -75,6 +75,50 @@ func StackByID(conn *cloudformation.CloudFormation, id string) (*cloudformation.
 	return stack, nil
 }
 
+func StackInstanceAccountIdByOrgIds(conn *cloudformation.CloudFormation, stackSetName, region string, orgIDs []string) (string, error) {
+	input := &cloudformation.ListStackInstancesInput{
+		StackInstanceRegion: aws.String(region),
+		StackSetName:        aws.String(stackSetName),
+	}
+
+	var result string
+
+	err := conn.ListStackInstancesPages(input, func(page *cloudformation.ListStackInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, s := range page.Summaries {
+			if s == nil {
+				continue
+			}
+
+			for _, orgID := range orgIDs {
+				if aws.StringValue(s.OrganizationalUnitId) == orgID {
+					result = aws.StringValue(s.Account)
+					return false
+				}
+			}
+
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
+		return "", &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
+}
+
 func StackInstanceByName(conn *cloudformation.CloudFormation, stackSetName, accountID, region string) (*cloudformation.StackInstance, error) {
 	input := &cloudformation.DescribeStackInstanceInput{
 		StackInstanceAccount: aws.String(accountID),

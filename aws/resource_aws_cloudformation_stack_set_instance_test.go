@@ -113,6 +113,7 @@ func TestAccAWSCloudFormationStackSetInstance_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance1),
 					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "region", testAccGetRegion()),
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
@@ -294,6 +295,50 @@ func TestAccAWSCloudFormationStackSetInstance_RetainStack(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetInstanceStackExists(&stackInstance3, &stack1),
 					testAccCheckCloudFormationStackDisappears(&stack1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudFormationStackSetInstance_DeploymentTargets(t *testing.T) {
+	TestAccSkip(t, "API does not support enabling Organizations access (in particular, creating the Stack Sets IAM Service-Linked Role)")
+
+	var stackInstance cloudformation.StackInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSCloudFormationStackSet(t)
+			testAccOrganizationsAccountPreCheck(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID, "organizations"),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationStackSetInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFormationStackSetInstanceConfigDeploymentTargets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_stack",
+					"deployment_targets",
+				},
+			},
+			{
+				Config: testAccAWSCloudFormationStackSetInstanceConfig_ServiceManagedStackSet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetInstanceExists(resourceName, &stackInstance),
 				),
 			},
 		},
@@ -561,4 +606,148 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
 `, retainStack)
+}
+
+func testAccAWSCloudFormationStackSetInstanceConfigBase_ServiceManagedStackSet(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "Administration" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.${data.aws_partition.current.dns_suffix}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s-Administration"
+}
+
+resource "aws_iam_role_policy" "Administration" {
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ],
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  role = aws_iam_role.Administration.name
+}
+
+resource "aws_iam_role" "Execution" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "${aws_iam_role.Administration.arn}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s-Execution"
+}
+
+resource "aws_iam_role_policy" "Execution" {
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ],
+      "Action": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+
+  role = aws_iam_role.Execution.name
+}
+
+data "aws_organizations_organization" "test" {}
+
+resource "aws_cloudformation_stack_set" "test" {
+  depends_on = [data.aws_organizations_organization.test]
+
+  name             = %[1]q
+  permission_model = "SERVICE_MANAGED"
+
+  auto_deployment {
+    enabled                          = true
+    retain_stacks_on_account_removal = false
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+
+  lifecycle {
+    ignore_changes = [administration_role_arn]
+  }
+}
+`, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
+}
+
+func testAccAWSCloudFormationStackSetInstanceConfigDeploymentTargets(rName string) string {
+	return composeConfig(
+		testAccAWSCloudFormationStackSetInstanceConfigBase_ServiceManagedStackSet(rName),
+		`
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  deployment_targets {
+    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+  }
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccAWSCloudFormationStackSetInstanceConfig_ServiceManagedStackSet(rName string) string {
+	return composeConfig(
+		testAccAWSCloudFormationStackSetInstanceConfigBase_ServiceManagedStackSet(rName),
+		`
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
 }
