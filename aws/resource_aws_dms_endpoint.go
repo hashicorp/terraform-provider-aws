@@ -18,6 +18,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfdms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -779,6 +780,12 @@ func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting DMS Endpoint (%s): %w", d.Id(), err)
 	}
 
+	_, err = waiter.EndpointDeleted(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error waiting for DMS Endpoint (%s) delete: %w", d.Id(), err)
+	}
+
 	return err
 }
 
@@ -832,8 +839,12 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
 		}
 	case "kafka":
-		if err := d.Set("kafka_settings", flattenDmsKafkaSettings(endpoint.KafkaSettings)); err != nil {
-			return fmt.Errorf("Error setting kafka_settings for DMS: %s", err)
+		if endpoint.KafkaSettings != nil {
+			if err := d.Set("kafka_settings", []interface{}{flattenDmsKafkaSettings(endpoint.KafkaSettings)}); err != nil {
+				return fmt.Errorf("error setting kafka_settings: %w", err)
+			}
+		} else {
+			d.Set("kafka_settings", nil)
 		}
 	case "kinesis":
 		if err := d.Set("kinesis_settings", flattenDmsKinesisSettings(endpoint.KinesisSettings)); err != nil {
@@ -969,33 +980,86 @@ func expandDmsKafkaSettings(tfMap map[string]interface{}) *dms.KafkaSettings {
 	return apiObject
 }
 
-func flattenDmsKafkaSettings(settings *dms.KafkaSettings) []map[string]interface{} {
-	if settings == nil {
-		return []map[string]interface{}{}
+func flattenDmsKafkaSettings(apiObject *dms.KafkaSettings) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"broker":                         aws.StringValue(settings.Broker),
-		"topic":                          aws.StringValue(settings.Topic),
-		"message_format":                 aws.StringValue(settings.MessageFormat),
-		"include_transaction_details":    aws.BoolValue(settings.IncludeTransactionDetails),
-		"include_partition_value":        aws.BoolValue(settings.IncludePartitionValue),
-		"partition_include_schema_table": aws.BoolValue(settings.PartitionIncludeSchemaTable),
-		"include_table_alter_operations": aws.BoolValue(settings.IncludeTableAlterOperations),
-		"include_control_details":        aws.BoolValue(settings.IncludeControlDetails),
-		"message_max_bytes":              aws.Int64Value(settings.MessageMaxBytes),
-		"include_null_and_empty":         aws.BoolValue(settings.IncludeNullAndEmpty),
-		"security_protocol":              aws.StringValue(settings.SecurityProtocol),
-		"ssl_client_certificate_arn":     aws.StringValue(settings.SslClientCertificateArn),
-		"ssl_client_key_arn":             aws.StringValue(settings.SslClientKeyArn),
-		"ssl_client_key_password":        aws.StringValue(settings.SslClientKeyPassword),
-		"ssl_ca_certificate_arn":         aws.StringValue(settings.SslCaCertificateArn),
-		"sasl_username":                  aws.StringValue(settings.SaslUsername),
-		"sasl_password":                  aws.StringValue(settings.SaslPassword),
-		"no_hex_prefix":                  aws.BoolValue(settings.NoHexPrefix),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Broker; v != nil {
+		tfMap["broker"] = aws.StringValue(v)
 	}
 
-	return []map[string]interface{}{m}
+	if v := apiObject.IncludeControlDetails; v != nil {
+		tfMap["include_control_details"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.IncludeNullAndEmpty; v != nil {
+		tfMap["include_null_and_empty"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.IncludePartitionValue; v != nil {
+		tfMap["include_partition_value"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.IncludeTableAlterOperations; v != nil {
+		tfMap["include_table_alter_operations"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.IncludeTransactionDetails; v != nil {
+		tfMap["include_transaction_details"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.MessageFormat; v != nil {
+		tfMap["message_format"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.MessageMaxBytes; v != nil {
+		tfMap["message_max_bytes"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.NoHexPrefix; v != nil {
+		tfMap["no_hex_prefix"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.PartitionIncludeSchemaTable; v != nil {
+		tfMap["partition_include_schema_table"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.SaslPassword; v != nil {
+		tfMap["sasl_password"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SaslUsername; v != nil {
+		tfMap["sasl_username"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SecurityProtocol; v != nil {
+		tfMap["security_protocol"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SslCaCertificateArn; v != nil {
+		tfMap["ssl_ca_certificate_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SslClientCertificateArn; v != nil {
+		tfMap["ssl_client_certificate_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SslClientKeyArn; v != nil {
+		tfMap["ssl_client_key_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SslClientKeyPassword; v != nil {
+		tfMap["ssl_client_key_password"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Topic; v != nil {
+		tfMap["topic"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenDmsKinesisSettings(settings *dms.KinesisSettings) []map[string]interface{} {
