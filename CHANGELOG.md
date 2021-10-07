@@ -9,6 +9,8 @@ ENHANCEMENTS:
 
 * resource/aws_db_instance: Add `replica_mode` argument ([#17991](https://github.com/hashicorp/terraform-provider-aws/issues/17991))
 * resource/aws_default_route_table: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+* resource/aws_dms_endpoint: Add plan time validation for `mongodb_settings.auth_type`, `mongodb_settings.auth_mechanism`, `mongodb_settings.nesting_level` and `s3_settings.compression_type` arguments ([#21174](https://github.com/hashicorp/terraform-provider-aws/issues/21174))
+* resource/aws_dms_endpoint: Added missing `engine_name` values for sources and/or targets ([#21174](https://github.com/hashicorp/terraform-provider-aws/issues/21174))
 * resource/aws_dx_lag: Add `connection_id` argument ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
 * resource/aws_emr_cluster: Add `log_encryption_kms_key_id` argument ([#17706](https://github.com/hashicorp/terraform-provider-aws/issues/17706))
 * resource/aws_lex_bot: Added waiter support to account for `BUILDING` status ([#21122](https://github.com/hashicorp/terraform-provider-aws/issues/21122))
@@ -23,7 +25,10 @@ BUG FIXES:
 * resource/aws_appstream_fleet: More error validation in waiter ([#21125](https://github.com/hashicorp/terraform-provider-aws/issues/21125))
 * resource/aws_appstream_stack:  More error validation in waiter ([#21125](https://github.com/hashicorp/terraform-provider-aws/issues/21125))
 * resource/aws_autoscalingplans_scaling_plan: Fix updates to `scaling_instruction` argument ([#17987](https://github.com/hashicorp/terraform-provider-aws/issues/17987))
+* resource/aws_elasticache_replication_group: Properly updates tags on Replication Group member clusters when scaling up ([#21185](https://github.com/hashicorp/terraform-provider-aws/issues/21185))
+* resource/aws_elasticache_replication_group: Properly updates tags on the Replication Group in addition to the member clusters ([#21185](https://github.com/hashicorp/terraform-provider-aws/issues/21185))
 * resource/aws_route: Use custom `timeouts` values ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+* resource/aws_ses_configuration_set: Fix ARN ([#21188](https://github.com/hashicorp/terraform-provider-aws/issues/21188))
 
 ## 3.61.0 (October 01, 2021)
 
