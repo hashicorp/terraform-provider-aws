@@ -177,8 +177,8 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"auth_mechanism": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      dms.AuthMechanismValueDefault,
-							ValidateFunc: validation.StringInSlice(dms.AuthMechanismValue_Values(), false),
+							Default:      tfdms.MongoDbAuthMechanismValueDefault,
+							ValidateFunc: validation.StringInSlice(tfdms.MongoDbAuthMechanismValue_Values(), false),
 						},
 						"nesting_level": {
 							Type:         schema.TypeString,

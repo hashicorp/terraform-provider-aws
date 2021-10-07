@@ -60,6 +60,21 @@ const (
 	KafkaDefaultTopic = "kafka-default-topic"
 )
 
+// https://github.com/aws/aws-sdk-go/issues/2522.
+const (
+	MongoDbAuthMechanismValueDefault   = "default"
+	MongoDbAuthMechanismValueMongodbCr = "mongodb-cr"
+	MongoDbAuthMechanismValueScramSha1 = "scram-sha-1"
+)
+
+func MongoDbAuthMechanismValue_Values() []string {
+	return []string{
+		MongoDbAuthMechanismValueDefault,
+		MongoDbAuthMechanismValueMongodbCr,
+		MongoDbAuthMechanismValueScramSha1,
+	}
+}
+
 const (
 	MongoDbAuthSourceAdmin = "admin"
 )
