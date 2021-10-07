@@ -105,7 +105,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -150,16 +150,16 @@ func TestAccAWSLBTargetGroup_attrsOnCreate(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "0"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 				),
 			},
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -467,7 +467,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion_HTTP_GRPC_Update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -673,14 +673,14 @@ func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rNameBefore),
+				Config: testAccAWSLBTargetGroupConfig_basic(rNameBefore, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameBefore),
 				),
 			},
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rNameAfter),
+				Config: testAccAWSLBTargetGroupConfig_basic(rNameAfter, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameAfter),
@@ -702,7 +702,7 @@ func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
@@ -731,7 +731,7 @@ func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -760,7 +760,7 @@ func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &before),
 				),
@@ -862,7 +862,7 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Config: testAccAWSLBTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -1591,7 +1591,7 @@ resource "aws_vpc" "test" {
 `, rName, healthCheckBlock)
 }
 
-func testAccAWSLBTargetGroupConfig_basic(rName string) string {
+func testAccAWSLBTargetGroupConfig_basic(rName string, deregDelay int) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
@@ -1599,7 +1599,7 @@ resource "aws_lb_target_group" "test" {
   protocol = "HTTPS"
   vpc_id   = aws_vpc.test.id
 
-  deregistration_delay = 200
+  deregistration_delay = %[2]d
   slow_start           = 0
 
   stickiness {
@@ -1630,7 +1630,7 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, deregDelay)
 }
 
 func testAccAWSLBTargetGroupConfig_ProtocolVersion(rName string) string {
