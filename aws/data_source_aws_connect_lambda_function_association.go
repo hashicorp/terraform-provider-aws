@@ -32,11 +32,11 @@ func dataSourceAwsConnectLambdaFunctionAssociationRead(ctx context.Context, d *s
 
 	lambdaArn, err := finder.LambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID.(string), functionArn.(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Association by ARN (%s): %w", functionArn, err))
+		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by ARN (%s): %w", functionArn, err))
 	}
 
 	if lambdaArn == "" {
-		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Association by ARN (%s): not found", functionArn))
+		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by ARN (%s): not found", functionArn))
 	}
 
 	d.Set("function_arn", lambdaArn)
