@@ -16,7 +16,7 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccAwsConnectLambdaFunctionAssociation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		//"basic":      testAccAwsConnectLambdaFunctionAssociation_basic,
+		"basic":      testAccAwsConnectLambdaFunctionAssociation_basic,
 		"disappears": testAccAwsConnectLambdaFunctionAssociation_disappears,
 	}
 
@@ -129,8 +129,8 @@ func testAccCheckAwsConnectLambdaFunctionAssociationDestroy(s *terraform.State) 
 		conn := testAccProvider.Meta().(*AWSClient).connectconn
 
 		LambdaFunction, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
-		if err == nil {
-			return fmt.Errorf("error LambdaFunction Association by Function Arn (%s): still exists", functionArn)
+		if err != nil {
+			return fmt.Errorf("error LambdaFunction Association by Function Arn (%s): still exists: %w ", functionArn, err)
 		}
 
 		if LambdaFunction != "" {
@@ -181,12 +181,10 @@ resource "aws_connect_instance" "test" {
 
 func testAccAwsConnectLambdaFunctionAssociationConfigBasic(rName string, rName2 string) string {
 	return composeConfig(
-		testAccAwsConnectLambdaFunctionAssociationConfigBase(rName, rName2),
-		`data "aws_region" "current" {}
-
+		testAccAwsConnectLambdaFunctionAssociationConfigBase(rName, rName2), `
 resource "aws_connect_lambda_function_association" "test" {
-  instance_id   = aws_connect_instance.test.id
-  function_arn  = aws_lambda_function.test.arn
+  instance_id  = aws_connect_instance.test.id
+  function_arn = aws_lambda_function.test.arn
 }
 `)
 }
