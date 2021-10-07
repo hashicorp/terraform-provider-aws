@@ -1,6 +1,10 @@
 package dms
 
 const (
+	EndpointStatusDeleting = "deleting"
+)
+
+const (
 	EngineNameAurora                     = "aurora"
 	EngineNameAuroraPostgresql           = "aurora-postgresql"
 	EngineNameAuroraPostgresqlServerless = "aurora-postgresql-serverless"
