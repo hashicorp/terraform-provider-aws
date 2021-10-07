@@ -16,13 +16,13 @@ func dataSourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceAwsConnectLambdaFunctionAssociationRead,
 		Schema: map[string]*schema.Schema{
-			"instance_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"function_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"instance_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -30,8 +30,8 @@ func dataSourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
 
 func dataSourceAwsConnectLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).connectconn
-	instanceID := d.Get("instance_id")
 	functionArn := d.Get("functionArn")
+	instanceID := d.Get("instance_id")
 
 	var matchedLambdaFunction string
 
@@ -41,7 +41,7 @@ func dataSourceAwsConnectLambdaFunctionAssociationRead(ctx context.Context, d *s
 	}
 
 	for _, LambdaFunctionArn := range LambdaFunctions {
-		log.Printf("[DEBUG] Connect Lambda Function Association: %s", LambdaFunctionArn)
+		log.Printf("[DEBUG] Connect Lambda Function Association: %s", *LambdaFunctionArn)
 		if aws.StringValue(LambdaFunctionArn) == functionArn.(string) {
 			matchedLambdaFunction = aws.StringValue(LambdaFunctionArn)
 			break
