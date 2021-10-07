@@ -639,7 +639,9 @@ func resourceAwsInstance() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				if diff.HasChange("launch_template.0.version") {
+				_, ok := diff.GetOk("launch_template")
+
+				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
 					conn := meta.(*AWSClient).ec2conn
 
 					stateVersion := diff.Get("launch_template.0.version")
@@ -3095,7 +3097,7 @@ func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[
 	name, defaultVersion, latestVersion, err := getAwsLaunchTemplateSpecification(conn, id)
 
 	if err != nil {
-		if isAWSErr(err, "InvalidLaunchTemplateId.Malformed", "") {
+		if isAWSErr(err, "InvalidLaunchTemplateId.Malformed", "") || isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
 			// Instance is tagged with non existent template just set it to nil
 			log.Printf("[WARN] Launch template %s not found, removing from state", id)
 			return nil, nil
@@ -3106,42 +3108,42 @@ func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[
 	attrs["id"] = id
 	attrs["name"] = name
 
-	version, err := getAwsInstanceLaunchTemplateVersion(conn, d.Id())
+	liveVersion, err := getAwsInstanceLaunchTemplateVersion(conn, d.Id())
 	if err != nil {
 		return nil, err
 	}
 
 	dltvi := &ec2.DescribeLaunchTemplateVersionsInput{
 		LaunchTemplateId: aws.String(id),
-		Versions:         []*string{aws.String(version)},
+		Versions:         []*string{aws.String(liveVersion)},
 	}
 
 	if _, err := conn.DescribeLaunchTemplateVersions(dltvi); err != nil {
 		if isAWSErr(err, "InvalidLaunchTemplateId.VersionNotFound", "") {
 			// Instance is tagged with non existent template version, just don't set it
-			log.Printf("[WARN] Launch template %s version %s not found, removing from state", id, version)
+			log.Printf("[WARN] Launch template %s version %s not found, removing from state", id, liveVersion)
 			result = append(result, attrs)
 			return result, nil
 		}
 		return nil, fmt.Errorf("error reading Launch Template Version: %s", err)
 	}
 
-	if v, ok := d.GetOk("launch_template.0.version"); ok {
-		switch v {
+	if stateVersion, ok := d.GetOk("launch_template.0.version"); ok {
+		switch stateVersion {
 		case "$Default":
-			if version == defaultVersion {
+			if liveVersion == defaultVersion {
 				attrs["version"] = "$Default"
 			} else {
-				attrs["version"] = version
+				attrs["version"] = liveVersion
 			}
 		case "$Latest":
-			if version == latestVersion {
+			if liveVersion == latestVersion {
 				attrs["version"] = "$Latest"
 			} else {
-				attrs["version"] = version
+				attrs["version"] = liveVersion
 			}
 		default:
-			attrs["version"] = version
+			attrs["version"] = liveVersion
 		}
 	}
 

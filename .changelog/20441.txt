@@ -1,0 +1,3 @@
+```release-note:bug
+aws/resource_aws_apigateway_vpc_link: Ensure deletion does not return an error when resource is not found
+```

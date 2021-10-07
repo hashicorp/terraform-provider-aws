@@ -34,7 +34,7 @@ The following arguments are supported:
 * `application_id` - (Required, Forces new resource) The application ID. Must be between 4 and 7 characters in length.
 * `configuration_profile_id` - (Required, Forces new resource) The configuration profile ID. Must be between 4 and 7 characters in length.
 * `configuration_version` - (Required, Forces new resource) The configuration version to deploy. Can be at most 1024 characters.
-* `deployment_strategy_id` - (Required, Forces new resource) The deployment strategy ID. Must be between 4 and 7 characters in length.
+* `deployment_strategy_id` - (Required, Forces new resource) The deployment strategy ID or name of a predefined deployment strategy. See [Predefined Deployment Strategies](https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-creating-deployment-strategy.html#appconfig-creating-deployment-strategy-predefined) for more details.
 * `description` - (Optional, Forces new resource) The description of the deployment. Can be at most 1024 characters.
 * `environment_id` - (Required, Forces new resource) The environment ID. Must be between 4 and 7 characters in length.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
