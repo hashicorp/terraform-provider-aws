@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appstream/lister"
 )
 
 // StackByName Retrieve a appstream stack by name
@@ -54,4 +55,41 @@ func FleetByName(ctx context.Context, conn *appstream.AppStream, name string) (*
 	}
 
 	return fleet, nil
+}
+
+// ImageBuilderByName Retrieve a appstream ImageBuilder by name
+func ImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
+	input := &appstream.DescribeImageBuildersInput{
+		Names: []*string{aws.String(name)},
+	}
+
+	var result *appstream.ImageBuilder
+
+	err := lister.DescribeImageBuildersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, imageBuilder := range page.ImageBuilders {
+			if imageBuilder == nil {
+				continue
+			}
+			if aws.StringValue(imageBuilder.Name) == name {
+				result = imageBuilder
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		return nil, nil
+	}
+
+	return result, nil
 }

@@ -30,8 +30,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Name of Domain.
-* `arn` - The ARN of Domain.
+* `id` - The ARN of the Domain.
+* `arn` - The ARN of the Domain.
 * `owner` - The AWS account ID that owns the domain.
 * `repository_count` - The number of repositories in the domain.
 * `created_time` - A timestamp that represents the date and time the domain was created in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).

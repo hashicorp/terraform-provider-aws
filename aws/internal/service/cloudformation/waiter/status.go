@@ -2,93 +2,43 @@ package waiter
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func ChangeSetStatus(conn *cloudformation.CloudFormation, stackID, changeSetName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeChangeSet(&cloudformation.DescribeChangeSetInput{
-			ChangeSetName: aws.String(changeSetName),
-			StackName:     aws.String(stackID),
-		})
-		if err != nil {
-			log.Printf("[ERROR] Failed to describe CloudFormation change set: %s", err)
-			return nil, "", err
-		}
+		output, err := finder.ChangeSetByStackIDAndChangeSetName(conn, stackID, changeSetName)
 
-		if resp == nil {
-			log.Printf("[WARN] Describing CloudFormation change set returned no response")
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		status := aws.StringValue(resp.Status)
+		if err != nil {
+			return nil, "", err
+		}
 
-		return resp, status, err
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
 func StackSetOperationStatus(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &cloudformation.DescribeStackSetOperationInput{
-			OperationId:  aws.String(operationID),
-			StackSetName: aws.String(stackSetName),
-		}
+		output, err := finder.StackSetOperationByStackSetNameAndOperationID(conn, stackSetName, operationID)
 
-		output, err := conn.DescribeStackSetOperation(input)
-
-		if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeOperationNotFoundException) {
-			return nil, cloudformation.StackSetOperationStatusRunning, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, cloudformation.StackSetOperationStatusFailed, err
+			return nil, "", err
 		}
 
-		if output == nil || output.StackSetOperation == nil {
-			return nil, cloudformation.StackSetOperationStatusRunning, nil
-		}
-
-		if aws.StringValue(output.StackSetOperation.Status) == cloudformation.StackSetOperationStatusFailed {
-			allResults := make([]string, 0)
-			listOperationResultsInput := &cloudformation.ListStackSetOperationResultsInput{
-				OperationId:  aws.String(operationID),
-				StackSetName: aws.String(stackSetName),
-			}
-
-			// TODO: PAGES
-			for {
-				listOperationResultsOutput, err := conn.ListStackSetOperationResults(listOperationResultsInput)
-
-				if err != nil {
-					return output.StackSetOperation, cloudformation.StackSetOperationStatusFailed, fmt.Errorf("error listing Operation (%s) errors: %w", operationID, err)
-				}
-
-				if listOperationResultsOutput == nil {
-					continue
-				}
-
-				for _, summary := range listOperationResultsOutput.Summaries {
-					allResults = append(allResults, fmt.Sprintf("Account (%s) Region (%s) Status (%s) Status Reason: %s", aws.StringValue(summary.Account), aws.StringValue(summary.Region), aws.StringValue(summary.Status), aws.StringValue(summary.StatusReason)))
-				}
-
-				if aws.StringValue(listOperationResultsOutput.NextToken) == "" {
-					break
-				}
-
-				listOperationResultsInput.NextToken = listOperationResultsOutput.NextToken
-			}
-
-			return output.StackSetOperation, cloudformation.StackSetOperationStatusFailed, fmt.Errorf("Operation (%s) Results:\n%s", operationID, strings.Join(allResults, "\n"))
-		}
-
-		return output.StackSetOperation, aws.StringValue(output.StackSetOperation.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
@@ -116,18 +66,14 @@ func StackStatus(conn *cloudformation.CloudFormation, stackName string) resource
 
 func TypeRegistrationProgressStatus(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &cloudformation.DescribeTypeRegistrationInput{
-			RegistrationToken: aws.String(registrationToken),
-		}
+		output, err := finder.TypeRegistrationByToken(ctx, conn, registrationToken)
 
-		output, err := conn.DescribeTypeRegistrationWithContext(ctx, input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
-		}
-
-		if output == nil {
-			return nil, "", nil
 		}
 
 		return output, aws.StringValue(output.ProgressStatus), nil

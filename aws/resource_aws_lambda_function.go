@@ -47,6 +47,16 @@ func resourceAwsLambdaFunction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"architectures": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(lambda.Architecture_Values(), false),
+				},
+			},
 			"filename": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -438,6 +448,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		PackageType:  aws.String(packageType),
 	}
 
+	if v, ok := d.GetOk("architectures"); ok && len(v.([]interface{})) > 0 {
+		params.Architectures = expandStringList(v.([]interface{}))
+	}
+
 	if packageType == lambda.PackageTypeZip {
 		params.Handler = aws.String(d.Get("handler").(string))
 		params.Runtime = aws.String(d.Get("runtime").(string))
@@ -675,6 +689,12 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 
 	function := getFunctionOutput.Configuration
 
+	architectures := flattenStringList(function.Architectures)
+	log.Printf("[INFO] Setting Lambda %s Architecture %#v from API", d.Id(), architectures)
+	if err := d.Set("architectures", architectures); err != nil {
+		return fmt.Errorf("error setting architectures for Lambda Function (%s): %w", d.Id(), err)
+	}
+
 	if err := d.Set("arn", function.FunctionArn); err != nil {
 		return fmt.Errorf("error setting function arn for Lambda Function: %w", err)
 	}
@@ -909,8 +929,8 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 		d.HasChange("s3_bucket") ||
 		d.HasChange("s3_key") ||
 		d.HasChange("s3_object_version") ||
-		d.HasChange("image_uri")
-
+		d.HasChange("image_uri") ||
+		d.HasChange("architectures")
 }
 
 // resourceAwsLambdaFunctionUpdate maps to:
@@ -1125,6 +1145,13 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	if codeUpdate {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("architectures") {
+			architectures := d.Get("architectures").([]interface{})
+			if len(architectures) > 0 {
+				codeReq.Architectures = expandStringList(architectures)
+			}
 		}
 
 		if v, ok := d.GetOk("filename"); ok {

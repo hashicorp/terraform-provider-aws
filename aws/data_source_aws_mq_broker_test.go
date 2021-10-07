@@ -10,13 +10,11 @@ import (
 )
 
 func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
-	rString := acctest.RandString(7)
-	prefix := "tf-acc-test-d-mq-broker"
-	brokerName := fmt.Sprintf("%s-%s", prefix, rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_mq_broker.test"
 
 	dataSourceByIdName := "data.aws_mq_broker.by_id"
 	dataSourceByNameName := "data.aws_mq_broker.by_name"
-	resourceName := "aws_mq_broker.acctest"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(mq.EndpointsID, t) },
@@ -24,7 +22,7 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSMqBrokerConfig_byId(brokerName, prefix),
+				Config: testAccDataSourceAWSMqBrokerConfig_byId(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "broker_name", resourceName, "broker_name"),
@@ -49,7 +47,7 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataSourceAWSMqBrokerConfig_byName(brokerName, prefix),
+				Config: testAccDataSourceAWSMqBrokerConfig_byName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_name", resourceName, "broker_name"),
@@ -59,12 +57,8 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix string) string {
+func testAccDataSourceAWSMqBrokerConfig_base(rName string) string {
 	return fmt.Sprintf(`
-variable "prefix" {
-  default = "%s"
-}
-
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -74,54 +68,58 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_vpc" "acctest" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = var.prefix
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "acctest" {
-  vpc_id = aws_vpc.acctest.id
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 }
 
-resource "aws_route_table" "acctest" {
-  vpc_id = aws_vpc.acctest.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.acctest.id
+    gateway_id = aws_internet_gateway.test.id
   }
 }
 
-resource "aws_subnet" "acctest" {
+resource "aws_subnet" "test" {
   count             = 2
   cidr_block        = "10.0.${count.index}.0/24"
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.acctest.id
+  vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = var.prefix
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table_association" "acctest" {
+resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = aws_subnet.acctest.*.id[count.index]
-  route_table_id = aws_route_table.acctest.id
+  subnet_id      = aws_subnet.test.*.id[count.index]
+  route_table_id = aws_route_table.test.id
 }
 
-resource "aws_security_group" "acctest" {
-  count  = 2
-  name   = "${var.prefix}-${count.index}"
-  vpc_id = aws_vpc.acctest.id
+resource "aws_security_group" "test" {
+  count = 2
+
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_mq_configuration" "acctest" {
-  name           = var.prefix
+resource "aws_mq_configuration" "test" {
+  name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  engine_version = "5.15.12"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -130,19 +128,19 @@ resource "aws_mq_configuration" "acctest" {
 DATA
 }
 
-resource "aws_mq_broker" "acctest" {
+resource "aws_mq_broker" "test" {
   auto_minor_version_upgrade = true
   apply_immediately          = true
-  broker_name                = "%s"
+  broker_name                = %[1]q
 
   configuration {
-    id       = aws_mq_configuration.acctest.id
-    revision = aws_mq_configuration.acctest.latest_revision
+    id       = aws_mq_configuration.test.id
+    revision = aws_mq_configuration.test.latest_revision
   }
 
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.0"
+  engine_version     = "5.15.12"
   host_instance_type = "mq.t2.micro"
 
   maintenance_window_start_time {
@@ -152,8 +150,8 @@ resource "aws_mq_broker" "acctest" {
   }
 
   publicly_accessible = true
-  security_groups     = aws_security_group.acctest[*].id
-  subnet_ids          = aws_subnet.acctest[*].id
+  security_groups     = aws_security_group.test.*.id
+  subnet_ids          = aws_subnet.test.*.id
 
   user {
     username = "Ender"
@@ -167,23 +165,23 @@ resource "aws_mq_broker" "acctest" {
     groups         = ["dragon", "salamander", "leopard"]
   }
 
-  depends_on = [aws_internet_gateway.acctest]
+  depends_on = [aws_internet_gateway.test]
 }
-`, prefix, brokerName)
+`, rName)
 }
 
-func testAccDataSourceAWSMqBrokerConfig_byId(brokerName, prefix string) string {
-	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + `
+func testAccDataSourceAWSMqBrokerConfig_byId(rName string) string {
+	return composeConfig(testAccDataSourceAWSMqBrokerConfig_base(rName), `
 data "aws_mq_broker" "by_id" {
-  broker_id = aws_mq_broker.acctest.id
+  broker_id = aws_mq_broker.test.id
 }
-`
+`)
 }
 
-func testAccDataSourceAWSMqBrokerConfig_byName(brokerName, prefix string) string {
-	return testAccDataSourceAWSMqBrokerConfig_base(brokerName, prefix) + `
+func testAccDataSourceAWSMqBrokerConfig_byName(rName string) string {
+	return composeConfig(testAccDataSourceAWSMqBrokerConfig_base(rName), `
 data "aws_mq_broker" "by_name" {
-  broker_name = aws_mq_broker.acctest.broker_name
+  broker_name = aws_mq_broker.test.broker_name
 }
-`
+`)
 }

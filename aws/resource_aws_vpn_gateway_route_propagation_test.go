@@ -1,98 +1,148 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
-	var rtID, gwID string
+	resourceName := "aws_vpn_gateway_route_propagation.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSVPNGatewayRoutePropagation_basic,
-				Check: func(state *terraform.State) error {
-					conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-					rs := state.RootModule().Resources["aws_vpn_gateway_route_propagation.foo"]
-					if rs == nil {
-						return errors.New("missing resource state")
-					}
-
-					rtID = rs.Primary.Attributes["route_table_id"]
-					gwID = rs.Primary.Attributes["vpn_gateway_id"]
-
-					rt, err := waiter.RouteTableReady(conn, rtID)
-
-					if err != nil {
-						return fmt.Errorf("error getting route table (%s) while checking VPN gateway route propagation: %w", rtID, err)
-					}
-
-					if rt == nil {
-						return errors.New("route table doesn't exist")
-					}
-
-					exists := false
-					for _, vgw := range rt.PropagatingVgws {
-						if *vgw.GatewayId == gwID {
-							exists = true
-						}
-					}
-					if !exists {
-						return errors.New("route table does not list VPN gateway as a propagator")
-					}
-
-					return nil
-				},
+				Config: testAccAWSVPNGatewayRoutePropagationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSVPNGatewayRoutePropagationExists(resourceName),
+				),
 			},
 		},
-		CheckDestroy: func(state *terraform.State) error {
-			conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-			rt, err := waiter.RouteTableDeleted(conn, rtID)
-
-			if err != nil {
-				return fmt.Errorf("error getting route table (%s) status while checking destroy: %w", rtID, err)
-			}
-
-			if rt != nil {
-				return errors.New("route table still exists")
-			}
-			return nil
-		},
 	})
-
 }
 
-const testAccAWSVPNGatewayRoutePropagation_basic = `
-resource "aws_vpc" "foo" {
+func TestAccAWSVPNGatewayRoutePropagation_disappears(t *testing.T) {
+	resourceName := "aws_vpn_gateway_route_propagation.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSVPNGatewayRoutePropagationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSVPNGatewayRoutePropagationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSVPNGatewayRoutePropagationExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpnGatewayRoutePropagation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSVPNGatewayRoutePropagationExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Route Table VPN Gateway route propagation ID is set")
+		}
+
+		routeTableID, gatewayID, err := tfec2.VpnGatewayRoutePropagationParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		err = finder.VpnGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSVPNGatewayRoutePropagationDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_vpn_gateway_route_propagation" {
+			continue
+		}
+
+		routeTableID, gatewayID, err := tfec2.VpnGatewayRoutePropagationParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		err = finder.VpnGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Route Table (%s) VPN Gateway (%s) route propagation still exists", routeTableID, gatewayID)
+	}
+
+	return nil
+}
+
+func testAccAWSVPNGatewayRoutePropagationConfigBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpn-gateway-route-propagation"
+    Name = %[1]q
   }
 }
 
-resource "aws_vpn_gateway" "foo" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route_table" "foo" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_vpn_gateway_route_propagation" "foo" {
-  vpn_gateway_id = aws_vpn_gateway.foo.id
-  route_table_id = aws_route_table.foo.id
+resource "aws_vpn_gateway_route_propagation" "test" {
+  vpn_gateway_id = aws_vpn_gateway.test.id
+  route_table_id = aws_route_table.test.id
 }
-`
+`, rName)
+}

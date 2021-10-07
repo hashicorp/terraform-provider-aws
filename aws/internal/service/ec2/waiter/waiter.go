@@ -19,8 +19,13 @@ const (
 	// Maximum amount of time to wait for EC2 Instance attribute modifications to propagate
 	InstanceAttributePropagationTimeout = 2 * time.Minute
 
+	InstanceStopTimeout = 10 * time.Minute
+
 	// General timeout for EC2 resource creations to propagate
 	PropagationTimeout = 2 * time.Minute
+
+	RouteTableNotFoundChecks                   = 1000 // Should exceed any reasonable custom timeout value.
+	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
 )
 
 const (
@@ -264,12 +269,12 @@ const (
 	NetworkAclEntryPropagationTimeout = 5 * time.Minute
 )
 
-func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) (*ec2.Route, error) {
+func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{RouteStatusReady},
 		Target:                    []string{},
 		Refresh:                   RouteStatus(conn, routeFinder, routeTableID, destination),
-		Timeout:                   PropagationTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -282,12 +287,12 @@ func RouteDeleted(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, d
 	return nil, err
 }
 
-func RouteReady(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string) (*ec2.Route, error) {
+func RouteReady(conn *ec2.EC2, routeFinder finder.RouteFinder, routeTableID, destination string, timeout time.Duration) (*ec2.Route, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{RouteStatusReady},
 		Refresh:                   RouteStatus(conn, routeFinder, routeTableID, destination),
-		Timeout:                   PropagationTimeout,
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -306,20 +311,14 @@ const (
 	RouteTableAssociationCreatedTimeout = 5 * time.Minute
 	RouteTableAssociationUpdatedTimeout = 5 * time.Minute
 	RouteTableAssociationDeletedTimeout = 5 * time.Minute
-
-	RouteTableReadyTimeout   = 10 * time.Minute
-	RouteTableDeletedTimeout = 5 * time.Minute
-	RouteTableUpdatedTimeout = 5 * time.Minute
-
-	RouteTableNotFoundChecks = 40
 )
 
-func RouteTableReady(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
+func RouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{},
 		Target:         []string{RouteTableStatusReady},
 		Refresh:        RouteTableStatus(conn, id),
-		Timeout:        RouteTableReadyTimeout,
+		Timeout:        timeout,
 		NotFoundChecks: RouteTableNotFoundChecks,
 	}
 
@@ -332,12 +331,12 @@ func RouteTableReady(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 	return nil, err
 }
 
-func RouteTableDeleted(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
+func RouteTableDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{RouteTableStatusReady},
 		Target:  []string{},
 		Refresh: RouteTableStatus(conn, id),
-		Timeout: RouteTableDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -351,10 +350,11 @@ func RouteTableDeleted(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 
 func RouteTableAssociationCreated(conn *ec2.EC2, id string) (*ec2.RouteTableAssociationState, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.RouteTableAssociationStateCodeAssociating},
-		Target:  []string{ec2.RouteTableAssociationStateCodeAssociated},
-		Refresh: RouteTableAssociationState(conn, id),
-		Timeout: RouteTableAssociationCreatedTimeout,
+		Pending:        []string{ec2.RouteTableAssociationStateCodeAssociating},
+		Target:         []string{ec2.RouteTableAssociationStateCodeAssociated},
+		Refresh:        RouteTableAssociationState(conn, id),
+		Timeout:        RouteTableAssociationCreatedTimeout,
+		NotFoundChecks: RouteTableAssociationCreatedNotFoundChecks,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -628,6 +628,63 @@ func VpnGatewayVpcAttachmentDetached(conn *ec2.EC2, vpnGatewayID, vpcID string) 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	HostCreatedTimeout = 10 * time.Minute
+	HostUpdatedTimeout = 10 * time.Minute
+	HostDeletedTimeout = 20 * time.Minute
+)
+
+func HostCreated(conn *ec2.EC2, id string) (*ec2.Host, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AllocationStatePending},
+		Target:  []string{ec2.AllocationStateAvailable},
+		Timeout: HostCreatedTimeout,
+		Refresh: HostState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Host); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func HostUpdated(conn *ec2.EC2, id string) (*ec2.Host, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AllocationStatePending},
+		Target:  []string{ec2.AllocationStateAvailable},
+		Timeout: HostUpdatedTimeout,
+		Refresh: HostState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Host); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func HostDeleted(conn *ec2.EC2, id string) (*ec2.Host, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AllocationStateAvailable},
+		Target:  []string{},
+		Timeout: HostDeletedTimeout,
+		Refresh: HostState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Host); ok {
 		return output, err
 	}
 

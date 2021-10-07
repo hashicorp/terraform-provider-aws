@@ -41,3 +41,20 @@ func FleetState(ctx context.Context, conn *appstream.AppStream, name string) res
 		return fleet, aws.StringValue(fleet.State), nil
 	}
 }
+
+//ImageBuilderState fetches the ImageBuilder and its state
+func ImageBuilderState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		imageBuilder, err := finder.ImageBuilderByName(ctx, conn, name)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if imageBuilder == nil {
+			return nil, "", nil
+		}
+
+		return imageBuilder, aws.StringValue(imageBuilder.State), nil
+	}
+}

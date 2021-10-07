@@ -199,6 +199,9 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `assume_role` - (Optional) An `assume_role` block (documented below). Only one
   `assume_role` block may be in the configuration.
 
+* `http_proxy` - (Optional) The address of an HTTP proxy to use when accessing the AWS API.
+  Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.
+
 * `endpoints` - (Optional) Configuration block for customizing service endpoints. See the
 [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html)
 for more information about connecting to alternate AWS endpoints or AWS compatible solutions.

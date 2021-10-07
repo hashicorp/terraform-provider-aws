@@ -124,3 +124,20 @@ func VpcEndpointSubnetAssociationCreateID(vpcEndpointID, subnetID string) string
 func VpnGatewayVpcAttachmentCreateID(vpnGatewayID, vpcID string) string {
 	return fmt.Sprintf("vpn-attachment-%x", hashcode.String(fmt.Sprintf("%s-%s", vpcID, vpnGatewayID)))
 }
+
+const vpnGatewayRoutePropagationIDSeparator = "_"
+
+func VpnGatewayRoutePropagationCreateID(routeTableID, gatewayID string) string {
+	parts := []string{gatewayID, routeTableID}
+	id := strings.Join(parts, vpnGatewayRoutePropagationIDSeparator)
+	return id
+}
+
+func VpnGatewayRoutePropagationParseID(id string) (string, string, error) {
+	parts := strings.Split(id, vpnGatewayRoutePropagationIDSeparator)
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[1], parts[0], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected vpn-gateway-id%[2]sroute-table-id", id, vpnGatewayRoutePropagationIDSeparator)
+}

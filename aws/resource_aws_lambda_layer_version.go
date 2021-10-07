@@ -27,6 +27,16 @@ func resourceAwsLambdaLayerVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"compatible_architectures": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 2,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(lambda.Architecture_Values(), false),
+				},
+			},
 			"layer_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -165,6 +175,10 @@ func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface
 		params.CompatibleRuntimes = expandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("compatible_architectures"); ok && v.(*schema.Set).Len() > 0 {
+		params.CompatibleArchitectures = expandStringSet(v.(*schema.Set))
+	}
+
 	log.Printf("[DEBUG] Publishing Lambda layer: %s", params)
 	result, err := conn.PublishLayerVersion(params)
 	if err != nil {
@@ -233,6 +247,10 @@ func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{})
 	}
 	if err := d.Set("compatible_runtimes", flattenStringList(layerVersion.CompatibleRuntimes)); err != nil {
 		return fmt.Errorf("Error setting lambda layer compatible runtimes: %s", err)
+	}
+
+	if err := d.Set("compatible_architectures", flattenStringList(layerVersion.CompatibleArchitectures)); err != nil {
+		return fmt.Errorf("Error setting lambda layer compatible architectures: %s", err)
 	}
 
 	return nil

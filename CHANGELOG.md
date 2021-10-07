@@ -1,4 +1,65 @@
-## 3.61.0 (Unreleased)
+## 3.62.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_dx_connection_confirmation` ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
+* **New Resource:** `aws_dx_hosted_connection` ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
+
+ENHANCEMENTS:
+
+* resource/aws_db_instance: Add `replica_mode` argument ([#17991](https://github.com/hashicorp/terraform-provider-aws/issues/17991))
+* resource/aws_default_route_table: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+* resource/aws_dx_lag: Add `connection_id` argument ([#16489](https://github.com/hashicorp/terraform-provider-aws/issues/16489))
+* resource/aws_emr_cluster: Add `log_encryption_kms_key_id` argument ([#17706](https://github.com/hashicorp/terraform-provider-aws/issues/17706))
+* resource/aws_lex_bot: Added waiter support to account for `BUILDING` status ([#21122](https://github.com/hashicorp/terraform-provider-aws/issues/21122))
+* resource/aws_route_table: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+* resource/aws_volume_attachment: Add `stop_instance_before_detaching` argument ([#21144](https://github.com/hashicorp/terraform-provider-aws/issues/21144))
+* resource/aws_vpn_gateway_route_propagation: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+
+BUG FIXES:
+
+* aws/resource_aws_lex_bot: Correctly determine `version` attribute ([#20383](https://github.com/hashicorp/terraform-provider-aws/issues/20383))
+* aws/resource_aws_lex_intent: Correctly determine `version` attribute ([#20383](https://github.com/hashicorp/terraform-provider-aws/issues/20383))
+* resource/aws_appstream_fleet: More error validation in waiter ([#21125](https://github.com/hashicorp/terraform-provider-aws/issues/21125))
+* resource/aws_appstream_stack:  More error validation in waiter ([#21125](https://github.com/hashicorp/terraform-provider-aws/issues/21125))
+* resource/aws_autoscalingplans_scaling_plan: Fix updates to `scaling_instruction` argument ([#17987](https://github.com/hashicorp/terraform-provider-aws/issues/17987))
+* resource/aws_route: Use custom `timeouts` values ([#21161](https://github.com/hashicorp/terraform-provider-aws/issues/21161))
+
+## 3.61.0 (October 01, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_cloudcontrolapi_resource` ([#21110](https://github.com/hashicorp/terraform-provider-aws/issues/21110))
+* **New Data Source:** `aws_db_proxy` ([#21053](https://github.com/hashicorp/terraform-provider-aws/issues/21053))
+* **New Data Source:** `aws_ec2_host` ([#10817](https://github.com/hashicorp/terraform-provider-aws/issues/10817))
+* **New Data Source:** `aws_kinesis_firehose_delivery_stream` ([#18445](https://github.com/hashicorp/terraform-provider-aws/issues/18445))
+* **New Data Source:** `aws_ssm_parameters_by_path` ([#9615](https://github.com/hashicorp/terraform-provider-aws/issues/9615))
+* **New Resource:** `aws_appstream_image_builder` ([#21036](https://github.com/hashicorp/terraform-provider-aws/issues/21036))
+* **New Resource:** `aws_cloudcontrolapi_resource` ([#21110](https://github.com/hashicorp/terraform-provider-aws/issues/21110))
+* **New Resource:** `aws_ec2_host` ([#10817](https://github.com/hashicorp/terraform-provider-aws/issues/10817))
+* **New Resource:** `aws_iot_authorizer` ([#14671](https://github.com/hashicorp/terraform-provider-aws/issues/14671))
+* **New Resource:** `aws_quicksight_data_source` ([#20710](https://github.com/hashicorp/terraform-provider-aws/issues/20710))
+* **New Resource:** `aws_redshift_scheduled_action` ([#13474](https://github.com/hashicorp/terraform-provider-aws/issues/13474))
+* **New Resource:** `aws_sagemaker_studio_lifecycle_config` ([#21041](https://github.com/hashicorp/terraform-provider-aws/issues/21041))
+
+ENHANCEMENTS:
+
+* data-source/aws_lambda_function: Add support for Graviton2 with `architectures` attribute ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
+* data-source/aws_lambda_layer_version: Add support for Graviton2 with `compatible_architectures` attribute ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
+* provider: Add parameter `http_proxy` to provider configuration ([#21077](https://github.com/hashicorp/terraform-provider-aws/issues/21077))
+* resource/aws_lb_target_group: Support `alb` value for `target_type` argument ([#21069](https://github.com/hashicorp/terraform-provider-aws/issues/21069))
+* resource/aws_lambda_function: Add support for Graviton2 with `architectures` argument ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
+* resource/aws_lambda_layer_version: Add support for Graviton2 with `compatible_architectures` argument ([#21091](https://github.com/hashicorp/terraform-provider-aws/issues/21091))
+* resource/aws_sagemaker_app_image_config: Add tagging support. ([#21037](https://github.com/hashicorp/terraform-provider-aws/issues/21037))
+* resource/aws_sagemaker_domain: Add `default_user_settings.jupyter_server_app_settings.lifecycle_config_arns` and `default_user_settings.kernel_gateway_app_settings.lifecycle_config_arns` arguments ([#21041](https://github.com/hashicorp/terraform-provider-aws/issues/21041))
+* resource/aws_user_profile: Add `user_settings.jupyter_server_app_settings.lifecycle_config_arns` and `user_settings.kernel_gateway_app_settings.lifecycle_config_arns` arguments ([#21041](https://github.com/hashicorp/terraform-provider-aws/issues/21041))
+
+BUG FIXES:
+
+* resource/aws_dx_connection: Mark `provider_name` as Computed to avoid resource recreation with pre-v3.56.0 configurations ([#21085](https://github.com/hashicorp/terraform-provider-aws/issues/21085))
+* resource/aws_dx_lag: Mark `provider_name` as Computed to avoid resource recreation with pre-v3.56.0 configurations ([#21085](https://github.com/hashicorp/terraform-provider-aws/issues/21085))
+* resource/aws_route_table_association: Wait for up to 40 not found checks when creating a new route table association ([#21062](https://github.com/hashicorp/terraform-provider-aws/issues/21062))
+
 ## 3.60.0 (September 23, 2021)
 
 FEATURES:
