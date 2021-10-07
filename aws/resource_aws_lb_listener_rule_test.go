@@ -1548,7 +1548,7 @@ resource "aws_lb_listener_rule" "unweighted" {
 
     forward {
       target_group {
-        arn    = aws_lb_target_group.test.arn
+        arn = aws_lb_target_group.test.arn
       }
     }
   }
