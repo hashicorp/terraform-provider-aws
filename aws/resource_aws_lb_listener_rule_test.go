@@ -145,6 +145,43 @@ func TestAccAWSLBListenerRule_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBListenerRule_forwardUnweighted(t *testing.T) {
+	var conf elbv2.Rule
+	lbName := fmt.Sprintf("testrule-unweighted-%s", acctest.RandString(12))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+
+	resourceName := "aws_lb_listener_rule.unweighted"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	targetGroupResourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleConfig_forwardUnweighted(lbName, targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.target_group_arn", targetGroupResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-weighted-%s", acctest.RandString(13))
@@ -1404,6 +1441,132 @@ resource "aws_lb_listener" "front_end" {
 
   default_action {
     target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "alb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.alb_test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list(string)
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-listener-rule-basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+
+  tags = {
+    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.alb_test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+`, lbName, targetGroupName)
+}
+
+func testAccAWSLBListenerRuleConfig_forwardUnweighted(lbName, targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "unweighted" {
+  listener_arn = aws_lb_listener.front_end.arn
+  priority     = 100
+
+  action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.test.arn
+      }
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["/weighted/*"]
+    }
+  }
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.alb_test.id
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 }
