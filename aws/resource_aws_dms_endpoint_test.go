@@ -5,11 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAwsDmsEndpoint_basic(t *testing.T) {
@@ -556,15 +557,24 @@ func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 }
 
 func dmsEndpointDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).dmsconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_endpoint" {
 			continue
 		}
 
-		err := checkDmsEndpointExists(rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("Found an endpoint that was not destroyed: %s", rs.Primary.ID)
+		_, err := finder.EndpointByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("DMS Endpoint %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -578,25 +588,15 @@ func checkDmsEndpointExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No DMS Endpoint ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).dmsconn
-		resp, err := conn.DescribeEndpoints(&dms.DescribeEndpointsInput{
-			Filters: []*dms.Filter{
-				{
-					Name:   aws.String("endpoint-id"),
-					Values: []*string{aws.String(rs.Primary.ID)},
-				},
-			},
-		})
+
+		_, err := finder.EndpointByID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("DMS endpoint error: %v", err)
-		}
-
-		if resp.Endpoints == nil {
-			return fmt.Errorf("DMS endpoint not found")
+			return err
 		}
 
 		return nil

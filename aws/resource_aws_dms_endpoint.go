@@ -8,13 +8,15 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfdms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDmsEndpoint() *schema.Resource {
@@ -545,24 +547,20 @@ func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	response, err := conn.DescribeEndpoints(&dms.DescribeEndpointsInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("endpoint-id"),
-				Values: []*string{aws.String(d.Id())}, // Must use d.Id() to work with import.
-			},
-		},
-	})
-	if err != nil {
-		if dmserr, ok := err.(awserr.Error); ok && dmserr.Code() == "ResourceNotFoundFault" {
-			log.Printf("[DEBUG] DMS Replication Endpoint %q Not Found", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+	endpoint, err := finder.EndpointByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	err = resourceAwsDmsEndpointSetState(d, response.Endpoints[0])
+	if err != nil {
+		return fmt.Errorf("error reading DMS Endpoint (%s): %w", d.Id(), err)
+	}
+
+	err = resourceAwsDmsEndpointSetState(d, endpoint)
+
 	if err != nil {
 		return err
 	}
@@ -570,7 +568,7 @@ func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, d.Get("endpoint_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Endpoint (%s): %s", d.Get("endpoint_arn").(string), err)
+		return fmt.Errorf("error listing tags for DMS Endpoint (%s): %w", d.Get("endpoint_arn").(string), err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -820,13 +818,19 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dmsconn
 
-	request := &dms.DeleteEndpointInput{
+	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
+	_, err := conn.DeleteEndpoint(&dms.DeleteEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil
 	}
 
-	log.Printf("[DEBUG] DMS delete endpoint: %#v", request)
+	if err != nil {
+		return fmt.Errorf("error deleting DMS Endpoint (%s): %w", d.Id(), err)
+	}
 
-	_, err := conn.DeleteEndpoint(request)
 	return err
 }
 
