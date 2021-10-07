@@ -21,7 +21,7 @@ func TestAccAwsDmsEndpoint_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointBasicConfig(randId),
@@ -61,7 +61,7 @@ func TestAccAwsDmsEndpoint_S3(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointS3Config(randId),
@@ -114,7 +114,7 @@ func TestAccAwsDmsEndpoint_S3_ExtraConnectionAttributes(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointS3ExtraConnectionAttributesConfig(randId),
@@ -141,7 +141,7 @@ func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointDynamoDbConfig(randId),
@@ -174,7 +174,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointElasticsearchConfig(rName),
@@ -208,7 +208,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch_ExtraConnectionAttributes(t *testing.T)
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointElasticsearchExtraConnectionAttributesConfig(rName),
@@ -235,7 +235,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch_ErrorRetryDuration(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 60),
@@ -273,7 +273,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 1),
@@ -311,7 +311,7 @@ func TestAccAwsDmsEndpoint_Kafka(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointKafkaConfig(randId),
@@ -371,7 +371,7 @@ func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointKinesisConfig(randId),
@@ -409,7 +409,7 @@ func TestAccAwsDmsEndpoint_MongoDb(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointMongoDbConfig(randId),
@@ -439,7 +439,7 @@ func TestAccAwsDmsEndpoint_MongoDb_Update(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointMongoDbConfig(randId),
@@ -484,7 +484,7 @@ func TestAccAwsDmsEndpoint_DocDB(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointDocDBConfig(randId),
@@ -524,7 +524,7 @@ func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointDb2Config(randId),
@@ -556,7 +556,7 @@ func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 	})
 }
 
-func dmsEndpointDestroy(s *terraform.State) error {
+func testAccCheckAWSDmsEndpointDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).dmsconn
 
 	for _, rs := range s.RootModule().Resources {
