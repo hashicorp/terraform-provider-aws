@@ -171,8 +171,9 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Default:  false,
 						},
 						"sasl_password": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"sasl_username": {
 							Type:     schema.TypeString,
@@ -199,8 +200,9 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							ValidateFunc: validateArn,
 						},
 						"ssl_client_key_password": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"topic": {
 							Type:     schema.TypeString,
@@ -840,7 +842,11 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		}
 	case "kafka":
 		if endpoint.KafkaSettings != nil {
-			if err := d.Set("kafka_settings", []interface{}{flattenDmsKafkaSettings(endpoint.KafkaSettings)}); err != nil {
+			// SASL password isn't returned in API. Propagate state value.
+			tfMap := flattenDmsKafkaSettings(endpoint.KafkaSettings)
+			tfMap["sasl_password"] = d.Get("kafka_settings.0.sasl_password").(string)
+
+			if err := d.Set("kafka_settings", []interface{}{tfMap}); err != nil {
 				return fmt.Errorf("error setting kafka_settings: %w", err)
 			}
 		} else {
