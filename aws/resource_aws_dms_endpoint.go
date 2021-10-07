@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfdms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms"
 )
 
 func resourceAwsDmsEndpoint() *schema.Resource {
@@ -39,15 +40,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Optional: true,
 			},
 			"elasticsearch_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"endpoint_uri": {
@@ -97,42 +93,14 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				ValidateFunc: validateDmsEndpointId,
 			},
 			"endpoint_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					dms.ReplicationEndpointTypeValueSource,
-					dms.ReplicationEndpointTypeValueTarget,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(dms.ReplicationEndpointTypeValue_Values(), false),
 			},
 			"engine_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"aurora",
-					"aurora-postgresql",
-					"aurora-postgresql-serverless",
-					"aurora-serverless",
-					"azuredb",
-					"db2",
-					"dms-transfer",
-					"docdb",
-					"dynamodb",
-					"elasticsearch",
-					"kafka",
-					"kinesis",
-					"mariadb",
-					"mongodb",
-					"mysql",
-					"neptune",
-					"opensearch",
-					"oracle",
-					"postgres",
-					"redis",
-					"redshift",
-					"s3",
-					"sqlserver",
-					"sybase",
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(tfdms.EngineName_Values(), false),
 			},
 			"extra_connection_attributes": {
 				Type:             schema.TypeString,
@@ -141,15 +109,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				DiffSuppressFunc: suppressExtraConnectionAttributesDiffs,
 			},
 			"kafka_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"broker": {
@@ -160,31 +123,23 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"topic": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "kafka-default-topic",
+							Default:  tfdms.KafkaDefaultTopic,
 						},
 					},
 				},
 			},
 			"kinesis_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"message_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								dms.MessageFormatValueJson,
-								dms.MessageFormatValueJsonUnformatted,
-							}, false),
-							Default: dms.MessageFormatValueJson,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.MessageFormatValueJson,
+							ValidateFunc: validation.StringInSlice(dms.MessageFormatValue_Values(), false),
 						},
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
@@ -207,31 +162,29 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"mongodb_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  dms.AuthTypeValuePassword,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.AuthTypeValuePassword,
+							ValidateFunc: validation.StringInSlice(dms.AuthTypeValue_Values(), false),
 						},
 						"auth_mechanism": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  dms.AuthMechanismValueDefault,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.AuthMechanismValueDefault,
+							ValidateFunc: validation.StringInSlice(dms.AuthMechanismValue_Values(), false),
 						},
 						"nesting_level": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  dms.NestingLevelValueNone,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.NestingLevelValueNone,
+							ValidateFunc: validation.StringInSlice(dms.NestingLevelValue_Values(), false),
 						},
 						"extract_doc_id": {
 							Type:     schema.TypeString,
@@ -246,7 +199,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"auth_source": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "admin",
+							Default:  tfdms.MongoDbAuthSourceAdmin,
 						},
 					},
 				},
@@ -261,15 +214,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Optional: true,
 			},
 			"s3_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_access_role_arn": {
@@ -303,9 +251,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Default:  "",
 						},
 						"compression_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "NONE",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      tfdms.S3SettingsCompressionTypeNone,
+							ValidateFunc: validation.StringInSlice(tfdms.S3SettingsCompressionType_Values(), false),
 						},
 						"date_partition_enabled": {
 							Type:     schema.TypeBool,
@@ -332,8 +281,8 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"encryption_mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      "SSE_S3",
-							ValidateFunc: validation.StringInSlice([]string{"SSE_S3", "SSE_KMS"}, false),
+							Default:      tfdms.S3SettingsEncryptionModeSseS3,
+							ValidateFunc: validation.StringInSlice(tfdms.S3SettingsEncryptionMode_Values(), false),
 						},
 						"server_side_encryption_kms_key_id": {
 							Type:     schema.TypeString,
@@ -351,15 +300,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Optional: true,
 			},
 			"ssl_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					dms.DmsSslModeValueNone,
-					dms.DmsSslModeValueRequire,
-					dms.DmsSslModeValueVerifyCa,
-					dms.DmsSslModeValueVerifyFull,
-				}, false),
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(dms.DmsSslModeValue_Values(), false),
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
