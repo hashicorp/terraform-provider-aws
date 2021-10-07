@@ -444,44 +444,46 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 			})
 		}
 
-		if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 {
-			stickinessBlocks := v.([]interface{})
-			stickiness := stickinessBlocks[0].(map[string]interface{})
+		if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
+			if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 {
+				stickinessBlocks := v.([]interface{})
+				stickiness := stickinessBlocks[0].(map[string]interface{})
 
-			if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
-				log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
-			} else {
-				attrs = append(attrs,
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.enabled"),
-						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-					},
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.type"),
-						Value: aws.String(stickiness["type"].(string)),
-					})
+				if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
+					log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
+				} else {
+					attrs = append(attrs,
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.enabled"),
+							Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+						},
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.type"),
+							Value: aws.String(stickiness["type"].(string)),
+						})
 
-				switch d.Get("protocol").(string) {
-				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-					switch stickiness["type"].(string) {
-					case "lb_cookie":
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-							})
-					case "app_cookie":
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-							},
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.app_cookie.cookie_name"),
-								Value: aws.String(stickiness["cookie_name"].(string)),
-							})
-					default:
-						log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
+					switch d.Get("protocol").(string) {
+					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+						switch stickiness["type"].(string) {
+						case "lb_cookie":
+							attrs = append(attrs,
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+								})
+						case "app_cookie":
+							attrs = append(attrs,
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+								},
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.app_cookie.cookie_name"),
+									Value: aws.String(stickiness["cookie_name"].(string)),
+								})
+						default:
+							log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
+						}
 					}
 				}
 			}
@@ -676,53 +678,56 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			})
 		}
 
-		if d.HasChange("stickiness") {
-			stickinessBlocks := d.Get("stickiness").([]interface{})
-			if len(stickinessBlocks) == 1 {
-				stickiness := stickinessBlocks[0].(map[string]interface{})
+		if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
 
-				if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
-					log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
-				} else {
-					attrs = append(attrs,
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.enabled"),
-							Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-						},
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.type"),
-							Value: aws.String(stickiness["type"].(string)),
-						})
+			if d.HasChange("stickiness") {
+				stickinessBlocks := d.Get("stickiness").([]interface{})
+				if len(stickinessBlocks) == 1 {
+					stickiness := stickinessBlocks[0].(map[string]interface{})
 
-					switch d.Get("protocol").(string) {
-					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-						switch stickiness["type"].(string) {
-						case "lb_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								})
-						case "app_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								},
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.cookie_name"),
-									Value: aws.String(stickiness["cookie_name"].(string)),
-								})
-						default:
-							log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
+					if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
+						log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
+					} else {
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.enabled"),
+								Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+							},
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.type"),
+								Value: aws.String(stickiness["type"].(string)),
+							})
+
+						switch d.Get("protocol").(string) {
+						case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+							switch stickiness["type"].(string) {
+							case "lb_cookie":
+								attrs = append(attrs,
+									&elbv2.TargetGroupAttribute{
+										Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+										Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+									})
+							case "app_cookie":
+								attrs = append(attrs,
+									&elbv2.TargetGroupAttribute{
+										Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+										Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+									},
+									&elbv2.TargetGroupAttribute{
+										Key:   aws.String("stickiness.app_cookie.cookie_name"),
+										Value: aws.String(stickiness["cookie_name"].(string)),
+									})
+							default:
+								log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
+							}
 						}
 					}
+				} else if len(stickinessBlocks) == 0 {
+					attrs = append(attrs, &elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.enabled"),
+						Value: aws.String("false"),
+					})
 				}
-			} else if len(stickinessBlocks) == 0 {
-				attrs = append(attrs, &elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.enabled"),
-					Value: aws.String("false"),
-				})
 			}
 		}
 
