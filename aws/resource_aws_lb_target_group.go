@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
@@ -48,10 +49,10 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Computed: true,
 			},
 			"deregistration_delay": {
-				Type:         schema.TypeInt,
+				Type:         nullable.TypeNullableInt,
 				Optional:     true,
 				Default:      300,
-				ValidateFunc: validation.IntBetween(0, 3600),
+				ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 3600),
 			},
 			"health_check": {
 				Type:     schema.TypeList,
@@ -408,10 +409,10 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	switch d.Get("target_type").(string) {
 	case elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp:
-		if v, ok := d.GetOk("deregistration_delay"); ok {
+		if v, null, _ := nullable.Int(d.Get("deregistration_delay").(string)).Value(); !null {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("deregistration_delay.timeout_seconds"),
-				Value: aws.String(fmt.Sprintf("%d", v.(int))),
+				Value: aws.String(fmt.Sprintf("%d", v)),
 			})
 		}
 
@@ -646,10 +647,12 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	switch d.Get("target_type").(string) {
 	case elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp:
 		if d.HasChange("deregistration_delay") {
-			attrs = append(attrs, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("deregistration_delay.timeout_seconds"),
-				Value: aws.String(fmt.Sprintf("%d", d.Get("deregistration_delay").(int))),
-			})
+			if v, null, _ := nullable.Int(d.Get("deregistration_delay").(string)).Value(); !null {
+				attrs = append(attrs, &elbv2.TargetGroupAttribute{
+					Key:   aws.String("deregistration_delay.timeout_seconds"),
+					Value: aws.String(fmt.Sprintf("%d", v)),
+				})
+			}
 		}
 
 		if d.HasChange("slow_start") {
@@ -881,11 +884,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	for _, attr := range attrResp.Attributes {
 		switch aws.StringValue(attr.Key) {
 		case "deregistration_delay.timeout_seconds":
-			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
-			if err != nil {
-				return fmt.Errorf("error converting deregistration_delay.timeout_seconds to int: %s", aws.StringValue(attr.Value))
-			}
-			d.Set("deregistration_delay", timeout)
+			d.Set("deregistration_delay", attr.Value)
 		case "lambda.multi_value_headers.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
