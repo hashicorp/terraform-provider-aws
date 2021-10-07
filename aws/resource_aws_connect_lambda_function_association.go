@@ -3,6 +3,8 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -10,7 +12,6 @@ import (
 	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
-	"log"
 )
 
 func resourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
@@ -66,7 +67,7 @@ func resourceAwsConnectLambdaFunctionAssociationRead(ctx context.Context, d *sch
 
 	instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseID(d.Id())
 
-	associatedFunctionArn, err := finder.LambdaFunctionAssociationByFunctionArn(ctx, conn, instanceID, functionArn)
+	associatedFunctionArn, err := finder.LambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID, functionArn)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Lambda Association by Function ARN (%s): %w", functionArn, err))
 	}

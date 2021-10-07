@@ -9,7 +9,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func LambdaFunctionAssociationByFunctionArn(ctx context.Context, conn *connect.Connect, instanceID string, functionArn string) (string, error) {
+func LambdaFunctionAssociationByArnWithContext(ctx context.Context, conn *connect.Connect, instanceID string, functionArn string) (string, error) {
 	var result string
 
 	input := &connect.ListLambdaFunctionsInput{

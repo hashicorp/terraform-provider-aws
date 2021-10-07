@@ -3,13 +3,10 @@ package aws
 import (
 	"context"
 	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
 )
 
 func dataSourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
@@ -30,56 +27,21 @@ func dataSourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
 
 func dataSourceAwsConnectLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).connectconn
-	functionArn := d.Get("functionArn")
+	functionArn := d.Get("function_arn")
 	instanceID := d.Get("instance_id")
 
-	var matchedLambdaFunction string
-
-	LambdaFunctions, err := dataSourceAwsConnectGetAllLambdaFunctionAssociations(ctx, conn, instanceID.(string))
+	lambdaArn, err := finder.LambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID.(string), functionArn.(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing Connect Lambda Functions: %s", err))
+		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Association by ARN (%s): %w", functionArn, err))
 	}
 
-	for _, LambdaFunctionArn := range LambdaFunctions {
-		log.Printf("[DEBUG] Connect Lambda Function Association: %s", *LambdaFunctionArn)
-		if aws.StringValue(LambdaFunctionArn) == functionArn.(string) {
-			matchedLambdaFunction = aws.StringValue(LambdaFunctionArn)
-			break
-		}
+	if lambdaArn == "" {
+		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Association by ARN (%s): not found", functionArn))
 	}
-	d.Set("function_arn", matchedLambdaFunction)
+
+	d.Set("function_arn", lambdaArn)
 	d.Set("instance_id", instanceID)
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, d.Get("function_arn").(string)))
+	d.SetId(fmt.Sprintf("%s:%s", d.Get("instance_id").(string), d.Get("function_arn").(string)))
 
 	return nil
-}
-
-func dataSourceAwsConnectGetAllLambdaFunctionAssociations(ctx context.Context, conn *connect.Connect, instanceID string) ([]*string, error) {
-	var functionArns []*string
-	var nextToken string
-
-	for {
-		input := &connect.ListLambdaFunctionsInput{
-			InstanceId: aws.String(instanceID),
-			MaxResults: aws.Int64(int64(tfconnect.ListLambdaFunctionsMaxResults)),
-		}
-		if nextToken != "" {
-			input.NextToken = aws.String(nextToken)
-		}
-
-		log.Printf("[DEBUG] Listing Connect Lambda Functions: %s", input)
-
-		output, err := conn.ListLambdaFunctionsWithContext(ctx, input)
-		if err != nil {
-			return functionArns, err
-		}
-		functionArns = append(functionArns, output.LambdaFunctions...)
-
-		if output.NextToken == nil {
-			break
-		}
-		nextToken = aws.StringValue(output.NextToken)
-	}
-
-	return functionArns, nil
 }

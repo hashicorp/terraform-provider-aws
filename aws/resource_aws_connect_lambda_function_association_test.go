@@ -97,7 +97,7 @@ func testAccCheckAwsConnectLambdaFunctionAssociationExists(resourceName string) 
 
 		conn := testAccProvider.Meta().(*AWSClient).connectconn
 
-		LambdaFunction, err := finder.LambdaFunctionAssociationByFunctionArn(context.Background(), conn, instanceID, functionArn)
+		LambdaFunction, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
 
 		if err != nil {
 			return fmt.Errorf("error finding LambdaFunction Association by Function Arn (%s): %w", functionArn, err)
@@ -128,7 +128,7 @@ func testAccCheckAwsConnectLambdaFunctionAssociationDestroy(s *terraform.State) 
 
 		conn := testAccProvider.Meta().(*AWSClient).connectconn
 
-		LambdaFunction, err := finder.LambdaFunctionAssociationByFunctionArn(context.Background(), conn, instanceID, functionArn)
+		LambdaFunction, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
 		if err == nil {
 			return fmt.Errorf("error LambdaFunction Association by Function Arn (%s): still exists", functionArn)
 		}
