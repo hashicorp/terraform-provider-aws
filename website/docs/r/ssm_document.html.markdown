@@ -11,8 +11,7 @@ description: |-
 Provides an SSM Document resource
 
 ~> **NOTE on updating SSM documents:** Only documents with a schema version of 2.0
-or greater can update their content once created, see [SSM Schema Features][1]. To update a document with an older
-schema version you must recreate the resource.
+or greater can update their content once created, see [SSM Schema Features][1]. To update a document with an older schema version you must recreate the resource. Note that not all document types support a schema version of 2.0 or greater. To find out which schema versions are supported for the respective `document_type`, refer to [SSM document schema features and examples](https://docs.aws.amazon.com/systems-manager/latest/userguide/document-schemas-features.html).
 
 ## Example Usage
 
