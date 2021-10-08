@@ -129,12 +129,14 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	stack, err := cffinder.Stack(cfConn, d.Id())
+	stack, err := cffinder.StackByID(cfConn, d.Id())
+
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", d.Id(), err)
 	}
@@ -285,7 +287,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 	}
 
 	cfConn := meta.(*AWSClient).cfconn
-	stack, err := cffinder.Stack(cfConn, stackID)
+	stack, err := cffinder.StackByID(cfConn, stackID)
 	if err != nil {
 		return nil, fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
 	}

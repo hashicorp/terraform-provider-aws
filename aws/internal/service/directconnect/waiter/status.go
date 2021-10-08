@@ -56,6 +56,22 @@ func GatewayAssociationState(conn *directconnect.DirectConnect, id string) resou
 	}
 }
 
+func HostedConnectionState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.HostedConnectionByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ConnectionState), nil
+	}
+}
+
 func LagState(conn *directconnect.DirectConnect, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.LagByID(conn, id)

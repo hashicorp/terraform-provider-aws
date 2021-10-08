@@ -29,7 +29,7 @@ const (
 	// SchemaNestedBlockNestingModeMap indicates that multiple instances of
 	// the nested block should be permitted, each with a single label, and
 	// that they should be represented in state and config values as a
-	// tftypes.Map, with an AttributeType of tftypes.Object. The labels on
+	// tftypes.Map, with an ElementType of tftypes.Object. The labels on
 	// the blocks will be used as the map keys. It is an error, therefore,
 	// to use the same label value on multiple block instances.
 	SchemaNestedBlockNestingModeMap SchemaNestedBlockNestingMode = 4

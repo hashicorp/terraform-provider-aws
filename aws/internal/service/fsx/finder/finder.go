@@ -5,7 +5,29 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
+
+func AdministrativeActionByFileSystemIDAndActionType(conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
+	fileSystem, err := FileSystemByID(conn, fsID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, administrativeAction := range fileSystem.AdministrativeActions {
+		if administrativeAction == nil {
+			continue
+		}
+
+		if aws.StringValue(administrativeAction.AdministrativeActionType) == actionType {
+			return administrativeAction, nil
+		}
+	}
+
+	// If the administrative action isn't found, assume it's complete.
+	return &fsx.AdministrativeAction{Status: aws.String(fsx.StatusCompleted)}, nil
+}
 
 func BackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	input := &fsx.DescribeBackupsInput{
@@ -26,10 +48,7 @@ func BackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	}
 
 	if output == nil || len(output.Backups) == 0 || output.Backups[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Backups[0], nil
@@ -43,13 +62,11 @@ func FileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	var filesystems []*fsx.FileSystem
 
 	err := conn.DescribeFileSystemsPages(input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
-		for _, fs := range page.FileSystems {
-			if fs == nil {
-				continue
-			}
-
-			filesystems = append(filesystems, fs)
+		if page == nil {
+			return !lastPage
 		}
+
+		filesystems = append(filesystems, page.FileSystems...)
 
 		return !lastPage
 	})
@@ -65,11 +82,12 @@ func FileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 		return nil, err
 	}
 
-	if filesystems == nil || filesystems[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+	if len(filesystems) == 0 || filesystems[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(filesystems); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	return filesystems[0], nil

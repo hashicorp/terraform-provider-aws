@@ -11,10 +11,29 @@ import (
 )
 
 const (
+	ConnectionConfirmedTimeout     = 10 * time.Minute
 	ConnectionDeletedTimeout       = 10 * time.Minute
 	ConnectionDisassociatedTimeout = 1 * time.Minute
+	HostedConnectionDeletedTimeout = 10 * time.Minute
 	LagDeletedTimeout              = 10 * time.Minute
 )
+
+func ConnectionConfirmed(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateRequested},
+		Target:  []string{directconnect.ConnectionStateAvailable},
+		Refresh: ConnectionState(conn, id),
+		Timeout: ConnectionConfirmedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*directconnect.Connection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func ConnectionDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
 	stateConf := &resource.StateChangeConf{
@@ -122,6 +141,23 @@ func GatewayAssociationDeleted(conn *directconnect.DirectConnect, id string, tim
 	if output, ok := outputRaw.(*directconnect.GatewayAssociation); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateChangeError)))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func HostedConnectionDeleted(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{directconnect.ConnectionStatePending, directconnect.ConnectionStateOrdering, directconnect.ConnectionStateAvailable, directconnect.ConnectionStateRequested, directconnect.ConnectionStateDeleting},
+		Target:  []string{},
+		Refresh: HostedConnectionState(conn, id),
+		Timeout: HostedConnectionDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*directconnect.Connection); ok {
 		return output, err
 	}
 

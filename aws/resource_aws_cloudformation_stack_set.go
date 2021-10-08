@@ -7,11 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudFormationStackSet() *schema.Resource {
@@ -132,8 +135,8 @@ func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).cfconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
 
+	name := d.Get("name").(string)
 	input := &cloudformation.CreateStackSetInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
 		StackSetName:       aws.String(name),
@@ -183,7 +186,7 @@ func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interf
 	_, err := conn.CreateStackSet(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFormation StackSet: %s", err)
+		return fmt.Errorf("error creating CloudFormation StackSet (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -196,28 +199,17 @@ func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interfac
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &cloudformation.DescribeStackSetInput{
-		StackSetName: aws.String(d.Id()),
-	}
+	stackSet, err := finder.StackSetByName(conn, d.Id())
 
-	log.Printf("[DEBUG] Reading CloudFormation StackSet: %s", d.Id())
-	output, err := conn.DescribeStackSet(input)
-
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFormation StackSet (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading CloudFormation StackSet (%s): %w", d.Id(), err)
 	}
-
-	if output == nil || output.StackSet == nil {
-		return fmt.Errorf("error reading CloudFormation StackSet (%s): empty response", d.Id())
-	}
-
-	stackSet := output.StackSet
 
 	d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
 	d.Set("arn", stackSet.StackSetARN)
@@ -317,11 +309,11 @@ func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interf
 	output, err := conn.UpdateStackSet(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudFormation StackSet (%s): %s", d.Id(), err)
+		return fmt.Errorf("error updating CloudFormation StackSet (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.StackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for CloudFormation StackSet (%s) update: %s", d.Id(), err)
+	if _, err := waiter.StackSetOperationSucceeded(conn, d.Id(), aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return fmt.Errorf("error waiting for CloudFormation StackSet (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceAwsCloudFormationStackSetRead(d, meta)
@@ -337,40 +329,15 @@ func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet: %s", d.Id())
 	_, err := conn.DeleteStackSet(input)
 
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFormation StackSet (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting CloudFormation StackSet (%s): %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func listCloudFormationStackSets(conn *cloudformation.CloudFormation) ([]*cloudformation.StackSetSummary, error) {
-	input := &cloudformation.ListStackSetsInput{
-		Status: aws.String(cloudformation.StackSetStatusActive),
-	}
-	result := make([]*cloudformation.StackSetSummary, 0)
-
-	for {
-		output, err := conn.ListStackSets(input)
-
-		if err != nil {
-			return result, err
-		}
-
-		result = append(result, output.Summaries...)
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return result, nil
 }
 
 func expandAutoDeployment(l []interface{}) *cloudformation.AutoDeployment {

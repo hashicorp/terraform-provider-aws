@@ -16,19 +16,23 @@ import (
 // derives a terraform.InstanceDiff to give to the legacy providers. This is
 // used to take the states provided by the new ApplyResourceChange method and
 // convert them to a state+diff required for the legacy Apply method.
-func DiffFromValues(ctx context.Context, prior, planned cty.Value, res *Resource) (*terraform.InstanceDiff, error) {
-	return diffFromValues(ctx, prior, planned, res, nil)
+func DiffFromValues(ctx context.Context, prior, planned, config cty.Value, res *Resource) (*terraform.InstanceDiff, error) {
+	return diffFromValues(ctx, prior, planned, config, res, nil)
 }
 
 // diffFromValues takes an additional CustomizeDiffFunc, so we can generate our
 // test fixtures from the legacy tests. In the new provider protocol the diff
 // only needs to be created for the apply operation, and any customizations
 // have already been done.
-func diffFromValues(ctx context.Context, prior, planned cty.Value, res *Resource, cust CustomizeDiffFunc) (*terraform.InstanceDiff, error) {
+func diffFromValues(ctx context.Context, prior, planned, config cty.Value, res *Resource, cust CustomizeDiffFunc) (*terraform.InstanceDiff, error) {
 	instanceState, err := res.ShimInstanceStateFromValue(prior)
 	if err != nil {
 		return nil, err
 	}
+
+	instanceState.RawConfig = config
+	instanceState.RawPlan = planned
+	instanceState.RawState = prior
 
 	configSchema := res.CoreConfigSchema()
 

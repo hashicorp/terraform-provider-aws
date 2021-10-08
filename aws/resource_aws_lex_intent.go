@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -22,7 +24,6 @@ const (
 	LexIntentCreateTimeout = 1 * time.Minute
 	LexIntentUpdateTimeout = 1 * time.Minute
 	LexIntentDeleteTimeout = 5 * time.Minute
-	LexIntentVersionLatest = "$LATEST"
 )
 
 func resourceAwsLexIntent() *schema.Resource {
@@ -358,7 +359,7 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
-		Version: aws.String(LexIntentVersionLatest),
+		Version: aws.String(tflex.LexIntentVersionLatest),
 	})
 	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
@@ -384,12 +385,12 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("name", resp.Name)
 
-	version, err := getLatestLexIntentVersion(conn, &lexmodelbuildingservice.GetIntentVersionsInput{
-		Name: aws.String(d.Id()),
-	})
+	version, err := finder.LatestIntentVersionByName(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error reading version of intent %s: %w", d.Id(), err)
+		return fmt.Errorf("error reading Lex Intent (%s) latest version: %w", d.Id(), err)
 	}
+
 	d.Set("version", version)
 
 	if resp.ConclusionStatement != nil {
@@ -606,38 +607,6 @@ var lexStatementResource = &schema.Resource{
 			ValidateFunc: validation.StringLenBetween(1, 50000),
 		},
 	},
-}
-
-func getLatestLexIntentVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetIntentVersionsInput) (string, error) {
-	version := LexIntentVersionLatest
-
-	for {
-		page, err := conn.GetIntentVersions(input)
-		if err != nil {
-			return "", err
-		}
-
-		// At least 1 version will always be returned.
-		if len(page.Intents) == 1 {
-			break
-		}
-
-		for _, intent := range page.Intents {
-			if *intent.Version == LexIntentVersionLatest {
-				continue
-			}
-			if *intent.Version > version {
-				version = *intent.Version
-			}
-		}
-
-		if page.NextToken == nil {
-			break
-		}
-		input.NextToken = page.NextToken
-	}
-
-	return version, nil
 }
 
 func flattenLexCodeHook(hook *lexmodelbuildingservice.CodeHook) (flattened []map[string]interface{}) {

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"archive/zip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -12,12 +13,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAwsCloudformationType_basic(t *testing.T) {
@@ -138,29 +139,20 @@ func TestAccAwsCloudformationType_LoggingConfig(t *testing.T) {
 func testAccCheckAwsCloudformationTypeExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
-
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudFormation Type ID is set")
+		}
+
 		conn := testAccProvider.Meta().(*AWSClient).cfconn
 
-		input := &cloudformation.DescribeTypeInput{
-			Arn: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeType(input)
+		_, err := finder.TypeByARN(context.TODO(), conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudFormation Type (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("error reading CloudFormation Type (%s): empty response", rs.Primary.ID)
-		}
-
-		if aws.StringValue(output.DeprecatedStatus) != cloudformation.DeprecatedStatusLive {
-			return fmt.Errorf("error reading CloudFormation Type (%s): unexpected deprecated status: %s", rs.Primary.ID, aws.StringValue(output.DeprecatedStatus))
+			return err
 		}
 
 		return nil
@@ -175,27 +167,17 @@ func testAccCheckAwsCloudformationTypeDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &cloudformation.DescribeTypeInput{
-			Arn: aws.String(rs.Primary.ID),
-		}
+		_, err := finder.TypeByARN(context.TODO(), conn, rs.Primary.ID)
 
-		output, err := conn.DescribeType(input)
-
-		if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeTypeNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudFormation Type (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("error reading CloudFormation Type (%s): empty response", rs.Primary.ID)
-		}
-
-		if aws.StringValue(output.DeprecatedStatus) != cloudformation.DeprecatedStatusDeprecated {
-			return fmt.Errorf("error reading CloudFormation Type (%s): unexpected deprecated status: %s", rs.Primary.ID, aws.StringValue(output.DeprecatedStatus))
-		}
+		return fmt.Errorf("CloudFormation Type %s still exists", rs.Primary.ID)
 	}
 
 	return nil
