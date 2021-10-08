@@ -23,6 +23,12 @@ const (
 	EndpointStatusDeleted = "DELETED"
 )
 
+const (
+	endpointCreatedDefaultTimeout = 10 * time.Minute
+	endpointUpdatedDefaultTimeout = 10 * time.Minute
+	endpointDeletedDefaultTimeout = 10 * time.Minute
+)
+
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceEndpointCreate,
@@ -101,9 +107,9 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(endpointCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(endpointUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(endpointDeletedDefaultTimeout),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,

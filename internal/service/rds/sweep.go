@@ -255,7 +255,7 @@ func sweepClusters(region string) error {
 				continue
 			}
 
-			if err := WaitForClusterDeletion(conn, id, 40*time.Minute); err != nil {
+			if err := WaitForClusterDeletion(conn, id, 40*time.Minute); err != nil { //nolint:gomnd
 				log.Printf("[ERROR] Failure while waiting for RDS DB Cluster (%s) to be deleted: %s", id, err)
 			}
 		}

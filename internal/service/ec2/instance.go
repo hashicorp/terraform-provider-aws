@@ -1431,7 +1431,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
 		}
 
-		if err := WaitForInstanceStopping(conn, d.Id(), 10*time.Minute); err != nil {
+		if err := WaitForInstanceStopping(conn, d.Id(), InstanceStopTimeout); err != nil {
 			return err
 		}
 

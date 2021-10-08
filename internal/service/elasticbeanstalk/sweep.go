@@ -101,7 +101,7 @@ func sweepEnvironments(region string) error {
 		environmentID := aws.StringValue(bse.EnvironmentId)
 		log.Printf("Trying to terminate (%s) (%s)", environmentName, environmentID)
 
-		err := DeleteEnvironment(conn, environmentID, 5*time.Minute, 10*time.Second)
+		err := DeleteEnvironment(conn, environmentID, 5*time.Minute, 10*time.Second) //nolint:gomnd
 		if err != nil {
 			errors = multierror.Append(fmt.Errorf("error deleting Elastic Beanstalk Environment %q: %w", environmentID, err))
 		}
