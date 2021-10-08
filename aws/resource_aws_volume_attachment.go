@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsVolumeAttachment() *schema.Resource {
@@ -62,6 +63,10 @@ func resourceAwsVolumeAttachment() *schema.Resource {
 				Optional: true,
 			},
 			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"stop_instance_before_detaching": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -149,43 +154,6 @@ func resourceAwsVolumeAttachmentCreate(d *schema.ResourceData, meta interface{})
 	return resourceAwsVolumeAttachmentRead(d, meta)
 }
 
-func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		request := &ec2.DescribeVolumesInput{
-			VolumeIds: []*string{aws.String(volumeID)},
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("attachment.device"),
-					Values: []*string{aws.String(name)},
-				},
-				{
-					Name:   aws.String("attachment.instance-id"),
-					Values: []*string{aws.String(instanceID)},
-				},
-			},
-		}
-
-		resp, err := conn.DescribeVolumes(request)
-		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				return nil, "failed", fmt.Errorf("code: %s, message: %s", awsErr.Code(), awsErr.Message())
-			}
-			return nil, "failed", err
-		}
-
-		if len(resp.Volumes) > 0 {
-			v := resp.Volumes[0]
-			for _, a := range v.Attachments {
-				if aws.StringValue(a.InstanceId) == instanceID {
-					return a, aws.StringValue(a.State), nil
-				}
-			}
-		}
-		// assume detached if volume count is 0
-		return 42, ec2.VolumeAttachmentStateDetached, nil
-	}
-}
-
 func resourceAwsVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
@@ -236,6 +204,19 @@ func resourceAwsVolumeAttachmentDelete(d *schema.ResourceData, meta interface{})
 	vID := d.Get("volume_id").(string)
 	iID := d.Get("instance_id").(string)
 
+	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
+		_, err := conn.StopInstances(&ec2.StopInstancesInput{
+			InstanceIds: []*string{aws.String(iID)},
+		})
+		if err != nil {
+			return fmt.Errorf("error stopping instance (%s): %s", iID, err)
+		}
+
+		if err := waitForInstanceStopping(conn, iID, waiter.InstanceStopTimeout); err != nil {
+			return err
+		}
+	}
+
 	opts := &ec2.DetachVolumeInput{
 		Device:     aws.String(name),
 		InstanceId: aws.String(iID),
@@ -266,6 +247,43 @@ func resourceAwsVolumeAttachmentDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return nil
+}
+
+func volumeAttachmentStateRefreshFunc(conn *ec2.EC2, name, volumeID, instanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		request := &ec2.DescribeVolumesInput{
+			VolumeIds: []*string{aws.String(volumeID)},
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("attachment.device"),
+					Values: []*string{aws.String(name)},
+				},
+				{
+					Name:   aws.String("attachment.instance-id"),
+					Values: []*string{aws.String(instanceID)},
+				},
+			},
+		}
+
+		resp, err := conn.DescribeVolumes(request)
+		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok {
+				return nil, "failed", fmt.Errorf("code: %s, message: %s", awsErr.Code(), awsErr.Message())
+			}
+			return nil, "failed", err
+		}
+
+		if len(resp.Volumes) > 0 {
+			v := resp.Volumes[0]
+			for _, a := range v.Attachments {
+				if aws.StringValue(a.InstanceId) == instanceID {
+					return a, aws.StringValue(a.State), nil
+				}
+			}
+		}
+		// assume detached if volume count is 0
+		return 42, ec2.VolumeAttachmentStateDetached, nil
+	}
 }
 
 func volumeAttachmentID(name, volumeID, instanceID string) string {

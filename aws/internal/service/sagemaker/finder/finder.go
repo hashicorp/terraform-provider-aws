@@ -5,6 +5,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfsagemaker "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // CodeRepositoryByName returns the code repository corresponding to the specified name.
@@ -15,6 +17,7 @@ func CodeRepositoryByName(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 	}
 
 	output, err := conn.DescribeCodeRepository(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +37,7 @@ func ModelPackageGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker
 	}
 
 	output, err := conn.DescribeModelPackageGroup(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +57,7 @@ func ImageByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeIma
 	}
 
 	output, err := conn.DescribeImage(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -72,12 +77,40 @@ func ImageVersionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 	}
 
 	output, err := conn.DescribeImageVersion(input)
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil {
 		return nil, nil
+	}
+
+	return output, nil
+}
+
+// DeviceFleetByName returns the Device Fleet corresponding to the specified Device Fleet name.
+// Returns nil if no Device Fleet is found.
+func DeviceFleetByName(conn *sagemaker.SageMaker, id string) (*sagemaker.DescribeDeviceFleetOutput, error) {
+	input := &sagemaker.DescribeDeviceFleetInput{
+		DeviceFleetName: aws.String(id),
+	}
+
+	output, err := conn.DescribeDeviceFleet(input)
+
+	if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "No devicefleet with name") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
@@ -91,6 +124,7 @@ func DomainByName(conn *sagemaker.SageMaker, domainID string) (*sagemaker.Descri
 	}
 
 	output, err := conn.DescribeDomain(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -102,20 +136,26 @@ func DomainByName(conn *sagemaker.SageMaker, domainID string) (*sagemaker.Descri
 	return output, nil
 }
 
-// FeatureGroupByName returns the feature group corresponding to the specified name.
-// Returns nil if no feature group is found.
 func FeatureGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
 	input := &sagemaker.DescribeFeatureGroupInput{
 		FeatureGroupName: aws.String(name),
 	}
 
 	output, err := conn.DescribeFeatureGroup(input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil {
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
@@ -130,6 +170,7 @@ func UserProfileByName(conn *sagemaker.SageMaker, domainID, userProfileName stri
 	}
 
 	output, err := conn.DescribeUserProfile(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +190,7 @@ func AppImageConfigByName(conn *sagemaker.SageMaker, appImageConfigID string) (*
 	}
 
 	output, err := conn.DescribeAppImageConfig(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -171,6 +213,7 @@ func AppByName(conn *sagemaker.SageMaker, domainID, userProfileName, appType, ap
 	}
 
 	output, err := conn.DescribeApp(input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +232,7 @@ func WorkforceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workfor
 
 	output, err := conn.DescribeWorkforce(input)
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "No workforce") {
+	if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "No workforce") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -201,10 +244,7 @@ func WorkforceByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workfor
 	}
 
 	if output == nil || output.Workforce == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Workforce, nil
@@ -217,7 +257,7 @@ func WorkteamByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workteam
 
 	output, err := conn.DescribeWorkteam(input)
 
-	if tfawserr.ErrMessageContains(err, "ValidationException", "The work team") {
+	if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "The work team") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -229,11 +269,108 @@ func WorkteamByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Workteam
 	}
 
 	if output == nil || output.Workteam == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Workteam, nil
+}
+
+func HumanTaskUiByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeHumanTaskUiOutput, error) {
+	input := &sagemaker.DescribeHumanTaskUiInput{
+		HumanTaskUiName: aws.String(name),
+	}
+
+	output, err := conn.DescribeHumanTaskUi(input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	return output.Workteam, nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func EndpointConfigByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeEndpointConfigOutput, error) {
+	input := &sagemaker.DescribeEndpointConfigInput{
+		EndpointConfigName: aws.String(name),
+	}
+
+	output, err := conn.DescribeEndpointConfig(input)
+
+	if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "Could not find endpoint configuration") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FlowDefinitionByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+	input := &sagemaker.DescribeFlowDefinitionInput{
+		FlowDefinitionName: aws.String(name),
+	}
+
+	output, err := conn.DescribeFlowDefinition(input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func StudioLifecycleConfigByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeStudioLifecycleConfigOutput, error) {
+	input := &sagemaker.DescribeStudioLifecycleConfigInput{
+		StudioLifecycleConfigName: aws.String(name),
+	}
+
+	output, err := conn.DescribeStudioLifecycleConfig(input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func resourceAwsLaunchTemplate() *schema.Resource {
@@ -184,12 +185,9 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"capacity_reservation_preference": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.CapacityReservationPreferenceOpen,
-								ec2.CapacityReservationPreferenceNone,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.CapacityReservationPreference_Values(), false),
 						},
 						"capacity_reservation_target": {
 							Type:     schema.TypeList,
@@ -215,8 +213,9 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cpu_credits": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(tfec2.CpuCredits_Values(), false),
 						},
 					},
 				},
@@ -291,12 +290,9 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"instance_initiated_shutdown_behavior": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.ShutdownBehaviorStop,
-					ec2.ShutdownBehaviorTerminate,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ec2.ShutdownBehavior_Values(), false),
 			},
 
 			"instance_market_options": {
@@ -308,7 +304,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"market_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{ec2.MarketTypeSpot}, false),
+							ValidateFunc: validation.StringInSlice(ec2.MarketType_Values(), false),
 						},
 						"spot_options": {
 							Type:     schema.TypeList,
@@ -317,24 +313,23 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"block_duration_minutes": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntDivisibleBy(60),
 									},
 									"instance_interruption_behavior": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
 									},
 									"max_price": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 									"spot_instance_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ec2.SpotInstanceTypeOneTime,
-											ec2.SpotInstanceTypePersistent,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
 									},
 									"valid_until": {
 										Type:         schema.TypeString,
@@ -389,13 +384,19 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled, ec2.LaunchTemplateInstanceMetadataEndpointStateDisabled}, false),
+							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataEndpointState_Values(), false),
+						},
+						"http_protocol_ipv6": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ec2.LaunchTemplateInstanceMetadataProtocolIpv6Disabled,
+							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateInstanceMetadataProtocolIpv6_Values(), false),
 						},
 						"http_tokens": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{ec2.LaunchTemplateHttpTokensStateOptional, ec2.LaunchTemplateHttpTokensStateRequired}, false),
+							ValidateFunc: validation.StringInSlice(ec2.LaunchTemplateHttpTokensState_Values(), false),
 						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
@@ -1119,7 +1120,8 @@ func expandLaunchTemplateInstanceMetadataOptions(l []interface{}) *ec2.LaunchTem
 	m := l[0].(map[string]interface{})
 
 	opts := &ec2.LaunchTemplateInstanceMetadataOptionsRequest{
-		HttpEndpoint: aws.String(m["http_endpoint"].(string)),
+		HttpEndpoint:     aws.String(m["http_endpoint"].(string)),
+		HttpProtocolIpv6: aws.String(m["http_protocol_ipv6"].(string)),
 	}
 
 	if m["http_endpoint"].(string) == ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled {
@@ -1144,6 +1146,7 @@ func flattenLaunchTemplateInstanceMetadataOptions(opts *ec2.LaunchTemplateInstan
 
 	m := map[string]interface{}{
 		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
+		"http_protocol_ipv6":          aws.StringValue(opts.HttpProtocolIpv6),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
 	}

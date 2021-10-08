@@ -642,6 +642,8 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 	newCaCertificate := tlsRsaX509SelfSignedCaCertificatePem(newCaKey)
 	newCertificate := tlsRsaX509LocallySignedCertificatePem(newCaKey, newCaCertificate, key, commonName)
 
+	withoutChainDomain := testAccRandomDomainName()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, acm.EndpointsID),
@@ -664,11 +666,11 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAcmCertificateConfigPrivateKeyWithoutChain("example2.com"),
+				Config: testAccAcmCertificateConfigPrivateKeyWithoutChain(withoutChainDomain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", withoutChainDomain),
 				),
 			},
 			{

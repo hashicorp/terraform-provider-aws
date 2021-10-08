@@ -63,6 +63,10 @@ func testSweepEksNodeGroups(region string) error {
 				return !lastPage
 			})
 
+			if testSweepSkipSweepError(err) {
+				continue
+			}
+
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Node Groups (%s): %w", region, err))
 			}
@@ -128,6 +132,7 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", eksClusterResourceName, "version"),
 				),
 			},
@@ -938,6 +943,44 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 						"value":  "value2",
 						"effect": "NO_SCHEDULE",
 					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEksNodeGroup_UpdateConfig(t *testing.T) {
+	var nodeGroup1 eks.Nodegroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksNodeGroupConfigUpdateConfig1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksNodeGroupConfigUpdateConfig2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "0"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "40"),
 				),
 			},
 		},
@@ -2047,6 +2090,60 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 `, rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2))
+}
+
+func testAccAWSEksNodeGroupConfigUpdateConfig1(rName string) string {
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+  ]
+}
+`, rName))
+}
+
+func testAccAWSEksNodeGroupConfigUpdateConfig2(rName string) string {
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  update_config {
+    max_unavailable_percentage = 40
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+  ]
+}
+`, rName))
 }
 
 func testAccAWSEksNodeGroupConfigVersion(rName, version string) string {

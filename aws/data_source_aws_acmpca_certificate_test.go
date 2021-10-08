@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsAcmpcaCertificate_Basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate.test"
 	dataSourceName := "data.aws_acmpca_certificate.test"
+
+	domain := testAccRandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
@@ -25,7 +25,7 @@ func TestAccDataSourceAwsAcmpcaCertificate_Basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
 			},
 			{
-				Config: testAccDataSourceAwsAcmpcaCertificateConfig_ARN(rName),
+				Config: testAccDataSourceAwsAcmpcaCertificateConfig_ARN(domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "certificate", resourceName, "certificate"),
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsAcmpcaCertificate_Basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsAcmpcaCertificateConfig_ARN(rName string) string {
+func testAccDataSourceAwsAcmpcaCertificateConfig_ARN(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acmpca_certificate" "test" {
   arn                       = aws_acmpca_certificate.test.arn
@@ -66,13 +66,13 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "%[1]s.com"
+      common_name = %[1]q
     }
   }
 }
 
 data "aws_partition" "current" {}
-`, rName)
+`, domain)
 }
 
 const testAccDataSourceAwsAcmpcaCertificateConfig_NonExistent = `

@@ -39,6 +39,10 @@ type InstanceDiff struct {
 	DestroyDeposed bool
 	DestroyTainted bool
 
+	RawConfig cty.Value
+	RawState  cty.Value
+	RawPlan   cty.Value
+
 	// Meta is a simple K/V map that is stored in a diff and persisted to
 	// plans but otherwise is completely ignored by Terraform core. It is
 	// meant to be used for additional data a resource may want to pass through.

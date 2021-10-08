@@ -168,6 +168,14 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 											},
 										},
 									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateArn,
+										},
+									},
 								},
 							},
 						},
@@ -195,6 +203,14 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 													ValidateFunc: validateArn,
 												},
 											},
+										},
+									},
+									"lifecycle_config_arns": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateArn,
 										},
 									},
 									"custom_image": {
@@ -478,6 +494,10 @@ func expandSagemakerDomainJupyterServerAppSettings(l []interface{}) *sagemaker.J
 		config.DefaultResourceSpec = expandSagemakerDomainDefaultResourceSpec(v)
 	}
 
+	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.LifecycleConfigArns = expandStringSet(v)
+	}
+
 	return config
 }
 
@@ -492,6 +512,10 @@ func expandSagemakerDomainKernelGatewayAppSettings(l []interface{}) *sagemaker.K
 
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandSagemakerDomainDefaultResourceSpec(v)
+	}
+
+	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.LifecycleConfigArns = expandStringSet(v)
 	}
 
 	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
@@ -657,6 +681,10 @@ func flattenSagemakerDomainJupyterServerAppSettings(config *sagemaker.JupyterSer
 		m["default_resource_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
 	}
 
+	if config.LifecycleConfigArns != nil {
+		m["lifecycle_config_arns"] = flattenStringSet(config.LifecycleConfigArns)
+	}
+
 	return []map[string]interface{}{m}
 }
 
@@ -669,6 +697,10 @@ func flattenSagemakerDomainKernelGatewayAppSettings(config *sagemaker.KernelGate
 
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
+	}
+
+	if config.LifecycleConfigArns != nil {
+		m["lifecycle_config_arns"] = flattenStringSet(config.LifecycleConfigArns)
 	}
 
 	if config.CustomImages != nil {

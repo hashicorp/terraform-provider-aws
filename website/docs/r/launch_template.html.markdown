@@ -145,7 +145,7 @@ The following arguments are supported:
 * `ram_disk_id` - The ID of the RAM disk.
 * `security_group_names` - A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
-* `vpc_security_group_ids` - A list of security group IDs to associate with.
+* `vpc_security_group_ids` - A list of security group IDs to associate with. Conflicts with `network_interfaces.security_groups`
 * `tag_specifications` - The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
 * `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
@@ -274,6 +274,7 @@ The `metadata_options` block supports the following:
 * `http_endpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"` or `"disabled"`. (Default: `"enabled"`).
 * `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
+* `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. (Default: `disabled`).
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 

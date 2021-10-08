@@ -47,6 +47,16 @@ func resourceAwsLambdaFunction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"architectures": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(lambda.Architecture_Values(), false),
+				},
+			},
 			"filename": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -332,7 +342,7 @@ func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff
 	_, handlerOk := d.GetOk("handler")
 	_, runtimeOk := d.GetOk("runtime")
 
-	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
+	if packageType == lambda.PackageTypeZip && (!handlerOk || !runtimeOk) {
 		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
 	}
 	return nil
@@ -426,14 +436,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	packageType := d.Get("package_type")
-	handler, handlerOk := d.GetOk("handler")
-	runtime, runtimeOk := d.GetOk("runtime")
-
-	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
-		return errors.New("handler and runtime must be set when PackageType is Zip")
-	}
-
+	packageType := d.Get("package_type").(string)
 	params := &lambda.CreateFunctionInput{
 		Code:         functionCode,
 		Description:  aws.String(d.Get("description").(string)),
@@ -442,12 +445,16 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		Role:         aws.String(iamRole),
 		Timeout:      aws.Int64(int64(d.Get("timeout").(int))),
 		Publish:      aws.Bool(d.Get("publish").(bool)),
-		PackageType:  aws.String(d.Get("package_type").(string)),
+		PackageType:  aws.String(packageType),
+	}
+
+	if v, ok := d.GetOk("architectures"); ok && len(v.([]interface{})) > 0 {
+		params.Architectures = expandStringList(v.([]interface{}))
 	}
 
 	if packageType == lambda.PackageTypeZip {
-		params.Handler = aws.String(handler.(string))
-		params.Runtime = aws.String(runtime.(string))
+		params.Handler = aws.String(d.Get("handler").(string))
+		params.Runtime = aws.String(d.Get("runtime").(string))
 	}
 
 	if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -682,6 +689,12 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 
 	function := getFunctionOutput.Configuration
 
+	architectures := flattenStringList(function.Architectures)
+	log.Printf("[INFO] Setting Lambda %s Architecture %#v from API", d.Id(), architectures)
+	if err := d.Set("architectures", architectures); err != nil {
+		return fmt.Errorf("error setting architectures for Lambda Function (%s): %w", d.Id(), err)
+	}
+
 	if err := d.Set("arn", function.FunctionArn); err != nil {
 		return fmt.Errorf("error setting function arn for Lambda Function: %w", err)
 	}
@@ -837,6 +850,15 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
+	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) region
+	// and returns ambiguous error codes (e.g. AccessDeniedException)
+	// so we cannot just ignore the error as would typically.
+	// We are hardcoding the region here, because go aws sdk endpoints
+	// package does not support Signer service
+	if meta.(*AWSClient).region == endpoints.ApNortheast3RegionID {
+		return nil
+	}
+
 	// Code Signing is only supported on zip packaged lambda functions.
 	var codeSigningConfigArn string
 
@@ -907,8 +929,8 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 		d.HasChange("s3_bucket") ||
 		d.HasChange("s3_key") ||
 		d.HasChange("s3_object_version") ||
-		d.HasChange("image_uri")
-
+		d.HasChange("image_uri") ||
+		d.HasChange("architectures")
 }
 
 // resourceAwsLambdaFunctionUpdate maps to:
@@ -1123,6 +1145,13 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	if codeUpdate {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("architectures") {
+			architectures := d.Get("architectures").([]interface{})
+			if len(architectures) > 0 {
+				codeReq.Architectures = expandStringList(architectures)
+			}
 		}
 
 		if v, ok := d.GetOk("filename"); ok {

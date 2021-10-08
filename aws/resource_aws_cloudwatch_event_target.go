@@ -50,7 +50,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventBusNameOrARN,
+				ValidateFunc: validateCloudWatchEventRuleName,
 			},
 
 			"target_id": {
@@ -413,7 +413,7 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Creating CloudWatch Events Target failed: %s", out.FailedEntries)
 	}
 
-	id := tfevents.TargetCreateID(busName, rule, targetID)
+	id := tfevents.TargetCreateResourceID(busName, rule, targetID)
 	d.SetId(id)
 
 	log.Printf("[INFO] CloudWatch Events Target (%s) created", d.Id())
@@ -1064,7 +1064,7 @@ func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interfa
 		return []*schema.ResourceData{}, err
 	}
 
-	id := tfevents.TargetCreateID(busName, ruleName, targetID)
+	id := tfevents.TargetCreateResourceID(busName, ruleName, targetID)
 	d.SetId(id)
 	d.Set("target_id", targetID)
 	d.Set("rule", ruleName)

@@ -160,7 +160,7 @@ func resourceAwsElasticacheUserGroupUpdate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).elasticacheconn
 	hasChange := false
 
-	if d.HasChangeExcept("tags_all") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		req := &elasticache.ModifyUserGroupInput{
 			UserGroupId: aws.String(d.Get("user_group_id").(string)),
 		}

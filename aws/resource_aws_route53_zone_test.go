@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -179,6 +180,7 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 				Config: testAccRoute53ZoneConfig(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists(resourceName, &zone),
+					testAccMatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("hostedzone/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", zoneName),
 					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

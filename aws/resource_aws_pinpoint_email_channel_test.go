@@ -72,7 +72,7 @@ func TestAccAWSPinpointEmailChannel_configurationSet(t *testing.T) {
 				Config: testAccAWSPinpointEmailChannelConfigConfigurationSet(domain, address, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPinpointEmailChannelExists(resourceName, &channel),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_set", "aws_ses_configuration_set.test", "name"),
 				),
 			},
 			{
@@ -239,7 +239,7 @@ resource "aws_pinpoint_email_channel" "test" {
   from_address      = %[2]q
   identity          = aws_ses_domain_identity.test.arn
   role_arn          = aws_iam_role.test.arn
-  configuration_set = aws_ses_configuration_set.test.arn
+  configuration_set = aws_ses_configuration_set.test.name
 }
 
 resource "aws_ses_domain_identity" "test" {

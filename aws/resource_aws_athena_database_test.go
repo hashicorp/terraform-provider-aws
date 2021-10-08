@@ -83,7 +83,7 @@ func TestAccAWSAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAthenaDatabaseConfig(rInt, dbName, false),
-				ExpectError: regexp.MustCompile(`see .*\.com`),
+				ExpectError: regexp.MustCompile(`must be lowercase letters, numbers, or underscore \('_'\)`),
 			},
 		},
 	})

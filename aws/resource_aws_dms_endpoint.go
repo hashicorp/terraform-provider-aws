@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfdms "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms"
 )
 
 func resourceAwsDmsEndpoint() *schema.Resource {
@@ -39,15 +40,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Optional: true,
 			},
 			"elasticsearch_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"endpoint_uri": {
@@ -97,36 +93,14 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				ValidateFunc: validateDmsEndpointId,
 			},
 			"endpoint_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					dms.ReplicationEndpointTypeValueSource,
-					dms.ReplicationEndpointTypeValueTarget,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(dms.ReplicationEndpointTypeValue_Values(), false),
 			},
 			"engine_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"aurora",
-					"aurora-postgresql",
-					"azuredb",
-					"db2",
-					"docdb",
-					"dynamodb",
-					"elasticsearch",
-					"kafka",
-					"kinesis",
-					"mariadb",
-					"mongodb",
-					"mysql",
-					"oracle",
-					"postgres",
-					"redshift",
-					"s3",
-					"sqlserver",
-					"sybase",
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(tfdms.EngineName_Values(), false),
 			},
 			"extra_connection_attributes": {
 				Type:             schema.TypeString,
@@ -135,15 +109,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				DiffSuppressFunc: suppressExtraConnectionAttributesDiffs,
 			},
 			"kafka_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"broker": {
@@ -154,31 +123,23 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"topic": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "kafka-default-topic",
+							Default:  tfdms.KafkaDefaultTopic,
 						},
 					},
 				},
 			},
 			"kinesis_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"message_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								dms.MessageFormatValueJson,
-								dms.MessageFormatValueJsonUnformatted,
-							}, false),
-							Default: dms.MessageFormatValueJson,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.MessageFormatValueJson,
+							ValidateFunc: validation.StringInSlice(dms.MessageFormatValue_Values(), false),
 						},
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
@@ -201,31 +162,29 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"mongodb_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  dms.AuthTypeValuePassword,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.AuthTypeValuePassword,
+							ValidateFunc: validation.StringInSlice(dms.AuthTypeValue_Values(), false),
 						},
 						"auth_mechanism": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  dms.AuthMechanismValueDefault,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      tfdms.MongoDbAuthMechanismValueDefault,
+							ValidateFunc: validation.StringInSlice(tfdms.MongoDbAuthMechanismValue_Values(), false),
 						},
 						"nesting_level": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  dms.NestingLevelValueNone,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.NestingLevelValueNone,
+							ValidateFunc: validation.StringInSlice(dms.NestingLevelValue_Values(), false),
 						},
 						"extract_doc_id": {
 							Type:     schema.TypeString,
@@ -240,7 +199,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"auth_source": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "admin",
+							Default:  tfdms.MongoDbAuthSourceAdmin,
 						},
 					},
 				},
@@ -255,15 +214,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Optional: true,
 			},
 			"s3_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_access_role_arn": {
@@ -297,14 +251,42 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Default:  "",
 						},
 						"compression_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "NONE",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      tfdms.S3SettingsCompressionTypeNone,
+							ValidateFunc: validation.StringInSlice(tfdms.S3SettingsCompressionType_Values(), false),
 						},
 						"date_partition_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+						},
+						"data_format": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.DataFormatValueCsv,
+							ValidateFunc: validation.StringInSlice(dms.DataFormatValue_Values(), false),
+						},
+						"parquet_timestamp_in_millisecond": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"parquet_version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.ParquetVersionValueParquet10,
+							ValidateFunc: validation.StringInSlice(dms.ParquetVersionValue_Values(), false),
+						},
+						"encryption_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      tfdms.S3SettingsEncryptionModeSseS3,
+							ValidateFunc: validation.StringInSlice(tfdms.S3SettingsEncryptionMode_Values(), false),
+						},
+						"server_side_encryption_kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -318,15 +300,10 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Optional: true,
 			},
 			"ssl_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					dms.DmsSslModeValueNone,
-					dms.DmsSslModeValueRequire,
-					dms.DmsSslModeValueVerifyCa,
-					dms.DmsSslModeValueVerifyFull,
-				}, false),
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(dms.DmsSslModeValue_Values(), false),
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -401,14 +378,19 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		request.DatabaseName = aws.String(d.Get("database_name").(string))
 	case "s3":
 		request.S3Settings = &dms.S3Settings{
-			ServiceAccessRoleArn:    aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
-			ExternalTableDefinition: aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
-			CsvRowDelimiter:         aws.String(d.Get("s3_settings.0.csv_row_delimiter").(string)),
-			CsvDelimiter:            aws.String(d.Get("s3_settings.0.csv_delimiter").(string)),
-			BucketFolder:            aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
-			BucketName:              aws.String(d.Get("s3_settings.0.bucket_name").(string)),
-			CompressionType:         aws.String(d.Get("s3_settings.0.compression_type").(string)),
-			DatePartitionEnabled:    aws.Bool(d.Get("s3_settings.0.date_partition_enabled").(bool)),
+			BucketFolder:                  aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
+			BucketName:                    aws.String(d.Get("s3_settings.0.bucket_name").(string)),
+			CompressionType:               aws.String(d.Get("s3_settings.0.compression_type").(string)),
+			CsvDelimiter:                  aws.String(d.Get("s3_settings.0.csv_delimiter").(string)),
+			CsvRowDelimiter:               aws.String(d.Get("s3_settings.0.csv_row_delimiter").(string)),
+			DataFormat:                    aws.String(d.Get("s3_settings.0.data_format").(string)),
+			DatePartitionEnabled:          aws.Bool(d.Get("s3_settings.0.date_partition_enabled").(bool)),
+			EncryptionMode:                aws.String(d.Get("s3_settings.0.encryption_mode").(string)),
+			ExternalTableDefinition:       aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
+			ParquetTimestampInMillisecond: aws.Bool(d.Get("s3_settings.0.parquet_timestamp_in_millisecond").(bool)),
+			ParquetVersion:                aws.String(d.Get("s3_settings.0.parquet_version").(string)),
+			ServerSideEncryptionKmsKeyId:  aws.String(d.Get("s3_settings.0.server_side_encryption_kms_key_id").(string)),
+			ServiceAccessRoleArn:          aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
 		}
 	default:
 		request.Password = aws.String(d.Get("password").(string))
@@ -648,15 +630,22 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		if d.HasChanges(
 			"s3_settings.0.service_access_role_arn", "s3_settings.0.external_table_definition",
 			"s3_settings.0.csv_row_delimiter", "s3_settings.0.csv_delimiter", "s3_settings.0.bucket_folder",
-			"s3_settings.0.bucket_name", "s3_settings.0.compression_type") {
+			"s3_settings.0.bucket_name", "s3_settings.0.compression_type", "s3_settings.0.data_format",
+			"s3_settings.0.parquet_version", "s3_settings.0.parquet_timestamp_in_millisecond",
+			"s3_settings.0.encryption_mode", "s3_settings.0.server_side_encryption_kms_key_id") {
 			request.S3Settings = &dms.S3Settings{
-				ServiceAccessRoleArn:    aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
-				ExternalTableDefinition: aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
-				CsvRowDelimiter:         aws.String(d.Get("s3_settings.0.csv_row_delimiter").(string)),
-				CsvDelimiter:            aws.String(d.Get("s3_settings.0.csv_delimiter").(string)),
-				BucketFolder:            aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
-				BucketName:              aws.String(d.Get("s3_settings.0.bucket_name").(string)),
-				CompressionType:         aws.String(d.Get("s3_settings.0.compression_type").(string)),
+				BucketFolder:                  aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
+				BucketName:                    aws.String(d.Get("s3_settings.0.bucket_name").(string)),
+				CompressionType:               aws.String(d.Get("s3_settings.0.compression_type").(string)),
+				CsvDelimiter:                  aws.String(d.Get("s3_settings.0.csv_delimiter").(string)),
+				CsvRowDelimiter:               aws.String(d.Get("s3_settings.0.csv_row_delimiter").(string)),
+				DataFormat:                    aws.String(d.Get("s3_settings.0.data_format").(string)),
+				EncryptionMode:                aws.String(d.Get("s3_settings.0.encryption_mode").(string)),
+				ExternalTableDefinition:       aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
+				ParquetTimestampInMillisecond: aws.Bool(d.Get("s3_settings.0.parquet_timestamp_in_millisecond").(bool)),
+				ParquetVersion:                aws.String(d.Get("s3_settings.0.parquet_version").(string)),
+				ServerSideEncryptionKmsKeyId:  aws.String(d.Get("s3_settings.0.server_side_encryption_kms_key_id").(string)),
+				ServiceAccessRoleArn:          aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
 			}
 			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 's3')
 			hasChanges = true
@@ -843,14 +832,19 @@ func flattenDmsS3Settings(settings *dms.S3Settings) []map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"service_access_role_arn":   aws.StringValue(settings.ServiceAccessRoleArn),
-		"external_table_definition": aws.StringValue(settings.ExternalTableDefinition),
-		"csv_row_delimiter":         aws.StringValue(settings.CsvRowDelimiter),
-		"csv_delimiter":             aws.StringValue(settings.CsvDelimiter),
-		"bucket_folder":             aws.StringValue(settings.BucketFolder),
-		"bucket_name":               aws.StringValue(settings.BucketName),
-		"compression_type":          aws.StringValue(settings.CompressionType),
-		"date_partition_enabled":    aws.BoolValue(settings.DatePartitionEnabled),
+		"bucket_folder":                     aws.StringValue(settings.BucketFolder),
+		"bucket_name":                       aws.StringValue(settings.BucketName),
+		"compression_type":                  aws.StringValue(settings.CompressionType),
+		"csv_delimiter":                     aws.StringValue(settings.CsvDelimiter),
+		"csv_row_delimiter":                 aws.StringValue(settings.CsvRowDelimiter),
+		"data_format":                       aws.StringValue(settings.DataFormat),
+		"date_partition_enabled":            aws.BoolValue(settings.DatePartitionEnabled),
+		"encryption_mode":                   aws.StringValue(settings.EncryptionMode),
+		"external_table_definition":         aws.StringValue(settings.ExternalTableDefinition),
+		"parquet_timestamp_in_millisecond":  aws.BoolValue(settings.ParquetTimestampInMillisecond),
+		"parquet_version":                   aws.StringValue(settings.ParquetVersion),
+		"server_side_encryption_kms_key_id": aws.StringValue(settings.ServerSideEncryptionKmsKeyId),
+		"service_access_role_arn":           aws.StringValue(settings.ServiceAccessRoleArn),
 	}
 
 	return []map[string]interface{}{m}

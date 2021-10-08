@@ -3,12 +3,12 @@ subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_event_source_mapping"
 description: |-
-  Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB, SQS and Managed Streaming for Apache Kafka (MSK).
+  Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB, SQS, Amazon MQ and Managed Streaming for Apache Kafka (MSK).
 ---
 
 # Resource: aws_lambda_event_source_mapping
 
-Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB, SQS and Managed Streaming for Apache Kafka (MSK).
+Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB, SQS, Amazon MQ and Managed Streaming for Apache Kafka (MSK).
 
 For information about Lambda and how to use it, see [What is AWS Lambda?][1].
 For information about event source mappings, see [CreateEventSourceMapping][2] in the API docs.
@@ -83,6 +83,45 @@ resource "aws_lambda_event_source_mapping" "example" {
 resource "aws_lambda_event_source_mapping" "example" {
   event_source_arn = aws_sqs_queue.sqs_queue_test.arn
   function_name    = aws_lambda_function.example.arn
+}
+```
+
+### Amazon MQ (ActiveMQ)
+
+```terraform
+resource "aws_lambda_event_source_mapping" "example" {
+  batch_size       = 10
+  event_source_arn = aws_mq_broker.example.arn
+  enabled          = true
+  function_name    = aws_lambda_function.example.arn
+  queues           = ["example"]
+
+  source_access_configuration {
+    type = "BASIC_AUTH"
+    uri  = aws_secretsmanager_secret_version.example.arn
+  }
+}
+```
+
+### Amazon MQ (RabbitMQ)
+
+```terraform
+resource "aws_lambda_event_source_mapping" "example" {
+  batch_size       = 1
+  event_source_arn = aws_mq_broker.example.arn
+  enabled          = true
+  function_name    = aws_lambda_function.example.arn
+  queues           = ["example"]
+
+  source_access_configuration {
+    type = "VIRTUAL_HOST"
+    uri  = "/example"
+  }
+
+  source_access_configuration {
+    type = "BASIC_AUTH"
+    uri  = aws_secretsmanager_secret_version.example.arn
+  }
 }
 ```
 

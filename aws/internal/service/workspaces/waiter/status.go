@@ -4,23 +4,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func DirectoryState(conn *workspaces.WorkSpaces, directoryID string) resource.StateRefreshFunc {
+func DirectoryState(conn *workspaces.WorkSpaces, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
-			DirectoryIds: aws.StringSlice([]string{directoryID}),
-		})
+		output, err := finder.DirectoryByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
 		if err != nil {
-			return nil, workspaces.WorkspaceDirectoryStateError, err
+			return nil, "", err
 		}
 
-		if len(output.Directories) == 0 {
-			return output, workspaces.WorkspaceDirectoryStateDeregistered, nil
-		}
-
-		directory := output.Directories[0]
-		return directory, aws.StringValue(directory.State), nil
+		return output, aws.StringValue(output.State), nil
 	}
 }
 

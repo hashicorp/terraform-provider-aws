@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -347,7 +349,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 
 		resp, err = s3conn.HeadObject(input)
 
-		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			return resource.RetryableError(err)
 		}
 
@@ -362,7 +364,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 		resp, err = s3conn.HeadObject(input)
 	}
 
-	if !d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -538,11 +540,7 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsS3BucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	id := d.Id()
-
-	if strings.HasPrefix(id, "s3://") {
-		id = strings.TrimPrefix(id, "s3://")
-	}
-
+	id = strings.TrimPrefix(id, "s3://")
 	parts := strings.Split(id, "/")
 
 	if len(parts) < 2 {

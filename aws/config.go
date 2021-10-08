@@ -30,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/cloud9"
+	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
@@ -115,6 +116,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mediastoredata"
+	"github.com/aws/aws-sdk-go/service/memorydb"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/aws/aws-sdk-go/service/neptune"
@@ -204,6 +206,7 @@ type Config struct {
 	Endpoints         map[string]string
 	IgnoreTagsConfig  *keyvaluetags.IgnoreConfig
 	Insecure          bool
+	HTTPProxy         string
 
 	SkipCredsValidation     bool
 	SkipGetEC2Platforms     bool
@@ -240,6 +243,7 @@ type AWSClient struct {
 	cfconn                              *cloudformation.CloudFormation
 	chimeconn                           *chime.Chime
 	cloud9conn                          *cloud9.Cloud9
+	cloudcontrolapiconn                 *cloudcontrolapi.CloudControlApi
 	cloudfrontconn                      *cloudfront.CloudFront
 	cloudhsmv2conn                      *cloudhsmv2.CloudHSMV2
 	cloudsearchconn                     *cloudsearch.CloudSearch
@@ -328,6 +332,7 @@ type AWSClient struct {
 	mediapackageconn                    *mediapackage.MediaPackage
 	mediastoreconn                      *mediastore.MediaStore
 	mediastoredataconn                  *mediastoredata.MediaStoreData
+	memorydbconn                        *memorydb.MemoryDB
 	mqconn                              *mq.MQ
 	mwaaconn                            *mwaa.MWAA
 	neptuneconn                         *neptune.Neptune
@@ -433,6 +438,7 @@ func (c *Config) Client() (interface{}, error) {
 		DebugLogging:                logging.IsDebugOrHigher(),
 		IamEndpoint:                 c.Endpoints["iam"],
 		Insecure:                    c.Insecure,
+		HTTPProxy:                   c.HTTPProxy,
 		MaxRetries:                  c.MaxRetries,
 		Profile:                     c.Profile,
 		Region:                      c.Region,
@@ -493,6 +499,7 @@ func (c *Config) Client() (interface{}, error) {
 		cfconn:                              cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudformation"])})),
 		chimeconn:                           chime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["chime"])})),
 		cloud9conn:                          cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloud9"])})),
+		cloudcontrolapiconn:                 cloudcontrolapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudcontrolapi"])})),
 		cloudfrontconn:                      cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudfront"])})),
 		cloudhsmv2conn:                      cloudhsmv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudhsm"])})),
 		cloudsearchconn:                     cloudsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudsearch"])})),
@@ -579,6 +586,7 @@ func (c *Config) Client() (interface{}, error) {
 		mediapackageconn:                    mediapackage.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediapackage"])})),
 		mediastoreconn:                      mediastore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastore"])})),
 		mediastoredataconn:                  mediastoredata.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastoredata"])})),
+		memorydbconn:                        memorydb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["memorydb"])})),
 		mqconn:                              mq.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mq"])})),
 		mwaaconn:                            mwaa.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mwaa"])})),
 		neptuneconn:                         neptune.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["neptune"])})),
@@ -730,6 +738,16 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.chimeconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// When calling CreateVoiceConnector across multiple resources,
+		// the API can randomly return a BadRequestException without explanation
+		if r.Operation.Name == "CreateVoiceConnector" {
+			if tfawserr.ErrMessageContains(r.Error, chime.ErrCodeBadRequestException, "Service received a bad request") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	client.cloudhsmv2conn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if tfawserr.ErrMessageContains(r.Error, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
 			r.Retryable = aws.Bool(true)
@@ -773,6 +791,12 @@ func (c *Config) Client() (interface{}, error) {
 			} else {
 				r.Retryable = aws.Bool(false)
 			}
+		}
+	})
+
+	client.cfconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if isAWSErr(r.Error, cloudformation.ErrCodeOperationInProgressException, "Another Operation on StackSet") {
+			r.Retryable = aws.Bool(true)
 		}
 	})
 

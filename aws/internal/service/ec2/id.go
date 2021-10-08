@@ -71,6 +71,24 @@ func ClientVpnRouteParseID(id string) (string, string, string, error) {
 			"target-subnet-id"+clientVpnRouteIDSeparator+"destination-cidr-block", id)
 }
 
+const managedPrefixListEntryIDSeparator = ","
+
+func ManagedPrefixListEntryCreateID(prefixListID, cidrBlock string) string {
+	parts := []string{prefixListID, cidrBlock}
+	id := strings.Join(parts, managedPrefixListEntryIDSeparator)
+	return id
+}
+
+func ManagedPrefixListEntryParseID(id string) (string, string, error) {
+	parts := strings.Split(id, managedPrefixListEntryIDSeparator)
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "",
+		fmt.Errorf("unexpected format for ID (%q), expected prefix-list-id"+managedPrefixListEntryIDSeparator+"cidr-block", id)
+}
+
 // RouteCreateID returns a route resource ID.
 func RouteCreateID(routeTableID, destination string) string {
 	return fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination))
@@ -105,4 +123,21 @@ func VpcEndpointSubnetAssociationCreateID(vpcEndpointID, subnetID string) string
 
 func VpnGatewayVpcAttachmentCreateID(vpnGatewayID, vpcID string) string {
 	return fmt.Sprintf("vpn-attachment-%x", hashcode.String(fmt.Sprintf("%s-%s", vpcID, vpnGatewayID)))
+}
+
+const vpnGatewayRoutePropagationIDSeparator = "_"
+
+func VpnGatewayRoutePropagationCreateID(routeTableID, gatewayID string) string {
+	parts := []string{gatewayID, routeTableID}
+	id := strings.Join(parts, vpnGatewayRoutePropagationIDSeparator)
+	return id
+}
+
+func VpnGatewayRoutePropagationParseID(id string) (string, string, error) {
+	parts := strings.Split(id, vpnGatewayRoutePropagationIDSeparator)
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[1], parts[0], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected vpn-gateway-id%[2]sroute-table-id", id, vpnGatewayRoutePropagationIDSeparator)
 }

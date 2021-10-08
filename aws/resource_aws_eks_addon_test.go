@@ -64,6 +64,10 @@ func testSweepEksAddon(region string) error {
 				return !lastPage
 			})
 
+			if testSweepSkipSweepError(err) {
+				continue
+			}
+
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Add-Ons (%s): %w", region, err))
 			}
@@ -74,7 +78,7 @@ func testSweepEksAddon(region string) error {
 
 	if testSweepSkipSweepError(err) {
 		log.Print(fmt.Errorf("[WARN] Skipping EKS Add-Ons sweep for %s: %w", region, err))
-		return sweeperErrs // In case we have completed some pages, but had errors
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
 	if err != nil {
@@ -180,8 +184,8 @@ func TestAccAWSEksAddon_AddonVersion(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	addonVersion1 := "v1.6.3-eksbuild.1"
-	addonVersion2 := "v1.7.5-eksbuild.1"
+	addonVersion1 := "v1.8.0-eksbuild.1"
+	addonVersion2 := "v1.9.0-eksbuild.1"
 	ctx := context.TODO()
 
 	resource.ParallelTest(t, resource.TestCase{

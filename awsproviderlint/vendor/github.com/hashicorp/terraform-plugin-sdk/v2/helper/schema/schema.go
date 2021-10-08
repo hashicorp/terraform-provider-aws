@@ -509,6 +509,9 @@ func (m schemaMap) Diff(
 	// Make sure to mark if the resource is tainted
 	if s != nil {
 		result.DestroyTainted = s.Tainted
+		result.RawConfig = s.RawConfig
+		result.RawState = s.RawState
+		result.RawPlan = s.RawPlan
 	}
 
 	d := &ResourceData{

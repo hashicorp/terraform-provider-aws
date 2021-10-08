@@ -26,12 +26,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfautoscaling "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
-)
-
-const (
-	autoscalingTagResourceTypeAutoScalingGroup = `auto-scaling-group`
 )
 
 func resourceAwsAutoscalingGroup() *schema.Resource {
@@ -696,11 +693,11 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
+		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, asgName, tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
 	}
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
@@ -889,23 +886,23 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	// Deprecated: In a future major version, this should always set all tags except those ignored.
 	//             Remove d.GetOk() and Only() handling.
 	if v, tagOk = d.GetOk("tag"); tagOk {
-		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
 
-		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfMap()); err != nil {
+		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfMap()); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
-		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
 
-		if err := d.Set("tags", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfStringMap()); err != nil {
+		if err := d.Set("tags", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfStringMap()); err != nil {
 			return fmt.Errorf("error setting tags: %w", err)
 		}
 	}
 
 	if !tagOk && !tagsOk {
-		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).AutoscalingListOfMap()); err != nil {
+		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).AutoscalingListOfMap()); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}
@@ -1116,15 +1113,15 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		oTagRaw, nTagRaw := d.GetChange("tag")
 		oTagsRaw, nTagsRaw := d.GetChange("tags")
 
-		oTag := keyvaluetags.AutoscalingKeyValueTags(oTagRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
-		oTags := keyvaluetags.AutoscalingKeyValueTags(oTagsRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		oTag := keyvaluetags.AutoscalingKeyValueTags(oTagRaw, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
+		oTags := keyvaluetags.AutoscalingKeyValueTags(oTagsRaw, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
 		oldTags := oTag.Merge(oTags).AutoscalingTags()
 
-		nTag := keyvaluetags.AutoscalingKeyValueTags(nTagRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
-		nTags := keyvaluetags.AutoscalingKeyValueTags(nTagsRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		nTag := keyvaluetags.AutoscalingKeyValueTags(nTagRaw, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
+		nTags := keyvaluetags.AutoscalingKeyValueTags(nTagsRaw, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup)
 		newTags := nTag.Merge(nTags).AutoscalingTags()
 
-		if err := keyvaluetags.AutoscalingUpdateTags(conn, d.Id(), autoscalingTagResourceTypeAutoScalingGroup, oldTags, newTags); err != nil {
+		if err := keyvaluetags.AutoscalingUpdateTags(conn, d.Id(), tfautoscaling.TagResourceTypeAutoScalingGroup, oldTags, newTags); err != nil {
 			return fmt.Errorf("error updating tags for Auto Scaling Group (%s): %w", d.Id(), err)
 		}
 	}
@@ -1453,7 +1450,8 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 		}
 
 		err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-			if _, err := conn.DeleteWarmPool(&deleteopts); err != nil {
+			_, err := conn.DeleteWarmPool(&deleteopts)
+			if err != nil {
 				if callerr, ok := err.(awserr.Error); ok {
 					switch callerr.Code() {
 					case "ResourceInUse", "ScalingActivityInProgress":

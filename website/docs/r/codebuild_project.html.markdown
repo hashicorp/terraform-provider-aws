@@ -332,7 +332,7 @@ Credentials for access to a private Docker registry.
 ### secondary_sources
 
 * `auth` - (Optional, **Deprecated**) Configuration block with the authorization settings for AWS CodeBuild to access the source code to be built. This information is for the AWS CodeBuild console's use only. Use the [`aws_codebuild_source_credential` resource](codebuild_source_credential.html) instead. Auth blocks are documented below.
-* `buildspec` - (Optional) Build specification to use for this build project's related builds.
+* `buildspec` - (Optional) The build spec declaration to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`. It can either be a path to a file residing in the repository to be built or a local file path leveraging the `file()` built-in.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits. Use `0` for a `Full` checkout which you need to run commands like `git branch --show-current`. See [AWS CodePipeline User Guide: Tutorial: Use full clone with a GitHub pipeline source](https://docs.aws.amazon.com/codepipeline/latest/userguide/tutorials-github-gitclone.html) for details.
 * `git_submodules_config` - (Optional) Configuration block. Detailed below.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.

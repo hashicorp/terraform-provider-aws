@@ -103,6 +103,10 @@ func dataSourceAwsWorkspacesDirectory() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"device_type_linux": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"device_type_osx": {
 							Type:     schema.TypeString,
 							Computed: true,

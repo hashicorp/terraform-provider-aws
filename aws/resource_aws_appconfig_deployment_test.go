@@ -41,6 +41,7 @@ func TestAccAWSAppConfigDeployment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "deployment_strategy_id", depStrategyResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_id", envResourceName, "environment_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

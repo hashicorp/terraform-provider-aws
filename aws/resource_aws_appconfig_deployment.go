@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appconfig/waiter"
 )
 
 func resourceAwsAppconfigDeployment() *schema.Resource {
@@ -72,6 +71,10 @@ func resourceAwsAppconfigDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
 			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
@@ -109,10 +112,6 @@ func resourceAwsAppconfigDeploymentCreate(d *schema.ResourceData, meta interface
 	deployNum := aws.Int64Value(output.DeploymentNumber)
 
 	d.SetId(fmt.Sprintf("%s/%s/%d", appID, envID, deployNum))
-
-	if err := waiter.DeploymentCreated(conn, appID, envID, deployNum); err != nil {
-		return fmt.Errorf("error waiting for AppConfig Deployment (%s) creation: %w", d.Id(), err)
-	}
 
 	return resourceAwsAppconfigDeploymentRead(d, meta)
 }
@@ -166,6 +165,7 @@ func resourceAwsAppconfigDeploymentRead(d *schema.ResourceData, meta interface{}
 	d.Set("deployment_strategy_id", output.DeploymentStrategyId)
 	d.Set("description", output.Description)
 	d.Set("environment_id", output.EnvironmentId)
+	d.Set("state", output.State)
 
 	tags, err := keyvaluetags.AppconfigListTags(conn, arn)
 

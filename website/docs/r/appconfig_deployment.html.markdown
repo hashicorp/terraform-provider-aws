@@ -46,6 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The AppConfig application ID, environment ID, and deployment number separated by a slash (`/`).
 * `arn` - The Amazon Resource Name (ARN) of the AppConfig Deployment.
 * `deployment_number` - The deployment number.
+* `state` - The state of the deployment.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

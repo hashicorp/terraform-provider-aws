@@ -237,6 +237,16 @@ func CognitoidentityproviderKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// ConnectTags returns connect service tags.
+func (tags KeyValueTags) ConnectTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// ConnectKeyValueTags creates KeyValueTags from connect service tags.
+func ConnectKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // DataexchangeTags returns dataexchange service tags.
 func (tags KeyValueTags) DataexchangeTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -454,6 +464,16 @@ func (tags KeyValueTags) ResourcegroupsTags() map[string]*string {
 
 // ResourcegroupsKeyValueTags creates KeyValueTags from resourcegroups service tags.
 func ResourcegroupsKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// Route53recoveryreadinessTags returns route53recoveryreadiness service tags.
+func (tags KeyValueTags) Route53recoveryreadinessTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// Route53recoveryreadinessKeyValueTags creates KeyValueTags from route53recoveryreadiness service tags.
+func Route53recoveryreadinessKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 

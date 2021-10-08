@@ -78,6 +78,8 @@ service/chime:
   - '((\*|-) ?`?|(data|resource) "?)aws_chime_'
 service/cloud9:
   - '((\*|-) ?`?|(data|resource) "?)aws_cloud9_'
+service/cloudcontrolapi:
+  - '((\*|-) ?`?|(data|resource) "?)aws_cloudcontrolapi_'
 service/clouddirectory:
   - '((\*|-) ?`?|(data|resource) "?)aws_clouddirectory_'
 service/cloudformation:
@@ -248,6 +250,8 @@ service/mediastore:
   - '((\*|-) ?`?|(data|resource) "?)aws_media_store_'
 service/mediatailor:
   - '((\*|-) ?`?|(data|resource) "?)aws_media_tailor_'
+service/memorydb:
+  - '((\*|-) ?`?|(data|resource) "?)aws_memorydb_'
 service/mobile:
   - '((\*|-) ?`?|(data|resource) "?)aws_mobile_'
 service/mq:

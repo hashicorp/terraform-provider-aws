@@ -53,15 +53,6 @@ func isResourceTimeoutError(err error) bool {
 	return tfresource.TimedOut(err)
 }
 
-func appendUniqueString(slice []string, elem string) []string {
-	for _, e := range slice {
-		if e == elem {
-			return slice
-		}
-	}
-	return append(slice, elem)
-}
-
 func StringSlicesEqualIgnoreOrder(s1, s2 []*string) bool {
 	if len(s1) != len(s2) {
 		return false
