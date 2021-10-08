@@ -21,6 +21,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(elasticache.EndpointsID, testAccErrorCheckSkipElasticache)
+
 	resource.AddTestSweepers("aws_elasticache_cluster", &resource.Sweeper{
 		Name: "aws_elasticache_cluster",
 		F:    testSweepElasticacheClusters,
@@ -74,6 +76,12 @@ func testSweepElasticacheClusters(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func testAccErrorCheckSkipElasticache(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"is not suppored in this region",
+	)
 }
 
 func TestAccAWSElasticacheCluster_Engine_Memcached(t *testing.T) {

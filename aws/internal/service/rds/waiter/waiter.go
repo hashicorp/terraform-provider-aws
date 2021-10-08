@@ -144,3 +144,58 @@ func DBClusterRoleAssociationDeleted(conn *rds.RDS, dbClusterID, roleARN string)
 
 	return nil, err
 }
+
+func DBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			tfrds.DBInstanceStatusAvailable,
+			tfrds.DBInstanceStatusBackingUp,
+			tfrds.DBInstanceStatusConfiguringEnhancedMonitoring,
+			tfrds.DBInstanceStatusConfiguringLogExports,
+			tfrds.DBInstanceStatusCreating,
+			tfrds.DBInstanceStatusDeleting,
+			tfrds.DBInstanceStatusIncompatibleParameters,
+			tfrds.DBInstanceStatusModifying,
+			tfrds.DBInstanceStatusStarting,
+			tfrds.DBInstanceStatusStopping,
+			tfrds.DBInstanceStatusStorageFull,
+			tfrds.DBInstanceStatusStorageOptimization,
+		},
+		Target:     []string{},
+		Refresh:    DBInstanceStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func DBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			tfrds.DBInstanceStatusConfiguringLogExports,
+			tfrds.DBInstanceStatusDeleting,
+			tfrds.DBInstanceStatusModifying,
+		},
+		Target:     []string{},
+		Refresh:    DBInstanceStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}

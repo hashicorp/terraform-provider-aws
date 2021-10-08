@@ -8,11 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -1235,6 +1236,32 @@ func TestAccAWSDBInstance_ReplicateSourceDb_CACertificateIdentifier(t *testing.T
 					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(sourceResourceName, "ca_cert_identifier", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ReplicateSourceDb_ReplicaMode(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_ReplicaMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "replica_mode", "mounted"),
 				),
 			},
 		},
@@ -2681,24 +2708,17 @@ func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the Group
-		var err error
-		resp, err := conn.DescribeDBInstances(
-			&rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
-			})
+		_, err := finder.DBInstanceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
-				continue
-			}
 			return err
 		}
 
-		if len(resp.DBInstances) != 0 &&
-			*resp.DBInstances[0].DBInstanceIdentifier == rs.Primary.ID {
-			return fmt.Errorf("DB Instance still exists")
-		}
+		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -2913,22 +2933,13 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 
 		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
-		opts := rds.DescribeDBInstancesInput{
-			DBInstanceIdentifier: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeDBInstances(&opts)
+		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.DBInstances) != 1 ||
-			*resp.DBInstances[0].DBInstanceIdentifier != rs.Primary.ID {
-			return fmt.Errorf("DB Instance not found")
-		}
-
-		*v = *resp.DBInstances[0]
+		*v = *output
 
 		return nil
 	}
@@ -2942,29 +2953,23 @@ func testAccCheckAWSDBInstanceEc2ClassicDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &rds.DescribeDBInstancesInput{
-			DBInstanceIdentifier: aws.String(rs.Primary.ID),
-		}
+		_, err := finder.DBInstanceByID(conn, rs.Primary.ID)
 
-		output, err := conn.DescribeDBInstances(input)
-
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading RDS DB Instance (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if output != nil && len(output.DBInstances) != 0 && output.DBInstances[0] != nil && aws.StringValue(output.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
-			return fmt.Errorf("RDS DB Instance (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAWSDBInstanceEc2ClassicExists(resourceName string, dbInstance *rds.DBInstance) resource.TestCheckFunc {
+func testAccCheckAWSDBInstanceEc2ClassicExists(resourceName string, v *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -2978,21 +2983,13 @@ func testAccCheckAWSDBInstanceEc2ClassicExists(resourceName string, dbInstance *
 
 		conn := testAccProviderEc2Classic.Meta().(*AWSClient).rdsconn
 
-		input := &rds.DescribeDBInstancesInput{
-			DBInstanceIdentifier: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeDBInstances(input)
+		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading RDS DB Instance (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if output == nil || len(output.DBInstances) != 1 || output.DBInstances[0] == nil || aws.StringValue(output.DBInstances[0].DBInstanceIdentifier) != rs.Primary.ID {
-			return fmt.Errorf("RDS DB Instance (%s): not found", rs.Primary.ID)
-		}
-
-		*dbInstance = *output.DBInstances[0]
+		*v = *output
 
 		return nil
 	}
@@ -6469,6 +6466,38 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName))
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_ReplicaMode(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = "oracle-ee"
+  engine_version = "12.1.0.2.v22"
+  license_model  = "bring-your-own-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = ["db.m5.large", "db.m4.large", "db.r4.large"]
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 20
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  instance_class      = aws_db_instance.source.instance_class
+  replica_mode        = "mounted"
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
+}
+`, rName)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier(rName string) string {

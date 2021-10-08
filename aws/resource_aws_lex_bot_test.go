@@ -7,14 +7,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tflex "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(lexmodelbuildingservice.EndpointsID, testAccErrorCheckSkipLex)
+
 	resource.AddTestSweepers("aws_lex_bot", &resource.Sweeper{
 		Name:         "aws_lex_bot",
 		F:            testSweepLexBots,
@@ -68,6 +72,12 @@ func testSweepLexBots(region string) error {
 	return errs.ErrorOrNil()
 }
 
+func testAccErrorCheckSkipLex(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"You can't set the enableModelImprovements field to false",
+	)
+}
+
 func TestAccAwsLexBot_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
@@ -107,7 +117,7 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0"),
 					resource.TestCheckResourceAttr(rName, "process_behavior", "SAVE"),
 					resource.TestCheckResourceAttr(rName, "status", "NOT_BUILT"),
-					resource.TestCheckResourceAttr(rName, "version", LexBotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflex.LexBotVersionLatest),
 					resource.TestCheckNoResourceAttr(rName, "voice_id"),
 				),
 			},
@@ -156,19 +166,7 @@ func testAccAwsLexBot_createVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexBotExists(rName, &v1),
 					testAccCheckAwsLexBotNotExists(testBotID, "1"),
-					resource.TestCheckResourceAttr(rName, "version", LexBotVersionLatest),
-					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
-				),
-			},
-			{
-				Config: composeConfig(
-					testAccAwsLexBotConfig_intent(testBotID),
-					testAccAwsLexBotConfig_createVersion(testBotID),
-				),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotExists(rName, &v2),
-					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v2),
-					resource.TestCheckResourceAttr(rName, "version", "1"),
+					resource.TestCheckResourceAttr(rName, "version", tflex.LexBotVersionLatest),
 					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 				),
 			},
@@ -176,6 +174,17 @@ func testAccAwsLexBot_createVersion(t *testing.T) {
 				ResourceName:      rName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_createVersion(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v2),
+					resource.TestCheckResourceAttr(rName, "version", "1"),
+					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
+				),
 			},
 		},
 	})
@@ -727,7 +736,7 @@ func TestAccAwsLexBot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsLexBotExistsWithVersion(rName, botVersion string, output *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
+func testAccCheckAwsLexBotExistsWithVersion(rName, botVersion string, v *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rName]
 		if !ok {
@@ -735,47 +744,42 @@ func testAccCheckAwsLexBotExistsWithVersion(rName, botVersion string, output *le
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Lex bot ID is set")
+			return fmt.Errorf("No Lex Bot ID is set")
 		}
 
-		var err error
 		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
 
-		output, err = conn.GetBot(&lexmodelbuildingservice.GetBotInput{
-			Name:           aws.String(rs.Primary.ID),
-			VersionOrAlias: aws.String(botVersion),
-		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return fmt.Errorf("error bot %q version %s not found", rs.Primary.ID, botVersion)
-		}
+		output, err := finder.BotVersionByName(conn, rs.Primary.ID, botVersion)
+
 		if err != nil {
-			return fmt.Errorf("error getting bot %q version %s: %w", rs.Primary.ID, botVersion, err)
+			return err
 		}
+
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccCheckAwsLexBotExists(rName string, output *lexmodelbuildingservice.GetBotOutput) resource.TestCheckFunc {
-	return testAccCheckAwsLexBotExistsWithVersion(rName, LexBotVersionLatest, output)
+	return testAccCheckAwsLexBotExistsWithVersion(rName, tflex.LexBotVersionLatest, output)
 }
 
 func testAccCheckAwsLexBotNotExists(botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
 
-		_, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
-			Name:           aws.String(botName),
-			VersionOrAlias: aws.String(botVersion),
-		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+		_, err := finder.BotVersionByName(conn, botName, botVersion)
+
+		if tfresource.NotFound(err) {
 			return nil
 		}
+
 		if err != nil {
-			return fmt.Errorf("error getting bot %s version %s: %s", botName, botVersion, err)
+			return err
 		}
 
-		return fmt.Errorf("error bot %s version %s exists", botName, botVersion)
+		return fmt.Errorf("Lex Box %s/%s still exists", botName, botVersion)
 	}
 }
 
@@ -790,9 +794,7 @@ func testAccCheckAwsLexBotDestroy(s *terraform.State) error {
 		output, err := conn.GetBotVersions(&lexmodelbuildingservice.GetBotVersionsInput{
 			Name: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			continue
-		}
+
 		if err != nil {
 			return err
 		}
@@ -801,7 +803,7 @@ func testAccCheckAwsLexBotDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		return fmt.Errorf("Lex bot %q still exists", rs.Primary.ID)
+		return fmt.Errorf("Lex Bot %s still exists", rs.Primary.ID)
 	}
 
 	return nil
