@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -420,24 +422,15 @@ func testAccCheckAWSGlueConnectionExists(resourceName string, connection *glue.C
 			return err
 		}
 
-		output, err := conn.GetConnection(&glue.GetConnectionInput{
-			CatalogId: aws.String(catalogID),
-			Name:      aws.String(connectionName),
-		})
+		output, err := finder.ConnectionByName(conn, connectionName, catalogID)
+
 		if err != nil {
 			return err
 		}
 
-		if output.Connection == nil {
-			return fmt.Errorf("Glue Connection (%s) not found", rs.Primary.ID)
-		}
+		*connection = *output
 
-		if aws.StringValue(output.Connection.Name) == connectionName {
-			*connection = *output.Connection
-			return nil
-		}
-
-		return fmt.Errorf("Glue Connection (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -453,24 +446,17 @@ func testAccCheckAWSGlueConnectionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		output, err := conn.GetConnection(&glue.GetConnectionInput{
-			CatalogId: aws.String(catalogID),
-			Name:      aws.String(connectionName),
-		})
+		_, err = finder.ConnectionByName(conn, connectionName, catalogID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-				return nil
-			}
-
+			return err
 		}
 
-		connection := output.Connection
-		if connection != nil && aws.StringValue(connection.Name) == connectionName {
-			return fmt.Errorf("Glue Connection %s still exists", rs.Primary.ID)
-		}
-
-		return err
+		return fmt.Errorf("Glue Connection %s still exists", rs.Primary.ID)
 	}
 
 	return nil

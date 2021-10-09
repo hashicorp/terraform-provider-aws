@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGlueConnection() *schema.Resource {
@@ -137,27 +139,15 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	input := &glue.GetConnectionInput{
-		CatalogId: aws.String(catalogID),
-		Name:      aws.String(connectionName),
-	}
-
-	log.Printf("[DEBUG] Reading Glue Connection: %s", input)
-	output, err := conn.GetConnection(input)
-	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-			log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Glue Connection (%s): %w", d.Id(), err)
-	}
-
-	connection := output.Connection
-	if connection == nil {
+	connection, err := finder.ConnectionByName(conn, connectionName, catalogID)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Glue Connection (%s): %w", d.Id(), err)
 	}
 
 	connectionArn := arn.ARN{
