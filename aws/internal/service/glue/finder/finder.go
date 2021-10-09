@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func DevEndpointByName(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
@@ -136,4 +137,30 @@ func PartitionByValues(conn *glue.Glue, id string) (*glue.Partition, error) {
 	}
 
 	return output.Partition, nil
+}
+
+// ConnectionByName returns the Connection corresponding to the specified Name and CatalogId.
+func ConnectionByName(conn *glue.Glue, name, catalogID string) (*glue.Connection, error) {
+	input := &glue.GetConnectionInput{
+		CatalogId: aws.String(catalogID),
+		Name:      aws.String(name),
+	}
+
+	output, err := conn.GetConnection(input)
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Connection == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Connection, nil
 }

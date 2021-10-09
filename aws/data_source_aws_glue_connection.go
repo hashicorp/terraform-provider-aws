@@ -6,11 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func dataSourceAwsGlueConnection() *schema.Resource {
@@ -88,21 +89,17 @@ func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData
 	id := d.Get("id").(string)
 	catalogID, connectionName, err := decodeGlueConnectionID(id)
 	if err != nil {
-		return diag.Errorf("error decoding Glue Connection %s: %w", id, err)
-	}
-	input := &glue.GetConnectionInput{
-		CatalogId: aws.String(catalogID),
-		Name:      aws.String(connectionName),
-	}
-	output, err := conn.GetConnection(input)
-	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-			return diag.Errorf("error Glue Connection (%s) not found", id)
-		}
-		return diag.Errorf("error reading Glue Connection (%s): %w", id, err)
+		return diag.Errorf("error decoding Glue Connection %s: %s", id, err)
 	}
 
-	connection := output.Connection
+	connection, err := finder.ConnectionByName(conn, connectionName, catalogID)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			return diag.Errorf("error Glue Connection (%s) not found", id)
+		}
+		return diag.Errorf("error reading Glue Connection (%s): %s", id, err)
+	}
+
 	d.SetId(id)
 	d.Set("catalog_id", catalogID)
 	d.Set("connection_type", connection.ConnectionType)
@@ -119,28 +116,28 @@ func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("arn", connectionArn)
 
 	if err := d.Set("connection_properties", aws.StringValueMap(connection.ConnectionProperties)); err != nil {
-		return diag.Errorf("error setting connection_properties: %w", err)
+		return diag.Errorf("error setting connection_properties: %s", err)
 	}
 
 	if err := d.Set("physical_connection_requirements", flattenGluePhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
-		return diag.Errorf("error setting physical_connection_requirements: %w", err)
+		return diag.Errorf("error setting physical_connection_requirements: %s", err)
 	}
 
 	if err := d.Set("match_criteria", flattenStringList(connection.MatchCriteria)); err != nil {
-		return diag.Errorf("error setting match_criteria: %w", err)
+		return diag.Errorf("error setting match_criteria: %s", err)
 	}
 
 	tags, err := keyvaluetags.GlueListTags(conn, connectionArn)
 
 	if err != nil {
-		return diag.Errorf("error listing tags for Glue Connection (%s): %w", connectionArn, err)
+		return diag.Errorf("error listing tags for Glue Connection (%s): %s", connectionArn, err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags: %w", err)
+		return diag.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
