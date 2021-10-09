@@ -656,7 +656,7 @@ resource "aws_glue_connection" "test" {
 
   tags = {
     %[3]q = %[4]q
-    %[5]q = %[6]q	
+    %[5]q = %[6]q
   }
 }
 `, rName, jdbcConnectionUrl, tagKey1, tagValue1, tagKey2, tagValue2)
