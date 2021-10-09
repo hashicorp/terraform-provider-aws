@@ -38,6 +38,10 @@ func dataSourceAwsOrganizationsAccounts() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
