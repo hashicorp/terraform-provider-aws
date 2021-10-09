@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsGlueConnection() *schema.Resource {
@@ -75,16 +76,19 @@ func dataSourceAwsGlueConnection() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).glueconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	id := d.Get("id").(string)
 	catalogID, connectionName, err := decodeGlueConnectionID(id)
 	if err != nil {
-		return diag.Errorf("error decoding Glue Connection %s: %s", id, err)
+		return diag.Errorf("error decoding Glue Connection %s: %w", id, err)
 	}
 	input := &glue.GetConnectionInput{
 		CatalogId: aws.String(catalogID),
@@ -95,7 +99,7 @@ func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData
 		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
 			return diag.Errorf("error Glue Connection (%s) not found", id)
 		}
-		return diag.Errorf("error reading Glue Connection (%s): %s", id, err)
+		return diag.Errorf("error reading Glue Connection (%s): %w", id, err)
 	}
 
 	connection := output.Connection
@@ -115,15 +119,28 @@ func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("arn", connectionArn)
 
 	if err := d.Set("connection_properties", aws.StringValueMap(connection.ConnectionProperties)); err != nil {
-		return diag.Errorf("error setting connection_properties: %s", err)
+		return diag.Errorf("error setting connection_properties: %w", err)
 	}
 
 	if err := d.Set("physical_connection_requirements", flattenGluePhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
-		return diag.Errorf("error setting physical_connection_requirements: %s", err)
+		return diag.Errorf("error setting physical_connection_requirements: %w", err)
 	}
 
 	if err := d.Set("match_criteria", flattenStringList(connection.MatchCriteria)); err != nil {
-		return diag.Errorf("error setting match_criteria: %s", err)
+		return diag.Errorf("error setting match_criteria: %w", err)
+	}
+
+	tags, err := keyvaluetags.GlueListTags(conn, connectionArn)
+
+	if err != nil {
+		return diag.Errorf("error listing tags for Glue Connection (%s): %w", connectionArn, err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.Map()); err != nil {
+		return diag.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
