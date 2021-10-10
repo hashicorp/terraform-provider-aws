@@ -11,14 +11,60 @@ import (
 const (
 	// Maximum amount of time to wait for a Workspace to be created, updated, or deleted
 	workspaceTimeout = 5 * time.Minute
+
+	// Maximum amount of time to wait for AlertManager to be created, updated, or deleted
+	alertManagerTimeout = 5 * time.Minute
 )
 
-// waitWorkspaceCreated waits for a Workspace to return "Active"
-func waitWorkspaceCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceSummary, error) {
+// waitAlertManagerActive waits for a AlertManager to return "Active"
+func waitAlertManagerActive(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.AlertManagerDefinitionDescription, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{prometheusservice.WorkspaceStatusCodeCreating},
+		Pending: []string{
+			prometheusservice.AlertManagerDefinitionStatusCodeCreating,
+			prometheusservice.AlertManagerDefinitionStatusCodeUpdating,
+		},
+		Target:  []string{prometheusservice.AlertManagerDefinitionStatusCodeActive},
+		Refresh: statusAlertManager(ctx, conn, id),
+		Timeout: alertManagerTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*prometheusservice.AlertManagerDefinitionDescription); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// waitAlertManagerDeleted waits for a AlertManager to return "Deleted"
+func waitAlertManagerDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) (*prometheusservice.WorkspaceSummary, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{prometheusservice.AlertManagerDefinitionStatusCodeDeleting},
+		Target:  []string{resourceStatusDeleted},
+		Refresh: statusAlertManagerDeleted(ctx, conn, arn),
+		Timeout: workspaceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	// TODO
+	if v, ok := outputRaw.(*prometheusservice.WorkspaceSummary); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// waitWorkspaceActive waits for a Workspace to return "Active"
+func waitWorkspaceActive(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceSummary, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			prometheusservice.WorkspaceStatusCodeCreating,
+			prometheusservice.WorkspaceStatusCodeUpdating,
+		},
 		Target:  []string{prometheusservice.WorkspaceStatusCodeActive},
-		Refresh: statusWorkspaceCreated(ctx, conn, id),
+		Refresh: statusWorkspace(ctx, conn, id),
 		Timeout: workspaceTimeout,
 	}
 

@@ -10,8 +10,6 @@ description: |-
 
 Manages an Amazon Managed Service for Prometheus (AMP) Workspace.
 
-~> **NOTE:** This AWS functionality is in Preview and may change before General Availability release. Backwards compatibility is not guaranteed between Terraform AWS Provider releases.
-
 ## Example Usage
 
 ```terraform
@@ -25,6 +23,7 @@ resource "aws_prometheus_workspace" "demo" {
 The following argument is supported:
 
 * `alias` - (Optional) The alias of the prometheus workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-create-workspace.html).
+* `alert_manager_definition` - (Optional) The prometheus workspace alert manager definition. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-create-workspace.html).
 
 ## Attributes Reference
 

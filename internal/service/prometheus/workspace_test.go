@@ -28,7 +28,7 @@ func TestAccPrometheusWorkspace_AMP_basic(t *testing.T) {
 			{
 				Config: testAccAMPWorkspaceWithAliasConfig(workspaceAlias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testCheckAMPWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", workspaceAlias),
 				),
 			},
@@ -46,8 +46,30 @@ func TestAccPrometheusWorkspace_AMP_basic(t *testing.T) {
 			{
 				Config: testAccAMPWorkspaceWithAliasConfig(workspaceAlias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testCheckAMPWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", workspaceAlias),
+				),
+			},
+			{
+				Config: testAWSAMPWorkspaceConfigWithAlertManagerDefinition("test"),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAWSAMPAlertManagerExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "alert_manager_definition"),
+				),
+			},
+			{
+				Config: testAWSAMPWorkspaceConfigWithAlertManagerDefinition("update"),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAWSAMPAlertManagerExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "alert_manager_definition"),
+				),
+			},
+			{
+				Config: testAccAMPWorkspaceWithAliasConfig(workspaceAlias),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAMPWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "alias", workspaceAlias),
+					resource.TestCheckResourceAttr(resourceName, "alert_manager_definition", ""),
 				),
 			},
 		},
@@ -65,7 +87,7 @@ func TestAccPrometheusWorkspace_AMP_disappears(t *testing.T) {
 			{
 				Config: testAccAMPWorkspaceWithoutAliasConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMPWorkspaceExists(resourceName),
+					testCheckAMPWorkspaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfprometheus.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -74,7 +96,35 @@ func TestAccPrometheusWorkspace_AMP_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAMPWorkspaceExists(n string) resource.TestCheckFunc {
+func testCheckAWSAMPAlertManagerExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No AMP Workspace ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PrometheusConn
+
+		req := &prometheusservice.DescribeAlertManagerDefinitionInput{
+			WorkspaceId: aws.String(rs.Primary.ID),
+		}
+		describe, err := conn.DescribeAlertManagerDefinition(req)
+		if err != nil {
+			return err
+		}
+		if describe == nil {
+			return fmt.Errorf("Got nil alertmanager ?!")
+		}
+
+		return nil
+	}
+}
+
+func testCheckAMPWorkspaceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -138,4 +188,25 @@ func testAccAMPWorkspaceWithoutAliasConfig() string {
 resource "aws_prometheus_workspace" "test" {
 }
 `
+}
+
+func testAWSAMPWorkspaceConfigWithAlertManagerDefinition(name string) string {
+	definition := fmt.Sprintf(`alertmanager_config: |
+  route:
+    receiver: '%s'
+  receivers:
+    - name: '%s'
+      sns_configs: 
+      - topic_arn: arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:My-Topic
+`, name, name)
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_prometheus_workspace" "test" {
+  alert_manager_definition = <<EOD
+%s
+EOD
+}`, definition)
 }
