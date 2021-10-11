@@ -164,3 +164,57 @@ func ConnectionByName(conn *glue.Glue, name, catalogID string) (*glue.Connection
 
 	return output.Connection, nil
 }
+
+// PartitionIndexByName returns the Partition Index corresponding to the specified Partition Index Name.
+func PartitionIndexByName(conn *glue.Glue, id string) (*glue.PartitionIndexDescriptor, error) {
+
+	catalogID, dbName, tableName, partIndex, err := tfglue.ReadAwsGluePartitionIndexID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &glue.GetPartitionIndexesInput{
+		CatalogId:    aws.String(catalogID),
+		DatabaseName: aws.String(dbName),
+		TableName:    aws.String(tableName),
+	}
+
+	var result *glue.PartitionIndexDescriptor
+
+	output, err := conn.GetPartitionIndexes(input)
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, partInd := range output.PartitionIndexDescriptorList {
+		if partInd == nil {
+			continue
+		}
+
+		if aws.StringValue(partInd.IndexName) == partIndex {
+			result = partInd
+			break
+		}
+	}
+
+	if result == nil {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	return result, nil
+}

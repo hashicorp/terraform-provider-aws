@@ -18,8 +18,20 @@ func ReadAwsGluePartitionID(id string) (catalogID string, dbName string, tableNa
 	return idParts[0], idParts[1], idParts[2], vals, nil
 }
 
+func ReadAwsGluePartitionIndexID(id string) (catalogID, dbName, tableName, indexName string, error error) {
+	idParts := strings.Split(id, ":")
+	if len(idParts) != 4 {
+		return "", "", "", "", fmt.Errorf("expected ID in format catalog-id:database-name:table-name:index-name, received: %s", id)
+	}
+	return idParts[0], idParts[1], idParts[2], idParts[3], nil
+}
+
 func CreateAwsGluePartitionID(catalogID, dbName, tableName string, values []interface{}) string {
 	return fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, stringifyAwsGluePartition(values))
+}
+
+func CreateAwsGluePartitionIndexID(catalogID, dbName, tableName, indexName string) string {
+	return fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, indexName)
 }
 
 func stringifyAwsGluePartition(partValues []interface{}) string {
