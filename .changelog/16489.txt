@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_dx_hosted_connection
+```
+
+```release-note:new-resource
+aws_dx_connection_confirmation
+```
+
+```release-note:enhancement
+resource/aws_dx_lag: Add `connection_id` argument
+```

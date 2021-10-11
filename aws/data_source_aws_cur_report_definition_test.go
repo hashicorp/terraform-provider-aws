@@ -2,19 +2,15 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
@@ -22,9 +18,10 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCur(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName, bucketName),
@@ -45,10 +42,6 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsCurReportDefinition_additional(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
@@ -56,9 +49,10 @@ func TestAccDataSourceAwsCurReportDefinition_additional(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCur(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsCurReportDefinitionConfig_additional(reportName, bucketName),
@@ -94,14 +88,13 @@ func testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resource
 	}
 }
 
-// note: cur report definitions are currently only supported in us-east-1
 func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
+	return composeConfig(
+		testAccCurRegionProviderConfig(),
+		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
+
+data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
@@ -133,10 +126,10 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURPutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::386209384616:root"
+        "AWS": "${data.aws_billing_service_account.test.arn}"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
     }
   ]
 }
@@ -144,7 +137,7 @@ POLICY
 }
 
 resource "aws_cur_report_definition" "test" {
-	depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
@@ -160,16 +153,16 @@ resource "aws_cur_report_definition" "test" {
 data "aws_cur_report_definition" "test" {
   report_name = aws_cur_report_definition.test.report_name
 }
-`, reportName, bucketName)
+`, reportName, bucketName))
 }
 
 func testAccDataSourceAwsCurReportDefinitionConfig_additional(reportName string, bucketName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
+	return composeConfig(
+		testAccCurRegionProviderConfig(),
+		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
+
+data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
@@ -201,10 +194,10 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURPutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::386209384616:root"
+        "AWS": "${data.aws_billing_service_account.test.arn}"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
     }
   ]
 }
@@ -212,7 +205,7 @@ POLICY
 }
 
 resource "aws_cur_report_definition" "test" {
-	depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
 
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
@@ -230,5 +223,5 @@ resource "aws_cur_report_definition" "test" {
 data "aws_cur_report_definition" "test" {
   report_name = aws_cur_report_definition.test.report_name
 }
-`, reportName, bucketName)
+`, reportName, bucketName))
 }

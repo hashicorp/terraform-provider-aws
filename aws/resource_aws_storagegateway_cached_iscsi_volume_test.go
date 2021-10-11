@@ -20,8 +20,8 @@ func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 		ErrCount           int
 	}{
 		{
-			Input:              "arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:TargetName",
-			ExpectedGatewayARN: "arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B",
+			Input:              "arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:TargetName", //lintignore:AWSAT003,AWSAT005
+			ExpectedGatewayARN: "arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B",                                          //lintignore:AWSAT003,AWSAT005
 			ExpectedTargetName: "TargetName",
 			ErrCount:           0,
 		},
@@ -30,11 +30,11 @@ func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Input:    "arn:aws:storagegateway:us-east-2:111122223333:target/iqn.1997-05.com.amazon:TargetName",
+			Input:    "arn:aws:storagegateway:us-east-2:111122223333:target/iqn.1997-05.com.amazon:TargetName", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 1,
 		},
 		{
-			Input:    "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678",
+			Input:    "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 1,
 		},
 		{
@@ -75,6 +75,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -114,6 +115,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_kms(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -141,6 +143,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -188,6 +191,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SnapshotId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -226,6 +230,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_SourceVolumeArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -263,6 +268,7 @@ func TestAccAWSStorageGatewayCachedIscsiVolume_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -400,9 +406,9 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 
 func testAccAWSStorageGatewayCachedIscsiVolumeConfigKMSEncrypted(rName string) string {
 	return testAccAWSStorageGatewayCachedIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
- resource "aws_kms_key" "test" {
-     description = "Terraform acc test %[1]s"
-     policy = <<POLICY
+resource "aws_kms_key" "test" {
+  description = "Terraform acc test %[1]s"
+  policy      = <<POLICY
  {
    "Version": "2012-10-17",
    "Id": "kms-tf-1",

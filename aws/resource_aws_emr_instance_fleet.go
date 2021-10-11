@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -235,7 +236,7 @@ func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{})
 	if resp == nil {
 		return fmt.Errorf("error creating instance fleet: no instance fleet returned")
 	}
-	d.SetId(*resp.InstanceFleetId)
+	d.SetId(aws.StringValue(resp.InstanceFleetId))
 
 	return nil
 }
@@ -243,15 +244,18 @@ func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{})
 func resourceAwsEMRInstanceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).emrconn
 	instanceFleets, err := fetchAllEMRInstanceFleets(conn, d.Get("cluster_id").(string))
+
 	if err != nil {
-		log.Printf("[DEBUG] EMR doesn't have any Instance Fleet ")
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error listing EMR Instance Fleets for Cluster (%s): %w", d.Get("cluster_id").(string), err)
 	}
 
 	fleet := findInstanceFleetById(instanceFleets, d.Id())
 	if fleet == nil {
-		log.Printf("[DEBUG] EMR Instance Fleet (%s) not found, removing", d.Id())
+		if d.IsNewResource() {
+			return fmt.Errorf("error finding EMR Instance Fleet (%s): not found after creation", d.Id())
+		}
+
+		log.Printf("[DEBUG] EMR Instance Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -356,6 +360,11 @@ func resourceAwsEMRInstanceFleetDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	_, err := conn.ModifyInstanceFleet(modifyInstanceFleetInput)
+
+	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "instance fleet may only be modified when the cluster is running or waiting") {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error deleting/modifying EMR Instance Fleet (%s): %w", d.Id(), err)
 	}

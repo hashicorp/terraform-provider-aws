@@ -18,6 +18,7 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueUDFDestroy,
 		Steps: []resource.TestStep{
@@ -57,6 +58,7 @@ func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueUDFDestroy,
 		Steps: []resource.TestStep{
@@ -96,6 +98,7 @@ func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueUDFDestroy,
 		Steps: []resource.TestStep{
@@ -214,8 +217,8 @@ resource "aws_glue_user_defined_function" "test" {
   owner_type    = "GROUP"
 
   resource_uris {
-   resource_type = "ARCHIVE"
-   uri           = %[1]q
+    resource_type = "ARCHIVE"
+    uri           = %[1]q
   }
 }
 `, rName)
@@ -236,13 +239,13 @@ resource "aws_glue_user_defined_function" "test" {
   owner_type    = "GROUP"
 
   resource_uris {
-   resource_type = "ARCHIVE"
-   uri           = %[1]q
+    resource_type = "ARCHIVE"
+    uri           = %[1]q
   }
 
   resource_uris {
-   resource_type = "JAR"
-   uri           = %[1]q
+    resource_type = "JAR"
+    uri           = %[1]q
   }
 }
 `, rName)

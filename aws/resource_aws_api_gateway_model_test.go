@@ -20,7 +20,8 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
 		Steps: []resource.TestStep{
@@ -55,7 +56,8 @@ func TestAccAWSAPIGatewayModel_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
 		Steps: []resource.TestStep{

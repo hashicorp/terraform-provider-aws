@@ -29,7 +29,6 @@ func init() {
 		Name: "aws_ec2_client_vpn_endpoint",
 		F:    testSweepEc2ClientVpnEndpoints,
 		Dependencies: []string{
-			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_network_association",
 		},
 	})
@@ -47,9 +46,9 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &ec2.DescribeClientVpnEndpointsInput{}
-	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, isLast bool) bool {
+	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
@@ -64,7 +63,7 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Client VPN endpoint sweep for %s: %s", region, err)
@@ -93,6 +92,7 @@ func TestAccAwsEc2ClientVpn_serial(t *testing.T) {
 			"withDNSServers":    testAccAwsEc2ClientVpnEndpoint_withDNSServers,
 			"tags":              testAccAwsEc2ClientVpnEndpoint_tags,
 			"splitTunnel":       testAccAwsEc2ClientVpnEndpoint_splitTunnel,
+			"selfServicePortal": testAccAwsEc2ClientVpnEndpoint_selfServicePortal,
 		},
 		"AuthorizationRule": {
 			"basic":      testAccAwsEc2ClientVpnAuthorizationRule_basic,
@@ -101,9 +101,10 @@ func TestAccAwsEc2ClientVpn_serial(t *testing.T) {
 			"disappears": testAccAwsEc2ClientVpnAuthorizationRule_disappears,
 		},
 		"NetworkAssociation": {
-			"basic":          testAccAwsEc2ClientVpnNetworkAssociation_basic,
-			"disappears":     testAccAwsEc2ClientVpnNetworkAssociation_disappears,
-			"securityGroups": testAccAwsEc2ClientVpnNetworkAssociation_securityGroups,
+			"basic":           testAccAwsEc2ClientVpnNetworkAssociation_basic,
+			"multipleSubnets": testAccAwsEc2ClientVpnNetworkAssociation_multipleSubnets,
+			"disappears":      testAccAwsEc2ClientVpnNetworkAssociation_disappears,
+			"securityGroups":  testAccAwsEc2ClientVpnNetworkAssociation_securityGroups,
 		},
 		"Route": {
 			"basic":       testAccAwsEc2ClientVpnRoute_basic,
@@ -136,6 +137,7 @@ func testAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -165,6 +167,7 @@ func testAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -187,6 +190,7 @@ func testAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -214,6 +218,7 @@ func testAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -242,6 +247,7 @@ func testAccAwsEc2ClientVpnEndpoint_federated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -251,12 +257,23 @@ func testAccAwsEc2ClientVpnEndpoint_federated(t *testing.T) {
 					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "federated-authentication"),
+					resource.TestCheckResourceAttrSet(resourceName, "authentication_options.0.saml_provider_arn"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithFederatedAuthSelfServiceSamlProviderArn(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "federated-authentication"),
+					resource.TestCheckResourceAttrSet(resourceName, "authentication_options.0.saml_provider_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "authentication_options.0.self_service_saml_provider_arn"),
+				),
 			},
 		},
 	})
@@ -271,6 +288,7 @@ func testAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -306,6 +324,7 @@ func testAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -332,6 +351,7 @@ func testAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -374,6 +394,7 @@ func testAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -394,6 +415,40 @@ func testAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsEc2ClientVpnEndpoint_selfServicePortal(t *testing.T) {
+	var v1, v2 ec2.ClientVpnEndpoint
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSelfServicePortal(rName, "enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "self_service_portal", "enabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSelfServicePortal(rName, "disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "self_service_portal", "disabled"),
 				),
 			},
 		},
@@ -638,6 +693,36 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `, rName, rName)
 }
 
+func testAccEc2ClientVpnEndpointConfigWithFederatedAuthSelfServiceSamlProviderArn(rName string) string {
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+resource "aws_iam_saml_provider" "default" {
+  name                   = "myprovider-%s"
+  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+}
+
+resource "aws_iam_saml_provider" "self_service" {
+  name                   = "myprovider-selfservice--%s"
+  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                           = "federated-authentication"
+    saml_provider_arn              = aws_iam_saml_provider.default.arn
+    self_service_saml_provider_arn = aws_iam_saml_provider.self_service.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName, rName, rName)
+}
+
 func testAccEc2ClientVpnEndpointConfig_tags(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -703,4 +788,29 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName, splitTunnel)
+}
+
+func testAccEc2ClientVpnEndpointConfigSelfServicePortal(rName string, selfServicePortal string) string {
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+resource "aws_iam_saml_provider" "default" {
+  name                   = "myprovider-%s"
+  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+  self_service_portal    = %[3]q
+
+  authentication_options {
+    type              = "federated-authentication"
+    saml_provider_arn = aws_iam_saml_provider.default.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName, rName, selfServicePortal)
 }

@@ -21,7 +21,8 @@ func TestAccAWSKinesisVideoStream_basic(t *testing.T) {
 	rInt2 := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisvideo.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +63,8 @@ func TestAccAWSKinesisVideoStream_options(t *testing.T) {
 	rName2 := acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisvideo.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
@@ -103,7 +105,8 @@ func TestAccAWSKinesisVideoStream_Tags(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisvideo.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{
@@ -148,7 +151,8 @@ func TestAccAWSKinesisVideoStream_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(kinesisvideo.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisvideo.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisVideoStreamDestroy,
 		Steps: []resource.TestStep{

@@ -12,7 +12,7 @@ Creates Security Hub custom action.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_action_target" "example" {
@@ -33,7 +33,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the Security Hub custom action target.
 

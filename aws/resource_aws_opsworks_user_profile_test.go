@@ -16,7 +16,8 @@ func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
 	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	updateRName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksUserProfileDestroy,
 		Steps: []resource.TestStep{

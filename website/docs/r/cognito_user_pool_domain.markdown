@@ -14,7 +14,7 @@ Provides a Cognito User Pool Domain resource.
 
 ### Amazon Cognito domain
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool_domain" "main" {
   domain       = "example-domain"
   user_pool_id = aws_cognito_user_pool.example.id
@@ -27,7 +27,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ### Custom Cognito domain
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool_domain" "main" {
   domain          = "example-domain.example.com"
   certificate_arn = aws_acm_certificate.cert.arn
@@ -63,7 +63,7 @@ The following arguments are supported:
 * `user_pool_id` - (Required) The user pool ID.
 * `certificate_arn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

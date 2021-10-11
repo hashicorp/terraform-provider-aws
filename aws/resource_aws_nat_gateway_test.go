@@ -61,16 +61,43 @@ func TestAccAWSNatGateway_basic(t *testing.T) {
 	resourceName := "aws_nat_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckNatGatewayDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNatGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNatGatewayExists(resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "public"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSNatGateway_ConnectivityType_Private(t *testing.T) {
+	var natGateway ec2.NatGateway
+	resourceName := "aws_nat_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNatGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNatGatewayConfigConnectivityType("private"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNatGatewayExists(resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "private"),
 				),
 			},
 			{
@@ -88,6 +115,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -230,7 +258,6 @@ resource "aws_eip" "test" {
 `
 
 const testAccNatGatewayConfig = testAccNatGatewayConfigBase + `
-// Actual SUT
 resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id
   subnet_id     = aws_subnet.public.id
@@ -238,6 +265,24 @@ resource "aws_nat_gateway" "test" {
   depends_on = [aws_internet_gateway.test]
 }
 `
+
+func testAccNatGatewayConfigConnectivityType(connectivityType string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id     = aws_vpc.test.id
+}
+
+resource "aws_nat_gateway" "test" {
+  connectivity_type = %[1]q
+  subnet_id         = aws_subnet.test.id
+}
+`, connectivityType)
+}
 
 func testAccNatGatewayConfigTags1(tagKey1, tagValue1 string) string {
 	return testAccNatGatewayConfigBase + fmt.Sprintf(`

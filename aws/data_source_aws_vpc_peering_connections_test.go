@@ -3,13 +3,15 @@ package aws
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcPeeringConnections_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcPeeringConnectionsConfig,
@@ -50,23 +52,23 @@ resource "aws_vpc" "baz" {
 }
 
 resource "aws_vpc_peering_connection" "conn1" {
-  vpc_id = aws_vpc.foo.id
+  vpc_id      = aws_vpc.foo.id
   peer_vpc_id = aws_vpc.bar.id
   auto_accept = true
 
   tags = {
-    Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-bar"
+    Name        = "terraform-testacc-vpc-peering-connection-data-source-foo-to-bar"
     Environment = "test"
   }
 }
 
 resource "aws_vpc_peering_connection" "conn2" {
-  vpc_id = aws_vpc.foo.id
+  vpc_id      = aws_vpc.foo.id
   peer_vpc_id = aws_vpc.baz.id
   auto_accept = true
 
   tags = {
-    Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-baz"
+    Name        = "terraform-testacc-vpc-peering-connection-data-source-foo-to-baz"
     Environment = "test"
   }
 }

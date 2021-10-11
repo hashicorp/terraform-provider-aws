@@ -25,6 +25,7 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -67,6 +68,7 @@ func TestAccAWSIAMUserPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -92,10 +94,10 @@ func TestAccAWSIAMUserPolicy_namePrefix(t *testing.T) {
 	userName := fmt.Sprintf("test_user_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: policyResourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckIAMUserPolicyDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMUserPolicyConfig_namePrefix(rInt, strconv.Quote(policy1)),
@@ -134,10 +136,10 @@ func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
 	userName := fmt.Sprintf("test_user_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: policyResourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckIAMUserPolicyDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMUserPolicyConfig_generatedName(rInt, strconv.Quote(policy1)),
@@ -177,6 +179,7 @@ func TestAccAWSIAMUserPolicy_multiplePolicies(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -399,7 +402,7 @@ func testAccIAMUserPolicyConfig_name(rInt int, policy string) string {
 resource "aws_iam_user_policy" "foo" {
   name   = "foo_policy_%d"
   user   = aws_iam_user.user.name
-  policy = %v
+  policy = %s
 }
 `, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), rInt, policy)
 }
@@ -411,7 +414,7 @@ func testAccIAMUserPolicyConfig_namePrefix(rInt int, policy string) string {
 resource "aws_iam_user_policy" "foo" {
   name_prefix = "foo_policy_"
   user        = aws_iam_user.user.name
-  policy      = %v
+  policy      = %s
 }
 `, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), policy)
 }
@@ -422,7 +425,7 @@ func testAccIAMUserPolicyConfig_generatedName(rInt int, policy string) string {
 
 resource "aws_iam_user_policy" "foo" {
   user   = aws_iam_user.user.name
-  policy = %v
+  policy = %s
 }
 `, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), policy)
 }
@@ -434,13 +437,13 @@ func testAccIAMUserPolicyConfig_multiplePolicies(rInt int, policy1, policy2 stri
 resource "aws_iam_user_policy" "foo" {
   name   = "foo_policy_%[2]d"
   user   = aws_iam_user.user.name
-  policy = %[3]v
+  policy = %[3]s
 }
 
 resource "aws_iam_user_policy" "bar" {
   name   = "bar_policy_%[2]d"
   user   = aws_iam_user.user.name
-  policy = %[4]v
+  policy = %[4]s
 }
 `, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), rInt, policy1, policy2)
 }

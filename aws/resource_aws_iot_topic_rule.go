@@ -5,9 +5,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsIotTopicRule() *schema.Resource {
@@ -68,7 +72,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"metric_timestamp": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateIoTTopicRuleCloudWatchMetricTimestamp,
+							ValidateFunc: validateUTCTimestamp,
 						},
 						"metric_unit": {
 							Type:     schema.TypeString,
@@ -421,7 +425,8 @@ func resourceAwsIotTopicRule() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"error_action": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -489,7 +494,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"metric_timestamp": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateIoTTopicRuleCloudWatchMetricTimestamp,
+										ValidateFunc: validateUTCTimestamp,
 									},
 									"metric_unit": {
 										Type:     schema.TypeString,
@@ -1075,21 +1080,46 @@ func resourceAwsIotTopicRule() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	ruleName := d.Get("name").(string)
 
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().UrlEncode()),
+		Tags:             aws.String(tags.IgnoreAws().UrlQueryString()),
 		TopicRulePayload: expandIotTopicRulePayload(d),
 	}
 
-	_, err := conn.CreateTopicRule(input)
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+		_, err = conn.CreateTopicRule(input)
+
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "unable to perform: sts:AssumeRole on resource") {
+			return resource.RetryableError(err)
+		}
+
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "unable to assume role (sts:AssumeRole) on resource") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.CreateTopicRule(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating IoT Topic Rule (%s): %w", ruleName, err)
@@ -1102,6 +1132,7 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &iot.GetTopicRuleInput{
@@ -1127,8 +1158,15 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for IoT Topic Rule (%s): %w", aws.StringValue(out.RuleArn), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	if err := d.Set("cloudwatch_alarm", flattenIotCloudWatchAlarmActions(out.Rule.Actions)); err != nil {
@@ -1209,6 +1247,7 @@ func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) err
 		"dynamodbv2",
 		"elasticsearch",
 		"enabled",
+		"error_action",
 		"firehose",
 		"iot_analytics",
 		"iot_events",
@@ -1234,8 +1273,8 @@ func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.IotUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)

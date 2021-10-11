@@ -3,15 +3,65 @@ package aws
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSEc2TransitGatewayDataSource_Filter(t *testing.T) {
+func TestAccAWSEc2TransitGatewayDataSource_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"DxGatewayAttachment": {
+			"Filter":                         testAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter,
+			"TransitGatewayIdAndDxGatewayId": testAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGatewayId,
+		},
+		"Gateway": {
+			"Filter": testAccAWSEc2TransitGatewayDataSource_Filter,
+			"ID":     testAccAWSEc2TransitGatewayDataSource_ID,
+		},
+		"PeeringAttachment": {
+			"FilterSameAccount":      testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_sameAccount,
+			"FilterDifferentAccount": testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_differentAccount,
+			"IDSameAccount":          testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_sameAccount,
+			"IDDifferentAccount":     testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_differentAccount,
+			"Tags":                   testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Tags,
+		},
+		"RouteTable": {
+			"Filter": testAccAWSEc2TransitGatewayRouteTableDataSource_Filter,
+			"ID":     testAccAWSEc2TransitGatewayRouteTableDataSource_ID,
+		},
+		"RouteTables": {
+			"basic":  testAccDataSourceAwsEc2TransitGatewayRouteTables_basic,
+			"Filter": testAccDataSourceAwsEc2TransitGatewayRouteTables_Filter,
+		},
+		"VpcAttachment": {
+			"Filter": testAccAWSEc2TransitGatewayVpcAttachmentDataSource_Filter,
+			"ID":     testAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID,
+		},
+		"VpnAttachment": {
+			"Filter":                             testAccAWSEc2TransitGatewayVpnAttachmentDataSource_filter,
+			"TransitGatewayIdAndVpnConnectionId": testAccAWSEc2TransitGatewayVpnAttachmentDataSource_TransitGatewayIdAndVpnConnectionId,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
+func testAccAWSEc2TransitGatewayDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -36,12 +86,13 @@ func TestAccAWSEc2TransitGatewayDataSource_Filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayDataSource_ID(t *testing.T) {
+func testAccAWSEc2TransitGatewayDataSource_ID(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{

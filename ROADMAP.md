@@ -1,111 +1,110 @@
-# Roadmap: August - October 2020
+# Roadmap:  August 2021 - October 2021
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top 10 Community Issues, [core services](docs/CORE_SERVICES.md), and internal priorities. When community pull requests exist for a given item, we will prioritize working with the original authors to include their contributions. If the author can no longer take on the implementation, HashiCorp will complete any additional work needed.
+We select items for inclusion in the roadmap from the Top 10 Community Issues, [Core Services](docs/CORE_SERVICES.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
 
-Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/terraform-providers/terraform-provider-aws/milestone/138).
+Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/hashicorp/terraform-provider-aws/milestone/138).
 
-Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist we will create the resources and implementation ourselves.
+This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur .
 
-From [May through July](docs/roadmaps/2020_May_to_July.md), we committed to adding support for WAFv2 and Lex. We are happy to report that WAFv2 support is now complete and we will be finishing support for Lex immediately following the release of v3.0.0. Additionally, we planned to refactor ACM and will include the redesigned resource as part of the 3.0.0 package. Lastly, we spent some time researching Default Tags and want to extend a thank you to all the folks that volunteered to assist. We’ve written a proposal for the feature that is being reviewed internally and we hope to include the functionality in the product in the future.
+In the period spanning May to July 2021 539 Pull Requests were opened in the provider and 449 were merged, adding support for:
 
-From August-October ‘20, we will be prioritizing the following areas of work:
+- Amazon Timestream
+- AWS AppConfig
+- AWS Amplify
+- AWS Service Catalog
+- AWS ElasticSearch Native SAML for Kibana
+- Amazon Macie 2
+- Delegated Administrators for Organisations
+- Predictive Autoscaling
+- Amazon EKS OIDC
+- AWS Transfer Family support for Amazon Elastic File System
+- Amazon Kinesis Data Streams for Amazon DynamoDB
+
+Among many other enhancements, bug fixes and resolutions to technical debt items.
+
+From August-October ‘21, we will be prioritizing the following areas of work:
+
+## Provider Version v4.0.0
+
+Issue: [#20433](https://github.com/hashicorp/terraform-provider-aws/issues/20433)
+
+The next major release of the provider will include the adoption of the AWS Go SDK v2.0 as well as a refactor of one of our oldest and most used resources: S3.
+
+There will also be the usual deprecations and sometimes breaking changes to existing resources which are necessary to maintain consistency of behavior across resources. Our goal is to focus on standardization to reduce technical debt and lay a strong foundation for future enhancement initiatives within the provider.
+
+For details of the changes in full please refer to #20433. We would love to hear your feedback.
 
 ## New Services
 
-### EventBridge
+### Amazon Quicksight
+Issue: [#10990](https://github.com/hashicorp/terraform-provider-aws/issues/10990)
 
-Issue: [#9330](https://github.com/terraform-providers/terraform-provider-aws/issues/9330)
+_Amazon QuickSight is a scalable, serverless, embeddable, machine learning-powered business intelligence (BI) service built for the cloud. QuickSight lets you easily create and publish interactive BI dashboards that include Machine Learning-powered insights. QuickSight dashboards can be accessed from any device, and seamlessly embedded into your applications, portals, and websites._
 
-_[Amazon EventBridge](https://aws.amazon.com/eventbridge/) is a serverless event bus that makes it easy to connect applications together using data from your own applications, integrated Software-as-a-Service (SaaS) applications, and AWS services. EventBridge delivers a stream of real-time data from event sources, such as Zendesk, Datadog, or Pagerduty, and routes that data to targets like AWS Lambda. You can set up routing rules to determine where to send your data to build application architectures that react in real time to all of your data sources._
-
-As EventBridge exists as an addition to existing CloudWatch APIs we will perform a research phase to determine whether Terraform support should exist as separate resources, additions to existing ones, or a combination of the two.
-
-### EC2 Image Builder
-
-Issue: [#11084](https://github.com/terraform-providers/terraform-provider-aws/issues/11084)
-
-_[EC2 Image Builder](https://aws.amazon.com/image-builder/) simplifies the creation, maintenance, validation, sharing, and deployment of Linux or Windows Server images for use with Amazon EC2 and on-premises._
-
-Support for EC2 Image Builder will include:
+Support for Amazon Quicksight will include:
 
 New Resource(s):
-- aws_imagebuilder_component
-- aws_imagebuilder_distribution_configuration
-- aws_imagebuilder_image
-- aws_imagebuilder_image_pipeline
-- aws_imagebuilder_image_recipe
-- aws_imagebuilder_infrastructure_configuration
+- aws_quicksight_data_source
+- aws_quicksight_group_membership
+- aws_quicksight_iam_policy_assignment
+- aws_quicksight_data_set
+- aws_quicksight_ingestion
+- aws_quicksight_template
+- aws_quicksight_dashboard
+- aws_quicksight_template_alias
 
-New Data Source(s):
-- aws_imagebuilder_image
 
-### AWS Lake Formation
+### Amazon AppStream
+Issue: [#6058](https://github.com/hashicorp/terraform-provider-aws/issues/6508)
 
-Issue: [#9700](https://github.com/terraform-providers/terraform-provider-aws/issues/9700)
+_Amazon AppStream 2.0 is a fully managed non-persistent desktop and application virtualization service that allows your users to securely access the data, applications, and resources they need, anywhere, anytime, from any supported device. With AppStream 2.0, you can easily scale your applications and desktops to any number of users across the globe without acquiring, provisioning, and operating hardware or infrastructure. AppStream 2.0 is built on AWS, so you benefit from a data center and network architecture designed for the most security-sensitive organizations. Each end user has a fluid and responsive experience because your applications run on virtual machines optimized for specific use cases and each streaming sessions automatically adjusts to network conditions._
 
-_[AWS Lake Formation](https://aws.amazon.com/lake-formation) is a service that makes it easy to set up a secure data lake in days. A data lake is a centralized, curated, and secured repository that stores all your data, both in its original form and prepared for analysis. A data lake enables you to break down data silos and combine different types of analytics to gain insights and guide better business decisions._
-
-Support for AWS Lake Formation will include:
-
-New Resource(s):
-
-- aws_lakeformation_resource
-- aws_lakeformation_datalake_settings
-- aws_lakeformation_permissions
-
-### AWS Serverless Application Repository
-
-Issue: [#3981](https://github.com/terraform-providers/terraform-provider-aws/issues/3981)
-
-_The [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/) is a managed repository for serverless applications. It enables teams, organizations, and individual developers to store and share reusable applications, and easily assemble and deploy serverless architectures in powerful new ways. Using the Serverless Application Repository, you don't need to clone, build, package, or publish source code to AWS before deploying it. Instead, you can use pre-built applications from the Serverless Application Repository in your serverless architectures, helping you and your teams reduce duplicated work, ensure organizational best practices, and get to market faster. Integration with AWS Identity and Access Management (IAM) provides resource-level control of each application, enabling you to publicly share applications with everyone or privately share them with specific AWS accounts._
-
-Support for AWS Serverless Application Repository will include:
+Support for Amazon AppStream will include:
 
 New Resource(s):
-- aws_serverlessrepository_stack
+- aws_appstream_stack
+- aws_appstream_fleet
+- aws_appstream_imagebuilder
 
-New Data Source(s):
-- aws_serverlessrepository_application
+### Amazon Connect 
+Issue: [#16392](https://github.com/hashicorp/terraform-provider-aws/issues/16392)
 
-## Issues and Enhancements
+_Amazon Connect is an easy to use omnichannel cloud contact center that helps you provide superior customer service at a lower cost. Designed from the ground up to be omnichannel, Amazon Connect provides a seamless experience across voice and chat for your customers and agents. This includes one set of tools for skills-based routing, task management, powerful real-time and historical analytics, and intuitive management tools – all with pay-as-you-go pricing, which means Amazon Connect simplifies contact center operations, improves agent efficiency, and lowers costs. You can set up a contact center in minutes that can scale to support millions of customers from the office or as a virtual contact center._
 
-The issues below have gained substantial support via our community. As a result, we want to highlight our commitment to addressing them.
+Support for Amazon Connect will include:
 
-- [#12690](https://github.com/terraform-providers/terraform-provider-aws/issues/12690) RDS Proxy Support
-- [#11281](https://github.com/terraform-providers/terraform-provider-aws/issues/11281) Home Directory Mappings Support for AWS Transfer User
-- [#384](https://github.com/terraform-providers/terraform-provider-aws/issues/384) Add support for CreateVPCAssociationAuthorization AWS API
-- [#6562](https://github.com/terraform-providers/terraform-provider-aws/issues/6562) Auto Scaling Plans (Dynamic/Predictive Auto Scaling Groups)
-- [#5549](https://github.com/terraform-providers/terraform-provider-aws/issues/5549) Terraform constantly updates resource policy on API Gateway
-- [#11569](https://github.com/terraform-providers/terraform-provider-aws/issues/11569) aws_transfer_server: support Elastic IPs
-- [#5286](https://github.com/terraform-providers/terraform-provider-aws/issues/5286) Point in time restore support for AWS RDS instances
+New Resource(s):
+- aws_connect_instance
+- aws_connect_contact_flow
+- aws_connect_bot_association
+- aws_connect_lex_bot_association
+- aws_connect_lambda_function_association
 
-## United States Federal Focus
+New Data Source(s): 
+- aws_connect_instance
+- aws_connect_contact_flow
+- aws_connect_bot_association
+- aws_connect_lex_bot_association
+- aws_connect_lambda_function_association
 
-We have added extra engineering and product capacity to enable us to provide the same compatibility and coverage assurances in the GovCloud, C2S, and SC2S regions as we currently do for Commercial AWS regions. Our attention on C2S/SC2S environments should result in better outcomes in other similar air gapped environments. Initially, we will be focusing on GovCloud and users should expect improved experiences within that region in the coming months.
+## Enhancements to Existing Services
+- [Support for KMS Multi-Region Keys](https://github.com/hashicorp/terraform-provider-aws/issues/19896)
+- [S3 Replication Time Control](https://github.com/hashicorp/terraform-provider-aws/issues/10974)
+- [New Data Source: aws_iam_roles](https://github.com/hashicorp/terraform-provider-aws/issues/14470)
 
-## Technical Debt Theme
+## Project Restructure: Service Level Packages
 
-Each quarter we identify a technical debt theme for the team to focus on alongside new service additions, issue resolutions and enhancements. This quarter we are looking at spending time improving the reliability of our acceptance test framework. We have a number of flaky tests which add friction to the development cycle. Making these more consistent should improve the development experience for both contributors and maintainers.
+The scale of the provider (now 1000 resources/datasources) has led to its existing package structure being difficult to work with and maintain. This quarter we are going to perform a large refactor of the codebase, to align on a single go package per AWS service. More details can be found in the encompassing issue [#20431](https://github.com/hashicorp/terraform-provider-aws/issues/20431)
 
 ## Research Topics
 
 Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
 
-We are interested in your thoughts and feedback about the proposals below and encourage you to comment on the linked issues or schedule time with @maryelizbeth via the link on her GitHub profile to discuss.
+### Scaffolding for new resources, datasources and associated tests. 
 
-### API Calls/IAM Actions Per Terraform Resource (Minimum IAM)
-
-Issue: [#9154](https://github.com/terraform-providers/terraform-provider-aws/issues/9154)
-
-To address security concerns and best practices we are considering how Terraform could surface minimally viable IAM policies for taking actions on resources or executing a TF plan. This is in the early stages of research and we are particularly interested in whether or not this would be useful and the resources or services areas for which it is most valuable.
-
-### Lifecycle: Retain [Add 'retain' attribute to the Terraform lifecycle meta-parameter]
-
-Issue: [#902](https://github.com/terraform-providers/terraform-provider-aws/issues/902)
-
-Some resources (e.g. log groups) are intended to be created but never destroyed. Terraform currently does not have a lifecycle attribute for retaining such resources. We are curious as to whether or not retaining resources is a workflow that meets the needs of our community and if so, how and where we might make use of that in the AWS Provider.
+Adding resources, datasources and test files to the provider is a repetitive task which should be automated to ensure consistency and speed up contributor and maintainer workflow. A simple cli tool should be able to generate these files in place, and ensure that any code reference additions required (ie adding to `provider.go`) are performed as part of the process.
 
 ## Disclosures
 

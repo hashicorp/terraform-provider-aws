@@ -12,7 +12,9 @@ Associates an SSM Document to an instance or EC2 tag.
 
 ## Example Usage
 
-```hcl
+### Create an association for a specific instance
+
+```terraform
 resource "aws_ssm_association" "example" {
   name = aws_ssm_document.example.name
 
@@ -23,11 +25,42 @@ resource "aws_ssm_association" "example" {
 }
 ```
 
+### Create an association for all managed instances in an AWS account
+
+To target all managed instances in an AWS account, set the `key` as `"InstanceIds"` with `values` set as `["*"]`. This example also illustrates how to use an Amazon owned SSM document named `AmazonCloudWatch-ManageAgent`.
+
+```terraform
+resource "aws_ssm_association" "example" {
+  name = "AmazonCloudWatch-ManageAgent"
+
+  targets {
+    key    = "InstanceIds"
+    values = ["*"]
+  }
+}
+```
+
+### Create an association for a specific tag
+
+This example shows how to target all managed instances that are assigned a tag key of `Environment` and value of `Development`.
+
+```terraform
+resource "aws_ssm_association" "example" {
+  name = "AmazonCloudWatch-ManageAgent"
+
+  targets {
+    key    = "tag:Environment"
+    values = ["Development"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name of the SSM document to apply.
+* `apply_only_at_cron_interval` - (Optional) By default, when you create a new or update associations, the system runs it immediately and then according to the schedule you specified. Enable this option if you do not want an association to run immediately after you create or update it. This parameter is not supported for rate expressions. Default: `false`.
 * `association_name` - (Optional) The descriptive name for the association.
 * `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
 * `instance_id` - (Optional) The instance ID to apply an SSM document to. Use `targets` with key `InstanceIds` for document schema versions 2.0 and above.

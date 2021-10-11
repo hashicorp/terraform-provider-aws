@@ -4,19 +4,22 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
-func TestAccAWSEc2TransitGatewayRouteTablePropagation_basic(t *testing.T) {
+func testAccAWSEc2TransitGatewayRouteTablePropagation_basic(t *testing.T) {
 	var transitGatewayRouteTablePropagtion1 ec2.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
 	transitGatewayRouteTableResourceName := "aws_ec2_transit_gateway_route_table.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTablePropagationDestroy,
 		Steps: []resource.TestStep{
@@ -58,7 +61,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTablePropagationExists(resourceName st
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		propagation, err := ec2DescribeTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		propagation, err := finder.TransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if err != nil {
 			return err
@@ -66,6 +69,10 @@ func testAccCheckAWSEc2TransitGatewayRouteTablePropagationExists(resourceName st
 
 		if propagation == nil {
 			return fmt.Errorf("EC2 Transit Gateway Route Table Propagation not found")
+		}
+
+		if aws.StringValue(propagation.State) != ec2.TransitGatewayPropagationStateEnabled {
+			return fmt.Errorf("EC2 Transit Gateway Route Table Propagation not in enabled state: %s", aws.StringValue(propagation.State))
 		}
 
 		*transitGatewayRouteTablePropagation = *propagation
@@ -88,7 +95,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTablePropagationDestroy(s *terraform.S
 			return err
 		}
 
-		propagation, err := ec2DescribeTransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		propagation, err := finder.TransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
 			continue

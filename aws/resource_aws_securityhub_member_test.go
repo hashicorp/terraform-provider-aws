@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfsecurityhub "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub"
 )
 
 func testAccAWSSecurityHubMember_basic(t *testing.T) {
@@ -16,11 +18,12 @@ func testAccAWSSecurityHubMember_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubMemberConfig_basic("111111111111", "example@example.com"),
+				Config: testAccAWSSecurityHubMemberConfig_basic("111111111111", testAccDefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
 				),
@@ -40,11 +43,12 @@ func testAccAWSSecurityHubMember_invite(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubMemberConfig_invite("111111111111", "example@example.com", true),
+				Config: testAccAWSSecurityHubMemberConfig_invite("111111111111", testAccDefaultEmailAddress, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
 					resource.TestCheckResourceAttr(resourceName, "member_status", "Invited"),
@@ -99,11 +103,16 @@ func testAccCheckAWSSecurityHubMemberDestroy(s *terraform.State) error {
 			AccountIds: []*string{aws.String(rs.Primary.ID)},
 		})
 
+		if tfawserr.ErrCodeEquals(err, tfsecurityhub.ErrCodeBadRequestException) {
+			continue
+		}
+
+		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
 		if err != nil {
-			if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
-			return err
+			return fmt.Errorf("error getting Security Hub Member (%s): %w", rs.Primary.ID, err)
 		}
 
 		if len(resp.Members) != 0 {
@@ -122,8 +131,8 @@ resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_member" "example" {
   depends_on = [aws_securityhub_account.example]
-  account_id = "%s"
-  email      = "%s"
+  account_id = %[1]q
+  email      = %[2]q
 }
 `, accountId, email)
 }
@@ -134,9 +143,9 @@ resource "aws_securityhub_account" "example" {}
 
 resource "aws_securityhub_member" "example" {
   depends_on = [aws_securityhub_account.example]
-  account_id = "%s"
-  email      = "%s"
-  invite     = %t
+  account_id = %[1]q
+  email      = %[2]q
+  invite     = %[3]t
 }
 `, accountId, email, invite)
 }

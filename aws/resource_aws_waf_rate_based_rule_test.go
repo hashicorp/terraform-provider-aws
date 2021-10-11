@@ -2,17 +2,105 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_waf_rate_based_rule", &resource.Sweeper{
+		Name: "aws_waf_rate_based_rule",
+		F:    testSweepWafRateBasedRules,
+		Dependencies: []string{
+			"aws_waf_rule_group",
+			"aws_waf_web_acl",
+		},
+	})
+}
+
+func testSweepWafRateBasedRules(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).wafconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+	var g multierror.Group
+	var mutex = &sync.Mutex{}
+
+	input := &waf.ListRateBasedRulesInput{}
+
+	err = lister.ListRateBasedRulesPages(conn, input, func(page *waf.ListRateBasedRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, rule := range page.Rules {
+			r := resourceAwsWafRateBasedRule()
+			d := r.Data(nil)
+
+			id := aws.StringValue(rule.RuleId)
+			d.SetId(id)
+
+			// read concurrently and gather errors
+			g.Go(func() error {
+				// Need to Read first to fill in predicates attribute
+				err := r.Read(d, client)
+
+				if err != nil {
+					sweeperErr := fmt.Errorf("error reading WAF Rate Based Rule (%s): %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					return sweeperErr
+				}
+
+				// In case it was already deleted
+				if d.Id() == "" {
+					return nil
+				}
+
+				mutex.Lock()
+				defer mutex.Unlock()
+				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+
+				return nil
+			})
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Rate Based Rule for %s: %w", region, err))
+	}
+
+	if err = g.Wait().ErrorOrNil(); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rate Based Rules: %w", err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rate Based Rule for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAF Rate Based Rule sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
 	var v waf.RateBasedRule
@@ -21,6 +109,7 @@ func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
@@ -51,6 +140,7 @@ func TestAccAWSWafRateBasedRule_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -88,6 +178,7 @@ func TestAccAWSWafRateBasedRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
@@ -113,6 +204,7 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
@@ -123,7 +215,7 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated": "false",
 						"type":    "IPMatch",
 					}),
@@ -136,7 +228,7 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated": "true",
 						"type":    "ByteMatch",
 					}),
@@ -151,7 +243,7 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9659
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/9659
 func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
 	var ipset waf.IPSet
 	var before, after waf.RateBasedRule
@@ -160,6 +252,7 @@ func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
@@ -171,7 +264,7 @@ func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "rate_limit", "4000"),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated": "false",
 						"type":    "IPMatch",
 					}),
@@ -185,7 +278,7 @@ func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "rate_limit", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated": "false",
 						"type":    "IPMatch",
 					}),
@@ -207,6 +300,7 @@ func TestAccAWSWafRateBasedRule_noPredicates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
@@ -234,6 +328,7 @@ func TestAccAWSWafRateBasedRule_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
 		Steps: []resource.TestStep{

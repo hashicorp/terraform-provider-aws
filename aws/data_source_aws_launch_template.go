@@ -29,6 +29,11 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"default_version": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -77,6 +82,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"throughput": {
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 									"volume_size": {
@@ -211,12 +220,28 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"http_protocol_ipv6": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"http_tokens": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"http_put_response_hop_limit": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"enclave_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -239,6 +264,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"associate_carrier_ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"associate_public_ip_address": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -290,6 +319,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"interface_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -311,6 +344,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Computed: true,
 						},
 						"host_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"host_resource_group_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -383,12 +420,16 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
+	id, idOk := d.GetOk("id")
 	name, nameOk := d.GetOk("name")
 	tags, tagsOk := d.GetOk("tags")
 
 	params := &ec2.DescribeLaunchTemplatesInput{}
 	if filtersOk {
 		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+	}
+	if idOk {
+		params.LaunchTemplateIds = []*string{aws.String(id.(string))}
 	}
 	if nameOk {
 		params.LaunchTemplateNames = []*string{aws.String(name.(string))}
@@ -428,7 +469,7 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
@@ -496,6 +537,10 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %w", err)
+	}
+
+	if err := d.Set("enclave_options", getEnclaveOptions(ltData.EnclaveOptions)); err != nil {
+		return fmt.Errorf("error setting enclave_options: %w", err)
 	}
 
 	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {

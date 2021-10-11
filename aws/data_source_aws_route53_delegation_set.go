@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -14,6 +15,10 @@ func dataSourceAwsDelegationSet() *schema.Resource {
 		Read: dataSourceAwsDelegationSetRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -44,15 +49,22 @@ func dataSourceAwsDelegationSetRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.GetReusableDelegationSet(input)
 	if err != nil {
-		return fmt.Errorf("Failed getting Route53 delegation set: %s Set: %q", err, dSetID)
+		return fmt.Errorf("Failed getting Route53 delegation set (%s): %w", dSetID, err)
 	}
 
 	d.SetId(dSetID)
 	d.Set("caller_reference", resp.DelegationSet.CallerReference)
 
-	if err := d.Set("name_servers", expandNameServers(resp.DelegationSet.NameServers)); err != nil {
-		return fmt.Errorf("error setting name_servers: %s", err)
+	if err := d.Set("name_servers", aws.StringValueSlice(resp.DelegationSet.NameServers)); err != nil {
+		return fmt.Errorf("error setting name_servers: %w", err)
 	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "route53",
+		Resource:  fmt.Sprintf("delegationset/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }

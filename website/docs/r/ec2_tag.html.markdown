@@ -16,7 +16,7 @@ Manages an individual EC2 resource tag. This resource should only be used in cas
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_transit_gateway" "example" {}
 
 resource "aws_customer_gateway" "example" {
@@ -46,7 +46,7 @@ The following arguments are supported:
 * `key` - (Required) The tag name.
 * `value` - (Required) The value of the tag.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

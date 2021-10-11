@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -18,15 +19,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
-
-const s3BucketCreationTimeout = 2 * time.Minute
 
 func resourceAwsS3Bucket() *schema.Resource {
 	return &schema.Resource{
@@ -76,6 +79,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 				Default:       "private",
 				Optional:      true,
 				ConflictsWith: []string{"grant"},
+				ValidateFunc:  validation.StringInSlice(tfs3.BucketCannedACL_Values(), false),
 			},
 
 			"grant": {
@@ -92,6 +96,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							// TypeAmazonCustomerByEmail is not currently supported
 							ValidateFunc: validation.StringInSlice([]string{
 								s3.TypeCanonicalUser,
 								s3.TypeGroup,
@@ -107,14 +112,8 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Required: true,
 							Set:      schema.HashString,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									s3.PermissionFullControl,
-									s3.PermissionRead,
-									s3.PermissionReadAcp,
-									s3.PermissionWrite,
-									s3.PermissionWriteAcp,
-								}, false),
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(s3.Permission_Values(), false),
 							},
 						},
 					},
@@ -381,23 +380,17 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"acceleration_status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.BucketAccelerateStatusEnabled,
-					s3.BucketAccelerateStatusSuspended,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.BucketAccelerateStatus_Values(), false),
 			},
 
 			"request_payer": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.PayerRequester,
-					s3.PayerBucketOwner,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.Payer_Values(), false),
 			},
 
 			"replication_configuration": {
@@ -439,17 +432,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 													ValidateFunc: validateArn,
 												},
 												"storage_class": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														s3.StorageClassStandard,
-														s3.StorageClassReducedRedundancy,
-														s3.StorageClassStandardIa,
-														s3.StorageClassOnezoneIa,
-														s3.StorageClassIntelligentTiering,
-														s3.StorageClassGlacier,
-														s3.StorageClassDeepArchive,
-													}, false),
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
 												},
 												"replica_kms_key_id": {
 													Type:     schema.TypeString,
@@ -463,11 +448,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"owner": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	s3.OwnerOverrideDestination,
-																}, false),
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(s3.OwnerOverride_Values(), false),
 															},
 														},
 													},
@@ -505,12 +488,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 									"status": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											s3.ReplicationRuleStatusEnabled,
-											s3.ReplicationRuleStatusDisabled,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(s3.ReplicationRuleStatus_Values(), false),
 									},
 									"priority": {
 										Type:     schema.TypeInt,
@@ -531,6 +511,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 												"tags": tagsSchema(),
 											},
 										},
+									},
+									"delete_marker_replication_status": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{s3.DeleteMarkerReplicationStatusEnabled}, false),
 									},
 								},
 							},
@@ -562,15 +547,16 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Optional: true,
 												},
 												"sse_algorithm": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														s3.ServerSideEncryptionAes256,
-														s3.ServerSideEncryptionAwsKms,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
 												},
 											},
 										},
+									},
+									"bucket_key_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
 									},
 								},
 							},
@@ -586,12 +572,10 @@ func resourceAwsS3Bucket() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"object_lock_enabled": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								s3.ObjectLockEnabledEnabled,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(s3.ObjectLockEnabled_Values(), false),
 						},
 
 						"rule": {
@@ -608,12 +592,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"mode": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														s3.ObjectLockRetentionModeGovernance,
-														s3.ObjectLockRetentionModeCompliance,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.ObjectLockRetentionMode_Values(), false),
 												},
 
 												"days": {
@@ -637,8 +618,11 @@ func resourceAwsS3Bucket() *schema.Resource {
 				},
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -673,7 +657,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Special case us-east-1 region and do not set the LocationConstraint.
 	// See "Request Elements: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUT.html
-	if awsRegion != "us-east-1" {
+	if awsRegion != endpoints.UsEast1RegionID {
 		req.CreateBucketConfiguration = &s3.CreateBucketConfiguration{
 			LocationConstraint: aws.String(awsRegion),
 		}
@@ -690,11 +674,9 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] Trying to create new S3 bucket: %q", bucket)
 		_, err := s3conn.CreateBucket(req)
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "OperationAborted" {
-				log.Printf("[WARN] Got an error while trying to create S3 bucket %s: %s", bucket, err)
 				return resource.RetryableError(
 					fmt.Errorf("Error creating S3 bucket %s, retrying: %s", bucket, err))
 			}
@@ -720,8 +702,8 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		// Retry due to S3 eventual consistency
 		_, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
@@ -815,20 +797,21 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &s3.HeadBucketInput{
 		Bucket: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(s3BucketCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.BucketCreatedTimeout, func() *resource.RetryError {
 		_, err := s3conn.HeadBucket(input)
 
-		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			return resource.RetryableError(err)
 		}
 
-		if d.IsNewResource() && isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
 		}
 
@@ -839,18 +822,24 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = s3conn.HeadBucket(input)
 	}
 
-	if isAWSErrRequestFailureStatusCode(err, 404) || isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
+		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Bucket (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading S3 Bucket (%s): %w", d.Id(), err)
 	}
 
 	// In the import case, we won't have this
@@ -1281,6 +1270,12 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			// the provider s3_force_path_style configuration, which defaults to
 			// false, but allows override.
 			r.Config.S3ForcePathStyle = s3conn.Config.S3ForcePathStyle
+
+			// By default, GetBucketRegion uses anonymous credentials when doing
+			// a HEAD request to get the bucket region. This breaks in aws-cn regions
+			// when the account doesn't have an ICP license to host public content.
+			// Use the current credentials when getting the bucket region.
+			r.Config.Credentials = s3conn.Config.Credentials
 		})
 	})
 	if err != nil {
@@ -1322,7 +1317,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry due to S3 eventual consistency
-	tags, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	tagsRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
 		return keyvaluetags.S3BucketListTags(s3conn, d.Id())
 	})
 
@@ -1330,8 +1325,21 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags, ok := tagsRaw.(keyvaluetags.KeyValueTags)
+
+	if !ok {
+		return fmt.Errorf("error listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -1741,15 +1749,15 @@ func WebsiteDomainUrl(client *AWSClient, region string) string {
 
 func isOldRegion(region string) bool {
 	oldRegions := []string{
-		"ap-northeast-1",
-		"ap-southeast-1",
-		"ap-southeast-2",
-		"eu-west-1",
-		"sa-east-1",
-		"us-east-1",
-		"us-gov-west-1",
-		"us-west-1",
-		"us-west-2",
+		endpoints.ApNortheast1RegionID,
+		endpoints.ApSoutheast1RegionID,
+		endpoints.ApSoutheast2RegionID,
+		endpoints.EuWest1RegionID,
+		endpoints.SaEast1RegionID,
+		endpoints.UsEast1RegionID,
+		endpoints.UsGovWest1RegionID,
+		endpoints.UsWest1RegionID,
+		endpoints.UsWest2RegionID,
 	}
 	for _, r := range oldRegions {
 		if region == r {
@@ -1935,6 +1943,10 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 			ApplyServerSideEncryptionByDefault: rcDefaultRule,
 		}
 
+		if val, ok := rr["bucket_key_enabled"].(bool); ok {
+			rcRule.BucketKeyEnabled = aws.Bool(val)
+		}
+
 		rules = append(rules, rcRule)
 	}
 
@@ -1945,9 +1957,15 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 	}
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
-	_, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
-		return s3conn.PutBucketEncryption(i)
-	})
+	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+		waiter.PropagationTimeout,
+		func() (interface{}, error) {
+			return s3conn.PutBucketEncryption(i)
+		},
+		s3.ErrCodeNoSuchBucket,
+		tfs3.ErrCodeOperationAborted,
+	)
+
 	if err != nil {
 		return fmt.Errorf("error putting S3 server side encryption configuration: %s", err)
 	}
@@ -2088,8 +2106,15 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			} else {
 				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
 			}
-			rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
-				Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+
+			if dmr, ok := rr["delete_marker_replication_status"].(string); ok && dmr != "" {
+				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+					Status: aws.String(dmr),
+				}
+			} else {
+				rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+					Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+				}
 			}
 		} else {
 			// XML schema V1.
@@ -2260,7 +2285,8 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 		// we explicitly pass a default ExpiredObjectDeleteMarker value to be able to create
 		// the rule while keeping the policy unaffected if the conditions are not met.
 		if rule.Expiration == nil && rule.NoncurrentVersionExpiration == nil &&
-			rule.Transitions == nil && rule.NoncurrentVersionTransitions == nil {
+			rule.Transitions == nil && rule.NoncurrentVersionTransitions == nil &&
+			rule.AbortIncompleteMultipartUpload == nil {
 			rule.Expiration = &s3.LifecycleExpiration{ExpiredObjectDeleteMarker: aws.Bool(false)}
 		}
 
@@ -2294,6 +2320,7 @@ func flattenAwsS3ServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionCon
 			d["kms_master_key_id"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.KMSMasterKeyID)
 			d["sse_algorithm"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.SSEAlgorithm)
 			r["apply_server_side_encryption_by_default"] = []map[string]interface{}{d}
+			r["bucket_key_enabled"] = aws.BoolValue(v.BucketKeyEnabled)
 			rules = append(rules, r)
 		}
 	}
@@ -2384,6 +2411,10 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				m["tags"] = keyvaluetags.S3KeyValueTags(a.Tags).IgnoreAws().Map()
 			}
 			t["filter"] = []interface{}{m}
+
+			if v.DeleteMarkerReplication != nil && v.DeleteMarkerReplication.Status != nil && aws.StringValue(v.DeleteMarkerReplication.Status) == s3.DeleteMarkerReplicationStatusEnabled {
+				t["delete_marker_replication_status"] = aws.StringValue(v.DeleteMarkerReplication.Status)
+			}
 		}
 
 		rules = append(rules, t)
@@ -2442,7 +2473,7 @@ func normalizeRegion(region string) string {
 	// Default to us-east-1 if the bucket doesn't have a region:
 	// http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html
 	if region == "" {
-		region = "us-east-1"
+		region = endpoints.UsEast1RegionID
 	}
 
 	return region
@@ -2452,7 +2483,7 @@ func normalizeRegion(region string) string {
 // Buckets outside of this region have to be DNS-compliant. After the same restrictions are
 // applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
 func validateS3BucketName(value string, region string) error {
-	if region != "us-east-1" {
+	if region != endpoints.UsEast1RegionID {
 		if (len(value) < 3) || (len(value) > 63) {
 			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
 		}
@@ -2553,6 +2584,10 @@ func rulesHash(v interface{}) int {
 	}
 	if v, ok := m["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", replicationRuleFilterHash(v[0])))
+
+		if v, ok := m["delete_marker_replication_status"]; ok && v.(string) == s3.DeleteMarkerReplicationStatusEnabled {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
 	}
 	return hashcode.String(buf.String())
 }

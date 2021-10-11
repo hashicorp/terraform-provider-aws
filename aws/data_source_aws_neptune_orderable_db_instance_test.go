@@ -18,6 +18,7 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -43,6 +44,7 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -95,7 +97,11 @@ data "aws_neptune_orderable_db_instance" "test" {
   engine_version = %q
   license_model  = %q
 
-  preferred_instance_classes = ["db.xyz.xlarge", %q, "db.t3.small"]
+  preferred_instance_classes = [
+    "db.xyz.xlarge",
+    %q,
+    "db.t3.small",
+  ]
 }
 `, engine, version, license, preferredOption)
 }

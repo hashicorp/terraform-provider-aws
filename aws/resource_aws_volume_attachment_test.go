@@ -20,6 +20,7 @@ func TestAccAWSVolumeAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -50,6 +51,7 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -108,6 +110,7 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -143,6 +146,7 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -192,6 +196,7 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -204,6 +209,40 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsVolumeAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSVolumeAttachment_stopInstance(t *testing.T) {
+	var i ec2.Instance
+	var v ec2.Volume
+	resourceName := "aws_volume_attachment.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVolumeAttachmentStopInstanceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "device_name", "/dev/sdh"),
+					testAccCheckInstanceExists("aws_instance.test", &i),
+					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
+					testAccCheckVolumeAttachmentExists(resourceName, &i, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"stop_instance_before_detaching",
+				},
 			},
 		},
 	})
@@ -283,9 +322,9 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_instance" "test" {
-  ami               = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  instance_type     = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
 
   tags = {
     Name = %[1]q
@@ -297,7 +336,7 @@ resource "aws_instance" "test" {
 func testAccVolumeAttachmentConfigBase(rName string) string {
 	return testAccVolumeAttachmentInstanceOnlyConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {
@@ -311,10 +350,31 @@ func testAccVolumeAttachmentConfig(rName string) string {
 	return testAccVolumeAttachmentConfigBase(rName) + `
 resource "aws_volume_attachment" "test" {
   device_name = "/dev/sdh"
-  volume_id   = "${aws_ebs_volume.test.id}"
-  instance_id = "${aws_instance.test.id}"
+  volume_id   = aws_ebs_volume.test.id
+  instance_id = aws_instance.test.id
 }
 `
+}
+
+func testAccVolumeAttachmentStopInstanceConfig(rName string) string {
+	return composeConfig(testAccVolumeAttachmentInstanceOnlyConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 1000
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_volume_attachment" "test" {
+  device_name                    = "/dev/sdh"
+  volume_id                      = aws_ebs_volume.test.id
+  instance_id                    = aws_instance.test.id
+  stop_instance_before_detaching = "true"
+}
+`, rName))
 }
 
 func testAccVolumeAttachmentConfigSkipDestroy(rName string) string {
@@ -322,12 +382,14 @@ func testAccVolumeAttachmentConfigSkipDestroy(rName string) string {
 data "aws_ebs_volume" "test" {
   filter {
     name   = "size"
-    values = ["${aws_ebs_volume.test.size}"]
+    values = [aws_ebs_volume.test.size]
   }
+
   filter {
     name   = "availability-zone"
-    values = ["${aws_ebs_volume.test.availability_zone}"]
+    values = [aws_ebs_volume.test.availability_zone]
   }
+
   filter {
     name   = "tag:Name"
     values = ["%[1]s"]
@@ -336,8 +398,8 @@ data "aws_ebs_volume" "test" {
 
 resource "aws_volume_attachment" "test" {
   device_name  = "/dev/sdh"
-  volume_id    = "${data.aws_ebs_volume.test.id}"
-  instance_id  = "${aws_instance.test.id}"
+  volume_id    = data.aws_ebs_volume.test.id
+  instance_id  = aws_instance.test.id
   skip_destroy = true
 }
 `, rName)
@@ -347,8 +409,8 @@ func testAccVolumeAttachmentUpdateConfig(rName string, detach bool) string {
 	return testAccVolumeAttachmentConfigBase(rName) + fmt.Sprintf(`
 resource "aws_volume_attachment" "test" {
   device_name  = "/dev/sdh"
-  volume_id    = "${aws_ebs_volume.test.id}"
-  instance_id  = "${aws_instance.test.id}"
+  volume_id    = aws_ebs_volume.test.id
+  instance_id  = aws_instance.test.id
   force_detach = %[1]t
   skip_destroy = %[1]t
 }

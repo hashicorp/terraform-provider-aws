@@ -9,14 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSEc2TransitGatewayRouteTableAssociation_basic(t *testing.T) {
+func testAccAWSEc2TransitGatewayRouteTableAssociation_basic(t *testing.T) {
 	var transitGatewayRouteTablePropagtion1 ec2.TransitGatewayRouteTableAssociation
 	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
 	transitGatewayRouteTableResourceName := "aws_ec2_transit_gateway_route_table.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{

@@ -17,6 +17,7 @@ func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		ErrorCheck:   testAccErrorCheck(t, mediapackage.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -48,6 +49,7 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		ErrorCheck:   testAccErrorCheck(t, mediapackage.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -80,6 +82,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		ErrorCheck:   testAccErrorCheck(t, mediapackage.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -200,7 +203,8 @@ resource "aws_media_package_channel" "test" {
   channel_id = "%[1]s"
 
   tags = {
-    Name  = "%[1]s"
+    Name = "%[1]s"
+
     %[2]s = "%[3]s"
   }
 }

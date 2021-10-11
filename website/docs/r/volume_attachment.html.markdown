@@ -15,7 +15,7 @@ detach volumes from AWS Instances.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_volume_attachment" "ebs_att" {
   device_name = "/dev/sdh"
   volume_id   = aws_ebs_volume.example.id
@@ -55,8 +55,12 @@ to detach the volume from the instance to which it is attached at destroy
 time, and instead just remove the attachment from Terraform state. This is
 useful when destroying an instance which has volumes created by some other
 means attached.
+* `stop_instance_before_detaching` - (Optional, Boolean) Set this to true to ensure that the target instance is stopped
+before trying to detach the volume. Stops the instance, if it is not already stopped.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `device_name` - The device name exposed to the instance
 * `instance_id` - ID of the Instance

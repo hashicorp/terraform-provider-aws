@@ -2,17 +2,105 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"sync"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_waf_geo_match_set", &resource.Sweeper{
+		Name: "aws_waf_geo_match_set",
+		F:    testSweepWafGeoMatchSet,
+		Dependencies: []string{
+			"aws_waf_rate_based_rule",
+			"aws_waf_rule",
+			"aws_waf_rule_group",
+		},
+	})
+}
+
+func testSweepWafGeoMatchSet(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).wafconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+	var g multierror.Group
+	var mutex = &sync.Mutex{}
+
+	input := &waf.ListGeoMatchSetsInput{}
+
+	err = lister.ListGeoMatchSetsPages(conn, input, func(page *waf.ListGeoMatchSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, geoMatchSet := range page.GeoMatchSets {
+			r := resourceAwsWafGeoMatchSet()
+			d := r.Data(nil)
+
+			id := aws.StringValue(geoMatchSet.GeoMatchSetId)
+			d.SetId(id)
+
+			// read concurrently and gather errors
+			g.Go(func() error {
+				// Need to Read first to fill in geo_match_constraint attribute
+				err := r.Read(d, client)
+
+				if err != nil {
+					sweeperErr := fmt.Errorf("error reading WAF Geo Match Set (%s): %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					return sweeperErr
+				}
+
+				// In case it was already deleted
+				if d.Id() == "" {
+					return nil
+				}
+
+				mutex.Lock()
+				defer mutex.Unlock()
+				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+
+				return nil
+			})
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Geo Match Set for %s: %w", region, err))
+	}
+
+	if err = g.Wait().ErrorOrNil(); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Geo Match Sets: %w", err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Geo Match Set for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAF Geo Match Set sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
 	var v waf.GeoMatchSet
@@ -21,6 +109,7 @@ func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -31,11 +120,11 @@ func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`geomatchset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", geoMatchSet),
 					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						"type":  "Country",
 						"value": "US",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						"type":  "Country",
 						"value": "CA",
 					}),
@@ -58,6 +147,7 @@ func TestAccAWSWafGeoMatchSet_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -93,6 +183,7 @@ func TestAccAWSWafGeoMatchSet_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -115,6 +206,7 @@ func TestAccAWSWafGeoMatchSet_changeConstraints(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -124,11 +216,11 @@ func TestAccAWSWafGeoMatchSet_changeConstraints(t *testing.T) {
 					testAccCheckAWSWafGeoMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", setName),
 					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						"type":  "Country",
 						"value": "US",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						"type":  "Country",
 						"value": "CA",
 					}),
@@ -140,11 +232,11 @@ func TestAccAWSWafGeoMatchSet_changeConstraints(t *testing.T) {
 					testAccCheckAWSWafGeoMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", setName),
 					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						"type":  "Country",
 						"value": "RU",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						"type":  "Country",
 						"value": "CN",
 					}),
@@ -166,6 +258,7 @@ func TestAccAWSWafGeoMatchSet_noConstraints(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{

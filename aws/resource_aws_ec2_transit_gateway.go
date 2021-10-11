@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +24,18 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIfChange("default_route_table_association", func(_ context.Context, old, new, meta interface{}) bool {
+				// Only changes from disable to enable for feature_set should force a new resource
+				return old.(string) == ec2.DefaultRouteTableAssociationValueDisable && new.(string) == ec2.DefaultRouteTableAssociationValueEnable
+			}),
+			customdiff.ForceNewIfChange("default_route_table_propagation", func(_ context.Context, old, new, meta interface{}) bool {
+				// Only changes from disable to enable for feature_set should force a new resource
+				return old.(string) == ec2.DefaultRouteTablePropagationValueDisable && new.(string) == ec2.DefaultRouteTablePropagationValueEnable
+			}),
+			SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {
@@ -41,7 +55,6 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 			"auto_accept_shared_attachments": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  ec2.AutoAcceptSharedAttachmentsValueDisable,
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.AutoAcceptSharedAttachmentsValueDisable,
@@ -51,7 +64,6 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 			"default_route_table_association": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  ec2.DefaultRouteTableAssociationValueEnable,
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.DefaultRouteTableAssociationValueDisable,
@@ -61,7 +73,6 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 			"default_route_table_propagation": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  ec2.DefaultRouteTablePropagationValueEnable,
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.DefaultRouteTablePropagationValueDisable,
@@ -71,12 +82,10 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"dns_support": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  ec2.DnsSupportValueEnable,
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.DnsSupportValueDisable,
@@ -91,11 +100,11 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"vpn_ecmp_support": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  ec2.VpnEcmpSupportValueEnable,
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.VpnEcmpSupportValueDisable,
@@ -108,6 +117,8 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 
 func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTransitGatewayInput{
 		Options: &ec2.TransitGatewayRequestOptions{
@@ -117,7 +128,7 @@ func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}
 			DnsSupport:                   aws.String(d.Get("dns_support").(string)),
 			VpnEcmpSupport:               aws.String(d.Get("vpn_ecmp_support").(string)),
 		},
-		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeTransitGateway),
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGateway),
 	}
 
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
@@ -145,6 +156,7 @@ func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	transitGateway, err := ec2DescribeTransitGateway(conn, d.Id())
@@ -175,7 +187,7 @@ func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error reading EC2 Transit Gateway (%s): missing options", d.Id())
 	}
 
-	d.Set("amazon_side_asn", aws.Int64Value(transitGateway.Options.AmazonSideAsn))
+	d.Set("amazon_side_asn", transitGateway.Options.AmazonSideAsn)
 	d.Set("arn", transitGateway.TransitGatewayArn)
 	d.Set("association_default_route_table_id", transitGateway.Options.AssociationDefaultRouteTableId)
 	d.Set("auto_accept_shared_attachments", transitGateway.Options.AutoAcceptSharedAttachments)
@@ -186,8 +198,15 @@ func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.Ec2KeyValueTags(transitGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
@@ -198,8 +217,50 @@ func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	modifyTransitGatewayInput := &ec2.ModifyTransitGatewayInput{}
+	transitGatewayModified := false
+
+	if d.HasChange("description") {
+		transitGatewayModified = true
+		modifyTransitGatewayInput.Description = aws.String(d.Get("description").(string))
+	}
+
+	options := &ec2.ModifyTransitGatewayOptions{}
+
+	if d.HasChange("auto_accept_shared_attachments") {
+		transitGatewayModified = true
+		options.AutoAcceptSharedAttachments = aws.String(d.Get("auto_accept_shared_attachments").(string))
+	}
+
+	if d.HasChange("default_route_table_association") {
+		transitGatewayModified = true
+		options.DefaultRouteTableAssociation = aws.String(d.Get("default_route_table_association").(string))
+	}
+
+	if d.HasChange("default_route_table_propagation") {
+		transitGatewayModified = true
+		options.DefaultRouteTablePropagation = aws.String(d.Get("default_route_table_propagation").(string))
+	}
+
+	if d.HasChange("dns_support") {
+		transitGatewayModified = true
+		options.DnsSupport = aws.String(d.Get("dns_support").(string))
+	}
+
+	if d.HasChange("vpn_ecmp_support") {
+		transitGatewayModified = true
+		options.VpnEcmpSupport = aws.String(d.Get("vpn_ecmp_support").(string))
+	}
+	if transitGatewayModified {
+		modifyTransitGatewayInput.TransitGatewayId = aws.String(d.Id())
+		modifyTransitGatewayInput.Options = options
+		if _, err := conn.ModifyTransitGateway(modifyTransitGatewayInput); err != nil {
+			return fmt.Errorf("error updating EC2 Transit Gateway (%s) options: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway (%s) tags: %s", d.Id(), err)
@@ -217,7 +278,7 @@ func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway (%s): %s", d.Id(), input)
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteTransitGateway(input)
 
 		if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {

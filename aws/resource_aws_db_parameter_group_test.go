@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -81,6 +81,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -91,15 +92,15 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -118,23 +119,23 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_connection",
 						"value": "utf8_unicode_ci",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_server",
 						"value": "utf8_unicode_ci",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -149,19 +150,36 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSDBParameterNotUserDefined(resourceName, "collation_connection"),
 					testAccCheckAWSDBParameterNotUserDefined(resourceName, "collation_server"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBParameterGroup_caseWithMixedParameters(t *testing.T) {
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBParameterGroupConfigCaseWithMixedParameters(groupName),
+				Check:  resource.ComposeTestCheckFunc(),
 			},
 		},
 	})
@@ -174,6 +192,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -185,169 +204,169 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "RDS default parameter group: Exceed default AWS parameter group limit of twenty"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_server",
 						"value": "utf8_general_ci",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_connection",
 						"value": "utf8_general_ci",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "join_buffer_size",
 						"value": "16777216",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "key_buffer_size",
 						"value": "67108864",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "max_connections",
 						"value": "3200",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "max_heap_table_size",
 						"value": "67108864",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "performance_schema",
 						"value": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "performance_schema_users_size",
 						"value": "1048576",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "query_cache_limit",
 						"value": "2097152",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "query_cache_size",
 						"value": "67108864",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "sort_buffer_size",
 						"value": "16777216",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "table_open_cache",
 						"value": "4096",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "tmp_table_size",
 						"value": "67108864",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "binlog_cache_size",
 						"value": "131072",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_flush_log_at_trx_commit",
 						"value": "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_open_files",
 						"value": "4000",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_read_io_threads",
 						"value": "64",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_thread_concurrency",
 						"value": "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_write_io_threads",
 						"value": "64",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_connection",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_database",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_filesystem",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "event_scheduler",
-						"value": "ON",
+						"value": "on",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_buffer_pool_dump_at_shutdown",
 						"value": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_file_format",
 						"value": "barracuda",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_io_capacity",
 						"value": "2000",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_io_capacity_max",
 						"value": "3000",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_lock_wait_timeout",
 						"value": "120",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_max_dirty_pages_pct",
 						"value": "90",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "log_bin_trust_function_creators",
 						"value": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "log_warnings",
 						"value": "2",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "log_output",
 						"value": "FILE",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "max_allowed_packet",
 						"value": "1073741824",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "max_connect_errors",
 						"value": "100",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "query_cache_min_res_unit",
 						"value": "512",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "slow_query_log",
 						"value": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "sync_binlog",
 						"value": "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "tx_isolation",
-						"value": "REPEATABLE-READ",
+						"value": "repeatable-read",
 					}),
 				),
 			},
@@ -364,169 +383,169 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated RDS default parameter group: Exceed default AWS parameter group limit of twenty"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_server",
 						"value": "utf8_general_ci",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_connection",
 						"value": "utf8_general_ci",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "join_buffer_size",
 						"value": "16777216",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "key_buffer_size",
 						"value": "67108864",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "max_connections",
 						"value": "3200",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "max_heap_table_size",
 						"value": "67108864",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "performance_schema",
 						"value": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "performance_schema_users_size",
 						"value": "1048576",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "query_cache_limit",
 						"value": "2097152",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "query_cache_size",
 						"value": "67108864",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "sort_buffer_size",
 						"value": "16777216",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "table_open_cache",
 						"value": "4096",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "tmp_table_size",
 						"value": "67108864",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "binlog_cache_size",
 						"value": "131072",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_flush_log_at_trx_commit",
 						"value": "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_open_files",
 						"value": "4000",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_read_io_threads",
 						"value": "64",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_thread_concurrency",
 						"value": "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_write_io_threads",
 						"value": "64",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_connection",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_database",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_filesystem",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "event_scheduler",
-						"value": "ON",
+						"value": "on",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_buffer_pool_dump_at_shutdown",
 						"value": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_file_format",
 						"value": "barracuda",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_io_capacity",
 						"value": "2000",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_io_capacity_max",
 						"value": "3000",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_lock_wait_timeout",
 						"value": "120",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "innodb_max_dirty_pages_pct",
 						"value": "90",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "log_bin_trust_function_creators",
 						"value": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "log_warnings",
 						"value": "2",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "log_output",
 						"value": "FILE",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "max_allowed_packet",
 						"value": "1073741824",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "max_connect_errors",
 						"value": "100",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "query_cache_min_res_unit",
 						"value": "512",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "slow_query_log",
 						"value": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "sync_binlog",
 						"value": "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "tx_isolation",
-						"value": "REPEATABLE-READ",
+						"value": "repeatable-read",
 					}),
 				),
 			},
@@ -541,6 +560,7 @@ func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -561,6 +581,7 @@ func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -580,6 +601,7 @@ func TestAccAWSDBParameterGroup_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -600,6 +622,7 @@ func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -611,12 +634,12 @@ func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":         "character_set_server",
 						"value":        "utf8",
 						"apply_method": "immediate",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":         "character_set_client",
 						"value":        "utf8",
 						"apply_method": "pending-reboot",
@@ -639,6 +662,7 @@ func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -667,6 +691,7 @@ func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -695,6 +720,7 @@ func TestAccAWSDBParameterGroup_updateParameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -705,15 +731,15 @@ func TestAccAWSDBParameterGroup_updateParameters(t *testing.T) {
 					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -729,15 +755,15 @@ func TestAccAWSDBParameterGroup_updateParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "ascii",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "ascii",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -745,6 +771,269 @@ func TestAccAWSDBParameterGroup_updateParameters(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSDBParameterGroup_caseParameters(t *testing.T) {
+	var v rds.DBParameterGroup
+	resourceName := "aws_db_parameter_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBParameterGroupUpperCaseConfig(rName, "Max_connections"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists(resourceName, &v),
+					testAccCheckAWSDBParameterGroupAttributes(&v, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "Max_connections",
+						"value": "LEAST({DBInstanceClassMemory/6000000},10)",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDBParameterGroupUpperCaseConfig(rName, "max_connections"),
+			},
+		},
+	})
+}
+
+func TestDBParameterModifyChunk(t *testing.T) {
+	cases := []struct {
+		Name              string
+		ChunkSize         int
+		Parameters        []*rds.Parameter
+		ExpectedModify    []*rds.Parameter
+		ExpectedRemainder []*rds.Parameter
+	}{
+		{
+			Name:              "Empty",
+			ChunkSize:         20,
+			Parameters:        nil,
+			ExpectedModify:    nil,
+			ExpectedRemainder: nil,
+		},
+		{
+			Name:      "A couple",
+			ChunkSize: 20,
+			Parameters: []*rds.Parameter{
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+			},
+			ExpectedModify: []*rds.Parameter{
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+			},
+			ExpectedRemainder: nil,
+		},
+		{
+			Name:      "Over 3 max, 6 in",
+			ChunkSize: 3,
+			Parameters: []*rds.Parameter{
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("innodb_read_io_threads"),
+					ParameterValue: aws.String("64"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("character_set_server"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+					ParameterValue: aws.String("0"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("character_set_filesystem"),
+					ParameterValue: aws.String("utf8"),
+				},
+			},
+			ExpectedModify: []*rds.Parameter{
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("character_set_server"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("character_set_filesystem"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+			},
+			ExpectedRemainder: []*rds.Parameter{
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("innodb_read_io_threads"),
+					ParameterValue: aws.String("64"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+					ParameterValue: aws.String("0"),
+				},
+			},
+		},
+		{
+			Name:      "Over 3 max, 9 in",
+			ChunkSize: 3,
+			Parameters: []*rds.Parameter{
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("innodb_read_io_threads"),
+					ParameterValue: aws.String("64"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("character_set_server"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+					ParameterValue: aws.String("0"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("character_set_filesystem"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
+					ParameterValue: aws.String("90"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("character_set_connection"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("key_buffer_size"),
+					ParameterValue: aws.String("67108864"),
+				},
+			},
+			ExpectedModify: []*rds.Parameter{
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("character_set_filesystem"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("character_set_connection"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
+					ParameterValue: aws.String("0"),
+				},
+			},
+			ExpectedRemainder: []*rds.Parameter{
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("tx_isolation"),
+					ParameterValue: aws.String("repeatable-read"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("binlog_cache_size"),
+					ParameterValue: aws.String("131072"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("innodb_read_io_threads"),
+					ParameterValue: aws.String("64"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("character_set_server"),
+					ParameterValue: aws.String("utf8"),
+				},
+				{
+					ApplyMethod:    aws.String("pending-reboot"),
+					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
+					ParameterValue: aws.String("90"),
+				},
+				{
+					ApplyMethod:    aws.String("immediate"),
+					ParameterName:  aws.String("key_buffer_size"),
+					ParameterValue: aws.String("67108864"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		mod, rem := resourceDBParameterModifyChunk(tc.Parameters, tc.ChunkSize)
+		if !reflect.DeepEqual(mod, tc.ExpectedModify) {
+			t.Errorf("Case %q: Modify did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedModify, mod)
+		}
+		if !reflect.DeepEqual(rem, tc.ExpectedRemainder) {
+			t.Errorf("Case %q: Remainder did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedRemainder, rem)
+		}
+	}
 }
 
 func testAccCheckAWSDbParamaterGroupDisappears(v *rds.DBParameterGroup) resource.TestCheckFunc {
@@ -813,11 +1102,11 @@ func testAccCheckAWSDBParameterGroupAttributes(v *rds.DBParameterGroup, name str
 	}
 }
 
-func testAccCheckAWSDBParameterGroupExists(n string, v *rds.DBParameterGroup) resource.TestCheckFunc {
+func testAccCheckAWSDBParameterGroupExists(rName string, v *rds.DBParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[rName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", rName)
 		}
 
 		if rs.Primary.ID == "" {
@@ -847,11 +1136,11 @@ func testAccCheckAWSDBParameterGroupExists(n string, v *rds.DBParameterGroup) re
 	}
 }
 
-func testAccCheckAWSDBParameterNotUserDefined(n, paramName string) resource.TestCheckFunc {
+func testAccCheckAWSDBParameterNotUserDefined(rName, paramName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[rName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", rName)
 		}
 
 		if rs.Primary.ID == "" {
@@ -884,10 +1173,10 @@ func testAccCheckAWSDBParameterNotUserDefined(n, paramName string) resource.Test
 	}
 }
 
-func testAccAWSDBParameterGroupConfig(n string) string {
+func testAccAWSDBParameterGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -905,13 +1194,58 @@ resource "aws_db_parameter_group" "test" {
     value = "utf8"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupConfigWithApplyMethod(n string) string {
+func testAccAWSDBParameterGroupConfigCaseWithMixedParameters(rName string) string {
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
+  family = "mysql5.6"
+
+  parameter {
+    name         = "character_set_server"
+    value        = "utf8mb4"
+    apply_method = "pending-reboot"
+  }
+  parameter {
+    name         = "innodb_large_prefix"
+    value        = 1
+    apply_method = "pending-reboot"
+  }
+  parameter {
+    name         = "innodb_file_format"
+    value        = "Barracuda"
+    apply_method = "pending-reboot"
+  }
+  parameter {
+    name         = "innodb_log_file_size"
+    value        = 2147483648
+    apply_method = "pending-reboot"
+  }
+  parameter {
+    name         = "sql_mode"
+    value        = "STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"
+    apply_method = "pending-reboot"
+  }
+  parameter {
+    name         = "innodb_log_buffer_size"
+    value        = 268435456
+    apply_method = "pending-reboot"
+  }
+  parameter {
+    name         = "max_allowed_packet"
+    value        = 268435456
+    apply_method = "pending-reboot"
+  }
+}
+`, rName))
+}
+
+func testAccAWSDBParameterGroupConfigWithApplyMethod(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -929,13 +1263,13 @@ resource "aws_db_parameter_group" "test" {
     foo = "test"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupAddParametersConfig(n string) string {
+func testAccAWSDBParameterGroupAddParametersConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -963,23 +1297,23 @@ resource "aws_db_parameter_group" "test" {
     value = "utf8_unicode_ci"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupOnlyConfig(n string) string {
+func testAccAWSDBParameterGroupOnlyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name        = "%s"
+  name        = %[1]q
   family      = "mysql5.6"
   description = "Test parameter group for terraform"
 }
-`, n)
+`, rName)
 }
 
-func createAwsDbParameterGroupsExceedDefaultAwsLimit(n string) string {
+func createAwsDbParameterGroupsExceedDefaultAwsLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name        = "%s"
+  name        = %[1]q
   family      = "mysql5.6"
   description = "RDS default parameter group: Exceed default AWS parameter group limit of twenty"
 
@@ -1030,7 +1364,7 @@ resource "aws_db_parameter_group" "test" {
 
   parameter {
     name  = "event_scheduler"
-    value = "ON"
+    value = "on"
   }
 
   parameter {
@@ -1190,16 +1524,16 @@ resource "aws_db_parameter_group" "test" {
 
   parameter {
     name  = "tx_isolation"
-    value = "REPEATABLE-READ"
+    value = "repeatable-read"
   }
 }
-`, n)
+`, rName)
 }
 
-func updateAwsDbParameterGroupsExceedDefaultAwsLimit(n string) string {
+func updateAwsDbParameterGroupsExceedDefaultAwsLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name        = "%s"
+  name        = %[1]q
   family      = "mysql5.6"
   description = "Updated RDS default parameter group: Exceed default AWS parameter group limit of twenty"
 
@@ -1250,7 +1584,7 @@ resource "aws_db_parameter_group" "test" {
 
   parameter {
     name  = "event_scheduler"
-    value = "ON"
+    value = "on"
   }
 
   parameter {
@@ -1410,16 +1744,16 @@ resource "aws_db_parameter_group" "test" {
 
   parameter {
     name  = "tx_isolation"
-    value = "REPEATABLE-READ"
+    value = "repeatable-read"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupIncludeDefaultConfig(n string) string {
+func testAccAWSDBParameterGroupIncludeDefaultConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "postgres9.4"
 
   parameter {
@@ -1428,13 +1762,13 @@ resource "aws_db_parameter_group" "test" {
     apply_method = "pending-reboot"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupUpdateParametersInitialConfig(n string) string {
+func testAccAWSDBParameterGroupUpdateParametersInitialConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -1452,13 +1786,13 @@ resource "aws_db_parameter_group" "test" {
     value = "utf8"
   }
 }
-`, n)
+`, rName)
 }
 
-func testAccAWSDBParameterGroupUpdateParametersUpdatedConfig(n string) string {
+func testAccAWSDBParameterGroupUpdateParametersUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
-  name   = "%s"
+  name   = %[1]q
   family = "mysql5.6"
 
   parameter {
@@ -1476,7 +1810,21 @@ resource "aws_db_parameter_group" "test" {
     value = "ascii"
   }
 }
-`, n)
+`, rName)
+}
+
+func testAccAWSDBParameterGroupUpperCaseConfig(rName, paramName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
+  family = "mysql5.6"
+
+  parameter {
+    name  = %[2]q
+    value = "LEAST({DBInstanceClassMemory/6000000},10)"
+  }
+}
+`, rName, paramName)
 }
 
 const testAccDBParameterGroupConfig_namePrefix = `
@@ -1485,7 +1833,7 @@ resource "aws_db_parameter_group" "test" {
   family      = "mysql5.6"
 
   parameter {
-    name = "sync_binlog"
+    name  = "sync_binlog"
     value = 0
   }
 }
@@ -1496,7 +1844,7 @@ resource "aws_db_parameter_group" "test" {
   family = "mysql5.6"
 
   parameter {
-    name = "sync_binlog"
+    name  = "sync_binlog"
     value = 0
   }
 }

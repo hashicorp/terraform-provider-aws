@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,11 +14,16 @@ import (
 )
 
 func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
-	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resourceName := "aws_shield_protection.test"
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSShield(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -25,6 +31,8 @@ func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
 				Config: testAccShieldProtectionGlobalAcceleratorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -37,11 +45,16 @@ func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
 }
 
 func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
-	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resourceName := "aws_shield_protection.test"
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSShield(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -49,6 +62,8 @@ func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -60,12 +75,43 @@ func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtection_Alb(t *testing.T) {
-	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+func TestAccAWSShieldProtection_disappears(t *testing.T) {
+	resourceName := "aws_shield_protection.test"
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSShield(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSShieldProtectionExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsShieldProtection(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSShieldProtection_Alb(t *testing.T) {
+	resourceName := "aws_shield_protection.test"
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -73,6 +119,8 @@ func TestAccAWSShieldProtection_Alb(t *testing.T) {
 				Config: testAccShieldProtectionAlbConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -85,11 +133,16 @@ func TestAccAWSShieldProtection_Alb(t *testing.T) {
 }
 
 func TestAccAWSShieldProtection_Elb(t *testing.T) {
-	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resourceName := "aws_shield_protection.test"
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSShield(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -97,6 +150,8 @@ func TestAccAWSShieldProtection_Elb(t *testing.T) {
 				Config: testAccShieldProtectionElbConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -109,11 +164,17 @@ func TestAccAWSShieldProtection_Elb(t *testing.T) {
 }
 
 func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
-	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	resourceName := "aws_shield_protection.test"
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSShield(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -121,6 +182,8 @@ func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 				Config: testAccShieldProtectionCloudfrontConfig(rName, testAccShieldProtectionCloudfrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -132,12 +195,69 @@ func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 	})
 }
 
-func TestAccAWSShieldProtection_Route53(t *testing.T) {
-	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+func TestAccAWSShieldProtection_Cloudfront_Tags(t *testing.T) {
+	resourceName := "aws_shield_protection.test"
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSShield(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccShieldProtectionCloudfrontConfigTags1(rName, testAccShieldProtectionCloudfrontRetainConfig(), "Key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSShieldProtectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccShieldProtectionCloudfrontConfigTags2(rName, testAccShieldProtectionCloudfrontRetainConfig(), "Key1", "value1updated", "Key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSShieldProtectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
+				),
+			},
+			{
+				Config: testAccShieldProtectionCloudfrontConfigTags1(rName, testAccShieldProtectionCloudfrontRetainConfig(), "Key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSShieldProtectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSShieldProtection_Route53(t *testing.T) {
+	resourceName := "aws_shield_protection.test"
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID, "route53"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -237,23 +357,21 @@ func testAccShieldProtectionCloudfrontRetainConfig() string {
 
 func testAccShieldProtectionRoute53HostedZoneConfig(rName string) string {
 	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
-}
-
-resource "aws_route53_zone" "acctest" {
-  name    = "${var.name}.com."
+resource "aws_route53_zone" "test" {
+  name    = "%[1]s.com."
   comment = "Terraform Acceptance Tests"
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 }
 
-resource "aws_shield_protection" "acctest" {
-  name         = var.name
-  resource_arn = "arn:aws:route53:::hostedzone/${aws_route53_zone.acctest.zone_id}"
+data "aws_partition" "current" {}
+
+resource "aws_shield_protection" "test" {
+  name         = %[1]q
+  resource_arn = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${aws_route53_zone.test.zone_id}"
 }
 `, rName)
 }
@@ -271,40 +389,35 @@ data "aws_availability_zones" "available" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
-variable "name" {
-  default = "%s"
-}
-
-resource "aws_vpc" "acctest" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "acctest" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.acctest.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 }
 
-resource "aws_elb" "acctest" {
-  name = var.name
+resource "aws_elb" "test" {
+  name = %[1]q
 
-  #availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
-  subnets  = [aws_subnet.acctest[0].id, aws_subnet.acctest[1].id]
+  subnets  = aws_subnet.test[*].id
   internal = true
 
   listener {
@@ -316,15 +429,15 @@ resource "aws_elb" "acctest" {
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 
   cross_zone_load_balancing = true
 }
 
-resource "aws_shield_protection" "acctest" {
-  name         = var.name
-  resource_arn = aws_elb.acctest.arn
+resource "aws_shield_protection" "test" {
+  name         = %[1]q
+  resource_arn = aws_elb.test.arn
 }
 `, rName)
 }
@@ -342,54 +455,50 @@ data "aws_availability_zones" "available" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
-variable "name" {
-  default = "%s"
-}
-
-resource "aws_lb" "acctest" {
-  name            = var.name
+resource "aws_lb" "test" {
+  name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.acctest.id]
-  subnets         = [aws_subnet.acctest[0].id, aws_subnet.acctest[1].id]
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 }
 
-resource "aws_vpc" "acctest" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "acctest" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.acctest.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 }
 
-resource "aws_security_group" "acctest" {
-  name        = var.name
-  description = "acctest"
-  vpc_id      = aws_vpc.acctest.id
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "test"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -407,24 +516,20 @@ resource "aws_security_group" "acctest" {
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 }
 
-resource "aws_shield_protection" "acctest" {
-  name         = var.name
-  resource_arn = aws_lb.acctest.arn
+resource "aws_shield_protection" "test" {
+  name         = %[1]q
+  resource_arn = aws_lb.test.arn
 }
 `, rName)
 }
 
 func testAccShieldProtectionCloudfrontConfig(rName, retainOnDelete string) string {
 	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
-}
-
-resource "aws_cloudfront_distribution" "acctest" {
+resource "aws_cloudfront_distribution" "test" {
   origin {
     custom_origin_config {
       http_port              = 80
@@ -439,8 +544,8 @@ resource "aws_cloudfront_distribution" "acctest" {
     }
 
     # This is a fake origin and it's set to this name to indicate that.
-    domain_name = "${var.name}.com"
-    origin_id   = "acctest"
+    domain_name = "%[1]s.com"
+    origin_id   = %[1]q
   }
 
   enabled             = false
@@ -449,7 +554,7 @@ resource "aws_cloudfront_distribution" "acctest" {
   default_cache_behavior {
     allowed_methods  = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "acctest"
+    target_origin_id = %[1]q
 
     forwarded_values {
       query_string = false
@@ -474,29 +579,173 @@ resource "aws_cloudfront_distribution" "acctest" {
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 
   viewer_certificate {
     cloudfront_default_certificate = true
   }
 
-  %s
+  %[2]s
 }
 
-resource "aws_shield_protection" "acctest" {
-  name         = var.name
-  resource_arn = aws_cloudfront_distribution.acctest.arn
+resource "aws_shield_protection" "test" {
+  name         = %[1]q
+  resource_arn = aws_cloudfront_distribution.test.arn
+
 }
 `, rName, retainOnDelete)
 }
 
-func testAccShieldProtectionElasticIPAddressConfig(rName string) string {
+func testAccShieldProtectionCloudfrontConfigTags1(rName, retainOnDelete, tagKey string, tagValue string) string {
 	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
+resource "aws_cloudfront_distribution" "test" {
+  origin {
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+
+      origin_ssl_protocols = [
+        "TLSv1",
+        "TLSv1.1",
+        "TLSv1.2",
+      ]
+    }
+
+    # This is a fake origin and it's set to this name to indicate that.
+    domain_name = "%[1]s.com"
+    origin_id   = %[1]q
+  }
+
+  enabled             = false
+  wait_for_deployment = false
+
+  default_cache_behavior {
+    allowed_methods  = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = %[1]q
+
+    forwarded_values {
+      query_string = false
+      headers      = ["*"]
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tags = {
+    foo  = "bar"
+    Name = %[1]q
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
 }
 
+resource "aws_shield_protection" "test" {
+  name         = %[1]q
+  resource_arn = aws_cloudfront_distribution.test.arn
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, retainOnDelete, tagKey, tagValue)
+}
+
+func testAccShieldProtectionCloudfrontConfigTags2(rName, retainOnDelete, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  origin {
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+
+      origin_ssl_protocols = [
+        "TLSv1",
+        "TLSv1.1",
+        "TLSv1.2",
+      ]
+    }
+
+    # This is a fake origin and it's set to this name to indicate that.
+    domain_name = "%[1]s.com"
+    origin_id   = %[1]q
+  }
+
+  enabled             = false
+  wait_for_deployment = false
+
+  default_cache_behavior {
+    allowed_methods  = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = %[1]q
+
+    forwarded_values {
+      query_string = false
+      headers      = ["*"]
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tags = {
+    foo  = "bar"
+    Name = %[1]q
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
+}
+
+resource "aws_shield_protection" "test" {
+  name         = %[1]q
+  resource_arn = aws_cloudfront_distribution.test.arn
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, retainOnDelete, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccShieldProtectionElasticIPAddressConfig(rName string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -505,39 +754,38 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
+
 data "aws_region" "current" {}
+
 data "aws_caller_identity" "current" {}
 
-resource "aws_eip" "acctest" {
+data "aws_partition" "current" {}
+
+resource "aws_eip" "test" {
   vpc = true
 
   tags = {
     foo  = "bar"
-    Name = var.name
+    Name = %[1]q
   }
 }
 
-resource "aws_shield_protection" "acctest" {
-  name         = var.name
-  resource_arn = "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.acctest.id}"
+resource "aws_shield_protection" "test" {
+  name         = %[1]q
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
 }
 `, rName)
 }
 
 func testAccShieldProtectionGlobalAcceleratorConfig(rName string) string {
 	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
+resource "aws_shield_protection" "test" {
+  name         = %[1]q
+  resource_arn = aws_globalaccelerator_accelerator.test.id
 }
 
-resource "aws_shield_protection" "acctest" {
-  name         = var.name
-  resource_arn = aws_globalaccelerator_accelerator.acctest.id
-}
-
-resource "aws_globalaccelerator_accelerator" "acctest" {
-  # provider        = "aws.us-west-2"
-  name            = var.name
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
   ip_address_type = "IPV4"
   enabled         = true
 }

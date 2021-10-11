@@ -7,17 +7,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointServiceAllowedPrincipalDestroy,
 		Steps: []resource.TestStep{
@@ -109,8 +109,8 @@ resource "aws_lb" "nlb_test_1" {
   name = "%s"
 
   subnets = [
-    "${aws_subnet.nlb_test_1.id}",
-    "${aws_subnet.nlb_test_2.id}",
+    aws_subnet.nlb_test_1.id,
+    aws_subnet.nlb_test_2.id,
   ]
 
   load_balancer_type         = "network"
@@ -124,7 +124,7 @@ resource "aws_lb" "nlb_test_1" {
 }
 
 resource "aws_subnet" "nlb_test_1" {
-  vpc_id            = "${aws_vpc.nlb_test.id}"
+  vpc_id            = aws_vpc.nlb_test.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -134,7 +134,7 @@ resource "aws_subnet" "nlb_test_1" {
 }
 
 resource "aws_subnet" "nlb_test_2" {
-  vpc_id            = "${aws_vpc.nlb_test.id}"
+  vpc_id            = aws_vpc.nlb_test.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
 
@@ -149,14 +149,14 @@ resource "aws_vpc_endpoint_service" "foo" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    "${aws_lb.nlb_test_1.id}",
+    aws_lb.nlb_test_1.id,
   ]
 }
 
 resource "aws_vpc_endpoint_service_allowed_principal" "foo" {
-	vpc_endpoint_service_id = "${aws_vpc_endpoint_service.foo.id}"
+  vpc_endpoint_service_id = aws_vpc_endpoint_service.foo.id
 
-  principal_arn = "${data.aws_caller_identity.current.arn}"
+  principal_arn = data.aws_caller_identity.current.arn
 }
 `, lbName))
 }

@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,6 +18,14 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zone_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,6 +78,10 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"transition_to_primary_storage_class": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -81,6 +92,8 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	efsconn := meta.(*AWSClient).efsconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	tagsToMatch := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	describeEfsOpts := &efs.DescribeFileSystemsInput{}
 
@@ -102,25 +115,40 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 		return errors.New("error reading EFS FileSystem: empty output")
 	}
 
-	if len(describeResp.FileSystems) > 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(describeResp.FileSystems))
+	var results []*efs.FileSystemDescription
+
+	if len(tagsToMatch) > 0 {
+
+		var fileSystems []*efs.FileSystemDescription
+
+		for _, fileSystem := range describeResp.FileSystems {
+
+			tags := keyvaluetags.EfsKeyValueTags(fileSystem.Tags)
+
+			if !tags.ContainsAll(tagsToMatch) {
+				continue
+			}
+
+			fileSystems = append(fileSystems, fileSystem)
+		}
+
+		results = fileSystems
+	} else {
+		results = describeResp.FileSystems
 	}
 
-	fs := describeResp.FileSystems[0]
+	if len(results) > 1 {
+		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
+	}
+
+	fs := results[0]
 
 	d.SetId(aws.StringValue(fs.FileSystemId))
+	d.Set("availability_zone_id", fs.AvailabilityZoneId)
+	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
 	d.Set("performance_mode", fs.PerformanceMode)
-
-	fsARN := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(fs.FileSystemId)),
-		Service:   "elasticfilesystem",
-	}.String()
-
-	d.Set("arn", fsARN)
+	d.Set("arn", fs.FileSystemArn)
 	d.Set("file_system_id", fs.FileSystemId)
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
@@ -131,7 +159,7 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	res, err := efsconn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{

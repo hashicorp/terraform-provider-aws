@@ -3,10 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsVpnGatewayRoutePropagation() *schema.Resource {
@@ -15,13 +18,18 @@ func resourceAwsVpnGatewayRoutePropagation() *schema.Resource {
 		Read:   resourceAwsVpnGatewayRoutePropagationRead,
 		Delete: resourceAwsVpnGatewayRoutePropagationDisable,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(2 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
-			"vpn_gateway_id": {
+			"route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"route_table_id": {
+			"vpn_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -33,35 +41,36 @@ func resourceAwsVpnGatewayRoutePropagation() *schema.Resource {
 func resourceAwsVpnGatewayRoutePropagationEnable(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	gwID := d.Get("vpn_gateway_id").(string)
-	rtID := d.Get("route_table_id").(string)
+	gatewayID := d.Get("vpn_gateway_id").(string)
+	routeTableID := d.Get("route_table_id").(string)
+	err := ec2RouteTableEnableVgwRoutePropagation(conn, routeTableID, gatewayID, d.Timeout(schema.TimeoutCreate))
 
-	log.Printf("[INFO] Enabling VGW propagation from %s to %s", gwID, rtID)
-	_, err := conn.EnableVgwRoutePropagation(&ec2.EnableVgwRoutePropagationInput{
-		GatewayId:    aws.String(gwID),
-		RouteTableId: aws.String(rtID),
-	})
 	if err != nil {
-		return fmt.Errorf("error enabling VGW propagation: %s", err)
+		return err
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s", gwID, rtID))
-	return nil
+	d.SetId(tfec2.VpnGatewayRoutePropagationCreateID(routeTableID, gatewayID))
+
+	return resourceAwsVpnGatewayRoutePropagationRead(d, meta)
 }
 
 func resourceAwsVpnGatewayRoutePropagationDisable(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	gwID := d.Get("vpn_gateway_id").(string)
-	rtID := d.Get("route_table_id").(string)
+	routeTableID, gatewayID, err := tfec2.VpnGatewayRoutePropagationParseID(d.Id())
 
-	log.Printf("[INFO] Disabling VGW propagation from %s to %s", gwID, rtID)
-	_, err := conn.DisableVgwRoutePropagation(&ec2.DisableVgwRoutePropagationInput{
-		GatewayId:    aws.String(gwID),
-		RouteTableId: aws.String(rtID),
-	})
 	if err != nil {
-		return fmt.Errorf("error disabling VGW propagation: %s", err)
+		return err
+	}
+
+	err = ec2RouteTableDisableVgwRoutePropagation(conn, routeTableID, gatewayID)
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -70,31 +79,22 @@ func resourceAwsVpnGatewayRoutePropagationDisable(d *schema.ResourceData, meta i
 func resourceAwsVpnGatewayRoutePropagationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	gwID := d.Get("vpn_gateway_id").(string)
-	rtID := d.Get("route_table_id").(string)
+	routeTableID, gatewayID, err := tfec2.VpnGatewayRoutePropagationParseID(d.Id())
 
-	log.Printf("[INFO] Reading route table %s to check for VPN gateway %s", rtID, gwID)
-	rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, rtID)()
 	if err != nil {
 		return err
 	}
-	if rtRaw == nil {
-		log.Printf("[INFO] Route table %q doesn't exist, so dropping %q route propagation from state", rtID, gwID)
+
+	err = finder.VpnGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route Table (%s) VPN Gateway (%s) route propagation not found, removing from state", routeTableID, gatewayID)
 		d.SetId("")
 		return nil
 	}
 
-	rt := rtRaw.(*ec2.RouteTable)
-	exists := false
-	for _, vgw := range rt.PropagatingVgws {
-		if *vgw.GatewayId == gwID {
-			exists = true
-		}
-	}
-	if !exists {
-		log.Printf("[INFO] %s is no longer propagating to %s, so dropping route propagation from state", rtID, gwID)
-		d.SetId("")
-		return nil
+	if err != nil {
+		return fmt.Errorf("error reading Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
 	}
 
 	return nil

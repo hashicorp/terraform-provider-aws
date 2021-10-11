@@ -14,6 +14,7 @@ func TestAccAWSOutpostsOutpostsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   testAccErrorCheck(t, outposts.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -63,7 +64,7 @@ func testAccPreCheckAWSOutpostsOutposts(t *testing.T) {
 
 	// Ensure there is at least one Outpost
 	if output == nil || len(output.Outposts) == 0 {
-		t.Skip("skipping since no Outposts Outpost found")
+		t.Skip("skipping since no Outposts found")
 	}
 }
 

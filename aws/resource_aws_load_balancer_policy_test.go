@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,6 +22,7 @@ func TestAccAWSLoadBalancerPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -46,6 +46,7 @@ func TestAccAWSLoadBalancerPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -79,6 +80,7 @@ func TestAccAWSLoadBalancerPolicy_updateWhileAssigned(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -238,10 +240,10 @@ func testAccCheckAWSLoadBalancerPolicyState(elbResource string, policyResource s
 }
 
 func testAccAWSLoadBalancerPolicyConfig_basic(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name               = "test-lb-%d"
-  availability_zones = ["us-west-2a"]
+  name               = "test-lb-%[1]d"
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 80
@@ -257,7 +259,7 @@ resource "aws_elb" "test-lb" {
 
 resource "aws_load_balancer_policy" "test-policy" {
   load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-policy-%d"
+  policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
   policy_attribute {
@@ -265,14 +267,14 @@ resource "aws_load_balancer_policy" "test-policy" {
     value = "magic_cookie"
   }
 }
-`, rInt, rInt)
+`, rInt))
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name               = "test-lb-%d"
-  availability_zones = ["us-west-2a"]
+  name               = "test-lb-%[1]d"
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 80
@@ -288,7 +290,7 @@ resource "aws_elb" "test-lb" {
 
 resource "aws_load_balancer_policy" "test-policy" {
   load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-policy-%d"
+  policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
   policy_attribute {
@@ -305,14 +307,14 @@ resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
     aws_load_balancer_policy.test-policy.policy_name,
   ]
 }
-`, rInt, rInt)
+`, rInt))
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name               = "test-lb-%d"
-  availability_zones = ["us-west-2a"]
+  name               = "test-lb-%[1]d"
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 80
@@ -328,7 +330,7 @@ resource "aws_elb" "test-lb" {
 
 resource "aws_load_balancer_policy" "test-policy" {
   load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-policy-%d"
+  policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
   policy_attribute {
@@ -345,5 +347,5 @@ resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
     aws_load_balancer_policy.test-policy.policy_name,
   ]
 }
-`, rInt, rInt)
+`, rInt))
 }

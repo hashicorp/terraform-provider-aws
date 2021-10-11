@@ -18,7 +18,8 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +63,8 @@ func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
 		Steps: []resource.TestStep{

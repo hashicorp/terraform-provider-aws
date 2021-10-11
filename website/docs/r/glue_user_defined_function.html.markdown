@@ -12,7 +12,7 @@ Provides a Glue User Defined Function Resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_glue_catalog_database" "example" {
   name = "my_database"
 }
@@ -49,7 +49,7 @@ The following arguments are supported:
 * `resource_type` - (Required) The type of the resource. can be one of `JAR`, `FILE`, and `ARCHIVE`.
 * `uri` - (Required) The URI for accessing the resource.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

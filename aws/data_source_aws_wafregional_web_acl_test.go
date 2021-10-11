@@ -2,10 +2,11 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -15,8 +16,9 @@ func TestAccDataSourceAwsWafRegionalWebAcl_basic(t *testing.T) {
 	datasourceName := "data.aws_wafregional_web_acl.web_acl"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
+		ErrorCheck: testAccErrorCheck(t, wafregional.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWafRegionalWebAclConfig_NonExistent,

@@ -2,16 +2,105 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
+	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_waf_xss_match_set", &resource.Sweeper{
+		Name: "aws_waf_xss_match_set",
+		F:    testSweepWafXssMatchSet,
+		Dependencies: []string{
+			"aws_waf_rate_based_rule",
+			"aws_waf_rule",
+			"aws_waf_rule_group",
+		},
+	})
+}
+
+func testSweepWafXssMatchSet(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).wafconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+	var g multierror.Group
+	var mutex = &sync.Mutex{}
+
+	input := &waf.ListXssMatchSetsInput{}
+
+	err = lister.ListXssMatchSetsPages(conn, input, func(page *waf.ListXssMatchSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, xssMatchSet := range page.XssMatchSets {
+			r := resourceAwsWafXssMatchSet()
+			d := r.Data(nil)
+
+			id := aws.StringValue(xssMatchSet.XssMatchSetId)
+			d.SetId(id)
+
+			// read concurrently and gather errors
+			g.Go(func() error {
+				// Need to Read first to fill in xss_match_tuples attribute
+				err := r.Read(d, client)
+
+				if err != nil {
+					sweeperErr := fmt.Errorf("error reading WAF XSS Match Set (%s): %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					return sweeperErr
+				}
+
+				// In case it was already deleted
+				if d.Id() == "" {
+					return nil
+				}
+
+				mutex.Lock()
+				defer mutex.Unlock()
+				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+
+				return nil
+			})
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing WAF XSS Match Sets for %s: %w", region, err))
+	}
+
+	if err = g.Wait().ErrorOrNil(); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF XSS Match Sets: %w", err))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF XSS Match Sets for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAF XSS Match Set sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
@@ -20,6 +109,7 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -30,13 +120,13 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`xssmatchset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
 						"field_to_match.#":      "1",
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "URI",
 						"text_transformation":   "NONE",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
 						"field_to_match.#":      "1",
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "QUERY_STRING",
@@ -61,6 +151,7 @@ func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -96,6 +187,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -118,6 +210,7 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -127,13 +220,13 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", setName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
 						"field_to_match.#":      "1",
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "QUERY_STRING",
 						"text_transformation":   "NONE",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
 						"field_to_match.#":      "1",
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "URI",
@@ -147,13 +240,13 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", setName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
 						"field_to_match.#":      "1",
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "METHOD",
 						"text_transformation":   "HTML_ENTITY_DECODE",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
 						"field_to_match.#":      "1",
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "BODY",
@@ -177,6 +270,7 @@ func TestAccAWSWafXssMatchSet_noTuples(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{

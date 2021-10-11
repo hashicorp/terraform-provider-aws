@@ -14,14 +14,15 @@ import (
 
 func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 	var resourceServer cognitoidentityprovider.ResourceServerType
-	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	name1 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	name2 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", acctest.RandString(10))
+	name1 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandString(10))
+	name2 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandString(10))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
@@ -56,13 +57,14 @@ func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 
 func TestAccAWSCognitoResourceServer_scope(t *testing.T) {
 	var resourceServer cognitoidentityprovider.ResourceServerType
-	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", acctest.RandString(10))
+	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", acctest.RandString(10))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{

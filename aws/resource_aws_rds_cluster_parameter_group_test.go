@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -91,6 +90,7 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -103,15 +103,15 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -131,23 +131,23 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_connection",
 						"value": "utf8_unicode_ci",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_server",
 						"value": "utf8_unicode_ci",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -162,15 +162,15 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSRDSClusterParameterNotUserDefined(resourceName, "collation_connection"),
 					testAccCheckAWSRDSClusterParameterNotUserDefined(resourceName, "collation_server"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -187,6 +187,7 @@ func TestAccAWSDBClusterParameterGroup_withApplyMethod(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -199,12 +200,12 @@ func TestAccAWSDBClusterParameterGroup_withApplyMethod(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":         "character_set_server",
 						"value":        "utf8",
 						"apply_method": "immediate",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":         "character_set_client",
 						"value":        "utf8",
 						"apply_method": "pending-reboot",
@@ -226,6 +227,7 @@ func TestAccAWSDBClusterParameterGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -253,6 +255,7 @@ func TestAccAWSDBClusterParameterGroup_namePrefix_Parameter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -280,6 +283,7 @@ func TestAccAWSDBClusterParameterGroup_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -304,6 +308,7 @@ func TestAccAWSDBClusterParameterGroup_generatedName_Parameter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -329,6 +334,7 @@ func TestAccAWSDBClusterParameterGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -351,6 +357,7 @@ func TestAccAWSDBClusterParameterGroup_only(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -383,6 +390,7 @@ func TestAccAWSDBClusterParameterGroup_updateParameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -393,15 +401,15 @@ func TestAccAWSDBClusterParameterGroup_updateParameters(t *testing.T) {
 					testAccCheckAWSDBClusterParameterGroupAttributes(&v, groupName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -417,19 +425,55 @@ func TestAccAWSDBClusterParameterGroup_updateParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDBClusterParameterGroupAttributes(&v, groupName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "ascii",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "ascii",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBClusterParameterGroup_caseParameters(t *testing.T) {
+	var v rds.DBClusterParameterGroup
+	resourceName := "aws_rds_cluster_parameter_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBClusterParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBClusterParameterGroupUpperCaseConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBClusterParameterGroupExists(resourceName, &v),
+					testAccCheckAWSDBClusterParameterGroupAttributes(&v, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "max_connections",
+						"value": "LEAST({DBInstanceClassMemory/6000000},10)",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDBClusterParameterGroupUpperCaseConfig(rName),
 			},
 		},
 	})
@@ -727,6 +771,20 @@ resource "aws_rds_cluster_parameter_group" "test" {
   }
 }
 `, name)
+}
+
+func testAccAWSDBClusterParameterGroupUpperCaseConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster_parameter_group" "test" {
+  name   = "%s"
+  family = "aurora5.6"
+
+  parameter {
+    name  = "max_connections"
+    value = "LEAST({DBInstanceClassMemory/6000000},10)"
+  }
+}
+`, rName)
 }
 
 const testAccAWSDBClusterParameterGroupConfig_namePrefix = `

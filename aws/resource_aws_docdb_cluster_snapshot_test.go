@@ -19,6 +19,7 @@ func TestAccAWSDocDBClusterSnapshot_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDocDBClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_docdb_subnet_group" "test" {
   name       = %q
-  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_docdb_cluster" "test" {

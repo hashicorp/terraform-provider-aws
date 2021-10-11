@@ -17,6 +17,7 @@ func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -42,6 +43,7 @@ func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -57,7 +59,7 @@ func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission(t *testing.T) {
 	})
 }
 
-// Bug reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6222
+// Bug reference: https://github.com/hashicorp/terraform-provider-aws/issues/6222
 // Images with <group>all</group> will not have <userId> and can cause a panic
 func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission_Public(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
@@ -65,6 +67,7 @@ func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission_Public(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -88,6 +91,7 @@ func TestAccAWSAMILaunchPermission_Disappears_AMI(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{

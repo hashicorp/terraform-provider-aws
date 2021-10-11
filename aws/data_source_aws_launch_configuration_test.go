@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -15,8 +16,9 @@ func TestAccAWSLaunchConfigurationDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_basic(rName),
@@ -42,8 +44,9 @@ func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 	rName := "data.aws_launch_configuration.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_securityGroups(rInt),
@@ -61,8 +64,9 @@ func TestAccAWSLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName),
@@ -71,6 +75,30 @@ func TestAccAWSLaunchConfigurationDataSource_ebsNoDevice(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "image_id", resourceName, "image_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_block_device.#", resourceName, "ebs_block_device.#"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchConfigurationDataSource_metadataOptions(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_launch_configuration.test"
+	resourceName := "aws_launch_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.#", resourceName, "metadata_options.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_tokens", resourceName, "metadata_options.0.http_tokens"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "metadata_options.0.http_put_response_hop_limit", resourceName, "metadata_options.0.http_put_response_hop_limit"),
 				),
 			},
 		},
@@ -137,6 +165,27 @@ data "aws_launch_configuration" "foo" {
   name = aws_launch_configuration.test.name
 }
 `, rInt, rInt)
+}
+
+func testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.nano"
+  name          = %[1]q
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
+}
+
+data "aws_launch_configuration" "test" {
+  name = aws_launch_configuration.test.name
+}
+`, rName))
 }
 
 func testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName string) string {
