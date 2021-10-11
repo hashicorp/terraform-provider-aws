@@ -228,7 +228,7 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	if err := d.Set("routes", dataSourceRoutesRead(rt.Routes)); err != nil {
+	if err := d.Set("routes", dataSourceRoutesRead(rt.Routes, meta)); err != nil {
 		return err
 	}
 
@@ -239,7 +239,7 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func dataSourceRoutesRead(ec2Routes []*ec2.Route) []map[string]interface{} {
+func dataSourceRoutesRead(ec2Routes []*ec2.Route, meta interface{}) []map[string]interface{} {
 	routes := make([]map[string]interface{}, 0, len(ec2Routes))
 	// Loop through the routes and add them to the set
 	for _, r := range ec2Routes {
@@ -255,6 +255,48 @@ func dataSourceRoutesRead(ec2Routes []*ec2.Route) []map[string]interface{} {
 			// Skipping because VPC endpoint routes are handled separately
 			// See aws_vpc_endpoint
 			continue
+		}
+
+		if r.NetworkInterfaceId != nil {
+
+			conn := meta.(*AWSClient).ec2conn
+
+			describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
+				NetworkInterfaceIds: []*string{r.NetworkInterfaceId},
+			}
+
+			describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
+
+			if err != nil {
+				if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+					log.Printf("Network Interface %s not found", err)
+				} else {
+					log.Printf("Error occured checking network inteface for route: %s", err)
+				}
+			}
+
+			if len(describeResp.NetworkInterfaces) != 1 {
+				log.Printf("Unable to find ENI: %s", describeResp.NetworkInterfaces)
+			} else {
+
+				eni := describeResp.NetworkInterfaces[0]
+
+				if eni.Attachment != nil {
+
+					owner := aws.StringValue(eni.OwnerId)
+					iowner := aws.StringValue(eni.Attachment.InstanceOwnerId)
+
+					log.Printf("[DEBUG] ENI owner: %s, ENI Instane Owner %s", owner, iowner)
+
+					if iowner != "" && iowner != owner {
+						//Skipping cross account ENI for AWS services
+						log.Printf("Found Cross Account ENI: %s. Skipping", aws.StringValue(describeResp.NetworkInterfaces[0].NetworkInterfaceId))
+						log.Printf("[DEBUG] Cross Account ENI Details: \n %s", describeResp.NetworkInterfaces[0])
+						continue
+					}
+				}
+			}
+
 		}
 
 		m := make(map[string]interface{})
