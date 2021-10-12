@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const lambdaFunctionAssociationIDSeparator = "_"
+const lambdaFunctionAssociationIDSeparator = ":"
 
 func LambdaFunctionAssociationParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, lambdaFunctionAssociationIDSeparator, 2)
