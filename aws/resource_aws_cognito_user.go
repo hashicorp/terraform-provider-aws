@@ -85,6 +85,23 @@ func resourceAwsCognitoUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"validation_data": {
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"value": {
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
+						},
+					},
+				},
+				Optional: true,
+			},
 		},
 	}
 }
@@ -118,6 +135,13 @@ func resourceAwsCognitoUserCreate(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("client_metadata"); ok {
 		metadata := v.(map[string]interface{})
 		params.ClientMetadata = expandCognitoUserClientMetadata(metadata)
+	}
+
+	if v, ok := d.GetOk("validation_data"); ok {
+		attributes := v.(*schema.Set)
+		// aws sdk uses the same type for both validation data and user attributes
+		// https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#AdminCreateUserInput
+		params.ValidationData = expandCognitoUserAttributes(attributes)
 	}
 
 	log.Print("[DEBUG] Creating Cognito User")
