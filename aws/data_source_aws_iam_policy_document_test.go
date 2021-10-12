@@ -296,6 +296,20 @@ func TestAccAWSDataSourceIAMPolicyDocument_version20081017(t *testing.T) {
 	})
 }
 
+func TestAccAWSDataSourceIAMPolicyDocument_SourceJSONInvalid(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSIAMPolicyDocumentSourceJsonInvalid,
+				ExpectError: regexp.MustCompile(`invalid character ']' looking for beginning of value`),
+			},
+		},
+	})
+}
+
 var testAccAWSIAMPolicyDocumentConfig = `
 data "aws_partition" "current" {}
 
@@ -1258,3 +1272,26 @@ func testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultipl
   ]
 }`, testAccGetPartition())
 }
+
+var testAccAWSIAMPolicyDocumentSourceJsonInvalid = `
+data "aws_iam_policy_document" "test" {
+
+source_json = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ContainExtraComma",
+      "Action": [
+        "s3:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "*",
+      ]
+    }
+  ]
+}
+EOF
+}
+`

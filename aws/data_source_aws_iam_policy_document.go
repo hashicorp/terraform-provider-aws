@@ -46,8 +46,9 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 				Optional: true,
 			},
 			"source_json": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsJSON,
 			},
 			"source_policy_documents": {
 				Type:     schema.TypeList,
