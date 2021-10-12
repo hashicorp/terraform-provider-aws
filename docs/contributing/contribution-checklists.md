@@ -264,7 +264,7 @@ Thus, for in-flight and future contributions, implementing tagging support for T
 
 This step is only necessary for the first implementation and may have been previously completed. If so, move on to the next section.
 
-More details about this code generation, including fixes for potential error messages in this process, can be found in the [generate documentation](../../internal/generate/README.md).
+More details about this code generation, including fixes for potential error messages in this process, can be found in the [generate documentation](../../internal/generate/tags/README.md).
 
 - Open the AWS Go SDK documentation for the service, e.g., for [`service/eks`](https://docs.aws.amazon.com/sdk-for-go/api/service/eks/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
 - Use the AWS Go SDK to determine which types of tagging code to generate. There are three main types of tagging code you can generate: service tags, list tags, and update tags. These are not mutually exclusive and some services use more than one.
@@ -272,7 +272,7 @@ More details about this code generation, including fixes for potential error mes
 - Check for a tagging code directive: `//go:generate go run -tags generate ../../generate/tags/main.go`. If one does not exist, add it. Note that without flags, the directive itself will not do anything useful. **WARNING:** You must never have more than one `generate/tags/main.go` directive in a `generate.go` file. Even if you want to generate all three types of tag code, you will use multiple flags but only one `generate/tags/main.go` directive! Including more than one directive will cause the generator to overwrite one set of generated code with whatever is specified in the next directive.
 - If the service supports service tags, determine the service's "type" of tagging implementation. Some services will use a simple map style (`map[string]*string` in Go) while others will have a separate structure (`[]service.Tag` `struct` with `Key` and `Value` fields).
 
-    - If the type is a map, add a new flag to the tagging directive (see above): `-ServiceTagsMap=yes`. If the type is `struct`, add a  `-ServiceTagsSlice=yes` flag. 
+    - If the type is a map, add a new flag to the tagging directive (see above): `-ServiceTagsMap=yes`. If the type is `struct`, add a  `-ServiceTagsSlice=yes` flag.
     - If you use the `-ServiceTagsSlice=yes` flag and if the `struct` name is not exactly `Tag`, you must include the `-TagType` flag with the name of the `struct` (e.g., `-TagType=S3Tag`). If the key and value elements of the `struct` are not exactly `Key` and `Value` respectively, you must include the `-TagTypeKeyElem` and/or `-TagTypeValElem` flags with the correct names.
     - In summary, you may need to include one or more of the following flags with `-ServiceTagsSlice` in order to properly customize the generated code: `-TagKeyType`, `TagPackage`, `TagResTypeElem`, `TagType`, `TagType2`, `TagTypeAddBoolElem`, `TagTypeAddBoolElemSnake`, `TagTypeIDElem`, `TagTypeKeyElem`, and `TagTypeValElem`.
 
@@ -285,14 +285,14 @@ More details about this code generation, including fixes for potential error mes
     - If the API list tags operation identifying element needs a slice, include the `-ListTagsInIDNeedSlice` flag with a `yes` value (e.g., `-ListTagsInIDNeedSlice=yes`).
     - If the API list tags operation output element is not exactly `Tags`, include the `-ListTagsOutTagsElem` flag with the name of the element (e.g., `-ListTagsOutTagsElem=TagList`).
     - In summary, you may need to include one or more of the following flags with `-ListTags` in order to properly customize the generated code: `ListTagsInFiltIDName`, `ListTagsInIDElem`, `ListTagsInIDNeedSlice`, `ListTagsOp`, `ListTagsOutTagsElem`, `TagPackage`, `TagResTypeElem`, and `TagTypeIDElem`.
-    
+
 - If the service API supports updating tags (usually `TagResource` and `UntagResource` API calls), follow these guidelines.
 
     - Add a new flag to the tagging directive (see above): `-UpdateTags=yes`.
     - If the API tag operation is not exactly `TagResource`, include the `-TagOp` flag with the name of the operation (e.g., `-TagOp=AddTags`).
     - If the API untag operation is not exactly `UntagResource`, include the `-UntagOp` flag with the name of the operation (e.g., `-UntagOp=RemoveTags`).
     - If the API operation identifying element is not exactly `ResourceArn`, include the `-TagInIDElem` flag with the name of the element (e.g., `-TagInIDElem=ResourceARN`).
-    - If the API untag operation tags input element is not exactly `TagKeys`, include the `-UntagInTagsElem` flag with the name of the element (e.g., `-UntagInTagsElem=Keys`).    
+    - If the API untag operation tags input element is not exactly `TagKeys`, include the `-UntagInTagsElem` flag with the name of the element (e.g., `-UntagInTagsElem=Keys`).
     - In summary, you may need to include one or more of the following flags with `-UpdateTags` in order to properly customize the generated code: `TagInCustomVal`, `TagInIDElem`, `TagInIDNeedSlice`, `TagInTagsElem`, `TagOp`, `TagOpBatchSize`, `TagPackage`, `TagResTypeElem`, `TagTypeAddBoolElem`, `TagTypeIDElem`, `UntagInCustomVal`, `UntagInNeedTagKeyType`, `UntagInNeedTagType`, `UntagInTagsElem`, and `UntagOp`.
 
 - Run `make gen` (`go generate ./...`) and ensure there are no errors via `make test` (`go test ./...`)
@@ -570,7 +570,7 @@ See the [EC2 Listing and filtering your resources page](https://docs.aws.amazon.
 
 Implementing server-side filtering support for Terraform AWS Provider resources requires the following, each with its own section below:
 
-- [ ] _Generated Service Filtering Code_: In the internal code generators (e.g., `aws/internal/namevaluesfilters`), implementation and customization of how a service handles filtering, which is standardized for the resources.
+- [ ] _Generated Service Filtering Code_: In the internal code generators (e.g., `internal/generate/namevaluesfilters`), implementation and customization of how a service handles filtering, which is standardized for the resources.
 - [ ] _Resource Filtering Code Implementation_: In the resource's equivalent data source code (e.g., `aws/data_source_aws_service_thing.go`), implementation of `filter` schema attribute, along with handling in the `Read` function.
 - [ ] _Resource Filtering Documentation Implementation_: In the resource's equivalent data source documentation (e.g., `website/docs/d/service_thing.html.markdown`), addition of `filter` argument
 
@@ -578,15 +578,15 @@ Implementing server-side filtering support for Terraform AWS Provider resources 
 
 This step is only necessary for the first implementation and may have been previously completed. If so, move on to the next section.
 
-More details about this code generation can be found in the [namevaluesfilters documentation](../../aws/internal/namevaluesfilters/README.md).
+More details about this code generation can be found in the [namevaluesfilters documentation](../../internal/generate/namevaluesfilters/README.md).
 
 - Open the AWS Go SDK documentation for the service, e.g., for [`service/rds`](https://docs.aws.amazon.com/sdk-for-go/api/service/rds/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
-- Determine if the service API includes functionality for filtering resources (usually a `Filters` argument to a `DescribeThing` API call). If so, add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `aws/internal/namevaluesfilters/generators/servicefilters/main.go`.
+- Determine if the service API includes functionality for filtering resources (usually a `Filters` argument to a `DescribeThing` API call). If so, add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `internal/generate/namevaluesfilters/generators/servicefilters/main.go`.
 - Run `make gen` (`go generate ./...`) and ensure there are no errors via `make test` (`go test ./...`)
 
 ### Resource Filter Code Implementation
 
-- In the resource's equivalent data source Go file (e.g., `aws/data_source_aws_internet_gateway.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/aws/internal/namevaluesfilters"`
+- In the resource's equivalent data source Go file (e.g., `aws/data_source_aws_internet_gateway.go`), add the following Go import: `"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"`
 - In the resource schema, add `"filter": namevaluesfilters.Schema(),`
 - Implement the logic to build the list of filters:
 
@@ -623,7 +623,7 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 
 ## New Resource
 
-_Before submitting this type of contribution, it is highly recommended to read and understand the other pages of the [Contributing Guide](contributing.md)._
+_Before submitting this type of contribution, it is highly recommended to read and understand the other pages of the [Contributing Guide](./README.md)._
 
 Implementing a new resource is a good way to learn more about how Terraform
 interacts with upstream APIs. There are plenty of examples to draw from in the
