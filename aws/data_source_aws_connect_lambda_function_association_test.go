@@ -53,13 +53,14 @@ func testAccAwsConnectLambdaFunctionAssociationDataSourceDestroy(s *terraform.St
 
 		conn := testAccProvider.Meta().(*AWSClient).connectconn
 
-		LambdaFunction, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
-		if err != nil {
-			return fmt.Errorf("error Connect Lambda Function Association (%s): still exists: %w", functionArn, err)
+		associatedFunctionArn, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+
+		if err != nil && !isAWSErr(err, "ResourceNotFoundException", "") {
+			return fmt.Errorf("error Connect Lambda Function Association (%s): still exists: %w", associatedFunctionArn, err)
 		}
 
-		if LambdaFunction != "" {
-			return fmt.Errorf("error Connect Lambda Function Association (%s): still exists", functionArn)
+		if associatedFunctionArn != "" {
+			return fmt.Errorf("error Connect Lambda Function Association (%s): still exists", associatedFunctionArn)
 		}
 	}
 	return nil

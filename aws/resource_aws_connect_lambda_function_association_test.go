@@ -16,7 +16,7 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccAwsConnectLambdaFunctionAssociation_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccAwsConnectLambdaFunctionAssociation_basic,
+		"basic":      TestAccAwsConnectLambdaFunctionAssociation_basic,
 		"disappears": testAccAwsConnectLambdaFunctionAssociation_disappears,
 	}
 
@@ -28,7 +28,7 @@ func TestAccAwsConnectLambdaFunctionAssociation_serial(t *testing.T) {
 	}
 }
 
-func testAccAwsConnectLambdaFunctionAssociation_basic(t *testing.T) {
+func TestAccAwsConnectLambdaFunctionAssociation_basic(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_lambda_function_association.test"
@@ -128,12 +128,12 @@ func testAccCheckAwsConnectLambdaFunctionAssociationDestroy(s *terraform.State) 
 
 		conn := testAccProvider.Meta().(*AWSClient).connectconn
 
-		LambdaFunction, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
-		if err != nil {
+		associatedFunctionArn, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
+		if err != nil && !isAWSErr(err, "ResourceNotFoundException", "") {
 			return fmt.Errorf("error LambdaFunction Association by Function Arn (%s): still exists: %w ", functionArn, err)
 		}
 
-		if LambdaFunction != "" {
+		if associatedFunctionArn != "" {
 			return fmt.Errorf("error LambdaFunction Association by Function Arn (%s): still exists", functionArn)
 		}
 	}

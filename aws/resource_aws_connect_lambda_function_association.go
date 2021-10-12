@@ -100,7 +100,7 @@ func resourceAwsConnectLambdaFunctionAssociationDelete(ctx context.Context, d *s
 
 	_, err = conn.DisassociateLambdaFunction(input)
 
-	if err != nil {
+	if err != nil && !isAWSErr(err, "ResourceNotFoundException", "") {
 		return diag.FromErr(fmt.Errorf("error deleting Connect Lambda Function Association (%s): %w", d.Id(), err))
 	}
 	return nil
