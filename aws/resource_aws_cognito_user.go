@@ -85,6 +85,20 @@ func resourceAwsCognitoUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"password": {
+				Type:          schema.TypeString,
+				Sensitive:     true,
+				Optional:      true,
+				ValidateFunc:  validation.StringLenBetween(6, 256),
+				ConflictsWith: []string{"temporary_password"},
+			},
+			"temporary_password": {
+				Type:          schema.TypeString,
+				Sensitive:     true,
+				Optional:      true,
+				ValidateFunc:  validation.StringLenBetween(6, 256),
+				ConflictsWith: []string{"password"},
+			},
 			"validation_data": {
 				Type: schema.TypeSet,
 				Elem: &schema.Resource{
@@ -109,14 +123,16 @@ func resourceAwsCognitoUser() *schema.Resource {
 func resourceAwsCognitoUserCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
 
+	log.Print("[DEBUG] Creating Cognito User")
+
 	params := &cognitoidentityprovider.AdminCreateUserInput{
 		Username:   aws.String(d.Get("username").(string)),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
-	if v, ok := d.GetOk("user_attribute"); ok {
-		attributes := v.(*schema.Set)
-		params.UserAttributes = expandCognitoUserAttributes(attributes)
+	if v, ok := d.GetOk("client_metadata"); ok {
+		metadata := v.(map[string]interface{})
+		params.ClientMetadata = expandCognitoUserClientMetadata(metadata)
 	}
 
 	if v, ok := d.GetOk("desired_delivery_mediums"); ok {
@@ -132,9 +148,9 @@ func resourceAwsCognitoUserCreate(d *schema.ResourceData, meta interface{}) erro
 		params.MessageAction = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("client_metadata"); ok {
-		metadata := v.(map[string]interface{})
-		params.ClientMetadata = expandCognitoUserClientMetadata(metadata)
+	if v, ok := d.GetOk("user_attribute"); ok {
+		attributes := v.(*schema.Set)
+		params.UserAttributes = expandCognitoUserAttributes(attributes)
 	}
 
 	if v, ok := d.GetOk("validation_data"); ok {
@@ -144,7 +160,9 @@ func resourceAwsCognitoUserCreate(d *schema.ResourceData, meta interface{}) erro
 		params.ValidationData = expandCognitoUserAttributes(attributes)
 	}
 
-	log.Print("[DEBUG] Creating Cognito User")
+	if v, ok := d.GetOk("temporary_password"); ok {
+		params.TemporaryPassword = aws.String(v.(string))
+	}
 
 	resp, err := conn.AdminCreateUser(params)
 	if err != nil {
@@ -158,7 +176,6 @@ func resourceAwsCognitoUserCreate(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(fmt.Sprintf("%s/%s", *params.UserPoolId, *resp.User.Username))
 
 	if v := d.Get("enabled"); !v.(bool) {
-		log.Println("[DEBUG] the user enabled value is ", v)
 		disableParams := &cognitoidentityprovider.AdminDisableUserInput{
 			Username:   aws.String(d.Get("username").(string)),
 			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
@@ -170,19 +187,32 @@ func resourceAwsCognitoUserCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	if v, ok := d.GetOk("password"); ok {
+		setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
+			Username:   aws.String(d.Get("username").(string)),
+			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+			Password:   aws.String(v.(string)),
+			Permanent:  aws.Bool(true),
+		}
+
+		_, err := conn.AdminSetUserPassword(setPasswordParams)
+		if err != nil {
+			return fmt.Errorf("Error setting Cognito User's password: %s", err)
+		}
+	}
+
 	return resourceAwsCognitoUserRead(d, meta)
 }
 
 func resourceAwsCognitoUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
 
-	log.Println("[DEBUG] Creating request struct")
+	log.Println("[DEBUG] Reading Cognito User")
+
 	params := &cognitoidentityprovider.AdminGetUserInput{
 		Username:   aws.String(d.Get("username").(string)),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
-	log.Println("[DEBUG] Request input: ", params)
-	log.Println("[DEBUG] Reading Cognito User")
 
 	user, err := conn.AdminGetUser(params)
 	if err != nil {
@@ -270,18 +300,48 @@ func resourceAwsCognitoUserUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	if d.HasChange("temporary_password") || d.HasChange("password") {
+		tempPassword := d.Get("temporary_password").(string)
+		permanentPassword := d.Get("password").(string)
+
+		var password string
+		var isPermanent bool
+
+		// both passwords cannot be non-empty because of ConflictsWith
+		if tempPassword != "" {
+			password = tempPassword
+		} else if permanentPassword != "" {
+			password = permanentPassword
+			isPermanent = true
+		}
+
+		if password != "" {
+			tempPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
+				Username:   aws.String(d.Get("username").(string)),
+				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				Password:   aws.String(password),
+				Permanent:  aws.Bool(isPermanent),
+			}
+
+			_, err := conn.AdminSetUserPassword(tempPasswordParams)
+			if err != nil {
+				return fmt.Errorf("Error changing Cognito User's password: %s", err)
+			}
+		}
+	}
+
 	return resourceAwsCognitoUserRead(d, meta)
 }
 
 func resourceAwsCognitoUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
 
+	log.Print("[DEBUG] Deleting Cognito User")
+
 	params := &cognitoidentityprovider.AdminDeleteUserInput{
 		Username:   aws.String(d.Get("username").(string)),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
-
-	log.Print("[DEBUG] Deleting Cognito User")
 
 	_, err := conn.AdminDeleteUser(params)
 	if err != nil {
