@@ -19,7 +19,7 @@ data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "example" {
   statement {
-	  sid       = "AddPermModelPackageGroup"
+    sid       = "AddPermModelPackageGroup"
     actions   = ["sagemaker:DescribeModelPackage", "sagemaker:ListModelPackages"]
     resources = [aws_sagemaker_model_package_group.example.arn]
     principals {
