@@ -1072,6 +1072,7 @@ func Provider() *schema.Provider {
 			"aws_sagemaker_human_task_ui":                             resourceAwsSagemakerHumanTaskUi(),
 			"aws_sagemaker_model":                                     resourceAwsSagemakerModel(),
 			"aws_sagemaker_model_package_group":                       resourceAwsSagemakerModelPackageGroup(),
+			"aws_sagemaker_model_package_group_policy":                resourceAwsSagemakerModelPackageGroupPolicy(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration(),
 			"aws_sagemaker_notebook_instance":                         resourceAwsSagemakerNotebookInstance(),
 			"aws_sagemaker_studio_lifecycle_config":                   resourceAwsSagemakerStudioLifecycleConfig(),
