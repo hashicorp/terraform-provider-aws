@@ -78,4 +78,15 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_acmpca_certificate` can not be imported at this time.
+`aws_acmpca_certificate` can be imported by using the certificate ARN, e.g,
+
+```
+$ terraform import aws_acmpca_certificate.example 	arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012
+```
+
+Or for a root CA certificates, the root CA certificate authority's ARN, e.g,
+
+```
+$ terraform import aws_acmpca_certificate.example_root 	arn:aws:acm:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
+```
+
