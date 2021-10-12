@@ -14,7 +14,6 @@
             - [yaml.v2 Updates](#yaml-v2-updates)
     - [Pull Request Merge Process](#pull-request-merge-process)
 - [Breaking Changes](#breaking-changes)
-- [Branch Dictionary](#branch-dictionary)
 - [Environment Variable Dictionary](#environment-variable-dictionary)
 - [Release Process](#release-process)
 
@@ -317,17 +316,6 @@ When breaking changes to the provider are necessary we release them in a major v
 - Add the `breaking-change` label.
 - Add the issue/PR to the next major version milestone.
 - Leave a comment why this is a breaking change or otherwise only being considered for a major version update. If possible, detail any changes that might be made for the contributor to accomplish the task without a breaking change.
-
-## Branch Dictionary
-
-The following branch conventions are used:
-
-| Branch | Example | Description |
-|--------|---------|-------------|
-| `main` | `main` | Main, unreleased code branch. |
-| `release/*` | `release/2.x` | Backport branches for previous major releases. |
-
-Additional branch naming recommendations can be found in the [Pull Request Submission and Lifecycle documentation](contributing/pullrequest-submission-and-lifecycle.md#branch-prefixes).
 
 ## Environment Variable Dictionary
 
