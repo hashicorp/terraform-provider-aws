@@ -25,36 +25,9 @@ func resourceAwsCognitoUser() *schema.Resource {
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
 		Schema: map[string]*schema.Schema{
-			"username": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"user_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"user_attribute": {
-				Type: schema.TypeSet,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-					},
-				},
+			"client_metadata": {
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
 			"desired_delivery_mediums": {
@@ -67,6 +40,50 @@ func resourceAwsCognitoUser() *schema.Resource {
 					}, false),
 				},
 				Optional: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"force_alias_creation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"message_action": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					cognitoidentityprovider.MessageActionTypeResend,
+					cognitoidentityprovider.MessageActionTypeSuppress,
+				}, false),
+			},
+			"user_attribute": {
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"value": {
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
+						},
+					},
+				},
+				Optional: true,
+			},
+			"user_pool_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"username": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -87,13 +104,30 @@ func resourceAwsCognitoUserCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("desired_delivery_mediums"); ok {
 		mediums := v.(*schema.Set)
-		params.DesiredDeliveryMediums = expandDesiredDeliveryMediums(mediums)
+		params.DesiredDeliveryMediums = expandCognitoUserDesiredDeliveryMediums(mediums)
+	}
+
+	if v, ok := d.GetOk("force_alias_creation"); ok {
+		params.ForceAliasCreation = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("message_action"); ok {
+		params.MessageAction = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("client_metadata"); ok {
+		metadata := v.(map[string]interface{})
+		params.ClientMetadata = expandCognitoUserClientMetadata(metadata)
 	}
 
 	log.Print("[DEBUG] Creating Cognito User")
 
 	resp, err := conn.AdminCreateUser(params)
 	if err != nil {
+		if isAWSErr(err, "AliasExistsException", "") {
+			log.Println("[ERROR] User alias already exists. To override the alias set `force_alias_creation` attribute to `true`.")
+			return nil
+		}
 		return fmt.Errorf("Error creating Cognito User: %s", err)
 	}
 
@@ -293,7 +327,7 @@ func flattenCognitoUserAttributes(apiList []*cognitoidentityprovider.AttributeTy
 	return tfSet
 }
 
-func expandDesiredDeliveryMediums(tfSet *schema.Set) []*string {
+func expandCognitoUserDesiredDeliveryMediums(tfSet *schema.Set) []*string {
 	apiList := []*string{}
 
 	for _, elem := range tfSet.List() {
@@ -343,6 +377,16 @@ func computeCognitoUserAttributesUpdate(old interface{}, new interface{}) (*sche
 	}
 
 	return upd, del
+}
+
+// For ClientMetadata we only need expand since AWS doesn't store its value
+func expandCognitoUserClientMetadata(tfMap map[string]interface{}) map[string]*string {
+	apiMap := map[string]*string{}
+	for k, v := range tfMap {
+		apiMap[k] = aws.String(v.(string))
+	}
+
+	return apiMap
 }
 
 func cognitoUserAttributeHash(attr interface{}) int {
