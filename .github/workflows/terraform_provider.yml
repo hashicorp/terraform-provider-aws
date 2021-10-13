@@ -87,41 +87,41 @@ jobs:
       name: go build
       run: go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$(go env GOOS)_$(go env GOARCH)/terraform-provider-aws .
 
-  # terraform_providers_schema:
-  #   name: terraform providers schema
-  #   needs: [go_build]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - uses: actions/cache@v2
-  #     continue-on-error: true
-  #     id: cache-terraform-providers-schema
-  #     timeout-minutes: 2
-  #     with:
-  #       path: terraform-providers-schema
-  #       key: ${{ runner.os }}-terraform-providers-schema-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
-  #   - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-  #     uses: actions/cache@v2
-  #     timeout-minutes: 2
-  #     with:
-  #       path: terraform-plugin-dir
-  #       key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
-  #   - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-  #     uses: hashicorp/setup-terraform@v1
-  #     with:
-  #       terraform_version: ${{ env.TERRAFORM_VERSION }}
-  #       terraform_wrapper: false
-  #   - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-  #     name: terraform init
-  #     run: |
-  #       # We need a file to initialize the provider
-  #       echo 'data "aws_partition" "example" {}' > example.tf
-  #       terraform init -plugin-dir terraform-plugin-dir
-  #   - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-  #     name: terraform providers schema
-  #     run: |
-  #       mkdir terraform-providers-schema
-  #       terraform providers schema -json > terraform-providers-schema/schema.json
+  terraform_providers_schema:
+    name: terraform providers schema
+    needs: [go_build]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      continue-on-error: true
+      id: cache-terraform-providers-schema
+      timeout-minutes: 2
+      with:
+        path: terraform-providers-schema
+        key: ${{ runner.os }}-terraform-providers-schema-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+    - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
+      uses: actions/cache@v2
+      timeout-minutes: 2
+      with:
+        path: terraform-plugin-dir
+        key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+    - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+        terraform_wrapper: false
+    - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
+      name: terraform init
+      run: |
+        # We need a file to initialize the provider
+        echo 'data "aws_partition" "example" {}' > example.tf
+        terraform init -plugin-dir terraform-plugin-dir
+    - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
+      name: terraform providers schema
+      run: |
+        mkdir terraform-providers-schema
+        terraform providers schema -json > terraform-providers-schema/schema.json
 
   # providerlint:
   #   needs: [go_build]
