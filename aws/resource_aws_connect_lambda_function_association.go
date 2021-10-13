@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/waiter"
 )
 
 func resourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
@@ -23,19 +22,15 @@ func resourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.ConnectLambdaFunctionAssociationCreatedTimeout),
-			Delete: schema.DefaultTimeout(waiter.ConnectInstanceDeletedTimeout),
-		},
 		Schema: map[string]*schema.Schema{
-			"instance_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"function_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateArn,
+			},
+			"instance_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -67,13 +62,15 @@ func resourceAwsConnectLambdaFunctionAssociationRead(ctx context.Context, d *sch
 
 	instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseID(d.Id())
 
-	associatedFunctionArn, err := finder.LambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID, functionArn)
+	lfaArn, err := finder.LambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID, functionArn)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by Function ARN (%s): %w", functionArn, err))
 	}
 
-	if associatedFunctionArn == "" {
-		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by Function ARN (%s): not found", functionArn))
+	if !d.IsNewResource() && lfaArn == "" {
+		log.Printf("[WARN] Connect Lambda Function Association (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("function_arn", functionArn)

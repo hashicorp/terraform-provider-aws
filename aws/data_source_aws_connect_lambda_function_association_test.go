@@ -1,16 +1,12 @@
 package aws
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfconnect "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/connect/finder"
 )
 
 func TestAccAwsConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
@@ -20,10 +16,9 @@ func TestAccAwsConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccAwsConnectLambdaFunctionAssociationDataSourceDestroy,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsConnectLambdaFunctionAssociationDataSourceConfigBasic(rName, rName2),
@@ -34,36 +29,6 @@ func TestAccAwsConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccAwsConnectLambdaFunctionAssociationDataSourceDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_lambda_function_association" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Connect Lambda Function Association ID not set")
-		}
-		instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).connectconn
-
-		associatedFunctionArn, err := finder.LambdaFunctionAssociationByArnWithContext(context.Background(), conn, instanceID, functionArn)
-
-		if err != nil && !isAWSErr(err, "ResourceNotFoundException", "") {
-			return fmt.Errorf("error Connect Lambda Function Association (%s): still exists: %w", associatedFunctionArn, err)
-		}
-
-		if associatedFunctionArn != "" {
-			return fmt.Errorf("error Connect Lambda Function Association (%s): still exists", associatedFunctionArn)
-		}
-	}
-	return nil
 }
 
 func testAccAwsConnectLambdaFunctionAssociationDataSourceBaseConfig(rName string, rName2 string) string {
@@ -113,7 +78,7 @@ resource "aws_connect_lambda_function_association" "test" {
 func testAccAwsConnectLambdaFunctionAssociationDataSourceConfigBasic(rName string, rName2 string) string {
 	return fmt.Sprintf(testAccAwsConnectLambdaFunctionAssociationDataSourceBaseConfig(rName, rName2) + `
 data "aws_connect_lambda_function_association" "test" {
-  function_arn = aws_lambda_function.test.arn
+  function_arn = aws_connect_lambda_function_association.test.function_arn
   instance_id  = aws_connect_instance.test.id
 }
 `)

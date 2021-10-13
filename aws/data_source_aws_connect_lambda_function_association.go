@@ -14,8 +14,9 @@ func dataSourceAwsConnectLambdaFunctionAssociation() *schema.Resource {
 		ReadContext: dataSourceAwsConnectLambdaFunctionAssociationRead,
 		Schema: map[string]*schema.Schema{
 			"function_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 			"instance_id": {
 				Type:     schema.TypeString,
@@ -30,12 +31,12 @@ func dataSourceAwsConnectLambdaFunctionAssociationRead(ctx context.Context, d *s
 	functionArn := d.Get("function_arn")
 	instanceID := d.Get("instance_id")
 
-	associatedFunctionArn, err := finder.LambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID.(string), functionArn.(string))
+	lfaArn, err := finder.LambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID.(string), functionArn.(string))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by ARN (%s): %w", functionArn, err))
 	}
 
-	if associatedFunctionArn == "" {
+	if lfaArn == "" {
 		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by ARN (%s): not found", functionArn))
 	}
 
