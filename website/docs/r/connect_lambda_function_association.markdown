@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_connect_lambda_function_association
 
-Allows the specified Amazon Connect instance to access the specified Lambda Funtion. For more information see
+Allows the specified Amazon Connect instance to access the specified Lambda Function. For more information see
 [Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html)
 
 [Invoke AWS Lambda functions](https://docs.aws.amazon.com/connect/latest/adminguide/connect-lambda-functions.html)

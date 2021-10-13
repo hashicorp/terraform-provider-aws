@@ -83,7 +83,6 @@ func resourceAwsConnectLambdaFunctionAssociationDelete(ctx context.Context, d *s
 	conn := meta.(*AWSClient).connectconn
 
 	instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseID(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
