@@ -11527,6 +11527,7 @@ var awsisoPartition = partition{
 				"us-iso-east-1": endpoint{
 					Protocols: []string{"http", "https"},
 				},
+				"us-iso-west-1": endpoint{},
 			},
 		},
 		"ec2": service{
