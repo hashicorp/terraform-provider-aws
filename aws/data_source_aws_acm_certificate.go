@@ -43,6 +43,7 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 						acm.KeyAlgorithmEcSecp521r1,
 						acm.KeyAlgorithmRsa1024,
 						acm.KeyAlgorithmRsa2048,
+						acm.KeyAlgorithmRsa3072,
 						acm.KeyAlgorithmRsa4096,
 					}, false),
 				},
