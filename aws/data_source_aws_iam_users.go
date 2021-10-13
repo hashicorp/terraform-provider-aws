@@ -2,12 +2,11 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/finder"
 )
 
 func dataSourceAwsIAMUsers() *schema.Resource {
@@ -40,33 +39,10 @@ func dataSourceAwsIAMUsers() *schema.Resource {
 func dataSourceAwsIAMUsersRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 
-	input := &iam.ListUsersInput{}
+	nameRegex := d.Get("name_regex").(string)
+	pathPrefix := d.Get("path_prefix").(string)
 
-	if v, ok := d.GetOk("path_prefix"); ok {
-		input.PathPrefix = aws.String(v.(string))
-	}
-
-	var results []*iam.User
-
-	err := conn.ListUsersPages(input, func(page *iam.ListUsersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, user := range page.Users {
-			if user == nil {
-				continue
-			}
-
-			if v, ok := d.GetOk("name_regex"); ok && !regexp.MustCompile(v.(string)).MatchString(aws.StringValue(user.UserName)) {
-				continue
-			}
-
-			results = append(results, user)
-		}
-
-		return !lastPage
-	})
+	results, err := finder.Users(conn, nameRegex, pathPrefix)
 
 	if err != nil {
 		return fmt.Errorf("error reading IAM users: %w", err)
