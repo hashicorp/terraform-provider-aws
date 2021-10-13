@@ -973,3 +973,41 @@ func ManagedPrefixListEntryByIDAndCIDR(conn *ec2.EC2, id, cidr string) (*ec2.Pre
 
 	return nil, &resource.NotFoundError{}
 }
+
+func PlacementGroupByName(conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {
+	input := &ec2.DescribePlacementGroupsInput{
+		GroupNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := conn.DescribePlacementGroups(input)
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidPlacementGroupUnknown) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.PlacementGroups) == 0 || output.PlacementGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.PlacementGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	placementGroup := output.PlacementGroups[0]
+
+	if state := aws.StringValue(placementGroup.State); state == ec2.PlacementGroupStateDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return placementGroup, nil
+}

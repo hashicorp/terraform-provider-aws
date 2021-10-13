@@ -597,6 +597,7 @@ func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -649,6 +650,7 @@ func TestAccAWSGlueCatalogTable_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogTable(), resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,

@@ -187,6 +187,10 @@ func testSweepSkipSweepError(err error) bool {
 	if isAWSErr(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
 		return true
 	}
+	// For example from us-west-2 ECR public repository
+	if isAWSErr(err, "UnsupportedCommandException", "command is only supported in") {
+		return true
+	}
 	return false
 }
 

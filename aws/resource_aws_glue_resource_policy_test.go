@@ -51,6 +51,41 @@ func testAccAWSGlueResourcePolicy_basic(t *testing.T) {
 	})
 }
 
+func testAccAWSGlueResourcePolicy_hybrid(t *testing.T) {
+	resourceName := "aws_glue_resource_policy.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueResourcePolicyHybrid("glue:CreateTable", "TRUE"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"enable_hybrid"},
+			},
+			{
+				Config: testAccAWSGlueResourcePolicyHybrid("glue:CreateTable", "FALSE"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "FALSE"),
+				),
+			},
+			{
+				Config: testAccAWSGlueResourcePolicyHybrid("glue:CreateTable", "TRUE"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
+				),
+			},
+		},
+	})
+}
 func testAccAWSGlueResourcePolicy_disappears(t *testing.T) {
 	resourceName := "aws_glue_resource_policy.test"
 	resource.Test(t, resource.TestCase{
@@ -63,6 +98,7 @@ func testAccAWSGlueResourcePolicy_disappears(t *testing.T) {
 				Config: testAccAWSGlueResourcePolicy_Required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSGlueResourcePolicy(resourceName, "glue:CreateTable"),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueResourcePolicy(), resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -94,6 +130,32 @@ resource "aws_glue_resource_policy" "test" {
   policy = data.aws_iam_policy_document.glue-example-policy.json
 }
 `, action)
+}
+
+func testAccAWSGlueResourcePolicyHybrid(action, hybrid string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "glue-example-policy" {
+  statement {
+    actions   = ["%[1]s"]
+    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+    principals {
+      identifiers = ["*"]
+      type        = "AWS"
+    }
+  }
+}
+
+resource "aws_glue_resource_policy" "test" {
+  policy        = data.aws_iam_policy_document.glue-example-policy.json
+  enable_hybrid = %[2]q
+}
+`, action, hybrid)
 }
 
 func testAccAWSGlueResourcePolicy_update(t *testing.T) {

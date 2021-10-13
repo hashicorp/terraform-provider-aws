@@ -492,6 +492,9 @@ func resourceAwsGlueCatalogTableDelete(d *schema.ResourceData, meta interface{})
 		DatabaseName: aws.String(dbName),
 	})
 	if err != nil {
+		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			return nil
+		}
 		return fmt.Errorf("Error deleting Glue Catalog Table: %w", err)
 	}
 	return nil
