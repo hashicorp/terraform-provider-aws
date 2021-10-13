@@ -340,6 +340,7 @@ func TestAccAWSRDSCluster_OnlyMajorVersion(t *testing.T) {
 					"cluster_identifier_prefix",
 					"db_instance_parameter_group_name",
 					"enable_global_write_forwarding",
+					"engine_version",
 					"master_password",
 					"skip_final_snapshot",
 				},
