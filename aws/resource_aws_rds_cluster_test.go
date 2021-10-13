@@ -2708,7 +2708,7 @@ resource "aws_rds_cluster_instance" "test" {
 
   lifecycle {
     ignore_changes = [engine_version]
-  }  
+  }
 }
 
 resource "aws_rds_cluster_parameter_group" "test" {
