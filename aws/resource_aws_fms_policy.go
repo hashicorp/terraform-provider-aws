@@ -33,6 +33,12 @@ func resourceAwsFmsPolicy() *schema.Resource {
 				Default:  true,
 			},
 
+			"delete_unused_fms_resources": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"exclude_resource_tags": {
 				Type:     schema.TypeBool,
 				Required: true,
@@ -206,6 +212,7 @@ func resourceAwsFmsPolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPoli
 	if err := d.Set("resource_type_list", resp.Policy.ResourceTypeList); err != nil {
 		return err
 	}
+	d.Set("delete_unused_fms_resources", resp.Policy.DeleteUnusedFMManagedResources)
 	d.Set("resource_type", resp.Policy.ResourceType)
 	d.Set("policy_update_token", resp.Policy.PolicyUpdateToken)
 	if err := d.Set("resource_tags", flattenFMSResourceTags(resp.Policy.ResourceTags)); err != nil {
@@ -231,11 +238,12 @@ func resourceAwsFmsPolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 	}
 
 	fmsPolicy := &fms.Policy{
-		PolicyName:          aws.String(d.Get("name").(string)),
-		RemediationEnabled:  aws.Bool(d.Get("remediation_enabled").(bool)),
-		ResourceType:        resourceType,
-		ResourceTypeList:    resourceTypeList,
-		ExcludeResourceTags: aws.Bool(d.Get("exclude_resource_tags").(bool)),
+		PolicyName:                     aws.String(d.Get("name").(string)),
+		RemediationEnabled:             aws.Bool(d.Get("remediation_enabled").(bool)),
+		ResourceType:                   resourceType,
+		ResourceTypeList:               resourceTypeList,
+		ExcludeResourceTags:            aws.Bool(d.Get("exclude_resource_tags").(bool)),
+		DeleteUnusedFMManagedResources: aws.Bool(d.Get("delete_unused_fms_resources").(bool)),
 	}
 
 	if d.Id() != "" {
