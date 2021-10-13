@@ -49,6 +49,32 @@ func ModelPackageGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker
 	return output, nil
 }
 
+func ModelPackageGroupPolicyByName(conn *sagemaker.SageMaker, name string) (*sagemaker.GetModelPackageGroupPolicyOutput, error) {
+	input := &sagemaker.GetModelPackageGroupPolicyInput{
+		ModelPackageGroupName: aws.String(name),
+	}
+
+	output, err := conn.GetModelPackageGroupPolicy(input)
+
+	if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "Cannot find Model Package Group") ||
+		tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "Cannot find resource policy") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 // ImageByName returns the Image corresponding to the specified name.
 // Returns nil if no Image is found.
 func ImageByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
