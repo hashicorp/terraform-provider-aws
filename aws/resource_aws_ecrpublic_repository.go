@@ -228,6 +228,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 		deleteInput.Force = aws.Bool(v.(bool))
 	}
 
+	log.Printf("[DEBUG] Deleting ECR Public Repository: (%s)", d.Id())
 	_, err := conn.DeleteRepository(deleteInput)
 
 	if err != nil {
