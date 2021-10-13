@@ -9,3 +9,7 @@ resource/aws_rds_cluster: Add `db_instance_parameter_group_name` attribute to al
 ```release-note:enhancement
 resource/rds_cluster_instance: Add `performance_insights_retention_period` attribute
 ```
+
+```release-notes:bug
+resource/aws_rds_cluster: Add possible pending states for cluster update
+```
