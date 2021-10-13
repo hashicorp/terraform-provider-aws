@@ -1,12 +1,18 @@
 ## 3.63.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_sagemaker_model_package_group_policy` ([#21250](https://github.com/hashicorp/terraform-provider-aws/issues/21250))
+
 ENHANCEMENTS:
 
 * data-source/aws_instance: Add `placement_partition_number` attribute ([#7777](https://github.com/hashicorp/terraform-provider-aws/issues/7777))
-* data-source/glue_connection: Add tagging support. ([#17654 copy](https://github.com/hashicorp/terraform-provider-aws/issues/17654 copy))
+* data-source/glue_connection: Add tagging support. ([#21226](https://github.com/hashicorp/terraform-provider-aws/issues/21226))
+* resource/aws_glue_resource_policy: Add `enable_hybrid` argument. ([#21239](https://github.com/hashicorp/terraform-provider-aws/issues/21239))
 * resource/aws_instance: Add `placement_partition_number` argument ([#7777](https://github.com/hashicorp/terraform-provider-aws/issues/7777))
 * resource/aws_placement_group: Add `partition_count` argument ([#15360](https://github.com/hashicorp/terraform-provider-aws/issues/15360))
-* resource/glue_connection: Add tagging support. ([#17654 copy](https://github.com/hashicorp/terraform-provider-aws/issues/17654 copy))
+* resource/aws_vpc_flow_log: Add `destination_options` block argument which can now enable parquet log file format ([#21285](https://github.com/hashicorp/terraform-provider-aws/issues/21285))
+* resource/glue_connection: Add tagging support. ([#21226](https://github.com/hashicorp/terraform-provider-aws/issues/21226))
 
 BUG FIXES:
 
