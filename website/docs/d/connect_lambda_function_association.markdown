@@ -3,7 +3,7 @@ subcategory: "Connect"
 layout: "aws"
 page_title: "AWS: aws_connect_lambda_function_association"
 description: |-
-  Provides details about a specific Connect Lambda Function Association.
+Provides details about a specific Connect Lambda Function Association.
 ---
 
 # Data Source: aws_connect_lambda_function_association
@@ -11,18 +11,7 @@ description: |-
 Provides details about a specific Connect Lambda Function Association.
 
 ## Example Usage
-By name
-
-```hcl
-data "aws_connect_lambda_function_association" "test" {
-  function_arn = "arn:aws:lambda:us-west-2:123456789123:function:abcdefg"
-  instance_id  = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
-}
-```
 
 ## Argument Reference
 
-The following arguments are supported:
-
-* `function_arn` - (Required) Name or Amazon Resource Name (ARN) of the Lambda Function, omitting any version or alias qualifier.
-* `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
+## Attributes Reference
