@@ -616,7 +616,7 @@ func TestAccEC2InstanceDataSource_blockDeviceTags(t *testing.T) {
 }
 
 // Lookup based on InstanceID
-var testAccInstanceDataSourceConfig = acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + `
+var testAccInstanceDataSourceConfig = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
@@ -636,7 +636,7 @@ data "aws_instance" "test" {
 
 // Use the tags attribute to filter
 func testAccInstanceDataSourceConfig_Tags(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
@@ -658,7 +658,7 @@ data "aws_instance" "test" {
 
 // filter on tag, populate more attributes
 var testAccInstanceDataSourceConfig_AzUserData = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-	acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
+	acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
 resource "aws_instance" "test" {
   ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -677,7 +677,7 @@ data "aws_instance" "test" {
 `)
 
 // GP2IopsDevice
-var testAccInstanceDataSourceConfig_gp2IopsDevice = acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + `
+var testAccInstanceDataSourceConfig_gp2IopsDevice = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.medium"
@@ -694,7 +694,7 @@ data "aws_instance" "test" {
 `
 
 // GP3ThroughputDevice
-var testAccInstanceDataSourceConfig_gp3ThroughputDevice = acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + `
+var testAccInstanceDataSourceConfig_gp3ThroughputDevice = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.medium"
@@ -712,7 +712,7 @@ data "aws_instance" "test" {
 `
 
 // Block Device
-var testAccInstanceDataSourceConfig_blockDevices = acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + `
+var testAccInstanceDataSourceConfig_blockDevices = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.medium"
@@ -759,7 +759,7 @@ data "aws_instance" "test" {
 }
 `
 
-var testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId = acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + `
+var testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -786,7 +786,7 @@ data "aws_instance" "test" {
 }
 `
 
-var testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId = acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + `
+var testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
@@ -808,7 +808,7 @@ data "aws_instance" "test" {
 }
 `
 
-var testAccInstanceDataSourceConfig_rootInstanceStore = acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + `
+var testAccInstanceDataSourceConfig_rootInstanceStore = acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.medium"
@@ -820,7 +820,7 @@ data "aws_instance" "test" {
 `
 
 func testAccInstanceDataSourceConfig_privateIP(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), testAccInstanceVPCBasicConfig(rName), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), testAccInstanceVPCBasicConfig(rName), `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -835,7 +835,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), testAccInstanceVPCBasicConfig(rName), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), testAccInstanceVPCBasicConfig(rName), `
 resource "aws_instance" "test" {
   ami                   = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type         = "t2.micro"
@@ -850,7 +850,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_ipv6Addresses(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), testAccInstanceVPCIPv6Config(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), testAccInstanceVPCIPv6Config(rName), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type      = "t2.micro"
@@ -869,7 +869,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_keyPair(rName, publicKey string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -900,7 +900,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_VPC(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), testAccInstanceVPCBasicConfig(rName), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), testAccInstanceVPCBasicConfig(rName), `
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.small"
@@ -918,7 +918,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_PlacementGroup(rName string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + testAccInstanceVPCBasicConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + testAccInstanceVPCBasicConfig(rName) + fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
   strategy = "cluster"
@@ -943,7 +943,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_SecurityGroups(rInt int) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
 resource "aws_security_group" "tf_test_foo" {
   name        = "tf_test_foo-%d"
   description = "foo"
@@ -970,7 +970,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_VPCSecurityGroups(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCBasicConfig(rName),
 		testAccInstanceVPCSecurityGroupConfig(rName),
 		`
@@ -1012,7 +1012,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfigGetUserData(rName string, getUserData bool) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + testAccInstanceVPCBasicConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + testAccInstanceVPCBasicConfig(rName) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -1033,7 +1033,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfigGetUserDataNoUserData(rName string, getUserData bool) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + testAccInstanceVPCBasicConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + testAccInstanceVPCBasicConfig(rName) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -1048,7 +1048,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_creditSpecification(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCBasicConfig(rName), `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -1068,7 +1068,7 @@ data "aws_instance" "test" {
 
 func testAccInstanceDataSourceConfig_metadataOptions(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -1096,7 +1096,7 @@ data "aws_instance" "test" {
 
 func testAccInstanceDataSourceConfig_enclaveOptions(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		testAccInstanceVPCConfig(rName, false),
 		acctest.AvailableEC2InstanceTypeForRegion("c5a.xlarge", "c5.xlarge"),
 		fmt.Sprintf(`
@@ -1122,7 +1122,7 @@ data "aws_instance" "test" {
 
 func testAccInstanceDataSourceConfig_blockDeviceTags(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {

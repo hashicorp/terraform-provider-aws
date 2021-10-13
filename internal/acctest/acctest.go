@@ -2219,10 +2219,10 @@ data "aws_ec2_instance_type_offering" "%[1]s" {
 `, name, strings.Join(preferredInstanceTypes, "\", \""))
 }
 
-// ConfigLatestAmazonLinuxHVMEBSAMI returns the configuration for a data source that
+// ConfigLatestAmazonLinuxHvmEbsAmi returns the configuration for a data source that
 // describes the latest Amazon Linux AMI using HVM virtualization and an EBS root device.
 // The data source is named 'amzn-ami-minimal-hvm-ebs'.
-func ConfigLatestAmazonLinuxHVMEBSAMI() string {
+func ConfigLatestAmazonLinuxHvmEbsAmi() string {
 	return `
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true

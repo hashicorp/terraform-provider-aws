@@ -307,7 +307,7 @@ func testAccCheckEIPAssociationDestroy(s *terraform.State) error {
 func testAccEIPAssociationConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/24"
@@ -376,7 +376,7 @@ resource "aws_network_interface" "test" {
 func testAccEIPAssociationDisappearsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "192.168.0.0/24"
@@ -438,7 +438,7 @@ resource "aws_eip_association" "test" {
 
 func testAccEIPAssociationConfig_spotInstance(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -485,7 +485,7 @@ func testAccEIPAssociationConfig_instance() string {
 	return acctest.ConfigCompose(
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

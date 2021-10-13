@@ -1697,7 +1697,7 @@ func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *ec2.SpotFleetReques
 
 func testAccSpotFleetRequestBaseConfig(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`

@@ -973,7 +973,7 @@ resource "aws_eip" "test" {
 
 func testAccEIPInstanceConfig() string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		`
@@ -1006,7 +1006,7 @@ resource "aws_eip" "test" {
 
 func testAccEIPInstanceAssociatedConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -1075,7 +1075,7 @@ resource "aws_eip" "test" {
 
 func testAccEIPInstanceAssociatedSwitchConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		fmt.Sprintf(`
 resource "aws_vpc" "default" {
   cidr_block           = "10.0.0.0/16"
@@ -1226,7 +1226,7 @@ resource "aws_eip" "test2" {
 
 func testAccEIPInstanceReassociateConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_eip" "test" {
@@ -1302,7 +1302,7 @@ func testAccEIPInstanceAssociateNotAssociatedConfig() string {
 	return acctest.ConfigCompose(
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -1332,7 +1332,7 @@ func testAccEIPInstanceAssociateAssociatedConfig() string {
 	return acctest.ConfigCompose(
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }

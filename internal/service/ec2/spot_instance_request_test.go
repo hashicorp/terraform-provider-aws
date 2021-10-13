@@ -804,7 +804,7 @@ func testAccCheckSpotInstanceRequestNotRecreated(before, after *ec2.SpotInstance
 
 func testAccSpotInstanceRequestConfig() string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"), `
 resource "aws_spot_instance_request" "test" {
   ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -817,7 +817,7 @@ resource "aws_spot_instance_request" "test" {
 
 func testAccSpotInstanceRequestTags1Config(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -834,7 +834,7 @@ resource "aws_spot_instance_request" "test" {
 
 func testAccSpotInstanceRequestTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -852,7 +852,7 @@ resource "aws_spot_instance_request" "test" {
 
 func testAccSpotInstanceRequestValidUntilConfig(rName string, validUntil string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -871,7 +871,7 @@ resource "aws_spot_instance_request" "test" {
 
 func testAccSpotInstanceRequestConfig_withoutSpotPrice(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -888,7 +888,7 @@ resource "aws_spot_instance_request" "test" {
 
 func testAccSpotInstanceRequestConfig_KeyName(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -915,7 +915,7 @@ resource "aws_key_pair" "test" {
 
 func testAccSpotInstanceRequestConfig_withLaunchGroup(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -934,7 +934,7 @@ resource "aws_spot_instance_request" "test" {
 
 func testAccSpotInstanceRequestConfig_withBlockDuration(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -954,7 +954,7 @@ resource "aws_spot_instance_request" "test" {
 func testAccSpotInstanceRequestVPCConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -992,7 +992,7 @@ resource "aws_spot_instance_request" "test" {
 func testAccSpotInstanceRequestConfig_SubnetAndSGAndPublicIPAddress(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -1067,7 +1067,7 @@ resource "aws_key_pair" "test" {
 
 func testAccSpotInstanceRequestInterruptConfig(interruptionBehavior string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("c5.large", "c4.large"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
@@ -1082,7 +1082,7 @@ resource "aws_spot_instance_request" "test" {
 
 func testAccSpotInstanceRequestInterruptConfig_Deprecated(interruptionBehavior string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("c5.large", "c4.large"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {

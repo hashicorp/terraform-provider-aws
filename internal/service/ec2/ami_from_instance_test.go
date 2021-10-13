@@ -165,7 +165,7 @@ func testAccCheckAMIFromInstanceDestroy(s *terraform.State) error {
 
 func testAccAMIFromInstanceBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
