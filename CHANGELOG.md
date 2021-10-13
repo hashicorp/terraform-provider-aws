@@ -1,4 +1,15 @@
 ## 3.63.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_instance: Add `placement_partition_number` attribute ([#7777](https://github.com/hashicorp/terraform-provider-aws/issues/7777))
+* resource/aws_instance: Add `placement_partition_number` argument ([#7777](https://github.com/hashicorp/terraform-provider-aws/issues/7777))
+* resource/aws_placement_group: Add `partition_count` argument ([#15360](https://github.com/hashicorp/terraform-provider-aws/issues/15360))
+
+BUG FIXES:
+
+* resource/aws_imagebuilder_distribution_configuration: remove hard limit on distribution target accounts ([#21254](https://github.com/hashicorp/terraform-provider-aws/issues/21254))
+
 ## 3.62.0 (October 08, 2021)
 
 FEATURES:
