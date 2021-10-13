@@ -5,6 +5,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -19,7 +20,7 @@ func init() {
 		Name: "aws_route53_resolver_firewall_rule",
 		F:    testSweepRoute53ResolverFirewallRules,
 		Dependencies: []string{
-			"aws_route53_resolver_firewall_rule_association",
+			"aws_route53_resolver_firewall_rule_group_association",
 		},
 	})
 }
@@ -32,35 +33,69 @@ func testSweepRoute53ResolverFirewallRules(region string) error {
 	conn := client.(*AWSClient).route53resolverconn
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListFirewallRulesPages(&route53resolver.ListFirewallRulesInput{}, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
+	err = conn.ListFirewallRuleGroupsPages(&route53resolver.ListFirewallRuleGroupsInput{}, func(page *route53resolver.ListFirewallRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, firewallRule := range page.FirewallRules {
-			id := tfroute53resolver.FirewallRuleCreateID(*firewallRule.FirewallRuleGroupId, *firewallRule.FirewallDomainListId)
-
-			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall rule: %s", id)
-			r := resourceAwsRoute53ResolverFirewallRule()
-			d := r.Data(nil)
-			d.SetId(id)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
+		for _, ruleGroup := range page.FirewallRuleGroups {
+			if ruleGroup == nil {
 				continue
 			}
+
+			ruleGroupId := aws.StringValue(ruleGroup.Id)
+
+			input := &route53resolver.ListFirewallRulesInput{
+				FirewallRuleGroupId: ruleGroup.Id,
+			}
+
+			err = conn.ListFirewallRulesPages(input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, firewallRule := range page.FirewallRules {
+					id := tfroute53resolver.FirewallRuleCreateID(*firewallRule.FirewallRuleGroupId, *firewallRule.FirewallDomainListId)
+
+					log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall rule: %s", id)
+					r := resourceAwsRoute53ResolverFirewallRule()
+					d := r.Data(nil)
+					d.SetId(id)
+					err := r.Delete(d, client)
+
+					if err != nil {
+						log.Printf("[ERROR] %s", err)
+						sweeperErrs = multierror.Append(sweeperErrs, err)
+						continue
+					}
+				}
+
+				return !lastPage
+			})
+
+			if testSweepSkipSweepError(err) {
+				log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall rules sweep (RuleGroup: %s) for %s: %s", ruleGroupId, region, err)
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 Resolver DNS Firewall rules for rule group (%s): %w", ruleGroupId, err))
+				continue
+			}
+
+			return !lastPage
 		}
 
 		return !lastPage
 	})
+
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall rules sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
+
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 Resolver DNS Firewall rules: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 Resolver DNS Firewall rule groups: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
