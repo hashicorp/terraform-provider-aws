@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,31 +37,30 @@ func resourceAwsPlacementGroup() *schema.Resource {
 				ForceNew: true,
 			},
 			"partition_count": {
-				Type:         schema.TypeInt,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 7), // AWS API: max of 7 partitions
-				Description:  "The number of partitions to create within the placement group (only available with the \"partition\" strategy).",
-			},
-			"strategy": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:     schema.TypeInt,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.PlacementStrategyCluster,
-					ec2.PlacementStrategyPartition,
-					ec2.PlacementStrategySpread,
-				}, false),
+				Optional: true,
+				// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#placement-groups-limitations-partition.
+				ValidateFunc: validation.IntBetween(0, 7),
 			},
 			"placement_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"strategy": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.PlacementStrategy_Values(), false),
+			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			resourceAwsPlacementGroupCustomizeDiff,
+			SetTagsDiff,
+		),
 	}
 }
 
@@ -69,26 +70,21 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-	strategy := d.Get("strategy").(string)
-	var partitionCount *int64
-	if partitionCountRaw, ok := d.GetOk("partition_count"); ok {
-		if strategy != "partition" {
-			return fmt.Errorf("error setting partition_count: strategy must be \"partition\" to use partition_count")
-		}
-
-		partitionCount = new(int64)
-		*partitionCount = int64(partitionCountRaw.(int))
-	}
-	input := ec2.CreatePlacementGroupInput{
+	input := &ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
-		PartitionCount:    partitionCount,
 		Strategy:          aws.String(d.Get("strategy").(string)),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePlacementGroup),
 	}
-	log.Printf("[DEBUG] Creating EC2 Placement group: %s", input)
-	_, err := conn.CreatePlacementGroup(&input)
+
+	if v, ok := d.GetOk("partition_count"); ok {
+		input.PartitionCount = aws.Int64(int64(v.(int)))
+	}
+
+	log.Printf("[DEBUG] Creating EC2 Placement Group: %s", input)
+	_, err := conn.CreatePlacementGroup(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating EC2 Placement Group (%s): %w", name, err)
 	}
 
 	wait := resource.StateChangeConf{
@@ -124,8 +120,6 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	log.Printf("[DEBUG] EC2 Placement group created: %q", name)
-
 	d.SetId(name)
 
 	return resourceAwsPlacementGroupRead(d, meta)
@@ -149,16 +143,13 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 
 		return err
 	}
+
 	pg := out.PlacementGroups[0]
-
-	log.Printf("[DEBUG] Received EC2 Placement Group: %s", pg)
-
 	d.Set("name", pg.GroupName)
-	d.Set("strategy", pg.Strategy)
-	if pg.PartitionCount != nil {
-		d.Set("partition_count", pg.PartitionCount)
-	}
+	d.Set("partition_count", pg.PartitionCount)
 	d.Set("placement_group_id", pg.GroupId)
+	d.Set("strategy", pg.Strategy)
+
 	tags := keyvaluetags.Ec2KeyValueTags(pg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
@@ -191,7 +182,7 @@ func resourceAwsPlacementGroupUpdate(d *schema.ResourceData, meta interface{}) e
 
 		pgId := d.Get("placement_group_id").(string)
 		if err := keyvaluetags.Ec2UpdateTags(conn, pgId, o, n); err != nil {
-			return fmt.Errorf("error updating Placement Group (%s) tags: %s", pgId, err)
+			return fmt.Errorf("error updating EC2 Placement Group (%s) tags: %w", pgId, err)
 		}
 	}
 
@@ -201,12 +192,13 @@ func resourceAwsPlacementGroupUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	log.Printf("[DEBUG] Deleting EC2 Placement Group %q", d.Id())
+	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
 	_, err := conn.DeletePlacementGroup(&ec2.DeletePlacementGroupInput{
 		GroupName: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting EC2 Placement Group (%s): %w", d.Id(), err)
 	}
 
 	wait := resource.StateChangeConf{
@@ -242,4 +234,14 @@ func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err = wait.WaitForState()
 	return err
+}
+
+func resourceAwsPlacementGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.Id() == "" {
+		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != ec2.PlacementGroupStrategyPartition {
+			return fmt.Errorf("partition_count must not be set when strategy = %q", strategy)
+		}
+	}
+
+	return nil
 }
