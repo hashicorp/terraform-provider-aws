@@ -95,6 +95,10 @@ const (
 )
 
 const (
+	ErrCodeInvalidFlowLogIdNotFound = "InvalidFlowLogId.NotFound"
+)
+
+const (
 	ErrCodeInvalidPlacementGroupUnknown = "InvalidPlacementGroup.Unknown"
 )
 

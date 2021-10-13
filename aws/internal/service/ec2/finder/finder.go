@@ -883,6 +883,28 @@ func VpnGatewayByID(conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
 	return output.VpnGateways[0], nil
 }
 
+func FlowLogByID(conn *ec2.EC2, id string) (*ec2.FlowLog, error) {
+	input := &ec2.DescribeFlowLogsInput{
+		FlowLogIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeFlowLogs(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.FlowLogs) == 0 || output.FlowLogs[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.FlowLogs); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.FlowLogs[0], nil
+}
+
 func ManagedPrefixListByID(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	input := &ec2.DescribeManagedPrefixListsInput{
 		PrefixListIds: aws.StringSlice([]string{id}),
