@@ -344,9 +344,9 @@ func expandFlowLogsDestinationOptions(l []interface{}) *ec2.DestinationOptionsRe
 	m := l[0].(map[string]interface{})
 
 	do := &ec2.DestinationOptionsRequest{
-		FileFormat:               aws.String(string(m["file_format"].(string))),
-		HiveCompatiblePartitions: aws.Bool(bool(m["hive_compatible_partitions"].(bool))),
-		PerHourPartition:         aws.Bool(bool(m["per_hour_partition"].(bool))),
+		FileFormat:               aws.String(m["file_format"].(string)),
+		HiveCompatiblePartitions: aws.Bool(m["hive_compatible_partitions"].(bool)),
+		PerHourPartition:         aws.Bool(m["per_hour_partition"].(bool)),
 	}
 
 	return do

@@ -289,6 +289,40 @@ func TestAccAWSFlowLog_LogDestinationType_S3_DO_PlainText(t *testing.T) {
 	})
 }
 
+func TestAccAWSFlowLog_LogDestinationType_S3_DO_PlainText_HiveCompatible(t *testing.T) {
+	var flowLog ec2.FlowLog
+	s3ResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible_PerHour(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					testAccCheckAWSFlowLogAttributes(&flowLog),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "plain-text"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.per_hour_partition", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSFlowLog_LogDestinationType_S3_DO_Parquet(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
@@ -636,26 +670,6 @@ resource "aws_flow_log" "test" {
   vpc_id               = aws_vpc.test.id
   destination_options {
     file_format = "plain-text"
-  }
-}
-`, rName)
-}
-
-func testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible(rName string) string {
-	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_flow_log" "test" {
-  log_destination      = aws_s3_bucket.test.arn
-  log_destination_type = "s3"
-  traffic_type         = "ALL"
-  vpc_id               = aws_vpc.test.id
-  destination_options {
-    file_format                = "plain-text"
-    hive_compatible_partitions = true
   }
 }
 `, rName)
