@@ -85,6 +85,10 @@ func resourceAwsCognitoUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"user_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"password": {
 				Type:          schema.TypeString,
 				Sensitive:     true,
@@ -216,9 +220,8 @@ func resourceAwsCognitoUserRead(d *schema.ResourceData, meta interface{}) error 
 
 	user, err := conn.AdminGetUser(params)
 	if err != nil {
-		log.Println("[ERROR] Error reading Cognito User: ", err)
 		if isAWSErr(err, "ResourceNotFoundException", "") {
-			log.Printf("[WARN] Cognito User %s is already gone", d.Id())
+			log.Printf("[WARN] Cognito User %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -227,6 +230,10 @@ func resourceAwsCognitoUserRead(d *schema.ResourceData, meta interface{}) error 
 
 	if err := d.Set("user_attribute", flattenCognitoUserAttributes(user.UserAttributes)); err != nil {
 		return fmt.Errorf("failed setting user_attributes: %w", err)
+	}
+
+	if err := d.Set("user_status", user.UserStatus); err != nil {
+		return fmt.Errorf("failed setting user_status: %w", err)
 	}
 
 	return nil
