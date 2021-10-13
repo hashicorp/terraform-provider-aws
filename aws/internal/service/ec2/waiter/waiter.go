@@ -758,6 +758,45 @@ func ManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList,
 	return nil, err
 }
 
+const (
+	PlacementGroupCreatedTimeout = 5 * time.Minute
+	PlacementGroupDeletedTimeout = 5 * time.Minute
+)
+
+func PlacementGroupCreated(conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.PlacementGroupStatePending},
+		Target:  []string{ec2.PlacementGroupStateAvailable},
+		Timeout: PlacementGroupCreatedTimeout,
+		Refresh: PlacementGroupState(conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.PlacementGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func PlacementGroupDeleted(conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.PlacementGroupStateDeleting},
+		Target:  []string{},
+		Timeout: PlacementGroupDeletedTimeout,
+		Refresh: PlacementGroupState(conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.PlacementGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func VpcEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{tfec2.VpcEndpointStatePendingAcceptance},

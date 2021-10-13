@@ -51,6 +51,10 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"placement_partition_number": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"tenancy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -449,6 +453,9 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 	if instance.Placement.GroupName != nil {
 		d.Set("placement_group", instance.Placement.GroupName)
+	}
+	if instance.Placement.PartitionNumber != nil {
+		d.Set("placement_partition_number", instance.Placement.PartitionNumber)
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)

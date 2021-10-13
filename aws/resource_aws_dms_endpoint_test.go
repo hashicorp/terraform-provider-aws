@@ -5,11 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dms/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAwsDmsEndpoint_basic(t *testing.T) {
@@ -20,12 +21,12 @@ func TestAccAwsDmsEndpoint_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointBasicConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
@@ -38,7 +39,7 @@ func TestAccAwsDmsEndpoint_basic(t *testing.T) {
 			{
 				Config: dmsEndpointBasicConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
 					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "extra"),
 					resource.TestCheckResourceAttr(resourceName, "password", "tftestupdate"),
@@ -60,12 +61,12 @@ func TestAccAwsDmsEndpoint_S3(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointS3Config(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\n"),
@@ -89,7 +90,7 @@ func TestAccAwsDmsEndpoint_S3(t *testing.T) {
 			{
 				Config: dmsEndpointS3ConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
@@ -113,12 +114,12 @@ func TestAccAwsDmsEndpoint_S3_ExtraConnectionAttributes(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointS3ExtraConnectionAttributesConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`dataFormat=parquet;`)),
 				),
 			},
@@ -140,12 +141,12 @@ func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointDynamoDbConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
@@ -158,7 +159,7 @@ func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 			{
 				Config: dmsEndpointDynamoDbConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 				),
 			},
 		},
@@ -173,12 +174,12 @@ func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointElasticsearchConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
 					testAccCheckResourceAttrRegionalHostname(resourceName, "elasticsearch_settings.0.endpoint_uri", "es", "search-estest"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "10"),
@@ -207,12 +208,12 @@ func TestAccAwsDmsEndpoint_Elasticsearch_ExtraConnectionAttributes(t *testing.T)
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointElasticsearchExtraConnectionAttributesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "errorRetryDuration=400;"),
 				),
 			},
@@ -234,12 +235,12 @@ func TestAccAwsDmsEndpoint_Elasticsearch_ErrorRetryDuration(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "60"),
 				),
@@ -255,7 +256,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch_ErrorRetryDuration(t *testing.T) {
 			// {
 			// 	Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 120),
 			// 	Check: resource.ComposeTestCheckFunc(
-			// 		checkDmsEndpointExists(resourceName),
+			// 		testAccCheckAWSDmsEndpointExists(resourceName),
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "120"),
 			// 	),
@@ -272,12 +273,12 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "1"),
 				),
@@ -293,7 +294,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 			// {
 			// 	Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 2),
 			// 	Check: resource.ComposeTestCheckFunc(
-			// 		checkDmsEndpointExists(resourceName),
+			// 		testAccCheckAWSDmsEndpointExists(resourceName),
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
 			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "2"),
 			// 	),
@@ -302,26 +303,38 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
-	resourceName := "aws_dms_endpoint.test"
+func TestAccAwsDmsEndpoint_Kafka(t *testing.T) {
+	domainName := testAccRandomSubdomain()
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	brokerPrefix := "ec2-12-345-678-901"
-	brokerService := "compute-1"
-	brokerPort1 := 2345
-	brokerPort2 := 3456
+	resourceName := "aws_dms_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerService, brokerPort1),
+				Config: dmsEndpointKafkaConfig(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
-					testAccCheckResourceAttrHostnameWithPort(resourceName, "kafka_settings.0.broker", brokerService, brokerPrefix, brokerPort1),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_control_details", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_null_and_empty", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_partition_value", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_table_alter_operations", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_transaction_details", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.message_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.message_max_bytes", "1000000"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.no_hex_prefix", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.partition_include_schema_table", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_password", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_username", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.security_protocol", "plaintext"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_ca_certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_client_certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_client_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_client_key_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
 				),
 			},
@@ -332,48 +345,27 @@ func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password"},
 			},
 			{
-				Config: dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerService, brokerPort2),
+				Config: dmsEndpointKafkaConfigUpdate(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
-					testAccCheckResourceAttrHostnameWithPort(resourceName, "kafka_settings.0.broker", brokerService, brokerPrefix, brokerPort2),
-					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAwsDmsEndpoint_Kafka_Topic(t *testing.T) {
-	resourceName := "aws_dms_endpoint.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: dmsEndpointKafkaConfigTopic(rName, "topic1"),
-				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_control_details", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_null_and_empty", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_partition_value", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_table_alter_operations", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.include_transaction_details", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.message_format", "json-unformatted"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.message_max_bytes", "500000"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.no_hex_prefix", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.partition_include_schema_table", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_password", "tftest-new"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.sasl_username", "tftest-new"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.security_protocol", "sasl-ssl"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_ca_certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_client_certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_client_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.ssl_client_key_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "topic1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
-			},
-			{
-				Config: dmsEndpointKafkaConfigTopic(rName, "topic2"),
-				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "topic2"),
 				),
 			},
 		},
@@ -388,12 +380,12 @@ func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointKinesisConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "json"),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", "aws_kinesis_stream.stream1", "arn"),
@@ -408,7 +400,7 @@ func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
 			{
 				Config: dmsEndpointKinesisConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "json"),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", "aws_kinesis_stream.stream2", "arn"),
@@ -426,12 +418,12 @@ func TestAccAwsDmsEndpoint_MongoDb(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointMongoDbConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
@@ -456,19 +448,19 @@ func TestAccAwsDmsEndpoint_MongoDb_Update(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointMongoDbConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
 			{
 				Config: dmsEndpointMongoDbConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
 					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
 					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
@@ -501,12 +493,12 @@ func TestAccAwsDmsEndpoint_DocDB(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointDocDBConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
@@ -519,7 +511,7 @@ func TestAccAwsDmsEndpoint_DocDB(t *testing.T) {
 			{
 				Config: dmsEndpointDocDBConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
 					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "extra"),
 					resource.TestCheckResourceAttr(resourceName, "password", "tftestupdate"),
@@ -541,12 +533,12 @@ func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: dmsEndpointDestroy,
+		CheckDestroy: testAccCheckAWSDmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: dmsEndpointDb2Config(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 				),
 			},
@@ -559,7 +551,7 @@ func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 			{
 				Config: dmsEndpointDb2ConfigUpdate(randId),
 				Check: resource.ComposeTestCheckFunc(
-					checkDmsEndpointExists(resourceName),
+					testAccCheckAWSDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
 					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "extra"),
 					resource.TestCheckResourceAttr(resourceName, "password", "tftestupdate"),
@@ -573,22 +565,31 @@ func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 	})
 }
 
-func dmsEndpointDestroy(s *terraform.State) error {
+func testAccCheckAWSDmsEndpointDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).dmsconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_endpoint" {
 			continue
 		}
 
-		err := checkDmsEndpointExists(rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("Found an endpoint that was not destroyed: %s", rs.Primary.ID)
+		_, err := finder.EndpointByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("DMS Endpoint %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func checkDmsEndpointExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSDmsEndpointExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -596,25 +597,15 @@ func checkDmsEndpointExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No DMS Endpoint ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).dmsconn
-		resp, err := conn.DescribeEndpoints(&dms.DescribeEndpointsInput{
-			Filters: []*dms.Filter{
-				{
-					Name:   aws.String("endpoint-id"),
-					Values: []*string{aws.String(rs.Primary.ID)},
-				},
-			},
-		})
+
+		_, err := finder.EndpointByID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("DMS endpoint error: %v", err)
-		}
-
-		if resp.Endpoints == nil {
-			return fmt.Errorf("DMS endpoint not found")
+			return err
 		}
 
 		return nil
@@ -1162,38 +1153,50 @@ resource "aws_dms_endpoint" "test" {
 `, rName, fullLoadErrorPercentage))
 }
 
-func dmsEndpointKafkaConfigBroker(rName, brokerPrefix, brokerServiceName string, brokerPort int) string {
+func dmsEndpointKafkaConfig(rName, domainName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
   engine_name   = "kafka"
+  ssl_mode      = "none"
 
   kafka_settings {
-    # example kafka broker: "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
-    broker = "%[2]s.%[3]s.${data.aws_partition.current.dns_suffix}:%[4]d"
+    broker                 = "%[2]s:2345"
+    include_null_and_empty = false
+    security_protocol      = "plaintext"
+    no_hex_prefix          = false
   }
 }
-`, rName, brokerPrefix, brokerServiceName, brokerPort)
+`, rName, domainName)
 }
 
-func dmsEndpointKafkaConfigTopic(rName string, topic string) string {
+func dmsEndpointKafkaConfigUpdate(rName, domainName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
   endpoint_type = "target"
   engine_name   = "kafka"
+  ssl_mode      = "none"
 
   kafka_settings {
-    broker = "ec2-12-345-678-901.compute-1.${data.aws_partition.current.dns_suffix}:2345"
-    topic  = %[2]q
+    broker                         = "%[2]s:2345"
+    topic                          = "topic1"
+    message_format                 = "json-unformatted"
+    include_transaction_details    = true
+    include_partition_value        = true
+    partition_include_schema_table = true
+    include_table_alter_operations = true
+    include_control_details        = true
+    message_max_bytes              = 500000
+    include_null_and_empty         = true
+    security_protocol              = "sasl-ssl"
+    sasl_username                  = "tftest-new"
+    sasl_password                  = "tftest-new"
+    no_hex_prefix                  = true
   }
 }
-`, rName, topic)
+`, rName, domainName)
 }
 
 func dmsEndpointKinesisConfig(randId string) string {
