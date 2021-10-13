@@ -32,3 +32,4 @@ data "aws_glue_connection" "example" {
 * `match_criteria` – A list of criteria that can be used in selecting this connection.
 * `name` - The name of the Glue Connection.
 * `physical_connection_requirements` - A map of physical connection requirements, such as VPC and SecurityGroup.
+* `tags` - The tags assigned to the resource
