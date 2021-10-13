@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
@@ -210,9 +211,10 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 			},
 
 			"performance_insights_retention_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntInSlice([]int{7, 731}),
 			},
 
 			"copy_tags_to_snapshot": {
