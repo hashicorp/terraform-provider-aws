@@ -1,0 +1,11 @@
+```release-notes:bug
+resource/aws_rds_cluster_instance: Remove force new resource on the `engine_version` parameter to allow upgrade without remove instances
+```
+
+```release-notes:enhancement
+resource/aws_rds_cluster: Add `db_instance_parameter_group_name` attribute to allow major version upgrade using custom parameter groups
+```
+
+```release-note:enhancement
+resource/rds_cluster_instance: Add `performance_insights_retention_period` attribute
+```
