@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_imagebuilder_distribution_configuration: remove hard limit on distribution target accounts
+```

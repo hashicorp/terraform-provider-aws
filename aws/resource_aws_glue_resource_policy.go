@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -27,6 +28,11 @@ func resourceAwsGlueResourcePolicy() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
+			"enable_hybrid": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(glue.EnableHybridValues_Values(), false),
+			},
 		},
 	}
 }
@@ -35,10 +41,16 @@ func resourceAwsGlueResourcePolicyPut(condition string) func(d *schema.ResourceD
 	return func(d *schema.ResourceData, meta interface{}) error {
 		conn := meta.(*AWSClient).glueconn
 
-		_, err := conn.PutResourcePolicy(&glue.PutResourcePolicyInput{
+		input := &glue.PutResourcePolicyInput{
 			PolicyInJson:          aws.String(d.Get("policy").(string)),
 			PolicyExistsCondition: aws.String(condition),
-		})
+		}
+
+		if v, ok := d.GetOk("enable_hybrid"); ok {
+			input.EnableHybrid = aws.String(v.(string))
+		}
+
+		_, err := conn.PutResourcePolicy(input)
 		if err != nil {
 			return fmt.Errorf("error putting policy request: %s", err)
 		}
@@ -57,7 +69,7 @@ func resourceAwsGlueResourcePolicyRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading policy request: %s", err)
+		return fmt.Errorf("error reading policy request: %w", err)
 	}
 
 	if *resourcePolicy.PolicyInJson == "" {
@@ -74,7 +86,10 @@ func resourceAwsGlueResourcePolicyDelete(d *schema.ResourceData, meta interface{
 
 	_, err := conn.DeleteResourcePolicy(&glue.DeleteResourcePolicyInput{})
 	if err != nil {
-		return fmt.Errorf("error deleting policy request: %s", err)
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+			return nil
+		}
+		return fmt.Errorf("error deleting policy request: %w", err)
 	}
 
 	return nil

@@ -7,6 +7,7 @@ func TestAccAWSGlue_serial(t *testing.T) {
 		"ResourcePolicy": {
 			"basic":      testAccAWSGlueResourcePolicy_basic,
 			"update":     testAccAWSGlueResourcePolicy_update,
+			"hybrid":     testAccAWSGlueResourcePolicy_hybrid,
 			"disappears": testAccAWSGlueResourcePolicy_disappears,
 		},
 	}
