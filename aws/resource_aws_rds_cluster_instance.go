@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
@@ -106,7 +107,6 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 
@@ -210,6 +210,13 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"performance_insights_retention_period": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntInSlice([]int{7, 731}),
+			},
+
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -281,6 +288,10 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 
 	if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
 		createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
+		createOpts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
 	}
 
 	if attr, ok := d.GetOk("preferred_backup_window"); ok {
@@ -459,6 +470,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("monitoring_role_arn", db.MonitoringRoleArn)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
+	d.Set("performance_insights_retention_period", db.PerformanceInsightsRetentionPeriod)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
@@ -514,11 +526,15 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
-	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id") {
+	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 
 		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
 			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+			req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
 		requestUpdate = true
