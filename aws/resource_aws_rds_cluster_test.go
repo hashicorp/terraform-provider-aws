@@ -2707,7 +2707,7 @@ resource "aws_rds_cluster_instance" "test" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
 
   lifecycle {
-	ignore_changes = [engine_version]
+    ignore_changes = [engine_version]
   }  
 }
 
