@@ -44,21 +44,21 @@ resource "aws_chime_voice_connector_termination_credentials" "default" {
 
 The following arguments are supported:
 
-* `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
+* `voice_connector_id` - (Required) Amazon Chime Voice Connector ID.
 * `credentials` - (Required) List of termination SIP credentials.
 
 ### `credentials`
 
 The SIP credentials used to authenticate requests to your Amazon Chime Voice Connector.
 
-* `username` - (Required) The RFC2617 compliant username associated with the SIP credentials.
-* `password` - (Required) The RFC2617 compliant password associated with the SIP credentials.
+* `username` - (Required) RFC2617 compliant username associated with the SIP credentials.
+* `password` - (Required) RFC2617 compliant password associated with the SIP credentials.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Chime Voice Connector ID.
+* `id` - Amazon Chime Voice Connector ID.
 
 ## Import
 
