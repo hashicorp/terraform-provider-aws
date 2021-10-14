@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDeviceFleet() *schema.Resource {
@@ -62,7 +63,7 @@ func ResourceDeviceFleet() *schema.Resource {
 						"kms_key_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"s3_output_location": {
 							Type:         schema.TypeString,
@@ -75,7 +76,7 @@ func ResourceDeviceFleet() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -108,7 +109,7 @@ func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = tags.IgnoreAws().SagemakerTags()
 	}
 
-	_, err := retryOnAwsCode("ValidationException", func() (interface{}, error) {
+	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
 		return conn.CreateDeviceFleet(input)
 	})
 	if err != nil {

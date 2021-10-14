@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEndpointConfiguration() *schema.Resource {
@@ -67,7 +68,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"notification_config": {
 										Type:     schema.TypeList,
@@ -80,13 +81,13 @@ func ResourceEndpointConfiguration() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ForceNew:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 												"success_topic": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ForceNew:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
@@ -112,7 +113,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateSagemakerName,
+				ValidateFunc: validName,
 			},
 
 			"production_variants": {
@@ -169,7 +170,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -208,7 +209,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"capture_options": {

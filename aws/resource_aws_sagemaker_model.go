@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceModel() *schema.Resource {
@@ -39,20 +40,20 @@ func ResourceModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateSagemakerName,
+							ValidateFunc: validName,
 						},
 						"environment": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateSagemakerEnvironment,
+							ValidateFunc: validEnvironment,
 							Elem:         &schema.Schema{Type: schema.TypeString},
 						},
 						"image": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateSagemakerImage,
+							ValidateFunc: validImage,
 						},
 						"image_config": {
 							Type:     schema.TypeList,
@@ -80,7 +81,7 @@ func ResourceModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateSagemakerModelDataUrl,
+							ValidateFunc: validModelDataURL,
 						},
 					},
 				},
@@ -94,7 +95,7 @@ func ResourceModel() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"inference_execution_config": {
 				Type:     schema.TypeList,
@@ -117,7 +118,7 @@ func ResourceModel() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateSagemakerName,
+				ValidateFunc: validName,
 			},
 			"primary_container": {
 				Type:     schema.TypeList,
@@ -129,20 +130,20 @@ func ResourceModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateSagemakerName,
+							ValidateFunc: validName,
 						},
 						"environment": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateSagemakerEnvironment,
+							ValidateFunc: validEnvironment,
 							Elem:         &schema.Schema{Type: schema.TypeString},
 						},
 						"image": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateSagemakerImage,
+							ValidateFunc: validImage,
 						},
 						"image_config": {
 							Type:     schema.TypeList,
@@ -170,7 +171,7 @@ func ResourceModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateSagemakerModelDataUrl,
+							ValidateFunc: validModelDataURL,
 						},
 					},
 				},
@@ -250,7 +251,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Sagemaker model create config: %#v", *createOpts)
-	_, err := retryOnAwsCode("ValidationException", func() (interface{}, error) {
+	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
 		return conn.CreateModel(createOpts)
 	})
 

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceUserProfile() *schema.Resource {
@@ -72,7 +73,7 @@ func ResourceUserProfile() *schema.Resource {
 						"execution_role": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"sharing_settings": {
 							Type:     schema.TypeList,
@@ -90,7 +91,7 @@ func ResourceUserProfile() *schema.Resource {
 									"s3_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"s3_output_path": {
 										Type:     schema.TypeString,
@@ -120,7 +121,7 @@ func ResourceUserProfile() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
@@ -149,7 +150,7 @@ func ResourceUserProfile() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
@@ -159,7 +160,7 @@ func ResourceUserProfile() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validateArn,
+											ValidateFunc: verify.ValidARN,
 										},
 									},
 								},
@@ -186,7 +187,7 @@ func ResourceUserProfile() *schema.Resource {
 												"sagemaker_image_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
@@ -196,7 +197,7 @@ func ResourceUserProfile() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validateArn,
+											ValidateFunc: verify.ValidARN,
 										},
 									},
 									"custom_image": {

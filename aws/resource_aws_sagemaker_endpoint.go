@@ -11,6 +11,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEndpoint() *schema.Resource {
@@ -34,13 +35,13 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateSagemakerName,
+				ValidateFunc: validName,
 			},
 
 			"endpoint_config_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateSagemakerName,
+				ValidateFunc: validName,
 			},
 
 			"tags":     tftags.TagsSchema(),
