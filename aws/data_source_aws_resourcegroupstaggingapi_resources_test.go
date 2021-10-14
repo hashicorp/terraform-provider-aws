@@ -13,12 +13,12 @@ import (
 func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_TagFilter(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigTagFilter(rName),
@@ -35,12 +35,12 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_TagFilter(t *testing.
 
 func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_IncludeComplianceDetails(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigIncludeComplianceDetails(rName),
@@ -56,12 +56,12 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_IncludeComplianceDeta
 func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceTypeFilters(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceTypeFilters(rName),
@@ -79,12 +79,12 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceTypeFilters(t
 func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceArnList(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceARNList(rName),
