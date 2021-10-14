@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConfigConformancePack() *schema.Resource {
+func ResourceConformancePack() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigConformancePackPut,
-		Read:   resourceAwsConfigConformancePackRead,
+		Read:   resourceConformancePackRead,
 		Update: resourceAwsConfigConformancePackPut,
-		Delete: resourceAwsConfigConformancePackDelete,
+		Delete: resourceConformancePackDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -132,10 +132,10 @@ func resourceAwsConfigConformancePackPut(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error waiting for Config Conformance Pack (%s) to be created: %w", d.Id(), err)
 	}
 
-	return resourceAwsConfigConformancePackRead(d, meta)
+	return resourceConformancePackRead(d, meta)
 }
 
-func resourceAwsConfigConformancePackRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConformancePackRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	pack, err := configDescribeConformancePack(conn, d.Id())
@@ -172,7 +172,7 @@ func resourceAwsConfigConformancePackRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsConfigConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.DeleteConformancePackInput{

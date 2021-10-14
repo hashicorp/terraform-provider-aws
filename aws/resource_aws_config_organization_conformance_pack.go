@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
+func ResourceOrganizationConformancePack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigOrganizationConformancePackCreate,
-		Read:   resourceAwsConfigOrganizationConformancePackRead,
-		Update: resourceAwsConfigOrganizationConformancePackUpdate,
-		Delete: resourceAwsConfigOrganizationConformancePackDelete,
+		Create: resourceOrganizationConformancePackCreate,
+		Read:   resourceOrganizationConformancePackRead,
+		Update: resourceOrganizationConformancePackUpdate,
+		Delete: resourceOrganizationConformancePackDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -108,7 +108,7 @@ func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationConformancePackCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
@@ -153,10 +153,10 @@ func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, 
 		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be created: %w", d.Id(), err)
 	}
 
-	return resourceAwsConfigOrganizationConformancePackRead(d, meta)
+	return resourceOrganizationConformancePackRead(d, meta)
 }
 
-func resourceAwsConfigOrganizationConformancePackRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationConformancePackRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	pack, err := configDescribeOrganizationConformancePack(conn, d.Id())
@@ -197,7 +197,7 @@ func resourceAwsConfigOrganizationConformancePackRead(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationConformancePackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.PutOrganizationConformancePackInput{
@@ -238,10 +238,10 @@ func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, 
 		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be updated: %w", d.Id(), err)
 	}
 
-	return resourceAwsConfigOrganizationConformancePackRead(d, meta)
+	return resourceOrganizationConformancePackRead(d, meta)
 }
 
-func resourceAwsConfigOrganizationConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.DeleteOrganizationConformancePackInput{

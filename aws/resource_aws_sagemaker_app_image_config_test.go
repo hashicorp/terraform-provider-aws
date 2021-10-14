@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepSagemakerAppImageConfigs(region string) error {
 		for _, config := range output.AppImageConfigs {
 
 			name := aws.StringValue(config.AppImageConfigName)
-			r := resourceAwsSagemakerAppImageConfig()
+			r := ResourceAppImageConfig()
 			d := r.Data(nil)
 			d.SetId(name)
 			err = r.Delete(d, client)
@@ -252,7 +253,7 @@ func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerAppImageConfigBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerAppImageConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAppImageConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

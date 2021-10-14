@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConfigOrganizationManagedRule() *schema.Resource {
+func ResourceOrganizationManagedRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigOrganizationManagedRuleCreate,
-		Delete: resourceAwsConfigOrganizationManagedRuleDelete,
-		Read:   resourceAwsConfigOrganizationManagedRuleRead,
-		Update: resourceAwsConfigOrganizationManagedRuleUpdate,
+		Create: resourceOrganizationManagedRuleCreate,
+		Delete: resourceOrganizationManagedRuleDelete,
+		Read:   resourceOrganizationManagedRuleRead,
+		Update: resourceOrganizationManagedRuleUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -107,7 +107,7 @@ func resourceAwsConfigOrganizationManagedRule() *schema.Resource {
 	}
 }
 
-func resourceAwsConfigOrganizationManagedRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationManagedRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	name := d.Get("name").(string)
 
@@ -162,10 +162,10 @@ func resourceAwsConfigOrganizationManagedRuleCreate(d *schema.ResourceData, meta
 		return fmt.Errorf("error waiting for Config Organization Managed Rule (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceAwsConfigOrganizationManagedRuleRead(d, meta)
+	return resourceOrganizationManagedRuleRead(d, meta)
 }
 
-func resourceAwsConfigOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	rule, err := configDescribeOrganizationConfigRule(conn, d.Id())
@@ -217,7 +217,7 @@ func resourceAwsConfigOrganizationManagedRuleRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsConfigOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.PutOrganizationConfigRuleInput{
@@ -269,10 +269,10 @@ func resourceAwsConfigOrganizationManagedRuleUpdate(d *schema.ResourceData, meta
 		return fmt.Errorf("error waiting for Config Organization Managed Rule (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceAwsConfigOrganizationManagedRuleRead(d, meta)
+	return resourceOrganizationManagedRuleRead(d, meta)
 }
 
-func resourceAwsConfigOrganizationManagedRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationManagedRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.DeleteOrganizationConfigRuleInput{

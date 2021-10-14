@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConfigConfigurationAggregator() *schema.Resource {
+func ResourceConfigurationAggregator() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigConfigurationAggregatorPut,
-		Read:   resourceAwsConfigConfigurationAggregatorRead,
+		Read:   resourceConfigurationAggregatorRead,
 		Update: resourceAwsConfigConfigurationAggregatorPut,
-		Delete: resourceAwsConfigConfigurationAggregatorDelete,
+		Delete: resourceConfigurationAggregatorDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -149,10 +149,10 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceAwsConfigConfigurationAggregatorRead(d, meta)
+	return resourceConfigurationAggregatorRead(d, meta)
 }
 
-func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -210,7 +210,7 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsConfigConfigurationAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	req := &configservice.DeleteConfigurationAggregatorInput{

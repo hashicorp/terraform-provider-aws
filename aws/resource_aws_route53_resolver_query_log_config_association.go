@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53ResolverQueryLogConfigAssociation() *schema.Resource {
+func ResourceQueryLogConfigAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ResolverQueryLogConfigAssociationCreate,
-		Read:   resourceAwsRoute53ResolverQueryLogConfigAssociationRead,
-		Delete: resourceAwsRoute53ResolverQueryLogConfigAssociationDelete,
+		Create: resourceQueryLogConfigAssociationCreate,
+		Read:   resourceQueryLogConfigAssociationRead,
+		Delete: resourceQueryLogConfigAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -37,7 +37,7 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ResolverQueryLogConfigAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogConfigAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.AssociateResolverQueryLogConfigInput{
@@ -60,10 +60,10 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociationCreate(d *schema.Resourc
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config Association (%s) to become available: %w", d.Id(), err)
 	}
 
-	return resourceAwsRoute53ResolverQueryLogConfigAssociationRead(d, meta)
+	return resourceQueryLogConfigAssociationRead(d, meta)
 }
 
-func resourceAwsRoute53ResolverQueryLogConfigAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogConfigAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	queryLogConfigAssociation, err := finder.ResolverQueryLogConfigAssociationByID(conn, d.Id())
@@ -90,7 +90,7 @@ func resourceAwsRoute53ResolverQueryLogConfigAssociationRead(d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsRoute53ResolverQueryLogConfigAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogConfigAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config Association (%s)", d.Id())

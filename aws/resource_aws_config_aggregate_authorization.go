@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConfigAggregateAuthorization() *schema.Resource {
+func ResourceAggregateAuthorization() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigAggregateAuthorizationPut,
-		Read:   resourceAwsConfigAggregateAuthorizationRead,
-		Update: resourceAwsConfigAggregateAuthorizationUpdate,
-		Delete: resourceAwsConfigAggregateAuthorizationDelete,
+		Read:   resourceAggregateAuthorizationRead,
+		Update: resourceAggregateAuthorizationUpdate,
+		Delete: resourceAggregateAuthorizationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -68,10 +68,10 @@ func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta int
 
 	d.SetId(fmt.Sprintf("%s:%s", accountId, region))
 
-	return resourceAwsConfigAggregateAuthorizationRead(d, meta)
+	return resourceAggregateAuthorizationRead(d, meta)
 }
 
-func resourceAwsConfigAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -125,7 +125,7 @@ func resourceAwsConfigAggregateAuthorizationRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsConfigAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	if d.HasChange("tags_all") {
@@ -136,10 +136,10 @@ func resourceAwsConfigAggregateAuthorizationUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsConfigAggregateAuthorizationRead(d, meta)
+	return resourceAggregateAuthorizationRead(d, meta)
 }
 
-func resourceAwsConfigAggregateAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAggregateAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	accountId, region, err := resourceAwsConfigAggregateAuthorizationParseID(d.Id())

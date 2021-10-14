@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConfigConfigRule() *schema.Resource {
+func ResourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigConfigRulePut,
-		Read:   resourceAwsConfigConfigRuleRead,
+		Read:   resourceConfigRuleRead,
 		Update: resourceAwsConfigConfigRulePut,
-		Delete: resourceAwsConfigConfigRuleDelete,
+		Delete: resourceConfigRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -207,10 +207,10 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsConfigConfigRuleRead(d, meta)
+	return resourceConfigRuleRead(d, meta)
 }
 
-func resourceAwsConfigConfigRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -275,7 +275,7 @@ func resourceAwsConfigConfigRuleRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)

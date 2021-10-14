@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccConfigOrganizationCustomRule_basic(t *testing.T) {
@@ -67,7 +68,7 @@ func testAccConfigOrganizationCustomRule_disappears(t *testing.T) {
 				Config: testAccConfigOrganizationCustomRuleConfigTriggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationCustomRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsConfigOrganizationCustomRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceOrganizationCustomRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

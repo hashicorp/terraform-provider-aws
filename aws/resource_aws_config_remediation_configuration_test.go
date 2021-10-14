@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccConfigRemediationConfiguration_basic(t *testing.T) {
@@ -63,7 +64,7 @@ func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 				Config: testAccConfigRemediationConfigurationConfig(prefix, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsConfigRemediationConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRemediationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

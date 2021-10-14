@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -38,7 +39,7 @@ func testSweepSagemakerStudioLifecycleConfigs(region string) error {
 	err = conn.ListStudioLifecycleConfigsPages(&sagemaker.ListStudioLifecycleConfigsInput{}, func(page *sagemaker.ListStudioLifecycleConfigsOutput, lastPage bool) bool {
 		for _, config := range page.StudioLifecycleConfigs {
 
-			r := resourceAwsSagemakerStudioLifecycleConfig()
+			r := ResourceStudioLifecycleConfig()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(config.StudioLifecycleConfigName))
 			err := r.Delete(d, client)
@@ -155,8 +156,8 @@ func TestAccAWSSagemakerStudioLifecycleConfig_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerStudioLifecycleConfigBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerStudioLifecycleConfigExists(resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerStudioLifecycleConfig(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerStudioLifecycleConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceStudioLifecycleConfig(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceStudioLifecycleConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

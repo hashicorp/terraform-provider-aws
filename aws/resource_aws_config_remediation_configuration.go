@@ -20,12 +20,12 @@ const (
 	configRemediationConfigurationDeletionTimeout = 2 * time.Minute
 )
 
-func resourceAwsConfigRemediationConfiguration() *schema.Resource {
+func ResourceRemediationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigRemediationConfigurationPut,
-		Read:   resourceAwsConfigRemediationConfigurationRead,
+		Read:   resourceRemediationConfigurationRead,
 		Update: resourceAwsConfigRemediationConfigurationPut,
-		Delete: resourceAwsConfigRemediationConfigurationDelete,
+		Delete: resourceRemediationConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -174,10 +174,10 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] AWSConfig config remediation configuration for rule %q created", name)
 
-	return resourceAwsConfigRemediationConfigurationRead(d, meta)
+	return resourceRemediationConfigurationRead(d, meta)
 }
 
-func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	out, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
@@ -213,7 +213,7 @@ func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsConfigRemediationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRemediationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("config_rule_name").(string)
