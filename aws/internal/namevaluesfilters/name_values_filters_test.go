@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 func TestNameValuesFiltersMap(t *testing.T) {
@@ -166,5 +166,5 @@ func testNameValuesFiltersVerifyMap(t *testing.T, got map[string][]string, want 
 
 func testNameValuesFiltersHashSet(v interface{}) int {
 	m := v.(map[string]interface{})
-	return hashcode.String(m["name"].(string))
+	return create.StringHashcode(m["name"].(string))
 }

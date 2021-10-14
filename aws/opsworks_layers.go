@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -207,7 +207,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 			},
 			Set: func(v interface{}) int {
 				m := v.(map[string]interface{})
-				return hashcode.String(m["mount_point"].(string))
+				return create.StringHashcode(m["mount_point"].(string))
 			},
 		},
 		"arn": {

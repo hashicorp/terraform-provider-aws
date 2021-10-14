@@ -45,7 +45,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/mitchellh/copystructure"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"gopkg.in/yaml.v2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -857,7 +857,7 @@ func flattenStringSet(list []*string) *schema.Set {
 // hashStringCaseInsensitive hashes strings in a case insensitive manner.
 // If you want a Set of strings and are case inensitive, this is the SchemaSetFunc you want.
 func hashStringCaseInsensitive(v interface{}) int {
-	return hashcode.String(strings.ToLower(v.(string)))
+	return create.StringHashcode(strings.ToLower(v.(string)))
 }
 
 func flattenCaseInsensitiveStringSet(list []*string) *schema.Set {
@@ -1391,27 +1391,27 @@ func pointersMapToStringList(pointers map[string]*string) map[string]interface{}
 // and values that must be destroyed, and the set of keys and values that are unchanged.
 func diffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
 	// First, we're creating everything we have
-	create := map[string]*string{}
+	add := map[string]*string{}
 	for k, v := range newMap {
-		create[k] = aws.String(v.(string))
+		add[k] = aws.String(v.(string))
 	}
 
 	// Build the maps of what to remove and what is unchanged
 	remove := map[string]*string{}
 	unchanged := map[string]*string{}
 	for k, v := range oldMap {
-		old, ok := create[k]
+		old, ok := add[k]
 		if !ok || aws.StringValue(old) != v.(string) {
 			// Delete it!
 			remove[k] = aws.String(v.(string))
 		} else if ok {
 			unchanged[k] = aws.String(v.(string))
 			// already present so remove from new
-			delete(create, k)
+			delete(add, k)
 		}
 	}
 
-	return create, remove, unchanged
+	return add, remove, unchanged
 }
 
 func flattenDSVpcSettings(

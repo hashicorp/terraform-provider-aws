@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -432,7 +432,7 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 	if d, ok := m["snapshot_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 // Generates a hash for the set hash function used by the product_codes
@@ -443,5 +443,5 @@ func amiProductCodesHash(v interface{}) int {
 	// All keys added in alphabetical order.
 	buf.WriteString(fmt.Sprintf("%s-", m["product_code_id"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["product_code_type"].(string)))
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }

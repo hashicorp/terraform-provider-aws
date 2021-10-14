@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
@@ -201,7 +201,7 @@ func resourceAwsInstance() *schema.Resource {
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 			"ebs_optimized": {
@@ -255,7 +255,7 @@ func resourceAwsInstance() *schema.Resource {
 					if v, ok := m["no_device"].(bool); ok && v {
 						buf.WriteString(fmt.Sprintf("%t-", v))
 					}
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 			"get_password_data": {

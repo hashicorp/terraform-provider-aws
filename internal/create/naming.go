@@ -1,4 +1,4 @@
-package naming
+package create
 
 import (
 	"fmt"
@@ -8,14 +8,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-// Generate returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
-func Generate(name string, namePrefix string) string {
-	return GenerateWithSuffix(name, namePrefix, "")
+// Name returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
+func Name(name string, namePrefix string) string {
+	return NameWithSuffix(name, namePrefix, "")
 }
 
-// GenerateWithSuffix returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with "terraform-".
+// NameWithSuffix returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with "terraform-".
 // In the latter two cases, any suffix is appended to the generated name
-func GenerateWithSuffix(name string, namePrefix string, nameSuffix string) string {
+func NameWithSuffix(name string, namePrefix string, nameSuffix string) string {
 	if name != "" {
 		return name
 	}
