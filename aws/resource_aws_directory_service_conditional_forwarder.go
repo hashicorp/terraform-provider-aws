@@ -53,7 +53,7 @@ func resourceAwsDirectoryServiceConditionalForwarder() *schema.Resource {
 func resourceAwsDirectoryServiceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectoryServiceConn
 
-	dnsIps := expandStringList(d.Get("dns_ips").([]interface{}))
+	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
 
 	directoryId := d.Get("directory_id").(string)
 	domainName := d.Get("remote_domain_name").(string)
@@ -103,7 +103,7 @@ func resourceAwsDirectoryServiceConditionalForwarderRead(d *schema.ResourceData,
 
 	cfd := res.ConditionalForwarders[0]
 
-	d.Set("dns_ips", flattenStringList(cfd.DnsIpAddrs))
+	d.Set("dns_ips", flex.FlattenStringList(cfd.DnsIpAddrs))
 	d.Set("directory_id", directoryId)
 	d.Set("remote_domain_name", cfd.RemoteDomainName)
 
@@ -118,7 +118,7 @@ func resourceAwsDirectoryServiceConditionalForwarderUpdate(d *schema.ResourceDat
 		return err
 	}
 
-	dnsIps := expandStringList(d.Get("dns_ips").([]interface{}))
+	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
 
 	_, err = conn.UpdateConditionalForwarder(&directoryservice.UpdateConditionalForwarderInput{
 		DirectoryId:      aws.String(directoryId),
