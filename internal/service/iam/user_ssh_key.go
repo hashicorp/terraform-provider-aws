@@ -23,7 +23,7 @@ func ResourceUserSSHKey() *schema.Resource {
 		Update: resourceUserSSHKeyUpdate,
 		Delete: resourceUserSSHKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsIamUserSshKeyImport,
+			State: resourceUserSSHKeyImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -190,7 +190,7 @@ func resourceUserSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamUserSshKeyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserSSHKeyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), ":", 3)
 
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {

@@ -30,7 +30,7 @@ func ResourceServerCertificate() *schema.Resource {
 		Update: resourceServerCertificateUpdate,
 		Delete: resourceServerCertificateDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsIAMServerCertificateImport,
+			State: resourceServerCertificateImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -244,7 +244,7 @@ func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) e
 	return err
 }
 
-func resourceAwsIAMServerCertificateImport(
+func resourceServerCertificateImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	// private_key can't be fetched from any API call

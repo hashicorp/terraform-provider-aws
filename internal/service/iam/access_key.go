@@ -169,7 +169,7 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		createResp.AccessKey.Status = aws.String(iam.StatusTypeInactive)
 	}
 
-	return resourceAwsIamAccessKeyReadResult(d, &iam.AccessKeyMetadata{
+	return resourceAccessKeyReadResult(d, &iam.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
 		CreateDate:  createResp.AccessKey.CreateDate,
 		Status:      createResp.AccessKey.Status,
@@ -196,7 +196,7 @@ func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	for _, key := range getResp.AccessKeyMetadata {
 		if key.AccessKeyId != nil && *key.AccessKeyId == d.Id() {
-			return resourceAwsIamAccessKeyReadResult(d, key)
+			return resourceAccessKeyReadResult(d, key)
 		}
 	}
 
@@ -205,7 +205,7 @@ func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetadata) error {
+func resourceAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetadata) error {
 	d.SetId(aws.StringValue(key.AccessKeyId))
 
 	if key.CreateDate != nil {
@@ -224,7 +224,7 @@ func resourceAccessKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("status") {
-		if err := resourceAwsIamAccessKeyStatusUpdate(conn, d); err != nil {
+		if err := resourceAccessKeyStatusUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -246,7 +246,7 @@ func resourceAccessKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamAccessKeyStatusUpdate(conn *iam.IAM, d *schema.ResourceData) error {
+func resourceAccessKeyStatusUpdate(conn *iam.IAM, d *schema.ResourceData) error {
 	request := &iam.UpdateAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		Status:      aws.String(d.Get("status").(string)),

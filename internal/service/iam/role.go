@@ -29,7 +29,7 @@ func ResourceRole() *schema.Resource {
 		Update: resourceRoleUpdate,
 		Delete: resourceRoleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsIamRoleImport,
+			State: resourceRoleImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -157,7 +157,7 @@ func ResourceRole() *schema.Resource {
 	}
 }
 
-func resourceAwsIamRoleImport(
+func resourceRoleImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("force_detach_policies", false)
 	return []*schema.ResourceData{d}, nil

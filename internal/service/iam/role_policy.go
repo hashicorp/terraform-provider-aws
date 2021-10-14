@@ -19,8 +19,8 @@ import (
 func ResourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutRolePolicy API is idempotent, so these can be the same.
-		Create: resourceAwsIamRolePolicyPut,
-		Update: resourceAwsIamRolePolicyPut,
+		Create: resourceRolePolicyPut,
+		Update: resourceRolePolicyPut,
 
 		Read:   resourceRolePolicyRead,
 		Delete: resourceRolePolicyDelete,
@@ -59,7 +59,7 @@ func ResourceRolePolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsIamRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.PutRolePolicyInput{

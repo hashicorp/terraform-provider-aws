@@ -22,7 +22,7 @@ func ResourceUserGroupMembership() *schema.Resource {
 		Update: resourceUserGroupMembershipUpdate,
 		Delete: resourceUserGroupMembershipDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsIamUserGroupMembershipImport,
+			State: resourceUserGroupMembershipImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -199,7 +199,7 @@ func addUserToGroups(conn *iam.IAM, user string, groups []*string) error {
 	return nil
 }
 
-func resourceAwsIamUserGroupMembershipImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserGroupMembershipImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) < 2 {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <user-name>/<group-name1>/...", d.Id())

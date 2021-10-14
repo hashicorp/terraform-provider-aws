@@ -20,7 +20,7 @@ func ResourceGroupPolicyAttachment() *schema.Resource {
 		Read:   resourceGroupPolicyAttachmentRead,
 		Delete: resourceGroupPolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsIamGroupPolicyAttachmentImport,
+			State: resourceGroupPolicyAttachmentImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -125,7 +125,7 @@ func resourceGroupPolicyAttachmentDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsIamGroupPolicyAttachmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGroupPolicyAttachmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <group-name>/<policy_arn>", d.Id())

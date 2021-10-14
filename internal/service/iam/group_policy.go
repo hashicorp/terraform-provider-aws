@@ -19,8 +19,8 @@ import (
 func ResourceGroupPolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutGroupPolicy API is idempotent, so these can be the same.
-		Create: resourceAwsIamGroupPolicyPut,
-		Update: resourceAwsIamGroupPolicyPut,
+		Create: resourceGroupPolicyPut,
+		Update: resourceGroupPolicyPut,
 
 		Read:   resourceGroupPolicyRead,
 		Delete: resourceGroupPolicyDelete,
@@ -58,7 +58,7 @@ func ResourceGroupPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsIamGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.PutGroupPolicyInput{

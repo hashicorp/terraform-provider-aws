@@ -19,9 +19,9 @@ import (
 func ResourceUserPolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutUserPolicy API is idempotent, so these can be the same.
-		Create: resourceAwsIamUserPolicyPut,
+		Create: resourceUserPolicyPut,
 		Read:   resourceUserPolicyRead,
-		Update: resourceAwsIamUserPolicyPut,
+		Update: resourceUserPolicyPut,
 		Delete: resourceUserPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -57,7 +57,7 @@ func ResourceUserPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.PutUserPolicyInput{

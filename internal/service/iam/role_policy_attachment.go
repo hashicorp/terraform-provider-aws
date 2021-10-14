@@ -20,7 +20,7 @@ func ResourceRolePolicyAttachment() *schema.Resource {
 		Read:   resourceRolePolicyAttachmentRead,
 		Delete: resourceRolePolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsIamRolePolicyAttachmentImport,
+			State: resourceRolePolicyAttachmentImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -129,7 +129,7 @@ func resourceRolePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsIamRolePolicyAttachmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRolePolicyAttachmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <role-name>/<policy_arn>", d.Id())

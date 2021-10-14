@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
-var dataSourceAwsIamPolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
+var dataSourcePolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
 
 func DataSourcePolicyDocument() *schema.Resource {
 	setOfString := &schema.Schema{
@@ -90,9 +90,9 @@ func DataSourcePolicyDocument() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
 						},
 						"not_actions":    setOfString,
-						"not_principals": dataSourceAwsIamPolicyPrincipalSchema(),
+						"not_principals": dataSourcePolicyPrincipalSchema(),
 						"not_resources":  setOfString,
-						"principals":     dataSourceAwsIamPolicyPrincipalSchema(),
+						"principals":     dataSourcePolicyPrincipalSchema(),
 						"resources":      setOfString,
 						"sid": {
 							Type:     schema.TypeString,
@@ -193,7 +193,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 			if resources := cfgStmt["resources"].(*schema.Set).List(); len(resources) > 0 {
 				var err error
-				stmt.Resources, err = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
+				stmt.Resources, err = dataSourcePolicyDocumentReplaceVarsInList(
 					iamPolicyDecodeConfigStringList(resources), doc.Version,
 				)
 				if err != nil {
@@ -202,7 +202,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 			}
 			if notResources := cfgStmt["not_resources"].(*schema.Set).List(); len(notResources) > 0 {
 				var err error
-				stmt.NotResources, err = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
+				stmt.NotResources, err = dataSourcePolicyDocumentReplaceVarsInList(
 					iamPolicyDecodeConfigStringList(notResources), doc.Version,
 				)
 				if err != nil {
@@ -212,7 +212,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 			if principals := cfgStmt["principals"].(*schema.Set).List(); len(principals) > 0 {
 				var err error
-				stmt.Principals, err = dataSourceAwsIamPolicyDocumentMakePrincipals(principals, doc.Version)
+				stmt.Principals, err = dataSourcePolicyDocumentMakePrincipals(principals, doc.Version)
 				if err != nil {
 					return fmt.Errorf("error reading principals: %w", err)
 				}
@@ -220,7 +220,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 			if notPrincipals := cfgStmt["not_principals"].(*schema.Set).List(); len(notPrincipals) > 0 {
 				var err error
-				stmt.NotPrincipals, err = dataSourceAwsIamPolicyDocumentMakePrincipals(notPrincipals, doc.Version)
+				stmt.NotPrincipals, err = dataSourcePolicyDocumentMakePrincipals(notPrincipals, doc.Version)
 				if err != nil {
 					return fmt.Errorf("error reading not_principals: %w", err)
 				}
@@ -228,7 +228,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 			if conditions := cfgStmt["condition"].(*schema.Set).List(); len(conditions) > 0 {
 				var err error
-				stmt.Conditions, err = dataSourceAwsIamPolicyDocumentMakeConditions(conditions, doc.Version)
+				stmt.Conditions, err = dataSourcePolicyDocumentMakeConditions(conditions, doc.Version)
 				if err != nil {
 					return fmt.Errorf("error reading condition: %w", err)
 				}
@@ -280,28 +280,28 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func dataSourceAwsIamPolicyDocumentReplaceVarsInList(in interface{}, version string) (interface{}, error) {
+func dataSourcePolicyDocumentReplaceVarsInList(in interface{}, version string) (interface{}, error) {
 	switch v := in.(type) {
 	case string:
 		if version == "2008-10-17" && strings.Contains(v, "&{") {
 			return nil, fmt.Errorf("found &{ sequence in (%s), which is not supported in document version 2008-10-17", v)
 		}
-		return dataSourceAwsIamPolicyDocumentVarReplacer.Replace(v), nil
+		return dataSourcePolicyDocumentVarReplacer.Replace(v), nil
 	case []string:
 		out := make([]string, len(v))
 		for i, item := range v {
 			if version == "2008-10-17" && strings.Contains(item, "&{") {
 				return nil, fmt.Errorf("found &{ sequence in (%s), which is not supported in document version 2008-10-17", item)
 			}
-			out[i] = dataSourceAwsIamPolicyDocumentVarReplacer.Replace(item)
+			out[i] = dataSourcePolicyDocumentVarReplacer.Replace(item)
 		}
 		return out, nil
 	default:
-		return nil, errors.New("dataSourceAwsIamPolicyDocumentReplaceVarsInList: input not string nor []string")
+		return nil, errors.New("dataSourcePolicyDocumentReplaceVarsInList: input not string nor []string")
 	}
 }
 
-func dataSourceAwsIamPolicyDocumentMakeConditions(in []interface{}, version string) (IAMPolicyStatementConditionSet, error) {
+func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (IAMPolicyStatementConditionSet, error) {
 	out := make([]IAMPolicyStatementCondition, len(in))
 	for i, itemI := range in {
 		var err error
@@ -310,7 +310,7 @@ func dataSourceAwsIamPolicyDocumentMakeConditions(in []interface{}, version stri
 			Test:     item["test"].(string),
 			Variable: item["variable"].(string),
 		}
-		out[i].Values, err = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
+		out[i].Values, err = dataSourcePolicyDocumentReplaceVarsInList(
 			aws.StringValueSlice(expandStringListKeepEmpty(item["values"].([]interface{}))),
 			version,
 		)
@@ -321,7 +321,7 @@ func dataSourceAwsIamPolicyDocumentMakeConditions(in []interface{}, version stri
 	return IAMPolicyStatementConditionSet(out), nil
 }
 
-func dataSourceAwsIamPolicyDocumentMakePrincipals(in []interface{}, version string) (IAMPolicyStatementPrincipalSet, error) {
+func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (IAMPolicyStatementPrincipalSet, error) {
 	out := make([]IAMPolicyStatementPrincipal, len(in))
 	for i, itemI := range in {
 		var err error
@@ -329,7 +329,7 @@ func dataSourceAwsIamPolicyDocumentMakePrincipals(in []interface{}, version stri
 		out[i] = IAMPolicyStatementPrincipal{
 			Type: item["type"].(string),
 		}
-		out[i].Identifiers, err = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
+		out[i].Identifiers, err = dataSourcePolicyDocumentReplaceVarsInList(
 			iamPolicyDecodeConfigStringList(
 				item["identifiers"].(*schema.Set).List(),
 			), version,
@@ -341,7 +341,7 @@ func dataSourceAwsIamPolicyDocumentMakePrincipals(in []interface{}, version stri
 	return IAMPolicyStatementPrincipalSet(out), nil
 }
 
-func dataSourceAwsIamPolicyPrincipalSchema() *schema.Schema {
+func dataSourcePolicyPrincipalSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

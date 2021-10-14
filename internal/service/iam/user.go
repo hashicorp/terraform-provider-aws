@@ -264,7 +264,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error removing IAM User (%s) login profile: %s", d.Id(), err)
 		}
 
-		if err := deleteAwsIamUserSigningCertificates(conn, d.Id()); err != nil {
+		if err := deleteUserSigningCertificates(conn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) signing certificate: %s", d.Id(), err)
 		}
 	}
@@ -470,7 +470,7 @@ func DeleteUserAccessKeys(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func deleteAwsIamUserSigningCertificates(svc *iam.IAM, userName string) error {
+func deleteUserSigningCertificates(svc *iam.IAM, userName string) error {
 	var certificateIDList []string
 
 	listInput := &iam.ListSigningCertificatesInput{
