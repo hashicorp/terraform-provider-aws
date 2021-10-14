@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepIotRoleAliases(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iotconn
+	conn := client.(*conns.AWSClient).IoTConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -133,7 +134,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIotRoleAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_role_alias" {
 			continue
@@ -161,7 +162,7 @@ func testAccCheckAWSIotRoleAliasExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 		role_arn := rs.Primary.Attributes["role_arn"]
 
 		roleAliasDescription, err := getIotRoleAliasDescription(conn, rs.Primary.ID)

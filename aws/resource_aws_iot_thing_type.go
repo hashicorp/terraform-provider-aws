@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html
@@ -74,7 +75,7 @@ func resourceAwsIotThingType() *schema.Resource {
 }
 
 func resourceAwsIotThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.CreateThingTypeInput{
 		ThingTypeName: aws.String(d.Get("name").(string)),
@@ -116,7 +117,7 @@ func resourceAwsIotThingTypeCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIotThingTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.DescribeThingTypeInput{
 		ThingTypeName: aws.String(d.Id()),
@@ -146,7 +147,7 @@ func resourceAwsIotThingTypeRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsIotThingTypeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("deprecated") {
 		params := &iot.DeprecateThingTypeInput{
@@ -166,7 +167,7 @@ func resourceAwsIotThingTypeUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIotThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	// In order to delete an IoT Thing Type, you must deprecate it first and wait
 	// at least 5 minutes.

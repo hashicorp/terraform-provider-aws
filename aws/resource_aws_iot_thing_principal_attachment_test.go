@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepIotThingPrincipalAttachments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iotconn
+	conn := client.(*conns.AWSClient).IoTConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -142,7 +143,7 @@ func TestAccAWSIotThingPrincipalAttachment_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIotThingPrincipalAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing_principal_attachment" {
@@ -179,7 +180,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentExists(n string) resource.TestChe
 			return fmt.Errorf("No attachment")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 		thing := rs.Primary.Attributes["thing"]
 		principal := rs.Primary.Attributes["principal"]
 
@@ -199,7 +200,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentExists(n string) resource.TestChe
 
 func testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName string, exists bool, principals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 		principalARNs := make(map[string]string)
 

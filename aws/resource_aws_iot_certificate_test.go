@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepIotCertifcates(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iotconn
+	conn := client.(*conns.AWSClient).IoTConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -116,7 +117,7 @@ func TestAccAWSIoTCertificate_keys_certificate(t *testing.T) {
 }
 
 func testAccCheckAWSIoTCertificateDestroy_basic(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_certificate" {

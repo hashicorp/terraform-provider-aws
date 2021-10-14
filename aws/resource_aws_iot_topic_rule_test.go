@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepIotTopicRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).iotconn
+	conn := client.(*conns.AWSClient).IoTConn
 	input := &iot.ListTopicRulesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -623,7 +624,7 @@ func TestAccAWSIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 }
 
 func testAccCheckAWSIoTTopicRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_topic_rule" {
@@ -656,7 +657,7 @@ func testAccCheckAWSIoTTopicRuleExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 		input := &iot.ListTopicRulesInput{}
 
 		output, err := conn.ListTopicRules(input)

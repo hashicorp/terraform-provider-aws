@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepIotPolicyAttachments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iotconn
+	conn := client.(*conns.AWSClient).IoTConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -134,7 +135,7 @@ func TestAccAWSIotPolicyAttachment_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIotPolicyAttchmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_policy_attachment" {
 			continue
@@ -186,7 +187,7 @@ func testAccCheckAWSIotPolicyAttachmentExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 		target := rs.Primary.Attributes["target"]
 		policyName := rs.Primary.Attributes["policy"]
 
@@ -206,7 +207,7 @@ func testAccCheckAWSIotPolicyAttachmentExists(n string) resource.TestCheckFunc {
 
 func testAccCheckAWSIotPolicyAttachmentCertStatus(n string, policies []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 		rs, ok := s.RootModule().Resources[n]
 

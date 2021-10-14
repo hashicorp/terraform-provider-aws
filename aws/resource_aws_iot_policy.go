@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIotPolicy() *schema.Resource {
@@ -44,7 +45,7 @@ func resourceAwsIotPolicy() *schema.Resource {
 
 func resourceAwsIotPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	out, err := conn.CreatePolicy(&iot.CreatePolicyInput{
 		PolicyName:     aws.String(d.Get("name").(string)),
@@ -61,7 +62,7 @@ func resourceAwsIotPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsIotPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	out, err := conn.GetPolicy(&iot.GetPolicyInput{
 		PolicyName: aws.String(d.Id()),
@@ -86,7 +87,7 @@ func resourceAwsIotPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIotPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("policy") {
 		_, err := conn.CreatePolicyVersion(&iot.CreatePolicyVersionInput{
@@ -105,7 +106,7 @@ func resourceAwsIotPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceAwsIotPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	out, err := conn.ListPolicyVersions(&iot.ListPolicyVersionsInput{
 		PolicyName: aws.String(d.Id()),

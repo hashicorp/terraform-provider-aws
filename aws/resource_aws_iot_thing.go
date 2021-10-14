@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIotThing() *schema.Resource {
@@ -54,7 +55,7 @@ func resourceAwsIotThing() *schema.Resource {
 }
 
 func resourceAwsIotThingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.CreateThingInput{
 		ThingName: aws.String(d.Get("name").(string)),
@@ -81,7 +82,7 @@ func resourceAwsIotThingCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIotThingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.DescribeThingInput{
 		ThingName: aws.String(d.Id()),
@@ -110,7 +111,7 @@ func resourceAwsIotThingRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIotThingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.UpdateThingInput{
 		ThingName: aws.String(d.Get("name").(string)),
@@ -144,7 +145,7 @@ func resourceAwsIotThingUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIotThingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.DeleteThingInput{
 		ThingName: aws.String(d.Id()),

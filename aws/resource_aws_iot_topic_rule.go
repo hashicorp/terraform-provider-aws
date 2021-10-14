@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIotTopicRule() *schema.Resource {
@@ -1086,8 +1087,8 @@ func resourceAwsIotTopicRule() *schema.Resource {
 }
 
 func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).IoTConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	ruleName := d.Get("name").(string)
@@ -1131,9 +1132,9 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).IoTConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iot.GetTopicRuleInput{
 		RuleName: aws.String(d.Id()),
@@ -1237,7 +1238,7 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChanges(
 		"cloudwatch_alarm",
@@ -1285,7 +1286,7 @@ func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIotTopicRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	input := &iot.DeleteTopicRuleInput{
 		RuleName: aws.String(d.Id()),

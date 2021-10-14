@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iot/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
@@ -154,7 +155,7 @@ func testAccCheckAWSIoTAuthorizerExists(n string, v *iot.AuthorizerDescription) 
 			return fmt.Errorf("No IoT Authorizer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 		output, err := finder.AuthorizerByName(conn, rs.Primary.ID)
 
@@ -169,7 +170,7 @@ func testAccCheckAWSIoTAuthorizerExists(n string, v *iot.AuthorizerDescription) 
 }
 
 func testAccCheckAWSIoTAuthorizerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_authorizer" {

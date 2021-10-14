@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIotRoleAlias() *schema.Resource {
@@ -44,7 +45,7 @@ func resourceAwsIotRoleAlias() *schema.Resource {
 }
 
 func resourceAwsIotRoleAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	roleAlias := d.Get("alias").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -82,7 +83,7 @@ func getIotRoleAliasDescription(conn *iot.IoT, alias string) (*iot.RoleAliasDesc
 }
 
 func resourceAwsIotRoleAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	var roleAliasDescription *iot.RoleAliasDescription
 
@@ -107,7 +108,7 @@ func resourceAwsIotRoleAliasRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsIotRoleAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	alias := d.Get("alias").(string)
 
@@ -123,7 +124,7 @@ func resourceAwsIotRoleAliasDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIotRoleAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChange("credential_duration") {
 		roleAliasInput := &iot.UpdateRoleAliasInput{

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iot/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIoTAuthorizer() *schema.Resource {
@@ -77,7 +78,7 @@ func resourceAwsIoTAuthorizer() *schema.Resource {
 }
 
 func resourceAwsIotAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	name := d.Get("name").(string)
 	input := &iot.CreateAuthorizerInput{
@@ -108,7 +109,7 @@ func resourceAwsIotAuthorizerCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsIotAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	authorizer, err := finder.AuthorizerByName(conn, d.Id())
 
@@ -134,7 +135,7 @@ func resourceAwsIotAuthorizerRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsIotAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	input := iot.UpdateAuthorizerInput{
 		AuthorizerName: aws.String(d.Id()),
@@ -167,7 +168,7 @@ func resourceAwsIotAuthorizerUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsIotAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	// In order to delete an IoT Authorizer, you must set it inactive first.
 	if d.Get("status").(string) == iot.AuthorizerStatusActive {

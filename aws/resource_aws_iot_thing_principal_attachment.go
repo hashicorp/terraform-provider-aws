@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIotThingPrincipalAttachment() *schema.Resource {
@@ -31,7 +32,7 @@ func resourceAwsIotThingPrincipalAttachment() *schema.Resource {
 }
 
 func resourceAwsIotThingPrincipalAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -69,7 +70,7 @@ func getIoTThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool
 }
 
 func resourceAwsIotThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -89,7 +90,7 @@ func resourceAwsIotThingPrincipalAttachmentRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsIotThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*conns.AWSClient).IoTConn
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
