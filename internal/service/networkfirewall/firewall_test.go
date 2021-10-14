@@ -80,7 +80,7 @@ func sweepFirewalls(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsNetworkFirewallFirewall_basic(t *testing.T) {
+func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	policyResourceName := "aws_networkfirewall_firewall_policy.test"
@@ -125,7 +125,7 @@ func TestAccAwsNetworkFirewallFirewall_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewall_description(t *testing.T) {
+func TestAccNetworkFirewallFirewall_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 
@@ -165,7 +165,7 @@ func TestAccAwsNetworkFirewallFirewall_description(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewall_deleteProtection(t *testing.T) {
+func TestAccNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 
@@ -206,7 +206,7 @@ func TestAccAwsNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateSubnet(t *testing.T) {
+func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	subnetResourceName := "aws_subnet.test"
@@ -251,7 +251,7 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateSubnet(t *testing.T)
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets(t *testing.T) {
+func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	subnetResourceName := "aws_subnet.test"
@@ -310,7 +310,7 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets(t *t
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewall_tags(t *testing.T) {
+func TestAccNetworkFirewallFirewall_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -352,7 +352,7 @@ func TestAccAwsNetworkFirewallFirewall_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallFirewall_disappears(t *testing.T) {
+func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 
