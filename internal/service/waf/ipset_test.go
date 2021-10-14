@@ -23,91 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_waf_ipset", &resource.Sweeper{
-		Name: "aws_waf_ipset",
-		F:    sweepIPSet,
-		Dependencies: []string{
-			"aws_waf_rate_based_rule",
-			"aws_waf_rule",
-			"aws_waf_rule_group",
-		},
-	})
-}
 
-func sweepIPSet(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).WAFConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
-	input := &waf.ListIPSetsInput{}
-
-	err = tfwaf.ListIPSetsPages(conn, input, func(page *waf.ListIPSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, ipSet := range page.IPSets {
-			r := tfwaf.ResourceIPSet()
-			d := r.Data(nil)
-
-			id := aws.StringValue(ipSet.IPSetId)
-			d.SetId(id)
-
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in ip_set_descriptors attribute
-				err := r.Read(d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF IP Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF IP Set for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF IP Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF IP Set for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF IP Set sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccWAFIPSet_basic(t *testing.T) {
 	var v waf.IPSet

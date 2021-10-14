@@ -19,91 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_waf_byte_match_set", &resource.Sweeper{
-		Name: "aws_waf_byte_match_set",
-		F:    sweepByteMatchSet,
-		Dependencies: []string{
-			"aws_waf_rate_based_rule",
-			"aws_waf_rule",
-			"aws_waf_rule_group",
-		},
-	})
-}
 
-func sweepByteMatchSet(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).WAFConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
-	input := &waf.ListByteMatchSetsInput{}
-
-	err = tfwaf.ListByteMatchSetsPages(conn, input, func(page *waf.ListByteMatchSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, byteMatchSet := range page.ByteMatchSets {
-			r := tfwaf.ResourceByteMatchSet()
-			d := r.Data(nil)
-
-			id := aws.StringValue(byteMatchSet.ByteMatchSetId)
-			d.SetId(id)
-
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in byte_match_tuples attribute
-				err := r.Read(d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Byte Match Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Byte Match Set for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Byte Match Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Byte Match Set for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Byte Match Set sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccWAFByteMatchSet_basic(t *testing.T) {
 	var v waf.ByteMatchSet

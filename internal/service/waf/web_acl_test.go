@@ -20,90 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_waf_web_acl", &resource.Sweeper{
-		Name: "aws_waf_web_acl",
-		F:    sweepWebACLs,
-	})
-}
 
-func sweepWebACLs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).WAFConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
-	input := &waf.ListWebACLsInput{}
-
-	err = tfwaf.ListWebACLsPages(conn, input, func(page *waf.ListWebACLsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, webACL := range page.WebACLs {
-			if webACL == nil {
-				continue
-			}
-
-			r := tfwaf.ResourceWebACL()
-			d := r.Data(nil)
-
-			id := aws.StringValue(webACL.WebACLId)
-			d.SetId(id)
-
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in rules argument
-				err := r.Read(d, client)
-
-				if err != nil {
-					readErr := fmt.Errorf("error reading WAF Web ACL (%s): %w", id, err)
-					log.Printf("[ERROR] %s", readErr)
-					return readErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Web ACLs for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Web ACLs: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Web ACLs for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Web ACL sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccWAFWebACL_basic(t *testing.T) {
 	var webACL waf.WebACL

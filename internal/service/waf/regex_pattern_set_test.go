@@ -20,91 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_waf_regex_pattern_set", &resource.Sweeper{
-		Name: "aws_waf_regex_pattern_set",
-		F:    sweepRegexPatternSet,
-		Dependencies: []string{
-			"aws_waf_rate_based_rule",
-			"aws_waf_rule",
-			"aws_waf_rule_group",
-		},
-	})
-}
 
-func sweepRegexPatternSet(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).WAFConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
-	input := &waf.ListRegexPatternSetsInput{}
-
-	err = tfwaf.ListRegexPatternSetsPages(conn, input, func(page *waf.ListRegexPatternSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, regexPatternSet := range page.RegexPatternSets {
-			r := tfwaf.ResourceRegexPatternSet()
-			d := r.Data(nil)
-
-			id := aws.StringValue(regexPatternSet.RegexPatternSetId)
-			d.SetId(id)
-
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in regex_pattern_strings attribute
-				err := r.Read(d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Regex Pattern Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Regex Pattern Set for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Regex Pattern Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regex Pattern Set for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Regex Pattern Set sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 // Serialized acceptance tests due to WAF account limits
 // https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
