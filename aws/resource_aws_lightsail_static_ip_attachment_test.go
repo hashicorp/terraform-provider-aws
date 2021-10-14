@@ -23,7 +23,7 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,7 +44,7 @@ func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	staticIpDestroy := func(*terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 		_, err := conn.DetachStaticIp(&lightsail.DetachStaticIpInput{
 			StaticIpName: aws.String(staticIpName),
 		})
@@ -59,7 +59,7 @@ func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -85,7 +85,7 @@ func testAccCheckAWSLightsailStaticIpAttachmentExists(n string, staticIp *lights
 			return errors.New("No Lightsail Static IP Attachment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
@@ -113,7 +113,7 @@ func testAccCheckAWSLightsailStaticIpAttachmentDestroy(s *terraform.State) error
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),

@@ -74,7 +74,7 @@ func TestAccAWSLightsailStaticIp_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,7 +92,7 @@ func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	staticIpDestroy := func(*terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 		_, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
 			StaticIpName: aws.String(staticIpName),
 		})
@@ -107,7 +107,7 @@ func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func testAccCheckAWSLightsailStaticIpExists(n string, staticIp *lightsail.Static
 			return errors.New("No Lightsail Static IP ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
@@ -157,7 +157,7 @@ func testAccCheckAWSLightsailStaticIpDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
 
 		resp, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
