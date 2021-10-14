@@ -20,6 +20,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 func ResourceBot() *schema.Resource {
@@ -269,7 +294,7 @@ func resourceBotCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.Name))
 
-	if _, err := waiter.BotVersionCreated(conn, name, tflex.LexBotVersionLatest, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := tflexmodelbuilding.waitBotVersionCreated(conn, name, tflexmodelbuilding.BotVersionLatest, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Lex Bot (%s) create: %w", d.Id(), err)
 	}
 
@@ -279,7 +304,7 @@ func resourceBotCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceBotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LexModelBuildingConn
 
-	output, err := finder.BotVersionByName(conn, d.Id(), tflex.LexBotVersionLatest)
+	output, err := tflexmodelbuilding.FindBotVersionByName(conn, d.Id(), tflexmodelbuilding.BotVersionLatest)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lex Bot (%s) not found, removing from state", d.Id())
@@ -331,7 +356,7 @@ func resourceBotRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("clarification_prompt", flattenLexPrompt(output.ClarificationPrompt))
 	}
 
-	version, err := finder.LatestBotVersionByName(conn, d.Id())
+	version, err := tflexmodelbuilding.FindLatestBotVersionByName(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading Lex Bot (%s) latest version: %w", d.Id(), err)
@@ -384,7 +409,7 @@ func resourceBotUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Lex Bot (%s): %w", d.Id(), err)
 	}
 
-	if _, err = waiter.BotVersionCreated(conn, d.Id(), tflex.LexBotVersionLatest, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err = tflexmodelbuilding.waitBotVersionCreated(conn, d.Id(), tflexmodelbuilding.BotVersionLatest, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Lex Bot (%s) update: %w", d.Id(), err)
 	}
 
@@ -411,7 +436,7 @@ func resourceBotDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Lex Bot (%s): %w", d.Id(), err)
 	}
 
-	if _, err = waiter.BotDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = tflexmodelbuilding.waitBotDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Lex Bot (%s) delete: %w", d.Id(), err)
 	}
 

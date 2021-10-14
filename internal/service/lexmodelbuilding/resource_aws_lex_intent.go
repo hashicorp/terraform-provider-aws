@@ -21,6 +21,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 const (
@@ -362,7 +387,7 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
-		Version: aws.String(tflex.LexIntentVersionLatest),
+		Version: aws.String(tflexmodelbuilding.IntentVersionLatest),
 	})
 	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
@@ -388,7 +413,7 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("name", resp.Name)
 
-	version, err := finder.LatestIntentVersionByName(conn, d.Id())
+	version, err := tflexmodelbuilding.FindLatestIntentVersionByName(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading Lex Intent (%s) latest version: %w", d.Id(), err)
@@ -533,7 +558,7 @@ func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting intent %s: %w", d.Id(), err)
 	}
 
-	_, err = waiter.LexIntentDeleted(conn, d.Id())
+	_, err = tflexmodelbuilding.waitLexIntentDeleted(conn, d.Id())
 
 	return err
 }

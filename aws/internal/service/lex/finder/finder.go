@@ -10,9 +10,11 @@ import (
 	tflex "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lex"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
-func BotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) (*lexmodelbuildingservice.GetBotOutput, error) {
+func FindBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) (*lexmodelbuildingservice.GetBotOutput, error) {
 	input := &lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(name),
 		VersionOrAlias: aws.String(version),
@@ -38,9 +40,9 @@ func BotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, nam
 	return output, nil
 }
 
-// LatestBotVersionByName returns the latest published version of a bot or $LATEST if the bot has never been published.
+// FindLatestBotVersionByName returns the latest published version of a bot or $LATEST if the bot has never been published.
 // See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
-func LatestBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
+func FindLatestBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
 	input := &lexmodelbuildingservice.GetBotVersionsInput{
 		Name: aws.String(name),
 	}
@@ -54,7 +56,7 @@ func LatestBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingServic
 		for _, bot := range page.Bots {
 			version := aws.StringValue(bot.Version)
 
-			if version == tflex.LexBotVersionLatest {
+			if version == tflexmodelbuilding.BotVersionLatest {
 				continue
 			}
 
@@ -73,15 +75,15 @@ func LatestBotVersionByName(conn *lexmodelbuildingservice.LexModelBuildingServic
 	}
 
 	if latestVersion == 0 {
-		return tflex.LexBotVersionLatest, nil
+		return tflexmodelbuilding.BotVersionLatest, nil
 	}
 
 	return strconv.Itoa(latestVersion), nil
 }
 
-// LatestIntentVersionByName returns the latest published version of an intent or $LATEST if the intent has never been published.
+// FindLatestIntentVersionByName returns the latest published version of an intent or $LATEST if the intent has never been published.
 // See https://docs.aws.amazon.com/lex/latest/dg/versioning-aliases.html.
-func LatestIntentVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
+func FindLatestIntentVersionByName(conn *lexmodelbuildingservice.LexModelBuildingService, name string) (string, error) {
 	input := &lexmodelbuildingservice.GetIntentVersionsInput{
 		Name: aws.String(name),
 	}
@@ -95,7 +97,7 @@ func LatestIntentVersionByName(conn *lexmodelbuildingservice.LexModelBuildingSer
 		for _, intent := range page.Intents {
 			version := aws.StringValue(intent.Version)
 
-			if version == tflex.LexIntentVersionLatest {
+			if version == tflexmodelbuilding.IntentVersionLatest {
 				continue
 			}
 
@@ -114,7 +116,7 @@ func LatestIntentVersionByName(conn *lexmodelbuildingservice.LexModelBuildingSer
 	}
 
 	if latestVersion == 0 {
-		return tflex.LexIntentVersionLatest, nil
+		return tflexmodelbuilding.IntentVersionLatest, nil
 	}
 
 	return strconv.Itoa(latestVersion), nil

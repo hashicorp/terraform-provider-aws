@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 func init() {
@@ -110,7 +112,7 @@ func TestAccAwsLexIntent_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(rName, "rejection_statement"),
 					resource.TestCheckNoResourceAttr(rName, "sample_utterances"),
 					resource.TestCheckNoResourceAttr(rName, "slot"),
-					resource.TestCheckResourceAttr(rName, "version", tflex.LexIntentVersionLatest),
+					resource.TestCheckResourceAttr(rName, "version", tflexmodelbuilding.IntentVersionLatest),
 				),
 			},
 			{
@@ -727,7 +729,7 @@ func testAccCheckAwsLexIntentExistsWithVersion(rName, intentVersion string, outp
 }
 
 func testAccCheckAwsLexIntentExists(rName string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
-	return testAccCheckAwsLexIntentExistsWithVersion(rName, tflex.LexIntentVersionLatest, output)
+	return testAccCheckAwsLexIntentExistsWithVersion(rName, tflexmodelbuilding.IntentVersionLatest, output)
 }
 
 func testAccCheckAwsLexIntentNotExists(intentName, intentVersion string) resource.TestCheckFunc {

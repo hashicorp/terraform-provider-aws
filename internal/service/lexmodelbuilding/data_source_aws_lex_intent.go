@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 func DataSourceIntent() *schema.Resource {
@@ -56,7 +58,7 @@ func DataSourceIntent() *schema.Resource {
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  tflex.LexIntentVersionLatest,
+				Default:  tflexmodelbuilding.IntentVersionLatest,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),

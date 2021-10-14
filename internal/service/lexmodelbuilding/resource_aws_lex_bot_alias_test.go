@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
+	tflexmodelbuilding "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodelbuilding"
 )
 
 func init() {
@@ -128,7 +130,7 @@ func TestAccAwsLexBotAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing lex bot alias create."),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_date"),
 					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotAliasID),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflex.LexBotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "name", testBotAliasID),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.#", "0"),
 				),
@@ -162,7 +164,7 @@ func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexBotAliasExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflex.LexBotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
 				),
 			},
 			{
@@ -215,7 +217,7 @@ func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexBotAliasExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflex.LexBotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
@@ -225,7 +227,7 @@ func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, "arn"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
-						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, tflex.LexBotVersionLatest))),
+						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, tflexmodelbuilding.BotVersionLatest))),
 					}),
 				),
 			},
@@ -262,7 +264,7 @@ func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexBotAliasExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflex.LexBotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
@@ -272,7 +274,7 @@ func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, "arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, "arn"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
-						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, tflex.LexBotVersionLatest))),
+						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, tflexmodelbuilding.BotVersionLatest))),
 					}),
 				),
 			},
@@ -310,7 +312,7 @@ func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexBotAliasExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", tflex.LexBotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodelbuilding.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "2"),
 
