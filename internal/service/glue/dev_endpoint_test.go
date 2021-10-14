@@ -19,8 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const ()
-
 func init() {
 	resource.AddTestSweepers("aws_glue_dev_endpoint", &resource.Sweeper{
 		Name: "aws_glue_dev_endpoint",
