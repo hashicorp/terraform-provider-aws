@@ -202,7 +202,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 			// above, which may become out of date, here we add logic to
 			// workaround this API behavior
 
-			if isResourceTimeoutError(err) || tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "Parameter reserved-memory doesn't exist") {
+			if tfresource.TimedOut(err) || tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "Parameter reserved-memory doesn't exist") {
 				for i, paramToModify := range paramsToModify {
 					if aws.StringValue(paramToModify.ParameterName) != "reserved-memory" {
 						continue
@@ -305,10 +305,10 @@ func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta int
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCacheParameterGroup(&deleteOpts)
 	}
-	if isAWSErr(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault, "") {
 		return nil
 	}
 
