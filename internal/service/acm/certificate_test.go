@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_acm_certificate", &resource.Sweeper{
 		Name: "aws_acm_certificate",
-		F:    testSweepAcmCertificates,
+		F:    sweepCertificates,
 	})
 }
 
-func testSweepAcmCertificates(region string) error {
+func sweepCertificates(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
