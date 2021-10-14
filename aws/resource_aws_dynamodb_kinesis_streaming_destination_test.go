@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dynamodb/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsDynamoDbKinesisStreamingDestination_basic(t *testing.T) {
@@ -57,7 +58,7 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_disappears(t *testing.T) {
 				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDynamoDbKinesisStreamingDestination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceKinesisStreamingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,7 +82,7 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_disappears_DynamoDbTable(t *t
 				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDynamoDbTable(), tableResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTable(), tableResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

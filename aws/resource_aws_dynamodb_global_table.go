@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDynamoDbGlobalTable() *schema.Resource {
+func ResourceGlobalTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDynamoDbGlobalTableCreate,
-		Read:   resourceAwsDynamoDbGlobalTableRead,
-		Update: resourceAwsDynamoDbGlobalTableUpdate,
-		Delete: resourceAwsDynamoDbGlobalTableDelete,
+		Create: resourceGlobalTableCreate,
+		Read:   resourceGlobalTableRead,
+		Update: resourceGlobalTableUpdate,
+		Delete: resourceGlobalTableDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -57,7 +57,7 @@ func resourceAwsDynamoDbGlobalTable() *schema.Resource {
 	}
 }
 
-func resourceAwsDynamoDbGlobalTableCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	globalTableName := d.Get("name").(string)
@@ -94,10 +94,10 @@ func resourceAwsDynamoDbGlobalTableCreate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	return resourceAwsDynamoDbGlobalTableRead(d, meta)
+	return resourceGlobalTableRead(d, meta)
 }
 
-func resourceAwsDynamoDbGlobalTableRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalTableRead(d *schema.ResourceData, meta interface{}) error {
 	globalTableDescription, err := resourceAwsDynamoDbGlobalTableRetrieve(d, meta)
 
 	if err != nil {
@@ -112,7 +112,7 @@ func resourceAwsDynamoDbGlobalTableRead(d *schema.ResourceData, meta interface{}
 	return flattenAwsDynamoDbGlobalTable(d, globalTableDescription)
 }
 
-func resourceAwsDynamoDbGlobalTableUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	if d.HasChange("replica") {
@@ -166,7 +166,7 @@ func resourceAwsDynamoDbGlobalTableUpdate(d *schema.ResourceData, meta interface
 }
 
 // Deleting a DynamoDB Global Table is represented by removing all replicas.
-func resourceAwsDynamoDbGlobalTableDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalTableDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	input := &dynamodb.UpdateGlobalTableInput{

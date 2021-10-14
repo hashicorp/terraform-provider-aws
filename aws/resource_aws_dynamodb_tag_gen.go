@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDynamodbTag() *schema.Resource {
+func ResourceTag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDynamodbTagCreate,
-		Read:   resourceAwsDynamodbTagRead,
-		Update: resourceAwsDynamodbTagUpdate,
-		Delete: resourceAwsDynamodbTagDelete,
+		Create: resourceTagCreate,
+		Read:   resourceTagRead,
+		Update: resourceTagUpdate,
+		Delete: resourceTagDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -43,7 +43,7 @@ func resourceAwsDynamodbTag() *schema.Resource {
 	}
 }
 
-func resourceAwsDynamodbTagCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 
 	identifier := d.Get("resource_arn").(string)
@@ -56,10 +56,10 @@ func resourceAwsDynamodbTagCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(tagresource.SetResourceID(identifier, key))
 
-	return resourceAwsDynamodbTagRead(d, meta)
+	return resourceTagRead(d, meta)
 }
 
-func resourceAwsDynamodbTagRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
@@ -86,7 +86,7 @@ func resourceAwsDynamodbTagRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsDynamodbTagUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTagUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
@@ -98,10 +98,10 @@ func resourceAwsDynamodbTagUpdate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error updating %s resource (%s) tag (%s): %w", dynamodb.ServiceID, identifier, key, err)
 	}
 
-	return resourceAwsDynamodbTagRead(d, meta)
+	return resourceTagRead(d, meta)
 }
 
-func resourceAwsDynamodbTagDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DynamoDBConn
 	identifier, key, err := tagresource.GetResourceID(d.Id())
 
