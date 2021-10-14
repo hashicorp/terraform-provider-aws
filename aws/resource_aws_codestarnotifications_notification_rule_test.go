@@ -7,25 +7,26 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarnotifications"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarnotifications.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarNotificationsNotificationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeStarNotificationsNotificationRuleConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codestar-notifications", regexp.MustCompile("notificationrule/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-notifications", regexp.MustCompile("notificationrule/.+")),
 					resource.TestCheckResourceAttr(resourceName, "detail_type", codestarnotifications.DetailTypeBasic),
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -45,11 +46,11 @@ func TestAccAWSCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 
 func TestAccAWSCodeStarNotificationsNotificationRule_Status(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarnotifications.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarNotificationsNotificationRuleDestroy,
 		Steps: []resource.TestStep{
@@ -82,11 +83,11 @@ func TestAccAWSCodeStarNotificationsNotificationRule_Status(t *testing.T) {
 
 func TestAccAWSCodeStarNotificationsNotificationRule_Targets(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarnotifications.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarNotificationsNotificationRuleDestroy,
 		Steps: []resource.TestStep{
@@ -119,11 +120,11 @@ func TestAccAWSCodeStarNotificationsNotificationRule_Targets(t *testing.T) {
 
 func TestAccAWSCodeStarNotificationsNotificationRule_Tags(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarnotifications.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarNotificationsNotificationRuleDestroy,
 		Steps: []resource.TestStep{
@@ -162,11 +163,11 @@ func TestAccAWSCodeStarNotificationsNotificationRule_Tags(t *testing.T) {
 
 func TestAccAWSCodeStarNotificationsNotificationRule_EventTypeIds(t *testing.T) {
 	resourceName := "aws_codestarnotifications_notification_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarnotifications.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codestarnotifications.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarnotifications.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codestarnotifications.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarNotificationsNotificationRuleDestroy,
 		Steps: []resource.TestStep{
