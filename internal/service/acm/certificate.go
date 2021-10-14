@@ -214,23 +214,23 @@ func ResourceCertificate() *schema.Resource {
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("domain_name"); ok {
 		if _, ok := d.GetOk("certificate_authority_arn"); ok {
-			return resourceAwsAcmCertificateCreateRequested(d, meta)
+			return resourceCertificateCreateRequested(d, meta)
 		}
 
 		if _, ok := d.GetOk("validation_method"); !ok {
 			return errors.New("validation_method must be set when creating a certificate")
 		}
-		return resourceAwsAcmCertificateCreateRequested(d, meta)
+		return resourceCertificateCreateRequested(d, meta)
 	} else if _, ok := d.GetOk("private_key"); ok {
 		if _, ok := d.GetOk("certificate_body"); !ok {
 			return errors.New("certificate_body must be set when importing a certificate with private_key")
 		}
-		return resourceAwsAcmCertificateCreateImported(d, meta)
+		return resourceCertificateCreateImported(d, meta)
 	}
 	return errors.New("certificate must be imported (private_key) or created (domain_name)")
 }
 
-func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateCreateImported(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -259,7 +259,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 	return resourceCertificateRead(d, meta)
 }
 
-func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -355,7 +355,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(err)
 		}
 
-		d.Set("validation_method", resourceAwsAcmCertificateValidationMethod(resp.Certificate))
+		d.Set("validation_method", resourceCertificateValidationMethod(resp.Certificate))
 
 		if err := d.Set("options", flattenAcmCertificateOptions(resp.Certificate.Options)); err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error setting certificate options: %s", err))
@@ -384,7 +384,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	})
 }
 
-func resourceAwsAcmCertificateValidationMethod(certificate *acm.CertificateDetail) string {
+func resourceCertificateValidationMethod(certificate *acm.CertificateDetail) string {
 	if aws.StringValue(certificate.Type) == acm.CertificateTypeAmazonIssued {
 		for _, domainValidation := range certificate.DomainValidationOptions {
 			if domainValidation.ValidationMethod != nil {

@@ -65,7 +65,7 @@ func resourceCertificateValidationCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if validation_record_fqdns, ok := d.GetOk("validation_record_fqdns"); ok {
-		err := resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns.(*schema.Set).List(), resp.Certificate, conn)
+		err := resourceCertificateCheckValidationRecords(validation_record_fqdns.(*schema.Set).List(), resp.Certificate, conn)
 		if err != nil {
 			return err
 		}
@@ -102,7 +102,7 @@ func resourceCertificateValidationCreate(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []interface{}, cert *acm.CertificateDetail, conn *acm.ACM) error {
+func resourceCertificateCheckValidationRecords(validationRecordFqdns []interface{}, cert *acm.CertificateDetail, conn *acm.ACM) error {
 	expectedFqdns := make(map[string]*acm.DomainValidation)
 
 	if len(cert.DomainValidationOptions) == 0 {
