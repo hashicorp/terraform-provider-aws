@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFrontPublicKey() *schema.Resource {
+func ResourcePublicKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontPublicKeyCreate,
-		Read:   resourceAwsCloudFrontPublicKeyRead,
-		Update: resourceAwsCloudFrontPublicKeyUpdate,
-		Delete: resourceAwsCloudFrontPublicKeyDelete,
+		Create: resourcePublicKeyCreate,
+		Read:   resourcePublicKeyRead,
+		Update: resourcePublicKeyUpdate,
+		Delete: resourcePublicKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -59,7 +59,7 @@ func resourceAwsCloudFrontPublicKey() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFrontPublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	if v, ok := d.GetOk("name"); ok {
@@ -82,10 +82,10 @@ func resourceAwsCloudFrontPublicKeyCreate(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(aws.StringValue(output.PublicKey.Id))
-	return resourceAwsCloudFrontPublicKeyRead(d, meta)
+	return resourcePublicKeyRead(d, meta)
 }
 
-func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	request := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(d.Id()),
@@ -117,7 +117,7 @@ func resourceAwsCloudFrontPublicKeyRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsCloudFrontPublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.UpdatePublicKeyInput{
@@ -131,10 +131,10 @@ func resourceAwsCloudFrontPublicKeyUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error updating CloudFront PublicKey (%s): %s", d.Id(), err)
 	}
 
-	return resourceAwsCloudFrontPublicKeyRead(d, meta)
+	return resourcePublicKeyRead(d, meta)
 }
 
-func resourceAwsCloudFrontPublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.DeletePublicKeyInput{

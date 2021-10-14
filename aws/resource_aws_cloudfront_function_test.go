@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -63,7 +64,7 @@ func testSweepCloudfrontFunctions(region string) error {
 				continue
 			}
 
-			r := resourceAwsCloudFrontFunction()
+			r := ResourceFunction()
 			d := r.Data(nil)
 			d.SetId(name)
 			d.Set("etag", output.ETag)
@@ -143,7 +144,7 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 				Config: testAccAWSCloudfrontConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFrontFunction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -14,9 +14,9 @@ const (
 	cnCloudFrontLogDeliveryCanonicalUserId = "a52cb28745c0c06e84ec548334e44bfa7fc2a85c54af20cd59e4969344b7af56"
 )
 
-func dataSourceAwsCloudFrontLogDeliveryCanonicalUserId() *schema.Resource {
+func DataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFrontLogDeliveryCanonicalUserIdRead,
+		Read: dataSourceLogDeliveryCanonicalUserIDRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -27,7 +27,7 @@ func dataSourceAwsCloudFrontLogDeliveryCanonicalUserId() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudFrontLogDeliveryCanonicalUserIdRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLogDeliveryCanonicalUserIDRead(d *schema.ResourceData, meta interface{}) error {
 	canonicalId := defaultCloudFrontLogDeliveryCanonicalUserId
 
 	region := meta.(*conns.AWSClient).Region

@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFrontCachePolicy() *schema.Resource {
+func ResourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontCachePolicyCreate,
-		Read:   resourceAwsCloudFrontCachePolicyRead,
-		Update: resourceAwsCloudFrontCachePolicyUpdate,
-		Delete: resourceAwsCloudFrontCachePolicyDelete,
+		Create: resourceCachePolicyCreate,
+		Read:   resourceCachePolicyRead,
+		Update: resourceCachePolicyUpdate,
+		Delete: resourceCachePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -155,7 +155,7 @@ func resourceAwsCloudFrontCachePolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFrontCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.CreateCachePolicyInput{
@@ -170,10 +170,10 @@ func resourceAwsCloudFrontCachePolicyCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.CachePolicy.Id))
 
-	return resourceAwsCloudFrontCachePolicyRead(d, meta)
+	return resourceCachePolicyRead(d, meta)
 }
 
-func resourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	request := &cloudfront.GetCachePolicyInput{
 		Id: aws.String(d.Id()),
@@ -197,7 +197,7 @@ func resourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsCloudFrontCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.UpdateCachePolicyInput{
@@ -211,10 +211,10 @@ func resourceAwsCloudFrontCachePolicyUpdate(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	return resourceAwsCloudFrontCachePolicyRead(d, meta)
+	return resourceCachePolicyRead(d, meta)
 }
 
-func resourceAwsCloudFrontCachePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCachePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	request := &cloudfront.DeleteCachePolicyInput{

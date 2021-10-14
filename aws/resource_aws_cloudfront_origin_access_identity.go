@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFrontOriginAccessIdentity() *schema.Resource {
+func ResourceOriginAccessIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontOriginAccessIdentityCreate,
-		Read:   resourceAwsCloudFrontOriginAccessIdentityRead,
-		Update: resourceAwsCloudFrontOriginAccessIdentityUpdate,
-		Delete: resourceAwsCloudFrontOriginAccessIdentityDelete,
+		Create: resourceOriginAccessIdentityCreate,
+		Read:   resourceOriginAccessIdentityRead,
+		Update: resourceOriginAccessIdentityUpdate,
+		Delete: resourceOriginAccessIdentityDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsCloudFrontOriginAccessIdentity() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFrontOriginAccessIdentityCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOriginAccessIdentityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	params := &cloudfront.CreateCloudFrontOriginAccessIdentityInput{
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
@@ -63,10 +63,10 @@ func resourceAwsCloudFrontOriginAccessIdentityCreate(d *schema.ResourceData, met
 		return err
 	}
 	d.SetId(aws.StringValue(resp.CloudFrontOriginAccessIdentity.Id))
-	return resourceAwsCloudFrontOriginAccessIdentityRead(d, meta)
+	return resourceOriginAccessIdentityRead(d, meta)
 }
 
-func resourceAwsCloudFrontOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 		Id: aws.String(d.Id()),
@@ -99,7 +99,7 @@ func resourceAwsCloudFrontOriginAccessIdentityRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsCloudFrontOriginAccessIdentityUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOriginAccessIdentityUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	params := &cloudfront.UpdateCloudFrontOriginAccessIdentityInput{
 		Id:                                   aws.String(d.Id()),
@@ -111,10 +111,10 @@ func resourceAwsCloudFrontOriginAccessIdentityUpdate(d *schema.ResourceData, met
 		return err
 	}
 
-	return resourceAwsCloudFrontOriginAccessIdentityRead(d, meta)
+	return resourceOriginAccessIdentityRead(d, meta)
 }
 
-func resourceAwsCloudFrontOriginAccessIdentityDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOriginAccessIdentityDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	params := &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),

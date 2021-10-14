@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFrontFunction() *schema.Resource {
+func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontFunctionCreate,
-		Read:   resourceAwsCloudFrontFunctionRead,
-		Update: resourceAwsCloudFrontFunctionUpdate,
-		Delete: resourceAwsCloudFrontFunctionDelete,
+		Create: resourceFunctionCreate,
+		Read:   resourceFunctionRead,
+		Update: resourceFunctionUpdate,
+		Delete: resourceFunctionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsCloudFrontFunction() *schema.Resource {
 
 // resourceAwsCloudFrontFunction maps to:
 // CreateFunction in the API / SDK
-func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	functionName := d.Get("name").(string)
@@ -109,12 +109,12 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsCloudFrontFunctionRead(d, meta)
+	return resourceFunctionRead(d, meta)
 }
 
-// resourceAwsCloudFrontFunctionRead maps to:
+// resourceFunctionRead maps to:
 // GetFunction in the API / SDK
-func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	stage := cloudfront.FunctionStageDevelopment
@@ -155,9 +155,9 @@ func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-// resourceAwsCloudFrontFunctionUpdate maps to:
+// resourceFunctionUpdate maps to:
 // UpdateFunctionCode in the API / SDK
-func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	etag := d.Get("etag").(string)
 
@@ -196,12 +196,12 @@ func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsCloudFrontFunctionRead(d, meta)
+	return resourceFunctionRead(d, meta)
 }
 
 // resourceAwsCloudFrontFunction maps to:
 // DeleteFunction in the API / SDK
-func resourceAwsCloudFrontFunctionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	log.Printf("[INFO] Deleting Cloudfront Function: %s", d.Id())

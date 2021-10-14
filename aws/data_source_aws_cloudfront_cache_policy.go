@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudFrontCachePolicy() *schema.Resource {
+func DataSourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFrontCachePolicyRead,
+		Read: dataSourceCachePolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -138,7 +138,7 @@ func dataSourceAwsCloudFrontCachePolicy() *schema.Resource {
 		},
 	}
 }
-func dataSourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	if d.Id() == "" {

@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFrontRealtimeLogConfig() *schema.Resource {
+func ResourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFrontRealtimeLogConfigCreate,
-		Read:   resourceAwsCloudFrontRealtimeLogConfigRead,
-		Update: resourceAwsCloudFrontRealtimeLogConfigUpdate,
-		Delete: resourceAwsCloudFrontRealtimeLogConfigDelete,
+		Create: resourceRealtimeLogConfigCreate,
+		Read:   resourceRealtimeLogConfigRead,
+		Update: resourceRealtimeLogConfigUpdate,
+		Delete: resourceRealtimeLogConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,7 +88,7 @@ func resourceAwsCloudFrontRealtimeLogConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFrontRealtimeLogConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRealtimeLogConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	name := d.Get("name").(string)
@@ -108,10 +108,10 @@ func resourceAwsCloudFrontRealtimeLogConfigCreate(d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(output.RealtimeLogConfig.ARN))
 
-	return resourceAwsCloudFrontRealtimeLogConfigRead(d, meta)
+	return resourceRealtimeLogConfigRead(d, meta)
 }
 
-func resourceAwsCloudFrontRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	logConfig, err := finder.RealtimeLogConfigByARN(conn, d.Id())
@@ -148,7 +148,7 @@ func resourceAwsCloudFrontRealtimeLogConfigRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsCloudFrontRealtimeLogConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRealtimeLogConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	input := &cloudfront.UpdateRealtimeLogConfigInput{
@@ -165,10 +165,10 @@ func resourceAwsCloudFrontRealtimeLogConfigUpdate(d *schema.ResourceData, meta i
 		return fmt.Errorf("error updating CloudFront Real-time Log Config (%s): %s", d.Id(), err)
 	}
 
-	return resourceAwsCloudFrontRealtimeLogConfigRead(d, meta)
+	return resourceRealtimeLogConfigRead(d, meta)
 }
 
-func resourceAwsCloudFrontRealtimeLogConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRealtimeLogConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	log.Printf("[DEBUG] Deleting CloudFront Real-time Log Config (%s)", d.Id())

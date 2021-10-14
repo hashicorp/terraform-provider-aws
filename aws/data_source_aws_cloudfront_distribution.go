@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudFrontDistribution() *schema.Resource {
+func DataSourceDistribution() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFrontDistributionRead,
+		Read: dataSourceDistributionRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -57,7 +57,7 @@ func dataSourceAwsCloudFrontDistribution() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("id").(string))
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig

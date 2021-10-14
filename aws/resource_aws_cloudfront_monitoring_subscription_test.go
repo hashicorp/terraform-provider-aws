@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -113,7 +114,7 @@ func TestAccAWSCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontMonitoringSubscriptionConfig("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontMonitoringSubscriptionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFrontMonitoringSubscription(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceMonitoringSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
