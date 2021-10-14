@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSsoAdminPermissionSet() *schema.Resource {
@@ -89,8 +90,8 @@ func resourceAwsSsoAdminPermissionSet() *schema.Resource {
 }
 
 func resourceAwsSsoAdminPermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SSOAdminConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceArn := d.Get("instance_arn").(string)
@@ -132,9 +133,9 @@ func resourceAwsSsoAdminPermissionSetCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SSOAdminConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
@@ -190,7 +191,7 @@ func resourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
@@ -242,7 +243,7 @@ func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSsoAdminPermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSsoAdminInstances() *schema.Resource {
@@ -29,7 +30,7 @@ func dataSourceAwsSsoAdminInstances() *schema.Resource {
 }
 
 func dataSourceAwsSsoAdminInstancesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*conns.AWSClient).SSOAdminConn
 
 	var instances []*ssoadmin.InstanceMetadata
 	var arns, ids []string
@@ -57,7 +58,7 @@ func dataSourceAwsSsoAdminInstancesRead(d *schema.ResourceData, meta interface{}
 		ids = append(ids, aws.StringValue(instance.IdentityStoreId))
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 	if err := d.Set("arns", arns); err != nil {
 		return fmt.Errorf("error setting arns: %w", err)
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
@@ -167,7 +168,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testin
 }
 
 func testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_managed_policy_attachment" {
@@ -217,7 +218,7 @@ func testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName string) r
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 		policy, err := finder.ManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepSsoAdminAccountAssignments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).ssoadminconn
+	conn := client.(*conns.AWSClient).SSOAdminConn
 	var sweeperErrs *multierror.Error
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
@@ -72,7 +73,7 @@ func testSweepSsoAdminAccountAssignments(region string) error {
 			permissionSetArn := aws.StringValue(permissionSet)
 
 			input := &ssoadmin.ListAccountAssignmentsInput{
-				AccountId:        aws.String(client.(*AWSClient).accountid),
+				AccountId:        aws.String(client.(*conns.AWSClient).AccountID),
 				InstanceArn:      aws.String(instanceArn),
 				PermissionSetArn: permissionSet,
 			}
@@ -227,7 +228,7 @@ func TestAccAWSSSOAdminAccountAssignment_Disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSSOAdminAccountAssignmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_account_assignment" {
@@ -275,7 +276,7 @@ func testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName string) resourc
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 		idParts, err := parseSsoAdminAccountAssignmentID(rs.Primary.ID)
 

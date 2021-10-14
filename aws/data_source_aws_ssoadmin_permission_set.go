@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
@@ -69,8 +70,8 @@ func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
 }
 
 func dataSourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SSOAdminConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceArn := d.Get("instance_arn").(string)
 

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepSsoAdminPermissionSets(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).ssoadminconn
+	conn := client.(*conns.AWSClient).SSOAdminConn
 	var sweeperErrs *multierror.Error
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
@@ -352,7 +353,7 @@ func TestAccAWSSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 }
 
 func testAccCheckAWSSSOAdminPermissionSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_permission_set" {
@@ -397,7 +398,7 @@ func testAccCheckAWSSOAdminPermissionSetExists(resourceName string) resource.Tes
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 		arn, instanceArn, err := parseSsoAdminResourceID(rs.Primary.ID)
 
