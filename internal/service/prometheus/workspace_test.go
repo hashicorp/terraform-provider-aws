@@ -23,12 +23,12 @@ func TestAccAWSAMPWorkspace_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMPWorkspaceDestroy,
+		CheckDestroy: testAccCheckAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAWSAMPWorkspaceConfigWithAlias(workspaceAlias),
+				Config: testAccAMPWorkspaceWithAliasConfig(workspaceAlias),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckAWSAMPWorkspaceExists(resourceName),
+					testAccCheckAMPWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", workspaceAlias),
 				),
 			},
@@ -38,15 +38,15 @@ func TestAccAWSAMPWorkspace_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAWSAMPWorkspaceConfigWithoutAlias(),
+				Config: testAccAMPWorkspaceWithoutAliasConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "alias", ""),
 				),
 			},
 			{
-				Config: testAWSAMPWorkspaceConfigWithAlias(workspaceAlias),
+				Config: testAccAMPWorkspaceWithAliasConfig(workspaceAlias),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckAWSAMPWorkspaceExists(resourceName),
+					testAccCheckAMPWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", workspaceAlias),
 				),
 			},
@@ -60,12 +60,12 @@ func TestAccAWSAMPWorkspace_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMPWorkspaceDestroy,
+		CheckDestroy: testAccCheckAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAWSAMPWorkspaceConfigWithoutAlias(),
+				Config: testAccAMPWorkspaceWithoutAliasConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckAWSAMPWorkspaceExists(resourceName),
+					testAccCheckAMPWorkspaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfprometheus.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -74,7 +74,7 @@ func TestAccAWSAMPWorkspace_disappears(t *testing.T) {
 	})
 }
 
-func testCheckAWSAMPWorkspaceExists(n string) resource.TestCheckFunc {
+func testAccCheckAMPWorkspaceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -102,7 +102,7 @@ func testCheckAWSAMPWorkspaceExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSAMPWorkspaceDestroy(s *terraform.State) error {
+func testAccCheckAMPWorkspaceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PrometheusConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -125,7 +125,7 @@ func testAccCheckAWSAMPWorkspaceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAWSAMPWorkspaceConfigWithAlias(randName string) string {
+func testAccAMPWorkspaceWithAliasConfig(randName string) string {
 	return fmt.Sprintf(`
 resource "aws_prometheus_workspace" "test" {
   alias = %q
@@ -133,7 +133,7 @@ resource "aws_prometheus_workspace" "test" {
 `, randName)
 }
 
-func testAWSAMPWorkspaceConfigWithoutAlias() string {
+func testAccAMPWorkspaceWithoutAliasConfig() string {
 	return `
 resource "aws_prometheus_workspace" "test" {
 }
