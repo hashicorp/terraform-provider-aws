@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSShieldProtectionGroup_basic(t *testing.T) {
@@ -237,7 +238,7 @@ func TestAccAWSShieldProtectionGroup_resourceType(t *testing.T) {
 }
 
 func testAccCheckAWSShieldProtectionGroupDestroy(s *terraform.State) error {
-	shieldconn := acctest.Provider.Meta().(*AWSClient).shieldconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_shield_protection_group" {
@@ -248,7 +249,7 @@ func testAccCheckAWSShieldProtectionGroupDestroy(s *terraform.State) error {
 			ProtectionGroupId: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := shieldconn.DescribeProtectionGroup(input)
+		resp, err := conn.DescribeProtectionGroup(input)
 
 		if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
 			continue
@@ -273,7 +274,7 @@ func testAccCheckAWSShieldProtectionGroupExists(name string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).shieldconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
 
 		input := &shield.DescribeProtectionGroupInput{
 			ProtectionGroupId: aws.String(rs.Primary.ID),
