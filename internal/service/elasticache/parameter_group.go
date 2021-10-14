@@ -189,7 +189,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 				paramsToModify, toRemove = toRemove[:maxParams], toRemove[maxParams:]
 			}
 
-			err := resourceAwsElastiCacheResetParameterGroup(conn, d.Get("name").(string), paramsToModify)
+			err := resourceResetParameterGroup(conn, d.Get("name").(string), paramsToModify)
 
 			// When attempting to reset the reserved-memory parameter, the API
 			// can return two types of error.
@@ -245,13 +245,13 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 							ParameterValue: aws.String("0"),
 						},
 					}
-					err = resourceAwsElastiCacheModifyParameterGroup(conn, d.Get("name").(string), paramsToModify)
+					err = resourceModifyParameterGroup(conn, d.Get("name").(string), paramsToModify)
 					if err != nil {
 						log.Printf("[WARN] Error attempting reserved-memory workaround to switch to reserved-memory-percent: %s", err)
 						break
 					}
 
-					err = resourceAwsElastiCacheResetParameterGroup(conn, d.Get("name").(string), workaroundParams)
+					err = resourceResetParameterGroup(conn, d.Get("name").(string), workaroundParams)
 					if err != nil {
 						log.Printf("[WARN] Error attempting reserved-memory workaround to reset reserved-memory-percent: %s", err)
 					}
@@ -261,7 +261,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 
 				// Retry any remaining parameter resets with reserved-memory potentially removed
 				if len(paramsToModify) > 0 {
-					err = resourceAwsElastiCacheResetParameterGroup(conn, d.Get("name").(string), paramsToModify)
+					err = resourceResetParameterGroup(conn, d.Get("name").(string), paramsToModify)
 				}
 			}
 
@@ -278,7 +278,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 				paramsToModify, toAdd = toAdd[:maxParams], toAdd[maxParams:]
 			}
 
-			err := resourceAwsElastiCacheModifyParameterGroup(conn, d.Get("name").(string), paramsToModify)
+			err := resourceModifyParameterGroup(conn, d.Get("name").(string), paramsToModify)
 			if err != nil {
 				return fmt.Errorf("error modifying ElastiCache Parameter Group: %w", err)
 			}
@@ -373,7 +373,7 @@ func ParameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.Para
 	return remove, addOrUpdate
 }
 
-func resourceAwsElastiCacheResetParameterGroup(conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
+func resourceResetParameterGroup(conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
 	input := elasticache.ResetCacheParameterGroupInput{
 		CacheParameterGroupName: aws.String(name),
 		ParameterNameValues:     parameters,
@@ -390,7 +390,7 @@ func resourceAwsElastiCacheResetParameterGroup(conn *elasticache.ElastiCache, na
 	})
 }
 
-func resourceAwsElastiCacheModifyParameterGroup(conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
+func resourceModifyParameterGroup(conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
 	input := elasticache.ModifyCacheParameterGroupInput{
 		CacheParameterGroupName: aws.String(name),
 		ParameterNameValues:     parameters,
