@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDefaultTagsDataSource_basic(t *testing.T) {
+func TestAccNASDefaultTagsDataSource_basic(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
@@ -34,7 +34,7 @@ func TestAccAWSDefaultTagsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultTagsDataSource_empty(t *testing.T) {
+func TestAccNASDefaultTagsDataSource_empty(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
@@ -58,7 +58,7 @@ func TestAccAWSDefaultTagsDataSource_empty(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultTagsDataSource_multiple(t *testing.T) {
+func TestAccNASDefaultTagsDataSource_multiple(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
@@ -84,7 +84,7 @@ func TestAccAWSDefaultTagsDataSource_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultTagsDataSource_ignore(t *testing.T) {
+func TestAccNASDefaultTagsDataSource_ignore(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"

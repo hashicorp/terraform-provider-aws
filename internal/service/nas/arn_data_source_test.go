@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsArn_basic(t *testing.T) {
+func TestAccNASARNDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_arn.test"
 
 	testARN := arn.ARN{
