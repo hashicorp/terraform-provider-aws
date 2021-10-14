@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/experimental/nullable"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -558,7 +558,7 @@ func resourceAwsAutoscalingScalingAdjustmentHash(v interface{}) int {
 	}
 	buf.WriteString(fmt.Sprintf("%d-", m["scaling_adjustment"].(int)))
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func expandTargetTrackingConfiguration(configs []interface{}) *autoscaling.TargetTrackingConfiguration {

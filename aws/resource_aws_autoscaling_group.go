@@ -23,9 +23,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/experimental/nullable"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
@@ -457,7 +457,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 					buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
 					buf.WriteString(fmt.Sprintf("%t-", m["propagate_at_launch"].(bool)))
 
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 
@@ -502,7 +502,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 						}
 					}
 
-					return hashcode.String(buf.String())
+					return create.StringHashcode(buf.String())
 				},
 			},
 
@@ -644,7 +644,7 @@ func generatePutLifecycleHookInputs(asgName string, cfgs []interface{}) []autosc
 func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 
-	asgName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	asgName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	createOpts := autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
@@ -871,7 +871,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("name", g.AutoScalingGroupName)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(g.AutoScalingGroupName)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(g.AutoScalingGroupName)))
 	d.Set("placement_group", g.PlacementGroup)
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
