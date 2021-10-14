@@ -24,7 +24,7 @@ const (
 		"To properly test inviting Macie member account must be provided."
 )
 
-func testAccAwsMacie2Member_basic(t *testing.T) {
+func testAccMember_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
@@ -36,13 +36,13 @@ func testAccAwsMacie2Member_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsMacie2MemberDestroy,
+		CheckDestroy:      testAccCheckMemberDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigBasic(acctest.DefaultEmailAddress),
+				Config: testAccMacieMemberBasicConfig(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
@@ -53,7 +53,7 @@ func testAccAwsMacie2Member_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccAwsMacieMemberConfigBasic(acctest.DefaultEmailAddress),
+				Config:            testAccMacieMemberBasicConfig(acctest.DefaultEmailAddress),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -62,7 +62,7 @@ func testAccAwsMacie2Member_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2Member_disappears(t *testing.T) {
+func testAccMember_disappears(t *testing.T) {
 	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
@@ -73,13 +73,13 @@ func testAccAwsMacie2Member_disappears(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsMacie2MemberDestroy,
+		CheckDestroy:      testAccCheckMemberDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigBasic(acctest.DefaultEmailAddress),
+				Config: testAccMacieMemberBasicConfig(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					testAccCheckMemberExists(resourceName, &macie2Output),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -88,7 +88,7 @@ func testAccAwsMacie2Member_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2Member_invite(t *testing.T) {
+func testAccMember_invite(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_member.member"
@@ -101,13 +101,13 @@ func testAccAwsMacie2Member_invite(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsMacie2InvitationAccepterDestroy,
+		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigInvite(email, false),
+				Config: testAccMacieMemberInviteConfig(email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
@@ -119,9 +119,9 @@ func testAccAwsMacie2Member_invite(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsMacieMemberConfigInvite(email, true),
+				Config: testAccMacieMemberInviteConfig(email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
@@ -133,7 +133,7 @@ func testAccAwsMacie2Member_invite(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccAwsMacieMemberConfigInvite(email, true),
+				Config:                  testAccMacieMemberInviteConfig(email, true),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -143,7 +143,7 @@ func testAccAwsMacie2Member_invite(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2Member_inviteRemoved(t *testing.T) {
+func testAccMember_inviteRemoved(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_member.member"
@@ -156,13 +156,13 @@ func testAccAwsMacie2Member_inviteRemoved(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsMacie2InvitationAccepterDestroy,
+		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigInvite(email, true),
+				Config: testAccMacieMemberInviteConfig(email, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
@@ -174,9 +174,9 @@ func testAccAwsMacie2Member_inviteRemoved(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsMacieMemberConfigInvite(email, false),
+				Config: testAccMacieMemberInviteConfig(email, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusRemoved),
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
@@ -188,7 +188,7 @@ func testAccAwsMacie2Member_inviteRemoved(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccAwsMacieMemberConfigInvite(email, false),
+				Config:                  testAccMacieMemberInviteConfig(email, false),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -198,7 +198,7 @@ func testAccAwsMacie2Member_inviteRemoved(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2Member_status(t *testing.T) {
+func testAccMember_status(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_member.member"
@@ -211,13 +211,13 @@ func testAccAwsMacie2Member_status(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsMacie2InvitationAccepterDestroy,
+		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigStatus(email, macie2.MacieStatusEnabled, true),
+				Config: testAccMacieMemberStatusConfig(email, macie2.MacieStatusEnabled, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
@@ -229,9 +229,9 @@ func testAccAwsMacie2Member_status(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsMacieMemberConfigStatus(email, macie2.MacieStatusPaused, true),
+				Config: testAccMacieMemberStatusConfig(email, macie2.MacieStatusPaused, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					testAccCheckMemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusPaused),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
@@ -243,7 +243,7 @@ func testAccAwsMacie2Member_status(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccAwsMacieMemberConfigStatus(email, macie2.MacieStatusPaused, true),
+				Config:                  testAccMacieMemberStatusConfig(email, macie2.MacieStatusPaused, true),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -253,7 +253,7 @@ func testAccAwsMacie2Member_status(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2Member_withTags(t *testing.T) {
+func testAccMember_withTags(t *testing.T) {
 	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
@@ -265,13 +265,13 @@ func testAccAwsMacie2Member_withTags(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsMacie2MemberDestroy,
+		CheckDestroy:      testAccCheckMemberDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigWithTags(acctest.DefaultEmailAddress),
+				Config: testAccMacieMemberWithTagsConfig(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					testAccCheckMemberExists(resourceName, &macie2Output),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -292,7 +292,7 @@ func testAccAwsMacie2Member_withTags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsMacie2MemberExists(resourceName string, macie2Session *macie2.GetMemberOutput) resource.TestCheckFunc {
+func testAccCheckMemberExists(resourceName string, macie2Session *macie2.GetMemberOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -318,7 +318,7 @@ func testAccCheckAwsMacie2MemberExists(resourceName string, macie2Session *macie
 	}
 }
 
-func testAccCheckAwsMacie2MemberDestroy(s *terraform.State) error {
+func testAccCheckMemberDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -349,7 +349,7 @@ func testAccCheckAwsMacie2MemberDestroy(s *terraform.State) error {
 
 }
 
-func testAccAwsMacieMemberConfigBasic(email string) string {
+func testAccMacieMemberBasicConfig(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"
@@ -365,7 +365,7 @@ resource "aws_macie2_member" "member" {
 `, email)
 }
 
-func testAccAwsMacieMemberConfigWithTags(email string) string {
+func testAccMacieMemberWithTagsConfig(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"
@@ -384,7 +384,7 @@ resource "aws_macie2_member" "member" {
 `, email)
 }
 
-func testAccAwsMacieMemberConfigInvite(email string, invite bool) string {
+func testAccMacieMemberInviteConfig(email string, invite bool) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"
@@ -408,7 +408,7 @@ resource "aws_macie2_member" "member" {
 `, email, invite)
 }
 
-func testAccAwsMacieMemberConfigStatus(email, memberStatus string, invite bool) string {
+func testAccMacieMemberStatusConfig(email, memberStatus string, invite bool) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"

@@ -17,7 +17,7 @@ import (
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 )
 
-func testAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
+func testAccCustomDataIdentifier_basic(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -25,13 +25,13 @@ func testAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
+		CheckDestroy:      testAccCheckCustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieCustomDataIdentifierconfigNameGenerated(regex),
+				Config: testAccMacieCustomDataIdentifierconfigNameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
+					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
@@ -48,7 +48,7 @@ func testAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2CustomDataIdentifier_Name_Generated(t *testing.T) {
+func testAccCustomDataIdentifier_Name_Generated(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -56,13 +56,13 @@ func testAccAwsMacie2CustomDataIdentifier_Name_Generated(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
+		CheckDestroy:      testAccCheckCustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieCustomDataIdentifierconfigNameGenerated(regex),
+				Config: testAccMacieCustomDataIdentifierconfigNameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
+					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
@@ -76,7 +76,7 @@ func testAccAwsMacie2CustomDataIdentifier_Name_Generated(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
+func testAccCustomDataIdentifier_disappears(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -84,13 +84,13 @@ func testAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
+		CheckDestroy:      testAccCheckCustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieCustomDataIdentifierconfigNameGenerated(regex),
+				Config: testAccMacieCustomDataIdentifierconfigNameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
+					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
@@ -100,7 +100,7 @@ func testAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2CustomDataIdentifier_NamePrefix(t *testing.T) {
+func testAccCustomDataIdentifier_NamePrefix(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -109,13 +109,13 @@ func testAccAwsMacie2CustomDataIdentifier_NamePrefix(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
+		CheckDestroy:      testAccCheckCustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieCustomDataIdentifierconfigNamePrefix(namePrefix, regex),
+				Config: testAccMacieCustomDataIdentifierconfigNamePrefix(namePrefix, regex),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
+					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`custom-data-identifier/.+`)),
@@ -130,7 +130,7 @@ func testAccAwsMacie2CustomDataIdentifier_NamePrefix(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
+func testAccCustomDataIdentifier_WithClassificationJob(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -141,13 +141,13 @@ func testAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
+		CheckDestroy:      testAccCheckCustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieCustomDataIdentifierconfigComplete(bucketName, regex, description),
+				Config: testAccMacieCustomDataIdentifierconfigComplete(bucketName, regex, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
+					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
@@ -155,9 +155,9 @@ func testAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsMacieCustomDataIdentifierconfigComplete(bucketName, regex, descriptionUpdated),
+				Config: testAccMacieCustomDataIdentifierconfigComplete(bucketName, regex, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
+					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
@@ -173,7 +173,7 @@ func testAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
+func testAccCustomDataIdentifier_WithTags(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -182,13 +182,13 @@ func testAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
+		CheckDestroy:      testAccCheckCustomDataIdentifierDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieCustomDataIdentifierconfigCompleteWithTags(bucketName, regex),
+				Config: testAccMacieCustomDataIdentifierconfigCompleteWithTags(bucketName, regex),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
+					testAccCheckCustomDataIdentifierExists(resourceName, &macie2Output),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -212,7 +212,7 @@ func testAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName string, macie2Session *macie2.GetCustomDataIdentifierOutput) resource.TestCheckFunc {
+func testAccCheckCustomDataIdentifierExists(resourceName string, macie2Session *macie2.GetCustomDataIdentifierOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -238,7 +238,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName string, macie2
 	}
 }
 
-func testAccCheckAwsMacie2CustomDataIdentifierDestroy(s *terraform.State) error {
+func testAccCheckCustomDataIdentifierDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -267,7 +267,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierDestroy(s *terraform.State) error 
 
 }
 
-func testAccAwsMacieCustomDataIdentifierconfigNameGenerated(regex string) string {
+func testAccMacieCustomDataIdentifierconfigNameGenerated(regex string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {}
 
@@ -279,7 +279,7 @@ resource "aws_macie2_custom_data_identifier" "test" {
 `, regex)
 }
 
-func testAccAwsMacieCustomDataIdentifierconfigNamePrefix(name, regex string) string {
+func testAccMacieCustomDataIdentifierconfigNamePrefix(name, regex string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {}
 
@@ -292,7 +292,7 @@ resource "aws_macie2_custom_data_identifier" "test" {
 `, name, regex)
 }
 
-func testAccAwsMacieCustomDataIdentifierconfigComplete(bucketName, regex, description string) string {
+func testAccMacieCustomDataIdentifierconfigComplete(bucketName, regex, description string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -331,7 +331,7 @@ resource "aws_macie2_classification_job" "test" {
 `, bucketName, regex, description)
 }
 
-func testAccAwsMacieCustomDataIdentifierconfigCompleteWithTags(bucketName, regex string) string {
+func testAccMacieCustomDataIdentifierconfigCompleteWithTags(bucketName, regex string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

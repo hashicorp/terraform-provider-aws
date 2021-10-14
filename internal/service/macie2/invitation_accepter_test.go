@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
+func testAccInvitationAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation_accepter.member"
 	email := conns.SkipIfEnvVarEmpty(t, EnvVarMacie2PrincipalEmail, EnvVarMacie2PrincipalEmailMessageError)
@@ -25,17 +25,17 @@ func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsMacie2InvitationAccepterDestroy,
+		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieInvitationAccepterConfigBasic(email),
+				Config: testAccMacieInvitationAccepterBasicConfig(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2InvitationAccepterExists(resourceName),
+					testAccCheckInvitationAccepterExists(resourceName),
 				),
 			},
 			{
-				Config:            testAccAwsMacieInvitationAccepterConfigBasic(email),
+				Config:            testAccMacieInvitationAccepterBasicConfig(email),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -44,7 +44,7 @@ func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsMacie2InvitationAccepterExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckInvitationAccepterExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -71,7 +71,7 @@ func testAccCheckAwsMacie2InvitationAccepterExists(resourceName string) resource
 	}
 }
 
-func testAccCheckAwsMacie2InvitationAccepterDestroy(s *terraform.State) error {
+func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -98,7 +98,7 @@ func testAccCheckAwsMacie2InvitationAccepterDestroy(s *terraform.State) error {
 
 }
 
-func testAccAwsMacieInvitationAccepterConfigBasic(email string) string {
+func testAccMacieInvitationAccepterBasicConfig(email string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "admin" {
   provider = "awsalternate"
