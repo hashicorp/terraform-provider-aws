@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceApplicationVersion() *schema.Resource {
@@ -20,7 +21,7 @@ func ResourceApplicationVersion() *schema.Resource {
 		Update: resourceApplicationVersionUpdate,
 		Delete: resourceApplicationVersionDelete,
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"application": {
@@ -56,8 +57,8 @@ func ResourceApplicationVersion() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -65,7 +66,7 @@ func ResourceApplicationVersion() *schema.Resource {
 func resourceApplicationVersionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	application := d.Get("application").(string)
 	description := d.Get("description").(string)
@@ -126,7 +127,7 @@ func resourceApplicationVersionRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", arn)
 	d.Set("description", resp.ApplicationVersions[0].Description)
 
-	tags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
+	tags, err := tftags.ElasticbeanstalkListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elastic Beanstalk Application version (%s): %w", arn, err)
@@ -159,7 +160,7 @@ func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Elastic Beanstalk Application version (%s) tags: %s", arn, err)
 		}
 	}

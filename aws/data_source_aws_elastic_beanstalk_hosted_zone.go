@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region

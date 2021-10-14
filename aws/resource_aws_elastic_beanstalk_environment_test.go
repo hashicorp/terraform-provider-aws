@@ -15,11 +15,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func init() {
@@ -679,7 +680,7 @@ func testAccCheckBeanstalkEnvTagsMatch(env *elasticbeanstalk.EnvironmentDescript
 			return err
 		}
 
-		foundTags := keyvaluetags.ElasticbeanstalkKeyValueTags(tags.ResourceTags).IgnoreElasticbeanstalk().Map()
+		foundTags := tftags.ElasticbeanstalkKeyValueTags(tags.ResourceTags).IgnoreElasticbeanstalk().Map()
 
 		if !reflect.DeepEqual(foundTags, expectedValue) {
 			return fmt.Errorf("Tag value: %s.  Expected %s", foundTags, expectedValue)

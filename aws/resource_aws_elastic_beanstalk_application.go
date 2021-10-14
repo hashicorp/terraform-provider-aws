@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceApplication() *schema.Resource {
@@ -23,7 +24,7 @@ func ResourceApplication() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -65,8 +66,8 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -74,7 +75,7 @@ func ResourceApplication() *schema.Resource {
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	// Get the name and description
 	name := d.Get("name").(string)
@@ -121,7 +122,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
+		if err := tftags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Elastic Beanstalk Application (%s) tags: %s", arn, err)
 		}
 	}
@@ -258,7 +259,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("appversion_lifecycle", flattenResourceLifecycleConfig(app.ResourceLifecycleConfig))
 	}
 
-	tags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
+	tags, err := tftags.ElasticbeanstalkListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elastic Beanstalk Application (%s): %s", arn, err)
