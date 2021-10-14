@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DescribeScalingPlansPages(conn *autoscalingplans.AutoScalingPlans, input *autoscalingplans.DescribeScalingPlansInput, fn func(*autoscalingplans.DescribeScalingPlansOutput, bool) bool) error {
