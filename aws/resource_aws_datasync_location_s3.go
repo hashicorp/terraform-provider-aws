@@ -106,7 +106,7 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("agent_arns"); ok {
-		input.AgentArns = expandStringSet(v.(*schema.Set))
+		input.AgentArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("s3_storage_class"); ok {
@@ -180,7 +180,7 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	d.Set("agent_arns", flattenStringSet(output.AgentArns))
+	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
 	d.Set("arn", output.LocationArn)
 	if err := d.Set("s3_config", flattenDataSyncS3Config(output.S3Config)); err != nil {
 		return fmt.Errorf("error setting s3_config: %s", err)

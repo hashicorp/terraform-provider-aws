@@ -177,11 +177,11 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("security_group_arns"); ok {
-		input.SecurityGroupArns = expandStringSet(v.(*schema.Set))
+		input.SecurityGroupArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnet_arns"); ok {
-		input.SubnetArns = expandStringSet(v.(*schema.Set))
+		input.SubnetArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
@@ -226,8 +226,8 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", output.Name)
 	if plc := output.PrivateLinkConfig; plc != nil {
 		d.Set("private_link_endpoint", plc.PrivateLinkEndpoint)
-		d.Set("security_group_arns", flattenStringList(plc.SecurityGroupArns))
-		d.Set("subnet_arns", flattenStringList(plc.SubnetArns))
+		d.Set("security_group_arns", flex.FlattenStringList(plc.SecurityGroupArns))
+		d.Set("subnet_arns", flex.FlattenStringList(plc.SubnetArns))
 		d.Set("vpc_endpoint_id", plc.VpcEndpointId)
 	} else {
 		d.Set("private_link_endpoint", "")
