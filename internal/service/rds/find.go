@@ -5,43 +5,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfrds "github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 // FindDBProxyTarget returns matching FindDBProxyTarget.
@@ -72,7 +37,7 @@ func FindDBProxyTarget(conn *rds.RDS, dbProxyName, targetGroupName, targetType, 
 
 // FindDBProxyEndpoint returns matching FindDBProxyEndpoint.
 func FindDBProxyEndpoint(conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error) {
-	dbProxyName, dbProxyEndpointName, err := tfrds.ProxyEndpointParseID(id)
+	dbProxyName, dbProxyEndpointName, err := ProxyEndpointParseID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +76,7 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(conn *rds.RDS, dbClusterID, roleAR
 
 	for _, associatedRole := range dbCluster.AssociatedRoles {
 		if aws.StringValue(associatedRole.RoleArn) == roleARN {
-			if status := aws.StringValue(associatedRole.Status); status == tfrds.ClusterRoleStatusDeleted {
+			if status := aws.StringValue(associatedRole.Status); status == ClusterRoleStatusDeleted {
 				return nil, &resource.NotFoundError{
 					Message: status,
 				}

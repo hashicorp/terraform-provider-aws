@@ -1,4 +1,4 @@
-package aws
+package rds
 
 import (
 	"fmt"
@@ -10,39 +10,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func ResourceEventSubscription() *schema.Resource {
@@ -157,7 +130,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
 
-	if _, err = tfrds.waitEventSubscriptionCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err = waitEventSubscriptionCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for RDS Event Subscription (%s) create: %w", d.Id(), err)
 	}
 
@@ -169,7 +142,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	sub, err := tfrds.FindEventSubscriptionByID(conn, d.Id())
+	sub, err := FindEventSubscriptionByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Event Subscription (%s) not found, removing from state", d.Id())
@@ -243,7 +216,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error updating RDS Event Subscription (%s): %w", d.Id(), err)
 		}
 
-		if _, err = tfrds.waitEventSubscriptionUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err = waitEventSubscriptionUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for RDS Event Subscription (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -307,7 +280,7 @@ func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error deleting RDS Event Subscription (%s): %w", d.Id(), err)
 	}
 
-	if _, err = tfrds.waitEventSubscriptionDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = waitEventSubscriptionDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for RDS Event Subscription (%s) delete: %w", d.Id(), err)
 	}
 

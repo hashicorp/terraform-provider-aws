@@ -1,4 +1,4 @@
-package aws
+package rds
 
 import (
 	"fmt"
@@ -14,76 +14,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tfrds "github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -229,7 +167,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(tfrds.ExportableLogType_Values(), false),
+					ValidateFunc: validation.StringInSlice(ExportableLogType_Values(), false),
 				},
 			},
 			"endpoint": {
@@ -1431,7 +1369,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := tfrds.FindDBInstanceByID(conn, d.Id())
+	v, err := FindDBInstanceByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DB Instance (%s) not found, removing from state", d.Id())
@@ -1601,7 +1539,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting DB Instance (%s): %w", d.Id(), err)
 	}
 
-	if _, err := tfrds.waitDBInstanceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitDBInstanceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for DB Instance (%s) delete: %w", d.Id(), err)
 	}
 
