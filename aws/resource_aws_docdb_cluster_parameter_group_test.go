@@ -23,7 +23,7 @@ func TestAccAWSDocDBClusterParameterGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +57,7 @@ func TestAccAWSDocDBClusterParameterGroup_systemParameter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,7 +89,7 @@ func TestAccAWSDocDBClusterParameterGroup_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -115,7 +115,7 @@ func TestAccAWSDocDBClusterParameterGroup_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -142,7 +142,7 @@ func TestAccAWSDocDBClusterParameterGroup_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func TestAccAWSDocDBClusterParameterGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,7 +195,7 @@ func TestAccAWSDocDBClusterParameterGroup_Parameter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -242,7 +242,7 @@ func TestAccAWSDocDBClusterParameterGroup_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDocDBClusterParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,7 +282,7 @@ func TestAccAWSDocDBClusterParameterGroup_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSDocDBClusterParameterGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).docdbconn
+	conn := acctest.Provider.Meta().(*AWSClient).docdbconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_docdb_cluster_parameter_group" {
@@ -315,7 +315,7 @@ func testAccCheckAWSDocDBClusterParameterGroupDestroy(s *terraform.State) error 
 func testAccCheckAWSDocDBClusterParameterGroupDisappears(group *docdb.DBClusterParameterGroup) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
 
 		params := &docdb.DeleteDBClusterParameterGroupInput{
 			DBClusterParameterGroupName: group.DBClusterParameterGroupName,
@@ -356,7 +356,7 @@ func testAccCheckAWSDocDBClusterParameterGroupExists(n string, v *docdb.DBCluste
 			return errors.New("No DocDB Cluster Parameter Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
 
 		opts := docdb.DescribeDBClusterParameterGroupsInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),

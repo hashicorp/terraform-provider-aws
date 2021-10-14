@@ -20,7 +20,7 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -46,7 +46,7 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -63,7 +63,7 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckAWSDocdbOrderableDbInstance(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).docdbconn
+	conn := acctest.Provider.Meta().(*AWSClient).docdbconn
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("docdb"),

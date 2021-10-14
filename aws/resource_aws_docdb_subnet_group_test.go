@@ -21,7 +21,7 @@ func TestAccAWSDocDBSubnetGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +52,7 @@ func TestAccAWSDocDBSubnetGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -74,7 +74,7 @@ func TestAccAWSDocDBSubnetGroup_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +102,7 @@ func TestAccAWSDocDBSubnetGroup_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,7 +129,7 @@ func TestAccAWSDocDBSubnetGroup_updateDescription(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDocDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +161,7 @@ func TestAccAWSDocDBSubnetGroup_updateDescription(t *testing.T) {
 }
 
 func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).docdbconn
+	conn := acctest.Provider.Meta().(*AWSClient).docdbconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_docdb_subnet_group" {
@@ -193,7 +193,7 @@ func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
 func testAccCheckAWSDocDBSubnetGroupDisappears(group *docdb.DBSubnetGroup) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
 
 		params := &docdb.DeleteDBSubnetGroupInput{
 			DBSubnetGroupName: group.DBSubnetGroupName,
@@ -219,7 +219,7 @@ func testAccCheckDocDBSubnetGroupExists(n string, v *docdb.DBSubnetGroup) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
 		resp, err := conn.DescribeDBSubnetGroups(
 			&docdb.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {
