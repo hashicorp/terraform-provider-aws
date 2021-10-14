@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourcePlan() *schema.Resource {
@@ -120,7 +121,7 @@ func ResourcePlan() *schema.Resource {
 								},
 							},
 						},
-						"recovery_point_tags": tagsSchema(),
+						"recovery_point_tags": tftags.TagsSchema(),
 					},
 				},
 				Set: backupBackupPlanHash,
@@ -153,18 +154,18 @@ func ResourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourcePlanCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
@@ -217,7 +218,7 @@ func resourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting advanced_backup_setting: %w", err)
 	}
 
-	tags, err := keyvaluetags.BackupListTags(conn, d.Get("arn").(string))
+	tags, err := tftags.BackupListTags(conn, d.Get("arn").(string))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Plan (%s): %w", d.Id(), err)
 	}
@@ -257,7 +258,7 @@ func resourcePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.BackupUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.BackupUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags for Backup Plan (%s): %w", d.Id(), err)
 		}
 	}
@@ -331,7 +332,7 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 		}
 
 		if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-			rule.RecoveryPointTags = keyvaluetags.New(vRecoveryPointTags).IgnoreAws().BackupTags()
+			rule.RecoveryPointTags = tftags.New(vRecoveryPointTags).IgnoreAws().BackupTags()
 		}
 
 		if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 {
@@ -421,7 +422,7 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 			"enable_continuous_backup": aws.BoolValue(rule.EnableContinuousBackup),
 			"start_window":             int(aws.Int64Value(rule.StartWindowMinutes)),
 			"completion_window":        int(aws.Int64Value(rule.CompletionWindowMinutes)),
-			"recovery_point_tags":      keyvaluetags.BackupKeyValueTags(rule.RecoveryPointTags).IgnoreAws().Map(),
+			"recovery_point_tags":      tftags.BackupKeyValueTags(rule.RecoveryPointTags).IgnoreAws().Map(),
 		}
 
 		if lifecycle := rule.Lifecycle; lifecycle != nil {
@@ -515,7 +516,7 @@ func backupBackupPlanHash(vRule interface{}) int {
 	}
 
 	if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", keyvaluetags.New(vRecoveryPointTags).Hash()))
+		buf.WriteString(fmt.Sprintf("%d-", tftags.New(vRecoveryPointTags).Hash()))
 	}
 
 	if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 && vLifecycle[0] != nil {

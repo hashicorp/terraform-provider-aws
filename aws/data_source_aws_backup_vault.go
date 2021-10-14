@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceVault() *schema.Resource {
@@ -31,7 +32,7 @@ func DataSourceVault() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -56,7 +57,7 @@ func dataSourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.BackupVaultName)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
-	tags, err := keyvaluetags.BackupListTags(conn, aws.StringValue(resp.BackupVaultArn))
+	tags, err := tftags.BackupListTags(conn, aws.StringValue(resp.BackupVaultArn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Vault (%s): %w", name, err)
 	}
