@@ -129,7 +129,7 @@ func resourceStateMachineCreate(d *schema.ResourceData, meta interface{}) error 
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
-		Tags:       tags.IgnoreAws().SfnTags(),
+		Tags:       Tags(tags.IgnoreAws()),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 
@@ -226,7 +226,7 @@ func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("tracing_configuration", nil)
 	}
 
-	tags, err := tftags.SfnListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
@@ -306,7 +306,7 @@ func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.SfnUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
