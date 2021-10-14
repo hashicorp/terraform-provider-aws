@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
@@ -62,7 +63,7 @@ func testAccAwsOrganizationsOrganizationalUnit_disappears(t *testing.T) {
 				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsOrganizationsOrganizationalUnit(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceOrganizationalUnit(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

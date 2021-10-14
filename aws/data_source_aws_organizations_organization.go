@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsOrganizationsOrganization() *schema.Resource {
+func DataSourceOrganization() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOrganizationsOrganizationRead,
+		Read: dataSourceOrganizationRead,
 
 		Schema: map[string]*schema.Schema{
 			"accounts": {
@@ -142,7 +142,7 @@ func dataSourceAwsOrganizationsOrganization() *schema.Resource {
 	}
 }
 
-func dataSourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})

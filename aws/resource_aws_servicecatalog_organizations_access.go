@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogOrganizationsAccess() *schema.Resource {
+func ResourceOrganizationsAccess() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogOrganizationsAccessCreate,
-		Read:   resourceAwsServiceCatalogOrganizationsAccessRead,
-		Delete: resourceAwsServiceCatalogOrganizationsAccessDelete,
+		Create: resourceOrganizationsAccessCreate,
+		Read:   resourceOrganizationsAccessRead,
+		Delete: resourceOrganizationsAccessDelete,
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {
@@ -27,7 +27,7 @@ func resourceAwsServiceCatalogOrganizationsAccess() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogOrganizationsAccessCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationsAccessCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -42,7 +42,7 @@ func resourceAwsServiceCatalogOrganizationsAccessCreate(d *schema.ResourceData, 
 			return fmt.Errorf("error enabling Service Catalog AWS Organizations Access: %w", err)
 		}
 
-		return resourceAwsServiceCatalogOrganizationsAccessRead(d, meta)
+		return resourceOrganizationsAccessRead(d, meta)
 	}
 
 	_, err := conn.DisableAWSOrganizationsAccess(&servicecatalog.DisableAWSOrganizationsAccessInput{})
@@ -51,10 +51,10 @@ func resourceAwsServiceCatalogOrganizationsAccessCreate(d *schema.ResourceData, 
 		return fmt.Errorf("error disabling Service Catalog AWS Organizations Access: %w", err)
 	}
 
-	return resourceAwsServiceCatalogOrganizationsAccessRead(d, meta)
+	return resourceOrganizationsAccessRead(d, meta)
 }
 
-func resourceAwsServiceCatalogOrganizationsAccessRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationsAccessRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.OrganizationsAccessStable(conn)
@@ -83,7 +83,7 @@ func resourceAwsServiceCatalogOrganizationsAccessRead(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsServiceCatalogOrganizationsAccessDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationsAccessDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	// During create, if enabled = "true", then Enable Access and vice versa

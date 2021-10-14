@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOrganizationsPolicy() *schema.Resource {
+func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsOrganizationsPolicyCreate,
-		ReadContext:   resourceAwsOrganizationsPolicyRead,
-		UpdateContext: resourceAwsOrganizationsPolicyUpdate,
-		DeleteContext: resourceAwsOrganizationsPolicyDelete,
+		CreateContext: resourcePolicyCreate,
+		ReadContext:   resourcePolicyRead,
+		UpdateContext: resourcePolicyUpdate,
+		DeleteContext: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAwsOrganizationsPolicyImport,
 		},
@@ -60,7 +60,7 @@ func resourceAwsOrganizationsPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -103,10 +103,10 @@ func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(aws.StringValue(resp.Policy.PolicySummary.Id))
 
-	return resourceAwsOrganizationsPolicyRead(ctx, d, meta)
+	return resourcePolicyRead(ctx, d, meta)
 }
 
-func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -167,7 +167,7 @@ func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsOrganizationsPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.UpdatePolicyInput{
@@ -199,10 +199,10 @@ func resourceAwsOrganizationsPolicyUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	return resourceAwsOrganizationsPolicyRead(ctx, d, meta)
+	return resourcePolicyRead(ctx, d, meta)
 }
 
-func resourceAwsOrganizationsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.DeletePolicyInput{

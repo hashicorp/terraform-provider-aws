@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsOrganizationsOrganizationalUnits() *schema.Resource {
+func DataSourceOrganizationalUnits() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOrganizationsOrganizationalUnitsRead,
+		Read: dataSourceOrganizationalUnitsRead,
 
 		Schema: map[string]*schema.Schema{
 			"parent_id": {
@@ -42,7 +42,7 @@ func dataSourceAwsOrganizationsOrganizationalUnits() *schema.Resource {
 	}
 }
 
-func dataSourceAwsOrganizationsOrganizationalUnitsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOrganizationalUnitsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	parent_id := d.Get("parent_id").(string)

@@ -17,12 +17,12 @@ import (
 
 const organizationsPolicyTypeStatusDisabled = "DISABLED"
 
-func resourceAwsOrganizationsOrganization() *schema.Resource {
+func ResourceOrganization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsOrganizationsOrganizationCreate,
-		Read:   resourceAwsOrganizationsOrganizationRead,
-		Update: resourceAwsOrganizationsOrganizationUpdate,
-		Delete: resourceAwsOrganizationsOrganizationDelete,
+		Create: resourceOrganizationCreate,
+		Read:   resourceOrganizationRead,
+		Update: resourceOrganizationUpdate,
+		Delete: resourceOrganizationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -166,7 +166,7 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 	}
 }
 
-func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	createOpts := &organizations.CreateOrganizationInput{
@@ -223,10 +223,10 @@ func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceAwsOrganizationsOrganizationRead(d, meta)
+	return resourceOrganizationRead(d, meta)
 }
 
-func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
@@ -323,7 +323,7 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	if d.HasChange("aws_service_access_principals") {
@@ -407,10 +407,10 @@ func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceAwsOrganizationsOrganizationRead(d, meta)
+	return resourceOrganizationRead(d, meta)
 }
 
-func resourceAwsOrganizationsOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())

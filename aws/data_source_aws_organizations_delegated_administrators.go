@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsOrganizationsDelegatedAdministrators() *schema.Resource {
+func DataSourceDelegatedAdministrators() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceAwsOrganizationsDelegatedAdministratorsRead,
+		ReadWithoutTimeout: dataSourceDelegatedAdministratorsRead,
 		Schema: map[string]*schema.Schema{
 			"service_principal": {
 				Type:         schema.TypeString,
@@ -66,7 +66,7 @@ func dataSourceAwsOrganizationsDelegatedAdministrators() *schema.Resource {
 	}
 }
 
-func dataSourceAwsOrganizationsDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
 	input := &organizations.ListDelegatedAdministratorsInput{}
