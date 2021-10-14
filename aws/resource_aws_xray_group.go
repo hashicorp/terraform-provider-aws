@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/xray"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceGroup() *schema.Resource {
@@ -22,7 +23,7 @@ func ResourceGroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -38,8 +39,8 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -47,7 +48,7 @@ func ResourceGroup() *schema.Resource {
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).XRayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	input := &xray.CreateGroupInput{
 		GroupName:        aws.String(d.Get("group_name").(string)),
 		FilterExpression: aws.String(d.Get("filter_expression").(string)),
@@ -89,7 +90,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("group_name", group.Group.GroupName)
 	d.Set("filter_expression", group.Group.FilterExpression)
 
-	tags, err := keyvaluetags.XrayListTags(conn, arn)
+	tags, err := tftags.XrayListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for Xray Group (%q): %s", d.Id(), err)
 	}
@@ -125,7 +126,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.XrayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.XrayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
