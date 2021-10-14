@@ -89,7 +89,7 @@ func resourceAwsElasticacheUserCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("passwords"); ok {
-		input.Passwords = expandStringSet(v.(*schema.Set))
+		input.Passwords = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	// Tags are currently only supported in AWS Commercial.
@@ -176,7 +176,7 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if d.HasChange("passwords") {
-			req.Passwords = expandStringSet(d.Get("passwords").(*schema.Set))
+			req.Passwords = flex.ExpandStringSet(d.Get("passwords").(*schema.Set))
 			hasChange = true
 		}
 

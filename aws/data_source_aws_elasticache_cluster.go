@@ -171,8 +171,8 @@ func dataSourceAwsElastiCacheClusterRead(d *schema.ResourceData, meta interface{
 	d.Set("subnet_group_name", cluster.CacheSubnetGroupName)
 	d.Set("engine", cluster.Engine)
 	d.Set("engine_version", cluster.EngineVersion)
-	d.Set("security_group_names", flattenElastiCacheSecurityGroupNames(cluster.CacheSecurityGroups))
-	d.Set("security_group_ids", flattenElastiCacheSecurityGroupIds(cluster.SecurityGroups))
+	d.Set("security_group_names", flattenSecurityGroupNames(cluster.CacheSecurityGroups))
+	d.Set("security_group_ids", flattenSecurityGroupIDs(cluster.SecurityGroups))
 
 	if cluster.CacheParameterGroup != nil {
 		d.Set("parameter_group_name", cluster.CacheParameterGroup.CacheParameterGroupName)
