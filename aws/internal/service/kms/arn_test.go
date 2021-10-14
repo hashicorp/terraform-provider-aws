@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestAliasARNToKeyARN(t *testing.T) {

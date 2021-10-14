@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceAlias() *schema.Resource {
@@ -21,7 +22,7 @@ func DataSourceAlias() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateAwsKmsName,
+				ValidateFunc: validateAwsKMSName,
 			},
 			"target_key_arn": {
 				Type:     schema.TypeString,

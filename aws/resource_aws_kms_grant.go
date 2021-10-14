@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceGrant() *schema.Resource {
@@ -44,7 +45,7 @@ func ResourceGrant() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsKmsGrantName,
+				ValidateFunc: validateAwsKMSGrantName,
 			},
 			"key_id": {
 				Type:     schema.TypeString,
@@ -55,7 +56,7 @@ func ResourceGrant() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"operations": {
 				Type: schema.TypeSet,
@@ -95,7 +96,7 @@ func ResourceGrant() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"grant_creation_tokens": {
 				Type:     schema.TypeSet,
@@ -503,12 +504,12 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 	m := make(map[string]interface{})
 	if constraint.EncryptionContextEquals != nil {
 		if len(constraint.EncryptionContextEquals) > 0 {
-			m["encryption_context_equals"] = pointersMapToStringList(constraint.EncryptionContextEquals)
+			m["encryption_context_equals"] = verify.PointersMapToStringList(constraint.EncryptionContextEquals)
 		}
 	}
 	if constraint.EncryptionContextSubset != nil {
 		if len(constraint.EncryptionContextSubset) > 0 {
-			m["encryption_context_subset"] = pointersMapToStringList(constraint.EncryptionContextSubset)
+			m["encryption_context_subset"] = verify.PointersMapToStringList(constraint.EncryptionContextSubset)
 		}
 	}
 	constraints.Add(m)

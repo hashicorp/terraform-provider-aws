@@ -13,6 +13,7 @@ import (
 	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

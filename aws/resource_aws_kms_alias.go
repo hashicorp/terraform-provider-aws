@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceAlias() *schema.Resource {
@@ -40,7 +41,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateAwsKmsName,
+				ValidateFunc:  validateAwsKMSName,
 			},
 
 			"name_prefix": {
@@ -49,7 +50,7 @@ func ResourceAlias() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateAwsKmsName,
+				ValidateFunc:  validateAwsKMSName,
 			},
 
 			"target_key_arn": {
