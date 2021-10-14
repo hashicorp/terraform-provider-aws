@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 const testAccGameliftBuildPrefix = "tf_acc_build_"
@@ -62,13 +63,13 @@ func testSweepGameliftBuilds(region string) error {
 func TestAccAWSGameliftBuild_basic(t *testing.T) {
 	var conf gamelift.Build
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	resourceName := "aws_gamelift_build.test"
 
 	buildName := fmt.Sprintf("%s_%s", testAccGameliftBuildPrefix, rString)
 	uBuildName := fmt.Sprintf("%s_updated_%s", testAccGameliftBuildPrefix, rString)
 
-	region := testAccGetRegion()
+	region := acctest.Region()
 	g, err := testAccAWSGameliftSampleGame(region)
 
 	if tfresource.NotFound(err) {
@@ -86,11 +87,11 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
 		Steps: []resource.TestStep{
@@ -99,7 +100,7 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", buildName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
@@ -113,7 +114,7 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", uBuildName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
@@ -129,11 +130,11 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 func TestAccAWSGameliftBuild_tags(t *testing.T) {
 	var conf gamelift.Build
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	resourceName := "aws_gamelift_build.test"
 
 	buildName := fmt.Sprintf("%s_%s", testAccGameliftBuildPrefix, rString)
-	region := testAccGetRegion()
+	region := acctest.Region()
 	g, err := testAccAWSGameliftSampleGame(region)
 
 	if tfresource.NotFound(err) {
@@ -151,11 +152,11 @@ func TestAccAWSGameliftBuild_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
 		Steps: []resource.TestStep{
@@ -191,12 +192,12 @@ func TestAccAWSGameliftBuild_tags(t *testing.T) {
 func TestAccAWSGameliftBuild_disappears(t *testing.T) {
 	var conf gamelift.Build
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	resourceName := "aws_gamelift_build.test"
 
 	buildName := fmt.Sprintf("%s_%s", testAccGameliftBuildPrefix, rString)
 
-	region := testAccGetRegion()
+	region := acctest.Region()
 	g, err := testAccAWSGameliftSampleGame(region)
 
 	if tfresource.NotFound(err) {
@@ -214,11 +215,11 @@ func TestAccAWSGameliftBuild_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
 		Steps: []resource.TestStep{
@@ -312,7 +313,7 @@ func testAccPreCheckAWSGamelift(t *testing.T) {
 
 	_, err := conn.ListBuilds(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

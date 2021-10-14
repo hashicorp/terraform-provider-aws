@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -80,7 +81,7 @@ func listGameliftAliases(input *gamelift.ListAliasesInput, conn *gamelift.GameLi
 func TestAccAWSGameliftAlias_basic(t *testing.T) {
 	var conf gamelift.Alias
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	resourceName := "aws_gamelift_alias.test"
 
 	aliasName := fmt.Sprintf("tf_acc_alias_%s", rString)
@@ -93,11 +94,11 @@ func TestAccAWSGameliftAlias_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
@@ -105,7 +106,7 @@ func TestAccAWSGameliftAlias_basic(t *testing.T) {
 				Config: testAccAWSGameliftAliasBasicConfig(aliasName, description, message),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftAliasExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/alias-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/alias-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.message", message),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "TERMINAL"),
@@ -123,7 +124,7 @@ func TestAccAWSGameliftAlias_basic(t *testing.T) {
 				Config: testAccAWSGameliftAliasBasicConfig(uAliasName, uDescription, uMessage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftAliasExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.message", uMessage),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "TERMINAL"),
@@ -140,15 +141,15 @@ func TestAccAWSGameliftAlias_tags(t *testing.T) {
 	var conf gamelift.Alias
 
 	resourceName := "aws_gamelift_alias.test"
-	aliasName := acctest.RandomWithPrefix("tf-acc-alias")
+	aliasName := sdkacctest.RandomWithPrefix("tf-acc-alias")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
@@ -189,14 +190,14 @@ func TestAccAWSGameliftAlias_tags(t *testing.T) {
 func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 	var conf gamelift.Alias
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 
 	aliasName := fmt.Sprintf("tf_acc_alias_%s", rString)
 	description := fmt.Sprintf("tf test description %s", rString)
 	fleetName := fmt.Sprintf("tf_acc_fleet_%s", rString)
 	buildName := fmt.Sprintf("tf_acc_build_%s", rString)
 
-	region := testAccGetRegion()
+	region := acctest.Region()
 	g, err := testAccAWSGameliftSampleGame(region)
 
 	if tfresource.NotFound(err) {
@@ -218,11 +219,11 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
@@ -231,7 +232,7 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 					fleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftAliasExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/alias-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/alias-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_strategy.0.fleet_id"),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "SIMPLE"),
@@ -251,7 +252,7 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 func TestAccAWSGameliftAlias_disappears(t *testing.T) {
 	var conf gamelift.Alias
 
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	resourceName := "aws_gamelift_alias.test"
 
 	aliasName := fmt.Sprintf("tf_acc_alias_%s", rString)
@@ -260,11 +261,11 @@ func TestAccAWSGameliftAlias_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheckAWSGamelift(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
