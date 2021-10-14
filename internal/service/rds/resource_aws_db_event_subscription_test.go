@@ -19,6 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func init() {
@@ -342,7 +349,7 @@ func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		output, err := finder.EventSubscriptionByID(conn, rs.Primary.ID)
+		output, err := tfrds.FindEventSubscriptionByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -362,7 +369,7 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.EventSubscriptionByID(conn, rs.Primary.ID)
+		_, err := tfrds.FindEventSubscriptionByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

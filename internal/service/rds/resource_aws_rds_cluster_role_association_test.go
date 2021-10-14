@@ -16,6 +16,47 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestAccAWSRDSClusterRoleAssociation_basic(t *testing.T) {
@@ -136,7 +177,7 @@ func testAccCheckAWSRDSClusterRoleAssociationExists(resourceName string, v *rds.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		role, err := finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+		role, err := tfrds.FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
 		if err != nil {
 			return err
@@ -162,7 +203,7 @@ func testAccCheckAWSRDSClusterRoleAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+		_, err = tfrds.FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
 		if tfresource.NotFound(err) {
 			continue

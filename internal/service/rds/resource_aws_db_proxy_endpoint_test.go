@@ -16,6 +16,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestAccAWSDBProxyEndpoint_basic(t *testing.T) {
@@ -232,7 +239,7 @@ func testAccCheckAWSDBProxyEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, rs.Primary.ID)
+		dbProxyEndpoint, err := tfrds.FindDBProxyEndpoint(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 			continue
@@ -263,7 +270,7 @@ func testAccCheckAWSDBProxyEndpointExists(n string, v *rds.DBProxyEndpoint) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, rs.Primary.ID)
+		dbProxyEndpoint, err := tfrds.FindDBProxyEndpoint(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

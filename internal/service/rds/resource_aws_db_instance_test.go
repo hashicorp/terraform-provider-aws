@@ -20,6 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func init() {
@@ -2714,7 +2721,7 @@ func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.DBInstanceByID(conn, rs.Primary.ID)
+		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -2939,7 +2946,7 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
+		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -2959,7 +2966,7 @@ func testAccCheckAWSDBInstanceEc2ClassicDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.DBInstanceByID(conn, rs.Primary.ID)
+		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -2989,7 +2996,7 @@ func testAccCheckAWSDBInstanceEc2ClassicExists(resourceName string, v *rds.DBIns
 
 		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
 
-		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
+		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

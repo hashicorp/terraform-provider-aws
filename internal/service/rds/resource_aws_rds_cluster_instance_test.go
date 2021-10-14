@@ -18,6 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
@@ -961,7 +968,7 @@ func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
+		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -981,7 +988,7 @@ func testAccCheckAWSClusterInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.DBInstanceByID(conn, rs.Primary.ID)
+		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

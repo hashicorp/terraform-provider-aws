@@ -17,6 +17,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func ResourceProxyEndpoint() *schema.Resource {
@@ -117,7 +142,7 @@ func resourceProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(strings.Join([]string{dbProxyName, dbProxyEndpointName}, "/"))
 
-	if _, err := waiter.DBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := tfrds.waitDBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -129,7 +154,7 @@ func resourceProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, d.Id())
+	dbProxyEndpoint, err := tfrds.FindDBProxyEndpoint(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
@@ -203,7 +228,7 @@ func resourceProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("Error updating DB Proxy Endpoint: %w", err)
 		}
 
-		if _, err := waiter.DBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := tfrds.waitDBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become modified: %w", d.Id(), err)
 		}
 	}
@@ -236,7 +261,7 @@ func resourceProxyEndpointDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error Deleting DB Proxy Endpoint: %w", err)
 	}
 
-	if _, err := waiter.DBProxyEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := tfrds.waitDBProxyEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 			return nil
 		}

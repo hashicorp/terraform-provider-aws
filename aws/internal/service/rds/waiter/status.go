@@ -7,19 +7,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 const (
 	// ProxyEndpoint NotFound
-	ProxyEndpointStatusNotFound = "NotFound"
+	proxyEndpointStatusNotFound = "NotFound"
 
 	// ProxyEndpoint Unknown
-	ProxyEndpointStatusUnknown = "Unknown"
+	proxyEndpointStatusUnknown = "Unknown"
 )
 
-func EventSubscriptionStatus(conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusEventSubscription(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.EventSubscriptionByID(conn, id)
+		output, err := tfrds.FindEventSubscriptionByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -33,26 +40,26 @@ func EventSubscriptionStatus(conn *rds.RDS, id string) resource.StateRefreshFunc
 	}
 }
 
-// DBProxyEndpointStatus fetches the ProxyEndpoint and its Status
-func DBProxyEndpointStatus(conn *rds.RDS, id string) resource.StateRefreshFunc {
+// statusDBProxyEndpoint fetches the ProxyEndpoint and its Status
+func statusDBProxyEndpoint(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DBProxyEndpoint(conn, id)
+		output, err := tfrds.FindDBProxyEndpoint(conn, id)
 
 		if err != nil {
-			return nil, ProxyEndpointStatusUnknown, err
+			return nil, proxyEndpointStatusUnknown, err
 		}
 
 		if output == nil {
-			return nil, ProxyEndpointStatusNotFound, nil
+			return nil, proxyEndpointStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-func DBClusterRoleStatus(conn *rds.RDS, dbClusterID, roleARN string) resource.StateRefreshFunc {
+func statusDBClusterRole(conn *rds.RDS, dbClusterID, roleARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
+		output, err := tfrds.FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -66,9 +73,9 @@ func DBClusterRoleStatus(conn *rds.RDS, dbClusterID, roleARN string) resource.St
 	}
 }
 
-func DBInstanceStatus(conn *rds.RDS, id string) resource.StateRefreshFunc {
+func statusDBInstance(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DBInstanceByID(conn, id)
+		output, err := tfrds.FindDBInstanceByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

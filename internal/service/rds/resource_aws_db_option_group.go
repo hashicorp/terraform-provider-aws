@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceOptionGroup() *schema.Resource {
@@ -284,7 +285,7 @@ func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[DEBUG] Modify DB Option Group: %s", modifyOpts)
 
-			err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+			err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 				_, err := conn.ModifyOptionGroup(modifyOpts)
 				if err != nil {
 					// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE

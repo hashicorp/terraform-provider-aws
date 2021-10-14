@@ -15,6 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
@@ -118,7 +125,7 @@ func testAccCheckAWSDBProxyTargetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		dbProxyTarget, err := finder.DBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+		dbProxyTarget, err := tfrds.FindDBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
 
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			continue
@@ -163,7 +170,7 @@ func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource
 			return err
 		}
 
-		dbProxyTarget, err := finder.DBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+		dbProxyTarget, err := tfrds.FindDBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
 
 		if err != nil {
 			return err

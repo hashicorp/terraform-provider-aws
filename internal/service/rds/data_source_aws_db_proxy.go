@@ -9,6 +9,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func DataSourceProxy() *schema.Resource {
@@ -93,7 +100,7 @@ func dataSourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	name := d.Get("name").(string)
-	dbProxy, err := finder.DBProxyByName(conn, name)
+	dbProxy, err := tfrds.FindDBProxyByName(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error reading RDS DB Proxy (%s): %w", name, err)
