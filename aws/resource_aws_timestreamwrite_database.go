@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsTimestreamWriteDatabase() *schema.Resource {
+func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsTimestreamWriteDatabaseCreate,
-		ReadWithoutTimeout:   resourceAwsTimestreamWriteDatabaseRead,
-		UpdateWithoutTimeout: resourceAwsTimestreamWriteDatabaseUpdate,
-		DeleteWithoutTimeout: resourceAwsTimestreamWriteDatabaseDelete,
+		CreateWithoutTimeout: resourceDatabaseCreate,
+		ReadWithoutTimeout:   resourceDatabaseRead,
+		UpdateWithoutTimeout: resourceDatabaseUpdate,
+		DeleteWithoutTimeout: resourceDatabaseDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -68,7 +68,7 @@ func resourceAwsTimestreamWriteDatabase() *schema.Resource {
 	}
 }
 
-func resourceAwsTimestreamWriteDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -99,10 +99,10 @@ func resourceAwsTimestreamWriteDatabaseCreate(ctx context.Context, d *schema.Res
 
 	d.SetId(aws.StringValue(resp.Database.DatabaseName))
 
-	return resourceAwsTimestreamWriteDatabaseRead(ctx, d, meta)
+	return resourceDatabaseRead(ctx, d, meta)
 }
 
-func resourceAwsTimestreamWriteDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -155,7 +155,7 @@ func resourceAwsTimestreamWriteDatabaseRead(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func resourceAwsTimestreamWriteDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn
 
 	if d.HasChange("kms_key_id") {
@@ -179,10 +179,10 @@ func resourceAwsTimestreamWriteDatabaseUpdate(ctx context.Context, d *schema.Res
 		}
 	}
 
-	return resourceAwsTimestreamWriteDatabaseRead(ctx, d, meta)
+	return resourceDatabaseRead(ctx, d, meta)
 }
 
-func resourceAwsTimestreamWriteDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn
 
 	input := &timestreamwrite.DeleteDatabaseInput{
