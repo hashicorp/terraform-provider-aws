@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepSesIdentities(region, identityType string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).sesconn
+	conn := client.(*conns.AWSClient).SESConn
 	input := &ses.ListIdentitiesInput{
 		IdentityType: aws.String(identityType),
 	}
@@ -128,7 +129,7 @@ func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 }
 
 func testAccCheckAwsSESDomainIdentityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_domain_identity" {
@@ -167,7 +168,7 @@ func testAccCheckAwsSESDomainIdentityExists(n string) resource.TestCheckFunc {
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -190,7 +191,7 @@ func testAccCheckAwsSESDomainIdentityExists(n string) resource.TestCheckFunc {
 
 func testAccCheckAwsSESDomainIdentityDisappears(identity string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		input := &ses.DeleteIdentityInput{
 			Identity: aws.String(identity),
@@ -205,12 +206,12 @@ func testAccCheckAwsSESDomainIdentityDisappears(identity string) resource.TestCh
 func testAccCheckAwsSESDomainIdentityArn(n string, domain string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		awsClient := acctest.Provider.Meta().(*AWSClient)
+		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
 
 		expected := arn.ARN{
-			AccountID: awsClient.accountid,
-			Partition: awsClient.partition,
-			Region:    awsClient.region,
+			AccountID: awsClient.AccountID,
+			Partition: awsClient.Partition,
+			Region:    awsClient.Region,
 			Resource:  fmt.Sprintf("identity/%s", strings.TrimSuffix(domain, ".")),
 			Service:   "ses",
 		}
@@ -224,7 +225,7 @@ func testAccCheckAwsSESDomainIdentityArn(n string, domain string) resource.TestC
 }
 
 func testAccPreCheckAWSSES(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	input := &ses.ListIdentitiesInput{}
 

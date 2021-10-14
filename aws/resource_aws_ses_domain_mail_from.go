@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesDomainMailFrom() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceAwsSesDomainMailFrom() *schema.Resource {
 }
 
 func resourceAwsSesDomainMailFromSet(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	behaviorOnMxFailure := d.Get("behavior_on_mx_failure").(string)
 	domainName := d.Get("domain").(string)
@@ -62,7 +63,7 @@ func resourceAwsSesDomainMailFromSet(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesDomainMailFromRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
 
@@ -98,7 +99,7 @@ func resourceAwsSesDomainMailFromRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSesDomainMailFromDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	domainName := d.Id()
 

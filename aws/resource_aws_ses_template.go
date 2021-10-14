@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesTemplate() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceAwsSesTemplate() *schema.Resource {
 	}
 }
 func resourceAwsSesTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	templateName := d.Get("name").(string)
 
@@ -86,7 +87,7 @@ func resourceAwsSesTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 	input := ses.GetTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}
@@ -108,10 +109,10 @@ func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("text", gto.Template.TextPart)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ses",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("template/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -120,7 +121,7 @@ func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsSesTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	templateName := d.Id()
 
@@ -154,7 +155,7 @@ func resourceAwsSesTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSesTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 	input := ses.DeleteTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}

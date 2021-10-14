@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesActiveReceiptRuleSet() *schema.Resource {
@@ -33,7 +34,7 @@ func resourceAwsSesActiveReceiptRuleSet() *schema.Resource {
 }
 
 func resourceAwsSesActiveReceiptRuleSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	ruleSetName := d.Get("rule_set_name").(string)
 
@@ -52,7 +53,7 @@ func resourceAwsSesActiveReceiptRuleSetUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSesActiveReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
 
@@ -75,10 +76,10 @@ func resourceAwsSesActiveReceiptRuleSetRead(d *schema.ResourceData, meta interfa
 	d.Set("rule_set_name", response.Metadata.Name)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ses",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-rule-set/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -87,7 +88,7 @@ func resourceAwsSesActiveReceiptRuleSetRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSesActiveReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	deleteOpts := &ses.SetActiveReceiptRuleSetInput{
 		RuleSetName: nil,

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
@@ -144,7 +145,7 @@ func testAccCheckAwsSESDomainMailFromExists(n string) resource.TestCheckFunc {
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		params := &ses.GetIdentityMailFromDomainAttributesInput{
 			Identities: []*string{
@@ -166,7 +167,7 @@ func testAccCheckAwsSESDomainMailFromExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckSESDomainMailFromDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_domain_mail_from" {
@@ -191,7 +192,7 @@ func testAccCheckSESDomainMailFromDestroy(s *terraform.State) error {
 
 func testAccCheckAwsSESDomainMailFromDisappears(identity string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		input := &ses.SetIdentityMailFromDomainInput{
 			Identity:       aws.String(identity),

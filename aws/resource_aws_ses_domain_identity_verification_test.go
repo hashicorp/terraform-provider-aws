@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsSesDomainIdentityDomainFromEnv(t *testing.T) string {
@@ -90,7 +91,7 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*AWSClient).sesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -112,9 +113,9 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 		}
 
 		expected := arn.ARN{
-			AccountID: acctest.Provider.Meta().(*AWSClient).accountid,
-			Partition: acctest.Provider.Meta().(*AWSClient).partition,
-			Region:    acctest.Provider.Meta().(*AWSClient).region,
+			AccountID: acctest.Provider.Meta().(*conns.AWSClient).AccountID,
+			Partition: acctest.Provider.Meta().(*conns.AWSClient).Partition,
+			Region:    acctest.Provider.Meta().(*conns.AWSClient).Region,
 			Resource:  fmt.Sprintf("identity/%s", domain),
 			Service:   "ses",
 		}

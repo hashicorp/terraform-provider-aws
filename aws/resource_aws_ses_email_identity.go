@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSesEmailIdentity() *schema.Resource {
@@ -38,7 +39,7 @@ func resourceAwsSesEmailIdentity() *schema.Resource {
 }
 
 func resourceAwsSesEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
@@ -58,7 +59,7 @@ func resourceAwsSesEmailIdentityCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSesEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	email := d.Id()
 	d.Set("email", email)
@@ -83,9 +84,9 @@ func resourceAwsSesEmailIdentityRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 		Service:   "ses",
 	}.String()
@@ -94,7 +95,7 @@ func resourceAwsSesEmailIdentityRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
+	conn := meta.(*conns.AWSClient).SESConn
 
 	email := d.Get("email").(string)
 
