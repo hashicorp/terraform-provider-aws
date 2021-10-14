@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDataSourceCloudWatchEvent_Connection_basic(t *testing.T) {
+func TestAccCloudWatchEventsConnectionDataSource_Connection_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudwatch_event_connection.test"
 	resourceName := "aws_cloudwatch_event_connection.api_key"
 

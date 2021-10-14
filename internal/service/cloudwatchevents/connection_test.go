@@ -68,7 +68,7 @@ func sweepConnection(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudWatchEventConnection_apiKey(t *testing.T) {
+func TestAccCloudWatchEventsConnection_apiKey(t *testing.T) {
 	var v1, v2, v3 events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
@@ -150,7 +150,7 @@ func TestAccAWSCloudWatchEventConnection_apiKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventConnection_basic(t *testing.T) {
+func TestAccCloudWatchEventsConnection_basic(t *testing.T) {
 	var v1, v2, v3 events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "BASIC"
@@ -232,7 +232,7 @@ func TestAccAWSCloudWatchEventConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventConnection_oAuth(t *testing.T) {
+func TestAccCloudWatchEventsConnection_oAuth(t *testing.T) {
 	var v1, v2, v3 events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "OAUTH_CLIENT_CREDENTIALS"
@@ -413,7 +413,7 @@ func TestAccAWSCloudWatchEventConnection_oAuth(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventConnection_invocationHttpParameters(t *testing.T) {
+func TestAccCloudWatchEventsConnection_invocationHTTPParameters(t *testing.T) {
 	var v1, v2, v3 events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
@@ -586,7 +586,7 @@ func TestAccAWSCloudWatchEventConnection_invocationHttpParameters(t *testing.T) 
 	})
 }
 
-func TestAccAWSCloudWatchEventConnection_disappears(t *testing.T) {
+func TestAccCloudWatchEventsConnection_disappears(t *testing.T) {
 	var v events.DescribeConnectionOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	authorizationType := "API_KEY"
