@@ -7,7 +7,6 @@ import (
 	serverlessrepository "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func findApplication(conn *serverlessrepository.ServerlessApplicationRepository, applicationID, version string) (*serverlessrepository.GetApplicationOutput, error) {
