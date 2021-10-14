@@ -27,11 +27,11 @@ func init() {
 	resource.AddTestSweepers("aws_launch_configuration", &resource.Sweeper{
 		Name:         "aws_launch_configuration",
 		Dependencies: []string{"aws_autoscaling_group"},
-		F:            testSweepLaunchConfigurations,
+		F:            sweepLaunchConfigurations,
 	})
 }
 
-func testSweepLaunchConfigurations(region string) error {
+func sweepLaunchConfigurations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -79,12 +79,12 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfig(),
+				Config: testAccLaunchConfigurationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(`launchConfiguration:.+`)),
 				),
 			},
@@ -106,12 +106,12 @@ func TestAccAWSLaunchConfiguration_Name_Generated(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigNameGenerated(),
+				Config: testAccLaunchConfigurationNameGeneratedConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
@@ -134,12 +134,12 @@ func TestAccAWSLaunchConfiguration_NamePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigNamePrefix("tf-acc-test-prefix-"),
+				Config: testAccLaunchConfigurationNamePrefixConfig("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
@@ -162,13 +162,13 @@ func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfig(),
+				Config: testAccLaunchConfigurationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					testAccCheckAWSLaunchConfigurationAttributes(&conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationAttributes(&conf),
 					resource.TestMatchResourceAttr(resourceName, "image_id", regexp.MustCompile("^ami-[0-9a-z]+")),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "m1.small"),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
@@ -194,12 +194,12 @@ func TestAccAWSLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rName),
+				Config: testAccLaunchConfigurationWithInstanceStoreAMIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 				),
 			},
 			{
@@ -223,21 +223,21 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_AmiDisappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceCopiedAmi(rName),
+				Config: testAccLaunchConfigurationWithRootBlockDeviceCopiedAMIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckAmiExists(amiCopyResourceName, &ami),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMI(), amiCopyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName, 10),
+				Config: testAccLaunchConfigurationWithRootBlockDeviceVolumeSizeConfig(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 				),
 			},
 		},
@@ -253,12 +253,12 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_VolumeSize(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName, 11),
+				Config: testAccLaunchConfigurationWithRootBlockDeviceVolumeSizeConfig(rName, 11),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
 				),
 			},
@@ -269,9 +269,9 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_VolumeSize(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
 			},
 			{
-				Config: testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName, 20),
+				Config: testAccLaunchConfigurationWithRootBlockDeviceVolumeSizeConfig(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "20"),
 				),
 			},
@@ -288,12 +288,12 @@ func TestAccAWSLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigWithEncryptedRootBlockDevice(rInt),
+				Config: testAccLaunchConfigurationWithEncryptedRootBlockDeviceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.encrypted", "true"),
 				),
 			},
@@ -315,12 +315,12 @@ func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationWithSpotPriceConfig(),
+				Config: testAccLaunchConfigurationWithSpotPriceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 				),
 			},
@@ -345,14 +345,14 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt),
+				Config: testAccLaunchConfigurationConfig_withVPCClassicLink(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					acctest.CheckVPCExists("aws_vpc.test", &vpc),
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckSecurityGroupExists("aws_security_group.test", &group),
 				),
 			},
 			{
@@ -373,12 +373,12 @@ func TestAccAWSLaunchConfiguration_withIAMProfile(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfig_withIAMProfile(rInt),
+				Config: testAccLaunchConfigurationConfig_withIAMProfile(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 				),
 			},
 			{
@@ -399,13 +399,13 @@ func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationWithEncryption(),
+				Config: testAccLaunchConfigurationWithEncryption(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.test", &conf),
-					testAccCheckAWSLaunchConfigurationWithEncryption(&conf),
+					testAccCheckLaunchConfigurationExists("aws_launch_configuration.test", &conf),
+					testAccCheckLaunchConfigurationWithEncryption(&conf),
 				),
 			},
 			{
@@ -426,12 +426,12 @@ func TestAccAWSLaunchConfiguration_withGP3(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationWithGP3(),
+				Config: testAccLaunchConfigurationWithGP3(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.test", &conf),
+					testAccCheckLaunchConfigurationExists("aws_launch_configuration.test", &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_type": "gp3",
 					}),
@@ -458,12 +458,12 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationWithEncryption(),
+				Config: testAccLaunchConfigurationWithEncryption(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "9",
 					}),
@@ -476,9 +476,9 @@ func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
 			},
 			{
-				Config: testAccAWSLaunchConfigurationWithEncryptionUpdated(),
+				Config: testAccLaunchConfigurationWithEncryptionUpdated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "10",
 					}),
@@ -497,12 +497,12 @@ func TestAccAWSLaunchConfiguration_metadataOptions(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigMetadataOptions(rName),
+				Config: testAccLaunchConfigurationMetadataOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
@@ -527,12 +527,12 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt),
+				Config: testAccLaunchConfigurationEBSNoDeviceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"device_name": "/dev/sda2",
@@ -558,12 +558,12 @@ func TestAccAWSLaunchConfiguration_userData(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		CheckDestroy: testAccCheckLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchConfigurationConfig_userData(),
+				Config: testAccLaunchConfigurationConfig_userData(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
 				),
 			},
@@ -574,9 +574,9 @@ func TestAccAWSLaunchConfiguration_userData(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
 			},
 			{
-				Config: testAccAWSLaunchConfigurationConfig_userDataBase64(),
+				Config: testAccLaunchConfigurationConfig_userDataBase64(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
+					testAccCheckLaunchConfigurationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
 				),
 			},
@@ -584,7 +584,7 @@ func TestAccAWSLaunchConfiguration_userData(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSLaunchConfigurationWithEncryption(conf *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
+func testAccCheckLaunchConfigurationWithEncryption(conf *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Map out the block devices by name, which should be unique.
 		blockDevices := make(map[string]*autoscaling.BlockDeviceMapping)
@@ -610,7 +610,7 @@ func testAccCheckAWSLaunchConfigurationWithEncryption(conf *autoscaling.LaunchCo
 	}
 }
 
-func testAccCheckAWSLaunchConfigurationDestroy(s *terraform.State) error {
+func testAccCheckLaunchConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -639,7 +639,7 @@ func testAccCheckAWSLaunchConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSLaunchConfigurationAttributes(conf *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
+func testAccCheckLaunchConfigurationAttributes(conf *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(*conf.LaunchConfigurationName, "terraform-") && !strings.HasPrefix(*conf.LaunchConfigurationName, "tf-acc-test-") {
 			return fmt.Errorf("Bad name: %s", *conf.LaunchConfigurationName)
@@ -679,7 +679,7 @@ func testAccCheckAWSLaunchConfigurationAttributes(conf *autoscaling.LaunchConfig
 	}
 }
 
-func testAccCheckAWSLaunchConfigurationExists(n string, res *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
+func testAccCheckLaunchConfigurationExists(n string, res *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -712,7 +712,7 @@ func testAccCheckAWSLaunchConfigurationExists(n string, res *autoscaling.LaunchC
 	}
 }
 
-func testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rName string) string {
+func testAccLaunchConfigurationWithInstanceStoreAMIConfig(rName string) string {
 	return acctest.ConfigCompose(testAccLatestAmazonLinuxPvInstanceStoreAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name     = %[1]q
@@ -724,7 +724,7 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceCopiedAmi(rName string) string {
+func testAccLaunchConfigurationWithRootBlockDeviceCopiedAMIConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -746,7 +746,7 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName string, volumeSize int) string {
+func testAccLaunchConfigurationWithRootBlockDeviceVolumeSizeConfig(rName string, volumeSize int) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
@@ -760,7 +760,7 @@ resource "aws_launch_configuration" "test" {
 `, rName, volumeSize))
 }
 
-func testAccAWSLaunchConfigurationConfigWithEncryptedRootBlockDevice(rInt int) string {
+func testAccLaunchConfigurationWithEncryptedRootBlockDeviceConfig(rInt int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -799,7 +799,7 @@ resource "aws_launch_configuration" "test" {
 `, rInt))
 }
 
-func testAccAWSLaunchConfigurationConfigMetadataOptions(rName string) string {
+func testAccLaunchConfigurationMetadataOptionsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
@@ -816,7 +816,7 @@ resource "aws_launch_configuration" "test" {
 `, rName))
 }
 
-func testAccAWSLaunchConfigurationConfig() string {
+func testAccLaunchConfigurationConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name                        = "tf-acc-test-%d"
@@ -850,7 +850,7 @@ resource "aws_launch_configuration" "test" {
 `, sdkacctest.RandInt()))
 }
 
-func testAccAWSLaunchConfigurationWithSpotPriceConfig() string {
+func testAccLaunchConfigurationWithSpotPriceConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = "tf-acc-test-%d"
@@ -861,7 +861,7 @@ resource "aws_launch_configuration" "test" {
 `, sdkacctest.RandInt()))
 }
 
-func testAccAWSLaunchConfigurationConfigNameGenerated() string {
+func testAccLaunchConfigurationNameGeneratedConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -870,7 +870,7 @@ resource "aws_launch_configuration" "test" {
 `)
 }
 
-func testAccAWSLaunchConfigurationConfigNamePrefix(namePrefix string) string {
+func testAccLaunchConfigurationNamePrefixConfig(namePrefix string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name_prefix   = %[1]q
@@ -880,7 +880,7 @@ resource "aws_launch_configuration" "test" {
 `, namePrefix))
 }
 
-func testAccAWSLaunchConfigurationWithEncryption() string {
+func testAccLaunchConfigurationWithEncryption() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -901,7 +901,7 @@ resource "aws_launch_configuration" "test" {
 `)
 }
 
-func testAccAWSLaunchConfigurationWithGP3() string {
+func testAccLaunchConfigurationWithGP3() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -924,7 +924,7 @@ resource "aws_launch_configuration" "test" {
 `)
 }
 
-func testAccAWSLaunchConfigurationWithEncryptionUpdated() string {
+func testAccLaunchConfigurationWithEncryptionUpdated() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -945,7 +945,7 @@ resource "aws_launch_configuration" "test" {
 `)
 }
 
-func testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt int) string {
+func testAccLaunchConfigurationConfig_withVPCClassicLink(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block         = "10.0.0.0/16"
@@ -972,7 +972,7 @@ resource "aws_launch_configuration" "test" {
 `, rInt))
 }
 
-func testAccAWSLaunchConfigurationConfig_withIAMProfile(rInt int) string {
+func testAccLaunchConfigurationConfig_withIAMProfile(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "tf-acc-test-%[1]d"
@@ -1007,7 +1007,7 @@ resource "aws_launch_configuration" "test" {
 `, rInt))
 }
 
-func testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt int) string {
+func testAccLaunchConfigurationEBSNoDeviceConfig(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name_prefix   = "tf-acc-test-%d"
@@ -1022,7 +1022,7 @@ resource "aws_launch_configuration" "test" {
 `, rInt))
 }
 
-func testAccAWSLaunchConfigurationConfig_userData() string {
+func testAccLaunchConfigurationConfig_userData() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -1033,7 +1033,7 @@ resource "aws_launch_configuration" "test" {
 `)
 }
 
-func testAccAWSLaunchConfigurationConfig_userDataBase64() string {
+func testAccLaunchConfigurationConfig_userDataBase64() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_launch_configuration" "test" {
   image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -1109,7 +1109,7 @@ data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
 `
 }
 
-func testAccCheckAWSSecurityGroupExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckSecurityGroupExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

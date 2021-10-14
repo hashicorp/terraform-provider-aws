@@ -29,7 +29,7 @@ func TestAccAWSASGNotification_basic(t *testing.T) {
 				Config: testAccASGNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
-					testAccCheckAWSASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
+					testAccCheckASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
 				),
 			},
 		},
@@ -51,7 +51,7 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 				Config: testAccASGNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName}, &asgn),
-					testAccCheckAWSASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
+					testAccCheckASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
 				),
 			},
 
@@ -59,7 +59,7 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 				Config: testAccASGNotificationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckASGNotificationExists("aws_autoscaling_notification.example", []string{"foobar1-terraform-test-" + rName, "barfoo-terraform-test-" + rName}, &asgn),
-					testAccCheckAWSASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
+					testAccCheckASGNotificationAttributes("aws_autoscaling_notification.example", &asgn),
 				),
 			},
 		},
@@ -103,7 +103,7 @@ func TestAccAWSASGNotification_Pagination(t *testing.T) {
 							"foobar3-terraform-test-18",
 							"foobar3-terraform-test-19",
 						}, &asgn),
-					testAccCheckAWSASGNotificationAttributes(resourceName, &asgn),
+					testAccCheckASGNotificationAttributes(resourceName, &asgn),
 				),
 			},
 		},
@@ -163,7 +163,7 @@ func testAccCheckASGNDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSASGNotificationAttributes(n string, asgn *autoscaling.DescribeNotificationConfigurationsOutput) resource.TestCheckFunc {
+func testAccCheckASGNotificationAttributes(n string, asgn *autoscaling.DescribeNotificationConfigurationsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

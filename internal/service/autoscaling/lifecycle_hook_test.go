@@ -20,10 +20,10 @@ func TestAccAWSAutoscalingLifecycleHook_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingLifecycleHookDestroy,
+		CheckDestroy: testAccCheckLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingLifecycleHookConfig(resourceName),
+				Config: testAccLifecycleHookConfig(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecycleHookExists("aws_autoscaling_lifecycle_hook.foobar"),
 					resource.TestCheckResourceAttr("aws_autoscaling_lifecycle_hook.foobar", "autoscaling_group_name", resourceName),
@@ -35,7 +35,7 @@ func TestAccAWSAutoscalingLifecycleHook_basic(t *testing.T) {
 			{
 				ResourceName:      "aws_autoscaling_lifecycle_hook.foobar",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingLifecycleHookImportStateIdFunc("aws_autoscaling_lifecycle_hook.foobar"),
+				ImportStateIdFunc: testAccLifecycleHookImportStateIdFunc("aws_autoscaling_lifecycle_hook.foobar"),
 				ImportStateVerify: true,
 			},
 		},
@@ -49,10 +49,10 @@ func TestAccAWSAutoscalingLifecycleHook_omitDefaultResult(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingLifecycleHookDestroy,
+		CheckDestroy: testAccCheckLifecycleHookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingLifecycleHookConfig_omitDefaultResult(rName, rInt),
+				Config: testAccLifecycleHookConfig_omitDefaultResult(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecycleHookExists("aws_autoscaling_lifecycle_hook.foobar"),
 					resource.TestCheckResourceAttr("aws_autoscaling_lifecycle_hook.foobar", "default_result", "ABANDON"),
@@ -91,7 +91,7 @@ func checkLifecycleHookExistsByName(asgName, hookName string) error {
 	return nil
 }
 
-func testAccCheckAWSAutoscalingLifecycleHookDestroy(s *terraform.State) error {
+func testAccCheckLifecycleHookDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -117,7 +117,7 @@ func testAccCheckAWSAutoscalingLifecycleHookDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAutoscalingLifecycleHookImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccLifecycleHookImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -128,7 +128,7 @@ func testAccAWSAutoscalingLifecycleHookImportStateIdFunc(resourceName string) re
 	}
 }
 
-func testAccAWSAutoscalingLifecycleHookConfig(name string) string {
+func testAccLifecycleHookConfig(name string) string {
 	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"
@@ -227,7 +227,7 @@ EOF
 `, name, name)
 }
 
-func testAccAWSAutoscalingLifecycleHookConfig_omitDefaultResult(name string, rInt int) string {
+func testAccLifecycleHookConfig_omitDefaultResult(name string, rInt int) string {
 	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
   name          = "%s"

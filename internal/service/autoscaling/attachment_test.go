@@ -21,36 +21,36 @@ func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutocalingAttachmentDestroy,
+		CheckDestroy: testAccCheckAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingAttachment_elb(rInt),
+				Config: testAccAttachment_elb(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingElbAttachmentExists("aws_autoscaling_group.asg", 0),
+					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 0),
 				),
 			},
 			{
-				Config: testAccAWSAutoscalingAttachment_elb_associated(rInt),
+				Config: testAccAttachment_elb_associated(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingElbAttachmentExists("aws_autoscaling_group.asg", 1),
+					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 1),
 				),
 			},
 			{
-				Config: testAccAWSAutoscalingAttachment_elb_double_associated(rInt),
+				Config: testAccAttachment_elb_double_associated(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingElbAttachmentExists("aws_autoscaling_group.asg", 2),
+					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 2),
 				),
 			},
 			{
-				Config: testAccAWSAutoscalingAttachment_elb_associated(rInt),
+				Config: testAccAttachment_elb_associated(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingElbAttachmentExists("aws_autoscaling_group.asg", 1),
+					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 1),
 				),
 			},
 			{
-				Config: testAccAWSAutoscalingAttachment_elb(rInt),
+				Config: testAccAttachment_elb(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingElbAttachmentExists("aws_autoscaling_group.asg", 0),
+					testAccCheckAutocalingELBAttachmentExists("aws_autoscaling_group.asg", 0),
 				),
 			},
 		},
@@ -65,43 +65,43 @@ func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutocalingAttachmentDestroy,
+		CheckDestroy: testAccCheckAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingAttachment_alb(rInt),
+				Config: testAccAttachment_alb(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 0),
+					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 0),
 				),
 			},
 			{
-				Config: testAccAWSAutoscalingAttachment_alb_associated(rInt),
+				Config: testAccAttachment_alb_associated(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 1),
+					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 1),
 				),
 			},
 			{
-				Config: testAccAWSAutoscalingAttachment_alb_double_associated(rInt),
+				Config: testAccAttachment_alb_double_associated(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 2),
+					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 2),
 				),
 			},
 			{
-				Config: testAccAWSAutoscalingAttachment_alb_associated(rInt),
+				Config: testAccAttachment_alb_associated(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 1),
+					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 1),
 				),
 			},
 			{
-				Config: testAccAWSAutoscalingAttachment_alb(rInt),
+				Config: testAccAttachment_alb(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 0),
+					testAccCheckAutocalingAlbAttachmentExists("aws_autoscaling_group.asg", 0),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSAutocalingAttachmentDestroy(s *terraform.State) error {
+func testAccCheckAutocalingAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -127,7 +127,7 @@ func testAccCheckAWSAutocalingAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAutocalingElbAttachmentExists(asgname string, loadBalancerCount int) resource.TestCheckFunc {
+func testAccCheckAutocalingELBAttachmentExists(asgname string, loadBalancerCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[asgname]
 		if !ok {
@@ -153,7 +153,7 @@ func testAccCheckAWSAutocalingElbAttachmentExists(asgname string, loadBalancerCo
 	}
 }
 
-func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCount int) resource.TestCheckFunc {
+func testAccCheckAutocalingAlbAttachmentExists(asgname string, targetGroupCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[asgname]
 		if !ok {
@@ -179,7 +179,7 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 	}
 }
 
-func testAccAWSAutoscalingAttachment_alb(rInt int) string {
+func testAccAttachment_alb(rInt int) string {
 	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -285,7 +285,7 @@ resource "aws_vpc" "test" {
 `, rInt, rInt, rInt, rInt)
 }
 
-func testAccAWSAutoscalingAttachment_elb(rInt int) string {
+func testAccAttachment_elb(rInt int) string {
 	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -347,32 +347,32 @@ resource "aws_autoscaling_group" "asg" {
 `, rInt, rInt)
 }
 
-func testAccAWSAutoscalingAttachment_elb_associated(rInt int) string {
-	return testAccAWSAutoscalingAttachment_elb(rInt) + `
+func testAccAttachment_elb_associated(rInt int) string {
+	return testAccAttachment_elb(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_foo" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
   elb                    = aws_elb.foo.id
 }`
 }
 
-func testAccAWSAutoscalingAttachment_alb_associated(rInt int) string {
-	return testAccAWSAutoscalingAttachment_alb(rInt) + `
+func testAccAttachment_alb_associated(rInt int) string {
+	return testAccAttachment_alb(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_foo" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
   alb_target_group_arn   = aws_lb_target_group.test.arn
 }`
 }
 
-func testAccAWSAutoscalingAttachment_elb_double_associated(rInt int) string {
-	return testAccAWSAutoscalingAttachment_elb_associated(rInt) + `
+func testAccAttachment_elb_double_associated(rInt int) string {
+	return testAccAttachment_elb_associated(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
   elb                    = aws_elb.bar.id
 }`
 }
 
-func testAccAWSAutoscalingAttachment_alb_double_associated(rInt int) string {
-	return testAccAWSAutoscalingAttachment_alb_associated(rInt) + `
+func testAccAttachment_alb_double_associated(rInt int) string {
+	return testAccAttachment_alb_associated(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
   alb_target_group_arn   = aws_lb_target_group.another_test.arn

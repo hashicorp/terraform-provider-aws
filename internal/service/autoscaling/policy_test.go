@@ -28,10 +28,10 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_basic(name),
+				Config: testAccPolicyConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
 					resource.TestCheckResourceAttr(resourceSimpleName, "adjustment_type", "ChangeInCapacity"),
@@ -65,23 +65,23 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceStepName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceStepName),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceStepName),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceTargetTrackingName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceTargetTrackingName),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceTargetTrackingName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_basicUpdate(name),
+				Config: testAccPolicyConfig_basicUpdate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
 					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
@@ -116,10 +116,10 @@ func TestAccAWSAutoscalingPolicy_predictiveScaling(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_predictiveScaling(name),
+				Config: testAccPolicyConfig_predictiveScaling(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastAndScale"),
@@ -136,7 +136,7 @@ func TestAccAWSAutoscalingPolicy_predictiveScaling(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 		},
@@ -154,17 +154,17 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingRemoved(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_predictiveScaling(name),
+				Config: testAccPolicyConfig_predictiveScaling(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_predictiveScalingRemoved(name),
+				Config: testAccPolicyConfig_predictiveScalingRemoved(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.#", "0"),
@@ -173,7 +173,7 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingRemoved(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 		},
@@ -191,10 +191,10 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingUpdated(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_predictiveScaling(name),
+				Config: testAccPolicyConfig_predictiveScaling(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastAndScale"),
@@ -209,7 +209,7 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingUpdated(t *testing.T) {
 				),
 			},
 			{
-				Config: testaccawsautoscalingpolicyconfigPredictivescalingUpdated(name),
+				Config: testAccautoScalingpolicyconfigPredictivescalingUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastOnly"),
@@ -226,7 +226,7 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingUpdated(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 		},
@@ -244,10 +244,10 @@ func TestAccAWSAutoscalingPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_basic(name),
+				Config: testAccPolicyConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceName, &policy),
 					testAccCheckScalingPolicyDisappears(&policy),
@@ -306,10 +306,10 @@ func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_SimpleScalingStepAdjustment(name),
+				Config: testAccPolicyConfig_SimpleScalingStepAdjustment(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "adjustment_type", "ExactCapacity"),
@@ -319,7 +319,7 @@ func TestAccAWSAutoscalingPolicy_SimpleScalingStepAdjustment(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -335,10 +335,10 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAutoscalingPolicyConfig_TargetTracking_Predefined(name),
+				Config: testAccPolicyConfig_TargetTracking_Predefined(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
 				),
@@ -346,7 +346,7 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Predefined(t *testing.T) {
 			{
 				ResourceName:      "aws_autoscaling_policy.test",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.test"),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc("aws_autoscaling_policy.test"),
 				ImportStateVerify: true,
 			},
 		},
@@ -362,10 +362,10 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Custom(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAutoscalingPolicyConfig_TargetTracking_Custom(name),
+				Config: testAccPolicyConfig_TargetTracking_Custom(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.test", &policy),
 				),
@@ -373,7 +373,7 @@ func TestAccAWSAutoscalingPolicy_TargetTrack_Custom(t *testing.T) {
 			{
 				ResourceName:      "aws_autoscaling_policy.test",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc("aws_autoscaling_policy.test"),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc("aws_autoscaling_policy.test"),
 				ImportStateVerify: true,
 			},
 		},
@@ -391,10 +391,10 @@ func TestAccAWSAutoscalingPolicy_zerovalue(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAutoscalingPolicyConfig_zerovalue(sdkacctest.RandString(5)),
+				Config: testAccPolicyConfig_zerovalue(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &simplepolicy),
 					testAccCheckScalingPolicyExists(resourceStepName, &steppolicy),
@@ -407,13 +407,13 @@ func TestAccAWSAutoscalingPolicy_zerovalue(t *testing.T) {
 			{
 				ResourceName:      resourceSimpleName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceStepName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceStepName),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceStepName),
 				ImportStateVerify: true,
 			},
 		},
@@ -446,7 +446,7 @@ func testAccCheckScalingPolicyExists(n string, policy *autoscaling.ScalingPolicy
 	}
 }
 
-func testAccCheckAWSAutoscalingPolicyDestroy(s *terraform.State) error {
+func testAccCheckPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -472,7 +472,7 @@ func testAccCheckAWSAutoscalingPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAutoscalingPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -483,7 +483,7 @@ func testAccAWSAutoscalingPolicyImportStateIdFunc(resourceName string) resource.
 	}
 }
 
-func testAccAWSAutoscalingPolicyConfig_base(name string) string {
+func testAccPolicyConfig_base(name string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn" {
   most_recent = true
@@ -521,8 +521,8 @@ resource "aws_autoscaling_group" "test" {
 `, name, name)
 }
 
-func testAccAWSAutoscalingPolicyConfig_basic(name string) string {
-	return acctest.ConfigCompose(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
+func testAccPolicyConfig_basic(name string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_base(name), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
   name                   = "%s-foobar_simple"
   adjustment_type        = "ChangeInCapacity"
@@ -563,8 +563,8 @@ resource "aws_autoscaling_policy" "foobar_target_tracking" {
 `, name, name, name))
 }
 
-func testAccAWSAutoscalingPolicyConfig_predictiveScaling(name string) string {
-	return acctest.ConfigCompose(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
+func testAccPolicyConfig_predictiveScaling(name string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_base(name), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-policy_predictive"
   policy_type            = "PredictiveScaling"
@@ -590,8 +590,8 @@ resource "aws_autoscaling_policy" "test" {
 `, name))
 }
 
-func testAccAWSAutoscalingPolicyConfig_predictiveScalingRemoved(name string) string {
-	return acctest.ConfigCompose(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
+func testAccPolicyConfig_predictiveScalingRemoved(name string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_base(name), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-foobar_simple"
   adjustment_type        = "ChangeInCapacity"
@@ -603,8 +603,8 @@ resource "aws_autoscaling_policy" "test" {
 `, name))
 }
 
-func testaccawsautoscalingpolicyconfigPredictivescalingUpdated(name string) string {
-	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+func testAccautoScalingpolicyconfigPredictivescalingUpdated(name string) string {
+	return testAccPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-policy_predictive"
   policy_type            = "PredictiveScaling"
@@ -628,8 +628,8 @@ resource "aws_autoscaling_policy" "test" {
 `, name)
 }
 
-func testAccAWSAutoscalingPolicyConfig_basicUpdate(name string) string {
-	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+func testAccPolicyConfig_basicUpdate(name string) string {
+	return testAccPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
   name                   = "%s-foobar_simple"
   adjustment_type        = "ChangeInCapacity"
@@ -677,8 +677,8 @@ resource "aws_autoscaling_policy" "foobar_target_tracking" {
 `, name, name, name)
 }
 
-func testAccAWSAutoscalingPolicyConfig_SimpleScalingStepAdjustment(name string) string {
-	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+func testAccPolicyConfig_SimpleScalingStepAdjustment(name string) string {
+	return testAccPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
   name                   = "%s-foobar_simple"
   adjustment_type        = "ExactCapacity"
@@ -690,8 +690,8 @@ resource "aws_autoscaling_policy" "foobar_simple" {
 `, name)
 }
 
-func testAccAwsAutoscalingPolicyConfig_TargetTracking_Predefined(name string) string {
-	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+func testAccPolicyConfig_TargetTracking_Predefined(name string) string {
+	return testAccPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%s-test"
   policy_type            = "TargetTrackingScaling"
@@ -708,8 +708,8 @@ resource "aws_autoscaling_policy" "test" {
 `, name)
 }
 
-func testAccAwsAutoscalingPolicyConfig_TargetTracking_Custom(name string) string {
-	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+func testAccPolicyConfig_TargetTracking_Custom(name string) string {
+	return testAccPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
   name                   = "%s-test"
   policy_type            = "TargetTrackingScaling"
@@ -733,8 +733,8 @@ resource "aws_autoscaling_policy" "test" {
 `, name)
 }
 
-func testAccAWSAutoscalingPolicyConfig_zerovalue(name string) string {
-	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+func testAccPolicyConfig_zerovalue(name string) string {
+	return testAccPolicyConfig_base(name) + fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
   name                   = "%s-foobar_simple"
   adjustment_type        = "ExactCapacity"

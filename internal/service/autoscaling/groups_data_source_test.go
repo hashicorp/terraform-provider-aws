@@ -21,12 +21,12 @@ func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAutoscalingGroupsConfig(sdkacctest.RandInt(), sdkacctest.RandInt(), sdkacctest.RandInt()),
+				Config: testAccCheckGroupsConfig(sdkacctest.RandInt(), sdkacctest.RandInt(), sdkacctest.RandInt()),
 			},
 			{
-				Config: testAccCheckAwsAutoscalingGroupsConfigWithDataSource(sdkacctest.RandInt(), sdkacctest.RandInt(), sdkacctest.RandInt()),
+				Config: testAccCheckGroupsWithDataSourceConfig(sdkacctest.RandInt(), sdkacctest.RandInt(), sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAutoscalingGroups("data.aws_autoscaling_groups.group_list"),
+					testAccCheckGroups("data.aws_autoscaling_groups.group_list"),
 					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "names.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_autoscaling_groups.group_list", "arns.#", "3"),
 				),
@@ -35,7 +35,7 @@ func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAutoscalingGroups(n string) resource.TestCheckFunc {
+func testAccCheckGroups(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -46,7 +46,7 @@ func testAccCheckAwsAutoscalingGroups(n string) resource.TestCheckFunc {
 			return fmt.Errorf("AZ resource ID not set.")
 		}
 
-		actual, err := testAccCheckAwsAutoscalingGroupsAvailable(rs.Primary.Attributes)
+		actual, err := testAccCheckGroupsAvailable(rs.Primary.Attributes)
 		if err != nil {
 			return err
 		}
@@ -60,7 +60,7 @@ func testAccCheckAwsAutoscalingGroups(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsAutoscalingGroupsAvailable(attrs map[string]string) ([]string, error) {
+func testAccCheckGroupsAvailable(attrs map[string]string) ([]string, error) {
 	v, ok := attrs["names.#"]
 	if !ok {
 		return nil, fmt.Errorf("Available ASG list is missing.")
@@ -83,7 +83,7 @@ func testAccCheckAwsAutoscalingGroupsAvailable(attrs map[string]string) ([]strin
 	return zones, nil
 }
 
-func testAccCheckAwsAutoscalingGroupsConfig(rInt1, rInt2, rInt3 int) string {
+func testAccCheckGroupsConfig(rInt1, rInt2, rInt3 int) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
@@ -156,7 +156,7 @@ resource "aws_autoscaling_group" "barbaz" {
 `, rInt1, rInt2, rInt3)
 }
 
-func testAccCheckAwsAutoscalingGroupsConfigWithDataSource(rInt1, rInt2, rInt3 int) string {
+func testAccCheckGroupsWithDataSourceConfig(rInt1, rInt2, rInt3 int) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
