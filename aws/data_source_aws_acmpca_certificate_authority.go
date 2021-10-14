@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCertificateAuthority() *schema.Resource {
@@ -90,7 +91,7 @@ func DataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -170,7 +171,7 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := keyvaluetags.AcmpcaListTags(conn, certificateAuthorityArn)
+	tags, err := tftags.AcmpcaListTags(conn, certificateAuthorityArn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ACM PCA Certificate Authority (%s): %w", certificateAuthorityArn, err)
