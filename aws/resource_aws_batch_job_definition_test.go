@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -34,7 +35,7 @@ func testSweepBatchJobDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).batchconn
+	conn := client.(*conns.AWSClient).BatchConn
 	input := &batch.DescribeJobDefinitionsInput{
 		Status: aws.String("ACTIVE"),
 	}
@@ -435,7 +436,7 @@ func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) res
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).batchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
 		jobDefinition, err := finder.JobDefinitionByARN(conn, rs.Primary.ID)
 
@@ -487,7 +488,7 @@ func testAccCheckJobDefinitionRecreated(t *testing.T, before, after *batch.JobDe
 }
 
 func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).batchconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_job_definition" {

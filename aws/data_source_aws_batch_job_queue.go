@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsBatchJobQueue() *schema.Resource {
@@ -68,8 +69,8 @@ func dataSourceAwsBatchJobQueue() *schema.Resource {
 }
 
 func dataSourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).batchconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BatchConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeJobQueuesInput{
 		JobQueues: []*string{aws.String(d.Get("name").(string))},
