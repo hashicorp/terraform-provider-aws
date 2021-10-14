@@ -26,11 +26,11 @@ func ResourceVirtualNode() *schema.Resource {
 		Update: resourceVirtualNodeUpdate,
 		Delete: resourceVirtualNodeDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAppmeshVirtualNodeImport,
+			State: resourceVirtualNodeImport,
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsAppmeshVirtualNodeMigrateState,
+		MigrateState:  resourceVirtualNodeMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -1231,7 +1231,7 @@ func resourceVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsAppmeshVirtualNodeImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVirtualNodeImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-node-name'", d.Id())

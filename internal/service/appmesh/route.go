@@ -26,7 +26,7 @@ func ResourceRoute() *schema.Resource {
 		Update: resourceRouteUpdate,
 		Delete: resourceRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAppmeshRouteImport,
+			State: resourceRouteImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -875,7 +875,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsAppmeshRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-router-name/route-name'", d.Id())

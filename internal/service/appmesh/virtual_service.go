@@ -25,7 +25,7 @@ func ResourceVirtualService() *schema.Resource {
 		Update: resourceVirtualServiceUpdate,
 		Delete: resourceVirtualServiceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAppmeshVirtualServiceImport,
+			State: resourceVirtualServiceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -303,7 +303,7 @@ func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsAppmeshVirtualServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVirtualServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-service-name'", d.Id())

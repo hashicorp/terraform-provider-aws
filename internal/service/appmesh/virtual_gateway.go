@@ -26,7 +26,7 @@ func ResourceVirtualGateway() *schema.Resource {
 		Update: resourceVirtualGatewayUpdate,
 		Delete: resourceVirtualGatewayDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAppmeshVirtualGatewayImport,
+			State: resourceVirtualGatewayImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -856,7 +856,7 @@ func resourceVirtualGatewayDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsAppmeshVirtualGatewayImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVirtualGatewayImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-gateway-name'", d.Id())
