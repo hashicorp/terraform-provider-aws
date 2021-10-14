@@ -24,10 +24,10 @@ const (
 	QueryLogConfigDeletedTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for a DnssecConfig to return ENABLED
-	DnssecConfigCreatedTimeout = 5 * time.Minute
+	DNSSECConfigCreatedTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for a DnssecConfig to return DISABLED
-	DnssecConfigDeletedTimeout = 5 * time.Minute
+	DNSSECConfigDeletedTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for a FirewallDomainList to be updated
 	FirewallDomainListUpdatedTimeout = 5 * time.Minute
@@ -45,12 +45,12 @@ const (
 	FirewallRuleGroupAssociationDeletedTimeout = 5 * time.Minute
 )
 
-// QueryLogConfigAssociationCreated waits for a QueryLogConfig to return ACTIVE
-func QueryLogConfigAssociationCreated(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
+// WaitQueryLogConfigAssociationCreated waits for a QueryLogConfig to return ACTIVE
+func WaitQueryLogConfigAssociationCreated(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.ResolverQueryLogConfigAssociationStatusCreating},
 		Target:  []string{route53resolver.ResolverQueryLogConfigAssociationStatusActive},
-		Refresh: QueryLogConfigAssociationStatus(conn, queryLogConfigAssociationID),
+		Refresh: StatusQueryLogConfigAssociation(conn, queryLogConfigAssociationID),
 		Timeout: QueryLogConfigAssociationCreatedTimeout,
 	}
 
@@ -63,12 +63,12 @@ func QueryLogConfigAssociationCreated(conn *route53resolver.Route53Resolver, que
 	return nil, err
 }
 
-// QueryLogConfigAssociationCreated waits for a QueryLogConfig to be deleted
-func QueryLogConfigAssociationDeleted(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
+// WaitQueryLogConfigAssociationCreated waits for a QueryLogConfig to be deleted
+func WaitQueryLogConfigAssociationDeleted(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.ResolverQueryLogConfigAssociationStatusDeleting},
 		Target:  []string{},
-		Refresh: QueryLogConfigAssociationStatus(conn, queryLogConfigAssociationID),
+		Refresh: StatusQueryLogConfigAssociation(conn, queryLogConfigAssociationID),
 		Timeout: QueryLogConfigAssociationDeletedTimeout,
 	}
 
@@ -81,12 +81,12 @@ func QueryLogConfigAssociationDeleted(conn *route53resolver.Route53Resolver, que
 	return nil, err
 }
 
-// QueryLogConfigCreated waits for a QueryLogConfig to return CREATED
-func QueryLogConfigCreated(conn *route53resolver.Route53Resolver, queryLogConfigID string) (*route53resolver.ResolverQueryLogConfig, error) {
+// WaitQueryLogConfigCreated waits for a QueryLogConfig to return CREATED
+func WaitQueryLogConfigCreated(conn *route53resolver.Route53Resolver, queryLogConfigID string) (*route53resolver.ResolverQueryLogConfig, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.ResolverQueryLogConfigStatusCreating},
 		Target:  []string{route53resolver.ResolverQueryLogConfigStatusCreated},
-		Refresh: QueryLogConfigStatus(conn, queryLogConfigID),
+		Refresh: StatusQueryLogConfig(conn, queryLogConfigID),
 		Timeout: QueryLogConfigCreatedTimeout,
 	}
 
@@ -99,12 +99,12 @@ func QueryLogConfigCreated(conn *route53resolver.Route53Resolver, queryLogConfig
 	return nil, err
 }
 
-// QueryLogConfigCreated waits for a QueryLogConfig to be deleted
-func QueryLogConfigDeleted(conn *route53resolver.Route53Resolver, queryLogConfigID string) (*route53resolver.ResolverQueryLogConfig, error) {
+// WaitQueryLogConfigCreated waits for a QueryLogConfig to be deleted
+func WaitQueryLogConfigDeleted(conn *route53resolver.Route53Resolver, queryLogConfigID string) (*route53resolver.ResolverQueryLogConfig, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.ResolverQueryLogConfigStatusDeleting},
 		Target:  []string{},
-		Refresh: QueryLogConfigStatus(conn, queryLogConfigID),
+		Refresh: StatusQueryLogConfig(conn, queryLogConfigID),
 		Timeout: QueryLogConfigDeletedTimeout,
 	}
 
@@ -117,13 +117,13 @@ func QueryLogConfigDeleted(conn *route53resolver.Route53Resolver, queryLogConfig
 	return nil, err
 }
 
-// DnssecConfigCreated waits for a DnssecConfig to return ENABLED
-func DnssecConfigCreated(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {
+// WaitDNSSECConfigCreated waits for a DnssecConfig to return ENABLED
+func WaitDNSSECConfigCreated(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.ResolverDNSSECValidationStatusEnabling},
 		Target:  []string{route53resolver.ResolverDNSSECValidationStatusEnabled},
-		Refresh: DnssecConfigStatus(conn, dnssecConfigID),
-		Timeout: DnssecConfigCreatedTimeout,
+		Refresh: StatusDNSSECConfig(conn, dnssecConfigID),
+		Timeout: DNSSECConfigCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -135,13 +135,13 @@ func DnssecConfigCreated(conn *route53resolver.Route53Resolver, dnssecConfigID s
 	return nil, err
 }
 
-// DnssecConfigDisabled waits for a DnssecConfig to return DISABLED
-func DnssecConfigDisabled(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {
+// WaitDNSSECConfigDisabled waits for a DnssecConfig to return DISABLED
+func WaitDNSSECConfigDisabled(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.ResolverDNSSECValidationStatusDisabling},
 		Target:  []string{route53resolver.ResolverDNSSECValidationStatusDisabled},
-		Refresh: DnssecConfigStatus(conn, dnssecConfigID),
-		Timeout: DnssecConfigDeletedTimeout,
+		Refresh: StatusDNSSECConfig(conn, dnssecConfigID),
+		Timeout: DNSSECConfigDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -153,8 +153,8 @@ func DnssecConfigDisabled(conn *route53resolver.Route53Resolver, dnssecConfigID 
 	return nil, err
 }
 
-// FirewallDomainListUpdated waits for a FirewallDomainList to be updated
-func FirewallDomainListUpdated(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {
+// WaitFirewallDomainListUpdated waits for a FirewallDomainList to be updated
+func WaitFirewallDomainListUpdated(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			route53resolver.FirewallDomainListStatusUpdating,
@@ -164,7 +164,7 @@ func FirewallDomainListUpdated(conn *route53resolver.Route53Resolver, firewallDo
 			route53resolver.FirewallDomainListStatusComplete,
 			route53resolver.FirewallDomainListStatusCompleteImportFailed,
 		},
-		Refresh: FirewallDomainListStatus(conn, firewallDomainListId),
+		Refresh: StatusFirewallDomainList(conn, firewallDomainListId),
 		Timeout: FirewallDomainListUpdatedTimeout,
 	}
 
@@ -180,12 +180,12 @@ func FirewallDomainListUpdated(conn *route53resolver.Route53Resolver, firewallDo
 	return nil, err
 }
 
-// FirewallDomainListDeleted waits for a FirewallDomainList to be deleted
-func FirewallDomainListDeleted(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {
+// WaitFirewallDomainListDeleted waits for a FirewallDomainList to be deleted
+func WaitFirewallDomainListDeleted(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.FirewallDomainListStatusDeleting},
 		Target:  []string{},
-		Refresh: FirewallDomainListStatus(conn, firewallDomainListId),
+		Refresh: StatusFirewallDomainList(conn, firewallDomainListId),
 		Timeout: FirewallDomainListDeletedTimeout,
 	}
 
@@ -198,12 +198,12 @@ func FirewallDomainListDeleted(conn *route53resolver.Route53Resolver, firewallDo
 	return nil, err
 }
 
-// FirewallRuleGroupAssociationCreated waits for a FirewallRuleGroupAssociation to return COMPLETE
-func FirewallRuleGroupAssociationCreated(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
+// WaitFirewallRuleGroupAssociationCreated waits for a FirewallRuleGroupAssociation to return COMPLETE
+func WaitFirewallRuleGroupAssociationCreated(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.FirewallRuleGroupAssociationStatusUpdating},
 		Target:  []string{route53resolver.FirewallRuleGroupAssociationStatusComplete},
-		Refresh: FirewallRuleGroupAssociationStatus(conn, firewallRuleGroupAssociationId),
+		Refresh: StatusFirewallRuleGroupAssociation(conn, firewallRuleGroupAssociationId),
 		Timeout: FirewallRuleGroupAssociationCreatedTimeout,
 	}
 
@@ -216,12 +216,12 @@ func FirewallRuleGroupAssociationCreated(conn *route53resolver.Route53Resolver, 
 	return nil, err
 }
 
-// FirewallRuleGroupAssociationUpdated waits for a FirewallRuleGroupAssociation to return COMPLETE
-func FirewallRuleGroupAssociationUpdated(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
+// WaitFirewallRuleGroupAssociationUpdated waits for a FirewallRuleGroupAssociation to return COMPLETE
+func WaitFirewallRuleGroupAssociationUpdated(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.FirewallRuleGroupAssociationStatusUpdating},
 		Target:  []string{route53resolver.FirewallRuleGroupAssociationStatusComplete},
-		Refresh: FirewallRuleGroupAssociationStatus(conn, firewallRuleGroupAssociationId),
+		Refresh: StatusFirewallRuleGroupAssociation(conn, firewallRuleGroupAssociationId),
 		Timeout: FirewallRuleGroupAssociationUpdatedTimeout,
 	}
 
@@ -234,12 +234,12 @@ func FirewallRuleGroupAssociationUpdated(conn *route53resolver.Route53Resolver, 
 	return nil, err
 }
 
-// FirewallRuleGroupAssociationDeleted waits for a FirewallRuleGroupAssociation to be deleted
-func FirewallRuleGroupAssociationDeleted(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
+// WaitFirewallRuleGroupAssociationDeleted waits for a FirewallRuleGroupAssociation to be deleted
+func WaitFirewallRuleGroupAssociationDeleted(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.FirewallRuleGroupAssociationStatusDeleting},
 		Target:  []string{},
-		Refresh: FirewallRuleGroupAssociationStatus(conn, firewallRuleGroupAssociationId),
+		Refresh: StatusFirewallRuleGroupAssociation(conn, firewallRuleGroupAssociationId),
 		Timeout: FirewallRuleGroupAssociationDeletedTimeout,
 	}
 

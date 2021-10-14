@@ -19,6 +19,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 )
 
 func init() {
@@ -132,7 +140,7 @@ func testAccCheckRoute53ResolverFirewallConfigDestroy(s *terraform.State) error 
 			continue
 		}
 
-		config, err := finder.FirewallConfigByID(conn, rs.Primary.ID)
+		config, err := tfroute53resolver.FindFirewallConfigByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -165,7 +173,7 @@ func testAccCheckRoute53ResolverFirewallConfigExists(n string, v *route53resolve
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
-		out, err := finder.FirewallConfigByID(conn, rs.Primary.ID)
+		out, err := tfroute53resolver.FindFirewallConfigByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

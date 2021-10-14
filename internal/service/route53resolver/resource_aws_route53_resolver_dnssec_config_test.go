@@ -20,6 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 )
 
 func init() {
@@ -142,7 +150,7 @@ func testAccCheckRoute53ResolverDnssecConfigDestroy(s *terraform.State) error {
 			continue
 		}
 
-		config, err := finder.ResolverDnssecConfigByID(conn, rs.Primary.ID)
+		config, err := tfroute53resolver.FindResolverDNSSECConfigByID(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			continue
@@ -176,7 +184,7 @@ func testAccCheckRoute53ResolverDnssecConfigExists(n string) resource.TestCheckF
 		id := rs.Primary.ID
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
-		config, err := finder.ResolverDnssecConfigByID(conn, id)
+		config, err := tfroute53resolver.FindResolverDNSSECConfigByID(conn, id)
 
 		if err != nil {
 			return err
