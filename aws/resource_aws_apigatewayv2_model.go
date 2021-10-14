@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayV2Model() *schema.Resource {
@@ -65,7 +66,7 @@ func resourceAwsApiGatewayV2Model() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2ModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateModelInput{
 		ApiId:       aws.String(d.Get("api_id").(string)),
@@ -89,7 +90,7 @@ func resourceAwsApiGatewayV2ModelCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2ModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetModel(&apigatewayv2.GetModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -113,7 +114,7 @@ func resourceAwsApiGatewayV2ModelRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayV2ModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -142,7 +143,7 @@ func resourceAwsApiGatewayV2ModelUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2ModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 model (%s)", d.Id())
 	_, err := conn.DeleteModel(&apigatewayv2.DeleteModelInput{

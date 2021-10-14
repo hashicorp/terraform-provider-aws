@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -183,8 +184,8 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	apiId := d.Get("api_id").(string)
@@ -238,9 +239,9 @@ func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	apiId := d.Get("api_id").(string)
 	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
@@ -261,9 +262,9 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("error setting access_log_settings: %s", err)
 	}
-	region := meta.(*AWSClient).region
+	region := meta.(*conns.AWSClient).Region
 	resourceArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
 		Region:    region,
 		Resource:  fmt.Sprintf("/apis/%s/stages/%s", apiId, stageName),
@@ -278,10 +279,10 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("deployment_id", resp.DeploymentId)
 	d.Set("description", resp.Description)
 	executionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "execute-api",
 		Region:    region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("%s/%s", apiId, stageName),
 	}.String()
 	d.Set("execution_arn", executionArn)
@@ -328,7 +329,7 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
 		"default_route_settings", "deployment_id", "description",
@@ -422,7 +423,7 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2StageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s)", d.Id())
 	_, err := conn.DeleteStage(&apigatewayv2.DeleteStageInput{
@@ -448,7 +449,7 @@ func resourceAwsApiGatewayV2StageImport(d *schema.ResourceData, meta interface{}
 	apiId := parts[0]
 	stageName := parts[1]
 
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
 		ApiId:     aws.String(apiId),

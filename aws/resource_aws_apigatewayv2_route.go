@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayV2Route() *schema.Resource {
@@ -97,7 +98,7 @@ func resourceAwsApiGatewayV2Route() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateRouteInput{
 		ApiId:             aws.String(d.Get("api_id").(string)),
@@ -142,7 +143,7 @@ func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2RouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetRoute(&apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -181,7 +182,7 @@ func resourceAwsApiGatewayV2RouteRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	var requestParameters map[string]*apigatewayv2.ParameterConstraints
 
@@ -269,7 +270,7 @@ func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayV2RouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route (%s)", d.Id())
 	_, err := conn.DeleteRoute(&apigatewayv2.DeleteRouteInput{
@@ -297,7 +298,7 @@ func resourceAwsApiGatewayV2RouteImport(d *schema.ResourceData, meta interface{}
 	apiId := parts[0]
 	routeId := parts[1]
 
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetRoute(&apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(apiId),

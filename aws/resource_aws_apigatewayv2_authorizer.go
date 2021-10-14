@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
@@ -92,7 +93,7 @@ func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	apiId := d.Get("api_id").(string)
 	authorizerType := d.Get("authorizer_type").(string)
@@ -146,7 +147,7 @@ func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2AuthorizerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetAuthorizer(&apigatewayv2.GetAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -179,7 +180,7 @@ func resourceAwsApiGatewayV2AuthorizerRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayV2AuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -223,7 +224,7 @@ func resourceAwsApiGatewayV2AuthorizerUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2AuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 authorizer (%s)", d.Id())
 	_, err := conn.DeleteAuthorizer(&apigatewayv2.DeleteAuthorizerInput{

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayV2Deployment() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsApiGatewayV2Deployment() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2DeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateDeploymentInput{
 		ApiId: aws.String(d.Get("api_id").(string)),
@@ -73,7 +74,7 @@ func resourceAwsApiGatewayV2DeploymentCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	outputRaw, _, err := waiter.DeploymentStatus(conn, d.Get("api_id").(string), d.Id())()
 	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
@@ -93,7 +94,7 @@ func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayV2DeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -117,7 +118,7 @@ func resourceAwsApiGatewayV2DeploymentUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayV2DeploymentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 deployment (%s)", d.Id())
 	_, err := conn.DeleteDeployment(&apigatewayv2.DeleteDeploymentInput{

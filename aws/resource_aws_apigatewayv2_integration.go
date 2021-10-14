@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsApiGatewayV2Integration() *schema.Resource {
@@ -166,7 +167,7 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 }
 
 func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateIntegrationInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
@@ -233,7 +234,7 @@ func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
@@ -282,7 +283,7 @@ func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
@@ -388,7 +389,7 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsApiGatewayV2IntegrationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration (%s)", d.Id())
 	_, err := conn.DeleteIntegration(&apigatewayv2.DeleteIntegrationInput{
@@ -414,7 +415,7 @@ func resourceAwsApiGatewayV2IntegrationImport(d *schema.ResourceData, meta inter
 	apiId := parts[0]
 	integrationId := parts[1]
 
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(apiId),
