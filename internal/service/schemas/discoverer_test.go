@@ -40,7 +40,7 @@ func testSweepSchemasDiscoverers(region string) error {
 		}
 
 		for _, discoverer := range page.Discoverers {
-			r := ResourceDiscoverer()
+			r := tfschemas.ResourceDiscoverer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(discoverer.DiscovererId))
 			err = r.Delete(d, client)
@@ -111,7 +111,7 @@ func TestAccAWSSchemasDiscoverer_disappears(t *testing.T) {
 				Config: testAccAWSSchemasDiscovererConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasDiscovererExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDiscoverer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceDiscoverer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
