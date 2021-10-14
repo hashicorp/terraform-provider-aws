@@ -267,7 +267,7 @@ func resourceAwsStorageGatewayNfsFileShareRead(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Reading Storage Gateway NFS File Share: %s", input)
 	output, err := conn.DescribeNFSFileShares(input)
 	if err != nil {
-		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
+		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
 			log.Printf("[WARN] Storage Gateway NFS File Share %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -401,14 +401,14 @@ func resourceAwsStorageGatewayNfsFileShareDelete(d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Deleting Storage Gateway NFS File Share: %s", input)
 	_, err := conn.DeleteFileShare(input)
 	if err != nil {
-		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
+		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Storage Gateway NFS File Share: %w", err)
 	}
 
 	if _, err = waiter.NfsFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		if isResourceNotFoundError(err) {
+		if tfresource.NotFound(err) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be deleted: %w", d.Id(), err)

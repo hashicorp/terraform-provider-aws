@@ -634,7 +634,7 @@ func testAccCheckAWSStorageGatewayNfsFileShareDestroy(s *terraform.State) error 
 		output, err := conn.DescribeNFSFileShares(input)
 
 		if err != nil {
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
 				continue
 			}
 			return err

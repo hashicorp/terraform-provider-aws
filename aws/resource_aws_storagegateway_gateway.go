@@ -297,7 +297,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			response, err = client.Do(request)
 		}
 		if err != nil {
@@ -479,7 +479,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Reading Storage Gateway SMB Settings: %s", smbSettingsInput)
 	smbSettingsOutput, err := conn.DescribeSMBSettings(smbSettingsInput)
-	if err != nil && !isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "This operation is not valid for the specified gateway") {
+	if err != nil && !tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "This operation is not valid for the specified gateway") {
 		if isAWSErrStorageGatewayGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway Gateway %q not found - removing from state", d.Id())
 			d.SetId("")
@@ -789,10 +789,10 @@ func flattenStorageGatewayGatewayNetworkInterfaces(nis []*storagegateway.Network
 
 // The API returns multiple responses for a missing gateway
 func isAWSErrStorageGatewayGatewayNotFound(err error) bool {
-	if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway was not found.") {
+	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway was not found.") {
 		return true
 	}
-	if isAWSErr(err, storagegateway.ErrorCodeGatewayNotFound, "") {
+	if tfawserr.ErrMessageContains(err, storagegateway.ErrorCodeGatewayNotFound, "") {
 		return true
 	}
 	return false
