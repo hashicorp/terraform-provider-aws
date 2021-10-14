@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSELBAttachment_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccAWSELBAttachment_drift(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	deregInstance := func() {
-		conn := acctest.Provider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 		deRegisterInstancesOpts := elb.DeregisterInstancesFromLoadBalancerInput{
 			LoadBalancerName: conf.LoadBalancerName,

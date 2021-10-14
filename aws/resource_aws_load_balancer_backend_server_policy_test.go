@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
@@ -65,7 +66,7 @@ func policyInBackendServerPolicies(str string, list []string) bool {
 }
 
 func testAccCheckAWSLoadBalancerBackendServerPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
 		switch {
@@ -115,9 +116,9 @@ func testAccCheckAWSLoadBalancerBackendServerPolicyDestroy(s *terraform.State) e
 
 func testAccCheckAWSLoadBalancerBackendServerPolicyState(loadBalancerName string, loadBalancerBackendAuthPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		elbconn := acctest.Provider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
-		loadBalancerDescription, err := elbconn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
+		loadBalancerDescription, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 		})
 		if err != nil {

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepELBs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).elbconn
+	conn := client.(*conns.AWSClient).ELBConn
 
 	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, lastPage bool) bool {
 		if len(out.LoadBalancerDescriptions) == 0 {
@@ -48,7 +49,7 @@ func testSweepELBs(region string) error {
 				log.Printf("[ERROR] Failed to delete ELB %s: %s", *lb.LoadBalancerName, err)
 				continue
 			}
-			err = cleanupELBNetworkInterfaces(client.(*AWSClient).ec2conn, *lb.LoadBalancerName)
+			err = cleanupELBNetworkInterfaces(client.(*conns.AWSClient).EC2Conn, *lb.LoadBalancerName)
 			if err != nil {
 				log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %s", *lb.LoadBalancerName, err)
 			}
@@ -546,7 +547,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener removal
-					conn := acctest.Provider.Meta().(*AWSClient).elbconn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 					input := &elb.DeleteLoadBalancerListenersInput{
 						LoadBalancerName:  conf.LoadBalancerName,
 						LoadBalancerPorts: []*int64{aws.Int64(int64(80))},
@@ -570,7 +571,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener addition
-					conn := acctest.Provider.Meta().(*AWSClient).elbconn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 					input := &elb.CreateLoadBalancerListenersInput{
 						LoadBalancerName: conf.LoadBalancerName,
 						Listeners: []*elb.Listener{
@@ -919,7 +920,7 @@ func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {
 }
 
 func testAccCheckAWSELBDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" {
@@ -953,7 +954,7 @@ func testAccCheckAWSELBDestroy(s *terraform.State) error {
 
 func testAccCheckAWSELBDisappears(loadBalancer *elb.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 		input := elb.DeleteLoadBalancerInput{
 			LoadBalancerName: loadBalancer.LoadBalancerName,
@@ -999,7 +1000,7 @@ func testAccCheckAWSELBExists(n string, res *elb.LoadBalancerDescription) resour
 			return fmt.Errorf("No ELB ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 		describe, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},

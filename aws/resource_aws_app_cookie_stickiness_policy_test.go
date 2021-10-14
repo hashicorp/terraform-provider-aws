@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAppCookieStickinessPolicy_basic(t *testing.T) {
@@ -73,7 +74,7 @@ func TestAccAWSAppCookieStickinessPolicy_disappears_ELB(t *testing.T) {
 }
 
 func testAccCheckAppCookieStickinessPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_app_cookie_stickiness_policy" {
@@ -117,9 +118,9 @@ func testAccCheckAppCookieStickinessPolicy(elbResource string, policyResource st
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		elbconn := acctest.Provider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 		elbName, _, policyName := resourceAwsAppCookieStickinessPolicyParseId(policy.Primary.ID)
-		_, err := elbconn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+		_, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(elbName),
 			PolicyNames:      []*string{aws.String(policyName)},
 		})

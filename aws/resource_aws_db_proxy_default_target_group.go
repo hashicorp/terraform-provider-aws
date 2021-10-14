@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
@@ -91,7 +92,7 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 }
 
 func resourceAwsDbProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	tg, err := resourceAwsDbProxyDefaultTargetGroupGet(conn, d.Id())
 
@@ -130,7 +131,7 @@ func resourceAwsDbProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta interface{}, timeout string) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := rds.ModifyDBProxyTargetGroupInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),

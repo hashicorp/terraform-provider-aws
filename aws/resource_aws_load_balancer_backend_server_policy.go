@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLoadBalancerBackendServerPolicies() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsLoadBalancerBackendServerPolicies() *schema.Resource {
 }
 
 func resourceAwsLoadBalancerBackendServerPoliciesCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName := d.Get("load_balancer_name")
 
@@ -55,7 +56,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesCreate(d *schema.ResourceData, 
 		PolicyNames:      policyNames,
 	}
 
-	if _, err := elbconn.SetLoadBalancerPoliciesForBackendServer(setOpts); err != nil {
+	if _, err := conn.SetLoadBalancerPoliciesForBackendServer(setOpts); err != nil {
 		return fmt.Errorf("Error setting LoadBalancerPoliciesForBackendServer: %s", err)
 	}
 
@@ -64,7 +65,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesCreate(d *schema.ResourceData, 
 }
 
 func resourceAwsLoadBalancerBackendServerPoliciesRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName, instancePort := resourceAwsLoadBalancerBackendServerPoliciesParseId(d.Id())
 
@@ -72,7 +73,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesRead(d *schema.ResourceData, me
 		LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 	}
 
-	describeResp, err := elbconn.DescribeLoadBalancers(describeElbOpts)
+	describeResp, err := conn.DescribeLoadBalancers(describeElbOpts)
 
 	if err != nil {
 		if ec2err, ok := err.(awserr.Error); ok {
@@ -111,7 +112,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesRead(d *schema.ResourceData, me
 }
 
 func resourceAwsLoadBalancerBackendServerPoliciesDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName, instancePort := resourceAwsLoadBalancerBackendServerPoliciesParseId(d.Id())
 
@@ -126,7 +127,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesDelete(d *schema.ResourceData, 
 		PolicyNames:      []*string{},
 	}
 
-	if _, err := elbconn.SetLoadBalancerPoliciesForBackendServer(setOpts); err != nil {
+	if _, err := conn.SetLoadBalancerPoliciesForBackendServer(setOpts); err != nil {
 		return fmt.Errorf("Error setting LoadBalancerPoliciesForBackendServer: %s", err)
 	}
 

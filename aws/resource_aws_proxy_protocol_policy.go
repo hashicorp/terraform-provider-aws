@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsProxyProtocolPolicy() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsProxyProtocolPolicy() *schema.Resource {
 }
 
 func resourceAwsProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	input := &elb.CreateLoadBalancerPolicyInput{
@@ -54,7 +55,7 @@ func resourceAwsProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] ELB create a policy %s from policy type %s",
 		*input.PolicyName, *input.PolicyTypeName)
 
-	if _, err := elbconn.CreateLoadBalancerPolicy(input); err != nil {
+	if _, err := conn.CreateLoadBalancerPolicy(input); err != nil {
 		return fmt.Errorf("Error creating a policy %s: %s",
 			*input.PolicyName, err)
 	}
@@ -66,14 +67,14 @@ func resourceAwsProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 	elbname := d.Get("load_balancer").(string)
 
 	// Retrieve the current ELB policies for updating the state
 	req := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{aws.String(elbname)},
 	}
-	resp, err := elbconn.DescribeLoadBalancers(req)
+	resp, err := conn.DescribeLoadBalancers(req)
 	if err != nil {
 		if isLoadBalancerNotFound(err) {
 			// The ELB is gone now, so just remove it from the state
@@ -96,14 +97,14 @@ func resourceAwsProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	// Retrieve the current ELB policies for updating the state
 	req := &elb.DescribeLoadBalancersInput{
 		LoadBalancerNames: []*string{elbname},
 	}
-	resp, err := elbconn.DescribeLoadBalancers(req)
+	resp, err := conn.DescribeLoadBalancers(req)
 	if err != nil {
 		if isLoadBalancerNotFound(err) {
 			// The ELB is gone now, so just remove it from the state
@@ -139,7 +140,7 @@ func resourceAwsProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface
 
 		for _, input := range inputs {
 			input.LoadBalancerName = elbname
-			if _, err := elbconn.SetLoadBalancerPoliciesForBackendServer(input); err != nil {
+			if _, err := conn.SetLoadBalancerPoliciesForBackendServer(input); err != nil {
 				return fmt.Errorf("Error setting policy for backend: %s", err)
 			}
 		}
@@ -149,7 +150,7 @@ func resourceAwsProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	// Retrieve the current ELB policies for updating the state
@@ -157,7 +158,7 @@ func resourceAwsProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface
 		LoadBalancerNames: []*string{elbname},
 	}
 	var err error
-	resp, err := elbconn.DescribeLoadBalancers(req)
+	resp, err := conn.DescribeLoadBalancers(req)
 	if err != nil {
 		if isLoadBalancerNotFound(err) {
 			return nil
@@ -175,7 +176,7 @@ func resourceAwsProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface
 	}
 	for _, input := range inputs {
 		input.LoadBalancerName = elbname
-		if _, err := elbconn.SetLoadBalancerPoliciesForBackendServer(input); err != nil {
+		if _, err := conn.SetLoadBalancerPoliciesForBackendServer(input); err != nil {
 			return fmt.Errorf("Error setting policy for backend: %s", err)
 		}
 	}
@@ -184,7 +185,7 @@ func resourceAwsProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface
 		LoadBalancerName: elbname,
 		PolicyName:       aws.String(policyName),
 	}
-	if _, err := elbconn.DeleteLoadBalancerPolicy(pOpt); err != nil {
+	if _, err := conn.DeleteLoadBalancerPolicy(pOpt); err != nil {
 		return fmt.Errorf("Error removing a policy from load balancer: %s", err)
 	}
 

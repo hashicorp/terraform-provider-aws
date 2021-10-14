@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLBCookieStickinessPolicy() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceAwsLBCookieStickinessPolicy() *schema.Resource {
 }
 
 func resourceAwsLBCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	// Provision the LBStickinessPolicy
 	lbspOpts := &elb.CreateLBCookieStickinessPolicyInput{
@@ -64,7 +65,7 @@ func resourceAwsLBCookieStickinessPolicyCreate(d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] LB Cookie Stickiness Policy opts: %#v", lbspOpts)
-	if _, err := elbconn.CreateLBCookieStickinessPolicy(lbspOpts); err != nil {
+	if _, err := conn.CreateLBCookieStickinessPolicy(lbspOpts); err != nil {
 		return fmt.Errorf("Error creating LBCookieStickinessPolicy: %s", err)
 	}
 
@@ -75,7 +76,7 @@ func resourceAwsLBCookieStickinessPolicyCreate(d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] LB Cookie Stickiness create configuration: %#v", setLoadBalancerOpts)
-	if _, err := elbconn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
+	if _, err := conn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
 		return fmt.Errorf("Error setting LBCookieStickinessPolicy: %s", err)
 	}
 
@@ -87,7 +88,7 @@ func resourceAwsLBCookieStickinessPolicyCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsLBCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, lbPort, policyName := resourceAwsLBCookieStickinessPolicyParseId(d.Id())
 
@@ -96,7 +97,7 @@ func resourceAwsLBCookieStickinessPolicyRead(d *schema.ResourceData, meta interf
 		PolicyNames:      []*string{aws.String(policyName)},
 	}
 
-	getResp, err := elbconn.DescribeLoadBalancerPolicies(request)
+	getResp, err := conn.DescribeLoadBalancerPolicies(request)
 	if err != nil {
 		if ec2err, ok := err.(awserr.Error); ok {
 			if ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound" {
@@ -112,7 +113,7 @@ func resourceAwsLBCookieStickinessPolicyRead(d *schema.ResourceData, meta interf
 	}
 
 	// we know the policy exists now, but we have to check if it's assigned to a listener
-	assigned, err := resourceAwsELBSticknessPolicyAssigned(policyName, lbName, lbPort, elbconn)
+	assigned, err := resourceAwsELBSticknessPolicyAssigned(policyName, lbName, lbPort, conn)
 	if err != nil {
 		return err
 	}
@@ -148,7 +149,7 @@ func resourceAwsLBCookieStickinessPolicyRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsLBCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, _, policyName := resourceAwsLBCookieStickinessPolicyParseId(d.Id())
 
@@ -161,7 +162,7 @@ func resourceAwsLBCookieStickinessPolicyDelete(d *schema.ResourceData, meta inte
 		PolicyNames:      []*string{},
 	}
 
-	if _, err := elbconn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
+	if _, err := conn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
 		return fmt.Errorf("Error removing LBCookieStickinessPolicy: %s", err)
 	}
 
@@ -170,7 +171,7 @@ func resourceAwsLBCookieStickinessPolicyDelete(d *schema.ResourceData, meta inte
 		PolicyName:       aws.String(policyName),
 	}
 
-	if _, err := elbconn.DeleteLoadBalancerPolicy(request); err != nil {
+	if _, err := conn.DeleteLoadBalancerPolicy(request); err != nil {
 		return fmt.Errorf("Error deleting LB stickiness policy %s: %s", d.Id(), err)
 	}
 	return nil

@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region
@@ -51,7 +52,7 @@ func dataSourceAwsElbHostedZoneId() *schema.Resource {
 }
 
 func dataSourceAwsElbHostedZoneIdRead(d *schema.ResourceData, meta interface{}) error {
-	region := meta.(*AWSClient).region
+	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}
