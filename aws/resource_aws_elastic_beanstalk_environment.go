@@ -596,23 +596,23 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 		return err
 	}
 
-	if err := d.Set("autoscaling_groups", flattenBeanstalkAsg(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
+	if err := d.Set("autoscaling_groups", flattenASG(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("instances", flattenBeanstalkInstances(resources.EnvironmentResources.Instances)); err != nil {
+	if err := d.Set("instances", flattenInstances(resources.EnvironmentResources.Instances)); err != nil {
 		return err
 	}
-	if err := d.Set("launch_configurations", flattenBeanstalkLc(resources.EnvironmentResources.LaunchConfigurations)); err != nil {
+	if err := d.Set("launch_configurations", flattenLc(resources.EnvironmentResources.LaunchConfigurations)); err != nil {
 		return err
 	}
-	if err := d.Set("load_balancers", flattenBeanstalkElb(resources.EnvironmentResources.LoadBalancers)); err != nil {
+	if err := d.Set("load_balancers", flattenELB(resources.EnvironmentResources.LoadBalancers)); err != nil {
 		return err
 	}
-	if err := d.Set("queues", flattenBeanstalkSqs(resources.EnvironmentResources.Queues)); err != nil {
+	if err := d.Set("queues", flattenSQS(resources.EnvironmentResources.Queues)); err != nil {
 		return err
 	}
-	if err := d.Set("triggers", flattenBeanstalkTrigger(resources.EnvironmentResources.Triggers)); err != nil {
+	if err := d.Set("triggers", flattenTrigger(resources.EnvironmentResources.Triggers)); err != nil {
 		return err
 	}
 	if err := d.Set("endpoint_url", env.EndpointURL); err != nil {
