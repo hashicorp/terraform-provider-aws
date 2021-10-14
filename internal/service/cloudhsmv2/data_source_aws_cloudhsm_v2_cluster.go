@@ -1,4 +1,4 @@
-package aws
+package cloudhsmv2
 
 import (
 	"fmt"

@@ -4,15 +4,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
-	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 )
 
 func statusClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		cluster, err := tfcloudhsmv2.FindCluster(conn, id)
+		cluster, err := FindCluster(conn, id)
 
 		if err != nil {
 			return nil, "", err
@@ -28,7 +25,7 @@ func statusClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRe
 
 func statusHSMState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hsm, err := tfcloudhsmv2.FindHSM(conn, id, "")
+		hsm, err := FindHSM(conn, id, "")
 
 		if err != nil {
 			return nil, "", err
