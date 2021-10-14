@@ -815,7 +815,7 @@ func ResourceDeliveryStream() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsKinesisFirehoseMigrateState,
+		MigrateState:  MigrateState,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,

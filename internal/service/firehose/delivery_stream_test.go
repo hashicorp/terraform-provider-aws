@@ -50,7 +50,7 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 		}
 
 		for _, sn := range page.DeliveryStreamNames {
-			r := ResourceDeliveryStream()
+			r := tffirehose.ResourceDeliveryStream()
 			d := r.Data(nil)
 			d.SetId("???")
 			d.Set("name", sn)
@@ -143,7 +143,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_disappears(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDeliveryStream(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tffirehose.ResourceDeliveryStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
