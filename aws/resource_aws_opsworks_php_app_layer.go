@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksPhpAppLayer() *schema.Resource {
+func ResourcePHPAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypePhpApp,
 		DefaultLayerName: "PHP App Server",

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSLBCookieStickinessPolicy_basic(t *testing.T) {
@@ -118,7 +119,7 @@ func TestAccAWSLBCookieStickinessPolicy_disappears(t *testing.T) {
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(elbResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLBCookieStickinessPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCookieStickinessPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,7 +142,7 @@ func TestAccAWSLBCookieStickinessPolicy_disappears_ELB(t *testing.T) {
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(elbResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElb(), elbResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceLoadBalancer(), elbResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

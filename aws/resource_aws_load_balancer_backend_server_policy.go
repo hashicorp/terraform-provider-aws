@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLoadBalancerBackendServerPolicies() *schema.Resource {
+func ResourceBackendServerPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLoadBalancerBackendServerPoliciesCreate,
-		Read:   resourceAwsLoadBalancerBackendServerPoliciesRead,
-		Update: resourceAwsLoadBalancerBackendServerPoliciesCreate,
-		Delete: resourceAwsLoadBalancerBackendServerPoliciesDelete,
+		Create: resourceBackendServerPolicyCreate,
+		Read:   resourceBackendServerPolicyRead,
+		Update: resourceBackendServerPolicyCreate,
+		Delete: resourceBackendServerPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"load_balancer_name": {
@@ -40,7 +40,7 @@ func resourceAwsLoadBalancerBackendServerPolicies() *schema.Resource {
 	}
 }
 
-func resourceAwsLoadBalancerBackendServerPoliciesCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBackendServerPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName := d.Get("load_balancer_name")
@@ -61,10 +61,10 @@ func resourceAwsLoadBalancerBackendServerPoliciesCreate(d *schema.ResourceData, 
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", *setOpts.LoadBalancerName, strconv.FormatInt(*setOpts.InstancePort, 10)))
-	return resourceAwsLoadBalancerBackendServerPoliciesRead(d, meta)
+	return resourceBackendServerPolicyRead(d, meta)
 }
 
-func resourceAwsLoadBalancerBackendServerPoliciesRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName, instancePort := resourceAwsLoadBalancerBackendServerPoliciesParseId(d.Id())
@@ -111,7 +111,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesRead(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAwsLoadBalancerBackendServerPoliciesDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBackendServerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName, instancePort := resourceAwsLoadBalancerBackendServerPoliciesParseId(d.Id())

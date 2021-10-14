@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLBSSLNegotiationPolicy() *schema.Resource {
+func ResourceSSLNegotiationPolicy() *schema.Resource {
 	return &schema.Resource{
 		// There is no concept of "updating" an LB policy in
 		// the AWS API.
-		Create: resourceAwsLBSSLNegotiationPolicyCreate,
-		Read:   resourceAwsLBSSLNegotiationPolicyRead,
-		Delete: resourceAwsLBSSLNegotiationPolicyDelete,
+		Create: resourceSSLNegotiationPolicyCreate,
+		Read:   resourceSSLNegotiationPolicyRead,
+		Delete: resourceSSLNegotiationPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -70,7 +70,7 @@ func resourceAwsLBSSLNegotiationPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsLBSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	// Provision the SSLNegotiationPolicy
@@ -109,7 +109,7 @@ func resourceAwsLBSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, lbPort, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(d.Id())
@@ -162,7 +162,7 @@ func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsLBSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	lbName, _, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(d.Id())

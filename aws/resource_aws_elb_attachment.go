@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElbAttachment() *schema.Resource {
+func ResourceAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElbAttachmentCreate,
-		Read:   resourceAwsElbAttachmentRead,
-		Delete: resourceAwsElbAttachmentDelete,
+		Create: resourceAttachmentCreate,
+		Read:   resourceAttachmentRead,
+		Delete: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"elb": {
@@ -34,7 +34,7 @@ func resourceAwsElbAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 	elbName := d.Get("elb").(string)
 
@@ -73,7 +73,7 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsElbAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 	elbName := d.Get("elb").(string)
 
@@ -117,7 +117,7 @@ func resourceAwsElbAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsElbAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 	elbName := d.Get("elb").(string)
 

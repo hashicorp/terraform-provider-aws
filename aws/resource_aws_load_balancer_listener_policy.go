@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLoadBalancerListenerPolicies() *schema.Resource {
+func ResourceListenerPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLoadBalancerListenerPoliciesCreate,
-		Read:   resourceAwsLoadBalancerListenerPoliciesRead,
-		Update: resourceAwsLoadBalancerListenerPoliciesCreate,
-		Delete: resourceAwsLoadBalancerListenerPoliciesDelete,
+		Create: resourceListenerPolicyCreate,
+		Read:   resourceListenerPolicyRead,
+		Update: resourceListenerPolicyCreate,
+		Delete: resourceListenerPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"load_balancer_name": {
@@ -40,7 +40,7 @@ func resourceAwsLoadBalancerListenerPolicies() *schema.Resource {
 	}
 }
 
-func resourceAwsLoadBalancerListenerPoliciesCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName := d.Get("load_balancer_name")
@@ -61,10 +61,10 @@ func resourceAwsLoadBalancerListenerPoliciesCreate(d *schema.ResourceData, meta 
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", *setOpts.LoadBalancerName, strconv.FormatInt(*setOpts.LoadBalancerPort, 10)))
-	return resourceAwsLoadBalancerListenerPoliciesRead(d, meta)
+	return resourceListenerPolicyRead(d, meta)
 }
 
-func resourceAwsLoadBalancerListenerPoliciesRead(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName, loadBalancerPort := resourceAwsLoadBalancerListenerPoliciesParseId(d.Id())
@@ -111,7 +111,7 @@ func resourceAwsLoadBalancerListenerPoliciesRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsLoadBalancerListenerPoliciesDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName, loadBalancerPort := resourceAwsLoadBalancerListenerPoliciesParseId(d.Id())

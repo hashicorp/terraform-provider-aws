@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -40,7 +41,7 @@ func testSweepSagemakerApps(region string) error {
 				continue
 			}
 
-			r := resourceAwsSagemakerApp()
+			r := ResourceApp()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(app.AppName))
 			d.Set("app_name", app.AppName)
@@ -195,7 +196,7 @@ func testAccAWSSagemakerApp_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerAppBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerAppExists(resourceName, &app),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerApp(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

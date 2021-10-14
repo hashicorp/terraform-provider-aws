@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksRailsAppLayer() *schema.Resource {
+func ResourceRailsAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeRailsApp,
 		DefaultLayerName: "Rails App Server",

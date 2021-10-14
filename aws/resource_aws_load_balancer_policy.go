@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLoadBalancerPolicy() *schema.Resource {
+func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLoadBalancerPolicyCreate,
-		Read:   resourceAwsLoadBalancerPolicyRead,
-		Update: resourceAwsLoadBalancerPolicyUpdate,
-		Delete: resourceAwsLoadBalancerPolicyDelete,
+		Create: resourcePolicyCreate,
+		Read:   resourcePolicyRead,
+		Update: resourcePolicyUpdate,
+		Delete: resourcePolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"load_balancer_name": {
@@ -59,7 +59,7 @@ func resourceAwsLoadBalancerPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsLoadBalancerPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	attributes := []*elb.PolicyAttribute{}
@@ -88,10 +88,10 @@ func resourceAwsLoadBalancerPolicyCreate(d *schema.ResourceData, meta interface{
 	d.SetId(fmt.Sprintf("%s:%s",
 		*lbspOpts.LoadBalancerName,
 		*lbspOpts.PolicyName))
-	return resourceAwsLoadBalancerPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsLoadBalancerPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName, policyName := resourceAwsLoadBalancerPolicyParseId(d.Id())
@@ -146,7 +146,7 @@ func resourceAwsLoadBalancerPolicyRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsLoadBalancerPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 	reassignments := Reassignment{}
 
@@ -173,7 +173,7 @@ func resourceAwsLoadBalancerPolicyUpdate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error deleting Load Balancer Policy %s: %s", d.Id(), err)
 	}
 
-	err = resourceAwsLoadBalancerPolicyCreate(d, meta)
+	err = resourcePolicyCreate(d, meta)
 	if err != nil {
 		return err
 	}
@@ -190,10 +190,10 @@ func resourceAwsLoadBalancerPolicyUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsLoadBalancerPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsLoadBalancerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
 	loadBalancerName, policyName := resourceAwsLoadBalancerPolicyParseId(d.Id())

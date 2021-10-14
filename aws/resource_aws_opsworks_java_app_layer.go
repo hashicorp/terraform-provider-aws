@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsOpsworksJavaAppLayer() *schema.Resource {
+func ResourceJavaAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypeJavaApp,
 		DefaultLayerName: "Java App Server",

@@ -38,9 +38,9 @@ var elbHostedZoneIdPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:      "Z1H1FL5HABSF5",
 }
 
-func dataSourceAwsElbHostedZoneId() *schema.Resource {
+func DataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElbHostedZoneIdRead,
+		Read: dataSourceHostedZoneIDRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -51,7 +51,7 @@ func dataSourceAwsElbHostedZoneId() *schema.Resource {
 	}
 }
 
-func dataSourceAwsElbHostedZoneIdRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error {
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
