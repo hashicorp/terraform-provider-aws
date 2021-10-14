@@ -21,13 +21,13 @@ func TestAccDataSourceAWSS3BucketObjects_basic(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				Config: testAccObjectsResourcesDataSourceConfig(rInt), // NOTE: contains no data source
 				// Does not need Check
 			},
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigBasic(rInt),
+				Config: testAccObjectsBasicDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
+					testAccCheckObjectsExistsDataSource("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.0", "arch/navajo/north_window"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.1", "arch/navajo/sand_dune"),
@@ -47,13 +47,13 @@ func TestAccDataSourceAWSS3BucketObjects_basicViaAccessPoint(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigResourcesPlusAccessPoint(rInt), // NOTE: contains no data source
+				Config: testAccObjectsResourcesPlusAccessPointDataSourceConfig(rInt), // NOTE: contains no data source
 				// Does not need Check
 			},
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigBasicViaAccessPoint(rInt),
+				Config: testAccObjectsBasicViaAccessPointDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
+					testAccCheckObjectsExistsDataSource("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.0", "arch/navajo/north_window"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.1", "arch/navajo/sand_dune"),
@@ -73,13 +73,13 @@ func TestAccDataSourceAWSS3BucketObjects_all(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				Config: testAccObjectsResourcesDataSourceConfig(rInt), // NOTE: contains no data source
 				// Does not need Check
 			},
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigAll(rInt),
+				Config: testAccObjectsAllDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
+					testAccCheckObjectsExistsDataSource("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "7"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.0", "arch/courthouse_towers/landscape"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.1", "arch/navajo/north_window"),
@@ -104,13 +104,13 @@ func TestAccDataSourceAWSS3BucketObjects_prefixes(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				Config: testAccObjectsResourcesDataSourceConfig(rInt), // NOTE: contains no data source
 				// Does not need Check
 			},
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigPrefixes(rInt),
+				Config: testAccObjectsPrefixesDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
+					testAccCheckObjectsExistsDataSource("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.0", "arch/rubicon"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "common_prefixes.#", "4"),
@@ -134,13 +134,13 @@ func TestAccDataSourceAWSS3BucketObjects_encoded(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigExtraResource(rInt), // NOTE: contains no data source
+				Config: testAccObjectsExtraResourceDataSourceConfig(rInt), // NOTE: contains no data source
 				// Does not need Check
 			},
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigEncoded(rInt),
+				Config: testAccObjectsEncodedDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
+					testAccCheckObjectsExistsDataSource("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.0", "arch/ru+b+ic+on"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.1", "arch/rubicon"),
@@ -160,13 +160,13 @@ func TestAccDataSourceAWSS3BucketObjects_maxKeys(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				Config: testAccObjectsResourcesDataSourceConfig(rInt), // NOTE: contains no data source
 				// Does not need Check
 			},
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigMaxKeys(rInt),
+				Config: testAccObjectsMaxKeysDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
+					testAccCheckObjectsExistsDataSource("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.0", "arch/courthouse_towers/landscape"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.1", "arch/navajo/north_window"),
@@ -186,13 +186,13 @@ func TestAccDataSourceAWSS3BucketObjects_startAfter(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				Config: testAccObjectsResourcesDataSourceConfig(rInt), // NOTE: contains no data source
 				// Does not need Check
 			},
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigStartAfter(rInt),
+				Config: testAccObjectsStartAfterDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
+					testAccCheckObjectsExistsDataSource("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.0", "arch/three_gossips/turret"),
 				),
@@ -211,13 +211,13 @@ func TestAccDataSourceAWSS3BucketObjects_fetchOwner(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				Config: testAccObjectsResourcesDataSourceConfig(rInt), // NOTE: contains no data source
 				// Does not need Check
 			},
 			{
-				Config: testAccAWSDataSourceS3ObjectsConfigOwners(rInt),
+				Config: testAccObjectsOwnersDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
+					testAccCheckObjectsExistsDataSource("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "owners.#", "2"),
 				),
@@ -226,7 +226,7 @@ func TestAccDataSourceAWSS3BucketObjects_fetchOwner(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsS3ObjectsDataSourceExists(addr string) resource.TestCheckFunc {
+func testAccCheckObjectsExistsDataSource(addr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[addr]
 		if !ok {
@@ -241,7 +241,7 @@ func testAccCheckAwsS3ObjectsDataSourceExists(addr string) resource.TestCheckFun
 	}
 }
 
-func testAccAWSDataSourceS3ObjectsConfigResources(randInt int) string {
+func testAccObjectsResourcesDataSourceConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "objects_bucket" {
   bucket = "tf-acc-objects-test-bucket-%d"
@@ -291,8 +291,8 @@ resource "aws_s3_bucket_object" "object7" {
 `, randInt)
 }
 
-func testAccAWSDataSourceS3ObjectsConfigResourcesPlusAccessPoint(randInt int) string {
-	return testAccAWSDataSourceS3ObjectsConfigResources(randInt) + fmt.Sprintf(`
+func testAccObjectsResourcesPlusAccessPointDataSourceConfig(randInt int) string {
+	return testAccObjectsResourcesDataSourceConfig(randInt) + fmt.Sprintf(`
 resource "aws_s3_access_point" "test" {
   bucket = aws_s3_bucket.objects_bucket.bucket
   name   = "tf-objects-test-access-point-%[1]d"
@@ -300,7 +300,7 @@ resource "aws_s3_access_point" "test" {
 `, randInt)
 }
 
-func testAccAWSDataSourceS3ObjectsConfigBasic(randInt int) string {
+func testAccObjectsBasicDataSourceConfig(randInt int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -309,11 +309,11 @@ data "aws_s3_bucket_objects" "yesh" {
   prefix    = "arch/navajo/"
   delimiter = "/"
 }
-`, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
+`, testAccObjectsResourcesDataSourceConfig(randInt))
 }
 
-func testAccAWSDataSourceS3ObjectsConfigBasicViaAccessPoint(randInt int) string {
-	return testAccAWSDataSourceS3ObjectsConfigResourcesPlusAccessPoint(randInt) + `
+func testAccObjectsBasicViaAccessPointDataSourceConfig(randInt int) string {
+	return testAccObjectsResourcesPlusAccessPointDataSourceConfig(randInt) + `
 data "aws_s3_bucket_objects" "yesh" {
   bucket    = aws_s3_access_point.test.arn
   prefix    = "arch/navajo/"
@@ -322,17 +322,17 @@ data "aws_s3_bucket_objects" "yesh" {
 `
 }
 
-func testAccAWSDataSourceS3ObjectsConfigAll(randInt int) string {
+func testAccObjectsAllDataSourceConfig(randInt int) string {
 	return fmt.Sprintf(`
 %s
 
 data "aws_s3_bucket_objects" "yesh" {
   bucket = aws_s3_bucket.objects_bucket.id
 }
-`, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
+`, testAccObjectsResourcesDataSourceConfig(randInt))
 }
 
-func testAccAWSDataSourceS3ObjectsConfigPrefixes(randInt int) string {
+func testAccObjectsPrefixesDataSourceConfig(randInt int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -341,10 +341,10 @@ data "aws_s3_bucket_objects" "yesh" {
   prefix    = "arch/"
   delimiter = "/"
 }
-`, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
+`, testAccObjectsResourcesDataSourceConfig(randInt))
 }
 
-func testAccAWSDataSourceS3ObjectsConfigExtraResource(randInt int) string {
+func testAccObjectsExtraResourceDataSourceConfig(randInt int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -353,10 +353,10 @@ resource "aws_s3_bucket_object" "object8" {
   key     = "arch/ru b ic on"
   content = "Goose Island"
 }
-`, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
+`, testAccObjectsResourcesDataSourceConfig(randInt))
 }
 
-func testAccAWSDataSourceS3ObjectsConfigEncoded(randInt int) string {
+func testAccObjectsEncodedDataSourceConfig(randInt int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -365,10 +365,10 @@ data "aws_s3_bucket_objects" "yesh" {
   encoding_type = "url"
   prefix        = "arch/ru"
 }
-`, testAccAWSDataSourceS3ObjectsConfigExtraResource(randInt))
+`, testAccObjectsExtraResourceDataSourceConfig(randInt))
 }
 
-func testAccAWSDataSourceS3ObjectsConfigMaxKeys(randInt int) string {
+func testAccObjectsMaxKeysDataSourceConfig(randInt int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -376,10 +376,10 @@ data "aws_s3_bucket_objects" "yesh" {
   bucket   = aws_s3_bucket.objects_bucket.id
   max_keys = 2
 }
-`, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
+`, testAccObjectsResourcesDataSourceConfig(randInt))
 }
 
-func testAccAWSDataSourceS3ObjectsConfigStartAfter(randInt int) string {
+func testAccObjectsStartAfterDataSourceConfig(randInt int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -387,10 +387,10 @@ data "aws_s3_bucket_objects" "yesh" {
   bucket      = aws_s3_bucket.objects_bucket.id
   start_after = "arch/three_gossips/broken"
 }
-`, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
+`, testAccObjectsResourcesDataSourceConfig(randInt))
 }
 
-func testAccAWSDataSourceS3ObjectsConfigOwners(randInt int) string {
+func testAccObjectsOwnersDataSourceConfig(randInt int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -399,5 +399,5 @@ data "aws_s3_bucket_objects" "yesh" {
   prefix      = "arch/three_gossips/"
   fetch_owner = true
 }
-`, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
+`, testAccObjectsResourcesDataSourceConfig(randInt))
 }

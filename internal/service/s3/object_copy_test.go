@@ -25,12 +25,12 @@ func TestAccAWSS3ObjectCopy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ObjectCopyDestroy,
+		CheckDestroy: testAccCheckObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ObjectCopyConfig_basic(rName1, sourceKey, rName2, key),
+				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, key),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ObjectCopyExists(resourceName),
+					testAccCheckObjectCopyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName2),
 					resource.TestCheckResourceAttr(resourceName, "key", key),
 					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("%s/%s", rName1, sourceKey)),
@@ -49,12 +49,12 @@ func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Bucket(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ObjectCopyDestroy,
+		CheckDestroy: testAccCheckObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ObjectCopyConfig_BucketKeyEnabled_Bucket(rName),
+				Config: testAccObjectCopyConfig_BucketKeyEnabled_Bucket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ObjectCopyExists(resourceName),
+					testAccCheckObjectCopyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "true"),
 				),
 			},
@@ -70,12 +70,12 @@ func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Object(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3ObjectCopyDestroy,
+		CheckDestroy: testAccCheckObjectCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ObjectCopyConfig_BucketKeyEnabled_Object(rName),
+				Config: testAccObjectCopyConfig_BucketKeyEnabled_Object(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3ObjectCopyExists(resourceName),
+					testAccCheckObjectCopyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "true"),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccAWSS3ObjectCopy_BucketKeyEnabled_Object(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSS3ObjectCopyDestroy(s *terraform.State) error {
+func testAccCheckObjectCopyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -104,7 +104,7 @@ func testAccCheckAWSS3ObjectCopyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSS3ObjectCopyExists(n string) resource.TestCheckFunc {
+func testAccCheckObjectCopyExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -130,7 +130,7 @@ func testAccCheckAWSS3ObjectCopyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSS3ObjectCopyConfig_basic(rName1, sourceKey, rName2, key string) string {
+func testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, key string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "source" {
   bucket = %[1]q
@@ -160,7 +160,7 @@ resource "aws_s3_object_copy" "test" {
 `, rName1, sourceKey, rName2, key)
 }
 
-func testAccAWSS3ObjectCopyConfig_BucketKeyEnabled_Bucket(rName string) string {
+func testAccObjectCopyConfig_BucketKeyEnabled_Bucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Encrypts test bucket objects"
@@ -199,7 +199,7 @@ resource "aws_s3_object_copy" "test" {
 `, rName)
 }
 
-func testAccAWSS3ObjectCopyConfig_BucketKeyEnabled_Object(rName string) string {
+func testAccObjectCopyConfig_BucketKeyEnabled_Object(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Encrypts test bucket objects"

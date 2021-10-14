@@ -33,10 +33,10 @@ func TestAccDataSourceAWSS3BucketObject_basic(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectConfig_basic(rInt),
+				Config: testAccObjectDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -65,11 +65,11 @@ func TestAccDataSourceAWSS3BucketObject_basicViaAccessPoint(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectConfig_basicViaAccessPoint(rName),
+				Config: testAccObjectDataSourceConfig_basicViaAccessPoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket", accessPointResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "key", resourceName, "key"),
 				),
@@ -94,10 +94,10 @@ func TestAccDataSourceAWSS3BucketObject_readableBody(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectConfig_readableBody(rInt),
+				Config: testAccObjectDataSourceConfig_readableBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -128,10 +128,10 @@ func TestAccDataSourceAWSS3BucketObject_kmsEncrypted(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectConfig_kmsEncrypted(rInt),
+				Config: testAccObjectDataSourceConfig_kmsEncrypted(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -164,10 +164,10 @@ func TestAccDataSourceAWSS3BucketObject_bucketKeyEnabled(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectConfig_bucketKeyEnabled(rInt),
+				Config: testAccObjectDataSourceConfig_bucketKeyEnabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -201,10 +201,10 @@ func TestAccDataSourceAWSS3BucketObject_allParams(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectConfig_allParams(rInt),
+				Config: testAccObjectDataSourceConfig_allParams(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "25"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -252,10 +252,10 @@ func TestAccDataSourceAWSS3BucketObject_ObjectLockLegalHoldOff(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectConfig_objectLockLegalHoldOff(rInt),
+				Config: testAccObjectDataSourceConfig_objectLockLegalHoldOff(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -287,10 +287,10 @@ func TestAccDataSourceAWSS3BucketObject_ObjectLockLegalHoldOn(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectConfig_objectLockLegalHoldOn(rInt, retainUntilDate),
+				Config: testAccObjectDataSourceConfig_objectLockLegalHoldOn(rInt, retainUntilDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -315,7 +315,7 @@ func TestAccDataSourceAWSS3BucketObject_LeadingSlash(t *testing.T) {
 	dataSourceName3 := "data.aws_s3_bucket_object.obj3"
 
 	rInt := sdkacctest.RandInt()
-	resourceOnlyConf, conf := testAccAWSDataSourceS3ObjectConfig_leadingSlash(rInt)
+	resourceOnlyConf, conf := testAccObjectDataSourceConfig_leadingSlash(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
@@ -326,27 +326,27 @@ func TestAccDataSourceAWSS3BucketObject_LeadingSlash(t *testing.T) {
 			{
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
+					testAccCheckBucketObjectExists(resourceName, &rObj),
 				),
 			},
 			{
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName1, &dsObj1),
+					testAccCheckObjectExistsDataSource(dataSourceName1, &dsObj1),
 					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
 
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName2, &dsObj2),
+					testAccCheckObjectExistsDataSource(dataSourceName2, &dsObj2),
 					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
 
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName3, &dsObj3),
+					testAccCheckObjectExistsDataSource(dataSourceName3, &dsObj3),
 					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
@@ -369,7 +369,7 @@ func TestAccDataSourceAWSS3BucketObject_MultipleSlashes(t *testing.T) {
 	dataSourceName3 := "data.aws_s3_bucket_object.obj3"
 
 	rInt := sdkacctest.RandInt()
-	resourceOnlyConf, conf := testAccAWSDataSourceS3ObjectConfig_multipleSlashes(rInt)
+	resourceOnlyConf, conf := testAccObjectDataSourceConfig_multipleSlashes(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(t) },
@@ -380,25 +380,25 @@ func TestAccDataSourceAWSS3BucketObject_MultipleSlashes(t *testing.T) {
 			{
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName1, &rObj1),
-					testAccCheckAWSS3BucketObjectExists(resourceName2, &rObj2),
+					testAccCheckBucketObjectExists(resourceName1, &rObj1),
+					testAccCheckBucketObjectExists(resourceName2, &rObj2),
 				),
 			},
 			{
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName1, &dsObj1),
+					testAccCheckObjectExistsDataSource(dataSourceName1, &dsObj1),
 					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "content_type", resourceName1, "content_type"),
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
 
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName2, &dsObj2),
+					testAccCheckObjectExistsDataSource(dataSourceName2, &dsObj2),
 					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "content_type", resourceName1, "content_type"),
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
 
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName3, &dsObj3),
+					testAccCheckObjectExistsDataSource(dataSourceName3, &dsObj3),
 					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "content_type", resourceName2, "content_type"),
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "no"),
@@ -420,16 +420,16 @@ func TestAccDataSourceAWSS3BucketObject_SingleSlashAsKey(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceS3ObjectConfigSingleSlashAsKey(rName),
+				Config: testAccObjectSingleSlashAsKeyDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsS3ObjectDataSourceExists(n string, obj *s3.GetObjectOutput) resource.TestCheckFunc {
+func testAccCheckObjectExistsDataSource(n string, obj *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -457,7 +457,7 @@ func testAccCheckAwsS3ObjectDataSourceExists(n string, obj *s3.GetObjectOutput) 
 	}
 }
 
-func testAccAWSDataSourceS3ObjectConfig_basic(randInt int) string {
+func testAccObjectDataSourceConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -476,7 +476,7 @@ data "aws_s3_bucket_object" "obj" {
 `, randInt)
 }
 
-func testAccAWSDataSourceS3ObjectConfig_basicViaAccessPoint(rName string) string {
+func testAccObjectDataSourceConfig_basicViaAccessPoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -500,7 +500,7 @@ data "aws_s3_bucket_object" "test" {
 `, rName)
 }
 
-func testAccAWSDataSourceS3ObjectConfig_readableBody(randInt int) string {
+func testAccObjectDataSourceConfig_readableBody(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -520,7 +520,7 @@ data "aws_s3_bucket_object" "obj" {
 `, randInt)
 }
 
-func testAccAWSDataSourceS3ObjectConfig_kmsEncrypted(randInt int) string {
+func testAccObjectDataSourceConfig_kmsEncrypted(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -546,7 +546,7 @@ data "aws_s3_bucket_object" "obj" {
 `, randInt)
 }
 
-func testAccAWSDataSourceS3ObjectConfig_bucketKeyEnabled(randInt int) string {
+func testAccObjectDataSourceConfig_bucketKeyEnabled(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -573,7 +573,7 @@ data "aws_s3_bucket_object" "obj" {
 `, randInt)
 }
 
-func testAccAWSDataSourceS3ObjectConfig_allParams(randInt int) string {
+func testAccObjectDataSourceConfig_allParams(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -610,7 +610,7 @@ data "aws_s3_bucket_object" "obj" {
 `, randInt)
 }
 
-func testAccAWSDataSourceS3ObjectConfig_objectLockLegalHoldOff(randInt int) string {
+func testAccObjectDataSourceConfig_objectLockLegalHoldOff(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -638,7 +638,7 @@ data "aws_s3_bucket_object" "obj" {
 `, randInt)
 }
 
-func testAccAWSDataSourceS3ObjectConfig_objectLockLegalHoldOn(randInt int, retainUntilDate string) string {
+func testAccObjectDataSourceConfig_objectLockLegalHoldOn(randInt int, retainUntilDate string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -669,7 +669,7 @@ data "aws_s3_bucket_object" "obj" {
 `, randInt, retainUntilDate)
 }
 
-func testAccAWSDataSourceS3ObjectConfig_leadingSlash(randInt int) (string, string) {
+func testAccObjectDataSourceConfig_leadingSlash(randInt int) (string, string) {
 	resources := fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -705,7 +705,7 @@ data "aws_s3_bucket_object" "obj3" {
 	return resources, both
 }
 
-func testAccAWSDataSourceS3ObjectConfig_multipleSlashes(randInt int) (string, string) {
+func testAccObjectDataSourceConfig_multipleSlashes(randInt int) (string, string) {
 	resources := fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
@@ -749,7 +749,7 @@ data "aws_s3_bucket_object" "obj3" {
 	return resources, both
 }
 
-func testAccAWSDataSourceS3ObjectConfigSingleSlashAsKey(rName string) string {
+func testAccObjectSingleSlashAsKeyDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

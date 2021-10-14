@@ -27,12 +27,12 @@ func TestAccAWSS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfiguration(rName, rName),
+				Config: testAccBucketAnalyticsConfiguration(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -57,18 +57,18 @@ func TestAccAWSS3BucketAnalyticsConfiguration_removed(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfiguration(rName, rName),
+				Config: testAccBucketAnalyticsConfiguration(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 				),
 			},
 			{
-				Config: testAccAWSS3BucketAnalyticsConfiguration_removed(rName),
+				Config: testAccBucketAnalyticsConfiguration_removed(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(rName, rName),
+					testAccCheckBucketAnalyticsConfigurationRemoved(rName, rName),
 				),
 			},
 		},
@@ -87,12 +87,12 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfiguration(originalACName, originalBucketName),
+				Config: testAccBucketAnalyticsConfiguration(originalACName, originalBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", originalACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -100,10 +100,10 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSS3BucketAnalyticsConfiguration(updatedACName, originalBucketName),
+				Config: testAccBucketAnalyticsConfiguration(updatedACName, originalBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
-					testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(originalACName, originalBucketName),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationRemoved(originalACName, originalBucketName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -111,10 +111,10 @@ func TestAccAWSS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationUpdateBucket(updatedACName, originalBucketName, updatedBucketName),
+				Config: testAccBucketAnalyticsConfigurationUpdateBucket(updatedACName, originalBucketName, updatedBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
-					testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(updatedACName, originalBucketName),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationRemoved(updatedACName, originalBucketName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test_2", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
@@ -137,10 +137,10 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Empty(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyFilter(rName, rName),
+				Config:      testAccBucketAnalyticsConfigurationWithEmptyFilter(rName, rName),
 				ExpectError: regexp.MustCompile(`one of .* must be specified`),
 			},
 		},
@@ -160,21 +160,21 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Prefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
+				Config: testAccBucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefixUpdate),
+				Config: testAccBucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefixUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
@@ -202,12 +202,12 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterSingleTag(rName, rName, tag1),
+				Config: testAccBucketAnalyticsConfigurationWithFilterSingleTag(rName, rName, tag1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -215,9 +215,9 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_SingleTag(t *testing.T)
 				),
 			},
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterSingleTag(rName, rName, tag1Update),
+				Config: testAccBucketAnalyticsConfigurationWithFilterSingleTag(rName, rName, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -248,12 +248,12 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterMultipleTags(rName, rName, tag1, tag2),
+				Config: testAccBucketAnalyticsConfigurationWithFilterMultipleTags(rName, rName, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -262,9 +262,9 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_MultipleTags(t *testing
 				),
 			},
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterMultipleTags(rName, rName, tag1Update, tag2Update),
+				Config: testAccBucketAnalyticsConfigurationWithFilterMultipleTags(rName, rName, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -298,12 +298,12 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testin
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefixAndTags(rName, rName, prefix, tag1, tag2),
+				Config: testAccBucketAnalyticsConfigurationWithFilterPrefixAndTags(rName, rName, prefix, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -312,9 +312,9 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_PrefixAndTags(t *testin
 				),
 			},
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefixAndTags(rName, rName, prefixUpdate, tag1Update, tag2Update),
+				Config: testAccBucketAnalyticsConfigurationWithFilterPrefixAndTags(rName, rName, prefixUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -343,18 +343,18 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithFilter_Remove(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
+				Config: testAccBucketAnalyticsConfigurationWithFilterPrefix(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 				),
 			},
 			{
-				Config: testAccAWSS3BucketAnalyticsConfiguration(rName, rName),
+				Config: testAccBucketAnalyticsConfiguration(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 				),
 			},
@@ -374,10 +374,10 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Empty(t *
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSS3BucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(rName, rName),
+				Config:      testAccBucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(rName, rName),
 				ExpectError: regexp.MustCompile(`running pre-apply refresh`),
 			},
 		},
@@ -394,12 +394,12 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Default(t
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithDefaultStorageClassAnalysis(rName, rName),
+				Config: testAccBucketAnalyticsConfigurationWithDefaultStorageClassAnalysis(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.0.output_schema_version", "V_1"),
@@ -430,12 +430,12 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Full(t *t
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketAnalyticsConfigurationDestroy,
+		CheckDestroy: testAccCheckBucketAnalyticsConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketAnalyticsConfigurationWithFullStorageClassAnalysis(rName, rName, prefix),
+				Config: testAccBucketAnalyticsConfigurationWithFullStorageClassAnalysis(rName, rName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketAnalyticsConfigurationExists(resourceName, &ac),
+					testAccCheckBucketAnalyticsConfigurationExists(resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.0.output_schema_version", "V_1"),
@@ -455,7 +455,7 @@ func TestAccAWSS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_Full(t *t
 	})
 }
 
-func testAccCheckAWSS3BucketAnalyticsConfigurationDestroy(s *terraform.State) error {
+func testAccCheckBucketAnalyticsConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -474,7 +474,7 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationDestroy(s *terraform.State) er
 	return nil
 }
 
-func testAccCheckAWSS3BucketAnalyticsConfigurationExists(n string, ac *s3.AnalyticsConfiguration) resource.TestCheckFunc {
+func testAccCheckBucketAnalyticsConfigurationExists(n string, ac *s3.AnalyticsConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -501,14 +501,14 @@ func testAccCheckAWSS3BucketAnalyticsConfigurationExists(n string, ac *s3.Analyt
 	}
 }
 
-func testAccCheckAWSS3BucketAnalyticsConfigurationRemoved(name, bucket string) resource.TestCheckFunc {
+func testAccCheckBucketAnalyticsConfigurationRemoved(name, bucket string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 		return tfs3.WaitForDeleteBucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)
 	}
 }
 
-func testAccAWSS3BucketAnalyticsConfiguration(name, bucket string) string {
+func testAccBucketAnalyticsConfiguration(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -521,7 +521,7 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfiguration_removed(bucket string) string {
+func testAccBucketAnalyticsConfiguration_removed(bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = "%s"
@@ -529,7 +529,7 @@ resource "aws_s3_bucket" "test" {
 `, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfigurationUpdateBucket(name, originalBucket, updatedBucket string) string {
+func testAccBucketAnalyticsConfigurationUpdateBucket(name, originalBucket, updatedBucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test_2.bucket
@@ -546,7 +546,7 @@ resource "aws_s3_bucket" "test_2" {
 `, name, originalBucket, updatedBucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfigurationWithEmptyFilter(name, bucket string) string {
+func testAccBucketAnalyticsConfigurationWithEmptyFilter(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -562,7 +562,7 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefix(name, bucket, prefix string) string {
+func testAccBucketAnalyticsConfigurationWithFilterPrefix(name, bucket, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -579,7 +579,7 @@ resource "aws_s3_bucket" "test" {
 `, name, prefix, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfigurationWithFilterSingleTag(name, bucket, tag string) string {
+func testAccBucketAnalyticsConfigurationWithFilterSingleTag(name, bucket, tag string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -598,7 +598,7 @@ resource "aws_s3_bucket" "test" {
 `, name, tag, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfigurationWithFilterMultipleTags(name, bucket, tag1, tag2 string) string {
+func testAccBucketAnalyticsConfigurationWithFilterMultipleTags(name, bucket, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -618,7 +618,7 @@ resource "aws_s3_bucket" "test" {
 `, name, tag1, tag2, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfigurationWithFilterPrefixAndTags(name, bucket, prefix, tag1, tag2 string) string {
+func testAccBucketAnalyticsConfigurationWithFilterPrefixAndTags(name, bucket, prefix, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -640,7 +640,7 @@ resource "aws_s3_bucket" "test" {
 `, name, prefix, tag1, tag2, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(name, bucket string) string {
+func testAccBucketAnalyticsConfigurationWithEmptyStorageClassAnalysis(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -656,7 +656,7 @@ resource "aws_s3_bucket" "test" {
 `, name, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfigurationWithDefaultStorageClassAnalysis(name, bucket string) string {
+func testAccBucketAnalyticsConfigurationWithDefaultStorageClassAnalysis(name, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -683,7 +683,7 @@ resource "aws_s3_bucket" "destination" {
 `, name, bucket)
 }
 
-func testAccAWSS3BucketAnalyticsConfigurationWithFullStorageClassAnalysis(name, bucket, prefix string) string {
+func testAccBucketAnalyticsConfigurationWithFullStorageClassAnalysis(name, bucket, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_analytics_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket

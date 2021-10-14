@@ -40,13 +40,13 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketPolicyConfig(name),
+				Config: testAccBucketPolicyConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
-					testAccCheckAWSS3BucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText),
+					testAccCheckBucketExists("aws_s3_bucket.bucket"),
+					testAccCheckBucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText),
 				),
 			},
 			{
@@ -106,21 +106,21 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		CheckDestroy: testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketPolicyConfig(name),
+				Config: testAccBucketPolicyConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
-					testAccCheckAWSS3BucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText1),
+					testAccCheckBucketExists("aws_s3_bucket.bucket"),
+					testAccCheckBucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText1),
 				),
 			},
 
 			{
-				Config: testAccAWSS3BucketPolicyConfig_updated(name),
+				Config: testAccBucketPolicyConfig_updated(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
-					testAccCheckAWSS3BucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText2),
+					testAccCheckBucketExists("aws_s3_bucket.bucket"),
+					testAccCheckBucketHasPolicy("aws_s3_bucket.bucket", expectedPolicyText2),
 				),
 			},
 
@@ -133,7 +133,7 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSS3BucketHasPolicy(n string, expectedPolicyText string) resource.TestCheckFunc {
+func testAccCheckBucketHasPolicy(n string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -168,7 +168,7 @@ func testAccCheckAWSS3BucketHasPolicy(n string, expectedPolicyText string) resou
 	}
 }
 
-func testAccAWSS3BucketPolicyConfig(bucketName string) string {
+func testAccBucketPolicyConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "%s"
@@ -205,7 +205,7 @@ data "aws_iam_policy_document" "policy" {
 `, bucketName)
 }
 
-func testAccAWSS3BucketPolicyConfig_updated(bucketName string) string {
+func testAccBucketPolicyConfig_updated(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "%s"

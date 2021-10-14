@@ -30,12 +30,12 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
+		CheckDestroy: testAccCheckBucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketInventoryConfig(bucketName, inventoryName),
+				Config: testAccBucketInventoryConfig(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
+					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
 					resource.TestCheckNoResourceAttr(resourceName, "filter"),
 					resource.TestCheckResourceAttr(resourceName, "name", inventoryName),
@@ -76,12 +76,12 @@ func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
+		CheckDestroy: testAccCheckBucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketInventoryConfigEncryptWithSSES3(bucketName, inventoryName),
+				Config: testAccBucketInventoryEncryptWithSSES3Config(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
+					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", "1"),
 				),
 			},
@@ -106,12 +106,12 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
+		CheckDestroy: testAccCheckBucketInventoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketInventoryConfigEncryptWithSSEKMS(bucketName, inventoryName),
+				Config: testAccBucketInventoryEncryptWithSSEKMSConfig(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
+					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexp.MustCompile(fmt.Sprintf("^arn:%s:kms:", acctest.Partition()))),
 				),
@@ -125,7 +125,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSS3BucketInventoryConfigExists(n string, res *s3.InventoryConfiguration) resource.TestCheckFunc {
+func testAccCheckBucketInventoryExistsConfig(n string, res *s3.InventoryConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -158,7 +158,7 @@ func testAccCheckAWSS3BucketInventoryConfigExists(n string, res *s3.InventoryCon
 	}
 }
 
-func testAccCheckAWSS3BucketInventoryDestroy(s *terraform.State) error {
+func testAccCheckBucketInventoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -196,7 +196,7 @@ func testAccCheckAWSS3BucketInventoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSS3BucketInventoryConfigBucket(name string) string {
+func testAccBucketInventoryBucketConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -205,8 +205,8 @@ resource "aws_s3_bucket" "test" {
 `, name)
 }
 
-func testAccAWSS3BucketInventoryConfig(bucketName, inventoryName string) string {
-	return testAccAWSS3BucketInventoryConfigBucket(bucketName) + fmt.Sprintf(`
+func testAccBucketInventoryConfig(bucketName, inventoryName string) string {
+	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket_inventory" "test" {
@@ -240,8 +240,8 @@ resource "aws_s3_bucket_inventory" "test" {
 `, inventoryName)
 }
 
-func testAccAWSS3BucketInventoryConfigEncryptWithSSES3(bucketName, inventoryName string) string {
-	return testAccAWSS3BucketInventoryConfigBucket(bucketName) + fmt.Sprintf(`
+func testAccBucketInventoryEncryptWithSSES3Config(bucketName, inventoryName string) string {
+	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
 resource "aws_s3_bucket_inventory" "test" {
   bucket = aws_s3_bucket.test.id
   name   = %[1]q
@@ -266,8 +266,8 @@ resource "aws_s3_bucket_inventory" "test" {
 `, inventoryName)
 }
 
-func testAccAWSS3BucketInventoryConfigEncryptWithSSEKMS(bucketName, inventoryName string) string {
-	return testAccAWSS3BucketInventoryConfigBucket(bucketName) + fmt.Sprintf(`
+func testAccBucketInventoryEncryptWithSSEKMSConfig(bucketName, inventoryName string) string {
+	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Terraform acc test S3 inventory SSE-KMS encryption: %[1]s"
   deletion_window_in_days = 7

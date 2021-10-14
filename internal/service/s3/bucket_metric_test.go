@@ -235,7 +235,7 @@ func TestFlattenS3MetricsFilter(t *testing.T) {
 	}
 }
 
-func TestResourceAwsS3BucketMetricParseID(t *testing.T) {
+func TestBucketMetricParseID(t *testing.T) {
 	validIds := []string{
 		"foo:bar",
 		"my-bucket:entire-bucket",
@@ -277,12 +277,12 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithoutFilter(bucketName, metricName),
+				Config: testAccBucketMetricsWithoutFilterConfig(bucketName, metricName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
 					resource.TestCheckNoResourceAttr(resourceName, "filter"),
 					resource.TestCheckResourceAttr(resourceName, "name", metricName),
@@ -311,12 +311,12 @@ func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithEmptyFilter(bucketName, metricName),
+				Config: testAccBucketMetricsWithEmptyFilterConfig(bucketName, metricName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 				),
 				ExpectError: regexp.MustCompile(`one of .* must be specified`),
 			},
@@ -338,21 +338,21 @@ func TestAccAWSS3BucketMetric_WithFilterPrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterPrefix(bucketName, metricName, prefix),
+				Config: testAccBucketMetricsWithFilterPrefixConfig(bucketName, metricName, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterPrefix(bucketName, metricName, prefixUpdate),
+				Config: testAccBucketMetricsWithFilterPrefixConfig(bucketName, metricName, prefixUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
@@ -385,12 +385,12 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndMultipleTags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterPrefixAndMultipleTags(bucketName, metricName, prefix, tag1, tag2),
+				Config: testAccBucketMetricsWithFilterPrefixAndMultipleTagsConfig(bucketName, metricName, prefix, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -399,9 +399,9 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndMultipleTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterPrefixAndMultipleTags(bucketName, metricName, prefixUpdate, tag1Update, tag2Update),
+				Config: testAccBucketMetricsWithFilterPrefixAndMultipleTagsConfig(bucketName, metricName, prefixUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -434,12 +434,12 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndSingleTag(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterPrefixAndSingleTag(bucketName, metricName, prefix, tag1),
+				Config: testAccBucketMetricsWithFilterPrefixAndSingleTagConfig(bucketName, metricName, prefix, tag1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -447,9 +447,9 @@ func TestAccAWSS3BucketMetric_WithFilterPrefixAndSingleTag(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterPrefixAndSingleTag(bucketName, metricName, prefixUpdate, tag1Update),
+				Config: testAccBucketMetricsWithFilterPrefixAndSingleTagConfig(bucketName, metricName, prefixUpdate, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -481,12 +481,12 @@ func TestAccAWSS3BucketMetric_WithFilterMultipleTags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterMultipleTags(bucketName, metricName, tag1, tag2),
+				Config: testAccBucketMetricsWithFilterMultipleTagsConfig(bucketName, metricName, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -495,9 +495,9 @@ func TestAccAWSS3BucketMetric_WithFilterMultipleTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterMultipleTags(bucketName, metricName, tag1Update, tag2Update),
+				Config: testAccBucketMetricsWithFilterMultipleTagsConfig(bucketName, metricName, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -528,12 +528,12 @@ func TestAccAWSS3BucketMetric_WithFilterSingleTag(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		CheckDestroy: testAccCheckBucketMetricDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterSingleTag(bucketName, metricName, tag1),
+				Config: testAccBucketMetricsWithFilterSingleTagConfig(bucketName, metricName, tag1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -541,9 +541,9 @@ func TestAccAWSS3BucketMetric_WithFilterSingleTag(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSS3BucketMetricsConfigWithFilterSingleTag(bucketName, metricName, tag1Update),
+				Config: testAccBucketMetricsWithFilterSingleTagConfig(bucketName, metricName, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+					testAccCheckBucketMetricsExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
@@ -559,7 +559,7 @@ func TestAccAWSS3BucketMetric_WithFilterSingleTag(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSS3BucketMetricDestroy(s *terraform.State) error {
+func testAccCheckBucketMetricDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -599,7 +599,7 @@ func testAccCheckAWSS3BucketMetricDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSS3BucketMetricsConfigExists(n string, res *s3.MetricsConfiguration) resource.TestCheckFunc {
+func testAccCheckBucketMetricsExistsConfig(n string, res *s3.MetricsConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -632,7 +632,7 @@ func testAccCheckAWSS3BucketMetricsConfigExists(n string, res *s3.MetricsConfigu
 	}
 }
 
-func testAccAWSS3BucketMetricsConfigBucket(name string) string {
+func testAccBucketMetricsBucketConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   acl    = "public-read"
@@ -641,7 +641,7 @@ resource "aws_s3_bucket" "bucket" {
 `, name)
 }
 
-func testAccAWSS3BucketMetricsConfigWithEmptyFilter(bucketName, metricName string) string {
+func testAccBucketMetricsWithEmptyFilterConfig(bucketName, metricName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -651,10 +651,10 @@ resource "aws_s3_bucket_metric" "test" {
 
   filter {}
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName)
+`, testAccBucketMetricsBucketConfig(bucketName), metricName)
 }
 
-func testAccAWSS3BucketMetricsConfigWithFilterPrefix(bucketName, metricName, prefix string) string {
+func testAccBucketMetricsWithFilterPrefixConfig(bucketName, metricName, prefix string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -666,10 +666,10 @@ resource "aws_s3_bucket_metric" "test" {
     prefix = "%s"
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName, prefix)
+`, testAccBucketMetricsBucketConfig(bucketName), metricName, prefix)
 }
 
-func testAccAWSS3BucketMetricsConfigWithFilterPrefixAndMultipleTags(bucketName, metricName, prefix, tag1, tag2 string) string {
+func testAccBucketMetricsWithFilterPrefixAndMultipleTagsConfig(bucketName, metricName, prefix, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -686,10 +686,10 @@ resource "aws_s3_bucket_metric" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName, prefix, tag1, tag2)
+`, testAccBucketMetricsBucketConfig(bucketName), metricName, prefix, tag1, tag2)
 }
 
-func testAccAWSS3BucketMetricsConfigWithFilterPrefixAndSingleTag(bucketName, metricName, prefix, tag string) string {
+func testAccBucketMetricsWithFilterPrefixAndSingleTagConfig(bucketName, metricName, prefix, tag string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -705,10 +705,10 @@ resource "aws_s3_bucket_metric" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName, prefix, tag)
+`, testAccBucketMetricsBucketConfig(bucketName), metricName, prefix, tag)
 }
 
-func testAccAWSS3BucketMetricsConfigWithFilterMultipleTags(bucketName, metricName, tag1, tag2 string) string {
+func testAccBucketMetricsWithFilterMultipleTagsConfig(bucketName, metricName, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -723,10 +723,10 @@ resource "aws_s3_bucket_metric" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName, tag1, tag2)
+`, testAccBucketMetricsBucketConfig(bucketName), metricName, tag1, tag2)
 }
 
-func testAccAWSS3BucketMetricsConfigWithFilterSingleTag(bucketName, metricName, tag string) string {
+func testAccBucketMetricsWithFilterSingleTagConfig(bucketName, metricName, tag string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -740,10 +740,10 @@ resource "aws_s3_bucket_metric" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName, tag)
+`, testAccBucketMetricsBucketConfig(bucketName), metricName, tag)
 }
 
-func testAccAWSS3BucketMetricsConfigWithoutFilter(bucketName, metricName string) string {
+func testAccBucketMetricsWithoutFilterConfig(bucketName, metricName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -751,5 +751,5 @@ resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName)
+`, testAccBucketMetricsBucketConfig(bucketName), metricName)
 }
