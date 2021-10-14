@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceJobQueue() *schema.Resource {
@@ -41,7 +42,7 @@ func ResourceJobQueue() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateBatchName,
+				ValidateFunc: validName,
 			},
 			"priority": {
 				Type:     schema.TypeInt,

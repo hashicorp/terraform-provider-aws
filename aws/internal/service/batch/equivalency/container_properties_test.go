@@ -2,6 +2,7 @@ package equivalency
 
 import (
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
