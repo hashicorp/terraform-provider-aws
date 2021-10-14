@@ -808,7 +808,7 @@ func resourceDistributionCreate(d *schema.ResourceData, meta interface{}) error 
 	params := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &cloudfront.DistributionConfigWithTags{
 			DistributionConfig: expandDistributionConfig(d),
-			Tags:               &cloudfront.Tags{Items: tags.IgnoreAws().CloudfrontTags()},
+			Tags:               &cloudfront.Tags{Items: Tags(tags.IgnoreAws())},
 		},
 	}
 
@@ -892,7 +892,7 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("etag", resp.ETag)
 	d.Set("arn", resp.Distribution.ARN)
 
-	tags, err := tftags.CloudfrontListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
 	}
@@ -953,7 +953,7 @@ func resourceDistributionUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.CloudfrontUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags for CloudFront Distribution (%s): %s", d.Id(), err)
 		}
 	}

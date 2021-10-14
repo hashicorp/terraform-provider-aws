@@ -84,7 +84,7 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 			d.Set("enabled", distributionConfig.Enabled)
 		}
 	}
-	tags, err := tftags.CloudfrontListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudFront Distribution (%s): %w", d.Id(), err)
 	}
