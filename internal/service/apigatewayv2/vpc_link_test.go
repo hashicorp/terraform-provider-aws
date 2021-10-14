@@ -19,67 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_apigatewayv2_vpc_link", &resource.Sweeper{
-		Name: "aws_apigatewayv2_vpc_link",
-		F:    sweepVPCLinks,
-	})
-}
 
-func sweepVPCLinks(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
-	input := &apigatewayv2.GetVpcLinksInput{}
-	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.GetVpcLinks(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping API Gateway v2 VPC Link sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving API Gateway v2 VPC Links: %s", err)
-		}
 
-		for _, link := range output.Items {
-			log.Printf("[INFO] Deleting API Gateway v2 VPC Link: %s", aws.StringValue(link.VpcLinkId))
-			_, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
-				VpcLinkId: link.VpcLinkId,
-			})
-			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting API Gateway v2 VPC Link (%s): %w", aws.StringValue(link.VpcLinkId), err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			_, err = tfapigatewayv2.WaitVPCLinkDeleted(conn, aws.StringValue(link.VpcLinkId))
-			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error waiting for API Gateway v2 VPC Link (%s) deletion: %w", aws.StringValue(link.VpcLinkId), err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccAPIGatewayV2VPCLink_basic(t *testing.T) {
 	var v apigatewayv2.GetVpcLinkOutput

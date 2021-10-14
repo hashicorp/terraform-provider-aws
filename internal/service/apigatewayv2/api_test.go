@@ -19,59 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_apigatewayv2_api", &resource.Sweeper{
-		Name: "aws_apigatewayv2_api",
-		F:    sweepAPIs,
-		Dependencies: []string{
-			"aws_apigatewayv2_domain_name",
-		},
-	})
-}
 
-func sweepAPIs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
-	input := &apigatewayv2.GetApisInput{}
-	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.GetApis(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping API Gateway v2 API sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving API Gateway v2 APIs: %s", err)
-		}
 
-		for _, api := range output.Items {
-			log.Printf("[INFO] Deleting API Gateway v2 API: %s", aws.StringValue(api.ApiId))
-			_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
-				ApiId: api.ApiId,
-			})
-			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting API Gateway v2 API (%s): %w", aws.StringValue(api.ApiId), err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccAPIGatewayV2API_basicWebSocket(t *testing.T) {
 	var v apigatewayv2.GetApiOutput

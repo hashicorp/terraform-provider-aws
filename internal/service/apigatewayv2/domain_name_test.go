@@ -19,54 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_apigatewayv2_domain_name", &resource.Sweeper{
-		Name: "aws_apigatewayv2_domain_name",
-		F:    sweepDomainNames,
-	})
-}
 
-func sweepDomainNames(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
-	input := &apigatewayv2.GetDomainNamesInput{}
-	var sweeperErrs *multierror.Error
 
-	err = tfapigatewayv2.GetDomainNamesPages(conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, domainName := range page.Items {
-			r := tfapigatewayv2.ResourceDomainName()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(domainName.DomainName))
-			err = r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping API Gateway v2 domain names sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing API Gateway v2 domain names: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccAPIGatewayV2DomainName_basic(t *testing.T) {
 	var v apigatewayv2.GetDomainNameOutput
