@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -74,14 +75,14 @@ func testSweepImageBuilderImagePipelines(region string) error {
 }
 
 func TestAccAwsImageBuilderImagePipeline_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	imageRecipeResourceName := "aws_imagebuilder_image_recipe.test"
 	infrastructureConfigurationResourceName := "aws_imagebuilder_infrastructure_configuration.test"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -89,11 +90,11 @@ func TestAccAwsImageBuilderImagePipeline_basic(t *testing.T) {
 				Config: testAccAwsImageBuilderImagePipelineConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImagePipelineExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", fmt.Sprintf("image-pipeline/%s", rName)),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_created"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", fmt.Sprintf("image-pipeline/%s", rName)),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_last_run", ""),
 					resource.TestCheckResourceAttr(resourceName, "date_next_run", ""),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_updated"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "distribution_configuration_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "true"),
@@ -119,12 +120,12 @@ func TestAccAwsImageBuilderImagePipeline_basic(t *testing.T) {
 }
 
 func TestAccAwsImageBuilderImagePipeline_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -132,7 +133,7 @@ func TestAccAwsImageBuilderImagePipeline_disappears(t *testing.T) {
 				Config: testAccAwsImageBuilderImagePipelineConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImagePipelineExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsImageBuilderImagePipeline(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsImageBuilderImagePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,12 +142,12 @@ func TestAccAwsImageBuilderImagePipeline_disappears(t *testing.T) {
 }
 
 func TestAccAwsImageBuilderImagePipeline_Description(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -174,13 +175,13 @@ func TestAccAwsImageBuilderImagePipeline_Description(t *testing.T) {
 }
 
 func TestAccAwsImageBuilderImagePipeline_DistributionConfigurationArn(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	distributionConfigurationResourceName := "aws_imagebuilder_distribution_configuration.test"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -208,12 +209,12 @@ func TestAccAwsImageBuilderImagePipeline_DistributionConfigurationArn(t *testing
 }
 
 func TestAccAwsImageBuilderImagePipeline_EnhancedImageMetadataEnabled(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -241,14 +242,14 @@ func TestAccAwsImageBuilderImagePipeline_EnhancedImageMetadataEnabled(t *testing
 }
 
 func TestAccAwsImageBuilderImagePipeline_ImageRecipeArn(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	imageRecipeResourceName := "aws_imagebuilder_image_recipe.test"
 	imageRecipeResourceName2 := "aws_imagebuilder_image_recipe.test2"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -276,12 +277,12 @@ func TestAccAwsImageBuilderImagePipeline_ImageRecipeArn(t *testing.T) {
 }
 
 func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_ImageTestsEnabled(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -311,12 +312,12 @@ func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_ImageTestsEnabl
 }
 
 func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_TimeoutMinutes(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -346,14 +347,14 @@ func TestAccAwsImageBuilderImagePipeline_ImageTestsConfiguration_TimeoutMinutes(
 }
 
 func TestAccAwsImageBuilderImagePipeline_InfrastructureConfigurationArn(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	infrastructureConfigurationResourceName := "aws_imagebuilder_infrastructure_configuration.test"
 	infrastructureConfigurationResourceName2 := "aws_imagebuilder_infrastructure_configuration.test2"
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -381,12 +382,12 @@ func TestAccAwsImageBuilderImagePipeline_InfrastructureConfigurationArn(t *testi
 }
 
 func TestAccAwsImageBuilderImagePipeline_Schedule_PipelineExecutionStartCondition(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -416,12 +417,12 @@ func TestAccAwsImageBuilderImagePipeline_Schedule_PipelineExecutionStartConditio
 }
 
 func TestAccAwsImageBuilderImagePipeline_Schedule_ScheduleExpression(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -451,12 +452,12 @@ func TestAccAwsImageBuilderImagePipeline_Schedule_ScheduleExpression(t *testing.
 }
 
 func TestAccAwsImageBuilderImagePipeline_Status(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -484,12 +485,12 @@ func TestAccAwsImageBuilderImagePipeline_Status(t *testing.T) {
 }
 
 func TestAccAwsImageBuilderImagePipeline_Tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -644,7 +645,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigDescription(rName string, description string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -657,7 +658,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigDistributionConfigurationArn1(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_distribution_configuration" "test" {
@@ -686,7 +687,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigDistributionConfigurationArn2(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_distribution_configuration" "test" {
@@ -715,7 +716,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigEnhancedImageMetadataEnabled(rName string, enhancedImageMetadataEnabled bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -728,7 +729,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigImageRecipeArn2(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_recipe" "test2" {
@@ -750,7 +751,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigImageTestsConfigurationImageTestsEnabled(rName string, imageTestsEnabled bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -766,7 +767,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigImageTestsConfigurationTimeoutMinutes(rName string, timeoutMinutes int) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -782,7 +783,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigInfrastructureConfigurationArn2(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test2" {
@@ -799,7 +800,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigName(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -811,7 +812,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigSchedulePipelineExecutionStartCondition(rName string, pipelineExecutionStartCondition string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -828,7 +829,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigScheduleScheduleExpression(rName string, scheduleExpression string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -844,7 +845,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigStatus(rName string, status string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -857,7 +858,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigTags1(rName string, tagKey1 string, tagValue1 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
@@ -873,7 +874,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccAwsImageBuilderImagePipelineConfigTags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImagePipelineConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {

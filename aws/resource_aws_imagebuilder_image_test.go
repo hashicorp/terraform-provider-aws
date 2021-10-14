@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -103,14 +104,14 @@ func testSweepImageBuilderImages(region string) error {
 }
 
 func TestAccAwsImageBuilderImage_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	imageRecipeResourceName := "aws_imagebuilder_image_recipe.test"
 	infrastructureConfigurationResourceName := "aws_imagebuilder_infrastructure_configuration.test"
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
@@ -118,8 +119,8 @@ func TestAccAwsImageBuilderImage_basic(t *testing.T) {
 				Config: testAccAwsImageBuilderImageConfigRequired(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImageExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", regexp.MustCompile(fmt.Sprintf("image/%s/1.0.0/[1-9][0-9]*", rName))),
-					testAccCheckResourceAttrRfc3339(resourceName, "date_created"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", regexp.MustCompile(fmt.Sprintf("image/%s/1.0.0/[1-9][0-9]*", rName))),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckNoResourceAttr(resourceName, "distribution_configuration_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "image_recipe_arn", imageRecipeResourceName, "arn"),
@@ -145,12 +146,12 @@ func TestAccAwsImageBuilderImage_basic(t *testing.T) {
 }
 
 func TestAccAwsImageBuilderImage_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
@@ -158,7 +159,7 @@ func TestAccAwsImageBuilderImage_disappears(t *testing.T) {
 				Config: testAccAwsImageBuilderImageConfigRequired(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImageExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsImageBuilderImage(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsImageBuilderImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -167,13 +168,13 @@ func TestAccAwsImageBuilderImage_disappears(t *testing.T) {
 }
 
 func TestAccAwsImageBuilderImage_DistributionConfigurationArn(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	distributionConfigurationResourceName := "aws_imagebuilder_distribution_configuration.test"
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
@@ -194,12 +195,12 @@ func TestAccAwsImageBuilderImage_DistributionConfigurationArn(t *testing.T) {
 }
 
 func TestAccAwsImageBuilderImage_EnhancedImageMetadataEnabled(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
@@ -220,12 +221,12 @@ func TestAccAwsImageBuilderImage_EnhancedImageMetadataEnabled(t *testing.T) {
 }
 
 func TestAccAwsImageBuilderImage_ImageTestsConfiguration_ImageTestsEnabled(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
@@ -247,12 +248,12 @@ func TestAccAwsImageBuilderImage_ImageTestsConfiguration_ImageTestsEnabled(t *te
 }
 
 func TestAccAwsImageBuilderImage_ImageTestsConfiguration_TimeoutMinutes(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
@@ -274,12 +275,12 @@ func TestAccAwsImageBuilderImage_ImageTestsConfiguration_TimeoutMinutes(t *testi
 }
 
 func TestAccAwsImageBuilderImage_Tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, imagebuilder.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsImageBuilderImageDestroy,
 		Steps: []resource.TestStep{
@@ -478,7 +479,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccAwsImageBuilderImageConfigDistributionConfigurationArn(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImageConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_distribution_configuration" "test" {
@@ -502,7 +503,7 @@ resource "aws_imagebuilder_image" "test" {
 }
 
 func testAccAwsImageBuilderImageConfigEnhancedImageMetadataEnabled(rName string, enhancedImageMetadataEnabled bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImageConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image" "test" {
@@ -514,7 +515,7 @@ resource "aws_imagebuilder_image" "test" {
 }
 
 func testAccAwsImageBuilderImageConfigImageTestsConfigurationImageTestsEnabled(rName string, imageTestsEnabled bool) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImageConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image" "test" {
@@ -529,7 +530,7 @@ resource "aws_imagebuilder_image" "test" {
 }
 
 func testAccAwsImageBuilderImageConfigImageTestsConfigurationTimeoutMinutes(rName string, timeoutMinutes int) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImageConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image" "test" {
@@ -544,7 +545,7 @@ resource "aws_imagebuilder_image" "test" {
 }
 
 func testAccAwsImageBuilderImageConfigRequired(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImageConfigBase(rName),
 		`
 resource "aws_imagebuilder_image" "test" {
@@ -555,7 +556,7 @@ resource "aws_imagebuilder_image" "test" {
 }
 
 func testAccAwsImageBuilderImageConfigTags1(rName string, tagKey1 string, tagValue1 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImageConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image" "test" {
@@ -570,7 +571,7 @@ resource "aws_imagebuilder_image" "test" {
 }
 
 func testAccAwsImageBuilderImageConfigTags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsImageBuilderImageConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image" "test" {
