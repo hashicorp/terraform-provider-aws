@@ -73,7 +73,7 @@ func sweepRepositories(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCodeArtifactRepository_basic(t *testing.T) {
+func TestAccCodeArtifactRepository_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -107,7 +107,7 @@ func TestAccAWSCodeArtifactRepository_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactRepository_tags(t *testing.T) {
+func TestAccCodeArtifactRepository_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -151,7 +151,7 @@ func TestAccAWSCodeArtifactRepository_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactRepository_owner(t *testing.T) {
+func TestAccCodeArtifactRepository_owner(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -184,7 +184,7 @@ func TestAccAWSCodeArtifactRepository_owner(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactRepository_description(t *testing.T) {
+func TestAccCodeArtifactRepository_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -217,7 +217,7 @@ func TestAccAWSCodeArtifactRepository_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactRepository_upstreams(t *testing.T) {
+func TestAccCodeArtifactRepository_upstreams(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -261,7 +261,7 @@ func TestAccAWSCodeArtifactRepository_upstreams(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactRepository_externalConnection(t *testing.T) {
+func TestAccCodeArtifactRepository_externalConnection(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
@@ -307,7 +307,7 @@ func TestAccAWSCodeArtifactRepository_externalConnection(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactRepository_disappears(t *testing.T) {
+func TestAccCodeArtifactRepository_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"
 
