@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayAccount() *schema.Resource {
+func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayAccountUpdate,
-		Read:   resourceAwsApiGatewayAccountRead,
-		Update: resourceAwsApiGatewayAccountUpdate,
-		Delete: resourceAwsApiGatewayAccountDelete,
+		Create: resourceAccountUpdate,
+		Read:   resourceAccountRead,
+		Update: resourceAccountUpdate,
+		Delete: resourceAccountDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,7 +47,7 @@ func resourceAwsApiGatewayAccount() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[INFO] Reading API Gateway Account %s", d.Id())
@@ -69,7 +69,7 @@ func resourceAwsApiGatewayAccountRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := apigateway.UpdateAccountInput{}
@@ -120,10 +120,10 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] API Gateway Account updated: %s", out)
 
 	d.SetId("api-gateway-account")
-	return resourceAwsApiGatewayAccountRead(d, meta)
+	return resourceAccountRead(d, meta)
 }
 
-func resourceAwsApiGatewayAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	// There is no API for "deleting" account or resetting it to "default" settings
 	return nil
 }

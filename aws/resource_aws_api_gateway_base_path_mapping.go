@@ -15,12 +15,12 @@ import (
 
 const emptyBasePathMappingValue = "(none)"
 
-func resourceAwsApiGatewayBasePathMapping() *schema.Resource {
+func ResourceBasePathMapping() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayBasePathMappingCreate,
-		Read:   resourceAwsApiGatewayBasePathMappingRead,
-		Update: resourceAwsApiGatewayBasePathMappingUpdate,
-		Delete: resourceAwsApiGatewayBasePathMappingDelete,
+		Create: resourceBasePathMappingCreate,
+		Read:   resourceBasePathMappingRead,
+		Update: resourceBasePathMappingUpdate,
+		Delete: resourceBasePathMappingDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,7 +47,7 @@ func resourceAwsApiGatewayBasePathMapping() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayBasePathMappingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBasePathMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	input := &apigateway.CreateBasePathMappingInput{
 		RestApiId:  aws.String(d.Get("api_id").(string)),
@@ -83,10 +83,10 @@ func resourceAwsApiGatewayBasePathMappingCreate(d *schema.ResourceData, meta int
 	id := fmt.Sprintf("%s/%s", d.Get("domain_name").(string), d.Get("base_path").(string))
 	d.SetId(id)
 
-	return resourceAwsApiGatewayBasePathMappingRead(d, meta)
+	return resourceBasePathMappingRead(d, meta)
 }
 
-func resourceAwsApiGatewayBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -143,10 +143,10 @@ func resourceAwsApiGatewayBasePathMappingUpdate(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] API Gateway base path mapping updated: %s", d.Id())
 
-	return resourceAwsApiGatewayBasePathMappingRead(d, meta)
+	return resourceBasePathMappingRead(d, meta)
 }
 
-func resourceAwsApiGatewayBasePathMappingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBasePathMappingRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	domainName, basePath, err := decodeApiGatewayBasePathMappingId(d.Id())
@@ -182,7 +182,7 @@ func resourceAwsApiGatewayBasePathMappingRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsApiGatewayBasePathMappingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBasePathMappingDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	domainName, basePath, err := decodeApiGatewayBasePathMappingId(d.Id())

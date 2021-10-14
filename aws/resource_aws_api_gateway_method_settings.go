@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayMethodSettings() *schema.Resource {
+func ResourceMethodSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayMethodSettingsUpdate,
-		Read:   resourceAwsApiGatewayMethodSettingsRead,
-		Update: resourceAwsApiGatewayMethodSettingsUpdate,
-		Delete: resourceAwsApiGatewayMethodSettingsDelete,
+		Create: resourceMethodSettingsUpdate,
+		Read:   resourceMethodSettingsRead,
+		Update: resourceMethodSettingsUpdate,
+		Delete: resourceMethodSettingsDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayMethodSettingsImport,
@@ -134,7 +134,7 @@ func flattenAwsApiGatewayMethodSettings(settings *apigateway.MethodSetting) []in
 	}
 }
 
-func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := &apigateway.GetStageInput{
@@ -170,7 +170,7 @@ func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	methodPath := d.Get("method_path").(string)
@@ -268,10 +268,10 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 
 	d.SetId(restApiId + "-" + stageName + "-" + methodPath)
 
-	return resourceAwsApiGatewayMethodSettingsRead(d, meta)
+	return resourceMethodSettingsRead(d, meta)
 }
 
-func resourceAwsApiGatewayMethodSettingsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodSettingsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := &apigateway.UpdateStageInput{

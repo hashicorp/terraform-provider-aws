@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayModel() *schema.Resource {
+func ResourceModel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayModelCreate,
-		Read:   resourceAwsApiGatewayModelRead,
-		Update: resourceAwsApiGatewayModelUpdate,
-		Delete: resourceAwsApiGatewayModelDelete,
+		Create: resourceModelCreate,
+		Read:   resourceModelRead,
+		Update: resourceModelUpdate,
+		Delete: resourceModelDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -77,7 +77,7 @@ func resourceAwsApiGatewayModel() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayModelCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Creating API Gateway Model")
 
@@ -109,7 +109,7 @@ func resourceAwsApiGatewayModelCreate(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsApiGatewayModelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
@@ -134,7 +134,7 @@ func resourceAwsApiGatewayModelRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsApiGatewayModelUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
@@ -164,10 +164,10 @@ func resourceAwsApiGatewayModelUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	log.Printf("[DEBUG] Received API Gateway Model: %s", out)
 
-	return resourceAwsApiGatewayModelRead(d, meta)
+	return resourceModelRead(d, meta)
 }
 
-func resourceAwsApiGatewayModelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Model: %s", d.Id())
 	input := &apigateway.DeleteModelInput{

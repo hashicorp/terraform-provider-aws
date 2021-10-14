@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayApiKey() *schema.Resource {
+func ResourceAPIKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayApiKeyCreate,
-		Read:   resourceAwsApiGatewayApiKeyRead,
-		Update: resourceAwsApiGatewayApiKeyUpdate,
-		Delete: resourceAwsApiGatewayApiKeyDelete,
+		Create: resourceAPIKeyCreate,
+		Read:   resourceAPIKeyRead,
+		Update: resourceAPIKeyUpdate,
+		Delete: resourceAPIKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsApiGatewayApiKey() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -92,10 +92,10 @@ func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(apiKey.Id))
 
-	return resourceAwsApiGatewayApiKeyRead(d, meta)
+	return resourceAPIKeyRead(d, meta)
 }
 
-func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -176,7 +176,7 @@ func resourceAwsApiGatewayApiKeyUpdateOperations(d *schema.ResourceData) []*apig
 	return operations
 }
 
-func resourceAwsApiGatewayApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
@@ -196,10 +196,10 @@ func resourceAwsApiGatewayApiKeyUpdate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	return resourceAwsApiGatewayApiKeyRead(d, meta)
+	return resourceAPIKeyRead(d, meta)
 }
 
-func resourceAwsApiGatewayApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway API Key: %s", d.Id())
 

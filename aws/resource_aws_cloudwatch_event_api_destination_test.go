@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
@@ -246,7 +247,7 @@ func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventApiDestinationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchEventApiDestination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAPIDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

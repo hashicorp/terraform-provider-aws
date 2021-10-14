@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
@@ -289,7 +290,7 @@ func TestAccAWSAPIGatewayDomainName_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &domainName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayDomainName(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

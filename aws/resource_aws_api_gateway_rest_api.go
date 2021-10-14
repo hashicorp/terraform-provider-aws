@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayRestApi() *schema.Resource {
+func ResourceRestAPI() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayRestApiCreate,
-		Read:   resourceAwsApiGatewayRestApiRead,
-		Update: resourceAwsApiGatewayRestApiUpdate,
-		Delete: resourceAwsApiGatewayRestApiDelete,
+		Create: resourceRestAPICreate,
+		Read:   resourceRestAPIRead,
+		Update: resourceRestAPIUpdate,
+		Delete: resourceRestAPIDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -144,7 +144,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRestAPICreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -322,10 +322,10 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsApiGatewayRestApiRead(d, meta)
+	return resourceRestAPIRead(d, meta)
 }
 
-func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -552,7 +552,7 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 	return operations
 }
 
-func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRestAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Updating API Gateway %s", d.Id())
 
@@ -688,7 +688,7 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 				}
 			}
 
-			return resourceAwsApiGatewayRestApiRead(d, meta)
+			return resourceRestAPIRead(d, meta)
 		}
 	}
 
@@ -701,10 +701,10 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error updating REST API (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsApiGatewayRestApiRead(d, meta)
+	return resourceRestAPIRead(d, meta)
 }
 
-func resourceAwsApiGatewayRestApiDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRestAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := &apigateway.DeleteRestApiInput{

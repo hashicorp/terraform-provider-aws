@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayClientCertificate() *schema.Resource {
+func ResourceClientCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayClientCertificateCreate,
-		Read:   resourceAwsApiGatewayClientCertificateRead,
-		Update: resourceAwsApiGatewayClientCertificateUpdate,
-		Delete: resourceAwsApiGatewayClientCertificateDelete,
+		Create: resourceClientCertificateCreate,
+		Read:   resourceClientCertificateRead,
+		Update: resourceClientCertificateUpdate,
+		Delete: resourceClientCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,7 +51,7 @@ func resourceAwsApiGatewayClientCertificate() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayClientCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClientCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -71,10 +71,10 @@ func resourceAwsApiGatewayClientCertificateCreate(d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(out.ClientCertificateId))
 
-	return resourceAwsApiGatewayClientCertificateRead(d, meta)
+	return resourceClientCertificateRead(d, meta)
 }
 
-func resourceAwsApiGatewayClientCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClientCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -120,7 +120,7 @@ func resourceAwsApiGatewayClientCertificateRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsApiGatewayClientCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClientCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -150,10 +150,10 @@ func resourceAwsApiGatewayClientCertificateUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsApiGatewayClientCertificateRead(d, meta)
+	return resourceClientCertificateRead(d, meta)
 }
 
-func resourceAwsApiGatewayClientCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClientCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Client Certificate: %s", d.Id())
 	input := apigateway.DeleteClientCertificateInput{

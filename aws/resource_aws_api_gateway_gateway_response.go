@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayGatewayResponse() *schema.Resource {
+func ResourceGatewayResponse() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsApiGatewayGatewayResponsePut,
-		Read:   resourceAwsApiGatewayGatewayResponseRead,
+		Read:   resourceGatewayResponseRead,
 		Update: resourceAwsApiGatewayGatewayResponsePut,
-		Delete: resourceAwsApiGatewayGatewayResponseDelete,
+		Delete: resourceGatewayResponseDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -103,10 +103,10 @@ func resourceAwsApiGatewayGatewayResponsePut(d *schema.ResourceData, meta interf
 	d.SetId(fmt.Sprintf("aggr-%s-%s", d.Get("rest_api_id").(string), d.Get("response_type").(string)))
 	log.Printf("[DEBUG] API Gateway Gateway Response put (%q)", d.Id())
 
-	return resourceAwsApiGatewayGatewayResponseRead(d, meta)
+	return resourceGatewayResponseRead(d, meta)
 }
 
-func resourceAwsApiGatewayGatewayResponseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayResponseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Gateway Response %s", d.Id())
@@ -133,7 +133,7 @@ func resourceAwsApiGatewayGatewayResponseRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsApiGatewayGatewayResponseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGatewayResponseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
 

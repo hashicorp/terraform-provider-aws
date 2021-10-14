@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
@@ -180,7 +181,7 @@ func TestAccAWSAPIGatewayDocumentationPart_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayDocumentationPart(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDocumentationPart(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

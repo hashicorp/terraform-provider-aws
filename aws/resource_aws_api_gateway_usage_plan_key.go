@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayUsagePlanKey() *schema.Resource {
+func ResourceUsagePlanKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayUsagePlanKeyCreate,
-		Read:   resourceAwsApiGatewayUsagePlanKeyRead,
-		Delete: resourceAwsApiGatewayUsagePlanKeyDelete,
+		Create: resourceUsagePlanKeyCreate,
+		Read:   resourceUsagePlanKeyRead,
+		Delete: resourceUsagePlanKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -63,7 +63,7 @@ func resourceAwsApiGatewayUsagePlanKey() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayUsagePlanKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUsagePlanKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Print("[DEBUG] Creating API Gateway Usage Plan Key")
 
@@ -81,10 +81,10 @@ func resourceAwsApiGatewayUsagePlanKeyCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(up.Id))
 
-	return resourceAwsApiGatewayUsagePlanKeyRead(d, meta)
+	return resourceUsagePlanKeyRead(d, meta)
 }
 
-func resourceAwsApiGatewayUsagePlanKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUsagePlanKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Reading API Gateway Usage Plan Key: %s", d.Id())
 
@@ -108,7 +108,7 @@ func resourceAwsApiGatewayUsagePlanKeyRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsApiGatewayUsagePlanKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUsagePlanKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan Key: %s", d.Id())

@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayMethod() *schema.Resource {
+func ResourceMethod() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayMethodCreate,
-		Read:   resourceAwsApiGatewayMethodRead,
-		Update: resourceAwsApiGatewayMethodUpdate,
-		Delete: resourceAwsApiGatewayMethodDelete,
+		Create: resourceMethodCreate,
+		Read:   resourceMethodRead,
+		Update: resourceMethodUpdate,
+		Delete: resourceMethodDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -103,7 +103,7 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := apigateway.PutMethodInput{
@@ -161,7 +161,7 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
@@ -203,7 +203,7 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
@@ -327,10 +327,10 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Received API Gateway Method: %s", method)
 
-	return resourceAwsApiGatewayMethodRead(d, meta)
+	return resourceMethodRead(d, meta)
 }
 
-func resourceAwsApiGatewayMethodDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
 

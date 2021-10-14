@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
@@ -107,7 +108,7 @@ func TestAccAWSAPIGatewayClientCertificate_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayClientCertificate(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceClientCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

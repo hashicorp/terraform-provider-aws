@@ -15,12 +15,12 @@ import (
 
 var resourceAwsApiGatewayMethodResponseMutex = &sync.Mutex{}
 
-func resourceAwsApiGatewayMethodResponse() *schema.Resource {
+func ResourceMethodResponse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayMethodResponseCreate,
-		Read:   resourceAwsApiGatewayMethodResponseRead,
-		Update: resourceAwsApiGatewayMethodResponseUpdate,
-		Delete: resourceAwsApiGatewayMethodResponseDelete,
+		Create: resourceMethodResponseCreate,
+		Read:   resourceMethodResponseRead,
+		Update: resourceMethodResponseUpdate,
+		Delete: resourceMethodResponseDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -80,7 +80,7 @@ func resourceAwsApiGatewayMethodResponse() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayMethodResponseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodResponseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	models := make(map[string]string)
@@ -123,7 +123,7 @@ func resourceAwsApiGatewayMethodResponseCreate(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsApiGatewayMethodResponseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodResponseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Method Response %s", d.Id())
@@ -155,7 +155,7 @@ func resourceAwsApiGatewayMethodResponseRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsApiGatewayMethodResponseUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodResponseUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Updating API Gateway Method Response %s", d.Id())
@@ -184,10 +184,10 @@ func resourceAwsApiGatewayMethodResponseUpdate(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Received API Gateway Method Response: %s", out)
 
-	return resourceAwsApiGatewayMethodResponseRead(d, meta)
+	return resourceMethodResponseRead(d, meta)
 }
 
-func resourceAwsApiGatewayMethodResponseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMethodResponseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Method Response: %s", d.Id())
 

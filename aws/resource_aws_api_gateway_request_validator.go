@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayRequestValidator() *schema.Resource {
+func ResourceRequestValidator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayRequestValidatorCreate,
-		Read:   resourceAwsApiGatewayRequestValidatorRead,
-		Update: resourceAwsApiGatewayRequestValidatorUpdate,
-		Delete: resourceAwsApiGatewayRequestValidatorDelete,
+		Create: resourceRequestValidatorCreate,
+		Read:   resourceRequestValidatorRead,
+		Update: resourceRequestValidatorUpdate,
+		Delete: resourceRequestValidatorDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -58,7 +58,7 @@ func resourceAwsApiGatewayRequestValidator() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayRequestValidatorCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRequestValidatorCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := apigateway.CreateRequestValidatorInput{
@@ -78,7 +78,7 @@ func resourceAwsApiGatewayRequestValidatorCreate(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsApiGatewayRequestValidatorRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRequestValidatorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	input := apigateway.GetRequestValidatorInput{
@@ -103,7 +103,7 @@ func resourceAwsApiGatewayRequestValidatorRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsApiGatewayRequestValidatorUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRequestValidatorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Updating Request Validator %s", d.Id())
 
@@ -146,10 +146,10 @@ func resourceAwsApiGatewayRequestValidatorUpdate(d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Updated Request Validator %s", d.Id())
 
-	return resourceAwsApiGatewayRequestValidatorRead(d, meta)
+	return resourceRequestValidatorRead(d, meta)
 }
 
-func resourceAwsApiGatewayRequestValidatorDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRequestValidatorDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting Request Validator %s", d.Id())
 

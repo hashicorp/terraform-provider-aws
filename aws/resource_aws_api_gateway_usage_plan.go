@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayUsagePlan() *schema.Resource {
+func ResourceUsagePlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayUsagePlanCreate,
-		Read:   resourceAwsApiGatewayUsagePlanRead,
-		Update: resourceAwsApiGatewayUsagePlanUpdate,
-		Delete: resourceAwsApiGatewayUsagePlanDelete,
+		Create: resourceUsagePlanCreate,
+		Read:   resourceUsagePlanRead,
+		Update: resourceUsagePlanUpdate,
+		Delete: resourceUsagePlanDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -119,7 +119,7 @@ func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -187,10 +187,10 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsApiGatewayUsagePlanRead(d, meta)
+	return resourceUsagePlanRead(d, meta)
 }
 
-func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -253,7 +253,7 @@ func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsApiGatewayUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Print("[DEBUG] Updating API Gateway Usage Plan")
 
@@ -442,10 +442,10 @@ func resourceAwsApiGatewayUsagePlanUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error updating API Gateway Usage Plan: %w", err)
 	}
 
-	return resourceAwsApiGatewayUsagePlanRead(d, meta)
+	return resourceUsagePlanRead(d, meta)
 }
 
-func resourceAwsApiGatewayUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	// Removing existing api stages associated

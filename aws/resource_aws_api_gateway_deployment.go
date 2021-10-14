@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayDeployment() *schema.Resource {
+func ResourceDeployment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayDeploymentCreate,
-		Read:   resourceAwsApiGatewayDeploymentRead,
-		Update: resourceAwsApiGatewayDeploymentUpdate,
-		Delete: resourceAwsApiGatewayDeploymentDelete,
+		Create: resourceDeploymentCreate,
+		Read:   resourceDeploymentRead,
+		Update: resourceDeploymentUpdate,
+		Delete: resourceDeploymentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"rest_api_id": {
@@ -75,7 +75,7 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	// Create the gateway
 	log.Printf("[DEBUG] Creating API Gateway Deployment")
@@ -100,10 +100,10 @@ func resourceAwsApiGatewayDeploymentCreate(d *schema.ResourceData, meta interfac
 	d.SetId(aws.StringValue(deployment.Id))
 	log.Printf("[DEBUG] API Gateway Deployment ID: %s", d.Id())
 
-	return resourceAwsApiGatewayDeploymentRead(d, meta)
+	return resourceDeploymentRead(d, meta)
 }
 
-func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Deployment %s", d.Id())
@@ -157,7 +157,7 @@ func resourceAwsApiGatewayDeploymentUpdateOperations(d *schema.ResourceData) []*
 	return operations
 }
 
-func resourceAwsApiGatewayDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
@@ -171,10 +171,10 @@ func resourceAwsApiGatewayDeploymentUpdate(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	return resourceAwsApiGatewayDeploymentRead(d, meta)
+	return resourceDeploymentRead(d, meta)
 }
 
-func resourceAwsApiGatewayDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Deployment: %s", d.Id())
 

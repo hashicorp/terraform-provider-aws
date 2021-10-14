@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsApiGatewayVpcLink() *schema.Resource {
+func DataSourceVPCLink() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsApiGatewayVpcLinkRead,
+		Read: dataSourceVPCLinkRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -47,7 +47,7 @@ func dataSourceAwsApiGatewayVpcLink() *schema.Resource {
 	}
 }
 
-func dataSourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

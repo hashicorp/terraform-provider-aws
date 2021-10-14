@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayIntegration() *schema.Resource {
+func ResourceIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayIntegrationCreate,
-		Read:   resourceAwsApiGatewayIntegrationRead,
-		Update: resourceAwsApiGatewayIntegrationUpdate,
-		Delete: resourceAwsApiGatewayIntegrationDelete,
+		Create: resourceIntegrationCreate,
+		Read:   resourceIntegrationRead,
+		Update: resourceIntegrationUpdate,
+		Delete: resourceIntegrationDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -170,7 +170,7 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Print("[DEBUG] Creating API Gateway Integration")
@@ -244,10 +244,10 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string)))
 
-	return resourceAwsApiGatewayIntegrationRead(d, meta)
+	return resourceIntegrationRead(d, meta)
 }
 
-func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Integration: %s", d.Id())
@@ -304,7 +304,7 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Updating API Gateway Integration: %s", d.Id())
@@ -490,10 +490,10 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 
 	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string)))
 
-	return resourceAwsApiGatewayIntegrationRead(d, meta)
+	return resourceIntegrationRead(d, meta)
 }
 
-func resourceAwsApiGatewayIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
 

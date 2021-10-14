@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsApiGatewayApiKey() *schema.Resource {
+func DataSourceAPIKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsApiGatewayApiKeyRead,
+		Read: dataSourceAPIKeyRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
@@ -49,7 +49,7 @@ func dataSourceAwsApiGatewayApiKey() *schema.Resource {
 	}
 }
 
-func dataSourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

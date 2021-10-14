@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
@@ -109,7 +110,7 @@ func TestAccAWSAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationVersionExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayDocumentationVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDocumentationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
