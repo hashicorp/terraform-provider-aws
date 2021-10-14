@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -55,7 +56,7 @@ func testSweepNetworkFirewallLoggingConfigurations(region string) error {
 
 			log.Printf("[INFO] Deleting NetworkFirewall Logging Configuration for firewall: %s", arn)
 
-			r := resourceAwsNetworkFirewallLoggingConfiguration()
+			r := ResourceLoggingConfiguration()
 			d := r.Data(nil)
 			d.SetId(arn)
 			diags := r.DeleteContext(ctx, d, client)
@@ -651,7 +652,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccNetworkFirewallLoggingConfiguration_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallLoggingConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsNetworkFirewallLoggingConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

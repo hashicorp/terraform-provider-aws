@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNetworkFirewallResourcePolicy() *schema.Resource {
+func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceAwsNetworkFirewallResourcePolicyPut,
-		ReadContext:   resourceAwsNetworkFirewallResourcePolicyRead,
+		ReadContext:   resourceResourcePolicyRead,
 		UpdateContext: resourceAwsNetworkFirewallResourcePolicyPut,
-		DeleteContext: resourceAwsNetworkFirewallResourcePolicyDelete,
+		DeleteContext: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -60,10 +60,10 @@ func resourceAwsNetworkFirewallResourcePolicyPut(ctx context.Context, d *schema.
 
 	d.SetId(resourceArn)
 
-	return resourceAwsNetworkFirewallResourcePolicyRead(ctx, d, meta)
+	return resourceResourcePolicyRead(ctx, d, meta)
 }
 
-func resourceAwsNetworkFirewallResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 	resourceArn := d.Id()
 
@@ -89,7 +89,7 @@ func resourceAwsNetworkFirewallResourcePolicyRead(ctx context.Context, d *schema
 	return nil
 }
 
-func resourceAwsNetworkFirewallResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy for resource: %s", d.Id())

@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsNetworkFirewallLoggingConfiguration() *schema.Resource {
+func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsNetworkFirewallLoggingConfigurationCreate,
-		ReadContext:   resourceAwsNetworkFirewallLoggingConfigurationRead,
-		UpdateContext: resourceAwsNetworkFirewallLoggingConfigurationUpdate,
-		DeleteContext: resourceAwsNetworkFirewallLoggingConfigurationDelete,
+		CreateContext: resourceLoggingConfigurationCreate,
+		ReadContext:   resourceLoggingConfigurationRead,
+		UpdateContext: resourceLoggingConfigurationUpdate,
+		DeleteContext: resourceLoggingConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -72,7 +72,7 @@ func resourceAwsNetworkFirewallLoggingConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsNetworkFirewallLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 	firewallArn := d.Get("firewall_arn").(string)
 
@@ -87,10 +87,10 @@ func resourceAwsNetworkFirewallLoggingConfigurationCreate(ctx context.Context, d
 
 	d.SetId(firewallArn)
 
-	return resourceAwsNetworkFirewallLoggingConfigurationRead(ctx, d, meta)
+	return resourceLoggingConfigurationRead(ctx, d, meta)
 }
 
-func resourceAwsNetworkFirewallLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Reading Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
@@ -119,7 +119,7 @@ func resourceAwsNetworkFirewallLoggingConfigurationRead(ctx context.Context, d *
 	return nil
 }
 
-func resourceAwsNetworkFirewallLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Updating Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
@@ -145,10 +145,10 @@ func resourceAwsNetworkFirewallLoggingConfigurationUpdate(ctx context.Context, d
 		}
 	}
 
-	return resourceAwsNetworkFirewallLoggingConfigurationRead(ctx, d, meta)
+	return resourceLoggingConfigurationRead(ctx, d, meta)
 }
 
-func resourceAwsNetworkFirewallLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn
 
 	log.Printf("[DEBUG] Deleting Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
