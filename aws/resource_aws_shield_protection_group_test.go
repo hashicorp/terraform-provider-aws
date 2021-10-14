@@ -8,22 +8,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSShieldProtectionGroup_basic(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -50,15 +51,15 @@ func TestAccAWSShieldProtectionGroup_basic(t *testing.T) {
 
 func TestAccAWSShieldProtectionGroup_disappears(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -66,7 +67,7 @@ func TestAccAWSShieldProtectionGroup_disappears(t *testing.T) {
 				Config: testAccShieldProtectionGroupConfig_basic_all(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionGroupExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsShieldProtectionGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsShieldProtectionGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,15 +77,15 @@ func TestAccAWSShieldProtectionGroup_disappears(t *testing.T) {
 
 func TestAccAWSShieldProtectionGroup_aggregation(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -118,15 +119,15 @@ func TestAccAWSShieldProtectionGroup_aggregation(t *testing.T) {
 
 func TestAccAWSShieldProtectionGroup_members(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -136,7 +137,7 @@ func TestAccAWSShieldProtectionGroup_members(t *testing.T) {
 					testAccCheckAWSShieldProtectionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternArbitrary),
 					resource.TestCheckResourceAttr(resourceName, "members.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexp.MustCompile(`eip-allocation/eipalloc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexp.MustCompile(`eip-allocation/eipalloc-.+`)),
 				),
 			},
 			{
@@ -150,16 +151,16 @@ func TestAccAWSShieldProtectionGroup_members(t *testing.T) {
 
 func TestAccAWSShieldProtectionGroup_protectionGroupId(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
-	testID1 := acctest.RandomWithPrefix("tf-acc-test")
-	testID2 := acctest.RandomWithPrefix("tf-acc-test")
+	testID1 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	testID2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -193,15 +194,15 @@ func TestAccAWSShieldProtectionGroup_protectionGroupId(t *testing.T) {
 
 func TestAccAWSShieldProtectionGroup_resourceType(t *testing.T) {
 	resourceName := "aws_shield_protection_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
 		Steps: []resource.TestStep{
@@ -320,14 +321,14 @@ resource "aws_shield_protection_group" "test" {
 }
 
 func testAccShieldProtectionGroupConfig_members(rName string) string {
-	return composeConfig(testAccShieldProtectionElasticIPAddressConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccShieldProtectionElasticIPAddressConfig(rName), fmt.Sprintf(`
 resource "aws_shield_protection_group" "test" {
   depends_on = [aws_shield_protection.acctest]
 
   protection_group_id = "%[1]s"
   aggregation         = "MAX"
   pattern             = "ARBITRARY"
-  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.acctest.id}"]
+  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.sdkacctest.id}"]
 }
 `, rName))
 }

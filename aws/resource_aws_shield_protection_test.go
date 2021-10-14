@@ -8,22 +8,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/shield"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
 	resourceName := "aws_shield_protection.test"
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -46,15 +47,15 @@ func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
 
 func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 	resourceName := "aws_shield_protection.test"
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -77,15 +78,15 @@ func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 
 func TestAccAWSShieldProtection_disappears(t *testing.T) {
 	resourceName := "aws_shield_protection.test"
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -93,7 +94,7 @@ func TestAccAWSShieldProtection_disappears(t *testing.T) {
 				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsShieldProtection(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsShieldProtection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,15 +104,15 @@ func TestAccAWSShieldProtection_disappears(t *testing.T) {
 
 func TestAccAWSShieldProtection_Alb(t *testing.T) {
 	resourceName := "aws_shield_protection.test"
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -134,15 +135,15 @@ func TestAccAWSShieldProtection_Alb(t *testing.T) {
 
 func TestAccAWSShieldProtection_Elb(t *testing.T) {
 	resourceName := "aws_shield_protection.test"
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -165,16 +166,16 @@ func TestAccAWSShieldProtection_Elb(t *testing.T) {
 
 func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 	resourceName := "aws_shield_protection.test"
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
-			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -197,16 +198,16 @@ func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 
 func TestAccAWSShieldProtection_Cloudfront_Tags(t *testing.T) {
 	resourceName := "aws_shield_protection.test"
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
-			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -249,15 +250,15 @@ func TestAccAWSShieldProtection_Cloudfront_Tags(t *testing.T) {
 
 func TestAccAWSShieldProtection_Route53(t *testing.T) {
 	resourceName := "aws_shield_protection.test"
-	rName := acctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID, "route53"),
+		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID, "route53"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
@@ -336,7 +337,7 @@ func testAccPreCheckAWSShield(t *testing.T) {
 
 	_, err := conn.ListProtections(input)
 
-	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "subscription does not exist") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "subscription does not exist") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
