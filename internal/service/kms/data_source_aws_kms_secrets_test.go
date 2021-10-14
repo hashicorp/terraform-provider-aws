@@ -1,4 +1,4 @@
-package aws
+package kms_test
 
 import (
 	"encoding/base64"

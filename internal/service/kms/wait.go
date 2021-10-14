@@ -8,23 +8,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 const (
@@ -68,7 +56,7 @@ func WaitKeyDeleted(conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
 
 func WaitKeyDescriptionPropagated(conn *kms.KMS, id string, description string) error {
 	checkFunc := func() (bool, error) {
-		output, err := tfkms.FindKeyByID(conn, id)
+		output, err := FindKeyByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -107,7 +95,7 @@ func WaitKeyMaterialImported(conn *kms.KMS, id string) (*kms.KeyMetadata, error)
 
 func WaitKeyPolicyPropagated(conn *kms.KMS, id, policy string) error {
 	checkFunc := func() (bool, error) {
-		output, err := tfkms.FindKeyPolicyByKeyIDAndPolicyName(conn, id, tfkms.PolicyNameDefault)
+		output, err := FindKeyPolicyByKeyIDAndPolicyName(conn, id, PolicyNameDefault)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -135,7 +123,7 @@ func WaitKeyPolicyPropagated(conn *kms.KMS, id, policy string) error {
 
 func WaitKeyRotationEnabledPropagated(conn *kms.KMS, id string, enabled bool) error {
 	checkFunc := func() (bool, error) {
-		output, err := tfkms.FindKeyRotationEnabledByKeyID(conn, id)
+		output, err := FindKeyRotationEnabledByKeyID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -157,7 +145,7 @@ func WaitKeyRotationEnabledPropagated(conn *kms.KMS, id string, enabled bool) er
 
 func WaitKeyStatePropagated(conn *kms.KMS, id string, enabled bool) error {
 	checkFunc := func() (bool, error) {
-		output, err := tfkms.FindKeyByID(conn, id)
+		output, err := FindKeyByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -179,7 +167,7 @@ func WaitKeyStatePropagated(conn *kms.KMS, id string, enabled bool) error {
 
 func WaitKeyValidToPropagated(conn *kms.KMS, id string, validTo string) error {
 	checkFunc := func() (bool, error) {
-		output, err := tfkms.FindKeyByID(conn, id)
+		output, err := FindKeyByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return false, nil
