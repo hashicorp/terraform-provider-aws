@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegexMatchSet() *schema.Resource {
+func ResourceRegexMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegexMatchSetCreate,
-		Read:   resourceAwsWafRegexMatchSetRead,
-		Update: resourceAwsWafRegexMatchSetUpdate,
-		Delete: resourceAwsWafRegexMatchSetDelete,
+		Create: resourceRegexMatchSetCreate,
+		Read:   resourceRegexMatchSetRead,
+		Update: resourceRegexMatchSetUpdate,
+		Delete: resourceRegexMatchSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsWafRegexMatchSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating WAF Regex Match Set: %s", d.Get("name").(string))
@@ -93,10 +93,10 @@ func resourceAwsWafRegexMatchSetCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(resp.RegexMatchSet.RegexMatchSetId))
 
-	return resourceAwsWafRegexMatchSetUpdate(d, meta)
+	return resourceRegexMatchSetUpdate(d, meta)
 }
 
-func resourceAwsWafRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading WAF Regex Match Set: %s", d.Get("name").(string))
 	params := &waf.GetRegexMatchSetInput{
@@ -128,7 +128,7 @@ func resourceAwsWafRegexMatchSetRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsWafRegexMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Updating WAF Regex Match Set: %s", d.Get("name").(string))
@@ -142,10 +142,10 @@ func resourceAwsWafRegexMatchSetUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAwsWafRegexMatchSetRead(d, meta)
+	return resourceRegexMatchSetRead(d, meta)
 }
 
-func resourceAwsWafRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldTuples := d.Get("regex_match_tuple").(*schema.Set).List()

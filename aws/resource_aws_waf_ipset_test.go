@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -54,7 +55,7 @@ func testSweepWafIPSet(region string) error {
 		}
 
 		for _, ipSet := range page.IPSets {
-			r := resourceAwsWafIPSet()
+			r := ResourceIPSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(ipSet.IPSetId)

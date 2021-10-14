@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWafRateBasedRule() *schema.Resource {
+func DataSourceRateBasedRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafRateBasedRuleRead,
+		Read: dataSourceRateBasedRuleRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -22,7 +22,7 @@ func dataSourceAwsWafRateBasedRule() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	name := d.Get("name").(string)
 

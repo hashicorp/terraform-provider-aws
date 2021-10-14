@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafSqlInjectionMatchSet() *schema.Resource {
+func ResourceSQLInjectionMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafSqlInjectionMatchSetCreate,
-		Read:   resourceAwsWafSqlInjectionMatchSetRead,
-		Update: resourceAwsWafSqlInjectionMatchSetUpdate,
-		Delete: resourceAwsWafSqlInjectionMatchSetDelete,
+		Create: resourceSQLInjectionMatchSetCreate,
+		Read:   resourceSQLInjectionMatchSetRead,
+		Update: resourceSQLInjectionMatchSetUpdate,
+		Delete: resourceSQLInjectionMatchSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -59,7 +59,7 @@ func resourceAwsWafSqlInjectionMatchSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafSqlInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSQLInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating SqlInjectionMatchSet: %s", d.Get("name").(string))
@@ -79,10 +79,10 @@ func resourceAwsWafSqlInjectionMatchSetCreate(d *schema.ResourceData, meta inter
 	resp := out.(*waf.CreateSqlInjectionMatchSetOutput)
 	d.SetId(aws.StringValue(resp.SqlInjectionMatchSet.SqlInjectionMatchSetId))
 
-	return resourceAwsWafSqlInjectionMatchSetUpdate(d, meta)
+	return resourceSQLInjectionMatchSetUpdate(d, meta)
 }
 
-func resourceAwsWafSqlInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSQLInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading SqlInjectionMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetSqlInjectionMatchSetInput{
@@ -109,7 +109,7 @@ func resourceAwsWafSqlInjectionMatchSetRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsWafSqlInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSQLInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("sql_injection_match_tuples") {
@@ -122,10 +122,10 @@ func resourceAwsWafSqlInjectionMatchSetUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsWafSqlInjectionMatchSetRead(d, meta)
+	return resourceSQLInjectionMatchSetRead(d, meta)
 }
 
-func resourceAwsWafSqlInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSQLInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldTuples := d.Get("sql_injection_match_tuples").(*schema.Set).List()

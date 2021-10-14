@@ -22,12 +22,12 @@ const (
 	WafRuleDeleteTimeout = 5 * time.Minute
 )
 
-func resourceAwsWafRule() *schema.Resource {
+func ResourceRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRuleCreate,
-		Read:   resourceAwsWafRuleRead,
-		Update: resourceAwsWafRuleUpdate,
-		Delete: resourceAwsWafRuleDelete,
+		Create: resourceRuleCreate,
+		Read:   resourceRuleRead,
+		Update: resourceRuleUpdate,
+		Delete: resourceRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,7 +78,7 @@ func resourceAwsWafRule() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -114,10 +114,10 @@ func resourceAwsWafRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsWafRuleRead(d, meta)
+	return resourceRuleRead(d, meta)
 }
 
-func resourceAwsWafRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -190,7 +190,7 @@ func resourceAwsWafRuleRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsWafRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("predicates") {
@@ -211,10 +211,10 @@ func resourceAwsWafRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsWafRuleRead(d, meta)
+	return resourceRuleRead(d, meta)
 }
 
-func resourceAwsWafRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldPredicates := d.Get("predicates").(*schema.Set).List()

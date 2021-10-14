@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafXssMatchSet() *schema.Resource {
+func ResourceXSSMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafXssMatchSetCreate,
-		Read:   resourceAwsWafXssMatchSetRead,
-		Update: resourceAwsWafXssMatchSetUpdate,
-		Delete: resourceAwsWafXssMatchSetDelete,
+		Create: resourceXSSMatchSetCreate,
+		Read:   resourceXSSMatchSetRead,
+		Update: resourceXSSMatchSetUpdate,
+		Delete: resourceXSSMatchSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsWafXssMatchSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafXssMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	log.Printf("[INFO] Creating XssMatchSet: %s", d.Get("name").(string))
@@ -94,10 +94,10 @@ func resourceAwsWafXssMatchSetCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("Error setting WAF XSS Match Set tuples: %w", err)
 		}
 	}
-	return resourceAwsWafXssMatchSetRead(d, meta)
+	return resourceXSSMatchSetRead(d, meta)
 }
 
-func resourceAwsWafXssMatchSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 	log.Printf("[INFO] Reading WAF XSS Match Set: %s", d.Get("name").(string))
 	params := &waf.GetXssMatchSetInput{
@@ -131,7 +131,7 @@ func resourceAwsWafXssMatchSetRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsWafXssMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceXSSMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	if d.HasChange("xss_match_tuples") {
@@ -144,10 +144,10 @@ func resourceAwsWafXssMatchSetUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsWafXssMatchSetRead(d, meta)
+	return resourceXSSMatchSetRead(d, meta)
 }
 
-func resourceAwsWafXssMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFConn
 
 	oldTuples := d.Get("xss_match_tuples").(*schema.Set).List()

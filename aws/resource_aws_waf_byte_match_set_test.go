@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -51,7 +52,7 @@ func testSweepWafByteMatchSet(region string) error {
 		}
 
 		for _, byteMatchSet := range page.ByteMatchSets {
-			r := resourceAwsWafByteMatchSet()
+			r := ResourceByteMatchSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(byteMatchSet.ByteMatchSetId)
