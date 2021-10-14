@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ReportGroupByArn returns the Report Group corresponding to the specified Arn.
-func ReportGroupByArn(conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
+// FindReportGroupByARN returns the Report Group corresponding to the specified Arn.
+func FindReportGroupByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
 
 	output, err := conn.BatchGetReportGroups(&codebuild.BatchGetReportGroupsInput{
 		ReportGroupArns: aws.StringSlice([]string{arn}),

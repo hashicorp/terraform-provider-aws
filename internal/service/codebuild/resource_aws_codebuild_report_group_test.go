@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 )
 
 func init() {
@@ -277,7 +278,7 @@ func testAccCheckAWSCodeBuildReportGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := finder.ReportGroupByArn(conn, rs.Primary.ID)
+		resp, err := tfcodebuild.FindReportGroupByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -299,7 +300,7 @@ func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebui
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
 
-		resp, err := finder.ReportGroupByArn(conn, rs.Primary.ID)
+		resp, err := tfcodebuild.FindReportGroupByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

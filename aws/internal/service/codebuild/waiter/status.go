@@ -6,23 +6,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/codebuild/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 )
 
 const (
-	ReportGroupStatusUnknown  = "Unknown"
-	ReportGroupStatusNotFound = "NotFound"
+	reportGroupStatusUnknown  = "Unknown"
+	reportGroupStatusNotFound = "NotFound"
 )
 
-// ReportGroupStatus fetches the Report Group and its Status
-func ReportGroupStatus(conn *codebuild.CodeBuild, arn string) resource.StateRefreshFunc {
+// statusReportGroup fetches the Report Group and its Status
+func statusReportGroup(conn *codebuild.CodeBuild, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ReportGroupByArn(conn, arn)
+		output, err := tfcodebuild.FindReportGroupByARN(conn, arn)
 		if err != nil {
-			return nil, ReportGroupStatusUnknown, err
+			return nil, reportGroupStatusUnknown, err
 		}
 
 		if output == nil {
-			return nil, ReportGroupStatusNotFound, nil
+			return nil, reportGroupStatusNotFound, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil

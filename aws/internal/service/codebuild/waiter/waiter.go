@@ -10,16 +10,16 @@ import (
 
 const (
 	// Maximum amount of time to wait for an Operation to return Deleted
-	ReportGroupDeleteTimeout = 2 * time.Minute
+	reportGroupDeleteTimeout = 2 * time.Minute
 )
 
-// ReportGroupDeleted waits for an ReportGroup to return Deleted
-func ReportGroupDeleted(conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
+// waitReportGroupDeleted waits for an ReportGroup to return Deleted
+func waitReportGroupDeleted(conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{codebuild.ReportGroupStatusTypeDeleting},
 		Target:  []string{},
-		Refresh: ReportGroupStatus(conn, arn),
-		Timeout: ReportGroupDeleteTimeout,
+		Refresh: statusReportGroup(conn, arn),
+		Timeout: reportGroupDeleteTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
