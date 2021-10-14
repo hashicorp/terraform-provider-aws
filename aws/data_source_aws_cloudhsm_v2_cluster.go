@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceCloudHsmV2Cluster() *schema.Resource {
+func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudHsmV2ClusterRead,
+		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -74,7 +74,7 @@ func dataSourceCloudHsmV2Cluster() *schema.Resource {
 	}
 }
 
-func dataSourceCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 
 	clusterId := d.Get("cluster_id").(string)

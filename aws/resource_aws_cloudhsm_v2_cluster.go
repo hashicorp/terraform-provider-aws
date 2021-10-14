@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudHsmV2Cluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudHsmV2ClusterCreate,
-		Read:   resourceAwsCloudHsmV2ClusterRead,
-		Update: resourceAwsCloudHsmV2ClusterUpdate,
-		Delete: resourceAwsCloudHsmV2ClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -110,7 +110,7 @@ func resourceAwsCloudHsmV2Cluster() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudHsmV2ClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -150,10 +150,10 @@ func resourceAwsCloudHsmV2ClusterCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsCloudHsmV2ClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -218,7 +218,7 @@ func resourceAwsCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsCloudHsmV2ClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 
 	if d.HasChange("tags_all") {
@@ -228,10 +228,10 @@ func resourceAwsCloudHsmV2ClusterUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsCloudHsmV2ClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsCloudHsmV2ClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 	input := &cloudhsmv2.DeleteClusterInput{
 		ClusterId: aws.String(d.Id()),

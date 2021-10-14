@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func testSweepCloudhsmv2Clusters(region string) error {
 				continue
 			}
 
-			r := resourceAwsCloudHsmV2Cluster()
+			r := ResourceCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster.ClusterId))
 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
@@ -117,9 +118,9 @@ func testAccAWSCloudHsmV2Cluster_disappears(t *testing.T) {
 				Config: testAccAWSCloudHsmV2ClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Cluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudHsmV2Cluster(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudHsmV2Hsm() *schema.Resource {
+func ResourceHSM() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudHsmV2HsmCreate,
-		Read:   resourceAwsCloudHsmV2HsmRead,
-		Delete: resourceAwsCloudHsmV2HsmDelete,
+		Create: resourceHSMCreate,
+		Read:   resourceHSMRead,
+		Delete: resourceHSMDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -74,7 +74,7 @@ func resourceAwsCloudHsmV2Hsm() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudHsmV2HsmCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHSMCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 
 	input := &cloudhsmv2.CreateHsmInput{
@@ -120,10 +120,10 @@ func resourceAwsCloudHsmV2HsmCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error waiting for CloudHSMv2 HSM (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudHsmV2HsmRead(d, meta)
+	return resourceHSMRead(d, meta)
 }
 
-func resourceAwsCloudHsmV2HsmRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHSMRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 
 	hsm, err := finder.Hsm(conn, d.Id(), d.Get("hsm_eni_id").(string))
@@ -160,7 +160,7 @@ func resourceAwsCloudHsmV2HsmRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsCloudHsmV2HsmDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHSMDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 	clusterId := d.Get("cluster_id").(string)
 
