@@ -69,7 +69,7 @@ func sweepGraphQLAPIs(region string) error {
 	return nil
 }
 
-func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_basic(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -106,7 +106,7 @@ func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_disappears(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_disappears(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -129,7 +129,7 @@ func TestAccAWSAppsyncGraphqlApi_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_Schema(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_schema(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -174,7 +174,7 @@ func TestAccAWSAppsyncGraphqlApi_Schema(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AuthenticationType(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_authenticationType(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -208,7 +208,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AuthenticationType_APIKey(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_AuthenticationType_apiKey(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -237,7 +237,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_APIKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AuthenticationType_AWSIAM(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_AuthenticationType_awsIAM(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -266,7 +266,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_AWSIAM(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AuthenticationType_AmazonCognitoUserPools(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_AuthenticationType_amazonCognitoUserPools(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -298,7 +298,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_AmazonCognitoUserPools(t *te
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AuthenticationType_OpenIDConnect(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_AuthenticationType_openIDConnect(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -327,7 +327,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_OpenIDConnect(t *testing.T) 
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_LogConfig(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_log(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -358,7 +358,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_Log_fieldLogLevel(t *testing.T) {
 	var api1, api2, api3 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -409,7 +409,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_LogConfig_ExcludeVerboseContent(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_Log_excludeVerboseContent(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -451,7 +451,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_ExcludeVerboseContent(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_AuthTTL(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_OpenIDConnect_authTTL(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -491,7 +491,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_AuthTTL(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_ClientID(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_OpenIDConnect_clientID(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -531,7 +531,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_ClientID(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_IatTTL(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_OpenIDConnect_iatTTL(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -571,7 +571,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_IatTTL(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_Issuer(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_OpenIDConnect_issuer(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -609,7 +609,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_Issuer(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_Name(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_name(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -639,7 +639,7 @@ func TestAccAWSAppsyncGraphqlApi_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_AwsRegion(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_UserPool_awsRegion(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -682,7 +682,7 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_AwsRegion(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_DefaultAction(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_UserPool_defaultAction(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -725,7 +725,7 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_DefaultAction(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_Tags(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_tags(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -766,7 +766,7 @@ func TestAccAWSAppsyncGraphqlApi_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_APIKey(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_AdditionalAuthentication_apiKey(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -799,7 +799,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_APIKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_AWSIAM(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_AdditionalAuthentication_awsIAM(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -832,7 +832,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_AWSIAM(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_CognitoUserPools(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_AdditionalAuthentication_cognitoUserPools(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -867,7 +867,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_CognitoUserPools(t *te
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_OpenIDConnect(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_AdditionalAuthentication_openIDConnect(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -901,7 +901,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_OpenIDConnect(t *testi
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_Multiple(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_AdditionalAuthentication_multiple(t *testing.T) {
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -943,7 +943,7 @@ func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_Multiple(t *testing.T)
 	})
 }
 
-func TestAccAWSAppsyncGraphqlApi_XrayEnabled(t *testing.T) {
+func TestAccAppSyncGraphQLAPI_xrayEnabled(t *testing.T) {
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"

@@ -16,7 +16,7 @@ import (
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
-func TestAccAwsAppsyncFunction_basic(t *testing.T) {
+func TestAccAppSyncFunction_basic(t *testing.T) {
 	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	rName3 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
@@ -56,7 +56,7 @@ func TestAccAwsAppsyncFunction_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncFunction_description(t *testing.T) {
+func TestAccAppSyncFunction_description(t *testing.T) {
 	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
@@ -91,7 +91,7 @@ func TestAccAwsAppsyncFunction_description(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncFunction_responseMappingTemplate(t *testing.T) {
+func TestAccAppSyncFunction_responseMappingTemplate(t *testing.T) {
 	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
@@ -118,7 +118,7 @@ func TestAccAwsAppsyncFunction_responseMappingTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
+func TestAccAppSyncFunction_disappears(t *testing.T) {
 	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
