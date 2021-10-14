@@ -20,60 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_autoscalingplans_scaling_plan", &resource.Sweeper{
-		Name: "aws_autoscalingplans_scaling_plan",
-		F:    sweepScalingPlans,
-	})
-}
 
-func sweepScalingPlans(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AutoScalingPlansConn
-	input := &autoscalingplans.DescribeScalingPlansInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = tfautoscalingplans.DescribeScalingPlansPages(conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, scalingPlan := range page.ScalingPlans {
-			scalingPlanName := aws.StringValue(scalingPlan.ScalingPlanName)
-			scalingPlanVersion := int(aws.Int64Value(scalingPlan.ScalingPlanVersion))
-
-			r := tfautoscalingplans.ResourceScalingPlan()
-			d := r.Data(nil)
-			d.SetId("????????????????") // ID not used in Delete.
-			d.Set("name", scalingPlanName)
-			d.Set("scaling_plan_version", scalingPlanVersion)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Auto Scaling Scaling Plan sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Auto Scaling Scaling Plans (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Auto Scaling Scaling Plans (%s): %w", region, err)
-	}
-
-	return nil
-}
 
 func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 	var scalingPlan autoscalingplans.ScalingPlan
