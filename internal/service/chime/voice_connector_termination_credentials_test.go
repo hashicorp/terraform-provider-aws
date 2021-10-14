@@ -15,7 +15,7 @@ import (
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
-func TestAccAWSChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
+func TestAccChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
 
@@ -42,7 +42,7 @@ func TestAccAWSChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
+func TestAccChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
 
@@ -64,7 +64,7 @@ func TestAccAWSChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T
 	})
 }
 
-func TestAccAWSChimeVoiceConnectorTerminationCredentials_update(t *testing.T) {
+func TestAccChimeVoiceConnectorTerminationCredentials_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
 

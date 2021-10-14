@@ -15,7 +15,7 @@ import (
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
-func TestAccAWSChimeVoiceConnectorStreaming_basic(t *testing.T) {
+func TestAccChimeVoiceConnectorStreaming_basic(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
@@ -43,7 +43,7 @@ func TestAccAWSChimeVoiceConnectorStreaming_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSChimeVoiceConnectorStreaming_disappears(t *testing.T) {
+func TestAccChimeVoiceConnectorStreaming_disappears(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
@@ -65,7 +65,7 @@ func TestAccAWSChimeVoiceConnectorStreaming_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSChimeVoiceConnectorStreaming_update(t *testing.T) {
+func TestAccChimeVoiceConnectorStreaming_update(t *testing.T) {
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
