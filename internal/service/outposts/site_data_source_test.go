@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSOutpostsSiteDataSource_Id(t *testing.T) {
+func TestAccOutpostsSiteDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_outposts_site.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,7 +31,7 @@ func TestAccAWSOutpostsSiteDataSource_Id(t *testing.T) {
 	})
 }
 
-func TestAccAWSOutpostsSiteDataSource_Name(t *testing.T) {
+func TestAccOutpostsSiteDataSource_name(t *testing.T) {
 	sourceDataSourceName := "data.aws_outposts_site.source"
 	dataSourceName := "data.aws_outposts_site.test"
 

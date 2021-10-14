@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSOutpostsOutpostDataSource_Id(t *testing.T) {
+func TestAccOutpostsOutpostDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -34,7 +34,7 @@ func TestAccAWSOutpostsOutpostDataSource_Id(t *testing.T) {
 	})
 }
 
-func TestAccAWSOutpostsOutpostDataSource_Name(t *testing.T) {
+func TestAccOutpostsOutpostDataSource_name(t *testing.T) {
 	sourceDataSourceName := "data.aws_outposts_outpost.source"
 	dataSourceName := "data.aws_outposts_outpost.test"
 
@@ -60,7 +60,7 @@ func TestAccAWSOutpostsOutpostDataSource_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSOutpostsOutpostDataSource_Arn(t *testing.T) {
+func TestAccOutpostsOutpostDataSource_arn(t *testing.T) {
 	sourceDataSourceName := "data.aws_outposts_outpost.source"
 	dataSourceName := "data.aws_outposts_outpost.test"
 
@@ -86,7 +86,7 @@ func TestAccAWSOutpostsOutpostDataSource_Arn(t *testing.T) {
 	})
 }
 
-func TestAccAWSOutpostsOutpostDataSource_OwnerId(t *testing.T) {
+func TestAccOutpostsOutpostDataSource_ownerID(t *testing.T) {
 	sourceDataSourceName := "data.aws_outposts_outpost.source"
 	dataSourceName := "data.aws_outposts_outpost.test"
 
