@@ -14,9 +14,9 @@ import (
 
 func ResourceAPNSVoIPChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointAPNSVoipChannelUpsert,
+		Create: resourceAPNSVoIPChannelUpsert,
 		Read:   resourceAPNSVoIPChannelRead,
-		Update: resourceAwsPinpointAPNSVoipChannelUpsert,
+		Update: resourceAPNSVoIPChannelUpsert,
 		Delete: resourceAPNSVoIPChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -71,7 +71,7 @@ func ResourceAPNSVoIPChannel() *schema.Resource {
 	}
 }
 
-func resourceAwsPinpointAPNSVoipChannelUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceAPNSVoIPChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 	certificate, certificateOk := d.GetOk("certificate")
 	privateKey, privateKeyOk := d.GetOk("private_key")
 

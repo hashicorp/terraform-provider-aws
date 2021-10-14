@@ -17,9 +17,9 @@ import (
 
 func ResourceEventStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointEventStreamUpsert,
+		Create: resourceEventStreamUpsert,
 		Read:   resourceEventStreamRead,
-		Update: resourceAwsPinpointEventStreamUpsert,
+		Update: resourceEventStreamUpsert,
 		Delete: resourceEventStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -45,7 +45,7 @@ func ResourceEventStream() *schema.Resource {
 	}
 }
 
-func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)

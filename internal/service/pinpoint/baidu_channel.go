@@ -13,9 +13,9 @@ import (
 
 func ResourceBaiduChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointBaiduChannelUpsert,
+		Create: resourceBaiduChannelUpsert,
 		Read:   resourceBaiduChannelRead,
-		Update: resourceAwsPinpointBaiduChannelUpsert,
+		Update: resourceBaiduChannelUpsert,
 		Delete: resourceBaiduChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -46,7 +46,7 @@ func ResourceBaiduChannel() *schema.Resource {
 	}
 }
 
-func resourceAwsPinpointBaiduChannelUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceBaiduChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)

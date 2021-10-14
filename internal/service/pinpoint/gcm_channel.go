@@ -13,9 +13,9 @@ import (
 
 func ResourceGCMChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointGCMChannelUpsert,
+		Create: resourceGCMChannelUpsert,
 		Read:   resourceGCMChannelRead,
-		Update: resourceAwsPinpointGCMChannelUpsert,
+		Update: resourceGCMChannelUpsert,
 		Delete: resourceGCMChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -41,7 +41,7 @@ func ResourceGCMChannel() *schema.Resource {
 	}
 }
 
-func resourceAwsPinpointGCMChannelUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceGCMChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)

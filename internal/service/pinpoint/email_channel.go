@@ -14,9 +14,9 @@ import (
 
 func ResourceEmailChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointEmailChannelUpsert,
+		Create: resourceEmailChannelUpsert,
 		Read:   resourceEmailChannelRead,
-		Update: resourceAwsPinpointEmailChannelUpsert,
+		Update: resourceEmailChannelUpsert,
 		Delete: resourceEmailChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -59,7 +59,7 @@ func ResourceEmailChannel() *schema.Resource {
 	}
 }
 
-func resourceAwsPinpointEmailChannelUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceEmailChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)

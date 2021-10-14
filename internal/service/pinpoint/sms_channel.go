@@ -13,9 +13,9 @@ import (
 
 func ResourceSMSChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointSMSChannelUpsert,
+		Create: resourceSMSChannelUpsert,
 		Read:   resourceSMSChannelRead,
-		Update: resourceAwsPinpointSMSChannelUpsert,
+		Update: resourceSMSChannelUpsert,
 		Delete: resourceSMSChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -52,7 +52,7 @@ func ResourceSMSChannel() *schema.Resource {
 	}
 }
 
-func resourceAwsPinpointSMSChannelUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceSMSChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)
