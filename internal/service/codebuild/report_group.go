@@ -112,7 +112,7 @@ func resourceReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	createOpts := &codebuild.CreateReportGroupInput{
 		Name:         aws.String(d.Get("name").(string)),
 		Type:         aws.String(d.Get("type").(string)),
-		ExportConfig: expandAwsCodeBuildReportGroupExportConfig(d.Get("export_config").([]interface{})),
+		ExportConfig: expandReportGroupExportConfig(d.Get("export_config").([]interface{})),
 		Tags:         Tags(tags.IgnoreAWS()),
 	}
 
@@ -150,7 +150,7 @@ func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting created: %w", err)
 	}
 
-	if err := d.Set("export_config", flattenAwsCodeBuildReportGroupExportConfig(reportGroup.ExportConfig)); err != nil {
+	if err := d.Set("export_config", flattenReportGroupExportConfig(reportGroup.ExportConfig)); err != nil {
 		return fmt.Errorf("error setting export config: %w", err)
 	}
 
@@ -178,7 +178,7 @@ func resourceReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("export_config") {
-		input.ExportConfig = expandAwsCodeBuildReportGroupExportConfig(d.Get("export_config").([]interface{}))
+		input.ExportConfig = expandReportGroupExportConfig(d.Get("export_config").([]interface{}))
 	}
 
 	if d.HasChange("tags_all") {
@@ -212,7 +212,7 @@ func resourceReportGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAwsCodeBuildReportGroupExportConfig(config []interface{}) *codebuild.ReportExportConfig {
+func expandReportGroupExportConfig(config []interface{}) *codebuild.ReportExportConfig {
 	if len(config) == 0 {
 		return nil
 	}
@@ -225,26 +225,26 @@ func expandAwsCodeBuildReportGroupExportConfig(config []interface{}) *codebuild.
 	}
 
 	if v, ok := s["s3_destination"]; ok {
-		exportConfig.S3Destination = expandAwsCodeBuildReportGroupS3ReportExportConfig(v.([]interface{}))
+		exportConfig.S3Destination = expandReportGroupS3ReportExportConfig(v.([]interface{}))
 	}
 
 	return exportConfig
 }
 
-func flattenAwsCodeBuildReportGroupExportConfig(config *codebuild.ReportExportConfig) []map[string]interface{} {
+func flattenReportGroupExportConfig(config *codebuild.ReportExportConfig) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if config == nil {
 		return nil
 	}
 
-	settings["s3_destination"] = flattenAwsCodeBuildReportGroupS3ReportExportConfig(config.S3Destination)
+	settings["s3_destination"] = flattenReportGroupS3ReportExportConfig(config.S3Destination)
 	settings["type"] = aws.StringValue(config.ExportConfigType)
 
 	return []map[string]interface{}{settings}
 }
 
-func expandAwsCodeBuildReportGroupS3ReportExportConfig(config []interface{}) *codebuild.S3ReportExportConfig {
+func expandReportGroupS3ReportExportConfig(config []interface{}) *codebuild.S3ReportExportConfig {
 	if len(config) == 0 {
 		return nil
 	}
@@ -274,7 +274,7 @@ func expandAwsCodeBuildReportGroupS3ReportExportConfig(config []interface{}) *co
 	return s3ReportExportConfig
 }
 
-func flattenAwsCodeBuildReportGroupS3ReportExportConfig(config *codebuild.S3ReportExportConfig) []map[string]interface{} {
+func flattenReportGroupS3ReportExportConfig(config *codebuild.S3ReportExportConfig) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
 	if config == nil {

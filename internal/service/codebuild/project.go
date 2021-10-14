@@ -354,7 +354,7 @@ func ResourceProject() *schema.Resource {
 									"location": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateAwsCodeBuildProjectS3LogsLocation,
+										ValidateFunc: validProjectS3LogsLocation,
 									},
 									"encryption_disabled": {
 										Type:     schema.TypeBool,
@@ -379,7 +379,7 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 12,
-				Set:      resourceAwsCodeBuildProjectArtifactsHash,
+				Set:      resourceProjectArtifactsHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -1261,43 +1261,43 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	project := resp.Projects[0]
 
-	if err := d.Set("artifacts", flattenAwsCodeBuildProjectArtifacts(project.Artifacts)); err != nil {
+	if err := d.Set("artifacts", flattenProjectArtifacts(project.Artifacts)); err != nil {
 		return fmt.Errorf("error setting artifacts: %s", err)
 	}
 
-	if err := d.Set("environment", flattenAwsCodeBuildProjectEnvironment(project.Environment)); err != nil {
+	if err := d.Set("environment", flattenProjectEnvironment(project.Environment)); err != nil {
 		return fmt.Errorf("error setting environment: %s", err)
 	}
 
-	if err := d.Set("file_system_locations", flattenAwsCodeBuildProjectFileSystemLocations(project.FileSystemLocations)); err != nil {
+	if err := d.Set("file_system_locations", flattenProjectFileSystemLocations(project.FileSystemLocations)); err != nil {
 		return fmt.Errorf("error setting file_system_locations: %s", err)
 	}
 
-	if err := d.Set("cache", flattenAwsCodebuildProjectCache(project.Cache)); err != nil {
+	if err := d.Set("cache", flattenProjectCache(project.Cache)); err != nil {
 		return fmt.Errorf("error setting cache: %s", err)
 	}
 
-	if err := d.Set("logs_config", flattenAwsCodeBuildLogsConfig(project.LogsConfig)); err != nil {
+	if err := d.Set("logs_config", flattenLogsConfig(project.LogsConfig)); err != nil {
 		return fmt.Errorf("error setting logs_config: %s", err)
 	}
 
-	if err := d.Set("secondary_artifacts", flattenAwsCodeBuildProjectSecondaryArtifacts(project.SecondaryArtifacts)); err != nil {
+	if err := d.Set("secondary_artifacts", flattenProjectSecondaryArtifacts(project.SecondaryArtifacts)); err != nil {
 		return fmt.Errorf("error setting secondary_artifacts: %s", err)
 	}
 
-	if err := d.Set("secondary_sources", flattenAwsCodeBuildProjectSecondarySources(project.SecondarySources)); err != nil {
+	if err := d.Set("secondary_sources", flattenProjectSecondarySources(project.SecondarySources)); err != nil {
 		return fmt.Errorf("error setting secondary_sources: %s", err)
 	}
 
-	if err := d.Set("source", flattenAwsCodeBuildProjectSource(project.Source)); err != nil {
+	if err := d.Set("source", flattenProjectSource(project.Source)); err != nil {
 		return fmt.Errorf("error setting source: %s", err)
 	}
 
-	if err := d.Set("vpc_config", flattenAwsCodeBuildVpcConfig(project.VpcConfig)); err != nil {
+	if err := d.Set("vpc_config", flattenVPCConfig(project.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %s", err)
 	}
 
-	if err := d.Set("build_batch_config", flattenAwsCodeBuildBuildBatchConfig(project.BuildBatchConfig)); err != nil {
+	if err := d.Set("build_batch_config", flattenBuildBatchConfig(project.BuildBatchConfig)); err != nil {
 		return fmt.Errorf("error setting build_batch_config: %s", err)
 	}
 
@@ -1479,7 +1479,7 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func flattenAwsCodeBuildProjectFileSystemLocations(apiObjects []*codebuild.ProjectFileSystemLocation) []interface{} {
+func flattenProjectFileSystemLocations(apiObjects []*codebuild.ProjectFileSystemLocation) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1491,13 +1491,13 @@ func flattenAwsCodeBuildProjectFileSystemLocations(apiObjects []*codebuild.Proje
 			continue
 		}
 
-		tfList = append(tfList, flattenAwsCodeBuildProjectFileSystemLocation(apiObject))
+		tfList = append(tfList, flattenProjectFileSystemLocation(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenAwsCodeBuildProjectFileSystemLocation(apiObject *codebuild.ProjectFileSystemLocation) map[string]interface{} {
+func flattenProjectFileSystemLocation(apiObject *codebuild.ProjectFileSystemLocation) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1527,7 +1527,7 @@ func flattenAwsCodeBuildProjectFileSystemLocation(apiObject *codebuild.ProjectFi
 	return tfMap
 }
 
-func flattenAwsCodeBuildLogsConfig(logsConfig *codebuild.LogsConfig) []interface{} {
+func flattenLogsConfig(logsConfig *codebuild.LogsConfig) []interface{} {
 	if logsConfig == nil {
 		return []interface{}{}
 	}
@@ -1535,17 +1535,17 @@ func flattenAwsCodeBuildLogsConfig(logsConfig *codebuild.LogsConfig) []interface
 	values := map[string]interface{}{}
 
 	if v := logsConfig.CloudWatchLogs; v != nil {
-		values["cloudwatch_logs"] = flattenAwsCodeBuildCloudWatchLogs(v)
+		values["cloudwatch_logs"] = flattenCloudWatchLogs(v)
 	}
 
 	if v := logsConfig.S3Logs; v != nil {
-		values["s3_logs"] = flattenAwsCodeBuildS3Logs(v)
+		values["s3_logs"] = flattenS3Logs(v)
 	}
 
 	return []interface{}{values}
 }
 
-func flattenAwsCodeBuildCloudWatchLogs(cloudWatchLogsConfig *codebuild.CloudWatchLogsConfig) []interface{} {
+func flattenCloudWatchLogs(cloudWatchLogsConfig *codebuild.CloudWatchLogsConfig) []interface{} {
 	values := map[string]interface{}{}
 
 	if cloudWatchLogsConfig == nil {
@@ -1559,7 +1559,7 @@ func flattenAwsCodeBuildCloudWatchLogs(cloudWatchLogsConfig *codebuild.CloudWatc
 	return []interface{}{values}
 }
 
-func flattenAwsCodeBuildS3Logs(s3LogsConfig *codebuild.S3LogsConfig) []interface{} {
+func flattenS3Logs(s3LogsConfig *codebuild.S3LogsConfig) []interface{} {
 	values := map[string]interface{}{}
 
 	if s3LogsConfig == nil {
@@ -1573,22 +1573,22 @@ func flattenAwsCodeBuildS3Logs(s3LogsConfig *codebuild.S3LogsConfig) []interface
 	return []interface{}{values}
 }
 
-func flattenAwsCodeBuildProjectSecondaryArtifacts(artifactsList []*codebuild.ProjectArtifacts) *schema.Set {
+func flattenProjectSecondaryArtifacts(artifactsList []*codebuild.ProjectArtifacts) *schema.Set {
 	artifactSet := schema.Set{
-		F: resourceAwsCodeBuildProjectArtifactsHash,
+		F: resourceProjectArtifactsHash,
 	}
 
 	for _, artifacts := range artifactsList {
-		artifactSet.Add(flattenAwsCodeBuildProjectArtifactsData(*artifacts))
+		artifactSet.Add(flattenProjectArtifactsData(*artifacts))
 	}
 	return &artifactSet
 }
 
-func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) []interface{} {
-	return []interface{}{flattenAwsCodeBuildProjectArtifactsData(*artifacts)}
+func flattenProjectArtifacts(artifacts *codebuild.ProjectArtifacts) []interface{} {
+	return []interface{}{flattenProjectArtifactsData(*artifacts)}
 }
 
-func flattenAwsCodeBuildProjectArtifactsData(artifacts codebuild.ProjectArtifacts) map[string]interface{} {
+func flattenProjectArtifactsData(artifacts codebuild.ProjectArtifacts) map[string]interface{} {
 	values := map[string]interface{}{}
 
 	values["type"] = aws.StringValue(artifacts.Type)
@@ -1627,7 +1627,7 @@ func flattenAwsCodeBuildProjectArtifactsData(artifacts codebuild.ProjectArtifact
 	return values
 }
 
-func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{} {
+func flattenProjectCache(cache *codebuild.ProjectCache) []interface{} {
 	if cache == nil {
 		return []interface{}{}
 	}
@@ -1641,7 +1641,7 @@ func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{
 	return []interface{}{values}
 }
 
-func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnvironment) []interface{} {
+func flattenProjectEnvironment(environment *codebuild.ProjectEnvironment) []interface{} {
 	envConfig := map[string]interface{}{}
 
 	envConfig["type"] = aws.StringValue(environment.Type)
@@ -1651,7 +1651,7 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 	envConfig["privileged_mode"] = aws.BoolValue(environment.PrivilegedMode)
 	envConfig["image_pull_credentials_type"] = aws.StringValue(environment.ImagePullCredentialsType)
 
-	envConfig["registry_credential"] = flattenAwsCodebuildRegistryCredential(environment.RegistryCredential)
+	envConfig["registry_credential"] = flattenRegistryCredential(environment.RegistryCredential)
 
 	if environment.EnvironmentVariables != nil {
 		envConfig["environment_variable"] = environmentVariablesToMap(environment.EnvironmentVariables)
@@ -1660,7 +1660,7 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 	return []interface{}{envConfig}
 }
 
-func flattenAwsCodebuildRegistryCredential(registryCredential *codebuild.RegistryCredential) []interface{} {
+func flattenRegistryCredential(registryCredential *codebuild.RegistryCredential) []interface{} {
 	if registryCredential == nil {
 		return []interface{}{}
 	}
@@ -1673,25 +1673,25 @@ func flattenAwsCodebuildRegistryCredential(registryCredential *codebuild.Registr
 	return []interface{}{values}
 }
 
-func flattenAwsCodeBuildProjectSecondarySources(sourceList []*codebuild.ProjectSource) []interface{} {
+func flattenProjectSecondarySources(sourceList []*codebuild.ProjectSource) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, source := range sourceList {
-		l = append(l, flattenAwsCodeBuildProjectSourceData(source))
+		l = append(l, flattenProjectSourceData(source))
 	}
 
 	return l
 }
 
-func flattenAwsCodeBuildProjectSource(source *codebuild.ProjectSource) []interface{} {
+func flattenProjectSource(source *codebuild.ProjectSource) []interface{} {
 	l := make([]interface{}, 1)
 
-	l[0] = flattenAwsCodeBuildProjectSourceData(source)
+	l[0] = flattenProjectSourceData(source)
 
 	return l
 }
 
-func flattenAwsCodeBuildProjectSourceData(source *codebuild.ProjectSource) interface{} {
+func flattenProjectSourceData(source *codebuild.ProjectSource) interface{} {
 	m := map[string]interface{}{
 		"buildspec":           aws.StringValue(source.Buildspec),
 		"location":            aws.StringValue(source.Location),
@@ -1701,9 +1701,9 @@ func flattenAwsCodeBuildProjectSourceData(source *codebuild.ProjectSource) inter
 		"type":                aws.StringValue(source.Type),
 	}
 
-	m["git_submodules_config"] = flattenAwsCodebuildProjectGitSubmodulesConfig(source.GitSubmodulesConfig)
+	m["git_submodules_config"] = flattenProjectGitSubmodulesConfig(source.GitSubmodulesConfig)
 
-	m["build_status_config"] = flattenAwsCodebuildProjectBuildStatusConfig(source.BuildStatusConfig)
+	m["build_status_config"] = flattenProjectBuildStatusConfig(source.BuildStatusConfig)
 
 	if source.Auth != nil {
 		m["auth"] = []interface{}{sourceAuthToMap(source.Auth)}
@@ -1715,7 +1715,7 @@ func flattenAwsCodeBuildProjectSourceData(source *codebuild.ProjectSource) inter
 	return m
 }
 
-func flattenAwsCodebuildProjectGitSubmodulesConfig(config *codebuild.GitSubmodulesConfig) []interface{} {
+func flattenProjectGitSubmodulesConfig(config *codebuild.GitSubmodulesConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1727,7 +1727,7 @@ func flattenAwsCodebuildProjectGitSubmodulesConfig(config *codebuild.GitSubmodul
 	return []interface{}{values}
 }
 
-func flattenAwsCodebuildProjectBuildStatusConfig(config *codebuild.BuildStatusConfig) []interface{} {
+func flattenProjectBuildStatusConfig(config *codebuild.BuildStatusConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1740,7 +1740,7 @@ func flattenAwsCodebuildProjectBuildStatusConfig(config *codebuild.BuildStatusCo
 	return []interface{}{values}
 }
 
-func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} {
+func flattenVPCConfig(vpcConfig *codebuild.VpcConfig) []interface{} {
 	if vpcConfig != nil {
 		values := map[string]interface{}{}
 
@@ -1753,7 +1753,7 @@ func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} 
 	return nil
 }
 
-func flattenAwsCodeBuildBuildBatchConfig(buildBatchConfig *codebuild.ProjectBuildBatchConfig) []interface{} {
+func flattenBuildBatchConfig(buildBatchConfig *codebuild.ProjectBuildBatchConfig) []interface{} {
 	if buildBatchConfig == nil {
 		return nil
 	}
@@ -1767,7 +1767,7 @@ func flattenAwsCodeBuildBuildBatchConfig(buildBatchConfig *codebuild.ProjectBuil
 	}
 
 	if buildBatchConfig.Restrictions != nil {
-		values["restrictions"] = flattenAwsCodeBuildBuildBatchConfigRestrictions(buildBatchConfig.Restrictions)
+		values["restrictions"] = flattenBuildBatchRestrictionsConfig(buildBatchConfig.Restrictions)
 	}
 
 	if buildBatchConfig.TimeoutInMins != nil {
@@ -1777,7 +1777,7 @@ func flattenAwsCodeBuildBuildBatchConfig(buildBatchConfig *codebuild.ProjectBuil
 	return []interface{}{values}
 }
 
-func flattenAwsCodeBuildBuildBatchConfigRestrictions(restrictions *codebuild.BatchRestrictions) []interface{} {
+func flattenBuildBatchRestrictionsConfig(restrictions *codebuild.BatchRestrictions) []interface{} {
 	if restrictions == nil {
 		return []interface{}{}
 	}
@@ -1790,7 +1790,7 @@ func flattenAwsCodeBuildBuildBatchConfigRestrictions(restrictions *codebuild.Bat
 	return []interface{}{values}
 }
 
-func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
+func resourceProjectArtifactsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
@@ -1879,7 +1879,7 @@ func ValidProjectName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validateAwsCodeBuildProjectS3LogsLocation(v interface{}, k string) (ws []string, errors []error) {
+func validProjectS3LogsLocation(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if _, errs := verify.ValidARN(v, k); len(errs) == 0 {

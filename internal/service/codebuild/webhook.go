@@ -70,7 +70,7 @@ func ResourceWebhook() *schema.Resource {
 						},
 					},
 				},
-				Set:           resourceAwsCodeBuildWebhookFilterHash,
+				Set:           resourceWebhookFilterHash,
 				ConflictsWith: []string{"branch_filter"},
 			},
 			"payload_url": {
@@ -186,7 +186,7 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("build_type", project.Webhook.BuildType)
 	d.Set("branch_filter", project.Webhook.BranchFilter)
-	d.Set("filter_group", flattenAwsCodeBuildWebhookFilterGroups(project.Webhook.FilterGroups))
+	d.Set("filter_group", flattenWebhookFilterGroups(project.Webhook.FilterGroups))
 	d.Set("payload_url", project.Webhook.PayloadUrl)
 	d.Set("project_name", project.Name)
 	d.Set("url", project.Webhook.Url)
@@ -246,18 +246,18 @@ func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenAwsCodeBuildWebhookFilterGroups(filterList [][]*codebuild.WebhookFilter) *schema.Set {
+func flattenWebhookFilterGroups(filterList [][]*codebuild.WebhookFilter) *schema.Set {
 	filterSet := schema.Set{
-		F: resourceAwsCodeBuildWebhookFilterHash,
+		F: resourceWebhookFilterHash,
 	}
 
 	for _, filters := range filterList {
-		filterSet.Add(flattenAwsCodeBuildWebhookFilterData(filters))
+		filterSet.Add(flattenWebhookFilterData(filters))
 	}
 	return &filterSet
 }
 
-func resourceAwsCodeBuildWebhookFilterHash(v interface{}) int {
+func resourceWebhookFilterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
@@ -273,7 +273,7 @@ func resourceAwsCodeBuildWebhookFilterHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenAwsCodeBuildWebhookFilterData(filters []*codebuild.WebhookFilter) map[string]interface{} {
+func flattenWebhookFilterData(filters []*codebuild.WebhookFilter) map[string]interface{} {
 	values := map[string]interface{}{}
 	ff := make([]interface{}, 0)
 
