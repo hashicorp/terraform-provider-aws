@@ -6,9 +6,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceAccelerator() *schema.Resource {
@@ -80,7 +81,7 @@ func DataSourceAccelerator() *schema.Resource {
 				},
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -142,7 +143,7 @@ func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting attributes: %w", err)
 	}
 
-	tags, err := keyvaluetags.GlobalacceleratorListTags(conn, d.Id())
+	tags, err := tftags.GlobalacceleratorListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags for Global Accelerator Accelerator (%s): %w", d.Id(), err)
 	}
