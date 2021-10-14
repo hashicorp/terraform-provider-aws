@@ -24,14 +24,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(elbv2.EndpointsID, testAccErrorCheckSkipELBv2)
 
-	resource.AddTestSweepers("aws_lb", &resource.Sweeper{
-		Name: "aws_lb",
-		F:    sweepLoadBalancers,
-		Dependencies: []string{
-			"aws_api_gateway_vpc_link",
-			"aws_vpc_endpoint_service",
-		},
-	})
+
 }
 
 func testAccErrorCheckSkipELBv2(t *testing.T) resource.ErrorCheckFunc {
@@ -41,44 +34,7 @@ func testAccErrorCheckSkipELBv2(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func sweepLoadBalancers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ELBV2Conn
 
-	var sweeperErrs *multierror.Error
-	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
-		if page == nil || len(page.LoadBalancers) == 0 {
-			log.Print("[DEBUG] No LBs to sweep")
-			return false
-		}
-
-		for _, loadBalancer := range page.LoadBalancers {
-			name := aws.StringValue(loadBalancer.LoadBalancerName)
-
-			log.Printf("[INFO] Deleting LB: %s", name)
-			_, err := conn.DeleteLoadBalancer(&elbv2.DeleteLoadBalancerInput{
-				LoadBalancerArn: loadBalancer.LoadBalancerArn,
-			})
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("failed to delete LB (%s): %w", name, err))
-				continue
-			}
-		}
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping LB sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving LBs: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 	cases := []struct {
