@@ -25,7 +25,7 @@ func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +56,7 @@ func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -87,14 +87,14 @@ func TestAccAWSShieldProtection_disappears(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSShieldProtectionExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsShieldProtection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsShieldProtection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -113,7 +113,7 @@ func TestAccAWSShieldProtection_Alb(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +144,7 @@ func TestAccAWSShieldProtection_Elb(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -176,7 +176,7 @@ func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -208,7 +208,7 @@ func TestAccAWSShieldProtection_Cloudfront_Tags(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -259,7 +259,7 @@ func TestAccAWSShieldProtection_Route53(t *testing.T) {
 			testAccPreCheckAWSShield(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID, "route53"),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -278,7 +278,7 @@ func TestAccAWSShieldProtection_Route53(t *testing.T) {
 }
 
 func testAccCheckAWSShieldProtectionDestroy(s *terraform.State) error {
-	shieldconn := testAccProvider.Meta().(*AWSClient).shieldconn
+	shieldconn := acctest.Provider.Meta().(*AWSClient).shieldconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_shield_protection" {
@@ -314,7 +314,7 @@ func testAccCheckAWSShieldProtectionExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).shieldconn
+		conn := acctest.Provider.Meta().(*AWSClient).shieldconn
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(rs.Primary.ID),
@@ -331,7 +331,7 @@ func testAccCheckAWSShieldProtectionExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAWSShield(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).shieldconn
+	conn := acctest.Provider.Meta().(*AWSClient).shieldconn
 
 	input := &shield.ListProtectionsInput{}
 
