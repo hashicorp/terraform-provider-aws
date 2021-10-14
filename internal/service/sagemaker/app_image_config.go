@@ -115,7 +115,7 @@ func resourceAppImageConfigCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().SagemakerTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
@@ -156,7 +156,7 @@ func resourceAppImageConfigRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting kernel_gateway_image_config: %w", err)
 	}
 
-	tags, err := tftags.SagemakerListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SageMaker App Image Config (%s): %w", d.Id(), err)
@@ -182,7 +182,7 @@ func resourceAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SageMaker App Image Config (%s) tags: %w", d.Id(), err)
 		}
 	}

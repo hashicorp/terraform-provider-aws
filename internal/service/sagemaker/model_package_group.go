@@ -69,7 +69,7 @@ func resourceModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().SagemakerTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	_, err := conn.CreateModelPackageGroup(input)
@@ -107,7 +107,7 @@ func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", arn)
 	d.Set("model_package_group_description", mpg.ModelPackageGroupDescription)
 
-	tags, err := tftags.SagemakerListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SageMaker Model Package Group (%s): %w", d.Id(), err)
@@ -133,7 +133,7 @@ func resourceModelPackageGroupUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SageMaker Model Package Group (%s) tags: %s", d.Id(), err)
 		}
 	}

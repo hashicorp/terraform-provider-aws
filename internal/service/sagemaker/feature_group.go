@@ -217,7 +217,7 @@ func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().SagemakerTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("offline_store_config"); ok {
@@ -297,7 +297,7 @@ func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting offline_store_config for Sagemaker Feature Group (%s): %w", d.Id(), err)
 	}
 
-	tags, err := tftags.SagemakerListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for Sagemaker Feature Group (%s): %w", d.Id(), err)
 	}
@@ -322,7 +322,7 @@ func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SageMaker Feature Group (%s) tags: %w", d.Id(), err)
 		}
 	}

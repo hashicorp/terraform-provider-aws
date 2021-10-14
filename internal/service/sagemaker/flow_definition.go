@@ -266,7 +266,7 @@ func resourceFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().SagemakerTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Flow Definition: %s", input)
@@ -325,7 +325,7 @@ func resourceFlowDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting output_config: %w", err)
 	}
 
-	tags, err := tftags.SagemakerListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SageMaker Flow Definition (%s): %w", d.Id(), err)
@@ -351,7 +351,7 @@ func resourceFlowDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SageMaker Flow Definition (%s) tags: %w", d.Id(), err)
 		}
 	}

@@ -298,7 +298,7 @@ func resourceEndpointConfigurationCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if len(tags) > 0 {
-		createOpts.Tags = tags.IgnoreAws().SagemakerTags()
+		createOpts.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("data_capture_config"); ok {
@@ -352,7 +352,7 @@ func resourceEndpointConfigurationRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting async_inference_config for SageMaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
 
-	tags, err := tftags.SagemakerListTags(conn, aws.StringValue(endpointConfig.EndpointConfigArn))
+	tags, err := ListTags(conn, aws.StringValue(endpointConfig.EndpointConfigArn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Sagemaker Endpoint Configuration (%s): %w", d.Id(), err)
 	}
@@ -377,7 +377,7 @@ func resourceEndpointConfigurationUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Sagemaker Endpoint Configuration (%s) tags: %w", d.Id(), err)
 		}
 	}

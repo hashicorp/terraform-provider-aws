@@ -105,7 +105,7 @@ func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().SagemakerTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	_, err := verify.RetryOnAWSCode("ValidationException", func() (interface{}, error) {
@@ -150,7 +150,7 @@ func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting output_config for Sagemaker Device Fleet (%s): %w", d.Id(), err)
 	}
 
-	tags, err := tftags.SagemakerListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SageMaker Device Fleet (%s): %w", d.Id(), err)
@@ -195,7 +195,7 @@ func resourceDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SageMaker Device Fleet (%s) tags: %w", d.Id(), err)
 		}
 	}
