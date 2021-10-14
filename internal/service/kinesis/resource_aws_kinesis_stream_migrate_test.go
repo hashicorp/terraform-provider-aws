@@ -1,4 +1,4 @@
-package aws
+package kinesis_test
 
 import (
 	"context"
