@@ -16,7 +16,7 @@ import (
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
-func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
+func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
@@ -48,7 +48,7 @@ func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17639
-func TestAccAwsLbListenerCertificate_CertificateArn_Underscores(t *testing.T) {
+func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
@@ -79,7 +79,7 @@ func TestAccAwsLbListenerCertificate_CertificateArn_Underscores(t *testing.T) {
 	})
 }
 
-func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
+func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 	keys := make([]string, 4)
 	certificates := make([]string, 4)
 	for i := 0; i < 4; i++ {
@@ -151,7 +151,7 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAwsLbListenerCertificate_disappears(t *testing.T) {
+func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	resourceName := "aws_lb_listener_certificate.test"

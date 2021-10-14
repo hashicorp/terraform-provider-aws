@@ -111,7 +111,7 @@ func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 	}
 }
 
-func TestAccAWSLB_ALB_basic(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -148,7 +148,7 @@ func TestAccAWSLB_ALB_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_NLB_basic(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -181,7 +181,7 @@ func TestAccAWSLB_NLB_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_LoadBalancerType_Gateway(t *testing.T) {
+func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
@@ -214,7 +214,7 @@ func TestAccAWSLB_LoadBalancerType_Gateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_IPv6SubnetMapping(t *testing.T) {
+func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
@@ -248,7 +248,7 @@ func TestAccAWSLB_IPv6SubnetMapping(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_LoadBalancerType_Gateway_EnableCrossZoneLoadBalancing(t *testing.T) {
+func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalancing(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
@@ -291,7 +291,7 @@ func TestAccAWSLB_LoadBalancerType_Gateway_EnableCrossZoneLoadBalancing(t *testi
 	})
 }
 
-func TestAccAWSLB_ALB_outpost(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-outpost-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -330,7 +330,7 @@ func TestAccAWSLB_ALB_outpost(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
+func TestAccELBV2LoadBalancer_networkLoadBalancerEIP(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	resourceName := "aws_lb.lb_test"
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
@@ -360,7 +360,7 @@ func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_NLB_privateipv4address(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-pipv4a-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.test"
@@ -389,7 +389,7 @@ func TestAccAWSLB_NLB_privateipv4address(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_BackwardsCompatibility(t *testing.T) {
+func TestAccELBV2LoadBalancer_backwardsCompatibility(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_alb.lb_test"
@@ -424,7 +424,7 @@ func TestAccAWSLB_BackwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_generatedName(t *testing.T) {
+func TestAccELBV2LoadBalancer_generatedName(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	resourceName := "aws_lb.lb_test"
 
@@ -445,7 +445,7 @@ func TestAccAWSLB_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_generatesNameForZeroValue(t *testing.T) {
+func TestAccELBV2LoadBalancer_generatesNameForZeroValue(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	resourceName := "aws_lb.lb_test"
 
@@ -466,7 +466,7 @@ func TestAccAWSLB_generatesNameForZeroValue(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_namePrefix(t *testing.T) {
+func TestAccELBV2LoadBalancer_namePrefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	resourceName := "aws_lb.lb_test"
 
@@ -489,7 +489,7 @@ func TestAccAWSLB_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_tags(t *testing.T) {
+func TestAccELBV2LoadBalancer_tags(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -529,7 +529,7 @@ func TestAccAWSLB_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-nlbcz-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -570,7 +570,7 @@ func TestAccAWSLB_networkLoadbalancer_updateCrossZone(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_applicationLoadBalancer_updateHttp2(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSalb-http2-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -611,7 +611,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateHttp2(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_applicationLoadBalancer_updateDropInvalidHeaderFields(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFields(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSalb-headers-%s", sdkacctest.RandString(10))
 
@@ -651,7 +651,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateDropInvalidHeaderFields(t *testi
 	})
 }
 
-func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t *testing.T) {
 	var pre, mid, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSalb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -692,7 +692,7 @@ func TestAccAWSLB_applicationLoadBalancer_updateDeletionProtection(t *testing.T)
 	})
 }
 
-func TestAccAWSLB_updatedSecurityGroups(t *testing.T) {
+func TestAccELBV2LoadBalancer_updatedSecurityGroups(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -722,7 +722,7 @@ func TestAccAWSLB_updatedSecurityGroups(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_updatedSubnets(t *testing.T) {
+func TestAccELBV2LoadBalancer_updatedSubnets(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -752,7 +752,7 @@ func TestAccAWSLB_updatedSubnets(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_updatedIpAddressType(t *testing.T) {
+func TestAccELBV2LoadBalancer_updatedIPAddressType(t *testing.T) {
 	var pre, post elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -784,7 +784,7 @@ func TestAccAWSLB_updatedIpAddressType(t *testing.T) {
 // TestAccAWSALB_noSecurityGroup regression tests the issue in #8264,
 // where if an ALB is created without a security group, a default one
 // is assigned.
-func TestAccAWSLB_noSecurityGroup(t *testing.T) {
+func TestAccELBV2LoadBalancer_noSecurityGroup(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-nosg-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"
@@ -816,7 +816,7 @@ func TestAccAWSLB_noSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALB_accessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
@@ -904,7 +904,7 @@ func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
+func TestAccELBV2LoadBalancer_ALBAccessLogs_prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
@@ -974,7 +974,7 @@ func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLB_accessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
@@ -1062,7 +1062,7 @@ func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_NLB_AccessLogs_Prefix(t *testing.T) {
+func TestAccELBV2LoadBalancer_NLBAccessLogs_prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", sdkacctest.RandString(6))
 	lbName := fmt.Sprintf("testAccAWSlbaccesslog-%s", sdkacctest.RandString(4))
@@ -1132,7 +1132,7 @@ func TestAccAWSLB_NLB_AccessLogs_Prefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSLB_networkLoadbalancer_subnet_change(t *testing.T) {
+func TestAccELBV2LoadBalancer_NetworkLoadBalancerSubnet_change(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	lbName := fmt.Sprintf("testAccAWSlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb.lb_test"

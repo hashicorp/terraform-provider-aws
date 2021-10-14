@@ -127,7 +127,7 @@ func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	}
 }
 
-func TestAccAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
+func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -170,7 +170,7 @@ func TestAccAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_ProtocolVersion(t *testing.T) {
+func TestAccELBV2TargetGroup_protocolVersion(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -215,7 +215,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_ProtocolVersion_GRPC_HealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_ProtocolVersionGRPC_healthCheck(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -239,7 +239,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion_GRPC_HealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_ProtocolVersion_HTTP_GRPC_Update(t *testing.T) {
+func TestAccELBV2TargetGroup_ProtocolVersionHTTPGRPC_update(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -270,7 +270,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion_HTTP_GRPC_Update(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_Protocol_Tcp_HealthCheck_Protocol(t *testing.T) {
+func TestAccELBV2TargetGroup_ProtocolTCPHealthCheck_protocol(t *testing.T) {
 	var targetGroup1, targetGroup2 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -302,7 +302,7 @@ func TestAccAWSLBTargetGroup_Protocol_Tcp_HealthCheck_Protocol(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
+func TestAccELBV2TargetGroup_Protocol_tls(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -324,7 +324,7 @@ func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_TCP_httpHealthCheck(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -383,7 +383,7 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_attrsOnCreate(t *testing.T) {
+func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -416,7 +416,7 @@ func TestAccAWSLBTargetGroup_attrsOnCreate(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_basic(t *testing.T) {
+func TestAccELBV2TargetGroup_basic(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -461,7 +461,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
+func TestAccELBV2TargetGroup_basicUdp(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -492,7 +492,7 @@ func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_changeNameForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rNameBefore := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameAfter := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -522,7 +522,7 @@ func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_changePortForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -551,7 +551,7 @@ func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_changeProtocolForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -580,7 +580,7 @@ func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_changeVPCForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -607,7 +607,7 @@ func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
+func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -645,7 +645,7 @@ func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
+func TestAccELBV2TargetGroup_Defaults_network(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -717,7 +717,7 @@ protocol = "TCP"
 	})
 }
 
-func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_enableHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -752,7 +752,7 @@ func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_generatedName(t *testing.T) {
+func TestAccELBV2TargetGroup_generatedName(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -773,7 +773,7 @@ func TestAccAWSLBTargetGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_namePrefix(t *testing.T) {
+func TestAccELBV2TargetGroup_namePrefix(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -795,7 +795,7 @@ func TestAccAWSLBTargetGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
+func TestAccELBV2TargetGroup_NetworkLB_targetGroup(t *testing.T) {
 	var targetGroup1, targetGroup2, targetGroup3 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -867,7 +867,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
+func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -896,7 +896,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_preserveClientIPValid(t *testing.T) {
+func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
 	var conf elbv2.TargetGroup
 	resourceName := "aws_lb_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -925,7 +925,7 @@ func TestAccAWSLBTargetGroup_preserveClientIPValid(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_protocolGeneve(t *testing.T) {
+func TestAccELBV2TargetGroup_protocolGeneve(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -958,7 +958,7 @@ func TestAccAWSLBTargetGroup_protocolGeneve(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_protocolGeneveNotSticky(t *testing.T) {
+func TestAccELBV2TargetGroup_protocolGeneveNotSticky(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -998,7 +998,7 @@ func TestAccAWSLBTargetGroup_protocolGeneveNotSticky(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessDefaultALB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessDefaultALB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1022,7 +1022,7 @@ func TestAccAWSLBTargetGroup_stickinessDefaultALB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessDefaultNLB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessDefaultNLB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1064,7 +1064,7 @@ func TestAccAWSLBTargetGroup_stickinessDefaultNLB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessInvalidALB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessInvalidALB(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1094,7 +1094,7 @@ func TestAccAWSLBTargetGroup_stickinessInvalidALB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessInvalidNLB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessInvalidNLB(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1119,7 +1119,7 @@ func TestAccAWSLBTargetGroup_stickinessInvalidNLB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessValidALB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessValidALB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1154,7 +1154,7 @@ func TestAccAWSLBTargetGroup_stickinessValidALB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessValidNLB(t *testing.T) {
+func TestAccELBV2TargetGroup_stickinessValidNLB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1214,7 +1214,7 @@ func TestAccAWSLBTargetGroup_stickinessValidNLB(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_tags(t *testing.T) {
+func TestAccELBV2TargetGroup_tags(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1254,7 +1254,7 @@ func TestAccAWSLBTargetGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_updateAppSticknessEnabled(t *testing.T) {
+func TestAccELBV2TargetGroup_updateAppStickinessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
@@ -1342,7 +1342,7 @@ func TestAccAWSLBTargetGroup_updateAppSticknessEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1407,7 +1407,7 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
+func TestAccELBV2TargetGroup_updateStickinessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1493,7 +1493,7 @@ func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_withoutHealthcheck(t *testing.T) {
+func TestAccELBV2TargetGroup_withoutHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1518,7 +1518,7 @@ func TestAccAWSLBTargetGroup_withoutHealthcheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_basic(t *testing.T) {
+func TestAccELBV2TargetGroup_A_basic(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1562,7 +1562,7 @@ func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_changeNameForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_A_changeNameForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameAfter := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1592,7 +1592,7 @@ func TestAccAWSALBTargetGroup_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_changePortForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_A_changePortForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1621,7 +1621,7 @@ func TestAccAWSALBTargetGroup_changePortForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_changeProtocolForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_A_changeProtocolForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1650,7 +1650,7 @@ func TestAccAWSALBTargetGroup_changeProtocolForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_changeVpcForceNew(t *testing.T) {
+func TestAccELBV2TargetGroup_A_changeVPCForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1677,7 +1677,7 @@ func TestAccAWSALBTargetGroup_changeVpcForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_generatedName(t *testing.T) {
+func TestAccELBV2TargetGroup_A_generatedName(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1698,7 +1698,7 @@ func TestAccAWSALBTargetGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_lambda(t *testing.T) {
+func TestAccELBV2TargetGroup_A_lambda(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1732,7 +1732,7 @@ func TestAccAWSALBTargetGroup_lambda(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_lambdaMultiValueHeadersEnabled(t *testing.T) {
+func TestAccELBV2TargetGroup_A_lambdaMultiValueHeadersEnabled(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1782,7 +1782,7 @@ func TestAccAWSALBTargetGroup_lambdaMultiValueHeadersEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_missingPortProtocolVpc(t *testing.T) {
+func TestAccELBV2TargetGroup_A_missingPortProtocolVPC(t *testing.T) {
 	rName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1807,7 +1807,7 @@ func TestAccAWSALBTargetGroup_missingPortProtocolVpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_namePrefix(t *testing.T) {
+func TestAccELBV2TargetGroup_A_namePrefix(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1829,7 +1829,7 @@ func TestAccAWSALBTargetGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_setAndUpdateSlowStart(t *testing.T) {
+func TestAccELBV2TargetGroup_A_setAndUpdateSlowStart(t *testing.T) {
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1858,7 +1858,7 @@ func TestAccAWSALBTargetGroup_setAndUpdateSlowStart(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_tags(t *testing.T) {
+func TestAccELBV2TargetGroup_A_tags(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1890,7 +1890,7 @@ func TestAccAWSALBTargetGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_updateHealthCheck(t *testing.T) {
+func TestAccELBV2TargetGroup_A_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1953,7 +1953,7 @@ func TestAccAWSALBTargetGroup_updateHealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_updateLoadBalancingAlgorithmType(t *testing.T) {
+func TestAccELBV2TargetGroup_A_updateLoadBalancingAlgorithmType(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1995,7 +1995,7 @@ func TestAccAWSALBTargetGroup_updateLoadBalancingAlgorithmType(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroup_updateSticknessEnabled(t *testing.T) {
+func TestAccELBV2TargetGroup_A_updateStickinessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
