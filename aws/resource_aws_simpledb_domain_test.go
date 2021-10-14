@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
@@ -37,7 +38,7 @@ func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
 }
 
 func testAccCheckAWSSimpleDBDomainDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).simpledbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_simpledb_domain" {
@@ -73,7 +74,7 @@ func testAccCheckAWSSimpleDBDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SimpleDB domain with that name exists")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).simpledbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn
 		input := &simpledb.DomainMetadataInput{
 			DomainName: aws.String(rs.Primary.ID),
 		}
