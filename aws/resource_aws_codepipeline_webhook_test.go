@@ -6,10 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 const envVarGithubTokenUsageCodePipelineWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
@@ -18,15 +19,15 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v codepipeline.ListWebhookItem
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codepipeline_webhook.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -53,15 +54,15 @@ func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
 	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v codepipeline.ListWebhookItem
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codepipeline_webhook.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -88,15 +89,15 @@ func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
 	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v codepipeline.ListWebhookItem
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codepipeline_webhook.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -121,15 +122,15 @@ func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
 	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v1, v2, v3 codepipeline.ListWebhookItem
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codepipeline_webhook.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -185,15 +186,15 @@ func TestAccAWSCodePipelineWebhook_UpdateAuthenticationConfiguration_SecretToken
 	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v1, v2 codepipeline.ListWebhookItem
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codepipeline_webhook.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
