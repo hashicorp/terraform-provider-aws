@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
