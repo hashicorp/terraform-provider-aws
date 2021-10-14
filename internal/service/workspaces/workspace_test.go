@@ -19,42 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_workspaces_workspace", &resource.Sweeper{
-		Name: "aws_workspaces_workspace",
-		F:    sweepWorkspace,
-	})
-}
 
-func sweepWorkspace(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn
 
-	var errors error
-	input := &workspaces.DescribeWorkspacesInput{}
-	err = conn.DescribeWorkspacesPages(input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
-		for _, workspace := range resp.Workspaces {
-			err := tfworkspaces.WorkspaceDelete(conn, aws.StringValue(workspace.WorkspaceId), tfworkspaces.WorkspaceTerminatedTimeout)
-			if err != nil {
-				errors = multierror.Append(errors, err)
-			}
 
-		}
-		return true
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping workspaces sweep for %s: %s", region, err)
-		return errors // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error listing workspaces: %s", err))
-	}
-
-	return errors
-}
 
 func testAccWorkspace_basic(t *testing.T) {
 	var v workspaces.Workspace

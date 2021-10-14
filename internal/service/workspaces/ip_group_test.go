@@ -17,55 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_workspaces_ip_group", &resource.Sweeper{
-		Name: "aws_workspaces_ip_group",
-		F:    sweepIPGroups,
-	})
-}
 
-func sweepIPGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn
-	input := &workspaces.DescribeIpGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = tfworkspaces.DescribeIPGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, ipGroup := range page.Result {
-			r := tfworkspaces.ResourceIPGroup()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(ipGroup.GroupId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WorkSpaces Ip Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing WorkSpaces Ip Groups (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping WorkSpaces Ip Groups (%s): %w", region, err)
-	}
-
-	return nil
-}
 
 func testAccIPGroup_basic(t *testing.T) {
 	var v workspaces.IpGroup

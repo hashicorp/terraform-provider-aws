@@ -18,56 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_workspaces_directory", &resource.Sweeper{
-		Name:         "aws_workspaces_directory",
-		F:            sweepDirectories,
-		Dependencies: []string{"aws_workspaces_workspace", "aws_workspaces_ip_group"},
-	})
-}
 
-func sweepDirectories(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn
-	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.DescribeWorkspaceDirectoriesPages(input, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, directory := range page.Directories {
-			r := tfworkspaces.ResourceDirectory()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(directory.DirectoryId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WorkSpaces Directory sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing WorkSpaces Directories (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping WorkSpaces Directories (%s): %w", region, err)
-	}
-
-	return nil
-}
 
 func testAccDirectory_basic(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
