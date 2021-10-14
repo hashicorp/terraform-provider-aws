@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepAppRunnerConnections(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).apprunnerconn
+	conn := client.(*conns.AWSClient).AppRunnerConn
 	sweepResources := make([]*testSweepResource, 0)
 	ctx := context.Background()
 
@@ -191,7 +192,7 @@ func testAccCheckAwsAppRunnerConnectionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
 		connection, err := finder.ConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 
@@ -222,7 +223,7 @@ func testAccCheckAwsAppRunnerConnectionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
 		connection, err := finder.ConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
 

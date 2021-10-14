@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepAppRunnerAutoScalingConfigurationVersions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).apprunnerconn
+	conn := client.(*conns.AWSClient).AppRunnerConn
 	sweepResources := make([]*testSweepResource, 0)
 	ctx := context.Background()
 	var errs *multierror.Error
@@ -372,7 +373,7 @@ func testAccCheckAwsAppRunnerAutoScalingConfigurationVersionDestroy(s *terraform
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
 			AutoScalingConfigurationArn: aws.String(rs.Primary.ID),
@@ -407,7 +408,7 @@ func testAccCheckAwsAppRunnerAutoScalingConfigurationVersionExists(n string) res
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
 			AutoScalingConfigurationArn: aws.String(rs.Primary.ID),

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepAppRunnerServices(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).apprunnerconn
+	conn := client.(*conns.AWSClient).AppRunnerConn
 	sweepResources := make([]*testSweepResource, 0)
 	ctx := context.Background()
 	var errs *multierror.Error
@@ -404,7 +405,7 @@ func testAccCheckAwsAppRunnerServiceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
 		input := &apprunner.DescribeServiceInput{
 			ServiceArn: aws.String(rs.Primary.ID),
@@ -439,7 +440,7 @@ func testAccCheckAwsAppRunnerServiceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
 		input := &apprunner.DescribeServiceInput{
 			ServiceArn: aws.String(rs.Primary.ID),
@@ -460,7 +461,7 @@ func testAccCheckAwsAppRunnerServiceExists(n string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAppRunner(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).apprunnerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 	ctx := context.Background()
 
 	input := &apprunner.ListServicesInput{}
