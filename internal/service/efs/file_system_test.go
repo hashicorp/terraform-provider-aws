@@ -65,7 +65,7 @@ func sweepFileSystems(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSEFSFileSystem_basic(t *testing.T) {
+func TestAccEFSFileSystem_basic(t *testing.T) {
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -113,7 +113,7 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_availabilityZoneName(t *testing.T) {
+func TestAccEFSFileSystem_availabilityZoneName(t *testing.T) {
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -141,7 +141,7 @@ func TestAccAWSEFSFileSystem_availabilityZoneName(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_tags(t *testing.T) {
+func TestAccEFSFileSystem_tags(t *testing.T) {
 	var desc efs.FileSystemDescription
 	rName := sdkacctest.RandomWithPrefix("tf-acc-tags")
 	resourceName := "aws_efs_file_system.test"
@@ -196,7 +196,7 @@ func TestAccAWSEFSFileSystem_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_pagedTags(t *testing.T) {
+func TestAccEFSFileSystem_pagedTags(t *testing.T) {
 	var desc efs.FileSystemDescription
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_efs_file_system.test"
@@ -223,7 +223,7 @@ func TestAccAWSEFSFileSystem_pagedTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_kmsKey(t *testing.T) {
+func TestAccEFSFileSystem_kmsKey(t *testing.T) {
 	var desc efs.FileSystemDescription
 	rInt := sdkacctest.RandInt()
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -252,7 +252,7 @@ func TestAccAWSEFSFileSystem_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_kmsConfigurationWithoutEncryption(t *testing.T) {
+func TestAccEFSFileSystem_kmsWithoutEncryption(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -269,7 +269,7 @@ func TestAccAWSEFSFileSystem_kmsConfigurationWithoutEncryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_ProvisionedThroughputInMibps(t *testing.T) {
+func TestAccEFSFileSystem_provisionedThroughputInMibps(t *testing.T) {
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 
@@ -304,7 +304,7 @@ func TestAccAWSEFSFileSystem_ProvisionedThroughputInMibps(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_ThroughputMode(t *testing.T) {
+func TestAccEFSFileSystem_throughputMode(t *testing.T) {
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 
@@ -339,7 +339,7 @@ func TestAccAWSEFSFileSystem_ThroughputMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_lifecyclePolicy(t *testing.T) {
+func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 
@@ -408,7 +408,7 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_disappears(t *testing.T) {
+func TestAccEFSFileSystem_disappears(t *testing.T) {
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

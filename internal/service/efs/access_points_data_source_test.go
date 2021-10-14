@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSEFSAccessPoints_basic(t *testing.T) {
+func TestAccEFSAccessPointsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_efs_access_points.test"
 
 	resource.ParallelTest(t, resource.TestCase{
