@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
@@ -85,7 +86,7 @@ func testAccCheckAWSWafv2WebACLAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetWebACLForResource(&wafv2.GetWebACLForResourceInput{
 			ResourceArn: aws.String(rs.Primary.Attributes["resource_arn"]),
 		})

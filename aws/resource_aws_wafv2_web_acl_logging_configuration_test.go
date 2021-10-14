@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
@@ -605,7 +606,7 @@ func testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy(s *terraform.State) e
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetLoggingConfiguration(
 			&wafv2.GetLoggingConfigurationInput{
 				ResourceArn: aws.String(rs.Primary.ID),
@@ -641,7 +642,7 @@ func testAccCheckAwsWafv2WebACLLoggingConfigurationExists(n string, v *wafv2.Log
 			return fmt.Errorf("No WAFv2 WebACL Logging Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetLoggingConfiguration(&wafv2.GetLoggingConfigurationInput{
 			ResourceArn: aws.String(rs.Primary.ID),
 		})

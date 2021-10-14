@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepWafv2WebAcls(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).wafv2conn
+	conn := client.(*conns.AWSClient).WAFV2Conn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -1466,7 +1467,7 @@ func testAccCheckAwsWafv2WebACLDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetWebACL(
 			&wafv2.GetWebACLInput{
 				Id:    aws.String(rs.Primary.ID),
@@ -1505,7 +1506,7 @@ func testAccCheckAwsWafv2WebACLExists(n string, v *wafv2.WebACL) resource.TestCh
 			return fmt.Errorf("No WAFv2 WebACL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetWebACL(&wafv2.GetWebACLInput{
 			Id:    aws.String(rs.Primary.ID),
 			Name:  aws.String(rs.Primary.Attributes["name"]),

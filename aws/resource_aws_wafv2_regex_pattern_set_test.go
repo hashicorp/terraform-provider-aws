@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepWafv2RegexPatternSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafv2conn
+	conn := client.(*conns.AWSClient).WAFV2Conn
 
 	var sweeperErrs *multierror.Error
 
@@ -281,7 +282,7 @@ func testAccCheckAWSWafv2RegexPatternSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetRegexPatternSet(
 			&wafv2.GetRegexPatternSetInput{
 				Id:    aws.String(rs.Primary.ID),
@@ -318,7 +319,7 @@ func testAccCheckAWSWafv2RegexPatternSetExists(n string, v *wafv2.RegexPatternSe
 			return fmt.Errorf("No WAFv2 RegexPatternSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetRegexPatternSet(&wafv2.GetRegexPatternSetInput{
 			Id:    aws.String(rs.Primary.ID),
 			Name:  aws.String(rs.Primary.Attributes["name"]),

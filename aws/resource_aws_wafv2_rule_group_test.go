@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepWafv2RuleGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafv2conn
+	conn := client.(*conns.AWSClient).WAFV2Conn
 
 	var sweeperErrs *multierror.Error
 
@@ -1570,7 +1571,7 @@ func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 }
 
 func testAccPreCheckAWSWafv2ScopeRegional(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 
 	input := &wafv2.ListRuleGroupsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
@@ -1593,7 +1594,7 @@ func testAccCheckAwsWafv2RuleGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetRuleGroup(
 			&wafv2.GetRuleGroupInput{
 				Id:    aws.String(rs.Primary.ID),
@@ -1635,7 +1636,7 @@ func testAccCheckAwsWafv2RuleGroupExists(n string, v *wafv2.RuleGroup) resource.
 			return fmt.Errorf("No WAFv2 RuleGroup ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetRuleGroup(&wafv2.GetRuleGroupInput{
 			Id:    aws.String(rs.Primary.ID),
 			Name:  aws.String(rs.Primary.Attributes["name"]),
