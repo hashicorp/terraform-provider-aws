@@ -167,7 +167,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Variables = aws.StringMap(variables)
 	}
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ApigatewayTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	out, err := conn.CreateStage(&input)
@@ -251,7 +251,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("xray_tracing_enabled", stage.TracingEnabled)
 
-	tags := tftags.ApigatewayKeyValueTags(stage.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(stage.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -299,7 +299,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ApigatewayUpdateTags(conn, stageArn, o, n); err != nil {
+		if err := UpdateTags(conn, stageArn, o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

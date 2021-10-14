@@ -85,7 +85,7 @@ func dataSourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", match.Description)
 	d.Set("target_arns", flex.FlattenStringList(match.TargetArns))
 
-	if err := d.Set("tags", tftags.ApigatewayKeyValueTags(match.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(match.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

@@ -159,7 +159,7 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().ApigatewayTags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	up, err := conn.CreateUsagePlan(params)
@@ -211,7 +211,7 @@ func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags := tftags.ApigatewayKeyValueTags(up.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(up.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -429,7 +429,7 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
