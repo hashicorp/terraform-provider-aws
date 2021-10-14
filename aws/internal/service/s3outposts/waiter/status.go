@@ -6,24 +6,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3outposts/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfs3outposts "github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
 )
 
 const (
-	EndpointStatusNotFound = "NotFound"
-	EndpointStatusUnknown  = "Unknown"
+	endpointStatusNotFound = "NotFound"
+	endpointStatusUnknown  = "Unknown"
 )
 
-// EndpointStatus fetches the Endpoint and its Status
-func EndpointStatus(conn *s3outposts.S3Outposts, endpointArn string) resource.StateRefreshFunc {
+// statusEndpoint fetches the Endpoint and its Status
+func statusEndpoint(conn *s3outposts.S3Outposts, endpointArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		endpoint, err := finder.Endpoint(conn, endpointArn)
+		endpoint, err := tfs3outposts.FindEndpoint(conn, endpointArn)
 
 		if err != nil {
-			return nil, EndpointStatusUnknown, err
+			return nil, endpointStatusUnknown, err
 		}
 
 		if endpoint == nil {
-			return nil, EndpointStatusNotFound, nil
+			return nil, endpointStatusNotFound, nil
 		}
 
 		return endpoint, aws.StringValue(endpoint.Status), nil

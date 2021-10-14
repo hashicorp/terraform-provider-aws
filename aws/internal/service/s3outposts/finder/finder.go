@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// Endpoint returns matching Endpoint by ARN.
-func Endpoint(conn *s3outposts.S3Outposts, endpointArn string) (*s3outposts.Endpoint, error) {
+// FindEndpoint returns matching FindEndpoint by ARN.
+func FindEndpoint(conn *s3outposts.S3Outposts, endpointArn string) (*s3outposts.Endpoint, error) {
 	input := &s3outposts.ListEndpointsInput{}
 	var result *s3outposts.Endpoint
 

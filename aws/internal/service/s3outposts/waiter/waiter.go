@@ -10,22 +10,22 @@ import (
 
 const (
 	// API model constant is incorrectly AVAILABLE
-	EndpointStatusAvailable = "Available"
+	endpointStatusAvailable = "Available"
 
 	// API model constant is incorrectly PENDING
-	EndpointStatusPending = "Pending"
+	endpointStatusPending = "Pending"
 
 	// Maximum amount of time to wait for Endpoint to return Available on creation
-	EndpointStatusCreatedTimeout = 20 * time.Minute
+	endpointStatusCreatedTimeout = 20 * time.Minute
 )
 
-// EndpointStatusCreated waits for Endpoint to return Available
-func EndpointStatusCreated(conn *s3outposts.S3Outposts, endpointArn string) (*s3outposts.Endpoint, error) {
+// waitEndpointStatusCreated waits for Endpoint to return Available
+func waitEndpointStatusCreated(conn *s3outposts.S3Outposts, endpointArn string) (*s3outposts.Endpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{EndpointStatusPending, EndpointStatusNotFound},
-		Target:  []string{EndpointStatusAvailable},
-		Refresh: EndpointStatus(conn, endpointArn),
-		Timeout: EndpointStatusCreatedTimeout,
+		Pending: []string{endpointStatusPending, endpointStatusNotFound},
+		Target:  []string{endpointStatusAvailable},
+		Refresh: statusEndpoint(conn, endpointArn),
+		Timeout: endpointStatusCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
