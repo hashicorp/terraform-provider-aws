@@ -230,7 +230,7 @@ func resourceAwsAmplifyBranchCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EnvironmentVariables = expandStringMap(v.(map[string]interface{}))
+		input.EnvironmentVariables = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("framework"); ok {
@@ -376,7 +376,7 @@ func resourceAwsAmplifyBranchUpdate(d *schema.ResourceData, meta interface{}) er
 
 		if d.HasChange("environment_variables") {
 			if v := d.Get("environment_variables").(map[string]interface{}); len(v) > 0 {
-				input.EnvironmentVariables = expandStringMap(v)
+				input.EnvironmentVariables = flex.ExpandStringMap(v)
 			} else {
 				input.EnvironmentVariables = aws.StringMap(map[string]string{"": ""})
 			}
