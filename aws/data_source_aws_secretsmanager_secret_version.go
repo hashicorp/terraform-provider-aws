@@ -90,7 +90,7 @@ func dataSourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta i
 	d.Set("secret_binary", string(output.SecretBinary))
 	d.Set("arn", output.ARN)
 
-	if err := d.Set("version_stages", flattenStringList(output.VersionStages)); err != nil {
+	if err := d.Set("version_stages", flex.FlattenStringList(output.VersionStages)); err != nil {
 		return fmt.Errorf("error setting version_stages: %w", err)
 	}
 
