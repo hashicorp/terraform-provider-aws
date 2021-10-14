@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityHubActionTarget() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsSecurityHubActionTarget() *schema.Resource {
 }
 
 func resourceAwsSecurityHubActionTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	description := d.Get("description").(string)
 	name := d.Get("name").(string)
 	identifier := d.Get("identifier").(string)
@@ -85,7 +86,7 @@ func resourceAwsSecurityHubActionTargetParseIdentifier(identifier string) (strin
 }
 
 func resourceAwsSecurityHubActionTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Reading Security Hub custom action targets to find %s", d.Id())
 
@@ -116,7 +117,7 @@ func resourceAwsSecurityHubActionTargetRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSecurityHubActionTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.UpdateActionTargetInput{
 		ActionTargetArn: aws.String(d.Id()),
@@ -152,7 +153,7 @@ func resourceAwsSecurityHubActionTargetCheckExists(conn *securityhub.SecurityHub
 }
 
 func resourceAwsSecurityHubActionTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Deleting Security Hub custom action target %s", d.Id())
 
 	_, err := conn.DeleteActionTarget(&securityhub.DeleteActionTargetInput{

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
@@ -71,7 +72,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionExists(n string, standardsSu
 			return fmt.Errorf("No Security Hub Standards Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 		output, err := finder.StandardsSubscriptionByARN(conn, rs.Primary.ID)
 
@@ -86,7 +87,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionExists(n string, standardsSu
 }
 
 func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).securityhubconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_standards_subscription" {

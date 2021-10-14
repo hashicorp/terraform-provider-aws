@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityHubAccount() *schema.Resource {
@@ -26,7 +27,7 @@ func resourceAwsSecurityHubAccount() *schema.Resource {
 }
 
 func resourceAwsSecurityHubAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Enabling Security Hub for account")
 
 	_, err := conn.EnableSecurityHub(&securityhub.EnableSecurityHubInput{})
@@ -35,13 +36,13 @@ func resourceAwsSecurityHubAccountCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error enabling Security Hub for account: %s", err)
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(meta.(*conns.AWSClient).AccountID)
 
 	return resourceAwsSecurityHubAccountRead(d, meta)
 }
 
 func resourceAwsSecurityHubAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Checking if Security Hub is enabled")
 	_, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{})
@@ -59,7 +60,7 @@ func resourceAwsSecurityHubAccountRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSecurityHubAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Disabling Security Hub for account")
 
 	err := resource.Retry(waiter.AdminAccountNotFoundTimeout, func() *resource.RetryError {

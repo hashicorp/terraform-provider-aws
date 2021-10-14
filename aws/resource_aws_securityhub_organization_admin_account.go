@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityHubOrganizationAdminAccount() *schema.Resource {
@@ -34,7 +35,7 @@ func resourceAwsSecurityHubOrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceAwsSecurityHubOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	adminAccountID := d.Get("admin_account_id").(string)
 
@@ -58,7 +59,7 @@ func resourceAwsSecurityHubOrganizationAdminAccountCreate(d *schema.ResourceData
 }
 
 func resourceAwsSecurityHubOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	adminAccount, err := finder.AdminAccount(conn, d.Id())
 
@@ -88,7 +89,7 @@ func resourceAwsSecurityHubOrganizationAdminAccountRead(d *schema.ResourceData, 
 }
 
 func resourceAwsSecurityHubOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),

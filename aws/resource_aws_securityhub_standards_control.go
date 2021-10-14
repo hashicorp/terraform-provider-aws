@@ -13,6 +13,7 @@ import (
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityHubStandardsControl() *schema.Resource {
@@ -82,7 +83,7 @@ func resourceAwsSecurityHubStandardsControl() *schema.Resource {
 }
 
 func resourceAwsSecurityHubStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	standardsSubscriptionARN, err := tfsecurityhub.StandardsControlARNToStandardsSubscriptionARN(d.Id())
 
@@ -117,7 +118,7 @@ func resourceAwsSecurityHubStandardsControlRead(ctx context.Context, d *schema.R
 }
 
 func resourceAwsSecurityHubStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	d.SetId(d.Get("standards_control_arn").(string))
 

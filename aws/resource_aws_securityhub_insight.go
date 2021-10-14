@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityHubInsight() *schema.Resource {
@@ -143,7 +144,7 @@ func resourceAwsSecurityHubInsight() *schema.Resource {
 }
 
 func resourceAwsSecurityHubInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	name := d.Get("name").(string)
 
@@ -172,7 +173,7 @@ func resourceAwsSecurityHubInsightCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAwsSecurityHubInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	insight, err := finder.Insight(ctx, conn, d.Id())
 
@@ -206,7 +207,7 @@ func resourceAwsSecurityHubInsightRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAwsSecurityHubInsightUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.UpdateInsightInput{
 		InsightArn: aws.String(d.Id()),
@@ -234,7 +235,7 @@ func resourceAwsSecurityHubInsightUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAwsSecurityHubInsightDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.DeleteInsightInput{
 		InsightArn: aws.String(d.Id()),

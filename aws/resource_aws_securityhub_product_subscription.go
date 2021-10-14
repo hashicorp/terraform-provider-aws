@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSecurityHubProductSubscription() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsSecurityHubProductSubscription() *schema.Resource {
 }
 
 func resourceAwsSecurityHubProductSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	productArn := d.Get("product_arn").(string)
 
 	log.Printf("[DEBUG] Enabling Security Hub product subscription for product %s", productArn)
@@ -54,7 +55,7 @@ func resourceAwsSecurityHubProductSubscriptionCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsSecurityHubProductSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	productArn, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(d.Id())
 
@@ -114,7 +115,7 @@ func resourceAwsSecurityHubProductSubscriptionParseId(id string) (string, string
 }
 
 func resourceAwsSecurityHubProductSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).securityhubconn
+	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Disabling Security Hub product subscription %s", d.Id())
 
 	_, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(d.Id())
