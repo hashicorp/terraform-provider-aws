@@ -16,6 +16,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // add sweeper to delete known test servicecat provisioned products
@@ -34,14 +35,14 @@ func testSweepServiceCatalogProvisionedProducts(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).scconn
+	conn := client.(*conns.AWSClient).ServiceCatalogConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProvisionedProductsInput{
 		AccessLevelFilter: &servicecatalog.AccessLevelFilter{
 			Key:   aws.String(servicecatalog.AccessLevelFilterKeyAccount),
-			Value: aws.String(client.(*AWSClient).accountid),
+			Value: aws.String(client.(*conns.AWSClient).AccountID),
 		},
 	}
 
@@ -183,7 +184,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogProvisionedProductDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_provisioned_product" {
@@ -212,7 +213,7 @@ func testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName string) 
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 		_, err := waiter.ProvisionedProductReady(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "")
 

@@ -15,6 +15,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogProvisioningArtifact() *schema.Resource {
@@ -98,7 +99,7 @@ func resourceAwsServiceCatalogProvisioningArtifact() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogProvisioningArtifactCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	parameters := make(map[string]interface{})
 	parameters["description"] = d.Get("description")
@@ -156,7 +157,7 @@ func resourceAwsServiceCatalogProvisioningArtifactCreate(d *schema.ResourceData,
 }
 
 func resourceAwsServiceCatalogProvisioningArtifactRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
 
@@ -204,7 +205,7 @@ func resourceAwsServiceCatalogProvisioningArtifactRead(d *schema.ResourceData, m
 }
 
 func resourceAwsServiceCatalogProvisioningArtifactUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	if d.HasChanges("accept_language", "active", "description", "guidance", "name", "product_id") {
 		artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
@@ -262,7 +263,7 @@ func resourceAwsServiceCatalogProvisioningArtifactUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsServiceCatalogProvisioningArtifactDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
 

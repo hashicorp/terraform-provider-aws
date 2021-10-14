@@ -14,6 +14,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogPrincipalPortfolioAssociation() *schema.Resource {
@@ -55,7 +56,7 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociation() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogPrincipalPortfolioAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.AssociatePrincipalWithPortfolioInput{
 		PortfolioId:  aws.String(d.Get("portfolio_id").(string)),
@@ -105,7 +106,7 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociationCreate(d *schema.Reso
 }
 
 func resourceAwsServiceCatalogPrincipalPortfolioAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	acceptLanguage, principalARN, portfolioID, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(d.Id())
 
@@ -142,7 +143,7 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociationRead(d *schema.Resour
 }
 
 func resourceAwsServiceCatalogPrincipalPortfolioAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	acceptLanguage, principalARN, portfolioID, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(d.Id())
 

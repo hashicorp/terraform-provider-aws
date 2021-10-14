@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // add sweeper to delete known test servicecat tag options
@@ -31,7 +32,7 @@ func testSweepServiceCatalogTagOptions(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).scconn
+	conn := client.(*conns.AWSClient).ServiceCatalogConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -213,7 +214,7 @@ func TestAccAWSServiceCatalogTagOption_notActive(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogTagOptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_tag_option" {
@@ -250,7 +251,7 @@ func testAccCheckAwsServiceCatalogTagOptionExists(resourceName string) resource.
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 		input := &servicecatalog.DescribeTagOptionInput{
 			Id: aws.String(rs.Primary.ID),

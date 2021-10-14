@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // add sweeper to delete known test servicecat tag option resource associations
@@ -33,7 +34,7 @@ func testSweepServiceCatalogTagOptionResourceAssociations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).scconn
+	conn := client.(*conns.AWSClient).ServiceCatalogConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -143,7 +144,7 @@ func TestAccAWSServiceCatalogTagOptionResourceAssociation_disappears(t *testing.
 }
 
 func testAccCheckAwsServiceCatalogTagOptionResourceAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_tag_option_resource_association" {
@@ -184,7 +185,7 @@ func testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceNam
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 		_, err = waiter.TagOptionResourceAssociationReady(conn, tagOptionID, resourceID)
 

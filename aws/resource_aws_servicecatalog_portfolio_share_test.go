@@ -13,6 +13,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
@@ -97,7 +98,7 @@ func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogPortfolioShareDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_portfolio_share" {
@@ -135,7 +136,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 		_, err := finder.PortfolioShare(
 			conn,

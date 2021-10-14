@@ -16,6 +16,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogPortfolioShare() *schema.Resource {
@@ -84,7 +85,7 @@ func resourceAwsServiceCatalogPortfolioShare() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.CreatePortfolioShareInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),
@@ -165,7 +166,7 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	portfolioID, shareType, principalID, err := tfservicecatalog.PortfolioShareParseResourceID(d.Id())
 
@@ -205,7 +206,7 @@ func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsServiceCatalogPortfolioShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	if d.HasChanges("accept_language", "share_tag_options") {
 		input := &servicecatalog.UpdatePortfolioShareInput{
@@ -247,7 +248,7 @@ func resourceAwsServiceCatalogPortfolioShareUpdate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsServiceCatalogPortfolioShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeletePortfolioShareInput{
 		PortfolioId: aws.String(d.Get("portfolio_id").(string)),

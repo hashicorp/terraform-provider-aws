@@ -12,6 +12,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogTagOption() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsServiceCatalogTagOption() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.CreateTagOptionInput{
 		Key:   aws.String(d.Get("key").(string)),
@@ -104,7 +105,7 @@ func resourceAwsServiceCatalogTagOptionCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsServiceCatalogTagOptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.TagOptionReady(conn, d.Id())
 
@@ -131,7 +132,7 @@ func resourceAwsServiceCatalogTagOptionRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsServiceCatalogTagOptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.UpdateTagOptionInput{
 		Id: aws.String(d.Id()),
@@ -174,7 +175,7 @@ func resourceAwsServiceCatalogTagOptionUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsServiceCatalogTagOptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeleteTagOptionInput{
 		Id: aws.String(d.Id()),

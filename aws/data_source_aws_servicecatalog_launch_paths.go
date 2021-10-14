@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsServiceCatalogLaunchPaths() *schema.Resource {
@@ -65,8 +66,8 @@ func dataSourceAwsServiceCatalogLaunchPaths() *schema.Resource {
 }
 
 func dataSourceAwsServiceCatalogLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	summaries, err := waiter.LaunchPathsReady(conn, d.Get("accept_language").(string), d.Get("product_id").(string))
 

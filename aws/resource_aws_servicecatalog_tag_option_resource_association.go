@@ -14,6 +14,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogTagOptionResourceAssociation() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsServiceCatalogTagOptionResourceAssociation() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogTagOptionResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.AssociateTagOptionWithResourceInput{
 		ResourceId:  aws.String(d.Get("resource_id").(string)),
@@ -99,7 +100,7 @@ func resourceAwsServiceCatalogTagOptionResourceAssociationCreate(d *schema.Resou
 }
 
 func resourceAwsServiceCatalogTagOptionResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	tagOptionID, resourceID, err := tfservicecatalog.TagOptionResourceAssociationParseID(d.Id())
 
@@ -137,7 +138,7 @@ func resourceAwsServiceCatalogTagOptionResourceAssociationRead(d *schema.Resourc
 }
 
 func resourceAwsServiceCatalogTagOptionResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	tagOptionID, resourceID, err := tfservicecatalog.TagOptionResourceAssociationParseID(d.Id())
 

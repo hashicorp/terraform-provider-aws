@@ -16,6 +16,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
@@ -232,9 +233,9 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &servicecatalog.ProvisionProductInput{
@@ -330,9 +331,9 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 }
 
 func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// There are two API operations for getting information about provisioned products:
 	// 1. DescribeProvisionedProduct (used in waiter.ProvisionedProductReady) and
@@ -419,7 +420,7 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 }
 
 func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.UpdateProvisionedProductInput{
 		UpdateToken:          aws.String(resource.UniqueId()),
@@ -457,7 +458,7 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 	}
 
 	if d.HasChanges("tags", "tags_all") {
-		defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 		tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 		if len(tags) > 0 {
@@ -493,7 +494,7 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 }
 
 func resourceAwsServiceCatalogProvisionedProductDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.TerminateProvisionedProductInput{
 		TerminateToken:       aws.String(resource.UniqueId()),

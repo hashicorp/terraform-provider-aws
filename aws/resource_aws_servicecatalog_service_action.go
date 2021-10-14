@@ -14,6 +14,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsServiceCatalogServiceAction() *schema.Resource {
@@ -81,7 +82,7 @@ func resourceAwsServiceCatalogServiceAction() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogServiceActionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.CreateServiceActionInput{
 		IdempotencyToken: aws.String(resource.UniqueId()),
@@ -133,7 +134,7 @@ func resourceAwsServiceCatalogServiceActionCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsServiceCatalogServiceActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.ServiceActionReady(conn, d.Get("accept_language").(string), d.Id())
 
@@ -166,7 +167,7 @@ func resourceAwsServiceCatalogServiceActionRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsServiceCatalogServiceActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.UpdateServiceActionInput{
 		Id: aws.String(d.Id()),
@@ -214,7 +215,7 @@ func resourceAwsServiceCatalogServiceActionUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsServiceCatalogServiceActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).scconn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeleteServiceActionInput{
 		Id: aws.String(d.Id()),
