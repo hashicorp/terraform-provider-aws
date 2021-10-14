@@ -113,7 +113,7 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 
 		resp, err = ssmconn.CreateActivation(activationInput)
 
-		if isAWSErr(err, "ValidationException", "Not existing role") {
+		if tfawserr.ErrMessageContains(err, "ValidationException", "Not existing role") {
 			return resource.RetryableError(err)
 		}
 
@@ -124,7 +124,7 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = ssmconn.CreateActivation(activationInput)
 	}
 

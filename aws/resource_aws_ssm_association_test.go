@@ -526,7 +526,7 @@ func testAccCheckAWSSSMAssociationExists(n string) resource.TestCheckFunc {
 		})
 
 		if err != nil {
-			if isAWSErr(err, ssm.ErrCodeAssociationDoesNotExist, "") {
+			if tfawserr.ErrMessageContains(err, ssm.ErrCodeAssociationDoesNotExist, "") {
 				return nil
 			}
 			return err
@@ -549,7 +549,7 @@ func testAccCheckAWSSSMAssociationDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, ssm.ErrCodeAssociationDoesNotExist, "") {
+			if tfawserr.ErrMessageContains(err, ssm.ErrCodeAssociationDoesNotExist, "") {
 				continue
 			}
 			return err

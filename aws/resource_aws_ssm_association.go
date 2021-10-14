@@ -213,7 +213,7 @@ func resourceAwsSsmAssociationRead(d *schema.ResourceData, meta interface{}) err
 	resp, err := ssmconn.DescribeAssociation(params)
 
 	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeAssociationDoesNotExist, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeAssociationDoesNotExist, "") {
 			d.SetId("")
 			return nil
 		}

@@ -184,7 +184,7 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 
 	_, err := ssmconn.UpdateMaintenanceWindow(params)
 	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -214,7 +214,7 @@ func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{
 
 	resp, err := ssmconn.GetMaintenanceWindow(params)
 	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

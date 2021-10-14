@@ -139,7 +139,7 @@ func resourceAwsSsmMaintenanceWindowTargetRead(d *schema.ResourceData, meta inte
 	}
 
 	resp, err := ssmconn.DescribeMaintenanceWindowTargets(params)
-	if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 		log.Printf("[WARN] Maintenance Window (%s) Target (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
 		return nil
@@ -216,7 +216,7 @@ func resourceAwsSsmMaintenanceWindowTargetDelete(d *schema.ResourceData, meta in
 	}
 
 	_, err := ssmconn.DeregisterTargetFromMaintenanceWindow(params)
-	if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+	if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
 		return nil
 	}
 

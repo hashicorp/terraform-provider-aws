@@ -75,14 +75,14 @@ func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateResourceDataSync(input)
 		if err != nil {
-			if isAWSErr(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {
+			if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateResourceDataSync(input)
 	}
 
@@ -119,7 +119,7 @@ func resourceAwsSsmResourceDataSyncDelete(d *schema.ResourceData, meta interface
 
 	_, err := conn.DeleteResourceDataSync(input)
 	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeResourceDataSyncNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncNotFoundException, "") {
 			return nil
 		}
 		return err
