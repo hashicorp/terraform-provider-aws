@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsFmsPolicy() *schema.Resource {
@@ -26,18 +27,15 @@ func resourceAwsFmsPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"delete_all_policy_resources": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"exclude_resource_tags": {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-
 			"exclude_map": {
 				Type:             schema.TypeList,
 				MaxItems:         1,
@@ -62,7 +60,6 @@ func resourceAwsFmsPolicy() *schema.Resource {
 					},
 				},
 			},
-
 			"include_map": {
 				Type:             schema.TypeList,
 				MaxItems:         1,
@@ -87,12 +84,10 @@ func resourceAwsFmsPolicy() *schema.Resource {
 					},
 				},
 			},
-
 			"remediation_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"resource_type_list": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -104,7 +99,6 @@ func resourceAwsFmsPolicy() *schema.Resource {
 					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
 				},
 			},
-
 			"resource_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -112,14 +106,11 @@ func resourceAwsFmsPolicy() *schema.Resource {
 				ConflictsWith: []string{"resource_type_list"},
 				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
 			},
-
 			"policy_update_token": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"resource_tags": tagsSchema(),
-
 			"security_service_policy_data": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -142,7 +133,10 @@ func resourceAwsFmsPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -151,8 +145,12 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 
 	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
 
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
 	params := &fms.PutPolicyInput{
-		Policy: fmsPolicy,
+		Policy:  fmsPolicy,
+		TagList: tags.IgnoreAws().FmsTags(),
 	}
 
 	var resp *fms.PutPolicyOutput
@@ -171,6 +169,8 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).fmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	var resp *fms.GetPolicyOutput
 	var req = &fms.GetPolicyInput{
@@ -188,10 +188,18 @@ func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resourceAwsFmsPolicyFlattenPolicy(d, resp)
+	tags, err := keyvaluetags.FmsListTags(fmsconn, d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).RemoveDefaultConfig(defaultTagsConfig)
+
+	return resourceAwsFmsPolicyFlattenPolicy(d, resp, tags)
 }
 
-func resourceAwsFmsPolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutput) error {
+func resourceAwsFmsPolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPolicyOutput, tags keyvaluetags.KeyValueTags) error {
 	d.Set("arn", resp.PolicyArn)
 
 	d.Set("name", resp.Policy.PolicyName)
@@ -217,6 +225,15 @@ func resourceAwsFmsPolicyFlattenPolicy(d *schema.ResourceData, resp *fms.GetPoli
 		"managed_service_data": *resp.Policy.SecurityServicePolicyData.ManagedServiceData,
 	}}
 	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
+		return err
+	}
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.Map()); err != nil {
+		return err
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return err
 	}
 
@@ -260,6 +277,14 @@ func resourceAwsFmsPolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 
 func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).fmsconn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.FmsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating FMS Policy (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	fmsPolicy := resourceAwsFmsPolicyExpandPolicy(d)
 
