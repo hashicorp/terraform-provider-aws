@@ -212,7 +212,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		BuildId:         aws.String(d.Get("build_id").(string)),
 		EC2InstanceType: aws.String(d.Get("ec2_instance_type").(string)),
 		Name:            aws.String(d.Get("name").(string)),
-		Tags:            tags.IgnoreAws().GameliftTags(),
+		Tags:            Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -352,7 +352,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
 	d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy))
-	tags, err := tftags.GameliftListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
 		return nil
@@ -423,7 +423,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.GameliftUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Game Lift Fleet (%s) tags: %s", arn, err)
 		}
 	}

@@ -83,7 +83,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	input := gamelift.CreateAliasInput{
 		Name:            aws.String(d.Get("name").(string)),
 		RoutingStrategy: rs,
-		Tags:            tags.IgnoreAws().GameliftTags(),
+		Tags:            Tags(tags.IgnoreAws()),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -123,7 +123,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", a.Description)
 	d.Set("name", a.Name)
 	d.Set("routing_strategy", flattenGameliftRoutingStrategy(a.RoutingStrategy))
-	tags, err := tftags.GameliftListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Game Lift Alias (%s): %s", arn, err)
@@ -161,7 +161,7 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.GameliftUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Game Lift Alias (%s) tags: %s", arn, err)
 		}
 	}

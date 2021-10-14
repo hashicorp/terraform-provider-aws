@@ -90,7 +90,7 @@ func resourceBuildCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:            aws.String(d.Get("name").(string)),
 		OperatingSystem: aws.String(d.Get("operating_system").(string)),
 		StorageLocation: sl,
-		Tags:            tags.IgnoreAws().GameliftTags(),
+		Tags:            Tags(tags.IgnoreAws()),
 	}
 	if v, ok := d.GetOk("version"); ok {
 		input.Version = aws.String(v.(string))
@@ -165,7 +165,7 @@ func resourceBuildRead(d *schema.ResourceData, meta interface{}) error {
 
 	arn := aws.StringValue(b.BuildArn)
 	d.Set("arn", arn)
-	tags, err := tftags.GameliftListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Game Lift Build (%s): %s", arn, err)
@@ -206,7 +206,7 @@ func resourceBuildUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.GameliftUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Game Lift Build (%s) tags: %s", arn, err)
 		}
 	}
