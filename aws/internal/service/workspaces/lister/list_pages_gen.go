@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DescribeIpGroupsPages(conn *workspaces.WorkSpaces, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
-	return DescribeIpGroupsPagesWithContext(context.Background(), conn, input, fn)
+func DescribeIPGroupsPages(conn *workspaces.WorkSpaces, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
+	return DescribeIPGroupsPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func DescribeIpGroupsPagesWithContext(ctx context.Context, conn *workspaces.WorkSpaces, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
+func DescribeIPGroupsPagesWithContext(ctx context.Context, conn *workspaces.WorkSpaces, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
 	for {
 		output, err := conn.DescribeIpGroupsWithContext(ctx, input)
 		if err != nil {

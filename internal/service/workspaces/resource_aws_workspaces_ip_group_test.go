@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 )
 
 func init() {
@@ -36,7 +38,7 @@ func testSweepWorkspacesIpGroups(region string) error {
 	input := &workspaces.DescribeIpGroupsInput{}
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = lister.DescribeIpGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
+	err = tfworkspaces.DescribeIPGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

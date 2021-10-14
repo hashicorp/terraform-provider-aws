@@ -31,11 +31,11 @@ const (
 	WorkspaceTerminatedTimeout = 10 * time.Minute
 )
 
-func DirectoryRegistered(conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
+func WaitDirectoryRegistered(conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{workspaces.WorkspaceDirectoryStateRegistering},
 		Target:  []string{workspaces.WorkspaceDirectoryStateRegistered},
-		Refresh: DirectoryState(conn, directoryID),
+		Refresh: StatusDirectoryState(conn, directoryID),
 		Timeout: DirectoryRegisteredTimeout,
 	}
 
@@ -48,7 +48,7 @@ func DirectoryRegistered(conn *workspaces.WorkSpaces, directoryID string) (*work
 	return nil, err
 }
 
-func DirectoryDeregistered(conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
+func WaitDirectoryDeregistered(conn *workspaces.WorkSpaces, directoryID string) (*workspaces.WorkspaceDirectory, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceDirectoryStateRegistering,
@@ -56,7 +56,7 @@ func DirectoryDeregistered(conn *workspaces.WorkSpaces, directoryID string) (*wo
 			workspaces.WorkspaceDirectoryStateDeregistering,
 		},
 		Target:  []string{},
-		Refresh: DirectoryState(conn, directoryID),
+		Refresh: StatusDirectoryState(conn, directoryID),
 		Timeout: DirectoryDeregisteredTimeout,
 	}
 
@@ -69,14 +69,14 @@ func DirectoryDeregistered(conn *workspaces.WorkSpaces, directoryID string) (*wo
 	return nil, err
 }
 
-func WorkspaceAvailable(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
+func WaitWorkspaceAvailable(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceStatePending,
 			workspaces.WorkspaceStateStarting,
 		},
 		Target:  []string{workspaces.WorkspaceStateAvailable},
-		Refresh: WorkspaceState(conn, workspaceID),
+		Refresh: StatusWorkspaceState(conn, workspaceID),
 		Timeout: timeout,
 	}
 
@@ -89,7 +89,7 @@ func WorkspaceAvailable(conn *workspaces.WorkSpaces, workspaceID string, timeout
 	return nil, err
 }
 
-func WorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
+func WaitWorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceStatePending,
@@ -110,7 +110,7 @@ func WorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string, timeou
 			workspaces.WorkspaceStateError,
 		},
 		Target:  []string{workspaces.WorkspaceStateTerminated},
-		Refresh: WorkspaceState(conn, workspaceID),
+		Refresh: StatusWorkspaceState(conn, workspaceID),
 		Timeout: timeout,
 	}
 
@@ -123,7 +123,7 @@ func WorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string, timeou
 	return nil, err
 }
 
-func WorkspaceUpdated(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
+func WaitWorkspaceUpdated(conn *workspaces.WorkSpaces, workspaceID string, timeout time.Duration) (*workspaces.Workspace, error) {
 	// OperationInProgressException: The properties of this WorkSpace are currently under modification. Please try again in a moment.
 	// AWS Workspaces service doesn't change instance status to "Updating" during property modification. Respective AWS Support feature request has been created. Meanwhile, artificial delay is placed here as a workaround.
 	stateConf := &resource.StateChangeConf{
@@ -134,7 +134,7 @@ func WorkspaceUpdated(conn *workspaces.WorkSpaces, workspaceID string, timeout t
 			workspaces.WorkspaceStateAvailable,
 			workspaces.WorkspaceStateStopped,
 		},
-		Refresh: WorkspaceState(conn, workspaceID),
+		Refresh: StatusWorkspaceState(conn, workspaceID),
 		Delay:   WorkspaceUpdatingDelay,
 		Timeout: timeout,
 	}

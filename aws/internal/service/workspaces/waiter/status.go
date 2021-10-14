@@ -7,11 +7,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 )
 
-func DirectoryState(conn *workspaces.WorkSpaces, id string) resource.StateRefreshFunc {
+func StatusDirectoryState(conn *workspaces.WorkSpaces, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DirectoryByID(conn, id)
+		output, err := tfworkspaces.FindDirectoryByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,7 +26,7 @@ func DirectoryState(conn *workspaces.WorkSpaces, id string) resource.StateRefres
 	}
 }
 
-func WorkspaceState(conn *workspaces.WorkSpaces, workspaceID string) resource.StateRefreshFunc {
+func StatusWorkspaceState(conn *workspaces.WorkSpaces, workspaceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: aws.StringSlice([]string{workspaceID}),

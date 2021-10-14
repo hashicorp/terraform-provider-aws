@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 )
 
 func init() {
@@ -739,7 +740,7 @@ func testAccCheckAwsWorkspacesDirectoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.DirectoryByID(conn, rs.Primary.ID)
+		_, err := tfworkspaces.FindDirectoryByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -768,7 +769,7 @@ func testAccCheckAwsWorkspacesDirectoryExists(n string, v *workspaces.WorkspaceD
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 
-		output, err := finder.DirectoryByID(conn, rs.Primary.ID)
+		output, err := tfworkspaces.FindDirectoryByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

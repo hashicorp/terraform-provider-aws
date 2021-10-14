@@ -20,6 +20,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 )
 
 func init() {
@@ -40,7 +55,7 @@ func testSweepWorkspacesWorkspace(region string) error {
 	input := &workspaces.DescribeWorkspacesInput{}
 	err = conn.DescribeWorkspacesPages(input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
 		for _, workspace := range resp.Workspaces {
-			err := workspaceDelete(conn, aws.StringValue(workspace.WorkspaceId), waiter.WorkspaceTerminatedTimeout)
+			err := workspaceDelete(conn, aws.StringValue(workspace.WorkspaceId), tfworkspaces.WorkspaceTerminatedTimeout)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}
