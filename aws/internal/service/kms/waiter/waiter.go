@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	tfkms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/finder"
@@ -191,9 +191,9 @@ func KeyValidToPropagated(conn *kms.KMS, id string, validTo string) error {
 	return tfresource.WaitUntil(KeyValidToPropagationTimeout, checkFunc, opts)
 }
 
-func TagsPropagated(conn *kms.KMS, id string, tags keyvaluetags.KeyValueTags) error {
+func TagsPropagated(conn *kms.KMS, id string, tags tftags.KeyValueTags) error {
 	checkFunc := func() (bool, error) {
-		output, err := keyvaluetags.KmsListTags(conn, id)
+		output, err := tftags.KmsListTags(conn, id)
 
 		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return false, nil
