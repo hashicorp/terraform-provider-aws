@@ -26,12 +26,12 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeStarConnectionsConnectionConfigBasic(rName),
+				Config: testAccConnectionBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
+					testAccCheckConnectionExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeBitbucket),
@@ -57,12 +57,12 @@ func TestAccAWSCodeStarConnectionsConnection_HostArn(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeStarConnectionsConnectionConfigHostArn(rName),
+				Config: testAccConnectionHostARNConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
+					testAccCheckConnectionExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexp.MustCompile("host/.+")),
@@ -89,12 +89,12 @@ func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeStarConnectionsConnectionConfigBasic(rName),
+				Config: testAccConnectionBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
+					testAccCheckConnectionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodestarconnections.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,12 +112,12 @@ func TestAccAWSCodeStarConnectionsConnection_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeStarConnectionsConnectionConfigTags1(rName, "key1", "value1"),
+				Config: testAccConnectionTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
+					testAccCheckConnectionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -128,18 +128,18 @@ func TestAccAWSCodeStarConnectionsConnection_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodeStarConnectionsConnectionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectionTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
+					testAccCheckConnectionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSCodeStarConnectionsConnectionConfigTags1(rName, "key2", "value2"),
+				Config: testAccConnectionTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
+					testAccCheckConnectionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -148,7 +148,7 @@ func TestAccAWSCodeStarConnectionsConnection_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCodeStarConnectionsConnectionExists(n string, v *codestarconnections.Connection) resource.TestCheckFunc {
+func testAccCheckConnectionExists(n string, v *codestarconnections.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -174,7 +174,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionExists(n string, v *codestarcon
 	}
 }
 
-func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) error {
+func testAccCheckConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -193,7 +193,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) err
 	return nil
 }
 
-func testAccAWSCodeStarConnectionsConnectionConfigBasic(rName string) string {
+func testAccConnectionBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
@@ -202,7 +202,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName)
 }
 
-func testAccAWSCodeStarConnectionsConnectionConfigHostArn(rName string) string {
+func testAccConnectionHostARNConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
@@ -217,7 +217,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName)
 }
 
-func testAccAWSCodeStarConnectionsConnectionConfigTags1(rName string, tagKey1 string, tagValue1 string) string {
+func testAccConnectionTags1Config(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
@@ -230,7 +230,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSCodeStarConnectionsConnectionConfigTags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccConnectionTags2Config(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q

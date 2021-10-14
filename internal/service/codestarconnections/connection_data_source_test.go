@@ -21,7 +21,7 @@ func TestAccDataSourceAwsCodeStarConnectionsConnection_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSCodeStarConnectionsConnectionConfigBasic(rName),
+				Config: testAccConnectionBasicDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -46,7 +46,7 @@ func TestAccDataSourceAwsCodeStarConnectionsConnection_tags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSCodeStarConnectionsConnectionConfigTags(rName),
+				Config: testAccConnectionTagsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
@@ -55,7 +55,7 @@ func TestAccDataSourceAwsCodeStarConnectionsConnection_tags(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSCodeStarConnectionsConnectionConfigBasic(rName string) string {
+func testAccConnectionBasicDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
@@ -68,7 +68,7 @@ data "aws_codestarconnections_connection" "test" {
 `, rName)
 }
 
-func testAccDataSourceAWSCodeStarConnectionsConnectionConfigTags(rName string) string {
+func testAccConnectionTagsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q

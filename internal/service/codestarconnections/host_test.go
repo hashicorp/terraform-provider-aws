@@ -26,12 +26,12 @@ func TestAccAWSCodeStarConnectionsHost_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeStarConnectionsHostDestroy,
+		CheckDestroy: testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeStarConnectionsHostConfigBasic(rName),
+				Config: testAccHostBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCodeStarConnectionsHostExists(resourceName, &v),
+					testAccCheckHostExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -57,12 +57,12 @@ func TestAccAWSCodeStarConnectionsHost_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeStarConnectionsHostDestroy,
+		CheckDestroy: testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeStarConnectionsHostConfigBasic(rName),
+				Config: testAccHostBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCodeStarConnectionsHostExists(resourceName, &v),
+					testAccCheckHostExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodestarconnections.ResourceHost(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,12 +80,12 @@ func TestAccAWSCodeStarConnectionsHost_vpcConfig(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeStarConnectionsHostDestroy,
+		CheckDestroy: testAccCheckHostDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeStarConnectionsHostConfigVpcConfig(rName),
+				Config: testAccHostVPCConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCodeStarConnectionsHostExists(resourceName, &v),
+					testAccCheckHostExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -107,7 +107,7 @@ func TestAccAWSCodeStarConnectionsHost_vpcConfig(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCodeStarConnectionsHostExists(n string, v *codestarconnections.GetHostOutput) resource.TestCheckFunc {
+func testAccCheckHostExists(n string, v *codestarconnections.GetHostOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -133,7 +133,7 @@ func testAccCheckAWSCodeStarConnectionsHostExists(n string, v *codestarconnectio
 	}
 }
 
-func testAccCheckAWSCodeStarConnectionsHostDestroy(s *terraform.State) error {
+func testAccCheckHostDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -152,7 +152,7 @@ func testAccCheckAWSCodeStarConnectionsHostDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCodeStarConnectionsHostVpcBaseConfig(rName string) string {
+func testAccHostVPCBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -202,7 +202,7 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-func testAccAWSCodeStarConnectionsHostConfigBasic(rName string) string {
+func testAccHostBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
@@ -212,9 +212,9 @@ resource "aws_codestarconnections_host" "test" {
 `, rName)
 }
 
-func testAccAWSCodeStarConnectionsHostConfigVpcConfig(rName string) string {
+func testAccHostVPCConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSCodeStarConnectionsHostVpcBaseConfig(rName),
+		testAccHostVPCBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
