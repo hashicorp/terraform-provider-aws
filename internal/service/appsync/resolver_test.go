@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
 func TestAccAwsAppsyncResolver_basic(t *testing.T) {
@@ -62,7 +63,7 @@ func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncGraphqlApiExists(appsyncGraphqlApiResourceName, &api1),
 					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceResolver(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceResolver(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -292,7 +293,7 @@ func testAccCheckAwsAppsyncResolverDestroy(s *terraform.State) error {
 			continue
 		}
 
-		apiID, typeName, fieldName, err := decodeAppsyncResolverID(rs.Primary.ID)
+		apiID, typeName, fieldName, err := tfappsync.DecodeResolverID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -327,7 +328,7 @@ func testAccCheckAwsAppsyncResolverExists(name string, resolver *appsync.Resolve
 			return fmt.Errorf("Resource has no ID: %s", name)
 		}
 
-		apiID, typeName, fieldName, err := decodeAppsyncResolverID(rs.Primary.ID)
+		apiID, typeName, fieldName, err := tfappsync.DecodeResolverID(rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
 func TestAccAWSAppsyncApiKey_basic(t *testing.T) {
@@ -123,12 +124,12 @@ func testAccCheckAwsAppsyncApiKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		apiID, keyID, err := decodeAppSyncApiKeyId(rs.Primary.ID)
+		apiID, keyID, err := tfappsync.DecodeAPIKeyID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		apiKey, err := getAppsyncApiKey(apiID, keyID, conn)
+		apiKey, err := tfappsync.GetAPIKey(apiID, keyID, conn)
 		if err == nil {
 			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 				return nil
@@ -154,13 +155,13 @@ func testAccCheckAwsAppsyncApiKeyExists(resourceName string, apiKey *appsync.Api
 			return fmt.Errorf("Appsync API Key Not found in state: %s", resourceName)
 		}
 
-		apiID, keyID, err := decodeAppSyncApiKeyId(rs.Primary.ID)
+		apiID, keyID, err := tfappsync.DecodeAPIKeyID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-		key, err := getAppsyncApiKey(apiID, keyID, conn)
+		key, err := tfappsync.GetAPIKey(apiID, keyID, conn)
 		if err != nil {
 			return err
 		}

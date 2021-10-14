@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
 func TestAccAwsAppsyncDatasource_basic(t *testing.T) {
@@ -406,7 +407,7 @@ func testAccCheckAwsAppsyncDatasourceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		apiID, name, err := decodeAppsyncDataSourceID(rs.Primary.ID)
+		apiID, name, err := tfappsync.DecodeID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -438,7 +439,7 @@ func testAccCheckAwsAppsyncDatasourceExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("Resource has no ID: %s", name)
 		}
 
-		apiID, name, err := decodeAppsyncDataSourceID(rs.Primary.ID)
+		apiID, name, err := tfappsync.DecodeID(rs.Primary.ID)
 
 		if err != nil {
 			return err

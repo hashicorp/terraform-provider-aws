@@ -187,7 +187,7 @@ func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
+	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
 		return err
@@ -239,7 +239,7 @@ func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 	region := meta.(*conns.AWSClient).Region
 
-	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
+	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppSyncConn
 
-	apiID, name, err := decodeAppsyncDataSourceID(d.Id())
+	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
 		return err
@@ -307,7 +307,7 @@ func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func decodeAppsyncDataSourceID(id string) (string, string, error) {
+func DecodeID(id string) (string, string, error) {
 	idParts := strings.SplitN(id, "-", 2)
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("expected ID in format ApiID-DataSourceName, received: %s", id)

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
 func TestAccAwsAppsyncFunction_basic(t *testing.T) {
@@ -133,7 +134,7 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFunction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,7 +149,7 @@ func testAccCheckAwsAppsyncFunctionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		apiID, functionID, err := decodeAppsyncFunctionID(rs.Primary.ID)
+		apiID, functionID, err := tfappsync.DecodeFunctionID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -178,7 +179,7 @@ func testAccCheckAwsAppsyncFunctionExists(name string, config *appsync.FunctionC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 
-		apiID, functionID, err := decodeAppsyncFunctionID(rs.Primary.ID)
+		apiID, functionID, err := tfappsync.DecodeFunctionID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

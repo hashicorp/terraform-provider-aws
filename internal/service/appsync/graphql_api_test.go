@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -120,7 +121,7 @@ func TestAccAWSAppsyncGraphqlApi_disappears(t *testing.T) {
 				Config: testAccAppsyncGraphqlApiConfig_AuthenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceGraphQLAPI(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceGraphQLAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
