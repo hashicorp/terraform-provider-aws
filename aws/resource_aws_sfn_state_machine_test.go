@@ -6,22 +6,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sfn/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	roleResourceName := "aws_iam_role.for_sfn"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
@@ -29,7 +30,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -55,7 +56,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfig(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -78,11 +79,11 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 func TestAccAWSSfnStateMachine_expressUpdate(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
@@ -118,11 +119,11 @@ func TestAccAWSSfnStateMachine_expressUpdate(t *testing.T) {
 func TestAccAWSSfnStateMachine_standardUpdate(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
@@ -158,11 +159,11 @@ func TestAccAWSSfnStateMachine_standardUpdate(t *testing.T) {
 func TestAccAWSSfnStateMachine_tags(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
@@ -203,11 +204,11 @@ func TestAccAWSSfnStateMachine_tags(t *testing.T) {
 func TestAccAWSSfnStateMachine_TracingConfiguration(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
@@ -239,11 +240,11 @@ func TestAccAWSSfnStateMachine_TracingConfiguration(t *testing.T) {
 func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
@@ -251,7 +252,7 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSfnStateMachine(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSfnStateMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -262,11 +263,11 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 func TestAccAWSSfnStateMachine_expressLoggingConfiguration(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
@@ -451,7 +452,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -484,7 +485,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfigTags1(rName, tag1Key, tag1Value string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -521,7 +522,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -559,7 +560,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineTypedConfig(rName, rType string, rMaxAttempts int) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -591,7 +592,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineExpressConfigLogConfiguration(rName string, rLevel string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -635,7 +636,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfigTracingConfigEnable(rName string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -672,7 +673,7 @@ EOF
 }
 
 func testAccAWSSfnStateMachineConfigTracingConfigDisable(rName string) string {
-	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
