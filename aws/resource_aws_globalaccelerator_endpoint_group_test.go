@@ -21,12 +21,12 @@ import (
 func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,19 +58,19 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 func TestAccAwsGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorEndpointGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlobalAcceleratorEndpointGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlobalAcceleratorEndpointGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,12 +84,12 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_ALBEndpoint_ClientIP(t *testing.T)
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	albResourceName := "aws_lb.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,12 +158,12 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_InstanceEndpoint(t *testing.T) {
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	instanceResourceName := "aws_instance.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +209,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_MultiRegion(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2); testAccPreCheckGlobalAccelerator(t) },
@@ -251,12 +251,12 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_MultiRegion(t *testing.T) {
 func TestAccAwsGlobalAcceleratorEndpointGroup_PortOverrides(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -318,12 +318,12 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_TCPHealthCheckProtocol(t *testing.
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -361,12 +361,12 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_Update(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -419,7 +419,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_Update(t *testing.T) {
 
 func testAccCheckGlobalAcceleratorEndpointGroupExists(name string, v *globalaccelerator.EndpointGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+		conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -443,7 +443,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupExists(name string, v *globalacce
 }
 
 func testAccCheckGlobalAcceleratorEndpointGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+	conn := acctest.Provider.Meta().(*AWSClient).globalacceleratorconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_globalaccelerator_endpoint_group" {
@@ -469,7 +469,7 @@ func testAccCheckGlobalAcceleratorEndpointGroupDestroy(s *terraform.State) error
 // placed into the VPC when Global Accelerator client IP address preservation is enabled.
 func testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGroup(vpc *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
 
 		sg, err := ec2finder.SecurityGroupByNameAndVpcID(conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
 		if tfresource.NotFound(err) {
