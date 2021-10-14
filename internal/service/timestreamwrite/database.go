@@ -85,7 +85,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().TimestreamwriteTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateDatabaseWithContext(ctx, input)
@@ -136,7 +136,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("kms_key_id", db.KmsKeyId)
 	d.Set("table_count", db.TableCount)
 
-	tags, err := tftags.TimestreamwriteListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for Timestream Database (%s): %w", arn, err))
@@ -175,7 +175,7 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.TimestreamwriteUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Timestream Database (%s) tags: %w", d.Get("arn").(string), err))
 		}
 	}
