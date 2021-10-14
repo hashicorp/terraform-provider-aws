@@ -61,7 +61,7 @@ func TestAccAwsCloudControlApiResource_disappears(t *testing.T) {
 			{
 				Config: testAccAwsCloudControlApiResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceResource(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudcontrol.ResourceResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
