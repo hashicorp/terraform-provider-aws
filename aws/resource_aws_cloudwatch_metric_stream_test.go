@@ -26,12 +26,12 @@ func testAccErrorCheckSkipCloudwatch(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -62,7 +62,7 @@ func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,19 +82,19 @@ func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudwatch.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfigNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
-					testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resourceName, "tf-acc-test"),
+					testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resourceName, acctest.ResourcePrefix),
 				),
 			},
 			{
@@ -108,12 +108,12 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,12 +136,12 @@ func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -164,12 +164,12 @@ func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,13 +199,13 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -229,12 +229,12 @@ func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 
 func TestAccAWSCloudWatchMetricStream_tags(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -277,7 +277,7 @@ func testAccCheckCloudWatchMetricStreamExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
 		params := cloudwatch.GetMetricStreamInput{
 			Name: aws.String(rs.Primary.ID),
 		}
@@ -293,7 +293,7 @@ func testAccCheckCloudWatchMetricStreamExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSCloudWatchMetricStreamDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_metric_stream" {
@@ -318,7 +318,7 @@ func testAccCheckAWSCloudWatchMetricStreamDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
 
 		params := cloudwatch.GetMetricStreamInput{
 			Name: aws.String(name),
