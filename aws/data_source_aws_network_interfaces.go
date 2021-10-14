@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceNetworkInterfaces() *schema.Resource {
@@ -19,7 +20,7 @@ func DataSourceNetworkInterfaces() *schema.Resource {
 
 			"filter": ec2CustomFiltersSchema(),
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"ids": {
 				Type:     schema.TypeSet,
@@ -41,7 +42,7 @@ func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) e
 
 	if tagsOk {
 		req.Filters = buildEC2TagFilterList(
-			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)
 	}
 

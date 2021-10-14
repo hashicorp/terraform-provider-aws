@@ -5,8 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
@@ -25,7 +26,7 @@ func DataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -36,7 +37,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(d *schema.ResourceData, me
 	input := &ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput{}
 
 	input.Filters = append(input.Filters, buildEC2TagFilterList(
-		keyvaluetags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
 
 	input.Filters = append(input.Filters, buildEC2CustomFilterList(

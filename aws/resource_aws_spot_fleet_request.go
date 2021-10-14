@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceSpotFleetRequest() *schema.Resource {
@@ -544,11 +545,11 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -630,7 +631,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
 		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
 
-		tags := keyvaluetags.New(m).IgnoreAws().Ec2Tags()
+		tags := tftags.New(m).IgnoreAws().Ec2Tags()
 
 		spec := &ec2.SpotFleetTagSpecification{
 			ResourceType: aws.String(ec2.ResourceTypeInstance),
@@ -926,7 +927,7 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
 	_, launchTemplateConfigsOk := d.GetOk("launch_template_config")
@@ -1302,7 +1303,7 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
-	tags := keyvaluetags.Ec2KeyValueTags(sfr.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.Ec2KeyValueTags(sfr.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1466,7 +1467,7 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 		for _, tagSpecs := range l.TagSpecifications {
 			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
 			if aws.StringValue(tagSpecs.ResourceType) == ec2.ResourceTypeInstance {
-				m["tags"] = keyvaluetags.Ec2KeyValueTags(tagSpecs.Tags).IgnoreAws().Map()
+				m["tags"] = tftags.Ec2KeyValueTags(tagSpecs.Tags).IgnoreAws().Map()
 			}
 		}
 	}
@@ -1641,7 +1642,7 @@ func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceSecurityGroups() *schema.Resource {
@@ -18,7 +19,7 @@ func DataSourceSecurityGroups() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
-			"tags":   tagsSchemaComputed(),
+			"tags":   tftags.TagsSchemaComputed(),
 
 			"ids": {
 				Type:     schema.TypeList,
@@ -56,7 +57,7 @@ func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	if tagsOk {
 		req.Filters = append(req.Filters, buildEC2TagFilterList(
-			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 

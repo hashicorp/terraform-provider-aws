@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLocalGatewayRouteTable() *schema.Resource {
@@ -41,7 +42,7 @@ func DataSourceLocalGatewayRouteTable() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"filter": ec2CustomFiltersSchema(),
 		},
@@ -67,7 +68,7 @@ func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface
 	)
 
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		keyvaluetags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
 
 	req.Filters = append(req.Filters, buildEC2CustomFilterList(
@@ -98,7 +99,7 @@ func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface
 	d.Set("outpost_arn", localgatewayroutetable.OutpostArn)
 	d.Set("state", localgatewayroutetable.State)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(localgatewayroutetable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(localgatewayroutetable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

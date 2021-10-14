@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceVPCEndpointService() *schema.Resource {
@@ -73,7 +74,7 @@ func DataSourceVPCEndpointService() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(ec2.ServiceType_Values(), false),
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"vpc_endpoint_policy_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -179,7 +180,7 @@ func dataSourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("service_id", serviceId)
 	d.Set("service_name", serviceName)
 	d.Set("service_type", sd.ServiceType[0].ServiceType)
-	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(sd.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set("tags", tftags.Ec2KeyValueTags(sd.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}

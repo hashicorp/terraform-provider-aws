@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceRouteTable() *schema.Resource {
@@ -40,7 +41,7 @@ func DataSourceRouteTable() *schema.Resource {
 				Computed: true,
 			},
 			"filter": ec2CustomFiltersSchema(),
-			"tags":   tagsSchemaComputed(),
+			"tags":   tftags.TagsSchemaComputed(),
 			"routes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -190,7 +191,7 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	)
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+		tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 	)...)
 	req.Filters = append(req.Filters, buildEC2CustomFilterList(
 		filter.(*schema.Set),
@@ -226,7 +227,7 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("route_table_id", rt.RouteTableId)
 	d.Set("vpc_id", rt.VpcId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

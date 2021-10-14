@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLocalGatewayVirtualInterface() *schema.Resource {
@@ -46,7 +47,7 @@ func DataSourceLocalGatewayVirtualInterface() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"vlan": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -66,7 +67,7 @@ func dataSourceLocalGatewayVirtualInterfaceRead(d *schema.ResourceData, meta int
 	}
 
 	input.Filters = append(input.Filters, buildEC2TagFilterList(
-		keyvaluetags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
 
 	input.Filters = append(input.Filters, buildEC2CustomFilterList(
@@ -101,7 +102,7 @@ func dataSourceLocalGatewayVirtualInterfaceRead(d *schema.ResourceData, meta int
 	d.Set("peer_address", localGatewayVirtualInterface.PeerAddress)
 	d.Set("peer_bgp_asn", localGatewayVirtualInterface.PeerBgpAsn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(localGatewayVirtualInterface.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tftags.Ec2KeyValueTags(localGatewayVirtualInterface.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
