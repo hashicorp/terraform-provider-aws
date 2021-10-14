@@ -397,7 +397,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("ec2_inbound_permission") {
 		oldPerms, newPerms := d.GetChange("ec2_inbound_permission")
-		authorizations, revocations := diffGameliftPortSettings(oldPerms.([]interface{}), newPerms.([]interface{}))
+		authorizations, revocations := DiffPortSettings(oldPerms.([]interface{}), newPerms.([]interface{}))
 
 		_, err := conn.UpdateFleetPortSettings(&gamelift.UpdateFleetPortSettingsInput{
 			FleetId:                         aws.String(d.Id()),
@@ -458,10 +458,10 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting Gamelift fleet: %s", err)
 	}
 
-	return waitForGameliftFleetToBeDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	return WaitForFleetToBeDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 }
 
-func waitForGameliftFleetToBeDeleted(conn *gamelift.GameLift, id string, timeout time.Duration) error {
+func WaitForFleetToBeDeleted(conn *gamelift.GameLift, id string, timeout time.Duration) error {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			gamelift.FleetStatusActive,
@@ -655,7 +655,7 @@ func isGameliftEventFailure(event *gamelift.Event) bool {
 	return false
 }
 
-func diffGameliftPortSettings(oldPerms, newPerms []interface{}) (a []*gamelift.IpPermission, r []*gamelift.IpPermission) {
+func DiffPortSettings(oldPerms, newPerms []interface{}) (a []*gamelift.IpPermission, r []*gamelift.IpPermission) {
 OUTER:
 	for i, op := range oldPerms {
 		oldPerm := op.(map[string]interface{})

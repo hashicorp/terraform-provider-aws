@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -71,7 +72,7 @@ func testSweepGameliftFleets(region string) error {
 					*attr.FleetId, err)
 			}
 
-			err = waitForGameliftFleetToBeDeleted(conn, *attr.FleetId, 5*time.Minute)
+			err = tfgamelift.WaitForFleetToBeDeleted(conn, *attr.FleetId, 5*time.Minute)
 			if err != nil {
 				return fmt.Errorf("Error waiting for Gamelift Fleet (%s) to be deleted: %s",
 					*attr.FleetId, err)
@@ -220,7 +221,7 @@ func TestDiffGameliftPortSettings(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		a, r := diffGameliftPortSettings(tc.Old, tc.New)
+		a, r := tfgamelift.DiffPortSettings(tc.Old, tc.New)
 
 		authsString := fmt.Sprintf("%+v", a)
 		expectedAuths := fmt.Sprintf("%+v", tc.ExpectedAuths)
@@ -619,7 +620,7 @@ func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resou
 			return fmt.Errorf("Error deleting Gamelift fleet: %s", err)
 		}
 
-		return waitForGameliftFleetToBeDeleted(conn, *res.FleetId, 15*time.Minute)
+		return tfgamelift.WaitForFleetToBeDeleted(conn, *res.FleetId, 15*time.Minute)
 	}
 }
 
