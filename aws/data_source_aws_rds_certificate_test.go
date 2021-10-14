@@ -15,7 +15,7 @@ func TestAccAWSRDSCertificateDataSource_Id(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRDSCertificatePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -34,7 +34,7 @@ func TestAccAWSRDSCertificateDataSource_LatestValidTill(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccAWSRDSCertificatePreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -46,8 +46,8 @@ func TestAccAWSRDSCertificateDataSource_LatestValidTill(t *testing.T) {
 					resource.TestCheckNoResourceAttr(dataSourceName, "customer_override_valid_till"),
 					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`rds-ca-[0-9]{4}`)),
 					resource.TestMatchResourceAttr(dataSourceName, "thumbprint", regexp.MustCompile(`[0-9a-f]+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "valid_from", regexp.MustCompile(rfc3339RegexPattern)),
-					resource.TestMatchResourceAttr(dataSourceName, "valid_till", regexp.MustCompile(rfc3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "valid_from", regexp.MustCompile(acctest.RFC3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "valid_till", regexp.MustCompile(acctest.RFC3339RegexPattern)),
 				),
 			},
 		},
@@ -55,7 +55,7 @@ func TestAccAWSRDSCertificateDataSource_LatestValidTill(t *testing.T) {
 }
 
 func testAccAWSRDSCertificatePreCheck(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	input := &rds.DescribeCertificatesInput{}
 
