@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeCommitTrigger() *schema.Resource {
@@ -71,7 +72,7 @@ func resourceAwsCodeCommitTrigger() *schema.Resource {
 }
 
 func resourceAwsCodeCommitTriggerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
+	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	// Expand the "trigger" set to aws-sdk-go compat []*codecommit.RepositoryTrigger
 	triggers := expandAwsCodeCommitTriggers(d.Get("trigger").(*schema.Set).List())
@@ -95,7 +96,7 @@ func resourceAwsCodeCommitTriggerCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCodeCommitTriggerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codecommitconn
+	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	input := &codecommit.GetRepositoryTriggersInput{
 		RepositoryName: aws.String(d.Id()),
@@ -113,7 +114,7 @@ func resourceAwsCodeCommitTriggerRead(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsCodeCommitTriggerDelete(d *schema.ResourceData, meta interface{}) error {
 
-	conn := meta.(*AWSClient).codecommitconn
+	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	log.Printf("[DEBUG] Deleting Trigger: %q", d.Id())
 
