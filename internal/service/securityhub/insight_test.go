@@ -17,7 +17,7 @@ import (
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
-func testAccAwsSecurityHubInsight_basic(t *testing.T) {
+func testAccInsight_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -25,13 +25,13 @@ func testAccAwsSecurityHubInsight_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig(rName),
+				Config: testAccInsightConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
-					testAccCheckAwsSecurityHubInsightArn(resourceName),
+					testAccCheckInsightExists(resourceName),
+					testAccCheckInsightARN(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "1"),
@@ -51,7 +51,7 @@ func testAccAwsSecurityHubInsight_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_disappears(t *testing.T) {
+func testAccInsight_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -59,12 +59,12 @@ func testAccAwsSecurityHubInsight_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig(rName),
+				Config: testAccInsightConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceInsight(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,7 +73,7 @@ func testAccAwsSecurityHubInsight_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_DateFilters(t *testing.T) {
+func testAccInsight_DateFilters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -84,12 +84,12 @@ func testAccAwsSecurityHubInsight_DateFilters(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig_DateFilters_DateRange(rName),
+				Config: testAccInsightConfig_DateFilters_DateRange(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.created_at.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.created_at.*", map[string]string{
@@ -105,9 +105,9 @@ func testAccAwsSecurityHubInsight_DateFilters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsSecurityHubInsightConfig_DateFilters_StartEnd(rName, startDate, endDate),
+				Config: testAccInsightConfig_DateFilters_StartEnd(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.created_at.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.created_at.*", map[string]string{
@@ -125,7 +125,7 @@ func testAccAwsSecurityHubInsight_DateFilters(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_IpFilters(t *testing.T) {
+func testAccInsight_IPFilters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -133,12 +133,12 @@ func testAccAwsSecurityHubInsight_IpFilters(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig_IpFilters(rName),
+				Config: testAccInsightConfig_IPFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.network_destination_ipv4.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.network_destination_ipv4.*", map[string]string{
@@ -155,7 +155,7 @@ func testAccAwsSecurityHubInsight_IpFilters(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_KeywordFilters(t *testing.T) {
+func testAccInsight_KeywordFilters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -163,12 +163,12 @@ func testAccAwsSecurityHubInsight_KeywordFilters(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig_KeywordFilters(rName),
+				Config: testAccInsightConfig_KeywordFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.keyword.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.keyword.*", map[string]string{
@@ -185,7 +185,7 @@ func testAccAwsSecurityHubInsight_KeywordFilters(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_MapFilters(t *testing.T) {
+func testAccInsight_MapFilters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -193,12 +193,12 @@ func testAccAwsSecurityHubInsight_MapFilters(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig_MapFilters(rName),
+				Config: testAccInsightConfig_MapFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
@@ -217,7 +217,7 @@ func testAccAwsSecurityHubInsight_MapFilters(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_MultipleFilters(t *testing.T) {
+func testAccInsight_MultipleFilters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -225,12 +225,12 @@ func testAccAwsSecurityHubInsight_MultipleFilters(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig_MultipleFilters(rName),
+				Config: testAccInsightConfig_MultipleFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
@@ -260,9 +260,9 @@ func testAccAwsSecurityHubInsight_MultipleFilters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsSecurityHubInsightConfig(rName),
+				Config: testAccInsightConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
@@ -275,7 +275,7 @@ func testAccAwsSecurityHubInsight_MultipleFilters(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_Name(t *testing.T) {
+func testAccInsight_Name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 
@@ -285,21 +285,21 @@ func testAccAwsSecurityHubInsight_Name(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig(rName),
+				Config: testAccInsightConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
-					testAccCheckAwsSecurityHubInsightArn(resourceName),
+					testAccCheckInsightExists(resourceName),
+					testAccCheckInsightARN(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccAwsSecurityHubInsightConfig(rNameUpdated),
+				Config: testAccInsightConfig(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
-					testAccCheckAwsSecurityHubInsightArn(resourceName),
+					testAccCheckInsightExists(resourceName),
+					testAccCheckInsightARN(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 				),
 			},
@@ -312,7 +312,7 @@ func testAccAwsSecurityHubInsight_Name(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_NumberFilters(t *testing.T) {
+func testAccInsight_NumberFilters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -320,12 +320,12 @@ func testAccAwsSecurityHubInsight_NumberFilters(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig_NumberFilters(rName, "eq = 50.5"),
+				Config: testAccInsightConfig_NumberFilters(rName, "eq = 50.5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.confidence.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.confidence.*", map[string]string{
@@ -339,9 +339,9 @@ func testAccAwsSecurityHubInsight_NumberFilters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsSecurityHubInsightConfig_NumberFilters(rName, "gte = 50.5"),
+				Config: testAccInsightConfig_NumberFilters(rName, "gte = 50.5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.confidence.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.confidence.*", map[string]string{
@@ -350,9 +350,9 @@ func testAccAwsSecurityHubInsight_NumberFilters(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsSecurityHubInsightConfig_NumberFilters(rName, "lte = 50.5"),
+				Config: testAccInsightConfig_NumberFilters(rName, "lte = 50.5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.confidence.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.confidence.*", map[string]string{
@@ -369,7 +369,7 @@ func testAccAwsSecurityHubInsight_NumberFilters(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_GroupByAttribute(t *testing.T) {
+func testAccInsight_GroupByAttribute(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -377,20 +377,20 @@ func testAccAwsSecurityHubInsight_GroupByAttribute(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig(rName),
+				Config: testAccInsightConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "AwsAccountId"),
 				),
 			},
 			{
-				Config: testAccAwsSecurityHubInsightConfig_UpdateGroupByAttribute(rName),
+				Config: testAccInsightConfig_UpdateGroupByAttribute(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "CompanyName"),
 				),
@@ -404,7 +404,7 @@ func testAccAwsSecurityHubInsight_GroupByAttribute(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubInsight_WorkflowStatus(t *testing.T) {
+func testAccInsight_WorkflowStatus(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_insight.test"
 
@@ -412,12 +412,12 @@ func testAccAwsSecurityHubInsight_WorkflowStatus(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
+		CheckDestroy: testAccCheckInsightDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubInsightConfig_WorkflowStatus(rName),
+				Config: testAccInsightConfig_WorkflowStatus(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubInsightExists(resourceName),
+					testAccCheckInsightExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.workflow_status.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.workflow_status.*", map[string]string{
@@ -436,7 +436,7 @@ func testAccAwsSecurityHubInsight_WorkflowStatus(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSecurityHubInsightDestroy(s *terraform.State) error {
+func testAccCheckInsightDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -464,7 +464,7 @@ func testAccCheckAwsSecurityHubInsightDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsSecurityHubInsightExists(n string) resource.TestCheckFunc {
+func testAccCheckInsightExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -487,10 +487,10 @@ func testAccCheckAwsSecurityHubInsightExists(n string) resource.TestCheckFunc {
 	}
 }
 
-// testAccCheckAwsSecurityHubInsightArn checks the computed ARN value
+// testAccCheckInsightARN checks the computed ARN value
 // and accounts for differences in SecurityHub on GovCloud where the partition portion
 // of the ARN is still "aws" while other services utilize the "aws-us-gov" partition
-func testAccCheckAwsSecurityHubInsightArn(resourceName string) resource.TestCheckFunc {
+func testAccCheckInsightARN(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(), acctest.AccountID())
 		//lintignore:AWSAT001
@@ -498,7 +498,7 @@ func testAccCheckAwsSecurityHubInsightArn(resourceName string) resource.TestChec
 	}
 }
 
-func testAccAwsSecurityHubInsightConfig(rName string) string {
+func testAccInsightConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -519,7 +519,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccAwsSecurityHubInsightConfig_DateFilters_DateRange(rName string) string {
+func testAccInsightConfig_DateFilters_DateRange(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -542,7 +542,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccAwsSecurityHubInsightConfig_DateFilters_StartEnd(rName, startDate, endDate string) string {
+func testAccInsightConfig_DateFilters_StartEnd(rName, startDate, endDate string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -563,7 +563,7 @@ resource "aws_securityhub_insight" "test" {
 `, startDate, endDate, rName)
 }
 
-func testAccAwsSecurityHubInsightConfig_IpFilters(rName string) string {
+func testAccInsightConfig_IPFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -583,7 +583,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccAwsSecurityHubInsightConfig_KeywordFilters(rName string) string {
+func testAccInsightConfig_KeywordFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -603,7 +603,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccAwsSecurityHubInsightConfig_MapFilters(rName string) string {
+func testAccInsightConfig_MapFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -625,7 +625,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccAwsSecurityHubInsightConfig_MultipleFilters(rName string) string {
+func testAccInsightConfig_MultipleFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -663,7 +663,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccAwsSecurityHubInsightConfig_NumberFilters(rName, value string) string {
+func testAccInsightConfig_NumberFilters(rName, value string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -683,7 +683,7 @@ resource "aws_securityhub_insight" "test" {
 `, value, rName)
 }
 
-func testAccAwsSecurityHubInsightConfig_UpdateGroupByAttribute(rName string) string {
+func testAccInsightConfig_UpdateGroupByAttribute(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -704,7 +704,7 @@ resource "aws_securityhub_insight" "test" {
 `, rName)
 }
 
-func testAccAwsSecurityHubInsightConfig_WorkflowStatus(rName string) string {
+func testAccInsightConfig_WorkflowStatus(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 

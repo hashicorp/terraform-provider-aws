@@ -14,20 +14,20 @@ import (
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
-func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
+func testAccProductSubscription_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
+		CheckDestroy: testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				// We would like to use an AWS product subscription, but they are
 				// all automatically subscribed when enabling Security Hub.
 				// This configuration will enable Security Hub, then in a later PreConfig,
 				// we will disable an AWS product subscription so we can test (re-)enabling it.
-				Config: testAccAWSSecurityHubProductSubscriptionConfig_empty,
-				Check:  testAccCheckAWSSecurityHubAccountExists("aws_securityhub_account.example"),
+				Config: testAccProductSubscriptionConfig_empty,
+				Check:  testAccCheckAccountExists("aws_securityhub_account.example"),
 			},
 			{
 				// AWS product subscriptions happen automatically when enabling Security Hub.
@@ -51,9 +51,9 @@ func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 						t.Fatalf("error disabling Security Hub Product Subscription for GuardDuty: %s", err)
 					}
 				},
-				Config: testAccAWSSecurityHubProductSubscriptionConfig_basic,
+				Config: testAccProductSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubProductSubscriptionExists("aws_securityhub_product_subscription.example"),
+					testAccCheckProductSubscriptionExists("aws_securityhub_product_subscription.example"),
 				),
 			},
 			{
@@ -64,14 +64,14 @@ func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
 			{
 				// Check Destroy - but only target the specific resource (otherwise Security Hub
 				// will be disabled and the destroy check will fail)
-				Config: testAccAWSSecurityHubProductSubscriptionConfig_empty,
-				Check:  testAccCheckAWSSecurityHubProductSubscriptionDestroy,
+				Config: testAccProductSubscriptionConfig_empty,
+				Check:  testAccCheckProductSubscriptionDestroy,
 			},
 		},
 	})
 }
 
-func testAccCheckAWSSecurityHubProductSubscriptionExists(n string) resource.TestCheckFunc {
+func testAccCheckProductSubscriptionExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -100,7 +100,7 @@ func testAccCheckAWSSecurityHubProductSubscriptionExists(n string) resource.Test
 	}
 }
 
-func testAccCheckAWSSecurityHubProductSubscriptionDestroy(s *terraform.State) error {
+func testAccCheckProductSubscriptionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -128,11 +128,11 @@ func testAccCheckAWSSecurityHubProductSubscriptionDestroy(s *terraform.State) er
 	return nil
 }
 
-const testAccAWSSecurityHubProductSubscriptionConfig_empty = `
+const testAccProductSubscriptionConfig_empty = `
 resource "aws_securityhub_account" "example" {}
 `
 
-const testAccAWSSecurityHubProductSubscriptionConfig_basic = `
+const testAccProductSubscriptionConfig_basic = `
 resource "aws_securityhub_account" "example" {}
 
 data "aws_region" "current" {}

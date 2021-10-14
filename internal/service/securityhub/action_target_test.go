@@ -13,19 +13,19 @@ import (
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
-func testAccAwsSecurityHubActionTarget_basic(t *testing.T) {
+func testAccActionTarget_basic(t *testing.T) {
 	resourceName := "aws_securityhub_action_target.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
+		CheckDestroy: testAccCheckActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubActionTargetConfigIdentifier("testaction"),
+				Config: testAccActionTargetIdentifierConfig("testaction"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					testAccCheckActionTargetExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "securityhub", "action/custom/testaction"),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is a test custom action"),
 					resource.TestCheckResourceAttr(resourceName, "identifier", "testaction"),
@@ -41,19 +41,19 @@ func testAccAwsSecurityHubActionTarget_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubActionTarget_disappears(t *testing.T) {
+func testAccActionTarget_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_action_target.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
+		CheckDestroy: testAccCheckActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubActionTargetConfigIdentifier("testaction"),
+				Config: testAccActionTargetIdentifierConfig("testaction"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					testAccCheckActionTargetExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceActionTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -62,19 +62,19 @@ func testAccAwsSecurityHubActionTarget_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubActionTarget_Description(t *testing.T) {
+func testAccActionTarget_Description(t *testing.T) {
 	resourceName := "aws_securityhub_action_target.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
+		CheckDestroy: testAccCheckActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubActionTargetConfigDescription("description1"),
+				Config: testAccActionTargetDescriptionConfig("description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					testAccCheckActionTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -84,9 +84,9 @@ func testAccAwsSecurityHubActionTarget_Description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsSecurityHubActionTargetConfigDescription("description2"),
+				Config: testAccActionTargetDescriptionConfig("description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					testAccCheckActionTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -94,19 +94,19 @@ func testAccAwsSecurityHubActionTarget_Description(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubActionTarget_Name(t *testing.T) {
+func testAccActionTarget_Name(t *testing.T) {
 	resourceName := "aws_securityhub_action_target.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
+		CheckDestroy: testAccCheckActionTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubActionTargetConfigName("name1"),
+				Config: testAccActionTargetNameConfig("name1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					testAccCheckActionTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "name1"),
 				),
 			},
@@ -116,9 +116,9 @@ func testAccAwsSecurityHubActionTarget_Name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsSecurityHubActionTargetConfigName("name2"),
+				Config: testAccActionTargetNameConfig("name2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
+					testAccCheckActionTargetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "name2"),
 				),
 			},
@@ -126,7 +126,7 @@ func testAccAwsSecurityHubActionTarget_Name(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSecurityHubActionTargetExists(n string) resource.TestCheckFunc {
+func testAccCheckActionTargetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -153,7 +153,7 @@ func testAccCheckAwsSecurityHubActionTargetExists(n string) resource.TestCheckFu
 	}
 }
 
-func testAccCheckAwsSecurityHubActionTargetDestroy(s *terraform.State) error {
+func testAccCheckActionTargetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -179,7 +179,7 @@ func testAccCheckAwsSecurityHubActionTargetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsSecurityHubActionTargetConfigDescription(description string) string {
+func testAccActionTargetDescriptionConfig(description string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -192,7 +192,7 @@ resource "aws_securityhub_action_target" "test" {
 `, description)
 }
 
-func testAccAwsSecurityHubActionTargetConfigIdentifier(identifier string) string {
+func testAccActionTargetIdentifierConfig(identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 
@@ -205,7 +205,7 @@ resource "aws_securityhub_action_target" "test" {
 `, identifier)
 }
 
-func testAccAwsSecurityHubActionTargetConfigName(name string) string {
+func testAccActionTargetNameConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {}
 

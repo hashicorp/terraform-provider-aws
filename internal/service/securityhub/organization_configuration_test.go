@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccAwsSecurityHubOrganizationConfiguration_basic(t *testing.T) {
+func testAccOrganizationConfiguration_basic(t *testing.T) {
 	resourceName := "aws_securityhub_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
@@ -21,9 +21,9 @@ func testAccAwsSecurityHubOrganizationConfiguration_basic(t *testing.T) {
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecurityHubOrganizationConfigurationConfig(true),
+				Config: testAccOrganizationConfigurationConfig(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsSecurityHubOrganizationConfigurationExists(resourceName),
+					testAccOrganizationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 				),
 			},
@@ -33,9 +33,9 @@ func testAccAwsSecurityHubOrganizationConfiguration_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsSecurityHubOrganizationConfigurationConfig(false),
+				Config: testAccOrganizationConfigurationConfig(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsSecurityHubOrganizationConfigurationExists(resourceName),
+					testAccOrganizationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
 				),
 			},
@@ -43,7 +43,7 @@ func testAccAwsSecurityHubOrganizationConfiguration_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubOrganizationConfigurationExists(n string) resource.TestCheckFunc {
+func testAccOrganizationConfigurationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -58,7 +58,7 @@ func testAccAwsSecurityHubOrganizationConfigurationExists(n string) resource.Tes
 	}
 }
 
-func testAccAwsSecurityHubOrganizationConfigurationConfig(autoEnable bool) string {
+func testAccOrganizationConfigurationConfig(autoEnable bool) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

@@ -14,7 +14,7 @@ import (
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
-func testAccAWSSecurityHubMember_basic(t *testing.T) {
+func testAccMember_basic(t *testing.T) {
 	var member securityhub.Member
 	resourceName := "aws_securityhub_member.example"
 
@@ -22,12 +22,12 @@ func testAccAWSSecurityHubMember_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
+		CheckDestroy: testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubMemberConfig_basic("111111111111", acctest.DefaultEmailAddress),
+				Config: testAccMemberConfig_basic("111111111111", acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
+					testAccCheckMemberExists(resourceName, &member),
 				),
 			},
 			{
@@ -39,7 +39,7 @@ func testAccAWSSecurityHubMember_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSSecurityHubMember_invite(t *testing.T) {
+func testAccMember_invite(t *testing.T) {
 	var member securityhub.Member
 	resourceName := "aws_securityhub_member.example"
 
@@ -47,12 +47,12 @@ func testAccAWSSecurityHubMember_invite(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSecurityHubMemberDestroy,
+		CheckDestroy: testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubMemberConfig_invite("111111111111", acctest.DefaultEmailAddress, true),
+				Config: testAccMemberConfig_invite("111111111111", acctest.DefaultEmailAddress, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubMemberExists(resourceName, &member),
+					testAccCheckMemberExists(resourceName, &member),
 					resource.TestCheckResourceAttr(resourceName, "member_status", "Invited"),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 				),
@@ -66,7 +66,7 @@ func testAccAWSSecurityHubMember_invite(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSecurityHubMemberExists(n string, member *securityhub.Member) resource.TestCheckFunc {
+func testAccCheckMemberExists(n string, member *securityhub.Member) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -93,7 +93,7 @@ func testAccCheckAWSSecurityHubMemberExists(n string, member *securityhub.Member
 	}
 }
 
-func testAccCheckAWSSecurityHubMemberDestroy(s *terraform.State) error {
+func testAccCheckMemberDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -127,7 +127,7 @@ func testAccCheckAWSSecurityHubMemberDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSecurityHubMemberConfig_basic(accountId, email string) string {
+func testAccMemberConfig_basic(accountId, email string) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "example" {}
 
@@ -139,7 +139,7 @@ resource "aws_securityhub_member" "example" {
 `, accountId, email)
 }
 
-func testAccAWSSecurityHubMemberConfig_invite(accountId, email string, invite bool) string {
+func testAccMemberConfig_invite(accountId, email string, invite bool) string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "example" {}
 

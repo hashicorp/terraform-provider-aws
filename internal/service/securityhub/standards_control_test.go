@@ -14,7 +14,7 @@ import (
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
-func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
+func testAccStandardsControl_basic(t *testing.T) {
 	var standardsControl securityhub.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
 
@@ -25,9 +25,9 @@ func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubStandardsControlConfig_basic(),
+				Config: testAccStandardsControlConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSecurityHubStandardsControlExists(resourceName, &standardsControl),
+					testAccCheckStandardsControlExists(resourceName, &standardsControl),
 					resource.TestCheckResourceAttr(resourceName, "control_id", "CIS.1.10"),
 					resource.TestCheckResourceAttr(resourceName, "control_status", "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "control_status_updated_at"),
@@ -43,7 +43,7 @@ func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
+func testAccStandardsControl_disabledControlStatus(t *testing.T) {
 	var standardsControl securityhub.StandardsControl
 	resourceName := "aws_securityhub_standards_control.test"
 
@@ -54,9 +54,9 @@ func testAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubStandardsControlConfig_disabledControlStatus(),
+				Config: testAccStandardsControlConfig_disabledControlStatus(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSecurityHubStandardsControlExists(resourceName, &standardsControl),
+					testAccCheckStandardsControlExists(resourceName, &standardsControl),
 					resource.TestCheckResourceAttr(resourceName, "control_status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "disabled_reason", "We handle password policies within Okta"),
 				),
@@ -65,7 +65,7 @@ func testAccAWSSecurityHubStandardsControl_disabledControlStatus(t *testing.T) {
 	})
 }
 
-func testAccAWSSecurityHubStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
+func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
@@ -73,14 +73,14 @@ func testAccAWSSecurityHubStandardsControl_enabledControlStatusAndDisabledReason
 		CheckDestroy: nil, //lintignore:AT001
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSSecurityHubStandardsControlConfig_enabledControlStatus(),
+				Config:      testAccStandardsControlConfig_enabledControlStatus(),
 				ExpectError: regexp.MustCompile("InvalidInputException: DisabledReason should not be given for action other than disabling control"),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSSecurityHubStandardsControlExists(n string, control *securityhub.StandardsControl) resource.TestCheckFunc {
+func testAccCheckStandardsControlExists(n string, control *securityhub.StandardsControl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -111,9 +111,9 @@ func testAccCheckAWSSecurityHubStandardsControlExists(n string, control *securit
 	}
 }
 
-func testAccAWSSecurityHubStandardsControlConfig_basic() string {
+func testAccStandardsControlConfig_basic() string {
 	return acctest.ConfigCompose(
-		testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
+		testAccStandardsSubscriptionConfig_basic,
 		`
 resource aws_securityhub_standards_control test {
   standards_control_arn = format("%s/1.10", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
@@ -122,9 +122,9 @@ resource aws_securityhub_standards_control test {
 `)
 }
 
-func testAccAWSSecurityHubStandardsControlConfig_disabledControlStatus() string {
+func testAccStandardsControlConfig_disabledControlStatus() string {
 	return acctest.ConfigCompose(
-		testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
+		testAccStandardsSubscriptionConfig_basic,
 		`
 resource aws_securityhub_standards_control test {
   standards_control_arn = format("%s/1.11", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))
@@ -134,9 +134,9 @@ resource aws_securityhub_standards_control test {
 `)
 }
 
-func testAccAWSSecurityHubStandardsControlConfig_enabledControlStatus() string {
+func testAccStandardsControlConfig_enabledControlStatus() string {
 	return acctest.ConfigCompose(
-		testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
+		testAccStandardsSubscriptionConfig_basic,
 		`
 resource aws_securityhub_standards_control test {
   standards_control_arn = format("%s/1.12", replace(aws_securityhub_standards_subscription.test.id, "subscription", "control"))

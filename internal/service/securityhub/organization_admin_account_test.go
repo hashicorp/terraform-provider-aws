@@ -14,7 +14,7 @@ import (
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
-func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
+func testAccOrganizationAdminAccount_basic(t *testing.T) {
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
@@ -24,12 +24,12 @@ func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
+		CheckDestroy: testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
+					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
@@ -42,7 +42,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
+func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_organization_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
@@ -52,12 +52,12 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
+		CheckDestroy: testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
+					testAccCheckOrganizationAdminAccountExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -66,7 +66,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
+func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 	var providers []*schema.Provider
 
 	resourceName := "aws_securityhub_organization_admin_account.test"
@@ -81,21 +81,21 @@ func testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
+		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityHubOrganizationAdminAccountConfigMultiRegion(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
-					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(altResourceName),
-					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(thirdResourceName),
+					testAccCheckOrganizationAdminAccountExists(resourceName),
+					testAccCheckOrganizationAdminAccountExists(altResourceName),
+					testAccCheckOrganizationAdminAccountExists(thirdResourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy(s *terraform.State) error {
+func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -125,7 +125,7 @@ func testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy(s *terraform.Stat
 	return nil
 }
 
-func testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

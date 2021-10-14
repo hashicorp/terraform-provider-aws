@@ -12,17 +12,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccAWSSecurityHubAccount_basic(t *testing.T) {
+func testAccAccount_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
+		CheckDestroy: testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubAccountConfig(),
+				Config: testAccAccountConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubAccountExists("aws_securityhub_account.example"),
+					testAccCheckAccountExists("aws_securityhub_account.example"),
 				),
 			},
 			{
@@ -34,7 +34,7 @@ func testAccAWSSecurityHubAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSecurityHubAccountExists(n string) resource.TestCheckFunc {
+func testAccCheckAccountExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -57,7 +57,7 @@ func testAccCheckAWSSecurityHubAccountExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSSecurityHubAccountDestroy(s *terraform.State) error {
+func testAccCheckAccountDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -81,7 +81,7 @@ func testAccCheckAWSSecurityHubAccountDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSecurityHubAccountConfig() string {
+func testAccAccountConfig() string {
 	return `
 resource "aws_securityhub_account" "example" {}
 `

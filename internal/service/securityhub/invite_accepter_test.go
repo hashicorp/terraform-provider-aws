@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
+func testAccInviteAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_securityhub_invite_accepter.test"
 
@@ -25,16 +25,16 @@ func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAWSSecurityHubInviteAccepterDestroy,
+		CheckDestroy:      testAccCheckInviteAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubInviteAccepterConfig_basic(acctest.DefaultEmailAddress),
+				Config: testAccInviteAccepterConfig_basic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubInviteAccepterExists(resourceName),
+					testAccCheckInviteAccepterExists(resourceName),
 				),
 			},
 			{
-				Config:            testAccAWSSecurityHubInviteAccepterConfig_basic(acctest.DefaultEmailAddress),
+				Config:            testAccInviteAccepterConfig_basic(acctest.DefaultEmailAddress),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -43,7 +43,7 @@ func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSecurityHubInviteAccepterExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckInviteAccepterExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -66,7 +66,7 @@ func testAccCheckAWSSecurityHubInviteAccepterExists(resourceName string) resourc
 	}
 }
 
-func testAccCheckAWSSecurityHubInviteAccepterDestroy(s *terraform.State) error {
+func testAccCheckInviteAccepterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -95,7 +95,7 @@ func testAccCheckAWSSecurityHubInviteAccepterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSecurityHubInviteAccepterConfig_basic(email string) string {
+func testAccInviteAccepterConfig_basic(email string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`

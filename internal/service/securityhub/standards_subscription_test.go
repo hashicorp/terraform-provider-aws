@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
+func testAccStandardsSubscription_basic(t *testing.T) {
 	var standardsSubscription securityhub.StandardsSubscription
 	resourceName := "aws_securityhub_standards_subscription.test"
 
@@ -22,12 +22,12 @@ func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSecurityHubStandardsSubscriptionDestroy,
+		CheckDestroy: testAccCheckStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
+				Config: testAccStandardsSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubStandardsSubscriptionExists(resourceName, &standardsSubscription),
+					testAccCheckStandardsSubscriptionExists(resourceName, &standardsSubscription),
 				),
 			},
 			{
@@ -39,7 +39,7 @@ func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSSecurityHubStandardsSubscription_disappears(t *testing.T) {
+func testAccStandardsSubscription_disappears(t *testing.T) {
 	var standardsSubscription securityhub.StandardsSubscription
 	resourceName := "aws_securityhub_standards_subscription.test"
 
@@ -47,12 +47,12 @@ func testAccAWSSecurityHubStandardsSubscription_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSecurityHubStandardsSubscriptionDestroy,
+		CheckDestroy: testAccCheckStandardsSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
+				Config: testAccStandardsSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityHubStandardsSubscriptionExists(resourceName, &standardsSubscription),
+					testAccCheckStandardsSubscriptionExists(resourceName, &standardsSubscription),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceStandardsSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -61,7 +61,7 @@ func testAccAWSSecurityHubStandardsSubscription_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSecurityHubStandardsSubscriptionExists(n string, standardsSubscription *securityhub.StandardsSubscription) resource.TestCheckFunc {
+func testAccCheckStandardsSubscriptionExists(n string, standardsSubscription *securityhub.StandardsSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -86,7 +86,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionExists(n string, standardsSu
 	}
 }
 
-func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) error {
+func testAccCheckStandardsSubscriptionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -115,7 +115,7 @@ func testAccCheckAWSSecurityHubStandardsSubscriptionDestroy(s *terraform.State) 
 	return nil
 }
 
-const testAccAWSSecurityHubStandardsSubscriptionConfig_basic = `
+const testAccStandardsSubscriptionConfig_basic = `
 resource "aws_securityhub_account" "test" {}
 
 data "aws_partition" "current" {}
