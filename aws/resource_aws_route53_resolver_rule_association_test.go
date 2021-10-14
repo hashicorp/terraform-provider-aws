@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -81,11 +82,11 @@ func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	resourceNameVpc := "aws_vpc.example"
 	resourceNameRule := "aws_route53_resolver_rule.example"
 	resourceNameAssoc := "aws_route53_resolver_rule_association.example"
-	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
+	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleAssociationDestroy,
 		Steps: []resource.TestStep{
