@@ -139,7 +139,7 @@ func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta inte
 
 	describeResp, err := conn.DescribeDBClusterParameterGroups(describeOpts)
 	if err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 			log.Printf("[WARN] DocDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -226,7 +226,7 @@ func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta in
 				log.Printf("[DEBUG] Modify DocDB Cluster Parameter Group: %#v", modifyOpts)
 				_, err := conn.ModifyDBClusterParameterGroup(&modifyOpts)
 				if err != nil {
-					if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+					if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 						log.Printf("[WARN] DocDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
 						d.SetId("")
 						return nil
@@ -257,7 +257,7 @@ func resourceAwsDocDBClusterParameterGroupDelete(d *schema.ResourceData, meta in
 
 	_, err := conn.DeleteDBClusterParameterGroup(deleteOpts)
 	if err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 			return nil
 		}
 		return err
@@ -274,7 +274,7 @@ func waitForDocDBClusterParameterGroupDeletion(conn *docdb.DocDB, name string) e
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBClusterParameterGroups(params)
 
-		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 			return nil
 		}
 
@@ -284,9 +284,9 @@ func waitForDocDBClusterParameterGroupDeletion(conn *docdb.DocDB, name string) e
 
 		return resource.RetryableError(fmt.Errorf("DocDB Parameter Group (%s) still exists", name))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeDBClusterParameterGroups(params)
-		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 			return nil
 		}
 	}

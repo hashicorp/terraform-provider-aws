@@ -344,14 +344,14 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.RestoreDBClusterFromSnapshot(&opts)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.RestoreDBClusterFromSnapshot(&opts)
 		}
 		if err != nil {
@@ -429,14 +429,14 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 			var err error
 			resp, err = conn.CreateDBCluster(createOpts)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			resp, err = conn.CreateDBCluster(createOpts)
 		}
 		if err != nil {
@@ -499,7 +499,7 @@ func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Describing DocDB Cluster: %s", input)
 	resp, err := conn.DescribeDBClusters(input)
 
-	if isAWSErr(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
 		log.Printf("[WARN] DocDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -656,15 +656,15 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.ModifyDBCluster(req)
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "DB cluster is not available for modification") {
+				if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "DB cluster is not available for modification") {
 					return resource.RetryableError(err)
 				}
 
@@ -672,7 +672,7 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = conn.ModifyDBCluster(req)
 		}
 		if err != nil {
@@ -722,17 +722,17 @@ func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) err
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
-			if isAWSErr(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+			if tfawserr.ErrMessageContains(err, docdb.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteDBCluster(&deleteOpts)
 	}
 	if err != nil {
@@ -763,7 +763,7 @@ func resourceAwsDocDBClusterStateRefreshFunc(conn *docdb.DocDB, dbClusterIdentif
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
 		})
 
-		if isAWSErr(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBClusterNotFoundFault, "") {
 			return 42, "destroyed", nil
 		}
 

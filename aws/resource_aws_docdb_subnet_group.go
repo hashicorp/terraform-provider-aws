@@ -115,7 +115,7 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
 		return !lastPage
 	}); err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
 			log.Printf("[WARN] DocDB Subnet Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -204,7 +204,7 @@ func resourceAwsDocDBSubnetGroupDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.DeleteDBSubnetGroup(&delOpts)
 	if err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting DocDB Subnet Group (%s): %s", d.Id(), err)
@@ -221,7 +221,7 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBSubnetGroups(params)
 
-		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
 			return nil
 		}
 
@@ -231,9 +231,9 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 
 		return resource.RetryableError(fmt.Errorf("DocDB Subnet Group (%s) still exists", name))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeDBSubnetGroups(params)
-		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
 			return nil
 		}
 	}

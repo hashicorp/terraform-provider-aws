@@ -301,7 +301,7 @@ func testAccCheckAWSDocDBClusterParameterGroupDestroy(s *terraform.State) error 
 		}
 
 		if err != nil {
-			if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
 				return nil
 			}
 			return err
