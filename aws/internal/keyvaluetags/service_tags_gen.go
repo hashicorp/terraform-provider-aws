@@ -1753,11 +1753,11 @@ func FirehoseKeyValueTags(tags []*firehose.Tag) KeyValueTags {
 }
 
 // FmsTags returns fms service tags.
-func (tags KeyValueTags) FmsTags() []*fms.ResourceTag {
-	result := make([]*fms.ResourceTag, 0, len(tags))
+func (tags KeyValueTags) FmsTags() []*fms.Tag {
+	result := make([]*fms.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &fms.ResourceTag{
+		tag := &fms.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -1769,7 +1769,7 @@ func (tags KeyValueTags) FmsTags() []*fms.ResourceTag {
 }
 
 // FmsKeyValueTags creates KeyValueTags from fms service tags.
-func FmsKeyValueTags(tags []*fms.ResourceTag) KeyValueTags {
+func FmsKeyValueTags(tags []*fms.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

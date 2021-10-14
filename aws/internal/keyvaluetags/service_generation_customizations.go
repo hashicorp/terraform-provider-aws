@@ -61,6 +61,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
@@ -247,6 +248,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(emr.New)
 	case "firehose":
 		funcType = reflect.TypeOf(firehose.New)
+	case "fms":
+		funcType = reflect.TypeOf(fms.New)
 	case "fsx":
 		funcType = reflect.TypeOf(fsx.New)
 	case "gamelift":
@@ -530,6 +533,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "TagDescriptions[0].Tags"
 	case "elbv2":
 		return "TagDescriptions[0].Tags"
+	case "fms":
+		return "TagList"
 	case "mediaconvert":
 		return "ResourceTags.Tags"
 	case "neptune":
@@ -647,6 +652,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTags"
 	case "firehose":
 		return "TagDeliveryStream"
+	case "fms":
+		return "TagResource"
 	case "glacier":
 		return "AddTagsToVault"
 	case "kinesis":
@@ -745,6 +752,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceId"
 	case "firehose":
 		return "DeliveryStreamName"
+	case "fms":
+		return "ResourceArn"
 	case "fsx":
 		return "ResourceARN"
 	case "gamelift":
@@ -839,6 +848,8 @@ func ServiceTagInputTagsField(serviceName string) string {
 		return "TagsToAdd"
 	case "elasticsearchservice":
 		return "TagList"
+	case "fms":
+		return "TagList"
 	case "glue":
 		return "TagsToAdd"
 	case "pinpoint":
@@ -908,7 +919,7 @@ func ServiceTagType(serviceName string) string {
 	case "datasync":
 		return "TagListEntry"
 	case "fms":
-		return "ResourceTag"
+		return "Tag"
 	case "s3control":
 		return "S3Tag"
 	case "swf":

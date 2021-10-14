@@ -55,6 +55,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
@@ -1351,6 +1352,30 @@ func FirehoseListTags(conn *firehose.Firehose, identifier string) (KeyValueTags,
 	}
 
 	return FirehoseKeyValueTags(output.Tags), nil
+}
+
+// FmsListTags lists fms service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func FmsListTags(conn *fms.FMS, identifier string) (KeyValueTags, error) {
+	input := &fms.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		err = &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return FmsKeyValueTags(output.TagList), nil
 }
 
 // FsxListTags lists fsx service tags.
