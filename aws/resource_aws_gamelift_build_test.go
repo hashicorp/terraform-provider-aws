@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const testAccGameliftBuildPrefix = "tf_acc_build_"
