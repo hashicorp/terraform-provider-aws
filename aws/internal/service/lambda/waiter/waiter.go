@@ -9,31 +9,31 @@ import (
 )
 
 const (
-	EventSourceMappingCreateTimeout      = 10 * time.Minute
-	EventSourceMappingUpdateTimeout      = 10 * time.Minute
-	EventSourceMappingDeleteTimeout      = 5 * time.Minute
-	LambdaFunctionCreateTimeout          = 5 * time.Minute
-	LambdaFunctionUpdateTimeout          = 5 * time.Minute
-	LambdaFunctionPublishTimeout         = 5 * time.Minute
-	LambdaFunctionPutConcurrencyTimeout  = 1 * time.Minute
-	LambdaFunctionExtraThrottlingTimeout = 9 * time.Minute
+	eventSourceMappingCreateTimeout      = 10 * time.Minute
+	eventSourceMappingUpdateTimeout      = 10 * time.Minute
+	eventSourceMappingDeleteTimeout      = 5 * time.Minute
+	lambdaFunctionCreateTimeout          = 5 * time.Minute
+	lambdaFunctionUpdateTimeout          = 5 * time.Minute
+	lambdaFunctionPublishTimeout         = 5 * time.Minute
+	lambdaFunctionPutConcurrencyTimeout  = 1 * time.Minute
+	lambdaFunctionExtraThrottlingTimeout = 9 * time.Minute
 
-	EventSourceMappingPropagationTimeout = 5 * time.Minute
+	eventSourceMappingPropagationTimeout = 5 * time.Minute
 )
 
-func EventSourceMappingCreate(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+func waitEventSourceMappingCreate(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			EventSourceMappingStateCreating,
-			EventSourceMappingStateDisabling,
-			EventSourceMappingStateEnabling,
+			eventSourceMappingStateCreating,
+			eventSourceMappingStateDisabling,
+			eventSourceMappingStateEnabling,
 		},
 		Target: []string{
-			EventSourceMappingStateDisabled,
-			EventSourceMappingStateEnabled,
+			eventSourceMappingStateDisabled,
+			eventSourceMappingStateEnabled,
 		},
-		Refresh: EventSourceMappingState(conn, id),
-		Timeout: EventSourceMappingCreateTimeout,
+		Refresh: statusEventSourceMappingState(conn, id),
+		Timeout: eventSourceMappingCreateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -45,12 +45,12 @@ func EventSourceMappingCreate(conn *lambda.Lambda, id string) (*lambda.EventSour
 	return nil, err
 }
 
-func EventSourceMappingDelete(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+func waitEventSourceMappingDelete(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{EventSourceMappingStateDeleting},
+		Pending: []string{eventSourceMappingStateDeleting},
 		Target:  []string{},
-		Refresh: EventSourceMappingState(conn, id),
-		Timeout: EventSourceMappingDeleteTimeout,
+		Refresh: statusEventSourceMappingState(conn, id),
+		Timeout: eventSourceMappingDeleteTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -62,19 +62,19 @@ func EventSourceMappingDelete(conn *lambda.Lambda, id string) (*lambda.EventSour
 	return nil, err
 }
 
-func EventSourceMappingUpdate(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
+func waitEventSourceMappingUpdate(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			EventSourceMappingStateDisabling,
-			EventSourceMappingStateEnabling,
-			EventSourceMappingStateUpdating,
+			eventSourceMappingStateDisabling,
+			eventSourceMappingStateEnabling,
+			eventSourceMappingStateUpdating,
 		},
 		Target: []string{
-			EventSourceMappingStateDisabled,
-			EventSourceMappingStateEnabled,
+			eventSourceMappingStateDisabled,
+			eventSourceMappingStateEnabled,
 		},
-		Refresh: EventSourceMappingState(conn, id),
-		Timeout: EventSourceMappingUpdateTimeout,
+		Refresh: statusEventSourceMappingState(conn, id),
+		Timeout: eventSourceMappingUpdateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

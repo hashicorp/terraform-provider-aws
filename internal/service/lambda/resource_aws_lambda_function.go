@@ -26,6 +26,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
@@ -531,7 +551,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = tags.IgnoreAws().LambdaTags()
 	}
 
-	err := resource.Retry(waiter.LambdaFunctionCreateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(tflambda.lambdaFunctionCreateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -570,7 +590,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating Lambda Function (1): %w", err)
 		}
 
-		err := resource.Retry(waiter.LambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
+		err := resource.Retry(tflambda.lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -609,7 +629,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
 		}
 
-		err := resource.Retry(waiter.LambdaFunctionPutConcurrencyTimeout, func() *resource.RetryError {
+		err := resource.Retry(tflambda.lambdaFunctionPutConcurrencyTimeout, func() *resource.RetryError {
 			_, err := conn.PutFunctionConcurrency(concurrencyParams)
 
 			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
@@ -1075,7 +1095,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		err := resource.Retry(waiter.LambdaFunctionUpdateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+		err := resource.Retry(tflambda.lambdaFunctionUpdateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1115,7 +1135,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			// Allow more time for EC2 throttling
-			err := resource.Retry(waiter.LambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+			err := resource.Retry(tflambda.lambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 				_, err = conn.UpdateFunctionConfiguration(configReq)
 
 				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
@@ -1229,7 +1249,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		var output *lambda.FunctionConfiguration
-		err := resource.Retry(waiter.LambdaFunctionPublishTimeout, func() *resource.RetryError {
+		err := resource.Retry(tflambda.lambdaFunctionPublishTimeout, func() *resource.RetryError {
 			var err error
 			output, err = conn.PublishVersion(versionReq)
 

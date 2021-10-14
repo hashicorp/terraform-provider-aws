@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 )
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
@@ -939,7 +941,7 @@ func testAccCheckLambdaEventSourceMappingDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.EventSourceMappingConfigurationByID(conn, rs.Primary.ID)
+		_, err := tflambda.FindEventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -968,7 +970,7 @@ func testAccCheckAwsLambdaEventSourceMappingExists(n string, v *lambda.EventSour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
-		eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, rs.Primary.ID)
+		eventSourceMappingConfiguration, err := tflambda.FindEventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
