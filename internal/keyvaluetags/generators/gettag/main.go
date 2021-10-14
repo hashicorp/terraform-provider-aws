@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -94,7 +94,7 @@ import (
 {{- range .ServiceNames }}
 	"github.com/aws/aws-sdk-go/service/{{ . }}"
 {{- end }}
-    "github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+    "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 {{- range .ServiceNames }}
