@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
 func init() {
@@ -458,7 +460,7 @@ func testAccCheckAwsCloudWatchCompositeAlarmDestroy(s *terraform.State) error {
 			continue
 		}
 
-		alarm, err := finder.CompositeAlarmByName(context.Background(), conn, rs.Primary.ID)
+		alarm, err := tfcloudwatch.FindCompositeAlarmByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
 			continue
@@ -488,7 +490,7 @@ func testAccCheckAwsCloudWatchCompositeAlarmExists(resourceName string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
-		alarm, err := finder.CompositeAlarmByName(context.Background(), conn, rs.Primary.ID)
+		alarm, err := tfcloudwatch.FindCompositeAlarmByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch composite alarm (%s): %w", rs.Primary.ID, err)

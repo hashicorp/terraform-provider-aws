@@ -19,6 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
 func ResourceMetricStream() *schema.Resource {
@@ -33,8 +40,8 @@ func ResourceMetricStream() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.MetricStreamReadyTimeout),
-			Delete: schema.DefaultTimeout(waiter.MetricStreamDeleteTimeout),
+			Create: schema.DefaultTimeout(tfcloudwatch.MetricStreamReadyTimeout),
+			Delete: schema.DefaultTimeout(tfcloudwatch.MetricStreamDeleteTimeout),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -160,7 +167,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := waiter.MetricStreamReady(ctx, conn, d.Id())
+	output, err := tfcloudwatch.WaitMetricStreamReady(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] CloudWatch Metric Stream (%s) not found, removing from state", d.Id())
@@ -229,7 +236,7 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error deleting CloudWatch MetricStream: %s", err))
 	}
 
-	if _, err := waiter.MetricStreamDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := tfcloudwatch.WaitMetricStreamDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error while waiting for CloudWatch Metric Stream (%s) to become deleted: %w", d.Id(), err))
 	}
 

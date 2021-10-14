@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func MetricStreamState(ctx context.Context, conn *cloudwatch.CloudWatch, name string) resource.StateRefreshFunc {
+func StatusMetricStreamState(ctx context.Context, conn *cloudwatch.CloudWatch, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := cloudwatch.GetMetricStreamInput{
 			Name: aws.String(name),

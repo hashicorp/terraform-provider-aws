@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
 func ResourceMetricAlarm() *schema.Resource {
@@ -308,7 +310,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := finder.MetricAlarmByName(conn, d.Id())
+	resp, err := tfcloudwatch.FindMetricAlarmByName(conn, d.Id())
 	if err != nil {
 		return err
 	}
