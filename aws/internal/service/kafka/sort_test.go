@@ -5,6 +5,11 @@ import (
 
 	tfkafka "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
 
 func TestSortEndpointsString(t *testing.T) {

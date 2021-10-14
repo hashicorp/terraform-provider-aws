@@ -20,6 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
 
 func init() {
@@ -929,7 +933,7 @@ func testAccCheckMskClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ClusterByARN(conn, rs.Primary.ID)
+		_, err := tfkafka.FindClusterByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -958,7 +962,7 @@ func testAccCheckMskClusterExists(n string, v *kafka.ClusterInfo) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
-		output, err := finder.ClusterByARN(conn, rs.Primary.ID)
+		output, err := tfkafka.FindClusterByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

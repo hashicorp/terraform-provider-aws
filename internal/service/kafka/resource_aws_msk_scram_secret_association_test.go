@@ -16,6 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
 
 func TestAccAwsMskScramSecretAssociation_basic(t *testing.T) {
@@ -174,7 +178,7 @@ func testAccCheckMskScramSecretAssociationExists(resourceName string) resource.T
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
-		_, err := finder.ScramSecrets(conn, rs.Primary.ID)
+		_, err := tfkafka.FindScramSecrets(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

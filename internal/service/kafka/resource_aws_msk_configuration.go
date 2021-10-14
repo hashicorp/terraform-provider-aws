@@ -11,6 +11,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
 
 func ResourceConfiguration() *schema.Resource {
@@ -176,7 +187,7 @@ func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error deleting MSK Configuration (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ConfigurationDeleted(conn, d.Id()); err != nil {
+	if _, err := tfkafka.waitConfigurationDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for MSK Configuration (%s): %w", d.Id(), err)
 	}
 

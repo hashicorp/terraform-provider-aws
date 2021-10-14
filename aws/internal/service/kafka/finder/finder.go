@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func ClusterByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterInfo, error) {
+func FindClusterByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterInfo, error) {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
@@ -33,7 +33,7 @@ func ClusterByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterInfo, error) {
 	return output.ClusterInfo, nil
 }
 
-func ClusterOperationByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterOperationInfo, error) {
+func FindClusterOperationByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterOperationInfo, error) {
 	input := &kafka.DescribeClusterOperationInput{
 		ClusterOperationArn: aws.String(arn),
 	}
@@ -58,7 +58,7 @@ func ClusterOperationByARN(conn *kafka.Kafka, arn string) (*kafka.ClusterOperati
 	return output.ClusterOperationInfo, nil
 }
 
-func ConfigurationByARN(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
+func FindConfigurationByARN(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
 	input := &kafka.DescribeConfigurationInput{
 		Arn: aws.String(arn),
 	}
@@ -83,8 +83,8 @@ func ConfigurationByARN(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigura
 	return output, nil
 }
 
-// ScramSecrets returns the matching MSK Cluster's associated secrets
-func ScramSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
+// FindScramSecrets returns the matching MSK Cluster's associated secrets
+func FindScramSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
 	input := &kafka.ListScramSecretsInput{
 		ClusterArn: aws.String(clusterArn),
 	}

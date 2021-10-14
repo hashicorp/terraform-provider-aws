@@ -9,23 +9,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
 
 const (
-	ClusterCreateTimeout = 120 * time.Minute
-	ClusterUpdateTimeout = 120 * time.Minute
-	ClusterDeleteTimeout = 120 * time.Minute
+	clusterCreateTimeout = 120 * time.Minute
+	clusterUpdateTimeout = 120 * time.Minute
+	clusterDeleteTimeout = 120 * time.Minute
 )
 
 const (
-	ConfigurationDeletedTimeout = 5 * time.Minute
+	configurationDeletedTimeout = 5 * time.Minute
 )
 
-func ClusterCreated(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
+func waitClusterCreated(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafka.ClusterStateCreating},
 		Target:  []string{kafka.ClusterStateActive},
-		Refresh: ClusterState(conn, arn),
+		Refresh: statusClusterState(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -42,11 +47,11 @@ func ClusterCreated(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafk
 	return nil, err
 }
 
-func ClusterDeleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
+func waitClusterDeleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafka.ClusterStateDeleting},
 		Target:  []string{},
-		Refresh: ClusterState(conn, arn),
+		Refresh: statusClusterState(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -63,11 +68,11 @@ func ClusterDeleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafk
 	return nil, err
 }
 
-func ClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) {
+func waitClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{tfkafka.ClusterOperationStatePending, tfkafka.ClusterOperationStateUpdateInProgress},
 		Target:  []string{tfkafka.ClusterOperationStateUpdateComplete},
-		Refresh: ClusterOperationState(conn, arn),
+		Refresh: statusClusterOperationState(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -84,12 +89,12 @@ func ClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.Durat
 	return nil, err
 }
 
-func ConfigurationDeleted(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
+func waitConfigurationDeleted(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafka.ConfigurationStateDeleting},
 		Target:  []string{},
-		Refresh: ConfigurationState(conn, arn),
-		Timeout: ConfigurationDeletedTimeout,
+		Refresh: statusConfigurationState(conn, arn),
+		Timeout: configurationDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
