@@ -17,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
 func TestGenerateIAMPassword(t *testing.T) {
-	p, err := generateIAMPassword(6)
+	p, err := tfiam.GeneratePassword(6)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -29,7 +30,7 @@ func TestGenerateIAMPassword(t *testing.T) {
 		t.Fatalf("expected a 6 character password, got: %q", p)
 	}
 
-	p, err = generateIAMPassword(128)
+	p, err = tfiam.GeneratePassword(128)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
@@ -54,7 +55,7 @@ func TestIAMPasswordPolicyCheck(t *testing.T) {
 		{pass: "abCD11#$", valid: true},
 	} {
 		t.Run(tc.pass, func(t *testing.T) {
-			valid := checkIAMPwdPolicy([]byte(tc.pass))
+			valid := tfiam.CheckPwdPolicy([]byte(tc.pass))
 			if valid != tc.valid {
 				t.Fatalf("expected %q to be valid==%t, got %t", tc.pass, tc.valid, valid)
 			}
@@ -270,7 +271,7 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 
 		return resource.Retry(2*time.Minute, func() *resource.RetryError {
 			iamAsCreatedUser := iam.New(iamAsCreatedUserSession)
-			newPassword, err := generateIAMPassword(20)
+			newPassword, err := tfiam.GeneratePassword(20)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}

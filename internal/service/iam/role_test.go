@@ -140,7 +140,7 @@ func testSweepIamRoles(region string) error {
 	for _, roleName := range roles {
 		log.Printf("[DEBUG] Deleting IAM Role (%s)", roleName)
 
-		err := deleteIamRole(conn, roleName, true, true, true)
+		err := tfiam.DeleteRole(conn, roleName, true, true, true)
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
@@ -351,7 +351,7 @@ func TestAccAWSIAMRole_disappears(t *testing.T) {
 				Config: testAccAWSIAMRoleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRole(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceRole(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

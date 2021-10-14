@@ -110,7 +110,7 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	serviceName, roleName, customSuffix, err := decodeIamServiceLinkedRoleID(d.Id())
+	serviceName, roleName, customSuffix, err := DecodeServiceLinkedRoleID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -147,7 +147,7 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())
+	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -169,12 +169,12 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())
+	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	deletionID, err := deleteIamServiceLinkedRole(conn, roleName)
+	deletionID, err := DeleteServiceLinkedRole(conn, roleName)
 	if err != nil {
 		return fmt.Errorf("Error deleting service-linked role %s: %s", d.Id(), err)
 	}
@@ -182,7 +182,7 @@ func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	err = deleteIamServiceLinkedRoleWaiter(conn, deletionID)
+	err = DeleteServiceLinkedRoleWaiter(conn, deletionID)
 	if err != nil {
 		return fmt.Errorf("Error waiting for role (%s) to be deleted: %s", d.Id(), err)
 	}
@@ -190,7 +190,7 @@ func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func decodeIamServiceLinkedRoleID(id string) (serviceName, roleName, customSuffix string, err error) {
+func DecodeServiceLinkedRoleID(id string) (serviceName, roleName, customSuffix string, err error) {
 	idArn, err := arn.Parse(id)
 	if err != nil {
 		return "", "", "", err
@@ -212,7 +212,7 @@ func decodeIamServiceLinkedRoleID(id string) (serviceName, roleName, customSuffi
 	return
 }
 
-func deleteIamServiceLinkedRole(conn *iam.IAM, roleName string) (string, error) {
+func DeleteServiceLinkedRole(conn *iam.IAM, roleName string) (string, error) {
 	params := &iam.DeleteServiceLinkedRoleInput{
 		RoleName: aws.String(roleName),
 	}
@@ -229,7 +229,7 @@ func deleteIamServiceLinkedRole(conn *iam.IAM, roleName string) (string, error) 
 	return aws.StringValue(resp.DeletionTaskId), nil
 }
 
-func deleteIamServiceLinkedRoleWaiter(conn *iam.IAM, deletionTaskID string) error {
+func DeleteServiceLinkedRoleWaiter(conn *iam.IAM, deletionTaskID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{iam.DeletionTaskStatusTypeInProgress, iam.DeletionTaskStatusTypeNotStarted},
 		Target:  []string{iam.DeletionTaskStatusTypeSucceeded},

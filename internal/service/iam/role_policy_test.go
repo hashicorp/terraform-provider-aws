@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
@@ -226,7 +227,7 @@ func testAccCheckIAMRolePolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		role, name, err := resourceAwsIamRolePolicyParseId(rs.Primary.ID)
+		role, name, err := tfiam.RolePolicyParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -287,7 +288,7 @@ func testAccCheckIAMRolePolicyExists(
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-		role, name, err := resourceAwsIamRolePolicyParseId(policy.Primary.ID)
+		role, name, err := tfiam.RolePolicyParseID(policy.Primary.ID)
 		if err != nil {
 			return err
 		}

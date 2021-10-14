@@ -238,29 +238,29 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	// IAM Users must be removed from all groups before they can be deleted
-	if err := deleteAwsIamUserGroupMemberships(conn, d.Id()); err != nil {
+	if err := DeleteUserGroupMemberships(conn, d.Id()); err != nil {
 		return fmt.Errorf("error removing IAM User (%s) group memberships: %s", d.Id(), err)
 	}
 
 	// All access keys, MFA devices and login profile for the user must be removed
 	if d.Get("force_destroy").(bool) {
-		if err := deleteAwsIamUserAccessKeys(conn, d.Id()); err != nil {
+		if err := DeleteUserAccessKeys(conn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) access keys: %s", d.Id(), err)
 		}
 
-		if err := deleteAwsIamUserSSHKeys(conn, d.Id()); err != nil {
+		if err := DeleteUserSSHKeys(conn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) SSH keys: %s", d.Id(), err)
 		}
 
-		if err := deleteAwsIamUserVirtualMFADevices(conn, d.Id()); err != nil {
+		if err := DeleteUserVirtualMFADevices(conn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) Virtual MFA devices: %s", d.Id(), err)
 		}
 
-		if err := deactivateAwsIamUserMFADevices(conn, d.Id()); err != nil {
+		if err := DeactivateUserMFADevices(conn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) MFA devices: %s", d.Id(), err)
 		}
 
-		if err := deleteAwsIamUserLoginProfile(conn, d.Id()); err != nil {
+		if err := DeleteUserLoginProfile(conn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) login profile: %s", d.Id(), err)
 		}
 
@@ -287,7 +287,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteAwsIamUserGroupMemberships(conn *iam.IAM, username string) error {
+func DeleteUserGroupMemberships(conn *iam.IAM, username string) error {
 	var groups []string
 	listGroups := &iam.ListGroupsForUserInput{
 		UserName: aws.String(username),
@@ -313,7 +313,7 @@ func deleteAwsIamUserGroupMemberships(conn *iam.IAM, username string) error {
 	return nil
 }
 
-func deleteAwsIamUserSSHKeys(svc *iam.IAM, username string) error {
+func DeleteUserSSHKeys(svc *iam.IAM, username string) error {
 	var publicKeys []string
 	var err error
 
@@ -343,7 +343,7 @@ func deleteAwsIamUserSSHKeys(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func deleteAwsIamUserVirtualMFADevices(svc *iam.IAM, username string) error {
+func DeleteUserVirtualMFADevices(svc *iam.IAM, username string) error {
 	var VirtualMFADevices []string
 	var err error
 
@@ -382,7 +382,7 @@ func deleteAwsIamUserVirtualMFADevices(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func deactivateAwsIamUserMFADevices(svc *iam.IAM, username string) error {
+func DeactivateUserMFADevices(svc *iam.IAM, username string) error {
 	var MFADevices []string
 	var err error
 
@@ -412,7 +412,7 @@ func deactivateAwsIamUserMFADevices(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
+func DeleteUserLoginProfile(svc *iam.IAM, username string) error {
 	var err error
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(username),
@@ -441,7 +441,7 @@ func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func deleteAwsIamUserAccessKeys(svc *iam.IAM, username string) error {
+func DeleteUserAccessKeys(svc *iam.IAM, username string) error {
 	var accessKeys []string
 	var err error
 	listAccessKeys := &iam.ListAccessKeysInput{

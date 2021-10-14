@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
@@ -241,7 +242,7 @@ func testAccCheckIAMUserPolicyExists(resource string, res *iam.GetUserPolicyOutp
 			return fmt.Errorf("No Policy name is set")
 		}
 
-		user, name, err := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
+		user, name, err := tfiam.UserPolicyParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -270,7 +271,7 @@ func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		user, name, err := resourceAwsIamUserPolicyParseId(rs.Primary.ID)
+		user, name, err := tfiam.UserPolicyParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -330,7 +331,7 @@ func testAccCheckIAMUserPolicy(
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-		username, name, err := resourceAwsIamUserPolicyParseId(policy.Primary.ID)
+		username, name, err := tfiam.UserPolicyParseID(policy.Primary.ID)
 		if err != nil {
 			return err
 		}

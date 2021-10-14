@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
@@ -112,7 +113,7 @@ func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
 					testAccCheckAWSRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
 					// DeleteConflict: Cannot delete entity, must detach all policies first.
 					testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRole(), iamRoleResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceRole(), iamRoleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -131,7 +132,7 @@ func testAccCheckAWSRolePolicyAttachmentDestroy(s *terraform.State) error {
 		policyARN := rs.Primary.Attributes["policy_arn"]
 		role := rs.Primary.Attributes["role"]
 
-		hasPolicyAttachment, err := iamRoleHasPolicyARNAttachment(conn, role, policyARN)
+		hasPolicyAttachment, err := tfiam.RoleHasPolicyARNAttachment(conn, role, policyARN)
 
 		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
@@ -211,7 +212,7 @@ func testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName string) resou
 		policyARN := rs.Primary.Attributes["policy_arn"]
 		role := rs.Primary.Attributes["role"]
 
-		return detachPolicyFromRole(conn, role, policyARN)
+		return tfiam.DetachPolicyFromRole(conn, role, policyARN)
 	}
 }
 

@@ -266,7 +266,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	if err := iamPolicyDeleteNondefaultVersions(d.Id(), conn); err != nil {
+	if err := PolicyDeleteNondefaultVersions(d.Id(), conn); err != nil {
 		return err
 	}
 
@@ -319,7 +319,7 @@ func iamPolicyPruneVersions(arn string, conn *iam.IAM) error {
 	return err1
 }
 
-func iamPolicyDeleteNondefaultVersions(arn string, conn *iam.IAM) error {
+func PolicyDeleteNondefaultVersions(arn string, conn *iam.IAM) error {
 	versions, err := iamPolicyListVersions(arn, conn)
 	if err != nil {
 		return err

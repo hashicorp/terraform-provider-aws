@@ -67,7 +67,7 @@ func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		hasPolicyAttachment, err = iamRoleHasPolicyARNAttachment(conn, role, policyARN)
+		hasPolicyAttachment, err = RoleHasPolicyARNAttachment(conn, role, policyARN)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -87,7 +87,7 @@ func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if tfresource.TimedOut(err) {
-		hasPolicyAttachment, err = iamRoleHasPolicyARNAttachment(conn, role, policyARN)
+		hasPolicyAttachment, err = RoleHasPolicyARNAttachment(conn, role, policyARN)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
@@ -117,7 +117,7 @@ func resourceRolePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
 
-	err := detachPolicyFromRole(conn, role, arn)
+	err := DetachPolicyFromRole(conn, role, arn)
 
 	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
@@ -153,7 +153,7 @@ func attachPolicyToRole(conn *iam.IAM, role string, arn string) error {
 	return err
 }
 
-func detachPolicyFromRole(conn *iam.IAM, role string, arn string) error {
+func DetachPolicyFromRole(conn *iam.IAM, role string, arn string) error {
 	_, err := conn.DetachRolePolicy(&iam.DetachRolePolicyInput{
 		RoleName:  aws.String(role),
 		PolicyArn: aws.String(arn),
@@ -161,7 +161,7 @@ func detachPolicyFromRole(conn *iam.IAM, role string, arn string) error {
 	return err
 }
 
-func iamRoleHasPolicyARNAttachment(conn *iam.IAM, role string, policyARN string) (bool, error) {
+func RoleHasPolicyARNAttachment(conn *iam.IAM, role string, policyARN string) (bool, error) {
 	hasPolicyAttachment := false
 	input := &iam.ListAttachedRolePoliciesInput{
 		RoleName: aws.String(role),

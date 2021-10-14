@@ -55,7 +55,7 @@ func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) erro
 	sessionName := ""
 	var err error
 
-	if roleName, sessionName = roleNameSessionFromARN(arn); roleName == "" {
+	if roleName, sessionName = RoleNameSessionFromARN(arn); roleName == "" {
 		d.Set("issuer_arn", arn)
 		d.Set("issuer_id", "")
 		d.Set("issuer_name", "")
@@ -102,9 +102,9 @@ func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-// roleNameSessionFromARN returns the role and session names in an ARN if any.
+// RoleNameSessionFromARN returns the role and session names in an ARN if any.
 // Otherwise, it returns empty strings.
-func roleNameSessionFromARN(rawARN string) (string, string) {
+func RoleNameSessionFromARN(rawARN string) (string, string) {
 	parsedARN, err := arn.Parse(rawARN)
 
 	if err != nil {

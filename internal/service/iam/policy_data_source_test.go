@@ -9,6 +9,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestPolicySearchDetails(t *testing.T) {
@@ -70,7 +71,7 @@ func TestPolicySearchDetails(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got := PolicySearchDetails(testCase.Arn, testCase.Name, testCase.PathPrefix)
+			got := tfiam.PolicySearchDetails(testCase.Arn, testCase.Name, testCase.PathPrefix)
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)

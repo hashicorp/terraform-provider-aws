@@ -118,7 +118,7 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("CreateAccessKey response did not contain a Secret Access Key as expected")
 	}
 
-	sesSMTPPasswordV4, err := sesSmtpPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
+	sesSMTPPasswordV4, err := SessmTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
 	if err != nil {
 		return fmt.Errorf("error getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
 	}
@@ -267,7 +267,7 @@ func hmacSignature(key []byte, value []byte) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-func sesSmtpPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
+func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
 	if key == nil {
 		return "", nil
 	}

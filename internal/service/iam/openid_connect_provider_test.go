@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -38,7 +39,7 @@ func testSweepIamOpenIDConnectProvider(region string) error {
 	for _, oidcProvider := range out.OpenIDConnectProviderList {
 		arn := aws.StringValue(oidcProvider.Arn)
 
-		r := ResourceOpenIDConnectProvider()
+		r := tfiam.ResourceOpenIDConnectProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
 		err := r.Delete(d, client)
@@ -169,7 +170,7 @@ func TestAccAWSIAMOpenIDConnectProvider_disappears(t *testing.T) {
 				Config: testAccIAMOpenIDConnectProviderConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMOpenIDConnectProvider(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceOpenIDConnectProvider(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceOpenIDConnectProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

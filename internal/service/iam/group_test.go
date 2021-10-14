@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -101,14 +102,14 @@ func testSweepIamGroups(region string) error {
 				GroupName: group.GroupName,
 			}
 
-			if err := deleteAwsIamGroupPolicyAttachments(conn, name); err != nil {
+			if err := tfiam.DeleteGroupPolicyAttachments(conn, name); err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Group (%s) policy attachments: %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
 			}
 
-			if err := deleteAwsIamGroupPolicies(conn, name); err != nil {
+			if err := tfiam.DeleteGroupPolicies(conn, name); err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Group (%s) policies: %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)

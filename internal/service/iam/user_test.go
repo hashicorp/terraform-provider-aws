@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/pquerna/otp/totp"
 )
@@ -128,7 +129,7 @@ func testSweepIamUsers(region string) error {
 
 			log.Printf("[DEBUG] Detaching IAM User (%s) attached policy: %s", username, policyARN)
 
-			if err := detachPolicyFromUser(conn, username, policyARN); err != nil {
+			if err := tfiam.DetachPolicyFromUser(conn, username, policyARN); err != nil {
 				sweeperErr := fmt.Errorf("error detaching IAM User (%s) attached policy (%s): %s", username, policyARN, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -136,42 +137,42 @@ func testSweepIamUsers(region string) error {
 			}
 		}
 
-		if err := deleteAwsIamUserGroupMemberships(conn, username); err != nil {
+		if err := tfiam.DeleteUserGroupMemberships(conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) group memberships: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := deleteAwsIamUserAccessKeys(conn, username); err != nil {
+		if err := tfiam.DeleteUserAccessKeys(conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) access keys: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := deleteAwsIamUserSSHKeys(conn, username); err != nil {
+		if err := tfiam.DeleteUserSSHKeys(conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) SSH keys: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := deleteAwsIamUserVirtualMFADevices(conn, username); err != nil {
+		if err := tfiam.DeleteUserVirtualMFADevices(conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) virtual MFA devices: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := deactivateAwsIamUserMFADevices(conn, username); err != nil {
+		if err := tfiam.DeactivateUserMFADevices(conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) MFA devices: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := deleteAwsIamUserLoginProfile(conn, username); err != nil {
+		if err := tfiam.DeleteUserLoginProfile(conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) login profile: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -720,7 +721,7 @@ func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resou
 func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-		password, err := generateIAMPassword(32)
+		password, err := tfiam.GeneratePassword(32)
 		if err != nil {
 			return err
 		}

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
@@ -172,7 +173,7 @@ func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		group, name, err := resourceAwsIamGroupPolicyParseId(rs.Primary.ID)
+		group, name, err := tfiam.GroupPolicyParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -233,7 +234,7 @@ func testAccCheckIAMGroupPolicyExists(
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-		group, name, err := resourceAwsIamGroupPolicyParseId(policy.Primary.ID)
+		group, name, err := tfiam.GroupPolicyParseID(policy.Primary.ID)
 		if err != nil {
 			return err
 		}

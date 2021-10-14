@@ -68,7 +68,7 @@ func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error
 	var policyName string
 	var err error
 	if !d.IsNewResource() {
-		_, policyName, err = resourceAwsIamUserPolicyParseId(d.Id())
+		_, policyName, err = UserPolicyParseID(d.Id())
 		if err != nil {
 			return err
 		}
@@ -92,7 +92,7 @@ func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error
 func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	user, name, err := resourceAwsIamUserPolicyParseId(d.Id())
+	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	user, name, err := resourceAwsIamUserPolicyParseId(d.Id())
+	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func resourceUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamUserPolicyParseId(id string) (userName, policyName string, err error) {
+func UserPolicyParseID(id string) (userName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
 		err = fmt.Errorf("user_policy id must be of the form <user name>:<policy name>")
