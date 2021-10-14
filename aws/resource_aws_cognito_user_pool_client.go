@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCognitoUserPoolClient() *schema.Resource {
+func ResourceUserPoolClient() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoUserPoolClientCreate,
-		Read:   resourceAwsCognitoUserPoolClientRead,
-		Update: resourceAwsCognitoUserPoolClientUpdate,
-		Delete: resourceAwsCognitoUserPoolClientDelete,
+		Create: resourceUserPoolClientCreate,
+		Read:   resourceUserPoolClientRead,
+		Update: resourceUserPoolClientUpdate,
+		Delete: resourceUserPoolClientDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCognitoUserPoolClientImport,
@@ -243,7 +243,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 	}
 }
 
-func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolClientCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	params := &cognitoidentityprovider.CreateUserPoolClientInput{
@@ -333,10 +333,10 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.UserPoolClient.ClientId))
 
-	return resourceAwsCognitoUserPoolClientRead(d, meta)
+	return resourceUserPoolClientRead(d, meta)
 }
 
-func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	params := &cognitoidentityprovider.DescribeUserPoolClientInput{
@@ -388,7 +388,7 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolClientUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	params := &cognitoidentityprovider.UpdateUserPoolClientInput{
@@ -474,10 +474,10 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error updating Cognito User Pool Client (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsCognitoUserPoolClientRead(d, meta)
+	return resourceUserPoolClientRead(d, meta)
 }
 
-func resourceAwsCognitoUserPoolClientDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolClientDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	params := &cognitoidentityprovider.DeleteUserPoolClientInput{

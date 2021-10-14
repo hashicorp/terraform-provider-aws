@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCognitoUserGroup() *schema.Resource {
+func ResourceUserGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoUserGroupCreate,
-		Read:   resourceAwsCognitoUserGroupRead,
-		Update: resourceAwsCognitoUserGroupUpdate,
-		Delete: resourceAwsCognitoUserGroupDelete,
+		Create: resourceUserGroupCreate,
+		Read:   resourceUserGroupRead,
+		Update: resourceUserGroupUpdate,
+		Delete: resourceUserGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCognitoUserGroupImport,
@@ -56,7 +56,7 @@ func resourceAwsCognitoUserGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsCognitoUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	params := &cognitoidentityprovider.CreateGroupInput{
@@ -85,10 +85,10 @@ func resourceAwsCognitoUserGroupCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(fmt.Sprintf("%s/%s", *resp.Group.UserPoolId, *resp.Group.GroupName))
 
-	return resourceAwsCognitoUserGroupRead(d, meta)
+	return resourceUserGroupRead(d, meta)
 }
 
-func resourceAwsCognitoUserGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	params := &cognitoidentityprovider.GetGroupInput{
@@ -115,7 +115,7 @@ func resourceAwsCognitoUserGroupRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsCognitoUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	params := &cognitoidentityprovider.UpdateGroupInput{
@@ -142,10 +142,10 @@ func resourceAwsCognitoUserGroupUpdate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error updating Cognito User Group: %s", err)
 	}
 
-	return resourceAwsCognitoUserGroupRead(d, meta)
+	return resourceUserGroupRead(d, meta)
 }
 
-func resourceAwsCognitoUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	params := &cognitoidentityprovider.DeleteGroupInput{

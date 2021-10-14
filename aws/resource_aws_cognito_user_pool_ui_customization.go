@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCognitoUserPoolUICustomization() *schema.Resource {
+func ResourceUserPoolUICustomization() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCognitoUserPoolUICustomizationPut,
-		Read:   resourceAwsCognitoUserPoolUICustomizationRead,
+		Read:   resourceUserPoolUICustomizationRead,
 		Update: resourceAwsCognitoUserPoolUICustomizationPut,
-		Delete: resourceAwsCognitoUserPoolUICustomizationDelete,
+		Delete: resourceUserPoolUICustomizationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -105,10 +105,10 @@ func resourceAwsCognitoUserPoolUICustomizationPut(d *schema.ResourceData, meta i
 
 	d.SetId(fmt.Sprintf("%s,%s", userPoolId, clientId))
 
-	return resourceAwsCognitoUserPoolUICustomizationRead(d, meta)
+	return resourceUserPoolUICustomizationRead(d, meta)
 }
 
-func resourceAwsCognitoUserPoolUICustomizationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolUICustomizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	userPoolId, clientId, err := parseCognitoUserPoolUICustomizationID(d.Id())
@@ -150,7 +150,7 @@ func resourceAwsCognitoUserPoolUICustomizationRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsCognitoUserPoolUICustomizationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPoolUICustomizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
 	userPoolId, clientId, err := parseCognitoUserPoolUICustomizationID(d.Id())

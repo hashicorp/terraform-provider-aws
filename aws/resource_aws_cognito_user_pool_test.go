@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -1454,7 +1455,7 @@ func TestAccAWSCognitoUserPool_disappears(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists(resourceName, nil),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCognitoUserPool(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
