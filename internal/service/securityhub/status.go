@@ -4,13 +4,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 const (
@@ -26,7 +21,7 @@ const (
 // statusAdminAccountAdmin fetches the AdminAccount and its AdminStatus
 func statusAdminAccountAdmin(conn *securityhub.SecurityHub, adminAccountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		adminAccount, err := tfsecurityhub.FindAdminAccount(conn, adminAccountID)
+		adminAccount, err := FindAdminAccount(conn, adminAccountID)
 
 		if err != nil {
 			return nil, adminStatusUnknown, err
@@ -42,7 +37,7 @@ func statusAdminAccountAdmin(conn *securityhub.SecurityHub, adminAccountID strin
 
 func statusStandardsSubscription(conn *securityhub.SecurityHub, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := tfsecurityhub.FindStandardsSubscriptionByARN(conn, arn)
+		output, err := FindStandardsSubscriptionByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			// Return a fake result and status to deal with the INCOMPLETE subscription status
