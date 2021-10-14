@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeCommitRepository() *schema.Resource {
+func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeCommitRepositoryCreate,
-		Update: resourceAwsCodeCommitRepositoryUpdate,
-		Read:   resourceAwsCodeCommitRepositoryRead,
-		Delete: resourceAwsCodeCommitRepositoryDelete,
+		Create: resourceRepositoryCreate,
+		Update: resourceRepositoryUpdate,
+		Read:   resourceRepositoryRead,
+		Delete: resourceRepositoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -68,7 +68,7 @@ func resourceAwsCodeCommitRepository() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -96,10 +96,10 @@ func resourceAwsCodeCommitRepositoryCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsCodeCommitRepositoryRead(d, meta)
+	return resourceRepositoryRead(d, meta)
 }
 
-func resourceAwsCodeCommitRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	if d.HasChange("default_branch") {
@@ -122,10 +122,10 @@ func resourceAwsCodeCommitRepositoryUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsCodeCommitRepositoryRead(d, meta)
+	return resourceRepositoryRead(d, meta)
 }
 
-func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -178,7 +178,7 @@ func resourceAwsCodeCommitRepositoryRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsCodeCommitRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	log.Printf("[DEBUG] CodeCommit Delete Repository: %s", d.Id())
