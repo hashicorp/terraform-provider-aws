@@ -29,10 +29,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(autoscaling.EndpointsID, testAccErrorCheckSkipAutoScaling)
 
-	resource.AddTestSweepers("aws_autoscaling_group", &resource.Sweeper{
-		Name: "aws_autoscaling_group",
-		F:    sweepGroups,
-	})
+
 }
 
 func testAccErrorCheckSkipAutoScaling(t *testing.T) resource.ErrorCheckFunc {
@@ -41,57 +38,7 @@ func testAccErrorCheckSkipAutoScaling(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func sweepGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AutoScalingConn
 
-	resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Auto Scaling Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Auto Scaling Groups in Sweeper: %s", err)
-	}
-
-	if len(resp.AutoScalingGroups) == 0 {
-		log.Print("[DEBUG] No Auto Scaling Groups to sweep")
-		return nil
-	}
-
-	for _, asg := range resp.AutoScalingGroups {
-		deleteopts := autoscaling.DeleteAutoScalingGroupInput{
-			AutoScalingGroupName: asg.AutoScalingGroupName,
-			ForceDelete:          aws.Bool(true),
-		}
-
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-			if _, err := conn.DeleteAutoScalingGroup(&deleteopts); err != nil {
-				if awserr, ok := err.(awserr.Error); ok {
-					switch awserr.Code() {
-					case "InvalidGroup.NotFound":
-						return nil
-					case "ResourceInUse", "ScalingActivityInProgress":
-						return resource.RetryableError(awserr)
-					}
-				}
-
-				// Didn't recognize the error, so shouldn't retry.
-				return resource.NonRetryableError(err)
-			}
-			// Successful delete
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 func TestAccAutoScalingGroup_basic(t *testing.T) {
 	var group autoscaling.Group

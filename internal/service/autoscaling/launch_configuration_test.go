@@ -23,53 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_launch_configuration", &resource.Sweeper{
-		Name:         "aws_launch_configuration",
-		Dependencies: []string{"aws_autoscaling_group"},
-		F:            sweepLaunchConfigurations,
-	})
-}
 
-func sweepLaunchConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AutoScalingConn
 
-	resp, err := conn.DescribeLaunchConfigurations(&autoscaling.DescribeLaunchConfigurationsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping AutoScaling Launch Configuration sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving launch configuration: %s", err)
-	}
 
-	if len(resp.LaunchConfigurations) == 0 {
-		log.Print("[DEBUG] No aws launch configurations to sweep")
-		return nil
-	}
-
-	for _, lc := range resp.LaunchConfigurations {
-		name := *lc.LaunchConfigurationName
-
-		log.Printf("[INFO] Deleting Launch Configuration: %s", name)
-		_, err := conn.DeleteLaunchConfiguration(
-			&autoscaling.DeleteLaunchConfigurationInput{
-				LaunchConfigurationName: aws.String(name),
-			})
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
-				return nil
-			}
-			return err
-		}
-	}
-
-	return nil
-}
 
 func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
