@@ -2,9 +2,7 @@ package elasticache_test
 
 import (
 	"fmt"
-	"log"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccElastiCacheParameterGroup_basic(t *testing.T) {

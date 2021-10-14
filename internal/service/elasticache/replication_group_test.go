@@ -2,7 +2,6 @@ package elasticache_test
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	multierror "github.com/hashicorp/go-multierror"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
