@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -24,13 +25,13 @@ func init() {
 }
 
 func testSweepEcrPublicRepositories(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).ECRPublicConn
 	input := &ecrpublic.DescribeRepositoriesInput{}
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeRepositoriesPages(input, func(page *ecrpublic.DescribeRepositoriesOutput, lastPage bool) bool {
 		if page == nil {
@@ -44,13 +45,13 @@ func testSweepEcrPublicRepositories(region string) error {
 			d.Set("registry_id", repository.RegistryId)
 			d.Set("force_destroy", true)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ECR Public Repository sweep for %s: %s", region, err)
 		return nil
 	}
@@ -59,7 +60,7 @@ func testSweepEcrPublicRepositories(region string) error {
 		return fmt.Errorf("error listing ECR Public Repositories (%s): %w", region, err)
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ECR Public Repositories (%s): %w", region, err)
