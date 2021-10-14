@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSMskKafkaVersionDataSource_basic(t *testing.T) {
+func TestAccKafkaKafkaVersionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_msk_kafka_version.test"
 	version := "2.4.1.1"
 
@@ -31,7 +31,7 @@ func TestAccAWSMskKafkaVersionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskKafkaVersionDataSource_preferred(t *testing.T) {
+func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_msk_kafka_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{

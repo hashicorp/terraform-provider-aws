@@ -79,7 +79,7 @@ func sweepConfigurations(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSMskConfiguration_basic(t *testing.T) {
+func TestAccKafkaConfiguration_basic(t *testing.T) {
 	var configuration1 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
@@ -111,7 +111,7 @@ func TestAccAWSMskConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskConfiguration_disappears(t *testing.T) {
+func TestAccKafkaConfiguration_disappears(t *testing.T) {
 	var configuration1 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
@@ -134,7 +134,7 @@ func TestAccAWSMskConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskConfiguration_Description(t *testing.T) {
+func TestAccKafkaConfiguration_description(t *testing.T) {
 	var configuration1, configuration2 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
@@ -169,7 +169,7 @@ func TestAccAWSMskConfiguration_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskConfiguration_KafkaVersions(t *testing.T) {
+func TestAccKafkaConfiguration_kafkaVersions(t *testing.T) {
 	var configuration1 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"
@@ -198,7 +198,7 @@ func TestAccAWSMskConfiguration_KafkaVersions(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskConfiguration_ServerProperties(t *testing.T) {
+func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 	var configuration1, configuration2 kafka.DescribeConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_configuration.test"

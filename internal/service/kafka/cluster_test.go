@@ -91,7 +91,7 @@ var (
 	mskClusterZookeeperConnectStringRegexp = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortZookeeper))
 )
 
-func TestAccAWSMskCluster_basic(t *testing.T) {
+func TestAccKafkaCluster_basic(t *testing.T) {
 	var cluster kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -150,7 +150,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_BrokerNodeGroupInfo_EbsVolumeSize(t *testing.T) {
+func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -191,7 +191,7 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_EbsVolumeSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_BrokerNodeGroupInfo_InstanceType(t *testing.T) {
+func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -233,7 +233,7 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_InstanceType(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
+func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -291,7 +291,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
+func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -349,7 +349,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *testing.T) {
+func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *testing.T) {
 	var cluster1 kafka.ClusterInfo
 	var ca acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -401,7 +401,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 	})
 }
 
-func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
+func TestAccKafkaCluster_Info_revision(t *testing.T) {
 
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -446,7 +446,7 @@ func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_EncryptionInfo_EncryptionAtRestKmsKeyArn(t *testing.T) {
+func TestAccKafkaCluster_EncryptionInfo_encryptionAtRestKMSKeyARN(t *testing.T) {
 	var cluster kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -476,7 +476,7 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionAtRestKmsKeyArn(t *testing.T)
 	})
 }
 
-func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_ClientBroker(t *testing.T) {
+func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testing.T) {
 	var cluster1 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -512,7 +512,7 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_ClientBroker(t *tes
 	})
 }
 
-func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_InCluster(t *testing.T) {
+func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.T) {
 	var cluster1 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -544,7 +544,7 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_InCluster(t *testin
 	})
 }
 
-func TestAccAWSMskCluster_EnhancedMonitoring(t *testing.T) {
+func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -582,7 +582,7 @@ func TestAccAWSMskCluster_EnhancedMonitoring(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
+func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -638,7 +638,7 @@ func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_OpenMonitoring(t *testing.T) {
+func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -686,7 +686,7 @@ func TestAccAWSMskCluster_OpenMonitoring(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_LoggingInfo(t *testing.T) {
+func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -738,7 +738,7 @@ func TestAccAWSMskCluster_LoggingInfo(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_KafkaVersionUpgrade(t *testing.T) {
+func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -776,7 +776,7 @@ func TestAccAWSMskCluster_KafkaVersionUpgrade(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_KafkaVersionDowngrade(t *testing.T) {
+func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
@@ -824,7 +824,7 @@ func TestAccAWSMskCluster_KafkaVersionDowngrade(t *testing.T) {
 	})
 }
 
-func TestAccAWSMskCluster_KafkaVersionUpgradeWithConfigurationInfo(t *testing.T) {
+func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	configurationResourceName1 := "aws_msk_configuration.config1"
@@ -870,7 +870,7 @@ func TestAccAWSMskCluster_KafkaVersionUpgradeWithConfigurationInfo(t *testing.T)
 	})
 }
 
-func TestAccAWSMskCluster_Tags(t *testing.T) {
+func TestAccKafkaCluster_tags(t *testing.T) {
 	var cluster kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
