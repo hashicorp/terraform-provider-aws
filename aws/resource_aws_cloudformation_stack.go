@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceStack() *schema.Resource {
@@ -44,9 +45,9 @@ func ResourceStack() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateStringIsJsonOrYaml,
+				ValidateFunc: verify.ValidStringIsJSONOrYAML,
 				StateFunc: func(v interface{}) string {
-					template, _ := normalizeJsonOrYamlString(v)
+					template, _ := verify.NormalizeJSONOrYAMLString(v)
 					return template
 				},
 			},
@@ -133,7 +134,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		ClientRequestToken: aws.String(requestToken),
 	}
 	if v, ok := d.GetOk("template_body"); ok {
-		template, err := normalizeJsonOrYamlString(v)
+		template, err := verify.NormalizeJSONOrYAMLString(v)
 		if err != nil {
 			return fmt.Errorf("template body contains an invalid JSON or YAML: %s", err)
 		}
@@ -244,7 +245,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	template, err := normalizeJsonOrYamlString(*out.TemplateBody)
+	template, err := verify.NormalizeJSONOrYAMLString(*out.TemplateBody)
 	if err != nil {
 		return fmt.Errorf("template body contains an invalid JSON or YAML: %s", err)
 	}
@@ -325,7 +326,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.TemplateURL = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("template_body"); ok && input.TemplateURL == nil {
-		template, err := normalizeJsonOrYamlString(v)
+		template, err := verify.NormalizeJSONOrYAMLString(v)
 		if err != nil {
 			return fmt.Errorf("template body contains an invalid JSON or YAML: %s", err)
 		}

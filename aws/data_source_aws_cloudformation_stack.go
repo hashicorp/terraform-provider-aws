@@ -10,6 +10,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceStack() *schema.Resource {
@@ -115,7 +116,7 @@ func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	template, err := normalizeJsonOrYamlString(*tOut.TemplateBody)
+	template, err := verify.NormalizeJSONOrYAMLString(*tOut.TemplateBody)
 	if err != nil {
 		return fmt.Errorf("template body contains an invalid JSON or YAML: %w", err)
 	}

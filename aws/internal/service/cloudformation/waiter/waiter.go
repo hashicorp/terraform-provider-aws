@@ -13,6 +13,7 @@ import (
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
