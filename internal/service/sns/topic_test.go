@@ -25,75 +25,10 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkipSNS)
 
-	resource.AddTestSweepers("aws_sns_topic", &resource.Sweeper{
-		Name: "aws_sns_topic",
-		F:    sweepTopics,
-		Dependencies: []string{
-			"aws_autoscaling_group",
-			"aws_backup_vault_notifications",
-			"aws_budgets_budget",
-			"aws_config_delivery_channel",
-			"aws_dax_cluster",
-			"aws_db_event_subscription",
-			"aws_elasticache_cluster",
-			"aws_elasticache_replication_group",
-			"aws_glacier_vault",
-			"aws_iot_topic_rule",
-			"aws_neptune_event_subscription",
-			"aws_redshift_event_subscription",
-			"aws_s3_bucket",
-			"aws_ses_configuration_set",
-			"aws_ses_domain_identity",
-			"aws_ses_email_identity",
-			"aws_ses_receipt_rule_set",
-			"aws_sns_platform_application",
-		},
-	})
+
 }
 
-func sweepTopics(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SNSConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListTopicsPages(&sns.ListTopicsInput{}, func(page *sns.ListTopicsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, topic := range page.Topics {
-			arn := aws.StringValue(topic.TopicArn)
-
-			log.Printf("[INFO] Deleting SNS Topic: %s", arn)
-			_, err := conn.DeleteTopic(&sns.DeleteTopicInput{
-				TopicArn: aws.String(arn),
-			})
-			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SNS Topic (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SNS Topics sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SNS Topics: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccErrorCheckSkipSNS(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

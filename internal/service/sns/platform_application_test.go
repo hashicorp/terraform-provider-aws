@@ -22,57 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sns_platform_application", &resource.Sweeper{
-		Name: "aws_sns_platform_application",
-		F:    sweepPlatformApplications,
-	})
-}
 
-func sweepPlatformApplications(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SNSConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListPlatformApplicationsPages(&sns.ListPlatformApplicationsInput{}, func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, platformApplication := range page.PlatformApplications {
-			arn := aws.StringValue(platformApplication.PlatformApplicationArn)
-
-			log.Printf("[INFO] Deleting SNS Platform Application: %s", arn)
-			_, err := conn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
-				PlatformApplicationArn: aws.String(arn),
-			})
-			if tfawserr.ErrMessageContains(err, sns.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SNS Platform Application (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SNS Platform Applications sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SNS Platform Applications: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 /**
  Before running this test, at least one of these ENV variables combinations must be set:
