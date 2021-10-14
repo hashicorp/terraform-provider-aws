@@ -71,14 +71,14 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,21 +102,21 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 func TestAccAWSRoute53QueryLog_disappears(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53QueryLog(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53QueryLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,21 +128,21 @@ func TestAccAWSRoute53QueryLog_disappears_hostedZone(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53Zone(), route53ZoneResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53Zone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

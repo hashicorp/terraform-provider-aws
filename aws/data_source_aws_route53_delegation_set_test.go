@@ -19,7 +19,7 @@ func TestAccAWSRoute53DelegationSetDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDataSourceAWSRoute53DelegationSetConfig_basic(zoneName),

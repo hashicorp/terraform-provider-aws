@@ -19,7 +19,7 @@ func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,14 +45,14 @@ func TestAccAWSRoute53ZoneAssociation_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ZoneAssociationConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53ZoneAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53ZoneAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,14 +69,14 @@ func TestAccAWSRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ZoneAssociationConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpc(), vpcResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsVpc(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,14 +93,14 @@ func TestAccAWSRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ZoneAssociationConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53Zone(), route53ZoneResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53Zone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -177,7 +177,7 @@ func TestAccAWSRoute53ZoneAssociation_CrossRegion(t *testing.T) {
 }
 
 func testAccCheckRoute53ZoneAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53conn
+	conn := acctest.Provider.Meta().(*AWSClient).r53conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_zone_association" {
 			continue
@@ -223,7 +223,7 @@ func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.Test
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := acctest.Provider.Meta().(*AWSClient).r53conn
 
 		hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
