@@ -21,11 +21,11 @@ func init() {
 	resource.AddTestSweepers("aws_elastic_beanstalk_application", &resource.Sweeper{
 		Name:         "aws_elastic_beanstalk_application",
 		Dependencies: []string{"aws_elastic_beanstalk_environment"},
-		F:            testSweepElasticBeanstalkApplications,
+		F:            sweepApplications,
 	})
 }
 
-func testSweepElasticBeanstalkApplications(region string) error {
+func sweepApplications(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

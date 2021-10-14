@@ -7,7 +7,7 @@ import (
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
 )
 
-func TestAWSElasticBeanstalkEnvironmentMigrateState(t *testing.T) {
+func TestEnvironmentMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string

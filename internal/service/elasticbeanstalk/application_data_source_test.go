@@ -23,10 +23,10 @@ func TestAccAwsElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		CheckDestroy: testAccCheckEKSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsElasticBeanstalkApplicationDataSourceConfig_Basic(rName),
+				Config: testAccApplicationDataSourceConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceResourceName, "name"),
@@ -41,7 +41,7 @@ func TestAccAwsElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsElasticBeanstalkApplicationDataSourceConfig_Basic(rName string) string {
+func testAccApplicationDataSourceConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -51,7 +51,7 @@ data "aws_elastic_beanstalk_application" "test" {
 `, testAccBeanstalkAppConfigWithMaxAge(rName))
 }
 
-func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
+func testAccCheckEKSClusterDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_cluster" {
 			continue

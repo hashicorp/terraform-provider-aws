@@ -21,9 +21,9 @@ func TestAccAWSDataSourceElasticBeanstalkHostedZone_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_currentRegion,
+				Config: testAccCheckAWSElasticBeanstalkHostedZoneDataSource_currentRegion,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsElasticBeanstalkHostedZone(dataSourceName, acctest.Region()),
+					testAccCheckHostedZone(dataSourceName, acctest.Region()),
 				),
 			},
 		},
@@ -39,26 +39,26 @@ func TestAccAWSDataSourceElasticBeanstalkHostedZone_Region(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion("ap-southeast-2"), //lintignore:AWSAT003 // passes in GovCloud
+				Config: testAccCheckHostedZoneDataSource_byRegion("ap-southeast-2"), //lintignore:AWSAT003 // passes in GovCloud
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsElasticBeanstalkHostedZone(dataSourceName, "ap-southeast-2"), //lintignore:AWSAT003 // passes in GovCloud
+					testAccCheckHostedZone(dataSourceName, "ap-southeast-2"), //lintignore:AWSAT003 // passes in GovCloud
 				),
 			},
 			{
-				Config: testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion("eu-west-1"), //lintignore:AWSAT003 // passes in GovCloud
+				Config: testAccCheckHostedZoneDataSource_byRegion("eu-west-1"), //lintignore:AWSAT003 // passes in GovCloud
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsElasticBeanstalkHostedZone(dataSourceName, "eu-west-1"), //lintignore:AWSAT003 // passes in GovCloud
+					testAccCheckHostedZone(dataSourceName, "eu-west-1"), //lintignore:AWSAT003 // passes in GovCloud
 				),
 			},
 			{
-				Config:      testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion("ss-pluto-1"),
+				Config:      testAccCheckHostedZoneDataSource_byRegion("ss-pluto-1"),
 				ExpectError: regexp.MustCompile("Unsupported region"),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsElasticBeanstalkHostedZone(resourceName string, region string) resource.TestCheckFunc {
+func testAccCheckHostedZone(resourceName string, region string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedValue, ok := tfelasticbeanstalk.HostedZoneIDs[region]
 
@@ -70,11 +70,11 @@ func testAccCheckAwsElasticBeanstalkHostedZone(resourceName string, region strin
 	}
 }
 
-const testAccCheckAwsElasticBeanstalkHostedZoneDataSource_currentRegion = `
+const testAccCheckAWSElasticBeanstalkHostedZoneDataSource_currentRegion = `
 data "aws_elastic_beanstalk_hosted_zone" "test" {}
 `
 
-func testAccCheckAwsElasticBeanstalkHostedZoneDataSource_byRegion(r string) string {
+func testAccCheckHostedZoneDataSource_byRegion(r string) string {
 	return fmt.Sprintf(`
 data "aws_elastic_beanstalk_hosted_zone" "test" {
   region = "%s"

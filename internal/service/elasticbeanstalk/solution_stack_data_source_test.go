@@ -18,9 +18,9 @@ func TestAccAWSElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsElasticBeanstalkSolutionStackDataSourceConfig,
+				Config: testAccCheckAWSElasticBeanstalkSolutionStackDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsElasticBeanstalkSolutionStackDataSourceID("data.aws_elastic_beanstalk_solution_stack.multi_docker"),
+					testAccCheckSolutionStackIDDataSource("data.aws_elastic_beanstalk_solution_stack.multi_docker"),
 					resource.TestMatchResourceAttr("data.aws_elastic_beanstalk_solution_stack.multi_docker", "name", regexp.MustCompile("^64bit Amazon Linux (.*) Multi-container Docker (.*)$")),
 				),
 			},
@@ -28,7 +28,7 @@ func TestAccAWSElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceID(n string) resource.TestCheckFunc {
+func testAccCheckSolutionStackIDDataSource(n string) resource.TestCheckFunc {
 	// Wait for solution stacks
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -43,7 +43,7 @@ func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceID(n string) resource
 	}
 }
 
-const testAccCheckAwsElasticBeanstalkSolutionStackDataSourceConfig = `
+const testAccCheckAWSElasticBeanstalkSolutionStackDataSourceConfig = `
 data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
   most_recent = true
   name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
