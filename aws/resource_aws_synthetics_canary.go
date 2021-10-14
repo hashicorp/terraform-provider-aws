@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -19,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/synthetics/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/mitchellh/go-homedir"
 )
 
 const awsMutexCanary = `aws_synthetics_canary`
@@ -613,8 +616,8 @@ func flattenAwsSyntheticsCanaryVpcConfig(canaryVpcOutput *synthetics.VpcConfigOu
 	}
 
 	m := map[string]interface{}{
-		"subnet_ids":         flattenStringSet(canaryVpcOutput.SubnetIds),
-		"security_group_ids": flattenStringSet(canaryVpcOutput.SecurityGroupIds),
+		"subnet_ids":         flex.FlattenStringSet(canaryVpcOutput.SubnetIds),
+		"security_group_ids": flex.FlattenStringSet(canaryVpcOutput.SecurityGroupIds),
 		"vpc_id":             aws.StringValue(canaryVpcOutput.VpcId),
 	}
 
@@ -629,8 +632,8 @@ func expandAwsSyntheticsCanaryVpcConfig(l []interface{}) *synthetics.VpcConfigIn
 	m := l[0].(map[string]interface{})
 
 	codeConfig := &synthetics.VpcConfigInput{
-		SubnetIds:        expandStringSet(m["subnet_ids"].(*schema.Set)),
-		SecurityGroupIds: expandStringSet(m["security_group_ids"].(*schema.Set)),
+		SubnetIds:        flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
 	}
 
 	return codeConfig
@@ -696,4 +699,17 @@ func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
 	}
 
 	return nil
+}
+
+// loadFileContent returns contents of a file in a given path
+func loadFileContent(v string) ([]byte, error) {
+	filename, err := homedir.Expand(v)
+	if err != nil {
+		return nil, err
+	}
+	fileContent, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return fileContent, nil
 }
