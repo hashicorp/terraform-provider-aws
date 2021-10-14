@@ -375,7 +375,7 @@ func expandETPermList(permissions *schema.Set) []*elastictranscoder.Permission {
 		m := p.(map[string]interface{})
 
 		perm := &elastictranscoder.Permission{
-			Access:      expandStringList(m["access"].([]interface{})),
+			Access:      flex.ExpandStringList(m["access"].([]interface{})),
 			Grantee:     aws.String(m["grantee"].(string)),
 			GranteeType: aws.String(m["grantee_type"].(string)),
 		}
@@ -390,7 +390,7 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 
 	for _, p := range perms {
 		result := map[string]interface{}{
-			"access":       flattenStringList(p.Access),
+			"access":       flex.FlattenStringList(p.Access),
 			"grantee":      aws.StringValue(p.Grantee),
 			"grantee_type": aws.StringValue(p.GranteeType),
 		}
