@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDocDBEngineVersionDataSource_basic(t *testing.T) {
@@ -16,8 +17,8 @@ func TestAccAWSDocDBEngineVersionDataSource_basic(t *testing.T) {
 	version := "3.6.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAWSDocDBEngineVersionPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccAWSDocDBEngineVersionPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -42,8 +43,8 @@ func TestAccAWSDocDBEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_docdb_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAWSDocDBEngineVersionPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccAWSDocDBEngineVersionPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -61,8 +62,8 @@ func TestAccAWSDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 	dataSourceName := "data.aws_docdb_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAWSDocDBEngineVersionPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccAWSDocDBEngineVersionPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -87,7 +88,7 @@ func testAccAWSDocDBEngineVersionPreCheck(t *testing.T) {
 
 	_, err := conn.DescribeDBEngineVersions(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

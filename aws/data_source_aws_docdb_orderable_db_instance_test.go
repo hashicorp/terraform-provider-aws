@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
@@ -17,8 +18,8 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_basic(t *testing.T) {
 	license := "na"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -43,8 +44,8 @@ func TestAccAWSDocdbOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r5.large"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
-		ErrorCheck:   testAccErrorCheck(t, docdb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDocdbOrderableDbInstance(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, docdb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -70,7 +71,7 @@ func testAccPreCheckAWSDocdbOrderableDbInstance(t *testing.T) {
 
 	_, err := conn.DescribeOrderableDBInstanceOptions(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
