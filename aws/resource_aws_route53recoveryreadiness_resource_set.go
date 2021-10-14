@@ -247,7 +247,7 @@ func resourceAwsRoute53RecoveryReadinessResourceSetDelete(d *schema.ResourceData
 	}
 	_, err := conn.DeleteResourceSet(input)
 	if err != nil {
-		if isAWSErr(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Route53 Recovery Readiness Resource Set: %s", err)
@@ -259,14 +259,14 @@ func resourceAwsRoute53RecoveryReadinessResourceSetDelete(d *schema.ResourceData
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.GetResourceSet(gcinput)
 		if err != nil {
-			if isAWSErr(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, route53recoveryreadiness.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
 		}
 		return resource.RetryableError(fmt.Errorf("Route 53 Recovery Readiness Resource Set (%s) still exists", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.GetResourceSet(gcinput)
 	}
 	if err != nil {
