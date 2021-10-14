@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -49,7 +50,7 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 		}
 
 		for _, sn := range page.DeliveryStreamNames {
-			r := resourceAwsKinesisFirehoseDeliveryStream()
+			r := ResourceDeliveryStream()
 			d := r.Data(nil)
 			d.SetId("???")
 			d.Set("name", sn)
@@ -142,7 +143,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_disappears(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKinesisFirehoseDeliveryStream(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDeliveryStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

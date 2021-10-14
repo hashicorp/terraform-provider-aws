@@ -788,13 +788,13 @@ func flattenFirehoseHttpEndpointConfiguration(description *firehose.HttpEndpoint
 	return []map[string]interface{}{m}
 }
 
-func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
+func ResourceDeliveryStream() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsKinesisFirehoseDeliveryStreamCreate,
-		Read:   resourceAwsKinesisFirehoseDeliveryStreamRead,
-		Update: resourceAwsKinesisFirehoseDeliveryStreamUpdate,
-		Delete: resourceAwsKinesisFirehoseDeliveryStreamDelete,
+		Create: resourceDeliveryStreamCreate,
+		Read:   resourceDeliveryStreamRead,
+		Update: resourceDeliveryStreamUpdate,
+		Delete: resourceDeliveryStreamDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -2458,7 +2458,7 @@ func extractCopyCommandConfiguration(redshift map[string]interface{}) *firehose.
 	return cmd
 }
 
-func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	validateError := validateAwsKinesisFirehoseSchema(d)
 
 	if validateError != nil {
@@ -2585,7 +2585,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceAwsKinesisFirehoseDeliveryStreamRead(d, meta)
+	return resourceDeliveryStreamRead(d, meta)
 }
 
 func validateAwsKinesisFirehoseSchema(d *schema.ResourceData) error {
@@ -2619,7 +2619,7 @@ func validateAwsKinesisFirehoseSchema(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	validateError := validateAwsKinesisFirehoseSchema(d)
 
 	if validateError != nil {
@@ -2752,10 +2752,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceAwsKinesisFirehoseDeliveryStreamRead(d, meta)
+	return resourceDeliveryStreamRead(d, meta)
 }
 
-func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FirehoseConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -2799,7 +2799,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsKinesisFirehoseDeliveryStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDeliveryStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FirehoseConn
 
 	sn := d.Get("name").(string)

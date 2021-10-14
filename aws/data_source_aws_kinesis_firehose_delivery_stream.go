@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
+func DataSourceDeliveryStream() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKinesisFirehoseDeliveryStreamRead,
+		Read: dataSourceDeliveryStreamRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -25,7 +25,7 @@ func dataSourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 	}
 }
 
-func dataSourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FirehoseConn
 
 	sn := d.Get("name").(string)
