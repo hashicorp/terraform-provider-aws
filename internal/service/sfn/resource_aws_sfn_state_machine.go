@@ -18,6 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
+	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
+	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
+	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
+	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
+	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 )
 
 func ResourceStateMachine() *schema.Resource {
@@ -147,7 +153,7 @@ func resourceStateMachineCreate(d *schema.ResourceData, meta interface{}) error 
 	var output *sfn.CreateStateMachineOutput
 
 	log.Printf("[DEBUG] Creating Step Function State Machine: %s", input)
-	err := resource.Retry(waiter.StateMachineCreatedTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfsfn.stateMachineCreatedTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateStateMachine(input)
@@ -189,7 +195,7 @@ func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.StateMachineByARN(conn, d.Id())
+	output, err := tfsfn.FindStateMachineByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Step Function State Machine (%s) not found, removing from state", d.Id())
@@ -284,8 +290,8 @@ func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		// Handle eventual consistency after update.
-		err = resource.Retry(waiter.StateMachineUpdatedTimeout, func() *resource.RetryError {
-			output, err := finder.StateMachineByARN(conn, d.Id())
+		err = resource.Retry(tfsfn.stateMachineUpdatedTimeout, func() *resource.RetryError {
+			output, err := tfsfn.FindStateMachineByARN(conn, d.Id())
 
 			if err != nil {
 				return resource.NonRetryableError(err)
@@ -328,7 +334,7 @@ func resourceStateMachineDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error deleting Step Function State Machine (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waiter.StateMachineDeleted(conn, d.Id()); err != nil {
+	if _, err := tfsfn.waitStateMachineDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Step Function State Machine (%s) deletion: %w", d.Id(), err)
 	}
 

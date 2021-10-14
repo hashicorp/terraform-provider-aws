@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	StateMachineCreatedTimeout = 5 * time.Minute
-	StateMachineDeletedTimeout = 5 * time.Minute
-	StateMachineUpdatedTimeout = 1 * time.Minute
+	stateMachineCreatedTimeout = 5 * time.Minute
+	stateMachineDeletedTimeout = 5 * time.Minute
+	stateMachineUpdatedTimeout = 1 * time.Minute
 )
 
-func StateMachineDeleted(conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeStateMachineOutput, error) {
+func waitStateMachineDeleted(conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeStateMachineOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sfn.StateMachineStatusActive, sfn.StateMachineStatusDeleting},
 		Target:  []string{},
-		Refresh: StateMachineStatus(conn, stateMachineArn),
-		Timeout: StateMachineDeletedTimeout,
+		Refresh: statusStateMachine(conn, stateMachineArn),
+		Timeout: stateMachineDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

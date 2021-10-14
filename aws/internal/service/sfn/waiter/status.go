@@ -7,11 +7,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sfn/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 )
 
-func StateMachineStatus(conn *sfn.SFN, stateMachineArn string) resource.StateRefreshFunc {
+func statusStateMachine(conn *sfn.SFN, stateMachineArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.StateMachineByARN(conn, stateMachineArn)
+		output, err := tfsfn.FindStateMachineByARN(conn, stateMachineArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

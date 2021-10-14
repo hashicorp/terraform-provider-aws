@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 )
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
@@ -319,7 +320,7 @@ func testAccCheckAWSSfnExists(n string, v *sfn.DescribeStateMachineOutput) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
 
-		output, err := finder.StateMachineByARN(conn, rs.Primary.ID)
+		output, err := tfsfn.FindStateMachineByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -339,7 +340,7 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.StateMachineByARN(conn, rs.Primary.ID)
+		_, err := tfsfn.FindStateMachineByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
