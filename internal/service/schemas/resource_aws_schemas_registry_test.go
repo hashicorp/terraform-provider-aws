@@ -21,6 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 )
 
 func init() {
@@ -259,7 +264,7 @@ func testAccCheckAWSSchemasRegistryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.RegistryByName(conn, rs.Primary.ID)
+		_, err := tfschemas.FindRegistryByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -288,7 +293,7 @@ func testAccCheckSchemasRegistryExists(n string, v *schemas.DescribeRegistryOutp
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
 
-		output, err := finder.RegistryByName(conn, rs.Primary.ID)
+		output, err := tfschemas.FindRegistryByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

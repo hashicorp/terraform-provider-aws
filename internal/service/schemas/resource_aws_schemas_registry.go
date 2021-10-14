@@ -16,6 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 )
 
 func ResourceRegistry() *schema.Resource {
@@ -93,7 +96,7 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.RegistryByName(conn, d.Id())
+	output, err := tfschemas.FindRegistryByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Registry (%s) not found, removing from state", d.Id())

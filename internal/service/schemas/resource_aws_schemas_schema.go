@@ -18,6 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 )
 
 func ResourceSchema() *schema.Resource {
@@ -140,7 +145,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
 	}
 
-	output, err := finder.SchemaByNameAndRegistryName(conn, name, registryName)
+	output, err := tfschemas.FindSchemaByNameAndRegistryName(conn, name, registryName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Schema (%s) not found, removing from state", d.Id())

@@ -15,6 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
+	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 )
 
 func ResourceDiscoverer() *schema.Resource {
@@ -89,7 +92,7 @@ func resourceDiscovererRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.DiscovererByID(conn, d.Id())
+	output, err := tfschemas.FindDiscovererByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Discoverer (%s) not found, removing from state", d.Id())
