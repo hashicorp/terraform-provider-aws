@@ -79,7 +79,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		ClusterSubnetGroupName: aws.String(d.Get("name").(string)),
 		Description:            aws.String(d.Get("description").(string)),
 		SubnetIds:              subnetIds,
-		Tags:                   tags.IgnoreAws().RedshiftTags(),
+		Tags:                   Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Create Redshift Subnet Group: %#v", createOpts)
@@ -119,7 +119,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", d.Id())
 	d.Set("description", describeResp.ClusterSubnetGroups[0].Description)
 	d.Set("subnet_ids", subnetIdsToSlice(describeResp.ClusterSubnetGroups[0].Subnets))
-	tags := tftags.RedshiftKeyValueTags(describeResp.ClusterSubnetGroups[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(describeResp.ClusterSubnetGroups[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -149,7 +149,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

@@ -100,7 +100,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		Severity:         aws.String(d.Get("severity").(string)),
 		EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
-		Tags:             tags.IgnoreAws().RedshiftTags(),
+		Tags:             Tags(tags.IgnoreAws()),
 	}
 
 	log.Println("[DEBUG] Create Redshift Event Subscription:", request)
@@ -167,7 +167,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	if err := d.Set("customer_aws_id", sub.CustomerAwsId); err != nil {
 		return err
 	}
-	tags := tftags.RedshiftKeyValueTags(sub.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(sub.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -225,7 +225,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

@@ -97,7 +97,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 		ParameterGroupName:   aws.String(d.Get("name").(string)),
 		ParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:          aws.String(d.Get("description").(string)),
-		Tags:                 tags.IgnoreAws().RedshiftTags(),
+		Tags:                 Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Create Redshift Parameter Group: %#v", createOpts)
@@ -157,7 +157,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", describeResp.ParameterGroups[0].ParameterGroupName)
 	d.Set("family", describeResp.ParameterGroups[0].ParameterGroupFamily)
 	d.Set("description", describeResp.ParameterGroups[0].Description)
-	tags := tftags.RedshiftKeyValueTags(describeResp.ParameterGroups[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(describeResp.ParameterGroups[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -217,7 +217,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
