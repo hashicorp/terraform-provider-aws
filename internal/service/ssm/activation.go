@@ -107,7 +107,7 @@ func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
 		activationInput.RegistrationLimit = aws.Int64(int64(d.Get("registration_limit").(int)))
 	}
 	if len(tags) > 0 {
-		activationInput.Tags = tags.IgnoreAws().SsmTags()
+		activationInput.Tags = Tags(tags.IgnoreAws())
 	}
 
 	// Retry to allow iam_role to be created and policy attachment to take place
@@ -183,7 +183,7 @@ func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iam_role", activation.IamRole)
 	d.Set("registration_limit", activation.RegistrationLimit)
 	d.Set("registration_count", activation.RegistrationsCount)
-	tags := tftags.SsmKeyValueTags(activation.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(activation.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

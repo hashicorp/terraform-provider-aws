@@ -104,7 +104,7 @@ func resourceMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().SsmTags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("end_date"); ok {
@@ -198,7 +198,7 @@ func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Maintenance Window (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -237,7 +237,7 @@ func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("start_date", resp.StartDate)
 	d.Set("description", resp.Description)
 
-	tags, err := tftags.SsmListTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow)
+	tags, err := ListTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSM Maintenance Window (%s): %s", d.Id(), err)
