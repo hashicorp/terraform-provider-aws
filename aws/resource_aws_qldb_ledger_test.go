@@ -71,7 +71,7 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +102,7 @@ func TestAccAWSQLDBLedger_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSQLDBLedger_update(t *testing.T) {
 }
 
 func testAccCheckAWSQLDBLedgerDestroy(s *terraform.State) error {
-	return testAccCheckAWSLedgerDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSLedgerDestroyWithProvider(s, acctest.Provider)
 }
 
 func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -181,7 +181,7 @@ func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) res
 			return fmt.Errorf("No QLDB Ledger ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).qldbconn
+		conn := acctest.Provider.Meta().(*AWSClient).qldbconn
 		resp, err := conn.DescribeLedger(&qldb.DescribeLedgerInput{
 			Name: aws.String(rs.Primary.ID),
 		})
@@ -221,13 +221,13 @@ resource "aws_qldb_ledger" "test" {
 
 func TestAccAWSQLDBLedger_Tags(t *testing.T) {
 	var cluster1, cluster2, cluster3 qldb.DescribeLedgerOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{

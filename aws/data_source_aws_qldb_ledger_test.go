@@ -16,7 +16,7 @@ func TestAccDataSourceAwsQLDBLedger_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, qldb.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsQLDBLedgerConfig(rName),
