@@ -8,11 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -64,12 +65,12 @@ func testSweepSagemakerStudioLifecycleConfigs(region string) error {
 
 func TestAccAWSSagemakerStudioLifecycleConfig_basic(t *testing.T) {
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerStudioLifecycleConfigDestroy,
 		Steps: []resource.TestStep{
@@ -78,7 +79,7 @@ func TestAccAWSSagemakerStudioLifecycleConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerStudioLifecycleConfigExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("studio-lifecycle-config/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("studio-lifecycle-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_app_type", "JupyterServer"),
 					resource.TestCheckResourceAttrSet(resourceName, "studio_lifecycle_config_content"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -95,12 +96,12 @@ func TestAccAWSSagemakerStudioLifecycleConfig_basic(t *testing.T) {
 
 func TestAccAWSSagemakerStudioLifecycleConfig_tags(t *testing.T) {
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerStudioLifecycleConfigDestroy,
 		Steps: []resource.TestStep{
@@ -140,12 +141,12 @@ func TestAccAWSSagemakerStudioLifecycleConfig_tags(t *testing.T) {
 
 func TestAccAWSSagemakerStudioLifecycleConfig_disappears(t *testing.T) {
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerStudioLifecycleConfigDestroy,
 		Steps: []resource.TestStep{
@@ -153,8 +154,8 @@ func TestAccAWSSagemakerStudioLifecycleConfig_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerStudioLifecycleConfigBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerStudioLifecycleConfigExists(resourceName, &config),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerStudioLifecycleConfig(), resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerStudioLifecycleConfig(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerStudioLifecycleConfig(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerStudioLifecycleConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

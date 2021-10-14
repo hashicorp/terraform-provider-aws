@@ -6,22 +6,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 	var rc configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	prefix := "Original"
 	sseAlgorithm := "AES256"
 	expectedName := fmt.Sprintf("%s-tf-acc-test-%d", prefix, rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -47,13 +48,13 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 	var rc configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	prefix := "original"
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -61,7 +62,7 @@ func testAccConfigRemediationConfiguration_disappears(t *testing.T) {
 				Config: testAccConfigRemediationConfigurationConfig(prefix, sseAlgorithm, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigRemediationConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsConfigRemediationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,15 +74,15 @@ func testAccConfigRemediationConfiguration_recreates(t *testing.T) {
 	var original configservice.RemediationConfiguration
 	var updated configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	originalName := "Original"
 	updatedName := "Updated"
 	sseAlgorithm := "AES256"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -108,15 +109,15 @@ func testAccConfigRemediationConfiguration_updates(t *testing.T) {
 	var original configservice.RemediationConfiguration
 	var updated configservice.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	name := "Original"
 	originalSseAlgorithm := "AES256"
 	updatedSseAlgorithm := "aws:kms"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
 		Steps: []resource.TestStep{

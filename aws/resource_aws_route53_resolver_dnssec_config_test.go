@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -78,11 +79,11 @@ func testSweepRoute53ResolverDnssecConfig(region string) error {
 
 func TestAccAWSRoute53ResolverDnssecConfig_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_dnssec_config.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverDnssecConfigDestroy,
 		Steps: []resource.TestStep{
@@ -90,7 +91,7 @@ func TestAccAWSRoute53ResolverDnssecConfig_basic(t *testing.T) {
 				Config: testAccRoute53ResolverDnssecConfigConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverDnssecConfigExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "route53resolver", regexp.MustCompile(`resolver-dnssec-config/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "route53resolver", regexp.MustCompile(`resolver-dnssec-config/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -108,11 +109,11 @@ func TestAccAWSRoute53ResolverDnssecConfig_basic(t *testing.T) {
 
 func TestAccAWSRoute53ResolverDnssecConfig_disappear(t *testing.T) {
 	resourceName := "aws_route53_resolver_dnssec_config.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, route53resolver.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverDnssecConfigDestroy,
 		Steps: []resource.TestStep{
@@ -120,7 +121,7 @@ func TestAccAWSRoute53ResolverDnssecConfig_disappear(t *testing.T) {
 				Config: testAccRoute53ResolverDnssecConfigConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverDnssecConfigExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53ResolverDnssecConfig(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53ResolverDnssecConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

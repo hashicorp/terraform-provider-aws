@@ -7,19 +7,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccConfigConfigRule_basic(t *testing.T) {
 	var cr configservice.ConfigRule
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -40,12 +41,12 @@ func testAccConfigConfigRule_basic(t *testing.T) {
 
 func testAccConfigConfigRule_ownerAws(t *testing.T) {
 	var cr configservice.ConfigRule
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -54,7 +55,7 @@ func testAccConfigConfigRule_ownerAws(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConfigRuleExists(resourceName, &cr),
 					testAccCheckConfigConfigRuleName(resourceName, rName, &cr),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile("config-rule/config-rule-[a-z0-9]+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile("config-rule/config-rule-[a-z0-9]+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexp.MustCompile("config-rule-[a-z0-9]+$")),
 					resource.TestCheckResourceAttr(resourceName, "description", "Terraform Acceptance tests"),
@@ -74,15 +75,15 @@ func testAccConfigConfigRule_ownerAws(t *testing.T) {
 
 func testAccConfigConfigRule_customlambda(t *testing.T) {
 	var cr configservice.ConfigRule
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_config_config_rule.test"
 
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 	path := "test-fixtures/lambdatest.zip"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -91,7 +92,7 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConfigRuleExists(resourceName, &cr),
 					testAccCheckConfigConfigRuleName(resourceName, expectedName, &cr),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile("config-rule/config-rule-[a-z0-9]+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile("config-rule/config-rule-[a-z0-9]+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexp.MustCompile("config-rule-[a-z0-9]+$")),
 					resource.TestCheckResourceAttr(resourceName, "description", "Terraform Acceptance tests"),
@@ -116,11 +117,11 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 
 func testAccConfigConfigRule_importAws(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -139,13 +140,13 @@ func testAccConfigConfigRule_importAws(t *testing.T) {
 
 func testAccConfigConfigRule_importLambda(t *testing.T) {
 	resourceName := "aws_config_config_rule.test"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	path := "test-fixtures/lambdatest.zip"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -164,12 +165,12 @@ func testAccConfigConfigRule_importLambda(t *testing.T) {
 
 func testAccConfigConfigRule_Scope_TagKey(t *testing.T) {
 	var configRule configservice.ConfigRule
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -195,12 +196,12 @@ func testAccConfigConfigRule_Scope_TagKey(t *testing.T) {
 
 func testAccConfigConfigRule_Scope_TagKey_Empty(t *testing.T) {
 	var configRule configservice.ConfigRule
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -216,12 +217,12 @@ func testAccConfigConfigRule_Scope_TagKey_Empty(t *testing.T) {
 
 func testAccConfigConfigRule_Scope_TagValue(t *testing.T) {
 	var configRule configservice.ConfigRule
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_config_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{
@@ -248,11 +249,11 @@ func testAccConfigConfigRule_Scope_TagValue(t *testing.T) {
 func testAccConfigConfigRule_tags(t *testing.T) {
 	var cr configservice.ConfigRule
 	resourceName := "aws_config_config_rule.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigRuleDestroy,
 		Steps: []resource.TestStep{

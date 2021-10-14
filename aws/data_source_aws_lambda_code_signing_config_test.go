@@ -5,14 +5,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -30,8 +31,8 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_PolicyConfigId(t *testing.T) {
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -51,8 +52,8 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_Description(t *testing.T) {
 	dataSourceName := "data.aws_lambda_code_signing_config.test"
 	resourceName := "aws_lambda_code_signing_config.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

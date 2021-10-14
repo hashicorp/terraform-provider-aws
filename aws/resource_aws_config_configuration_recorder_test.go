@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -64,15 +65,15 @@ func testSweepConfigConfigurationRecorder(region string) error {
 
 func testAccConfigConfigurationRecorder_basic(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 	expectedRoleName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
 
 	resourceName := "aws_config_configuration_recorder.foo"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func testAccConfigConfigurationRecorder_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConfigurationRecorderExists(resourceName, &cr),
 					testAccCheckConfigConfigurationRecorderName(resourceName, expectedName, &cr),
-					testAccCheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
 				),
 			},
@@ -91,15 +92,15 @@ func testAccConfigConfigurationRecorder_basic(t *testing.T) {
 
 func testAccConfigConfigurationRecorder_allParams(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 	expectedRoleName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
 
 	resourceName := "aws_config_configuration_recorder.foo"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func testAccConfigConfigurationRecorder_allParams(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConfigurationRecorderExists(resourceName, &cr),
 					testAccCheckConfigConfigurationRecorderName(resourceName, expectedName, &cr),
-					testAccCheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", "false"),
@@ -122,11 +123,11 @@ func testAccConfigConfigurationRecorder_allParams(t *testing.T) {
 
 func testAccConfigConfigurationRecorder_importBasic(t *testing.T) {
 	resourceName := "aws_config_configuration_recorder.foo"
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConfigurationRecorderDestroy,
 		Steps: []resource.TestStep{

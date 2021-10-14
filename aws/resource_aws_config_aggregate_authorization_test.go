@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -58,13 +59,13 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 }
 
 func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
-	rString := acctest.RandStringFromCharSet(12, "0123456789")
+	rString := sdkacctest.RandStringFromCharSet(12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.example"
 	dataSourceName := "data.aws_region.current"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
 		Steps: []resource.TestStep{
@@ -73,7 +74,7 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_id", rString),
 					resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "name"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, testAccGetRegion()))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, acctest.Region()))),
 				),
 			},
 			{
@@ -86,12 +87,12 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 }
 
 func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
-	rString := acctest.RandStringFromCharSet(12, "0123456789")
+	rString := sdkacctest.RandStringFromCharSet(12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
 		Steps: []resource.TestStep{
