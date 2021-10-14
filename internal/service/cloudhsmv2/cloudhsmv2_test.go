@@ -7,16 +7,16 @@ import (
 func TestAccAWSCloudHsmV2_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Cluster": {
-			"basic":      testAccAWSCloudHsmV2Cluster_basic,
-			"disappears": testAccAWSCloudHsmV2Cluster_disappears,
-			"tags":       testAccAWSCloudHsmV2Cluster_Tags,
+			"basic":      testAccCluster_basic,
+			"disappears": testAccCluster_disappears,
+			"tags":       testAccCluster_Tags,
 		},
 		"Hsm": {
-			"availabilityZone":   testAccAWSCloudHsmV2Hsm_AvailabilityZone,
-			"basic":              testAccAWSCloudHsmV2Hsm_basic,
-			"disappears":         testAccAWSCloudHsmV2Hsm_disappears,
-			"disappears_Cluster": testAccAWSCloudHsmV2Hsm_disappears_Cluster,
-			"ipAddress":          testAccAWSCloudHsmV2Hsm_IpAddress,
+			"availabilityZone":   testAccHSM_AvailabilityZone,
+			"basic":              testAccHSM_basic,
+			"disappears":         testAccHSM_disappears,
+			"disappears_Cluster": testAccHSM_disappears_Cluster,
+			"ipAddress":          testAccHSM_IPAddress,
 		},
 	}
 
