@@ -17,49 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_image", &resource.Sweeper{
-		Name: "aws_sagemaker_image",
-		F:    sweepImages,
-	})
-}
 
-func sweepImages(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
 
-	err = conn.ListImagesPages(&sagemaker.ListImagesInput{}, func(page *sagemaker.ListImagesOutput, lastPage bool) bool {
-		for _, Image := range page.Images {
-			name := aws.StringValue(Image.ImageName)
 
-			input := &sagemaker.DeleteImageInput{
-				ImageName: Image.ImageName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Image: %s", name)
-			if _, err := conn.DeleteImage(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Image (%s): %s", name, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker Image sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Images: %w", err)
-	}
-
-	return nil
-}
 
 func TestAccSageMakerImage_basic(t *testing.T) {
 	var image sagemaker.DescribeImageOutput

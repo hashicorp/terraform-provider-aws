@@ -18,55 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_endpoint_configuration", &resource.Sweeper{
-		Name: "aws_sagemaker_endpoint_configuration",
-		Dependencies: []string{
-			"aws_sagemaker_model",
-		},
-		F: sweepEndpointConfigurations,
-	})
-}
 
-func sweepEndpointConfigurations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
-	var sweeperErrs *multierror.Error
 
-	req := &sagemaker.ListEndpointConfigsInput{
-		NameContains: aws.String(acctest.ResourcePrefix),
-	}
-	err = conn.ListEndpointConfigsPages(req, func(page *sagemaker.ListEndpointConfigsOutput, lastPage bool) bool {
-		for _, endpointConfig := range page.EndpointConfigs {
 
-			r := tfsagemaker.ResourceEndpointConfiguration()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(endpointConfig.EndpointConfigName))
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker Endpoint Config sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Endpoint Configs: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

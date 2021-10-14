@@ -17,49 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_model_package_group", &resource.Sweeper{
-		Name: "aws_sagemaker_model_package_group",
-		F:    sweepModelPackageGroups,
-	})
-}
 
-func sweepModelPackageGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
 
-	err = conn.ListModelPackageGroupsPages(&sagemaker.ListModelPackageGroupsInput{}, func(page *sagemaker.ListModelPackageGroupsOutput, lastPage bool) bool {
-		for _, ModelPackageGroup := range page.ModelPackageGroupSummaryList {
-			name := aws.StringValue(ModelPackageGroup.ModelPackageGroupName)
 
-			input := &sagemaker.DeleteModelPackageGroupInput{
-				ModelPackageGroupName: ModelPackageGroup.ModelPackageGroupName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Model Package Group: %s", name)
-			if _, err := conn.DeleteModelPackageGroup(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Model Package Group (%s): %s", name, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker Model Package Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Model Package Groups: %w", err)
-	}
-
-	return nil
-}
 
 func TestAccSageMakerModelPackageGroup_basic(t *testing.T) {
 	var mpg sagemaker.DescribeModelPackageGroupOutput

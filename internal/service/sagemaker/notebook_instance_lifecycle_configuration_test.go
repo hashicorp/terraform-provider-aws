@@ -18,56 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_notebook_instance_lifecycle_configuration", &resource.Sweeper{
-		Name: "aws_sagemaker_notebook_instance_lifecycle_configuration",
-		F:    sweepNotebookInstanceLifecycleConfiguration,
-		Dependencies: []string{
-			"aws_sagemaker_notebook_instance",
-		},
-	})
-}
 
-func sweepNotebookInstanceLifecycleConfiguration(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
 
-	input := &sagemaker.ListNotebookInstanceLifecycleConfigsInput{}
-	err = conn.ListNotebookInstanceLifecycleConfigsPages(input, func(page *sagemaker.ListNotebookInstanceLifecycleConfigsOutput, lastPage bool) bool {
-		if len(page.NotebookInstanceLifecycleConfigs) == 0 {
-			log.Printf("[INFO] No SageMaker Notebook Instance Lifecycle Configuration to sweep")
-			return false
-		}
-		for _, lifecycleConfig := range page.NotebookInstanceLifecycleConfigs {
-			name := aws.StringValue(lifecycleConfig.NotebookInstanceLifecycleConfigName)
-			if !strings.HasPrefix(name, acctest.ResourcePrefix) {
-				log.Printf("[INFO] Skipping SageMaker Notebook Instance Lifecycle Configuration: %s", name)
-				continue
-			}
 
-			log.Printf("[INFO] Deleting SageMaker Notebook Instance Lifecycle Configuration: %s", name)
-			_, err := conn.DeleteNotebookInstanceLifecycleConfig(&sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
-				NotebookInstanceLifecycleConfigName: aws.String(name),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete SageMaker Notebook Instance Lifecycle Configuration %s: %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SageMaker Notebook Instance Lifecycle Configuration sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving SageMaker Notebook Instance Lifecycle Configuration: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccSageMakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput

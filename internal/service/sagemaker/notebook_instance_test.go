@@ -19,63 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_notebook_instance", &resource.Sweeper{
-		Name: "aws_sagemaker_notebook_instance",
-		F:    sweepNotebookInstances,
-	})
-}
 
-func sweepNotebookInstances(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
 
-	err = conn.ListNotebookInstancesPages(&sagemaker.ListNotebookInstancesInput{}, func(page *sagemaker.ListNotebookInstancesOutput, lastPage bool) bool {
-		for _, instance := range page.NotebookInstances {
-			name := aws.StringValue(instance.NotebookInstanceName)
-			status := aws.StringValue(instance.NotebookInstanceStatus)
 
-			input := &sagemaker.DeleteNotebookInstanceInput{
-				NotebookInstanceName: instance.NotebookInstanceName,
-			}
-
-			log.Printf("[INFO] Stopping SageMaker Notebook Instance: %s", name)
-			if status != sagemaker.NotebookInstanceStatusFailed && status != sagemaker.NotebookInstanceStatusStopped {
-				if err := tfsagemaker.StopNotebookInstance(conn, name); err != nil {
-					log.Printf("[ERROR] Error stopping SageMaker Notebook Instance (%s): %s", name, err)
-					continue
-				}
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Notebook Instance: %s", name)
-			if _, err := conn.DeleteNotebookInstance(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Notebook Instance (%s): %s", name, err)
-				continue
-			}
-
-			if _, err := tfsagemaker.WaitNotebookInstanceDeleted(conn, name); err != nil {
-				log.Printf("error waiting for sagemaker notebook instance (%s) to delete: %s", name, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker Notebook Instance sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Notebook Instances: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput

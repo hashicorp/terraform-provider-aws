@@ -16,50 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_endpoint", &resource.Sweeper{
-		Name: "aws_sagemaker_endpoint",
-		Dependencies: []string{
-			"aws_sagemaker_model",
-			"aws_sagemaker_endpoint_configuration",
-		},
-		F: sweepEndpoints,
-	})
-}
 
-func sweepEndpoints(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
 
-	req := &sagemaker.ListEndpointsInput{
-		NameContains: aws.String(acctest.ResourcePrefix),
-	}
-	resp, err := conn.ListEndpoints(req)
-	if err != nil {
-		return fmt.Errorf("error listing endpoints: %s", err)
-	}
 
-	if len(resp.Endpoints) == 0 {
-		log.Print("[DEBUG] No SageMaker Endpoint to sweep")
-		return nil
-	}
-
-	for _, endpoint := range resp.Endpoints {
-		_, err := conn.DeleteEndpoint(&sagemaker.DeleteEndpointInput{
-			EndpointName: endpoint.EndpointName,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"error deleting SageMaker Endpoint (%s): %s",
-				*endpoint.EndpointName, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccSageMakerEndpoint_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

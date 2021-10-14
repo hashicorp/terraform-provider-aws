@@ -17,49 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_code_repository", &resource.Sweeper{
-		Name: "aws_sagemaker_code_repository",
-		F:    sweepCodeRepositories,
-	})
-}
 
-func sweepCodeRepositories(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
 
-	err = conn.ListCodeRepositoriesPages(&sagemaker.ListCodeRepositoriesInput{}, func(page *sagemaker.ListCodeRepositoriesOutput, lastPage bool) bool {
-		for _, instance := range page.CodeRepositorySummaryList {
-			name := aws.StringValue(instance.CodeRepositoryName)
 
-			input := &sagemaker.DeleteCodeRepositoryInput{
-				CodeRepositoryName: instance.CodeRepositoryName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Code Repository: %s", name)
-			if _, err := conn.DeleteCodeRepository(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Code Repository (%s): %s", name, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker Code Repository sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Code Repositorys: %w", err)
-	}
-
-	return nil
-}
 
 func TestAccSageMakerCodeRepository_basic(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput

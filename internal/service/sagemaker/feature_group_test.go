@@ -18,49 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_feature_group", &resource.Sweeper{
-		Name: "aws_sagemaker_feature_group",
-		F:    sweepFeatureGroups,
-	})
-}
 
-func sweepFeatureGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
 
-	err = conn.ListFeatureGroupsPages(&sagemaker.ListFeatureGroupsInput{}, func(page *sagemaker.ListFeatureGroupsOutput, lastPage bool) bool {
-		for _, group := range page.FeatureGroupSummaries {
-			name := aws.StringValue(group.FeatureGroupName)
 
-			input := &sagemaker.DeleteFeatureGroupInput{
-				FeatureGroupName: group.FeatureGroupName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Feature Group: %s", name)
-			if _, err := conn.DeleteFeatureGroup(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Feature Group (%s): %s", name, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker Feature Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Feature Groups: %w", err)
-	}
-
-	return nil
-}
 
 func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){

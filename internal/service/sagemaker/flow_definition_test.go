@@ -18,49 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_flow_definition", &resource.Sweeper{
-		Name: "aws_sagemaker_flow_definition",
-		F:    sweepFlowDefinitions,
-	})
-}
 
-func sweepFlowDefinitions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListFlowDefinitionsPages(&sagemaker.ListFlowDefinitionsInput{}, func(page *sagemaker.ListFlowDefinitionsOutput, lastPage bool) bool {
-		for _, flowDefinition := range page.FlowDefinitionSummaries {
 
-			r := tfsagemaker.ResourceFlowDefinition()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(flowDefinition.FlowDefinitionName))
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker Flow Definition sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Flow Definitions: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccFlowDefinition_basic(t *testing.T) {
 	var flowDefinition sagemaker.DescribeFlowDefinitionOutput

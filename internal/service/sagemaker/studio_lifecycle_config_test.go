@@ -18,52 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_studio_lifecycle_config", &resource.Sweeper{
-		Name: "aws_sagemaker_studio_lifecycle_config",
-		F:    sweepStudioLifecyclesConfig,
-		Dependencies: []string{
-			"aws_sagemaker_domain",
-		},
-	})
-}
 
-func sweepStudioLifecyclesConfig(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListStudioLifecycleConfigsPages(&sagemaker.ListStudioLifecycleConfigsInput{}, func(page *sagemaker.ListStudioLifecycleConfigsOutput, lastPage bool) bool {
-		for _, config := range page.StudioLifecycleConfigs {
 
-			r := tfsagemaker.ResourceStudioLifecycleConfig()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(config.StudioLifecycleConfigName))
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker Studio Lifecycle Config sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Studio Lifecycle Configs: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 	var config sagemaker.DescribeStudioLifecycleConfigOutput

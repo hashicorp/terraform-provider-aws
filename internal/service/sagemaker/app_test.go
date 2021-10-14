@@ -19,58 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_app", &resource.Sweeper{
-		Name: "aws_sagemaker_app",
-		F:    sweepApps,
-	})
-}
 
-func sweepApps(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListAppsPages(&sagemaker.ListAppsInput{}, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
-		for _, app := range page.Apps {
 
-			if aws.StringValue(app.Status) == sagemaker.AppStatusDeleted {
-				continue
-			}
-
-			r := tfsagemaker.ResourceApp()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(app.AppName))
-			d.Set("app_name", app.AppName)
-			d.Set("app_type", app.AppType)
-			d.Set("domain_id", app.DomainId)
-			d.Set("user_profile_name", app.UserProfileName)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker domain sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Apps: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccApp_basic(t *testing.T) {
 	var app sagemaker.DescribeAppOutput

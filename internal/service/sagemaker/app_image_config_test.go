@@ -18,61 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_app_image_config", &resource.Sweeper{
-		Name: "aws_sagemaker_app_image_config",
-		F:    sweepAppImagesConfig,
-	})
-}
 
-func sweepAppImagesConfig(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).SageMakerConn
-	input := &sagemaker.ListAppImageConfigsInput{}
-	var sweeperErrs *multierror.Error
-
-	for {
-		output, err := conn.ListAppImageConfigs(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SageMaker App Image Config for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil()
-		}
-
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Thing: %w", err))
-			return sweeperErrs
-		}
-
-		for _, config := range output.AppImageConfigs {
-
-			name := aws.StringValue(config.AppImageConfigName)
-			r := tfsagemaker.ResourceAppImageConfig()
-			d := r.Data(nil)
-			d.SetId(name)
-			err = r.Delete(d, client)
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
 	var config sagemaker.DescribeAppImageConfigOutput

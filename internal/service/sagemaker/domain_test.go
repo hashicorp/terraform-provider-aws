@@ -20,55 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_domain", &resource.Sweeper{
-		Name: "aws_sagemaker_domain",
-		F:    sweepDomains,
-		Dependencies: []string{
-			"aws_efs_mount_target",
-			"aws_efs_file_system",
-			"aws_sagemaker_user_profile",
-		},
-	})
-}
 
-func sweepDomains(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListDomainsPages(&sagemaker.ListDomainsInput{}, func(page *sagemaker.ListDomainsOutput, lastPage bool) bool {
-		for _, domain := range page.Domains {
 
-			r := tfsagemaker.ResourceDomain()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(domain.DomainId))
-			d.Set("retention_policy.0.home_efs_file_system", "Delete")
-			err = r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker domain sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Domains: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccDomain_basic(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput

@@ -18,50 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_device_fleet", &resource.Sweeper{
-		Name: "aws_sagemaker_device_fleet",
-		F:    sweepDeviceFleets,
-	})
-}
 
-func sweepDeviceFleets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListDeviceFleetsPages(&sagemaker.ListDeviceFleetsInput{}, func(page *sagemaker.ListDeviceFleetsOutput, lastPage bool) bool {
-		for _, deviceFleet := range page.DeviceFleetSummaries {
-			name := aws.StringValue(deviceFleet.DeviceFleetName)
 
-			r := tfsagemaker.ResourceDeviceFleet()
-			d := r.Data(nil)
-			d.SetId(name)
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker Device Fleet sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Device Fleets: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput

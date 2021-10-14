@@ -19,52 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_workforce", &resource.Sweeper{
-		Name: "aws_sagemaker_workforce",
-		F:    sweepWorkforces,
-		Dependencies: []string{
-			"aws_sagemaker_workteam",
-		},
-	})
-}
 
-func sweepWorkforces(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListWorkforcesPages(&sagemaker.ListWorkforcesInput{}, func(page *sagemaker.ListWorkforcesOutput, lastPage bool) bool {
-		for _, workforce := range page.Workforces {
 
-			r := tfsagemaker.ResourceWorkforce()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(workforce.WorkforceName))
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker workforce sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Workforces: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccWorkforce_cognitoConfig(t *testing.T) {
 	var workforce sagemaker.Workforce

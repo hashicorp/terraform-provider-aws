@@ -18,49 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sagemaker_human_task_ui", &resource.Sweeper{
-		Name: "aws_sagemaker_human_task_ui",
-		F:    sweepHumanTaskUIs,
-	})
-}
 
-func sweepHumanTaskUIs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SageMakerConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListHumanTaskUisPages(&sagemaker.ListHumanTaskUisInput{}, func(page *sagemaker.ListHumanTaskUisOutput, lastPage bool) bool {
-		for _, humanTaskUi := range page.HumanTaskUiSummaries {
 
-			r := tfsagemaker.ResourceHumanTaskUI()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(humanTaskUi.HumanTaskUiName))
-			err := r.Delete(d, client)
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SageMaker humanTaskUi sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker HumanTaskUis: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSageMakerHumanTaskUI_basic(t *testing.T) {
 	var humanTaskUi sagemaker.DescribeHumanTaskUiOutput
