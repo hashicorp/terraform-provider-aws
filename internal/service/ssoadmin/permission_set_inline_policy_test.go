@@ -22,15 +22,15 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetInlinePolicyDestroy,
+		CheckDestroy: testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName),
+					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
 					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexp.MustCompile("s3:ListAllMyBuckets")),
@@ -51,21 +51,21 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetInlinePolicyDestroy,
+		CheckDestroy: testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName),
+					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 				),
 			},
 			{
 				Config: testAccSSOAdminPermissionSetInlinePolicyUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName),
+					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexp.MustCompile("s3:ListAllMyBuckets")),
 				),
 			},
@@ -83,15 +83,15 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetInlinePolicyDestroy,
+		CheckDestroy: testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName),
+					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSetInlinePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -106,15 +106,15 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_disappears_permissionSet(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetInlinePolicyDestroy,
+		CheckDestroy: testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSOAdminPermissionSetInlinePolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName),
+					testAccCheckPermissionSetInlinePolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -123,7 +123,7 @@ func TestAccAWSSSOAdminPermissionSetInlinePolicy_disappears_permissionSet(t *tes
 	})
 }
 
-func testAccCheckAWSSSOAdminPermissionSetInlinePolicyDestroy(s *terraform.State) error {
+func testAccCheckPermissionSetInlinePolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -166,7 +166,7 @@ func testAccCheckAWSSSOAdminPermissionSetInlinePolicyDestroy(s *terraform.State)
 	return nil
 }
 
-func testAccCheckAWSSSOAdminPermissionSetInlinePolicyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPermissionSetInlinePolicyExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

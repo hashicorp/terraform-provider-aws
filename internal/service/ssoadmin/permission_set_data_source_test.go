@@ -17,12 +17,12 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSSSOPermissionSetByArnConfig(rName),
+				Config: testAccSSOPermissionSetByARNDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -42,12 +42,12 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSSSOPermissionSetByNameConfig(rName),
+				Config: testAccSSOPermissionSetByNameDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
@@ -64,19 +64,19 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_name(t *testing.T) {
 func TestAccDataSourceAWSSSOAdminPermissionSet_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAWSSSOPermissionSetByNameConfig_nonExistent,
+				Config:      testAccSSOPermissionSetByNameDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAWSSSOPermissionSetBaseConfig(rName string) string {
+func testAccSSOPermissionSetBaseDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -95,9 +95,9 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccDataSourceAWSSSOPermissionSetByArnConfig(rName string) string {
+func testAccSSOPermissionSetByARNDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSourceAWSSSOPermissionSetBaseConfig(rName),
+		testAccSSOPermissionSetBaseDataSourceConfig(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
@@ -106,9 +106,9 @@ data "aws_ssoadmin_permission_set" "test" {
 `)
 }
 
-func testAccDataSourceAWSSSOPermissionSetByNameConfig(rName string) string {
+func testAccSSOPermissionSetByNameDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSourceAWSSSOPermissionSetBaseConfig(rName),
+		testAccSSOPermissionSetBaseDataSourceConfig(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
@@ -117,7 +117,7 @@ data "aws_ssoadmin_permission_set" "test" {
 `)
 }
 
-const testAccDataSourceAWSSSOPermissionSetByNameConfig_nonExistent = `
+const testAccSSOPermissionSetByNameDataSourceConfig_nonExistent = `
 data "aws_ssoadmin_instances" "test" {}
 
 data "aws_ssoadmin_permission_set" "test" {

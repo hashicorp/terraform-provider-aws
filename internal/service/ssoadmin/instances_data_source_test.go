@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccPreCheckAWSSSOAdminInstances(t *testing.T) {
+func testAccPreCheckInstances(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	var instances []*ssoadmin.InstanceMetadata
@@ -41,12 +41,12 @@ func TestAccDataSourceAWSSSOAdminInstances_basic(t *testing.T) {
 	dataSourceName := "data.aws_ssoadmin_instances.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSSSOAdminInstancesConfigBasic,
+				Config: testAccInstancesBasicDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "identity_store_ids.#", "1"),
@@ -58,4 +58,4 @@ func TestAccDataSourceAWSSSOAdminInstances_basic(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAWSSSOAdminInstancesConfigBasic = `data "aws_ssoadmin_instances" "test" {}`
+const testAccInstancesBasicDataSourceConfig = `data "aws_ssoadmin_instances" "test" {}`

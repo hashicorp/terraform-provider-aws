@@ -24,11 +24,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_ssoadmin_account_assignment", &resource.Sweeper{
 		Name: "aws_ssoadmin_account_assignment",
-		F:    testSweepSsoAdminAccountAssignments,
+		F:    sweepAccountAssignments,
 	})
 }
 
-func testSweepSsoAdminAccountAssignments(region string) error {
+func sweepAccountAssignments(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -143,17 +143,17 @@ func TestAccAWSSSOAdminAccountAssignment_Basic_Group(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSSOAdminInstances(t)
-			testAccPreCheckAWSIdentityStoreGroupName(t)
+			testAccPreCheckInstances(t)
+			testAccPreCheckIdentityStoreGroupName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSOAdminAccountAssignmentDestroy,
+		CheckDestroy: testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSOAdminAccountAssignmentBasicGroupConfig(groupName, rName),
+				Config: testAccAccountAssignmentBasicGroupConfig(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName),
+					testAccCheckAccountAssignmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "GROUP"),
 					resource.TestMatchResourceAttr(resourceName, "principal_id", regexp.MustCompile("^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")),
@@ -176,17 +176,17 @@ func TestAccAWSSSOAdminAccountAssignment_Basic_User(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSSOAdminInstances(t)
-			testAccPreCheckAWSIdentityStoreUserName(t)
+			testAccPreCheckInstances(t)
+			testAccPreCheckIdentityStoreUserName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSOAdminAccountAssignmentDestroy,
+		CheckDestroy: testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSOAdminAccountAssignmentBasicUserConfig(userName, rName),
+				Config: testAccAccountAssignmentBasicUserConfig(userName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName),
+					testAccCheckAccountAssignmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "USER"),
 					resource.TestMatchResourceAttr(resourceName, "principal_id", regexp.MustCompile("^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")),
@@ -209,17 +209,17 @@ func TestAccAWSSSOAdminAccountAssignment_Disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSSSOAdminInstances(t)
-			testAccPreCheckAWSIdentityStoreGroupName(t)
+			testAccPreCheckInstances(t)
+			testAccPreCheckIdentityStoreGroupName(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSSOAdminAccountAssignmentDestroy,
+		CheckDestroy: testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSOAdminAccountAssignmentBasicGroupConfig(groupName, rName),
+				Config: testAccAccountAssignmentBasicGroupConfig(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName),
+					testAccCheckAccountAssignmentExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceAccountAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -228,7 +228,7 @@ func TestAccAWSSSOAdminAccountAssignment_Disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSSOAdminAccountAssignmentDestroy(s *terraform.State) error {
+func testAccCheckAccountAssignmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -266,7 +266,7 @@ func testAccCheckAWSSSOAdminAccountAssignmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckAccountAssignmentExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -305,7 +305,7 @@ func testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName string) resourc
 	}
 }
 
-func testAccAWSSSOAdminAccountAssignmentBaseConfig(rName string) string {
+func testAccAccountAssignmentBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -318,9 +318,9 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccAWSSSOAdminAccountAssignmentBasicGroupConfig(groupName, rName string) string {
+func testAccAccountAssignmentBasicGroupConfig(groupName, rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSSSOAdminAccountAssignmentBaseConfig(rName),
+		testAccAccountAssignmentBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_identitystore_group" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
@@ -341,9 +341,9 @@ resource "aws_ssoadmin_account_assignment" "test" {
 `, groupName))
 }
 
-func testAccAWSSSOAdminAccountAssignmentBasicUserConfig(userName, rName string) string {
+func testAccAccountAssignmentBasicUserConfig(userName, rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSSSOAdminAccountAssignmentBaseConfig(rName),
+		testAccAccountAssignmentBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
@@ -364,14 +364,14 @@ resource "aws_ssoadmin_account_assignment" "test" {
 `, userName))
 }
 
-func testAccPreCheckAWSIdentityStoreGroupName(t *testing.T) {
+func testAccPreCheckIdentityStoreGroupName(t *testing.T) {
 	if os.Getenv("AWS_IDENTITY_STORE_GROUP_NAME") == "" {
 		t.Skip("AWS_IDENTITY_STORE_GROUP_NAME env var must be set for AWS Identity Store Group acceptance test. " +
 			"This is required until ListGroups API returns results without filtering by name.")
 	}
 }
 
-func testAccPreCheckAWSIdentityStoreUserName(t *testing.T) {
+func testAccPreCheckIdentityStoreUserName(t *testing.T) {
 	if os.Getenv("AWS_IDENTITY_STORE_USER_NAME") == "" {
 		t.Skip("AWS_IDENTITY_STORE_USER_NAME env var must be set for AWS Identity Store User acceptance test. " +
 			"This is required until ListUsers API returns results without filtering by name.")
