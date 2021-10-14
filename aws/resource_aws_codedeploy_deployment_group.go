@@ -18,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDeploymentGroup() *schema.Resource {
@@ -89,7 +90,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 			"deployment_style": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -177,7 +178,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 			"service_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 
 			"alarm_configuration": {
@@ -260,7 +261,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 													Required: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validateArn,
+														ValidateFunc: verify.ValidARN,
 													},
 												},
 											},
@@ -292,7 +293,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 													Required: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validateArn,
+														ValidateFunc: verify.ValidARN,
 													},
 												},
 											},
@@ -358,7 +359,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateTagFilters,
+										ValidateFunc: validTagFilters,
 									},
 
 									"value": {
@@ -387,7 +388,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateTagFilters,
+							ValidateFunc: validTagFilters,
 						},
 
 						"value": {
@@ -432,7 +433,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateTagFilters,
+							ValidateFunc: validTagFilters,
 						},
 
 						"value": {
@@ -467,7 +468,7 @@ func ResourceDeploymentGroup() *schema.Resource {
 						"trigger_target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
