@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSElasticSearchDomainSAMLOptions_basic(t *testing.T) {
@@ -159,7 +160,7 @@ func TestAccAWSElasticSearchDomainSAMLOptions_Disabled(t *testing.T) {
 }
 
 func testAccCheckESDomainSAMLOptionsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).esconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticSearchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticsearch_domain_saml_options" {
@@ -203,7 +204,7 @@ func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource stri
 			return fmt.Errorf("Not found: %s", samlOptionsResource)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).esconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticSearchConn
 		_, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
 			DomainName: aws.String(options.Primary.Attributes["domain_name"]),
 		})

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElasticSearchDomainSAMLOptions() *schema.Resource {
@@ -105,7 +106,7 @@ func elasticsearchDomainSamlOptionsDiffSupress(k, old, new string, d *schema.Res
 }
 
 func resourceAwsElasticSearchDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
+	conn := meta.(*conns.AWSClient).ElasticSearchConn
 
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -135,7 +136,7 @@ func resourceAwsElasticSearchDomainSAMLOptionsRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsElasticSearchDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
+	conn := meta.(*conns.AWSClient).ElasticSearchConn
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
@@ -186,7 +187,7 @@ func resourceAwsElasticSearchDomainSAMLOptionsPut(d *schema.ResourceData, meta i
 }
 
 func resourceAwsElasticSearchDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
+	conn := meta.(*conns.AWSClient).ElasticSearchConn
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
