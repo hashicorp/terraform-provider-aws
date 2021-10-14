@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAmplifyWebhook() *schema.Resource {
@@ -58,7 +59,7 @@ func resourceAwsAmplifyWebhook() *schema.Resource {
 }
 
 func resourceAwsAmplifyWebhookCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	input := &amplify.CreateWebhookInput{
 		AppId:      aws.String(d.Get("app_id").(string)),
@@ -82,7 +83,7 @@ func resourceAwsAmplifyWebhookCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsAmplifyWebhookRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	webhook, err := finder.WebhookByID(conn, d.Id())
 
@@ -120,7 +121,7 @@ func resourceAwsAmplifyWebhookRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsAmplifyWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	input := &amplify.UpdateWebhookInput{
 		WebhookId: aws.String(d.Id()),
@@ -145,7 +146,7 @@ func resourceAwsAmplifyWebhookUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsAmplifyWebhookDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	log.Printf("[DEBUG] Deleting Amplify Webhook: %s", d.Id())
 	_, err := conn.DeleteWebhook(&amplify.DeleteWebhookInput{

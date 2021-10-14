@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepAmplifyApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).amplifyconn
+	conn := client.(*conns.AWSClient).AmplifyConn
 	input := &amplify.ListAppsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -639,7 +640,7 @@ func testAccCheckAWSAmplifyAppExists(n string, v *amplify.App) resource.TestChec
 			return fmt.Errorf("No Amplify App ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).amplifyconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
 		output, err := finder.AppByID(conn, rs.Primary.ID)
 
@@ -654,7 +655,7 @@ func testAccCheckAWSAmplifyAppExists(n string, v *amplify.App) resource.TestChec
 }
 
 func testAccCheckAWSAmplifyAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).amplifyconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_amplify_app" {

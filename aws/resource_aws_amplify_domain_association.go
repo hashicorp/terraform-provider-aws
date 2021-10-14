@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAmplifyDomainAssociation() *schema.Resource {
@@ -86,7 +87,7 @@ func resourceAwsAmplifyDomainAssociation() *schema.Resource {
 }
 
 func resourceAwsAmplifyDomainAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID := d.Get("app_id").(string)
 	domainName := d.Get("domain_name").(string)
@@ -121,7 +122,7 @@ func resourceAwsAmplifyDomainAssociationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsAmplifyDomainAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, domainName, err := tfamplify.DomainAssociationParseResourceID(d.Id())
 
@@ -153,7 +154,7 @@ func resourceAwsAmplifyDomainAssociationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsAmplifyDomainAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, domainName, err := tfamplify.DomainAssociationParseResourceID(d.Id())
 
@@ -186,7 +187,7 @@ func resourceAwsAmplifyDomainAssociationUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsAmplifyDomainAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	appID, domainName, err := tfamplify.DomainAssociationParseResourceID(d.Id())
 

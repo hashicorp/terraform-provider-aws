@@ -16,6 +16,7 @@ import (
 	tfamplify "github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAmplifyApp() *schema.Resource {
@@ -316,8 +317,8 @@ func resourceAwsAmplifyApp() *schema.Resource {
 }
 
 func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AmplifyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -407,9 +408,9 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AmplifyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	app, err := finder.AppByID(conn, d.Id())
 
@@ -470,7 +471,7 @@ func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &amplify.UpdateAppInput{
@@ -577,7 +578,7 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsAmplifyAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).amplifyconn
+	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	log.Printf("[DEBUG] Deleting Amplify App (%s)", d.Id())
 	_, err := conn.DeleteApp(&amplify.DeleteAppInput{

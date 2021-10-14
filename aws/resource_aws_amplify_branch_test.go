@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSAmplifyBranch_basic(t *testing.T) {
@@ -297,7 +298,7 @@ func testAccCheckAWSAmplifyBranchExists(resourceName string, v *amplify.Branch) 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).amplifyconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
 		branch, err := finder.BranchByAppIDAndBranchName(conn, appID, branchName)
 
@@ -312,7 +313,7 @@ func testAccCheckAWSAmplifyBranchExists(resourceName string, v *amplify.Branch) 
 }
 
 func testAccCheckAWSAmplifyBranchDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).amplifyconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_amplify_branch" {
