@@ -181,7 +181,7 @@ func resourceProductCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().ServicecatalogTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	var output *servicecatalog.CreateProductOutput
@@ -269,7 +269,7 @@ func resourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("support_url", pvs.SupportUrl)
 	d.Set("type", pvs.Type)
 
-	tags := tftags.ServicecatalogKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

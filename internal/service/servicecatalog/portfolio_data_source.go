@@ -88,7 +88,7 @@ func dataSourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("provider_name", detail.ProviderName)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags := tftags.ServicecatalogKeyValueTags(output.Tags)
+	tags := KeyValueTags(output.Tags)
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
