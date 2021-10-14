@@ -20,63 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_db_parameter_group", &resource.Sweeper{
-		Name: "aws_db_parameter_group",
-		F:    sweepParameterGroups,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
-}
 
-func sweepParameterGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).RDSConn
 
-	err = conn.DescribeDBParameterGroupsPages(&rds.DescribeDBParameterGroupsInput{}, func(out *rds.DescribeDBParameterGroupsOutput, lastPage bool) bool {
-		for _, dbpg := range out.DBParameterGroups {
-			if dbpg == nil {
-				continue
-			}
 
-			input := &rds.DeleteDBParameterGroupInput{
-				DBParameterGroupName: dbpg.DBParameterGroupName,
-			}
-			name := aws.StringValue(dbpg.DBParameterGroupName)
-
-			if strings.HasPrefix(name, "default.") {
-				log.Printf("[INFO] Skipping DB Parameter Group: %s", name)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting DB Parameter Group: %s", name)
-
-			_, err := conn.DeleteDBParameterGroup(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DB Parameter Group %s: %s", name, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Parameter Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error retrieving DB Parameter Groups: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccRDSParameterGroup_basic(t *testing.T) {
 	var v rds.DBParameterGroup

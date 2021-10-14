@@ -20,60 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_db_option_group", &resource.Sweeper{
-		Name: "aws_db_option_group",
-		F:    sweepOptionGroups,
-	})
-}
 
-func sweepOptionGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).RDSConn
 
-	opts := rds.DescribeOptionGroupsInput{}
-	resp, err := conn.DescribeOptionGroups(&opts)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Option Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error describing DB Option Groups in Sweeper: %s", err)
-	}
-
-	for _, og := range resp.OptionGroupsList {
-		if strings.HasPrefix(aws.StringValue(og.OptionGroupName), "default") {
-			continue
-		}
-
-		log.Printf("[INFO] Deleting RDS Option Group: %s", aws.StringValue(og.OptionGroupName))
-
-		deleteOpts := &rds.DeleteOptionGroupInput{
-			OptionGroupName: og.OptionGroupName,
-		}
-
-		ret := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteOptionGroup(deleteOpts)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
-					log.Printf("[DEBUG] AWS believes the RDS Option Group is still in use, retrying")
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if ret != nil {
-			return fmt.Errorf("Error Deleting DB Option Group (%s) in Sweeper: %s", *og.OptionGroupName, ret)
-		}
-	}
-
-	return nil
-}
 
 func TestAccRDSOptionGroup_basic(t *testing.T) {
 	var v rds.OptionGroup

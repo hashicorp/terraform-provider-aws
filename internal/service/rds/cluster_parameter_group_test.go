@@ -20,71 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_rds_cluster_parameter_group", &resource.Sweeper{
-		Name: "aws_rds_cluster_parameter_group",
-		F:    sweepClusterParameterGroups,
-		Dependencies: []string{
-			"aws_rds_cluster",
-		},
-	})
-}
 
-func sweepClusterParameterGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).RDSConn
 
-	input := &rds.DescribeDBClusterParameterGroupsInput{}
 
-	for {
-		output, err := conn.DescribeDBClusterParameterGroups(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Cluster Parameter Group sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error retrieving DB Cluster Parameter Groups: %s", err)
-		}
-
-		for _, dbcpg := range output.DBClusterParameterGroups {
-			if dbcpg == nil {
-				continue
-			}
-
-			input := &rds.DeleteDBClusterParameterGroupInput{
-				DBClusterParameterGroupName: dbcpg.DBClusterParameterGroupName,
-			}
-			name := aws.StringValue(dbcpg.DBClusterParameterGroupName)
-
-			if strings.HasPrefix(name, "default.") {
-				log.Printf("[INFO] Skipping DB Cluster Parameter Group: %s", name)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting DB Cluster Parameter Group: %s", name)
-
-			_, err := conn.DeleteDBClusterParameterGroup(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DB Cluster Parameter Group %s: %s", name, err)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.Marker) == "" {
-			break
-		}
-
-		input.Marker = output.Marker
-	}
-
-	return nil
-}
 
 func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 	var v rds.DBClusterParameterGroup

@@ -20,42 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
-		Name: "aws_db_instance",
-		F:    sweepInstances,
-	})
-}
 
-func sweepInstances(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).RDSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
-		for _, dbi := range out.DBInstances {
-			r := tfrds.ResourceInstance()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(dbi.DBInstanceIdentifier))
-			d.Set("skip_final_snapshot", true)
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping RDS DB Instance sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving DB instances: %s", err)
-	}
-
-	return sweep.SweepOrchestrator(sweepResources)
-}
 
 func TestAccRDSInstance_basic(t *testing.T) {
 	var dbInstance1 rds.DBInstance

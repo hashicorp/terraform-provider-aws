@@ -19,74 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_db_snapshot", &resource.Sweeper{
-		Name: "aws_db_snapshot",
-		F:    sweepSnapshots,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
-}
 
-func sweepSnapshots(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeDBSnapshotsInput{}
-	var sweeperErrs error
-
-	err = conn.DescribeDBSnapshotsPages(input, func(out *rds.DescribeDBSnapshotsOutput, lastPage bool) bool {
-		if out == nil {
-			return !lastPage
-		}
-
-		for _, dbSnapshot := range out.DBSnapshots {
-			if dbSnapshot == nil {
-				continue
-			}
-
-			id := aws.StringValue(dbSnapshot.DBSnapshotIdentifier)
-			input := &rds.DeleteDBSnapshotInput{
-				DBSnapshotIdentifier: dbSnapshot.DBSnapshotIdentifier,
-			}
-
-			if strings.HasPrefix(id, "rds:") {
-				log.Printf("[INFO] Skipping RDS Automated DB Snapshot: %s", id)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting RDS DB Snapshot: %s", id)
-			_, err := conn.DeleteDBSnapshot(input)
-
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
-				continue
-			}
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting RDS DB Snapshot (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			}
-		}
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Snapshot sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error describing RDS DB Snapshots: %s", err)
-	}
-
-	return sweeperErrs
-}
 
 func TestAccRDSSnapshot_basic(t *testing.T) {
 	var v rds.DBSnapshot

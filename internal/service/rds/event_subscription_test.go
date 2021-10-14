@@ -18,55 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_db_event_subscription", &resource.Sweeper{
-		Name: "aws_db_event_subscription",
-		F:    sweepEventSubscriptions,
-	})
-}
 
-func sweepEventSubscriptions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeEventSubscriptionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.DescribeEventSubscriptionsPages(input, func(page *rds.DescribeEventSubscriptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := tfrds.ResourceEventSubscription()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS Event Subscription sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing RDS Event Subscriptions (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping RDS Event Subscriptions (%s): %w", region, err)
-	}
-
-	return nil
-}
 
 func TestAccRDSEventSubscription_basic(t *testing.T) {
 	var v rds.EventSubscription

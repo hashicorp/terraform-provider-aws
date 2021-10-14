@@ -18,55 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_db_proxy", &resource.Sweeper{
-		Name: "aws_db_proxy",
-		F:    sweepProxies,
-	})
-}
 
-func sweepProxies(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).RDSConn
 
-	err = conn.DescribeDBProxiesPages(&rds.DescribeDBProxiesInput{}, func(out *rds.DescribeDBProxiesOutput, lastPage bool) bool {
-		for _, dbpg := range out.DBProxies {
-			if dbpg == nil {
-				continue
-			}
 
-			input := &rds.DeleteDBProxyInput{
-				DBProxyName: dbpg.DBProxyName,
-			}
-			name := aws.StringValue(dbpg.DBProxyName)
-
-			log.Printf("[INFO] Deleting DB Proxy: %s", name)
-
-			_, err := conn.DeleteDBProxy(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DB Proxy %s: %s", name, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Proxy sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving DB Proxies: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccRDSProxy_basic(t *testing.T) {
 	var v rds.DBProxy

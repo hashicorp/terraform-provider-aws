@@ -17,55 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_db_subnet_group", &resource.Sweeper{
-		Name: "aws_db_subnet_group",
-		F:    sweepSubnetGroups,
-		Dependencies: []string{
-			"aws_db_instance",
-		},
-	})
-}
 
-func sweepSubnetGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeDBSubnetGroupsInput{}
-
-	err = conn.DescribeDBSubnetGroupsPages(input, func(out *rds.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
-		for _, dbSubnetGroup := range out.DBSubnetGroups {
-			name := aws.StringValue(dbSubnetGroup.DBSubnetGroupName)
-			input := &rds.DeleteDBSubnetGroupInput{
-				DBSubnetGroupName: dbSubnetGroup.DBSubnetGroupName,
-			}
-
-			log.Printf("[INFO] Deleting RDS DB Subnet Group: %s", name)
-
-			_, err := conn.DeleteDBSubnetGroup(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete RDS DB Subnet Group (%s): %s", name, err)
-			}
-		}
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Subnet Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error retrieving RDS DB Subnet Groups: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccRDSSubnetGroup_basic(t *testing.T) {
 	var v rds.DBSubnetGroup
