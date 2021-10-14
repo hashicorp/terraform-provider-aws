@@ -7,19 +7,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
 	var sourceCredentialsInfo codebuild.SourceCredentialsInfo
-	token := acctest.RandomWithPrefix("token")
+	token := sdkacctest.RandomWithPrefix("token")
 	resourceName := "aws_codebuild_source_credential.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildSourceCredentialDestroy,
 		Steps: []resource.TestStep{
@@ -27,7 +28,7 @@ func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
 				Config: testAccAWSCodeBuildSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github`)),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -36,7 +37,7 @@ func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
 				Config: testAccAWSCodeBuildSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github_enterprise`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github_enterprise`)),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB_ENTERPRISE"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -53,12 +54,12 @@ func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
 
 func TestAccAWSCodeBuildSourceCredential_BasicAuth(t *testing.T) {
 	var sourceCredentialsInfo codebuild.SourceCredentialsInfo
-	token := acctest.RandomWithPrefix("token")
+	token := sdkacctest.RandomWithPrefix("token")
 	resourceName := "aws_codebuild_source_credential.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildSourceCredentialDestroy,
 		Steps: []resource.TestStep{
@@ -66,7 +67,7 @@ func TestAccAWSCodeBuildSourceCredential_BasicAuth(t *testing.T) {
 				Config: testAccAWSCodeBuildSourceCredential_BasicAuth(token, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/bitbucket`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/bitbucket`)),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "user1"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "BITBUCKET"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "BASIC_AUTH"),
