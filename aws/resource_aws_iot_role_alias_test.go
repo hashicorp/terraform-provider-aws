@@ -78,7 +78,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIotRoleAliasDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -133,7 +133,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIotRoleAliasDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_role_alias" {
 			continue
@@ -161,7 +161,7 @@ func testAccCheckAWSIotRoleAliasExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 		role_arn := rs.Primary.Attributes["role_arn"]
 
 		roleAliasDescription, err := getIotRoleAliasDescription(conn, rs.Primary.ID)

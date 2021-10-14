@@ -15,13 +15,13 @@ import (
 
 func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
 	var conf iot.AuthorizerDescription
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -48,20 +48,20 @@ func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
 
 func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 	var conf iot.AuthorizerDescription
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTAuthorizerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIoTAuthorizer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIoTAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,13 +71,13 @@ func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 
 func TestAccAWSIoTAuthorizer_SigningDisabled(t *testing.T) {
 	var conf iot.AuthorizerDescription
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,13 +103,13 @@ func TestAccAWSIoTAuthorizer_SigningDisabled(t *testing.T) {
 
 func TestAccAWSIoTAuthorizer_Update(t *testing.T) {
 	var conf iot.AuthorizerDescription
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,7 +154,7 @@ func testAccCheckAWSIoTAuthorizerExists(n string, v *iot.AuthorizerDescription) 
 			return fmt.Errorf("No IoT Authorizer ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 		output, err := finder.AuthorizerByName(conn, rs.Primary.ID)
 
@@ -169,7 +169,7 @@ func testAccCheckAWSIoTAuthorizerExists(n string, v *iot.AuthorizerDescription) 
 }
 
 func testAccCheckAWSIoTAuthorizerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_authorizer" {

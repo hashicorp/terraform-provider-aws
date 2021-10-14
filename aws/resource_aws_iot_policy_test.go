@@ -73,13 +73,13 @@ func testSweepIotPolicies(region string) error {
 
 func TestAccAWSIoTPolicy_basic(t *testing.T) {
 	var v iot.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			{
@@ -103,20 +103,20 @@ func TestAccAWSIoTPolicy_basic(t *testing.T) {
 
 func TestAccAWSIoTPolicy_disappears(t *testing.T) {
 	var v iot.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIoTPolicyConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIotPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIotPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +125,7 @@ func TestAccAWSIoTPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSIoTPolicyDestroy_basic(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_policy" {
@@ -168,7 +168,7 @@ func testAccCheckAWSIoTPolicyExists(n string, v *iot.GetPolicyOutput) resource.T
 			return fmt.Errorf("No IoT Policy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 		resp, err := conn.GetPolicy(&iot.GetPolicyInput{
 			PolicyName: aws.String(rs.Primary.ID),

@@ -77,7 +77,7 @@ func TestAccAWSIotThing_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIotThingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -111,7 +111,7 @@ func TestAccAWSIotThing_full(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIotThingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -176,7 +176,7 @@ func testAccCheckIotThingExists(n string, thing *iot.DescribeThingOutput) resour
 			return fmt.Errorf("No IoT Thing ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := acctest.Provider.Meta().(*AWSClient).iotconn
 		params := &iot.DescribeThingInput{
 			ThingName: aws.String(rs.Primary.ID),
 		}
@@ -192,7 +192,7 @@ func testAccCheckIotThingExists(n string, thing *iot.DescribeThingOutput) resour
 }
 
 func testAccCheckAWSIotThingDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := acctest.Provider.Meta().(*AWSClient).iotconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing" {
