@@ -8,10 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 )
 
-// StackByName Retrieve a appstream stack by name
-func StackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
+// FindStackByName Retrieve a appstream stack by name
+func FindStackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
 	input := &appstream.DescribeStacksInput{
 		Names: []*string{aws.String(name)},
 	}
@@ -34,8 +40,8 @@ func StackByName(ctx context.Context, conn *appstream.AppStream, name string) (*
 	return stack, nil
 }
 
-// FleetByName Retrieve a appstream fleet by name
-func FleetByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
+// FindFleetByName Retrieve a appstream fleet by name
+func FindFleetByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
 	input := &appstream.DescribeFleetsInput{
 		Names: []*string{aws.String(name)},
 	}
@@ -58,15 +64,15 @@ func FleetByName(ctx context.Context, conn *appstream.AppStream, name string) (*
 	return fleet, nil
 }
 
-// ImageBuilderByName Retrieve a appstream ImageBuilder by name
-func ImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
+// FindImageBuilderByName Retrieve a appstream ImageBuilder by name
+func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	input := &appstream.DescribeImageBuildersInput{
 		Names: []*string{aws.String(name)},
 	}
 
 	var result *appstream.ImageBuilder
 
-	err := lister.DescribeImageBuildersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
+	err := tfappstream.DescribeImageBuildersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

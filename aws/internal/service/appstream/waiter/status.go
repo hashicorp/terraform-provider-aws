@@ -8,12 +8,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 )
 
-//StackState fetches the fleet and its state
-func StackState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
+//statusStackState fetches the fleet and its state
+func statusStackState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		stack, err := finder.StackByName(ctx, conn, name)
+		stack, err := tfappstream.FindStackByName(ctx, conn, name)
 		if err != nil {
 			return nil, "Unknown", err
 		}
@@ -26,10 +29,10 @@ func StackState(ctx context.Context, conn *appstream.AppStream, name string) res
 	}
 }
 
-//FleetState fetches the fleet and its state
-func FleetState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
+//statusFleetState fetches the fleet and its state
+func statusFleetState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		fleet, err := finder.FleetByName(ctx, conn, name)
+		fleet, err := tfappstream.FindFleetByName(ctx, conn, name)
 
 		if err != nil {
 			return nil, "Unknown", err
@@ -43,10 +46,10 @@ func FleetState(ctx context.Context, conn *appstream.AppStream, name string) res
 	}
 }
 
-//ImageBuilderState fetches the ImageBuilder and its state
-func ImageBuilderState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
+//statusImageBuilderState fetches the ImageBuilder and its state
+func statusImageBuilderState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		imageBuilder, err := finder.ImageBuilderByName(ctx, conn, name)
+		imageBuilder, err := tfappstream.FindImageBuilderByName(ctx, conn, name)
 
 		if err != nil {
 			return nil, "", err

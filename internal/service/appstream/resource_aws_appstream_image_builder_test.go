@@ -21,6 +21,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 )
 
 func init() {
@@ -46,7 +55,7 @@ func testSweepAppStreamImageBuilder(region string) error {
 
 	input := &appstream.DescribeImageBuildersInput{}
 
-	err = lister.DescribeImageBuildersPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
+	err = tfappstream.DescribeImageBuildersPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -244,7 +253,7 @@ func testAccCheckAwsAppStreamImageBuilderExists(resourceName string) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 
-		imageBuilder, err := finder.ImageBuilderByName(context.Background(), conn, rs.Primary.ID)
+		imageBuilder, err := tfappstream.FindImageBuilderByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -266,7 +275,7 @@ func testAccCheckAwsAppStreamImageBuilderDestroy(s *terraform.State) error {
 			continue
 		}
 
-		imageBuilder, err := finder.ImageBuilderByName(context.Background(), conn, rs.Primary.ID)
+		imageBuilder, err := tfappstream.FindImageBuilderByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 			continue

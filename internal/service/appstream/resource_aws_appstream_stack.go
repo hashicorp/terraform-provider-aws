@@ -20,6 +20,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 )
 
 var (
@@ -237,7 +249,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var err error
 	var output *appstream.CreateStackOutput
-	err = resource.RetryContext(ctx, waiter.StackOperationTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, tfappstream.stackOperationTimeout, func() *resource.RetryError {
 		output, err = conn.CreateStackWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
@@ -390,7 +402,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error deleting Appstream Stack (%s): %w", d.Id(), err))
 	}
 
-	if _, err = waiter.StackStateDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err = tfappstream.waitStackStateDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 			return nil
 		}

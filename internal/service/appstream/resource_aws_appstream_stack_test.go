@@ -20,6 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 )
 
 func init() {
@@ -42,7 +48,7 @@ func testSweepAppStreamStack(region string) error {
 
 	input := &appstream.DescribeStacksInput{}
 
-	err = lister.DescribeStacksPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
+	err = tfappstream.DescribeStacksPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

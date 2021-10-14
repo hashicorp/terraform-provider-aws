@@ -14,24 +14,24 @@ import (
 )
 
 const (
-	// StackOperationTimeout Maximum amount of time to wait for Stack operation eventual consistency
-	StackOperationTimeout = 4 * time.Minute
+	// stackOperationTimeout Maximum amount of time to wait for Stack operation eventual consistency
+	stackOperationTimeout = 4 * time.Minute
 
-	// FleetStateTimeout Maximum amount of time to wait for the FleetState to be RUNNING or STOPPED
-	FleetStateTimeout = 180 * time.Minute
-	// FleetOperationTimeout Maximum amount of time to wait for Fleet operation eventual consistency
-	FleetOperationTimeout = 15 * time.Minute
-	// ImageBuilderStateTimeout Maximum amount of time to wait for the ImageBuilderState to be RUNNING
+	// fleetStateTimeout Maximum amount of time to wait for the statusFleetState to be RUNNING or STOPPED
+	fleetStateTimeout = 180 * time.Minute
+	// fleetOperationTimeout Maximum amount of time to wait for Fleet operation eventual consistency
+	fleetOperationTimeout = 15 * time.Minute
+	// imageBuilderStateTimeout Maximum amount of time to wait for the statusImageBuilderState to be RUNNING
 	// or for the ImageBuilder to be deleted
-	ImageBuilderStateTimeout = 60 * time.Minute
+	imageBuilderStateTimeout = 60 * time.Minute
 )
 
-// StackStateDeleted waits for a deleted stack
-func StackStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
+// waitStackStateDeleted waits for a deleted stack
+func waitStackStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:  []string{"NotFound", "Unknown"},
-		Refresh: StackState(ctx, conn, name),
-		Timeout: StackOperationTimeout,
+		Refresh: statusStackState(ctx, conn, name),
+		Timeout: stackOperationTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -53,13 +53,13 @@ func StackStateDeleted(ctx context.Context, conn *appstream.AppStream, name stri
 	return nil, err
 }
 
-// FleetStateRunning waits for a fleet running
-func FleetStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
+// waitFleetStateRunning waits for a fleet running
+func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.FleetStateStarting},
 		Target:  []string{appstream.FleetStateRunning},
-		Refresh: FleetState(ctx, conn, name),
-		Timeout: FleetStateTimeout,
+		Refresh: statusFleetState(ctx, conn, name),
+		Timeout: fleetStateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -81,13 +81,13 @@ func FleetStateRunning(ctx context.Context, conn *appstream.AppStream, name stri
 	return nil, err
 }
 
-// FleetStateStopped waits for a fleet stopped
-func FleetStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
+// waitFleetStateStopped waits for a fleet stopped
+func waitFleetStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.FleetStateStopping},
 		Target:  []string{appstream.FleetStateStopped},
-		Refresh: FleetState(ctx, conn, name),
-		Timeout: FleetStateTimeout,
+		Refresh: statusFleetState(ctx, conn, name),
+		Timeout: fleetStateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -109,13 +109,13 @@ func FleetStateStopped(ctx context.Context, conn *appstream.AppStream, name stri
 	return nil, err
 }
 
-// ImageBuilderStateRunning waits for a ImageBuilder running
-func ImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
+// waitImageBuilderStateRunning waits for a ImageBuilder running
+func waitImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.ImageBuilderStatePending},
 		Target:  []string{appstream.ImageBuilderStateRunning},
-		Refresh: ImageBuilderState(ctx, conn, name),
-		Timeout: ImageBuilderStateTimeout,
+		Refresh: statusImageBuilderState(ctx, conn, name),
+		Timeout: imageBuilderStateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -137,13 +137,13 @@ func ImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream, na
 	return nil, err
 }
 
-// ImageBuilderStateDeleted waits for a ImageBuilder deleted
-func ImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
+// waitImageBuilderStateDeleted waits for a ImageBuilder deleted
+func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{appstream.ImageBuilderStatePending, appstream.ImageBuilderStateDeleting},
 		Target:  []string{},
-		Refresh: ImageBuilderState(ctx, conn, name),
-		Timeout: ImageBuilderStateTimeout,
+		Refresh: statusImageBuilderState(ctx, conn, name),
+		Timeout: imageBuilderStateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
