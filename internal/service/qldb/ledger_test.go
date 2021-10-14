@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfqldb "github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -58,7 +59,7 @@ func testSweepQLDBLedgers(region string) error {
 			continue
 		}
 
-		if err := waitForQLDBLedgerDeletion(conn, name); err != nil {
+		if err := tfqldb.WaitForLedgerDeletion(conn, name); err != nil {
 			log.Printf("[ERROR] Error waiting for QLDB Ledger (%s) deletion: %s", name, err)
 		}
 	}
