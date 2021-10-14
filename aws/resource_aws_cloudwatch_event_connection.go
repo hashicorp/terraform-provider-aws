@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchEventConnection() *schema.Resource {
+func ResourceConnection() *schema.Resource {
 	connectionHttpParameters := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"body": {
@@ -89,10 +89,10 @@ func resourceAwsCloudWatchEventConnection() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventConnectionCreate,
-		Read:   resourceAwsCloudWatchEventConnectionRead,
-		Update: resourceAwsCloudWatchEventConnectionUpdate,
-		Delete: resourceAwsCloudWatchEventConnectionDelete,
+		Create: resourceConnectionCreate,
+		Read:   resourceConnectionRead,
+		Update: resourceConnectionUpdate,
+		Delete: resourceConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -237,7 +237,7 @@ func resourceAwsCloudWatchEventConnection() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchEventConnectionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	name := d.Get("name").(string)
@@ -267,10 +267,10 @@ func resourceAwsCloudWatchEventConnectionCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudWatchEventConnectionRead(d, meta)
+	return resourceConnectionRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventConnectionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	output, err := finder.ConnectionByName(conn, d.Id())
@@ -301,7 +301,7 @@ func resourceAwsCloudWatchEventConnectionRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsCloudWatchEventConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.UpdateConnectionInput{
@@ -333,10 +333,10 @@ func resourceAwsCloudWatchEventConnectionUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to update: %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudWatchEventConnectionRead(d, meta)
+	return resourceConnectionRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventConnectionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	log.Printf("[INFO] Deleting CloudWatch Events connection (%s)", d.Id())

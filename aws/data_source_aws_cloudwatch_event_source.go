@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudWatchEventSource() *schema.Resource {
+func DataSourceSource() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudWatchEventSourceRead,
+		Read: dataSourceSourceRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -39,7 +39,7 @@ func dataSourceAwsCloudWatchEventSource() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudWatchEventSourceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.ListEventSourcesInput{}

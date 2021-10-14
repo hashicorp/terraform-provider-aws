@@ -16,6 +16,7 @@ import (
 	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -307,7 +308,7 @@ func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 				Config: testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventPermissionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchEventPermission(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

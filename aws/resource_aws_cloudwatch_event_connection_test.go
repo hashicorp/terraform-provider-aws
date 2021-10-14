@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -610,7 +611,7 @@ func TestAccAWSCloudWatchEventConnection_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventConnectionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchEventConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

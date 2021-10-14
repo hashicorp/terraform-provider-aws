@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchEventBus() *schema.Resource {
+func ResourceBus() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventBusCreate,
-		Read:   resourceAwsCloudWatchEventBusRead,
-		Update: resourceAwsCloudWatchEventBusUpdate,
-		Delete: resourceAwsCloudWatchEventBusDelete,
+		Create: resourceBusCreate,
+		Read:   resourceBusRead,
+		Update: resourceBusUpdate,
+		Delete: resourceBusDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -46,7 +46,7 @@ func resourceAwsCloudWatchEventBus() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBusCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -75,10 +75,10 @@ func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{
 
 	log.Printf("[INFO] CloudWatch Events event bus (%s) created", d.Id())
 
-	return resourceAwsCloudWatchEventBusRead(d, meta)
+	return resourceBusRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBusRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -121,7 +121,7 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsCloudWatchEventBusUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBusUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	arn := d.Get("arn").(string)
@@ -133,10 +133,10 @@ func resourceAwsCloudWatchEventBusUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsCloudWatchEventBusRead(d, meta)
+	return resourceBusRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventBusDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBusDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 	log.Printf("[INFO] Deleting CloudWatch Events event bus (%s)", d.Id())
 	_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{

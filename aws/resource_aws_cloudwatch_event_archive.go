@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchEventArchive() *schema.Resource {
+func ResourceArchive() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchEventArchiveCreate,
-		Read:   resourceAwsCloudWatchEventArchiveRead,
-		Update: resourceAwsCloudWatchEventArchiveUpdate,
-		Delete: resourceAwsCloudWatchEventArchiveDelete,
+		Create: resourceArchiveCreate,
+		Read:   resourceArchiveRead,
+		Update: resourceArchiveUpdate,
+		Delete: resourceArchiveDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -62,7 +62,7 @@ func resourceAwsCloudWatchEventArchive() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchEventArchiveCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceArchiveCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input, err := buildCreateArchiveInputStruct(d)
@@ -82,10 +82,10 @@ func resourceAwsCloudWatchEventArchiveCreate(d *schema.ResourceData, meta interf
 
 	log.Printf("[INFO] CloudWatch Events Archive (%s) created", d.Id())
 
-	return resourceAwsCloudWatchEventArchiveRead(d, meta)
+	return resourceArchiveRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interface{}) error {
+func resourceArchiveRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 	input := &events.DescribeArchiveInput{
 		ArchiveName: aws.String(d.Id()),
@@ -115,7 +115,7 @@ func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsCloudWatchEventArchiveUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceArchiveUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input, err := buildUpdateArchiveInputStruct(d)
@@ -130,10 +130,10 @@ func resourceAwsCloudWatchEventArchiveUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error updating CloudWatch Events Archive (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsCloudWatchEventArchiveRead(d, meta)
+	return resourceArchiveRead(d, meta)
 }
 
-func resourceAwsCloudWatchEventArchiveDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceArchiveDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
 	input := &events.DeleteArchiveInput{
