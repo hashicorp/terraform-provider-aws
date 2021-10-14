@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 )
 
 func TestAccAWSLicenseManagerAssociation_basic(t *testing.T) {
@@ -51,12 +52,12 @@ func testAccCheckLicenseManagerAssociationExists(resourceName string, licenseSpe
 			return fmt.Errorf("No ID is set")
 		}
 
-		resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(rs.Primary.ID)
+		resourceArn, licenseConfigurationArn, err := tflicensemanager.AssociationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		specification, err := resourceAwsLicenseManagerAssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
+		specification, err := tflicensemanager.AssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
 		if err != nil {
 			return err
 		}
@@ -78,12 +79,12 @@ func testAccCheckLicenseManagerAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(rs.Primary.ID)
+		resourceArn, licenseConfigurationArn, err := tflicensemanager.AssociationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		specification, err := resourceAwsLicenseManagerAssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
+		specification, err := tflicensemanager.AssociationFindSpecification(conn, resourceArn, licenseConfigurationArn)
 		if err != nil {
 			return err
 		}
