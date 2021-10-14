@@ -63,7 +63,7 @@ func QueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]st
 					return fmt.Errorf("SQS Queue policies are not equivalent")
 				}
 			case sqs.QueueAttributeNameRedrivePolicy:
-				if !tfjson.StringsEquivalent(g, e) {
+				if !StringsEquivalent(g, e) {
 					return fmt.Errorf("SQS Queue redrive policies are not equivalent")
 				}
 			default:

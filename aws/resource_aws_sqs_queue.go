@@ -150,7 +150,7 @@ var (
 		"tags_all": tftags.TagsSchemaComputed(),
 	}
 
-	sqsQueueAttributeMap = attrmap.New(map[string]string{
+	sqsQueueAttributeMap = NewAttrMap(map[string]string{
 		"delay_seconds":                     sqs.QueueAttributeNameDelaySeconds,
 		"max_message_size":                  sqs.QueueAttributeNameMaximumMessageSize,
 		"message_retention_seconds":         sqs.QueueAttributeNameMessageRetentionPeriod,
