@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
+func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 
@@ -62,7 +62,7 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
+func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))

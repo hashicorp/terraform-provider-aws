@@ -390,7 +390,7 @@ func TestUpdateDynamoDbDiffGSI(t *testing.T) {
 	}
 }
 
-func TestAccAWSDynamoDbTable_basic(t *testing.T) {
+func TestAccDynamoDBTable_basic(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -425,7 +425,7 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
+func TestAccDynamoDBTable_disappears(t *testing.T) {
 	var table1 dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -448,7 +448,7 @@ func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_disappears_payPerRequestWithGSI(t *testing.T) {
+func TestAccDynamoDBTable_Disappears_payPerRequestWithGSI(t *testing.T) {
 	var table1, table2 dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -482,7 +482,7 @@ func TestAccAWSDynamoDbTable_disappears_payPerRequestWithGSI(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_extended(t *testing.T) {
+func TestAccDynamoDBTable_extended(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -556,7 +556,7 @@ func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
+func TestAccDynamoDBTable_enablePITR(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -591,7 +591,7 @@ func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
+func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -625,7 +625,7 @@ func TestAccAWSDynamoDbTable_BillingMode_payPerRequestToProvisioned(t *testing.T
 	})
 }
 
-func TestAccAWSDynamoDbTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
+func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -659,7 +659,7 @@ func TestAccAWSDynamoDbTable_BillingMode_provisionedToPayPerRequest(t *testing.T
 	})
 }
 
-func TestAccAWSDynamoDbTable_BillingMode_GSI_payPerRequestToProvisioned(t *testing.T) {
+func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -693,7 +693,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_payPerRequestToProvisioned(t *testi
 	})
 }
 
-func TestAccAWSDynamoDbTable_BillingMode_GSI_provisionedToPayPerRequest(t *testing.T) {
+func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -727,7 +727,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_provisionedToPayPerRequest(t *testi
 	})
 }
 
-func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
+func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -767,7 +767,7 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_streamSpecificationValidation(t *testing.T) {
+func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
@@ -782,7 +782,7 @@ func TestAccAWSDynamoDbTable_streamSpecificationValidation(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_tags(t *testing.T) {
+func TestAccDynamoDBTable_tags(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -811,7 +811,7 @@ func TestAccAWSDynamoDbTable_tags(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform/issues/13243
-func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
+func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -875,7 +875,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
+func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -965,7 +965,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15115
-func TestAccAWSDynamoDbTable_lsiNonKeyAttributes(t *testing.T) {
+func TestAccDynamoDBTable_lsiNonKeyAttributes(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1000,7 +1000,7 @@ func TestAccAWSDynamoDbTable_lsiNonKeyAttributes(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/566
-func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
+func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1091,7 +1091,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/671
-func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
+func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1137,7 +1137,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
-func TestAccAWSDynamoDbTable_Ttl_enabled(t *testing.T) {
+func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1167,7 +1167,7 @@ func TestAccAWSDynamoDbTable_Ttl_enabled(t *testing.T) {
 
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
-func TestAccAWSDynamoDbTable_Ttl_disabled(t *testing.T) {
+func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1203,7 +1203,7 @@ func TestAccAWSDynamoDbTable_Ttl_disabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
+func TestAccDynamoDBTable_attributeUpdate(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1247,7 +1247,7 @@ func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_lsiUpdate(t *testing.T) {
+func TestAccDynamoDBTable_lsiUpdate(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1279,7 +1279,7 @@ func TestAccAWSDynamoDbTable_lsiUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
+func TestAccDynamoDBTable_attributeUpdateValidation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1304,7 +1304,7 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
+func TestAccDynamoDBTable_encryption(t *testing.T) {
 	var confBYOK, confEncEnabled, confEncDisabled dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1363,7 +1363,7 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_Replica_multiple(t *testing.T) {
+func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
@@ -1409,7 +1409,7 @@ func TestAccAWSDynamoDbTable_Replica_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_Replica_single(t *testing.T) {
+func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
@@ -1455,7 +1455,7 @@ func TestAccAWSDynamoDbTable_Replica_single(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_Replica_singleWithCMK(t *testing.T) {
+func TestAccDynamoDBTable_Replica_singleWithCMK(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"

@@ -15,7 +15,7 @@ import (
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
 
-func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
+func TestAccDynamoDBTableItem_basic(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
 	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
@@ -48,7 +48,7 @@ func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTableItem_rangeKey(t *testing.T) {
+func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
 	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
@@ -84,7 +84,7 @@ func TestAccAWSDynamoDbTableItem_rangeKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
+func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 	var conf1 dynamodb.GetItemOutput
 	var conf2 dynamodb.GetItemOutput
 
@@ -135,7 +135,7 @@ func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
+func TestAccDynamoDBTableItem_update(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
 	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
@@ -185,7 +185,7 @@ func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
+func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 	var conf dynamodb.GetItemOutput
 
 	tableName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))

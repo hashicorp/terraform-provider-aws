@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
+func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_dynamodb_table.test"
 	tableName := fmt.Sprintf("testAccAWSdynamodbtable-basic-%s", sdkacctest.RandString(10))
 
