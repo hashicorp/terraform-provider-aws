@@ -22,7 +22,7 @@ func TestAccAWSRoute53DelegationSetDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataSourceAWSRoute53DelegationSetConfig_basic(zoneName),
+				Config: testAccDelegationSetDataSourceConfig_basic(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name_servers.#", resourceName, "name_servers.#"),
@@ -33,7 +33,7 @@ func TestAccAWSRoute53DelegationSetDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSDataSourceAWSRoute53DelegationSetConfig_basic(zoneName string) string {
+func testAccDelegationSetDataSourceConfig_basic(zoneName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_delegation_set" "dset" {
   reference_name = "DynDNS"

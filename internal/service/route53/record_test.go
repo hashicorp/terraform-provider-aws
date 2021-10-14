@@ -1021,7 +1021,7 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 func TestAccAWSRoute53Record_doNotAllowOverwrite(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   testAccAWSRoute53RecordOverwriteExpectErrorCheck(t),
+		ErrorCheck:   testAccRecordOverwriteExpectErrorCheck(t),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -1065,7 +1065,7 @@ func testAccErrorCheckSkipRoute53(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func testAccAWSRoute53RecordOverwriteExpectErrorCheck(t *testing.T) resource.ErrorCheckFunc {
+func testAccRecordOverwriteExpectErrorCheck(t *testing.T) resource.ErrorCheckFunc {
 	return func(err error) error {
 		f := acctest.ErrorCheck(t, route53.EndpointsID)
 		err = f(err)

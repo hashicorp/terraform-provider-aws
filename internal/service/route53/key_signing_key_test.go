@@ -31,11 +31,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_key_signing_key", &resource.Sweeper{
 		Name: "aws_route53_key_signing_key",
-		F:    testSweepRoute53KeySigningKeys,
+		F:    sweepKeySigningKeys,
 	})
 }
 
-func testSweepRoute53KeySigningKeys(region string) error {
+func sweepKeySigningKeys(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -126,12 +126,12 @@ func TestAccAwsRoute53KeySigningKey_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
+		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53KeySigningKeyConfig_Name(rName, domainName),
+				Config: testAccKeySigningKeyConfig_Name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53KeySigningKeyExists(resourceName),
+					testAccKeySigningKeyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "digest_algorithm_mnemonic", "SHA-256"),
 					resource.TestCheckResourceAttr(resourceName, "digest_algorithm_type", "2"),
 					resource.TestMatchResourceAttr(resourceName, "digest_value", regexp.MustCompile(`^[0-9A-F]+$`)),
@@ -167,12 +167,12 @@ func TestAccAwsRoute53KeySigningKey_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
+		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53KeySigningKeyConfig_Name(rName, domainName),
+				Config: testAccKeySigningKeyConfig_Name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53KeySigningKeyExists(resourceName),
+					testAccKeySigningKeyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceKeySigningKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -191,12 +191,12 @@ func TestAccAwsRoute53KeySigningKey_Status(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53KeySigningKeyDestroy,
+		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53KeySigningKeyConfig_Status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
+				Config: testAccKeySigningKeyConfig_Status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53KeySigningKeyExists(resourceName),
+					testAccKeySigningKeyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusInactive),
 				),
 			},
@@ -206,16 +206,16 @@ func TestAccAwsRoute53KeySigningKey_Status(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsRoute53KeySigningKeyConfig_Status(rName, domainName, tfroute53.KeySigningKeyStatusActive),
+				Config: testAccKeySigningKeyConfig_Status(rName, domainName, tfroute53.KeySigningKeyStatusActive),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53KeySigningKeyExists(resourceName),
+					testAccKeySigningKeyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusActive),
 				),
 			},
 			{
-				Config: testAccAwsRoute53KeySigningKeyConfig_Status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
+				Config: testAccKeySigningKeyConfig_Status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53KeySigningKeyExists(resourceName),
+					testAccKeySigningKeyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusInactive),
 				),
 			},
@@ -223,7 +223,7 @@ func TestAccAwsRoute53KeySigningKey_Status(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsRoute53KeySigningKeyDestroy(s *terraform.State) error {
+func testAccCheckKeySigningKeyDestroy(s *terraform.State) error {
 	conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -253,7 +253,7 @@ func testAccCheckAwsRoute53KeySigningKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsRoute53KeySigningKeyExists(resourceName string) resource.TestCheckFunc {
+func testAccKeySigningKeyExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -281,7 +281,7 @@ func testAccAwsRoute53KeySigningKeyExists(resourceName string) resource.TestChec
 	}
 }
 
-func testAccAwsRoute53KeySigningKeyConfig_Base(rName, domainName string) string {
+func testAccKeySigningKeyConfig_Base(rName, domainName string) string {
 	return acctest.ConfigCompose(
 		testAccRoute53KeySigningKeyRegionProviderConfig(),
 		fmt.Sprintf(`
@@ -323,9 +323,9 @@ resource "aws_route53_zone" "test" {
 `, rName, domainName))
 }
 
-func testAccAwsRoute53KeySigningKeyConfig_Name(rName, domainName string) string {
+func testAccKeySigningKeyConfig_Name(rName, domainName string) string {
 	return acctest.ConfigCompose(
-		testAccAwsRoute53KeySigningKeyConfig_Base(rName, domainName),
+		testAccKeySigningKeyConfig_Base(rName, domainName),
 		fmt.Sprintf(`
 resource "aws_route53_key_signing_key" "test" {
   hosted_zone_id             = aws_route53_zone.test.id
@@ -335,9 +335,9 @@ resource "aws_route53_key_signing_key" "test" {
 `, rName))
 }
 
-func testAccAwsRoute53KeySigningKeyConfig_Status(rName, domainName, status string) string {
+func testAccKeySigningKeyConfig_Status(rName, domainName, status string) string {
 	return acctest.ConfigCompose(
-		testAccAwsRoute53KeySigningKeyConfig_Base(rName, domainName),
+		testAccKeySigningKeyConfig_Base(rName, domainName),
 		fmt.Sprintf(`
 resource "aws_route53_key_signing_key" "test" {
   hosted_zone_id             = aws_route53_zone.test.id

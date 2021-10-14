@@ -93,7 +93,7 @@ func init() {
 			"aws_elb",
 			"aws_route53_key_signing_key",
 		},
-		F: testSweepRoute53Zones,
+		F: sweepZones,
 	})
 }
 
@@ -107,7 +107,7 @@ func hostedZonesToPreserve() []string {
 	}
 }
 
-func testSweepRoute53Zones(region string) error {
+func sweepZones(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {

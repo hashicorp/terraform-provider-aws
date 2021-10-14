@@ -7,7 +7,7 @@ import (
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
-func TestAWSRoute53RecordMigrateState(t *testing.T) {
+func TestRecordMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		ID           string
@@ -59,7 +59,7 @@ func TestAWSRoute53RecordMigrateState(t *testing.T) {
 	}
 }
 
-func TestAWSRoute53RecordMigrateStateV1toV2(t *testing.T) {
+func TestRecordMigrateStateV1toV2(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string

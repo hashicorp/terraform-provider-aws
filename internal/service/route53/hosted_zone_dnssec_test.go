@@ -26,12 +26,12 @@ func TestAccAwsRoute53HostedZoneDnssec_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53HostedZoneDnssecDestroy,
+		CheckDestroy:      testAccCheckHostedZoneDNSSECDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53HostedZoneDnssecConfig(rName, domainName),
+				Config: testAccHostedZoneDNSSECConfig(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53HostedZoneDnssecExists(resourceName),
+					testAccHostedZoneDNSSECExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "hosted_zone_id", route53ZoneResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "signing_status", tfroute53.ServeSignatureSigning),
 				),
@@ -55,12 +55,12 @@ func TestAccAwsRoute53HostedZoneDnssec_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53HostedZoneDnssecDestroy,
+		CheckDestroy:      testAccCheckHostedZoneDNSSECDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53HostedZoneDnssecConfig(rName, domainName),
+				Config: testAccHostedZoneDNSSECConfig(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53HostedZoneDnssecExists(resourceName),
+					testAccHostedZoneDNSSECExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceHostedZoneDNSSEC(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,12 +79,12 @@ func TestAccAwsRoute53HostedZoneDnssec_SigningStatus(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsRoute53HostedZoneDnssecDestroy,
+		CheckDestroy:      testAccCheckHostedZoneDNSSECDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53HostedZoneDnssecConfig_SigningStatus(rName, domainName, tfroute53.ServeSignatureNotSigning),
+				Config: testAccHostedZoneDNSSECConfig_SigningStatus(rName, domainName, tfroute53.ServeSignatureNotSigning),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53HostedZoneDnssecExists(resourceName),
+					testAccHostedZoneDNSSECExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "signing_status", tfroute53.ServeSignatureNotSigning),
 				),
 			},
@@ -94,16 +94,16 @@ func TestAccAwsRoute53HostedZoneDnssec_SigningStatus(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsRoute53HostedZoneDnssecConfig_SigningStatus(rName, domainName, tfroute53.ServeSignatureSigning),
+				Config: testAccHostedZoneDNSSECConfig_SigningStatus(rName, domainName, tfroute53.ServeSignatureSigning),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53HostedZoneDnssecExists(resourceName),
+					testAccHostedZoneDNSSECExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "signing_status", tfroute53.ServeSignatureSigning),
 				),
 			},
 			{
-				Config: testAccAwsRoute53HostedZoneDnssecConfig_SigningStatus(rName, domainName, tfroute53.ServeSignatureNotSigning),
+				Config: testAccHostedZoneDNSSECConfig_SigningStatus(rName, domainName, tfroute53.ServeSignatureNotSigning),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsRoute53HostedZoneDnssecExists(resourceName),
+					testAccHostedZoneDNSSECExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "signing_status", tfroute53.ServeSignatureNotSigning),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccAwsRoute53HostedZoneDnssec_SigningStatus(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsRoute53HostedZoneDnssecDestroy(s *terraform.State) error {
+func testAccCheckHostedZoneDNSSECDestroy(s *terraform.State) error {
 	conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -141,7 +141,7 @@ func testAccCheckAwsRoute53HostedZoneDnssecDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsRoute53HostedZoneDnssecExists(resourceName string) resource.TestCheckFunc {
+func testAccHostedZoneDNSSECExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -169,7 +169,7 @@ func testAccAwsRoute53HostedZoneDnssecExists(resourceName string) resource.TestC
 	}
 }
 
-func testAccAwsRoute53HostedZoneDnssecConfig_Base(rName, domainName string) string {
+func testAccHostedZoneDNSSECConfig_Base(rName, domainName string) string {
 	return acctest.ConfigCompose(
 		testAccRoute53KeySigningKeyRegionProviderConfig(),
 		fmt.Sprintf(`
@@ -217,18 +217,18 @@ resource "aws_route53_key_signing_key" "test" {
 `, rName, domainName))
 }
 
-func testAccAwsRoute53HostedZoneDnssecConfig(rName, domainName string) string {
+func testAccHostedZoneDNSSECConfig(rName, domainName string) string {
 	return acctest.ConfigCompose(
-		testAccAwsRoute53HostedZoneDnssecConfig_Base(rName, domainName), `
+		testAccHostedZoneDNSSECConfig_Base(rName, domainName), `
 resource "aws_route53_hosted_zone_dnssec" "test" {
   hosted_zone_id = aws_route53_key_signing_key.test.hosted_zone_id
 }
 `)
 }
 
-func testAccAwsRoute53HostedZoneDnssecConfig_SigningStatus(rName, domainName, signingStatus string) string {
+func testAccHostedZoneDNSSECConfig_SigningStatus(rName, domainName, signingStatus string) string {
 	return acctest.ConfigCompose(
-		testAccAwsRoute53HostedZoneDnssecConfig_Base(rName, domainName),
+		testAccHostedZoneDNSSECConfig_Base(rName, domainName),
 		fmt.Sprintf(`
 resource "aws_route53_hosted_zone_dnssec" "test" {
   hosted_zone_id = aws_route53_key_signing_key.test.hosted_zone_id

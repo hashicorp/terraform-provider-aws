@@ -28,11 +28,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_query_log", &resource.Sweeper{
 		Name: "aws_route53_query_log",
-		F:    testSweepRoute53QueryLogs,
+		F:    sweepQueryLogs,
 	})
 }
 
-func testSweepRoute53QueryLogs(region string) error {
+func sweepQueryLogs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -91,7 +91,7 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
+				Config: testAccCheckQueryLogResourceBasic1Config(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("queryloggingconfig/.+")),
@@ -122,7 +122,7 @@ func TestAccAWSRoute53QueryLog_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
+				Config: testAccCheckQueryLogResourceBasic1Config(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceQueryLog(), resourceName),
@@ -148,7 +148,7 @@ func TestAccAWSRoute53QueryLog_disappears_hostedZone(t *testing.T) {
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
+				Config: testAccCheckQueryLogResourceBasic1Config(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
@@ -215,7 +215,7 @@ func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName string) string {
+func testAccCheckQueryLogResourceBasic1Config(rName, domainName string) string {
 	return acctest.ConfigCompose(
 		testAccRoute53QueryLogRegionProviderConfig(),
 		fmt.Sprintf(`

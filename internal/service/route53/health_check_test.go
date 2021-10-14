@@ -27,11 +27,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_route53_health_check", &resource.Sweeper{
 		Name: "aws_route53_health_check",
-		F:    testSweepRoute53Healthchecks,
+		F:    sweepHealthchecks,
 	})
 }
 
-func testSweepRoute53Healthchecks(region string) error {
+func sweepHealthchecks(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
