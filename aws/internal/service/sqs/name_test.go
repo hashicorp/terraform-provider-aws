@@ -2,6 +2,7 @@ package sqs
 
 import (
 	"testing"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestQueueNameFromURL(t *testing.T) {

@@ -12,6 +12,7 @@ import (
 	tfsqs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
