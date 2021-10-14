@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
+func TestAccECRReplicationConfiguration_basic(t *testing.T) {
 	resourceName := "aws_ecr_replication_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{

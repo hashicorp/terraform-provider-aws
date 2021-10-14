@@ -14,7 +14,7 @@ import (
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 )
 
-func TestAccAWSEcrRegistryPolicy_serial(t *testing.T) {
+func TestAccECRRegistryPolicy_serial(t *testing.T) {
 	testFuncs := map[string]func(t *testing.T){
 		"basic":      testAccRegistryPolicy_basic,
 		"disappears": testAccRegistryPolicy_disappears,

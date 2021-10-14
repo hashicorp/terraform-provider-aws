@@ -72,7 +72,7 @@ func sweepRepositories(region string) error {
 	return errors
 }
 
-func TestAccAWSEcrRepository_basic(t *testing.T) {
+func TestAccECRRepository_basic(t *testing.T) {
 	var v ecr.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
@@ -105,7 +105,7 @@ func TestAccAWSEcrRepository_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepository_tags(t *testing.T) {
+func TestAccECRRepository_tags(t *testing.T) {
 	var v1, v2 ecr.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
@@ -138,7 +138,7 @@ func TestAccAWSEcrRepository_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepository_immutability(t *testing.T) {
+func TestAccECRRepository_immutability(t *testing.T) {
 	var v ecr.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
@@ -166,7 +166,7 @@ func TestAccAWSEcrRepository_immutability(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepository_image_scanning_configuration(t *testing.T) {
+func TestAccECRRepository_Image_scanning(t *testing.T) {
 	var v1, v2 ecr.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
@@ -216,7 +216,7 @@ func TestAccAWSEcrRepository_image_scanning_configuration(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
+func TestAccECRRepository_Encryption_kms(t *testing.T) {
 	var v1, v2 ecr.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
@@ -262,7 +262,7 @@ func TestAccAWSEcrRepository_encryption_kms(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcrRepository_encryption_aes256(t *testing.T) {
+func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 	var v1, v2 ecr.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
