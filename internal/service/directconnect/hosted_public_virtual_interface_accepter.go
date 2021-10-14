@@ -104,7 +104,7 @@ func resourceHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, me
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
 
 	arn := d.Get("arn").(string)
-	tags, err := tftags.DirectconnectListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect hosted public virtual interface (%s): %s", arn, err)

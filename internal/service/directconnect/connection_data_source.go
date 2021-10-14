@@ -97,7 +97,7 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("provider_name", connection.ProviderName)
 
-	tags, err := tftags.DirectconnectListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect Connection (%s): %w", arn, err)

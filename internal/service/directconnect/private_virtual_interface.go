@@ -161,7 +161,7 @@ func resourcePrivateVirtualInterfaceCreate(d *schema.ResourceData, meta interfac
 		req.NewPrivateVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
 	if len(tags) > 0 {
-		req.NewPrivateVirtualInterface.Tags = tags.IgnoreAws().DirectconnectTags()
+		req.NewPrivateVirtualInterface.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect private virtual interface: %s", req)
@@ -217,7 +217,7 @@ func resourcePrivateVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 	d.Set("vlan", vif.Vlan)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 
-	tags, err := tftags.DirectconnectListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect private virtual interface (%s): %s", arn, err)

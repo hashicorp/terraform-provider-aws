@@ -130,7 +130,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceData, m
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 
 	arn := d.Get("arn").(string)
-	tags, err := tftags.DirectconnectListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect hosted private virtual interface (%s): %s", arn, err)

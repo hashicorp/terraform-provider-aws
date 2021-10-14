@@ -46,7 +46,7 @@ func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DirectconnectUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Direct Connect virtual interface (%s) tags: %s", arn, err)
 		}
 	}

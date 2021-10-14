@@ -93,7 +93,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().DirectconnectTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect Connection: %s", input)
@@ -142,7 +142,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("provider_name", connection.ProviderName)
 
-	tags, err := tftags.DirectconnectListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect Connection (%s): %w", arn, err)
@@ -169,7 +169,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DirectconnectUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Direct Connect Connection (%s) tags: %w", arn, err)
 		}
 	}

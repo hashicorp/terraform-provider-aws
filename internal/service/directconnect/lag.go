@@ -107,7 +107,7 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().DirectconnectTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect LAG: %s", input)
@@ -164,7 +164,7 @@ func resourceLagRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_account_id", lag.OwnerAccount)
 	d.Set("provider_name", lag.ProviderName)
 
-	tags, err := tftags.DirectconnectListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect LAG (%s): %w", arn, err)
@@ -205,7 +205,7 @@ func resourceLagUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DirectconnectUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Direct Connect LAG (%s) tags: %w", arn, err)
 		}
 	}
