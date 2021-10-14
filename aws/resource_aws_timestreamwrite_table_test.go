@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepTimestreamWriteTables(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).timestreamwriteconn
+	conn := client.(*conns.AWSClient).TimestreamWriteConn
 	ctx := context.Background()
 
 	var sweeperErrs *multierror.Error
@@ -236,7 +237,7 @@ func TestAccAWSTimestreamWriteTable_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSTimestreamWriteTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).timestreamwriteconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -290,7 +291,7 @@ func testAccCheckAWSTimestreamWriteTableExists(n string) resource.TestCheckFunc 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).timestreamwriteconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
 
 		input := &timestreamwrite.DescribeTableInput{
 			DatabaseName: aws.String(dbName),

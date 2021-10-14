@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepTimestreamWriteDatabases(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).timestreamwriteconn
+	conn := client.(*conns.AWSClient).TimestreamWriteConn
 	ctx := context.Background()
 
 	var sweeperErrs *multierror.Error
@@ -255,7 +256,7 @@ func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSTimestreamWriteDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).timestreamwriteconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_timestreamwrite_database" {
@@ -293,7 +294,7 @@ func testAccCheckAWSTimestreamWriteDatabaseExists(n string) resource.TestCheckFu
 			return fmt.Errorf("no resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).timestreamwriteconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
 
 		output, err := conn.DescribeDatabase(&timestreamwrite.DescribeDatabaseInput{
 			DatabaseName: aws.String(rs.Primary.ID),
@@ -312,7 +313,7 @@ func testAccCheckAWSTimestreamWriteDatabaseExists(n string) resource.TestCheckFu
 }
 
 func testAccPreCheckAWSTimestreamWrite(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).timestreamwriteconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
 
 	input := &timestreamwrite.ListDatabasesInput{}
 
