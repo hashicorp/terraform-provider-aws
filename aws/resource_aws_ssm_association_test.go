@@ -6,18 +6,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSSMAssociation_basic(t *testing.T) {
-	name := fmt.Sprintf("tf-acc-ssm-association-%s", acctest.RandString(10))
+	name := fmt.Sprintf("tf-acc-ssm-association-%s", sdkacctest.RandString(10))
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -38,12 +39,12 @@ func TestAccAWSSSMAssociation_basic(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -51,7 +52,7 @@ func TestAccAWSSSMAssociation_disappears(t *testing.T) {
 				Config: testAccAWSSSMAssociationBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSsmAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -60,12 +61,12 @@ func TestAccAWSSSMAssociation_disappears(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_ApplyOnlyAtCronInterval(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -93,7 +94,7 @@ func TestAccAWSSSMAssociation_ApplyOnlyAtCronInterval(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_withTargets(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 	oneTarget := `
 
@@ -117,8 +118,8 @@ targets {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -172,12 +173,12 @@ targets {
 }
 
 func TestAccAWSSSMAssociation_withParameters(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -208,14 +209,14 @@ func TestAccAWSSSMAssociation_withParameters(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_withAssociationName(t *testing.T) {
-	assocName1 := acctest.RandString(10)
-	assocName2 := acctest.RandString(10)
-	rName := acctest.RandString(5)
+	assocName1 := sdkacctest.RandString(10)
+	assocName2 := sdkacctest.RandString(10)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -245,15 +246,15 @@ func TestAccAWSSSMAssociation_withAssociationName(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_withAssociationNameAndScheduleExpression(t *testing.T) {
-	assocName := acctest.RandString(10)
-	rName := acctest.RandString(5)
+	assocName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_ssm_association.test"
 	scheduleExpression1 := "cron(0 16 ? * TUE *)"
 	scheduleExpression2 := "cron(0 16 ? * WED *)"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -283,12 +284,12 @@ func TestAccAWSSSMAssociation_withAssociationNameAndScheduleExpression(t *testin
 }
 
 func TestAccAWSSSMAssociation_withDocumentVersion(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -310,12 +311,12 @@ func TestAccAWSSSMAssociation_withDocumentVersion(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_withOutputLocation(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -359,12 +360,12 @@ func TestAccAWSSSMAssociation_withOutputLocation(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_withAutomationTargetParamName(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -395,12 +396,12 @@ func TestAccAWSSSMAssociation_withAutomationTargetParamName(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -428,15 +429,15 @@ func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_withComplianceSeverity(t *testing.T) {
-	assocName := acctest.RandString(10)
-	rName := acctest.RandString(10)
+	assocName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandString(10)
 	compSeverity1 := "HIGH"
 	compSeverity2 := "LOW"
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -470,12 +471,12 @@ func TestAccAWSSSMAssociation_withComplianceSeverity(t *testing.T) {
 }
 
 func TestAccAWSSSMAssociation_rateControl(t *testing.T) {
-	name := acctest.RandString(10)
+	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -605,7 +606,7 @@ resource "aws_ssm_association" "test" {
 }
 
 func testAccAWSSSMAssociationBasicConfigWithAutomationTargetParamName(rName string) string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = "ssm_profile-%[1]s"
   role = aws_iam_role.ssm_role.name

@@ -7,20 +7,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSSMActivation_basic(t *testing.T) {
 	var ssmActivation ssm.Activation
-	name := acctest.RandomWithPrefix("tf-acc")
-	tag := acctest.RandomWithPrefix("tf-acc")
+	name := sdkacctest.RandomWithPrefix("tf-acc")
+	tag := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
@@ -29,7 +30,7 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMActivationExists(resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
-					testAccCheckResourceAttrRfc3339(resourceName, "expiration_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "expiration_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", tag)),
 			},
@@ -47,12 +48,12 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 
 func TestAccAWSSSMActivation_update(t *testing.T) {
 	var ssmActivation1, ssmActivation2 ssm.Activation
-	name := acctest.RandomWithPrefix("tf-acc")
+	name := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
@@ -97,14 +98,14 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 
 func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 	var ssmActivation ssm.Activation
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	expirationTime := time.Now().Add(48 * time.Hour).UTC()
 	expirationDateS := expirationTime.Format(time.RFC3339)
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{
@@ -129,13 +130,13 @@ func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 
 func TestAccAWSSSMActivation_disappears(t *testing.T) {
 	var ssmActivation ssm.Activation
-	name := acctest.RandomWithPrefix("tf-acc")
-	tag := acctest.RandomWithPrefix("tf-acc")
+	name := sdkacctest.RandomWithPrefix("tf-acc")
+	tag := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMActivationDestroy,
 		Steps: []resource.TestStep{

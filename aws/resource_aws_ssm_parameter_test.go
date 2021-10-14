@@ -7,19 +7,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSSMParameter_basic(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -27,7 +28,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter/%s", name)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter/%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
@@ -48,12 +49,12 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 
 func TestAccAWSSSMParameter_Tier(t *testing.T) {
 	var parameter1, parameter2, parameter3 ssm.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -90,12 +91,12 @@ func TestAccAWSSSMParameter_Tier(t *testing.T) {
 
 func TestAccAWSSSMParameter_Tier_IntelligentTieringToStandard(t *testing.T) {
 	var parameter ssm.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -138,12 +139,12 @@ func TestAccAWSSSMParameter_Tier_IntelligentTieringToStandard(t *testing.T) {
 
 func TestAccAWSSSMParameter_Tier_IntelligentTieringToAdvanced(t *testing.T) {
 	var parameter1, parameter2 ssm.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -186,12 +187,12 @@ func TestAccAWSSSMParameter_Tier_IntelligentTieringToAdvanced(t *testing.T) {
 
 func TestAccAWSSSMParameter_disappears(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -199,7 +200,7 @@ func TestAccAWSSSMParameter_disappears(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmParameter(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSsmParameter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -209,12 +210,12 @@ func TestAccAWSSSMParameter_disappears(t *testing.T) {
 
 func TestAccAWSSSMParameter_overwrite(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -242,12 +243,12 @@ func TestAccAWSSSMParameter_overwrite(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18550
 func TestAccAWSSSMParameter_overwriteWithTags(t *testing.T) {
 	var param ssm.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -272,12 +273,12 @@ func TestAccAWSSSMParameter_overwriteWithTags(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18550
 func TestAccAWSSSMParameter_noOverwriteWithTags(t *testing.T) {
 	var param ssm.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -302,12 +303,12 @@ func TestAccAWSSSMParameter_noOverwriteWithTags(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18550
 func TestAccAWSSSMParameter_updateToOverwriteWithTags(t *testing.T) {
 	var param ssm.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -338,12 +339,12 @@ func TestAccAWSSSMParameter_updateToOverwriteWithTags(t *testing.T) {
 
 func TestAccAWSSSMParameter_tags(t *testing.T) {
 	var param ssm.Parameter
-	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	rName := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -384,12 +385,12 @@ func TestAccAWSSSMParameter_tags(t *testing.T) {
 
 func TestAccAWSSSMParameter_updateType(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -415,12 +416,12 @@ func TestAccAWSSSMParameter_updateType(t *testing.T) {
 
 func TestAccAWSSSMParameter_updateDescription(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -446,13 +447,13 @@ func TestAccAWSSSMParameter_updateDescription(t *testing.T) {
 
 func TestAccAWSSSMParameter_changeNameForcesNew(t *testing.T) {
 	var beforeParam, afterParam ssm.Parameter
-	before := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
-	after := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	before := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	after := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -481,12 +482,12 @@ func TestAccAWSSSMParameter_changeNameForcesNew(t *testing.T) {
 
 func TestAccAWSSSMParameter_fullPath(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("/path/%s_%s", t.Name(), acctest.RandString(10))
+	name := fmt.Sprintf("/path/%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -494,7 +495,7 @@ func TestAccAWSSSMParameter_fullPath(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter%s", name)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("parameter%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "value", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 				),
@@ -511,12 +512,12 @@ func TestAccAWSSSMParameter_fullPath(t *testing.T) {
 
 func TestAccAWSSSMParameter_secure(t *testing.T) {
 	var param ssm.Parameter
-	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -541,12 +542,12 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 
 func TestAccAWSSSMParameter_DataType_AwsEc2Image(t *testing.T) {
 	var param ssm.Parameter
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -569,13 +570,13 @@ func TestAccAWSSSMParameter_DataType_AwsEc2Image(t *testing.T) {
 
 func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
 	var param ssm.Parameter
-	randString := acctest.RandString(10)
+	randString := sdkacctest.RandString(10)
 	name := fmt.Sprintf("%s_%s", t.Name(), randString)
 	resourceName := "aws_ssm_parameter.secret_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -600,13 +601,13 @@ func TestAccAWSSSMParameter_secure_with_key(t *testing.T) {
 
 func TestAccAWSSSMParameter_secure_keyUpdate(t *testing.T) {
 	var param ssm.Parameter
-	randString := acctest.RandString(10)
+	randString := sdkacctest.RandString(10)
 	name := fmt.Sprintf("%s_%s", t.Name(), randString)
 	resourceName := "aws_ssm_parameter.secret_test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ssm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
@@ -739,8 +740,8 @@ resource "aws_ssm_parameter" "test" {
 }
 
 func testAccAWSSSMParameterConfigDataTypeAwsEc2Image(rName string) string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name      = %[1]q
