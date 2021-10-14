@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSElasticacheUser_basic(t *testing.T) {
@@ -152,7 +153,7 @@ func TestAccAWSElasticacheUser_disappears(t *testing.T) {
 				Config: testAccAWSElasticacheUserConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheUserExists(resourceName, &user),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticacheUser(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

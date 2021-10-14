@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsElastiCacheUser() *schema.Resource {
+func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElastiCacheUserRead,
+		Read: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_string": {
@@ -46,7 +46,7 @@ func dataSourceAwsElastiCacheUser() *schema.Resource {
 	}
 }
 
-func dataSourceAwsElastiCacheUserRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	params := &elasticache.DescribeUsersInput{

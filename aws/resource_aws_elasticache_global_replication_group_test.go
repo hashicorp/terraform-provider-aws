@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -219,7 +220,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 				Config: testAccAWSElasticacheGlobalReplicationGroupConfig_basic(rName, primaryReplicationGroupId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsElasticacheGlobalReplicationGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGlobalReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

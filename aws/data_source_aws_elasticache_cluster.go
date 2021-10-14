@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsElastiCacheCluster() *schema.Resource {
+func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElastiCacheClusterRead,
+		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -150,7 +150,7 @@ func dataSourceAwsElastiCacheCluster() *schema.Resource {
 	}
 }
 
-func dataSourceAwsElastiCacheClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

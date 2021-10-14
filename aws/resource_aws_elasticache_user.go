@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticacheUser() *schema.Resource {
+func ResourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheUserCreate,
-		Read:   resourceAwsElasticacheUserRead,
-		Update: resourceAwsElasticacheUserUpdate,
-		Delete: resourceAwsElasticacheUserDelete,
+		Create: resourceUserCreate,
+		Read:   resourceUserRead,
+		Update: resourceUserUpdate,
+		Delete: resourceUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -75,7 +75,7 @@ func resourceAwsElasticacheUser() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticacheUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -104,11 +104,11 @@ func resourceAwsElasticacheUserCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(out.UserId))
 
-	return resourceAwsElasticacheUserRead(d, meta)
+	return resourceUserRead(d, meta)
 
 }
 
-func resourceAwsElasticacheUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -156,7 +156,7 @@ func resourceAwsElasticacheUserRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	hasChange := false
 
@@ -201,10 +201,10 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsElasticacheUserRead(d, meta)
+	return resourceUserRead(d, meta)
 }
 
-func resourceAwsElasticacheUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	input := &elasticache.DeleteUserInput{

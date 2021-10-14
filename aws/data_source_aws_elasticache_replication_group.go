@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
+func DataSourceReplicationGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElasticacheReplicationGroupRead,
+		Read: dataSourceReplicationGroupRead,
 		Schema: map[string]*schema.Schema{
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -82,7 +82,7 @@ func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	groupID := d.Get("replication_group_id").(string)

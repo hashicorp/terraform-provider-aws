@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsElasticacheUserGroup() *schema.Resource {
+func ResourceUserGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElasticacheUserGroupCreate,
-		Read:   resourceAwsElasticacheUserGroupRead,
-		Update: resourceAwsElasticacheUserGroupUpdate,
-		Delete: resourceAwsElasticacheUserGroupDelete,
+		Create: resourceUserGroupCreate,
+		Read:   resourceUserGroupRead,
+		Update: resourceUserGroupUpdate,
+		Delete: resourceUserGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,7 +65,7 @@ var resourceAwsElasticacheUserGroupPendingStates = []string{
 	"modifying",
 }
 
-func resourceAwsElasticacheUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -106,11 +106,11 @@ func resourceAwsElasticacheUserGroupCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error creating ElastiCache User Group: %w", err)
 	}
 
-	return resourceAwsElasticacheUserGroupRead(d, meta)
+	return resourceUserGroupRead(d, meta)
 
 }
 
-func resourceAwsElasticacheUserGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -157,7 +157,7 @@ func resourceAwsElasticacheUserGroupRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsElasticacheUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	hasChange := false
 
@@ -212,10 +212,10 @@ func resourceAwsElasticacheUserGroupUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsElasticacheUserGroupRead(d, meta)
+	return resourceUserGroupRead(d, meta)
 }
 
-func resourceAwsElasticacheUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	input := &elasticache.DeleteUserGroupInput{
