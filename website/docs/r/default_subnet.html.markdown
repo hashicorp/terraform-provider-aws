@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Subnets can be imported using the `subnet id`, e.g.
+Subnets can be imported using the `subnet id`, e.g.,
 
 ```
 $ terraform import aws_default_subnet.public_subnet subnet-9d4a7b6c

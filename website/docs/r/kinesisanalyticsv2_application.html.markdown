@@ -485,7 +485,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_kinesisanalyticsv2_application` can be imported by using the application ARN, e.g.
+`aws_kinesisanalyticsv2_application` can be imported by using the application ARN, e.g.,
 
 ```
 $ terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application

@@ -118,7 +118,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Target Groups can be imported using their ARN, e.g.
+Target Groups can be imported using their ARN, e.g.,
 
 ```
 $ terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314

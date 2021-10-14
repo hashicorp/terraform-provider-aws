@@ -89,7 +89,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 query logging configurations can be imported using their ID, e.g.
+Route53 query logging configurations can be imported using their ID, e.g.,
 
 ```
 $ terraform import aws_route53_query_log.example_com xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

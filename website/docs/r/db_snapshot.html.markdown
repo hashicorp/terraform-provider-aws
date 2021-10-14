@@ -71,7 +71,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_db_snapshot` can be imported by using the snapshot identifier, e.g.
+`aws_db_snapshot` can be imported by using the snapshot identifier, e.g.,
 
 ```
 $ terraform import aws_db_snapshot.example my-snapshot

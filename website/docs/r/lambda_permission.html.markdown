@@ -181,11 +181,11 @@ EOF
 
 ## Argument Reference
 
-* `action` - (Required) The AWS Lambda action you want to allow in this statement. (e.g. `lambda:InvokeFunction`)
+* `action` - (Required) The AWS Lambda action you want to allow in this statement. (e.g., `lambda:InvokeFunction`)
 * `event_source_token` - (Optional) The Event Source Token to validate.  Used with [Alexa Skills][1].
 * `function_name` - (Required) Name of the Lambda function whose resource policy you are updating
-* `principal` - (Required) The principal who is getting this permission. e.g. `s3.amazonaws.com`, an AWS account ID, or any valid AWS service principal such as `events.amazonaws.com` or `sns.amazonaws.com`.
-* `qualifier` - (Optional) Query parameter to specify function version or alias name. The permission will then apply to the specific qualified ARN. e.g. `arn:aws:lambda:aws-region:acct-id:function:function-name:2`
+* `principal` - (Required) The principal who is getting this permissionE.g., `s3.amazonaws.com`, an AWS account ID, or any valid AWS service principal such as `events.amazonaws.com` or `sns.amazonaws.com`.
+* `qualifier` - (Optional) Query parameter to specify function version or alias name. The permission will then apply to the specific qualified ARNE.g., `arn:aws:lambda:aws-region:acct-id:function:function-name:2`
 * `source_account` - (Optional) This parameter is used for S3 and SES. The AWS account ID (without a hyphen) of the source owner.
 * `source_arn` - (Optional) When the principal is an AWS service, the ARN of the specific resource within that service to grant permission to.
   Without this, any resource from `principal` will be granted permission – even if that resource is from another account.
@@ -204,7 +204,7 @@ No additional attributes are exported.
 
 ## Import
 
-Lambda permission statements can be imported using function_name/statement_id, with an optional qualifier, e.g.
+Lambda permission statements can be imported using function_name/statement_id, with an optional qualifier, e.g.,
 
 ```
 $ terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function/AllowExecutionFromCloudWatch

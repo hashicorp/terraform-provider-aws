@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Studio Lifecycle Configs can be imported using the `studio_lifecycle_config_name`, e.g.
+Sagemaker Code Studio Lifecycle Configs can be imported using the `studio_lifecycle_config_name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_studio_lifecycle_config.example example

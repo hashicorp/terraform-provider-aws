@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Model Package Groups can be imported using the `name`, e.g.
+Sagemaker Code Model Package Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_model_package_group_policy.example example

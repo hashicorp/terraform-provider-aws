@@ -123,7 +123,7 @@ The following arguments are supported:
 * `placement_partition_number` - (Optional) The number of the partition the instance is in. Valid only if [the `aws_placement_group` resource's](placement_group.html) `strategy` argument is set to `"partition"`.
 * `private_ip` - (Optional) Private IP address to associate with the instance in a VPC.
 * `root_block_device` - (Optional) Configuration block to customize details about the root block device of the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a list containing one object.
-* `secondary_private_ips` - (Optional) A list of secondary private IPv4 addresses to assign to the instance's primary network interface (eth0) in a VPC. Can only be assigned to the primary network interface (eth0) attached at instance creation, not a pre-existing network interface i.e. referenced in a `network_interface` block. Refer to the [Elastic network interfaces documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI) to see the maximum number of private IP addresses allowed per instance type.
+* `secondary_private_ips` - (Optional) A list of secondary private IPv4 addresses to assign to the instance's primary network interface (eth0) in a VPC. Can only be assigned to the primary network interface (eth0) attached at instance creation, not a pre-existing network interface i.e., referenced in a `network_interface` block. Refer to the [Elastic network interfaces documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI) to see the maximum number of private IP addresses allowed per instance type.
 * `security_groups` - (Optional, EC2-Classic and default VPC only) A list of security group names to associate with.
 
 -> **NOTE:** If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
@@ -145,7 +145,7 @@ The following arguments are supported:
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when launching the instance (until it reaches the initial `running` state)
-* `update` - (Defaults to 10 mins) Used when stopping and starting the instance when necessary during update - e.g. when changing instance type
+* `update` - (Defaults to 10 mins) Used when stopping and starting the instance when necessary during update - e.g., when changing instance type
 * `delete` - (Defaults to 20 mins) Used when terminating the instance
 
 ### Capacity Reservation Specification
@@ -213,7 +213,7 @@ Each `ephemeral_block_device` block supports the following:
 
 * `device_name` - The name of the block device to mount on the instance.
 * `no_device` - (Optional) Suppresses the specified device included in the AMI's block device mapping.
-* `virtual_name` - (Optional) [Instance Store Device Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames) (e.g. `ephemeral0`).
+* `virtual_name` - (Optional) [Instance Store Device Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames) (e.g., `ephemeral0`).
 
 Each AWS Instance type has a different set of Instance Store block devices available for attachment. AWS [publishes a list](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes) of which ephemeral devices are available on each type. The devices are always identified by the `virtual_name` in the format `ephemeral{0..N}`.
 
@@ -288,11 +288,11 @@ For `ebs_block_device`, in addition to the arguments above, the following attrib
 For `root_block_device`, in addition to the arguments above, the following attributes are exported:
 
 * `volume_id` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.root_block_device.0.volume_id`.
-* `device_name` - Device name, e.g. `/dev/sdh` or `xvdh`.
+* `device_name` - Device name, e.g., `/dev/sdh` or `xvdh`.
 
 ## Import
 
-Instances can be imported using the `id`, e.g.
+Instances can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_instance.web i-12345678

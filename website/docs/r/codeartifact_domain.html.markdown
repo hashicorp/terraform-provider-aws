@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeArtifact Domain can be imported using the CodeArtifact Domain arn, e.g.
+CodeArtifact Domain can be imported using the CodeArtifact Domain arn, e.g.,
 
 ```
 $ terraform import aws_codeartifact_domain.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-8593714120730241305

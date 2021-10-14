@@ -69,7 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.
+`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.,
 
 ```
 $ terraform import aws_cognito_resource_server.example xxx_yyyyy|https://example.com

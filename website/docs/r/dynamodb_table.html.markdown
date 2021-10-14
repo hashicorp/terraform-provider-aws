@@ -213,7 +213,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DynamoDB tables can be imported using the `name`, e.g.
+DynamoDB tables can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_dynamodb_table.basic-dynamodb-table GameScores

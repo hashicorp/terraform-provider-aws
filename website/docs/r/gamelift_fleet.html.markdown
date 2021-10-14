@@ -35,12 +35,12 @@ The following arguments are supported:
 * `build_id` - (Required) ID of the Gamelift Build to be deployed on the fleet.
 * `description` - (Optional) Human-readable description of the fleet.
 * `ec2_inbound_permission` - (Optional) Range of IP addresses and port settings that permit inbound traffic to access server processes running on the fleet. See below.
-* `ec2_instance_type` - (Required) Name of an EC2 instance type. e.g. `t2.micro`
+* `ec2_instance_type` - (Required) Name of an EC2 instance typeE.g., `t2.micro`
 * `fleet_type` - (Optional) Type of fleet. This value must be `ON_DEMAND` or `SPOT`. Defaults to `ON_DEMAND`.
 * `instance_role_arn` - (Optional) ARN of an IAM role that instances in the fleet can assume.
 * `metric_groups` - (Optional) List of names of metric groups to add this fleet to. A metric group tracks metrics across all fleets in the group. Defaults to `default`.
 * `name` - (Required) The name of the fleet.
-* `new_game_session_protection_policy` - (Optional) Game session protection policy to apply to all instances in this fleet. e.g. `FullProtection`. Defaults to `NoProtection`.
+* `new_game_session_protection_policy` - (Optional) Game session protection policy to apply to all instances in this fleetE.g., `FullProtection`. Defaults to `NoProtection`.
 * `resource_creation_limit_policy` - (Optional) Policy that limits the number of game sessions an individual player can create over a span of time for this fleet. See below.
 * `runtime_configuration` - (Optional) Instructions for launching server processes on each instance in the fleet. See below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -50,8 +50,8 @@ The following arguments are supported:
 #### `ec2_inbound_permission`
 
 * `from_port` - (Required) Starting value for a range of allowed port numbers.
-* `ip_range` - (Required) Range of allowed IP addresses expressed in CIDR notation. e.g. `000.000.000.000/[subnet mask]` or `0.0.0.0/[subnet mask]`.
-* `protocol` - (Required) Network communication protocol used by the fleet. e.g. `TCP` or `UDP`
+* `ip_range` - (Required) Range of allowed IP addresses expressed in CIDR notationE.g., `000.000.000.000/[subnet mask]` or `0.0.0.0/[subnet mask]`.
+* `protocol` - (Required) Network communication protocol used by the fleetE.g., `TCP` or `UDP`
 * `to_port` - (Required) Ending value for a range of allowed port numbers. Port numbers are end-inclusive. This value must be higher than `from_port`.
 
 #### `resource_creation_limit_policy`
