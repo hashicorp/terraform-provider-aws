@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
 		Name: "aws_fsx_windows_file_system",
-		F:    testSweepFSXWindowsFileSystems,
+		F:    sweepFSXWindowsFileSystems,
 	})
 }
 
-func testSweepFSXWindowsFileSystems(region string) error {
+func sweepFSXWindowsFileSystems(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -86,7 +86,7 @@ func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1(),
+				Config: testAccWindowsFileSystemSubnetIds1Config(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
@@ -124,7 +124,7 @@ func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 				},
 			},
 			{
-				Config:   testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithSingleType("SINGLE_AZ_1"),
+				Config:   testAccWindowsFileSystemSubnetIds1WithSingleTypeConfig("SINGLE_AZ_1"),
 				PlanOnly: true,
 			},
 		},
@@ -142,7 +142,7 @@ func TestAccAWSFsxWindowsFileSystem_singleAz2(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithSingleType("SINGLE_AZ_2"),
+				Config: testAccWindowsFileSystemSubnetIds1WithSingleTypeConfig("SINGLE_AZ_2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
@@ -191,7 +191,7 @@ func TestAccAWSFsxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithStorageType("SINGLE_AZ_2", "HDD"),
+				Config: testAccWindowsFileSystemSubnetIds1WithStorageTypeConfig("SINGLE_AZ_2", "HDD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_2"),
@@ -222,7 +222,7 @@ func TestAccAWSFsxWindowsFileSystem_multiAz(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds2(),
+				Config: testAccWindowsFileSystemSubnetIds2Config(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
@@ -270,7 +270,7 @@ func TestAccAWSFsxWindowsFileSystem_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1(),
+				Config: testAccWindowsFileSystemSubnetIds1Config(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceWindowsFileSystem(), resourceName),
@@ -292,7 +292,7 @@ func TestAccAWSFsxWindowsFileSystem_aliases(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAliases1("filesystem1.example.com"),
+				Config: testAccWindowsFileSystemAliases1Config("filesystem1.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "1"),
@@ -309,7 +309,7 @@ func TestAccAWSFsxWindowsFileSystem_aliases(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAliases2("filesystem2.example.com", "filesystem3.example.com"),
+				Config: testAccWindowsFileSystemAliases2Config("filesystem2.example.com", "filesystem3.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -319,7 +319,7 @@ func TestAccAWSFsxWindowsFileSystem_aliases(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAliases1("filesystem3.example.com"),
+				Config: testAccWindowsFileSystemAliases1Config("filesystem3.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem3),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem2, &filesystem3),
@@ -342,7 +342,7 @@ func TestAccAWSFsxWindowsFileSystem_AutomaticBackupRetentionDays(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAutomaticBackupRetentionDays(90),
+				Config: testAccWindowsFileSystemAutomaticBackupRetentionDaysConfig(90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "90"),
@@ -358,7 +358,7 @@ func TestAccAWSFsxWindowsFileSystem_AutomaticBackupRetentionDays(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAutomaticBackupRetentionDays(0),
+				Config: testAccWindowsFileSystemAutomaticBackupRetentionDaysConfig(0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -366,7 +366,7 @@ func TestAccAWSFsxWindowsFileSystem_AutomaticBackupRetentionDays(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAutomaticBackupRetentionDays(14),
+				Config: testAccWindowsFileSystemAutomaticBackupRetentionDaysConfig(14),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem3),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem2, &filesystem3),
@@ -388,7 +388,7 @@ func TestAccAWSFsxWindowsFileSystem_CopyTagsToBackups(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigCopyTagsToBackups(true),
+				Config: testAccWindowsFileSystemCopyTagsToBackupsConfig(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "true"),
@@ -404,7 +404,7 @@ func TestAccAWSFsxWindowsFileSystem_CopyTagsToBackups(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigCopyTagsToBackups(false),
+				Config: testAccWindowsFileSystemCopyTagsToBackupsConfig(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemRecreated(&filesystem1, &filesystem2),
@@ -426,7 +426,7 @@ func TestAccAWSFsxWindowsFileSystem_DailyAutomaticBackupStartTime(t *testing.T) 
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigDailyAutomaticBackupStartTime("01:01"),
+				Config: testAccWindowsFileSystemDailyAutomaticBackupStartTimeConfig("01:01"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "01:01"),
@@ -442,7 +442,7 @@ func TestAccAWSFsxWindowsFileSystem_DailyAutomaticBackupStartTime(t *testing.T) 
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigDailyAutomaticBackupStartTime("02:02"),
+				Config: testAccWindowsFileSystemDailyAutomaticBackupStartTimeConfig("02:02"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -466,7 +466,7 @@ func TestAccAWSFsxWindowsFileSystem_KmsKeyId(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigKmsKeyId1(),
+				Config: testAccWindowsFileSystemKMSKeyId1Config(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
@@ -482,7 +482,7 @@ func TestAccAWSFsxWindowsFileSystem_KmsKeyId(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigKmsKeyId2(),
+				Config: testAccWindowsFileSystemKMSKeyId2Config(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemRecreated(&filesystem1, &filesystem2),
@@ -504,7 +504,7 @@ func TestAccAWSFsxWindowsFileSystem_SecurityGroupIds(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1(),
+				Config: testAccWindowsFileSystemSecurityGroupIds1Config(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -520,7 +520,7 @@ func TestAccAWSFsxWindowsFileSystem_SecurityGroupIds(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds2(),
+				Config: testAccWindowsFileSystemSecurityGroupIds2Config(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemRecreated(&filesystem1, &filesystem2),
@@ -542,7 +542,7 @@ func TestAccAWSFsxWindowsFileSystem_SelfManagedActiveDirectory(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectory(),
+				Config: testAccWindowsFileSystemSelfManagedActiveDirectoryConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
@@ -573,7 +573,7 @@ func TestAccAWSFsxWindowsFileSystem_SelfManagedActiveDirectory_Username(t *testi
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectoryUsername("Admin"),
+				Config: testAccWindowsFileSystemSelfManagedActiveDirectoryUsernameConfig("Admin"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
@@ -590,7 +590,7 @@ func TestAccAWSFsxWindowsFileSystem_SelfManagedActiveDirectory_Username(t *testi
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectoryUsername("Administrator"),
+				Config: testAccWindowsFileSystemSelfManagedActiveDirectoryUsernameConfig("Administrator"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
@@ -611,7 +611,7 @@ func TestAccAWSFsxWindowsFileSystem_StorageCapacity(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigStorageCapacity(32),
+				Config: testAccWindowsFileSystemStorageCapacityConfig(32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "32"),
@@ -627,7 +627,7 @@ func TestAccAWSFsxWindowsFileSystem_StorageCapacity(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigStorageCapacity(36),
+				Config: testAccWindowsFileSystemStorageCapacityConfig(36),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -649,7 +649,7 @@ func TestAccAWSFsxWindowsFileSystem_fromBackup(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemFromBackup(),
+				Config: testAccWindowsFileSystemFromBackup(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttrPair(resourceName, "backup_id", "aws_fsx_backup.test", "id"),
@@ -680,7 +680,7 @@ func TestAccAWSFsxWindowsFileSystem_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigTags1("key1", "value1"),
+				Config: testAccWindowsFileSystemTags1Config("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -697,7 +697,7 @@ func TestAccAWSFsxWindowsFileSystem_Tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccWindowsFileSystemTags2Config("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -707,7 +707,7 @@ func TestAccAWSFsxWindowsFileSystem_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigTags1("key2", "value2"),
+				Config: testAccWindowsFileSystemTags1Config("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem3),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem2, &filesystem3),
@@ -730,7 +730,7 @@ func TestAccAWSFsxWindowsFileSystem_ThroughputCapacity(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigThroughputCapacity(16),
+				Config: testAccWindowsFileSystemThroughputCapacityConfig(16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "16"),
@@ -746,7 +746,7 @@ func TestAccAWSFsxWindowsFileSystem_ThroughputCapacity(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigThroughputCapacity(32),
+				Config: testAccWindowsFileSystemThroughputCapacityConfig(32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -768,7 +768,7 @@ func TestAccAWSFsxWindowsFileSystem_WeeklyMaintenanceStartTime(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigWeeklyMaintenanceStartTime("1:01:01"),
+				Config: testAccWindowsFileSystemWeeklyMaintenanceStartTimeConfig("1:01:01"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_start_time", "1:01:01"),
@@ -784,7 +784,7 @@ func TestAccAWSFsxWindowsFileSystem_WeeklyMaintenanceStartTime(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigWeeklyMaintenanceStartTime("2:02:02"),
+				Config: testAccWindowsFileSystemWeeklyMaintenanceStartTimeConfig("2:02:02"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -807,7 +807,7 @@ func TestAccAWSFsxWindowsFileSystem_auditConfig(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAuditConfig(rName, "SUCCESS_ONLY"),
+				Config: testAccWindowsFileSystemAuditConfig(rName, "SUCCESS_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
@@ -826,7 +826,7 @@ func TestAccAWSFsxWindowsFileSystem_auditConfig(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAuditConfig(rName, "SUCCESS_AND_FAILURE"),
+				Config: testAccWindowsFileSystemAuditConfig(rName, "SUCCESS_AND_FAILURE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
@@ -903,7 +903,7 @@ func testAccCheckFsxWindowsFileSystemRecreated(i, j *fsx.FileSystem) resource.Te
 	}
 }
 
-func testAccAwsFsxWindowsFileSystemConfigBase() string {
+func testAccWindowsFileSystemBaseConfig() string {
 	return `
 data "aws_availability_zones" "available" {
   state = "available"
@@ -944,8 +944,8 @@ resource "aws_directory_service_directory" "test" {
 `
 }
 
-func testAccAwsFsxWindowsFileSystemConfigAliases1(alias1 string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemAliases1Config(alias1 string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -958,8 +958,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, alias1)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigAliases2(alias1, alias2 string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemAliases2Config(alias1, alias2 string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -972,8 +972,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, alias1, alias2)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigAutomaticBackupRetentionDays(automaticBackupRetentionDays int) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemAutomaticBackupRetentionDaysConfig(automaticBackupRetentionDays int) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id             = aws_directory_service_directory.test.id
   automatic_backup_retention_days = %[1]d
@@ -985,8 +985,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, automaticBackupRetentionDays)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigCopyTagsToBackups(copyTagsToBackups bool) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemCopyTagsToBackupsConfig(copyTagsToBackups bool) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id  = aws_directory_service_directory.test.id
   copy_tags_to_backups = %[1]t
@@ -998,8 +998,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, copyTagsToBackups)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigDailyAutomaticBackupStartTime(dailyAutomaticBackupStartTime string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemDailyAutomaticBackupStartTimeConfig(dailyAutomaticBackupStartTime string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id               = aws_directory_service_directory.test.id
   daily_automatic_backup_start_time = %[1]q
@@ -1011,8 +1011,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, dailyAutomaticBackupStartTime)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigKmsKeyId1() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+func testAccWindowsFileSystemKMSKeyId1Config() string {
+	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_kms_key" "test1" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
@@ -1029,8 +1029,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccAwsFsxWindowsFileSystemConfigKmsKeyId2() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+func testAccWindowsFileSystemKMSKeyId2Config() string {
+	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_kms_key" "test2" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
@@ -1047,8 +1047,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+func testAccWindowsFileSystemSecurityGroupIds1Config() string {
+	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = aws_vpc.test.id
@@ -1079,8 +1079,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds2() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+func testAccWindowsFileSystemSecurityGroupIds2Config() string {
+	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = aws_vpc.test.id
@@ -1130,8 +1130,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectory() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+func testAccWindowsFileSystemSelfManagedActiveDirectoryConfig() string {
+	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_fsx_windows_file_system" "test" {
   skip_final_backup   = true
   storage_capacity    = 32
@@ -1148,8 +1148,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccAwsFsxWindowsFileSystemConfigSelfManagedActiveDirectoryUsername(username string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemSelfManagedActiveDirectoryUsernameConfig(username string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   skip_final_backup   = true
   storage_capacity    = 32
@@ -1166,8 +1166,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, username)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigStorageCapacity(storageCapacity int) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemStorageCapacityConfig(storageCapacity int) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -1178,8 +1178,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, storageCapacity)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigSubnetIds1() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+func testAccWindowsFileSystemSubnetIds1Config() string {
+	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -1190,8 +1190,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithSingleType(azType string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemSubnetIds1WithSingleTypeConfig(azType string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -1203,8 +1203,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, azType)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigSubnetIds1WithStorageType(azType, storageType string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemSubnetIds1WithStorageTypeConfig(azType, storageType string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -1217,8 +1217,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, azType, storageType)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigSubnetIds2() string {
-	return acctest.ConfigCompose(testAccAwsFsxWindowsFileSystemConfigBase(), `
+func testAccWindowsFileSystemSubnetIds2Config() string {
+	return acctest.ConfigCompose(testAccWindowsFileSystemBaseConfig(), `
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -1231,8 +1231,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `)
 }
 
-func testAccAwsFsxWindowsFileSystemFromBackup() string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+func testAccWindowsFileSystemFromBackup() string {
+	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_fsx_windows_file_system" "base" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -1255,8 +1255,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccAwsFsxWindowsFileSystemConfigTags1(tagKey1, tagValue1 string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemTags1Config(tagKey1, tagValue1 string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -1271,8 +1271,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -1288,8 +1288,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigThroughputCapacity(throughputCapacity int) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemThroughputCapacityConfig(throughputCapacity int) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
   skip_final_backup   = true
@@ -1300,8 +1300,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, throughputCapacity)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigWeeklyMaintenanceStartTime(weeklyMaintenanceStartTime string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemWeeklyMaintenanceStartTimeConfig(weeklyMaintenanceStartTime string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id           = aws_directory_service_directory.test.id
   skip_final_backup             = true
@@ -1313,8 +1313,8 @@ resource "aws_fsx_windows_file_system" "test" {
 `, weeklyMaintenanceStartTime)
 }
 
-func testAccAwsFsxWindowsFileSystemConfigAuditConfig(rName, status string) string {
-	return testAccAwsFsxWindowsFileSystemConfigBase() + fmt.Sprintf(`
+func testAccWindowsFileSystemAuditConfig(rName, status string) string {
+	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test" {
   name = "/aws/fsx/%[1]s"
 }
