@@ -364,11 +364,11 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if v := d.Get("cluster_security_groups").(*schema.Set); v.Len() > 0 {
-			restoreOpts.ClusterSecurityGroups = expandStringSet(v)
+			restoreOpts.ClusterSecurityGroups = flex.ExpandStringSet(v)
 		}
 
 		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-			restoreOpts.VpcSecurityGroupIds = expandStringSet(v)
+			restoreOpts.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
 		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
@@ -388,7 +388,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if v, ok := d.GetOk("iam_roles"); ok {
-			restoreOpts.IamRoles = expandStringSet(v.(*schema.Set))
+			restoreOpts.IamRoles = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		log.Printf("[DEBUG] Redshift Cluster restore cluster options: %s", restoreOpts)
@@ -432,11 +432,11 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if v := d.Get("cluster_security_groups").(*schema.Set); v.Len() > 0 {
-			createOpts.ClusterSecurityGroups = expandStringSet(v)
+			createOpts.ClusterSecurityGroups = flex.ExpandStringSet(v)
 		}
 
 		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = expandStringSet(v)
+			createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
 		if v, ok := d.GetOk("cluster_subnet_group_name"); ok {
@@ -472,7 +472,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if v, ok := d.GetOk("iam_roles"); ok {
-			createOpts.IamRoles = expandStringSet(v.(*schema.Set))
+			createOpts.IamRoles = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		log.Printf("[DEBUG] Redshift Cluster create options: %s", createOpts)
@@ -569,7 +569,7 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("encrypted", rsc.Encrypted)
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 	d.Set("kms_key_id", rsc.KmsKeyId)
-	if err := d.Set("logging", flattenRedshiftLogging(loggingStatus)); err != nil {
+	if err := d.Set("logging", flattenLogging(loggingStatus)); err != nil {
 		return fmt.Errorf("error setting logging: %w", err)
 	}
 	d.Set("master_username", rsc.MasterUsername)
@@ -577,7 +577,7 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rsc.PubliclyAccessible)
-	if err := d.Set("snapshot_copy", flattenRedshiftSnapshotCopy(rsc.ClusterSnapshotCopyStatus)); err != nil {
+	if err := d.Set("snapshot_copy", flattenSnapshotCopy(rsc.ClusterSnapshotCopyStatus)); err != nil {
 		return fmt.Errorf("error setting snapshot_copy: %w", err)
 	}
 
@@ -663,12 +663,12 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("cluster_security_groups") {
-		req.ClusterSecurityGroups = expandStringSet(d.Get("cluster_security_groups").(*schema.Set))
+		req.ClusterSecurityGroups = flex.ExpandStringSet(d.Get("cluster_security_groups").(*schema.Set))
 		requestUpdate = true
 	}
 
 	if d.HasChange("vpc_security_group_ids") {
-		req.VpcSecurityGroupIds = expandStringSet(d.Get("vpc_security_group_ids").(*schema.Set))
+		req.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set))
 		requestUpdate = true
 	}
 
@@ -749,8 +749,8 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		log.Printf("[INFO] Building Redshift Modify Cluster IAM Role Options")
 		req := &redshift.ModifyClusterIamRolesInput{
 			ClusterIdentifier: aws.String(d.Id()),
-			AddIamRoles:       expandStringSet(addIams),
-			RemoveIamRoles:    expandStringSet(removeIams),
+			AddIamRoles:       flex.ExpandStringSet(addIams),
+			RemoveIamRoles:    flex.ExpandStringSet(removeIams),
 		}
 
 		log.Printf("[INFO] Modifying Redshift Cluster IAM Roles: %s", d.Id())
