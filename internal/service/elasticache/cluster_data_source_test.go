@@ -21,7 +21,7 @@ func TestAccAWSDataElasticacheCluster_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElastiCacheClusterConfigWithDataSource(rName),
+				Config: testAccClusterWithDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_address", resourceName, "cluster_address"),
@@ -36,7 +36,7 @@ func TestAccAWSDataElasticacheCluster_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSElastiCacheClusterConfigWithDataSource(rName string) string {
+func testAccClusterWithDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
   cluster_id      = %[1]q

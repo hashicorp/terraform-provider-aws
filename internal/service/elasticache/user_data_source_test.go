@@ -21,7 +21,7 @@ func TestAccDataSourceAWSElasticacheUser_basic(t *testing.T) {
 		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElastiCacheUserConfigWithDataSource(rName),
+				Config: testAccUserWithDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
@@ -34,7 +34,7 @@ func TestAccDataSourceAWSElasticacheUser_basic(t *testing.T) {
 }
 
 // Basic Resource
-func testAccAWSElastiCacheUserConfigWithDataSource(rName string) string {
+func testAccUserWithDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_user" "test-basic" {
   user_id              = %[1]q

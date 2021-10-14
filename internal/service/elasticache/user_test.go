@@ -25,12 +25,12 @@ func TestAccAWSElasticacheUser_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
+		CheckDestroy: testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheUserConfigBasic(rName),
+				Config: testAccUserBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
@@ -59,18 +59,18 @@ func TestAccAWSElasticacheUser_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
+		CheckDestroy: testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheUserConfigBasic(rName),
+				Config: testAccUserBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 				),
 			},
 			{
-				Config: testAccAWSElasticacheUserConfigUpdate(rName),
+				Config: testAccUserUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* +@all"),
 				),
 			},
@@ -96,12 +96,12 @@ func TestAccAWSElasticacheUser_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
+		CheckDestroy: testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheUserConfigTags(rName, "tagKey", "tagVal"),
+				Config: testAccUserTagsConfig(rName, "tagKey", "tagVal"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
@@ -111,9 +111,9 @@ func TestAccAWSElasticacheUser_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSElasticacheUserConfigTags(rName, "tagKey", "tagVal2"),
+				Config: testAccUserTagsConfig(rName, "tagKey", "tagVal2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
@@ -123,9 +123,9 @@ func TestAccAWSElasticacheUser_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSElasticacheUserConfigBasic(rName),
+				Config: testAccUserBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
@@ -146,12 +146,12 @@ func TestAccAWSElasticacheUser_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSElasticacheUserDestroy,
+		CheckDestroy: testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheUserConfigBasic(rName),
+				Config: testAccUserBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheUserExists(resourceName, &user),
+					testAccCheckUserExists(resourceName, &user),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -160,11 +160,11 @@ func TestAccAWSElasticacheUser_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSElasticacheUserDestroy(s *terraform.State) error {
-	return testAccCheckAWSElasticacheUserDestroyWithProvider(s, acctest.Provider)
+func testAccCheckUserDestroy(s *terraform.State) error {
+	return testAccCheckUserDestroyWithProvider(s, acctest.Provider)
 }
 
-func testAccCheckAWSElasticacheUserDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+func testAccCheckUserDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -190,11 +190,11 @@ func testAccCheckAWSElasticacheUserDestroyWithProvider(s *terraform.State, provi
 	return nil
 }
 
-func testAccCheckAWSElasticacheUserExists(n string, v *elasticache.User) resource.TestCheckFunc {
-	return testAccCheckAWSElasticacheUserExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
+func testAccCheckUserExists(n string, v *elasticache.User) resource.TestCheckFunc {
+	return testAccCheckUserExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckAWSElasticacheUserExistsWithProvider(n string, v *elasticache.User, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckUserExistsWithProvider(n string, v *elasticache.User, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -218,7 +218,7 @@ func testAccCheckAWSElasticacheUserExistsWithProvider(n string, v *elasticache.U
 	}
 }
 
-func testAccAWSElasticacheUserConfigBasic(rName string) string {
+func testAccUserBasicConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
@@ -230,7 +230,7 @@ resource "aws_elasticache_user" "test" {
 `, rName))
 }
 
-func testAccAWSElasticacheUserConfigUpdate(rName string) string {
+func testAccUserUpdateConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q
@@ -242,7 +242,7 @@ resource "aws_elasticache_user" "test" {
 `, rName))
 }
 
-func testAccAWSElasticacheUserConfigTags(rName, tagKey, tagValue string) string {
+func testAccUserTagsConfig(rName, tagKey, tagValue string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
   user_id       = %[1]q

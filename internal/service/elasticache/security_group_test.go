@@ -19,7 +19,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_elasticache_security_group", &resource.Sweeper{
 		Name: "aws_elasticache_security_group",
-		F:    testSweepElasticacheCacheSecurityGroups,
+		F:    sweepCacheSecurityGroups,
 		Dependencies: []string{
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
@@ -27,7 +27,7 @@ func init() {
 	})
 }
 
-func testSweepElasticacheCacheSecurityGroups(region string) error {
+func sweepCacheSecurityGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -76,12 +76,12 @@ func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSElasticacheSecurityGroupDestroy,
+		CheckDestroy:      testAccCheckSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheSecurityGroupConfig(rName),
+				Config: testAccSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheSecurityGroupExists(resourceName),
+					testAccCheckSecurityGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 				),
 			},
@@ -94,7 +94,7 @@ func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSElasticacheSecurityGroupDestroy(s *terraform.State) error {
+func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -116,7 +116,7 @@ func testAccCheckAWSElasticacheSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSElasticacheSecurityGroupExists(n string) resource.TestCheckFunc {
+func testAccCheckSecurityGroupExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -138,7 +138,7 @@ func testAccCheckAWSElasticacheSecurityGroupExists(n string) resource.TestCheckF
 	}
 }
 
-func testAccAWSElasticacheSecurityGroupConfig(rName string) string {
+func testAccSecurityGroupConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
