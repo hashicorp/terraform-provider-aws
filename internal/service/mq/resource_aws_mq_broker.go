@@ -1,4 +1,4 @@
-package aws
+package mq
 
 import (
 	"bytes"
@@ -18,20 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mitchellh/copystructure"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mq/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
-	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
-	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
-	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
-	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
-	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
-	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 )
 
 func ResourceBroker() *schema.Resource {
@@ -415,7 +407,7 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
-	if _, err := tfmq.WaitBrokerCreated(conn, d.Id()); err != nil {
+	if _, err := WaitBrokerCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) creation: %w", d.Id(), err)
 	}
 
@@ -562,7 +554,7 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error rebooting MQ Broker (%s): %w", d.Id(), err)
 		}
 
-		if _, err := tfmq.WaitBrokerRebooted(conn, d.Id()); err != nil {
+		if _, err := WaitBrokerRebooted(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for MQ Broker (%s) reboot: %w", d.Id(), err)
 		}
 	}
@@ -589,7 +581,7 @@ func resourceBrokerDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if _, err := tfmq.WaitBrokerDeleted(conn, d.Id()); err != nil {
+	if _, err := WaitBrokerDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) deletion: %w", d.Id(), err)
 	}
 
