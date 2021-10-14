@@ -1,4 +1,4 @@
-package aws
+package route53recoveryreadiness_test
 
 import (
 	"fmt"
