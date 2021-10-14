@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
+func testAccDomainAssociation_basic(t *testing.T) {
 	key := "AMPLIFY_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -28,15 +28,15 @@ func testAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyDomainAssociationDestroy,
+		CheckDestroy: testAccCheckDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyDomainAssociationConfig(rName, domainName, false),
+				Config: testAccDomainAssociationConfig(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyDomainAssociationExists(resourceName, &domain),
+					testAccCheckDomainAssociationExists(resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
@@ -57,7 +57,7 @@ func testAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSAmplifyDomainAssociation_disappears(t *testing.T) {
+func testAccDomainAssociation_disappears(t *testing.T) {
 	key := "AMPLIFY_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -69,15 +69,15 @@ func testAccAWSAmplifyDomainAssociation_disappears(t *testing.T) {
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyDomainAssociationDestroy,
+		CheckDestroy: testAccCheckDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyDomainAssociationConfig(rName, domainName, false),
+				Config: testAccDomainAssociationConfig(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyDomainAssociationExists(resourceName, &domain),
+					testAccCheckDomainAssociationExists(resourceName, &domain),
 					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,7 +86,7 @@ func testAccAWSAmplifyDomainAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccAWSAmplifyDomainAssociation_update(t *testing.T) {
+func testAccDomainAssociation_update(t *testing.T) {
 	key := "AMPLIFY_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -98,15 +98,15 @@ func testAccAWSAmplifyDomainAssociation_update(t *testing.T) {
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyDomainAssociationDestroy,
+		CheckDestroy: testAccCheckDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyDomainAssociationConfig(rName, domainName, true),
+				Config: testAccDomainAssociationConfig(rName, domainName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyDomainAssociationExists(resourceName, &domain),
+					testAccCheckDomainAssociationExists(resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
@@ -124,9 +124,9 @@ func testAccAWSAmplifyDomainAssociation_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_verification"},
 			},
 			{
-				Config: testAccAWSAmplifyDomainAssociationConfigUpdated(rName, domainName, true),
+				Config: testAccDomainAssociationUpdatedConfig(rName, domainName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyDomainAssociationExists(resourceName, &domain),
+					testAccCheckDomainAssociationExists(resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "2"),
@@ -145,7 +145,7 @@ func testAccAWSAmplifyDomainAssociation_update(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAmplifyDomainAssociationExists(resourceName string, v *amplify.DomainAssociation) resource.TestCheckFunc {
+func testAccCheckDomainAssociationExists(resourceName string, v *amplify.DomainAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -176,7 +176,7 @@ func testAccCheckAWSAmplifyDomainAssociationExists(resourceName string, v *ampli
 	}
 }
 
-func testAccCheckAWSAmplifyDomainAssociationDestroy(s *terraform.State) error {
+func testAccCheckDomainAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -206,7 +206,7 @@ func testAccCheckAWSAmplifyDomainAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAmplifyDomainAssociationConfig(rName, domainName string, waitForVerification bool) string {
+func testAccDomainAssociationConfig(rName, domainName string, waitForVerification bool) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -231,7 +231,7 @@ resource "aws_amplify_domain_association" "test" {
 `, rName, domainName, waitForVerification)
 }
 
-func testAccAWSAmplifyDomainAssociationConfigUpdated(rName, domainName string, waitForVerification bool) string {
+func testAccDomainAssociationUpdatedConfig(rName, domainName string, waitForVerification bool) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q

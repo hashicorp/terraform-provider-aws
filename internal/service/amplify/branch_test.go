@@ -16,21 +16,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccAWSAmplifyBranch_basic(t *testing.T) {
+func testAccBranch_basic(t *testing.T) {
 	var branch amplify.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
+		CheckDestroy: testAccCheckBranchDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBranchConfigName(rName),
+				Config: testAccBranchNameConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/branches/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associated_resources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "backend_environment_arn", ""),
@@ -63,21 +63,21 @@ func testAccAWSAmplifyBranch_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSAmplifyBranch_disappears(t *testing.T) {
+func testAccBranch_disappears(t *testing.T) {
 	var branch amplify.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
+		CheckDestroy: testAccCheckBranchDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBranchConfigName(rName),
+				Config: testAccBranchNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceBranch(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,21 +86,21 @@ func testAccAWSAmplifyBranch_disappears(t *testing.T) {
 	})
 }
 
-func testAccAWSAmplifyBranch_Tags(t *testing.T) {
+func testAccBranch_Tags(t *testing.T) {
 	var branch amplify.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
+		CheckDestroy: testAccCheckBranchDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBranchConfigTags1(rName, "key1", "value1"),
+				Config: testAccBranchTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -111,18 +111,18 @@ func testAccAWSAmplifyBranch_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyBranchConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBranchTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSAmplifyBranchConfigTags1(rName, "key2", "value2"),
+				Config: testAccBranchTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -131,7 +131,7 @@ func testAccAWSAmplifyBranch_Tags(t *testing.T) {
 	})
 }
 
-func testAccAWSAmplifyBranch_BasicAuthCredentials(t *testing.T) {
+func testAccBranch_BasicAuthCredentials(t *testing.T) {
 	var branch amplify.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
@@ -140,15 +140,15 @@ func testAccAWSAmplifyBranch_BasicAuthCredentials(t *testing.T) {
 	credentials2 := base64.StdEncoding.EncodeToString([]byte("username2:password2"))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
+		CheckDestroy: testAccCheckBranchDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBranchConfigBasicAuthCredentials(rName, credentials1),
+				Config: testAccBranchBasicAuthCredentialsConfig(rName, credentials1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials1),
 					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
 				),
@@ -159,17 +159,17 @@ func testAccAWSAmplifyBranch_BasicAuthCredentials(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyBranchConfigBasicAuthCredentials(rName, credentials2),
+				Config: testAccBranchBasicAuthCredentialsConfig(rName, credentials2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials2),
 					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
 				),
 			},
 			{
-				Config: testAccAWSAmplifyBranchConfigName(rName),
+				Config: testAccBranchNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					// Clearing basic_auth_credentials not reflected in API.
 					// resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
@@ -179,21 +179,21 @@ func testAccAWSAmplifyBranch_BasicAuthCredentials(t *testing.T) {
 	})
 }
 
-func testAccAWSAmplifyBranch_EnvironmentVariables(t *testing.T) {
+func testAccBranch_EnvironmentVariables(t *testing.T) {
 	var branch amplify.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
+		CheckDestroy: testAccCheckBranchDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBranchConfigEnvironmentVariables(rName),
+				Config: testAccBranchEnvironmentVariablesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "1"),
 				),
@@ -204,18 +204,18 @@ func testAccAWSAmplifyBranch_EnvironmentVariables(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyBranchConfigEnvironmentVariablesUpdated(rName),
+				Config: testAccBranchEnvironmentVariablesUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "2"),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", "2"),
 				),
 			},
 			{
-				Config: testAccAWSAmplifyBranchConfigName(rName),
+				Config: testAccBranchNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
 				),
 			},
@@ -223,7 +223,7 @@ func testAccAWSAmplifyBranch_EnvironmentVariables(t *testing.T) {
 	})
 }
 
-func testAccAWSAmplifyBranch_OptionalArguments(t *testing.T) {
+func testAccBranch_OptionalArguments(t *testing.T) {
 	var branch amplify.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	environmentName := sdkacctest.RandStringFromCharSet(9, sdkacctest.CharSetAlpha)
@@ -232,15 +232,15 @@ func testAccAWSAmplifyBranch_OptionalArguments(t *testing.T) {
 	backendEnvironment2ResourceName := "aws_amplify_backend_environment.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
+		CheckDestroy: testAccCheckBranchDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBranchConfigOptionalArguments(rName, environmentName),
+				Config: testAccBranchOptionalArgumentsConfig(rName, environmentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", "testdescription1"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "testdisplayname1"),
@@ -260,9 +260,9 @@ func testAccAWSAmplifyBranch_OptionalArguments(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyBranchConfigOptionalArgumentsUpdated(rName, environmentName),
+				Config: testAccBranchOptionalArgumentsUpdatedConfig(rName, environmentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					testAccCheckBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment2ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", "testdescription2"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "testdisplayname2"),
@@ -280,7 +280,7 @@ func testAccAWSAmplifyBranch_OptionalArguments(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAmplifyBranchExists(resourceName string, v *amplify.Branch) resource.TestCheckFunc {
+func testAccCheckBranchExists(resourceName string, v *amplify.Branch) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -311,7 +311,7 @@ func testAccCheckAWSAmplifyBranchExists(resourceName string, v *amplify.Branch) 
 	}
 }
 
-func testAccCheckAWSAmplifyBranchDestroy(s *terraform.State) error {
+func testAccCheckBranchDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -341,7 +341,7 @@ func testAccCheckAWSAmplifyBranchDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAmplifyBranchConfigName(rName string) string {
+func testAccBranchNameConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -354,7 +354,7 @@ resource "aws_amplify_branch" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyBranchConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccBranchTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -371,7 +371,7 @@ resource "aws_amplify_branch" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSAmplifyBranchConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccBranchTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -389,7 +389,7 @@ resource "aws_amplify_branch" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSAmplifyBranchConfigBasicAuthCredentials(rName, basicAuthCredentials string) string {
+func testAccBranchBasicAuthCredentialsConfig(rName, basicAuthCredentials string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -405,7 +405,7 @@ resource "aws_amplify_branch" "test" {
 `, rName, basicAuthCredentials)
 }
 
-func testAccAWSAmplifyBranchConfigEnvironmentVariables(rName string) string {
+func testAccBranchEnvironmentVariablesConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -422,7 +422,7 @@ resource "aws_amplify_branch" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyBranchConfigEnvironmentVariablesUpdated(rName string) string {
+func testAccBranchEnvironmentVariablesUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -440,7 +440,7 @@ resource "aws_amplify_branch" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyBranchConfigOptionalArguments(rName, environmentName string) string {
+func testAccBranchOptionalArgumentsConfig(rName, environmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -475,7 +475,7 @@ resource "aws_amplify_branch" "test" {
 `, rName, environmentName)
 }
 
-func testAccAWSAmplifyBranchConfigOptionalArgumentsUpdated(rName, environmentName string) string {
+func testAccBranchOptionalArgumentsUpdatedConfig(rName, environmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q

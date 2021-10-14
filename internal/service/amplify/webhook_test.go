@@ -15,21 +15,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccAWSAmplifyWebhook_basic(t *testing.T) {
+func testAccWebhook_basic(t *testing.T) {
 	var webhook amplify.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyWebhookDestroy,
+		CheckDestroy: testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyWebhookConfig(rName),
+				Config: testAccWebhookConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSAmplifyWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/webhooks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -45,21 +45,21 @@ func testAccAWSAmplifyWebhook_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSAmplifyWebhook_disappears(t *testing.T) {
+func testAccWebhook_disappears(t *testing.T) {
 	var webhook amplify.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyWebhookDestroy,
+		CheckDestroy: testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyWebhookConfig(rName),
+				Config: testAccWebhookConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSAmplifyWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -68,21 +68,21 @@ func testAccAWSAmplifyWebhook_disappears(t *testing.T) {
 	})
 }
 
-func testAccAWSAmplifyWebhook_update(t *testing.T) {
+func testAccWebhook_update(t *testing.T) {
 	var webhook amplify.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAmplifyWebhookDestroy,
+		CheckDestroy: testAccCheckWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyWebhookConfigDescription(rName),
+				Config: testAccWebhookDescriptionConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSAmplifyWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "testdescription1"),
 				),
@@ -93,9 +93,9 @@ func testAccAWSAmplifyWebhook_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyWebhookConfigDescriptionUpdated(rName),
+				Config: testAccWebhookDescriptionUpdatedConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSAmplifyWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "testdescription2"),
 				),
@@ -104,7 +104,7 @@ func testAccAWSAmplifyWebhook_update(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAmplifyWebhookExists(resourceName string, v *amplify.Webhook) resource.TestCheckFunc {
+func testAccCheckWebhookExists(resourceName string, v *amplify.Webhook) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -129,7 +129,7 @@ func testAccCheckAWSAmplifyWebhookExists(resourceName string, v *amplify.Webhook
 	}
 }
 
-func testAccCheckAWSAmplifyWebhookDestroy(s *terraform.State) error {
+func testAccCheckWebhookDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -153,7 +153,7 @@ func testAccCheckAWSAmplifyWebhookDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAmplifyWebhookConfig(rName string) string {
+func testAccWebhookConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -171,7 +171,7 @@ resource "aws_amplify_webhook" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyWebhookConfigDescription(rName string) string {
+func testAccWebhookDescriptionConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -195,7 +195,7 @@ resource "aws_amplify_webhook" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyWebhookConfigDescriptionUpdated(rName string) string {
+func testAccWebhookDescriptionUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
