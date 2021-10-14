@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCognitoIdentityProvider() *schema.Resource {
+func ResourceIdentityProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoIdentityProviderCreate,
-		Read:   resourceAwsCognitoIdentityProviderRead,
-		Update: resourceAwsCognitoIdentityProviderUpdate,
-		Delete: resourceAwsCognitoIdentityProviderDelete,
+		Create: resourceIdentityProviderCreate,
+		Read:   resourceIdentityProviderRead,
+		Update: resourceIdentityProviderUpdate,
+		Delete: resourceIdentityProviderDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -79,7 +79,7 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 	}
 }
 
-func resourceAwsCognitoIdentityProviderCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityProviderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Print("[DEBUG] Creating Cognito Identity Provider")
 
@@ -110,10 +110,10 @@ func resourceAwsCognitoIdentityProviderCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(fmt.Sprintf("%s:%s", userPoolID, providerName))
 
-	return resourceAwsCognitoIdentityProviderRead(d, meta)
+	return resourceIdentityProviderRead(d, meta)
 }
 
-func resourceAwsCognitoIdentityProviderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Reading Cognito Identity Provider: %s", d.Id())
 
@@ -162,7 +162,7 @@ func resourceAwsCognitoIdentityProviderRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsCognitoIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Print("[DEBUG] Updating Cognito Identity Provider")
 
@@ -193,10 +193,10 @@ func resourceAwsCognitoIdentityProviderUpdate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error updating Cognito Identity Provider: %w", err)
 	}
 
-	return resourceAwsCognitoIdentityProviderRead(d, meta)
+	return resourceIdentityProviderRead(d, meta)
 }
 
-func resourceAwsCognitoIdentityProviderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider: %s", d.Id())
 

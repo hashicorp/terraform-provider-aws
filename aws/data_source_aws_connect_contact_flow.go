@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsConnectContactFlow() *schema.Resource {
+func DataSourceContactFlow() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsConnectContactFlowRead,
+		ReadContext: dataSourceContactFlowRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -54,7 +54,7 @@ func dataSourceAwsConnectContactFlow() *schema.Resource {
 	}
 }
 
-func dataSourceAwsConnectContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

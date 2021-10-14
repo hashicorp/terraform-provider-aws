@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudTrail() *schema.Resource {
+func ResourceCloudTrail() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudTrailCreate,
-		Read:   resourceAwsCloudTrailRead,
-		Update: resourceAwsCloudTrailUpdate,
-		Delete: resourceAwsCloudTrailDelete,
+		Create: resourceCloudTrailCreate,
+		Read:   resourceCloudTrailRead,
+		Update: resourceCloudTrailUpdate,
+		Delete: resourceCloudTrailDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -233,7 +233,7 @@ func resourceAwsCloudTrail() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -328,10 +328,10 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsCloudTrailRead(d, meta)
+	return resourceCloudTrailRead(d, meta)
 }
 
-func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -439,7 +439,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
 	input := cloudtrail.UpdateTrailInput{
@@ -539,10 +539,10 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] CloudTrail updated: %s", t)
 
-	return resourceAwsCloudTrailRead(d, meta)
+	return resourceCloudTrailRead(d, meta)
 }
 
-func resourceAwsCloudTrailDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudTrailDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudTrailConn
 
 	log.Printf("[DEBUG] Deleting CloudTrail: %q", d.Id())

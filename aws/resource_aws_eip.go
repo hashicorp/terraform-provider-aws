@@ -23,12 +23,12 @@ const (
 	ec2AddressAssociationClassicTimeout = 2 * time.Minute
 )
 
-func resourceAwsEip() *schema.Resource {
+func ResourceEIP() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEipCreate,
-		Read:   resourceAwsEipRead,
-		Update: resourceAwsEipUpdate,
-		Delete: resourceAwsEipDelete,
+		Create: resourceEIPCreate,
+		Read:   resourceEIPRead,
+		Update: resourceEIPUpdate,
+		Delete: resourceEIPDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -126,7 +126,7 @@ func resourceAwsEip() *schema.Resource {
 	}
 }
 
-func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -191,10 +191,10 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
 
-	return resourceAwsEipUpdate(d, meta)
+	return resourceEIPUpdate(d, meta)
 }
 
-func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -326,7 +326,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	domain := resourceAwsEipDomain(d)
@@ -420,13 +420,13 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsEipRead(d, meta)
+	return resourceEIPRead(d, meta)
 }
 
-func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if err := resourceAwsEipRead(d, meta); err != nil {
+	if err := resourceEIPRead(d, meta); err != nil {
 		return err
 	}
 	if d.Id() == "" {

@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsConnectInstance() *schema.Resource {
+func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsConnectInstanceCreate,
-		ReadContext:   resourceAwsConnectInstanceRead,
-		UpdateContext: resourceAwsConnectInstanceUpdate,
-		DeleteContext: resourceAwsConnectInstanceDelete,
+		CreateContext: resourceInstanceCreate,
+		ReadContext:   resourceInstanceRead,
+		UpdateContext: resourceInstanceUpdate,
+		DeleteContext: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -112,7 +112,7 @@ func resourceAwsConnectInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
 	input := &connect.CreateInstanceInput{
@@ -156,10 +156,10 @@ func resourceAwsConnectInstanceCreate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	return resourceAwsConnectInstanceRead(ctx, d, meta)
+	return resourceInstanceRead(ctx, d, meta)
 }
 
-func resourceAwsConnectInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
 	for att := range tfconnect.InstanceAttributeMapping() {
@@ -178,7 +178,7 @@ func resourceAwsConnectInstanceUpdate(ctx context.Context, d *schema.ResourceDat
 
 	return nil
 }
-func resourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
 	input := connect.DescribeInstanceInput{
@@ -221,7 +221,7 @@ func resourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func resourceAwsConnectInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
 	input := &connect.DeleteInstanceInput{

@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsVpcs() *schema.Resource {
+func DataSourceVPCs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsVpcsRead,
+		Read: dataSourceVPCsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
@@ -29,7 +29,7 @@ func dataSourceAwsVpcs() *schema.Resource {
 	}
 }
 
-func dataSourceAwsVpcsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceVPCsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeVpcsInput{}

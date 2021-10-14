@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSubnet() *schema.Resource {
+func DataSourceSubnet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSubnetRead,
+		Read: dataSourceSubnetRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -99,7 +99,7 @@ func dataSourceAwsSubnet() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

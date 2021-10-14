@@ -28,12 +28,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func resourceAwsLb() *schema.Resource {
+func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLbCreate,
-		Read:   resourceAwsLbRead,
-		Update: resourceAwsLbUpdate,
-		Delete: resourceAwsLbDelete,
+		Create: resourceLoadBalancerCreate,
+		Read:   resourceLoadBalancerRead,
+		Update: resourceLoadBalancerUpdate,
+		Delete: resourceLoadBalancerDelete,
 		// Subnets are ForceNew for Network Load Balancers
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffNLBSubnets,
@@ -264,7 +264,7 @@ func suppressIfLBType(t string) schema.SchemaDiffSuppressFunc {
 	}
 }
 
-func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -352,10 +352,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 	}
 
-	return resourceAwsLbUpdate(d, meta)
+	return resourceLoadBalancerUpdate(d, meta)
 }
 
-func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	lb, err := finder.LoadBalancerByARN(conn, d.Id())
@@ -383,7 +383,7 @@ func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 	return flattenAwsLbResource(d, meta, lb)
 }
 
-func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	if d.HasChange("tags_all") {
@@ -548,10 +548,10 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 	}
 
-	return resourceAwsLbRead(d, meta)
+	return resourceLoadBalancerRead(d, meta)
 }
 
-func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 
 	log.Printf("[INFO] Deleting LB: %s", d.Id())

@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCognitoIdentityPool() *schema.Resource {
+func ResourcePool() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoIdentityPoolCreate,
-		Read:   resourceAwsCognitoIdentityPoolRead,
-		Update: resourceAwsCognitoIdentityPoolUpdate,
-		Delete: resourceAwsCognitoIdentityPoolDelete,
+		Create: resourcePoolCreate,
+		Read:   resourcePoolRead,
+		Update: resourcePoolUpdate,
+		Delete: resourcePoolDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -114,7 +114,7 @@ func resourceAwsCognitoIdentityPool() *schema.Resource {
 	}
 }
 
-func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -157,10 +157,10 @@ func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(entity.IdentityPoolId))
 
-	return resourceAwsCognitoIdentityPoolRead(d, meta)
+	return resourcePoolRead(d, meta)
 }
 
-func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -220,7 +220,7 @@ func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
 
@@ -267,10 +267,10 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsCognitoIdentityPoolRead(d, meta)
+	return resourcePoolRead(d, meta)
 }
 
-func resourceAwsCognitoIdentityPoolDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePoolDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 

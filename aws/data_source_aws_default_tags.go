@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDefaultTags() *schema.Resource {
+func DataSourceDefaultTags() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDefaultTagsRead,
+		Read: dataSourceDefaultTagsRead,
 
 		Schema: map[string]*schema.Schema{
 			"tags": tagsSchemaComputed(),
@@ -17,7 +17,7 @@ func dataSourceAwsDefaultTags() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDefaultTagsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDefaultTagsRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLaunchConfiguration() *schema.Resource {
+func DataSourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLaunchConfigurationRead,
+		Read: dataSourceLaunchConfigurationRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -224,7 +224,7 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 

@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRoute53Zone() *schema.Resource {
+func DataSourceZone() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRoute53ZoneRead,
+		Read: dataSourceZoneRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -72,7 +72,7 @@ func dataSourceAwsRoute53Zone() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

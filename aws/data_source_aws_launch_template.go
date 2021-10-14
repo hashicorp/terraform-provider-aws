@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLaunchTemplate() *schema.Resource {
+func DataSourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLaunchTemplateRead,
+		Read: dataSourceLaunchTemplateRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -416,7 +416,7 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

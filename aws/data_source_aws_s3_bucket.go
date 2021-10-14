@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsS3Bucket() *schema.Resource {
+func DataSourceBucket() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsS3BucketRead,
+		Read: dataSourceBucketRead,
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -55,7 +55,7 @@ func dataSourceAwsS3Bucket() *schema.Resource {
 	}
 }
 
-func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)

@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsArn() *schema.Resource {
+func DataSourceARN() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsArnRead,
+		Read: dataSourceARNRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -42,7 +42,7 @@ func dataSourceAwsArn() *schema.Resource {
 	}
 }
 
-func dataSourceAwsArnRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceARNRead(d *schema.ResourceData, meta interface{}) error {
 	v := d.Get("arn").(string)
 	arn, err := arn.Parse(v)
 	if err != nil {

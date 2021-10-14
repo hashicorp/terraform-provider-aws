@@ -24,13 +24,13 @@ var r53NoRecordsFound = errors.New("No matching records found")
 var r53NoHostedZoneFound = errors.New("No matching Hosted Zone found")
 var r53ValidRecordTypes = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT|DS)$")
 
-func resourceAwsRoute53Record() *schema.Resource {
+func ResourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAwsRoute53RecordCreate,
-		Read:   resourceAwsRoute53RecordRead,
-		Update: resourceAwsRoute53RecordUpdate,
-		Delete: resourceAwsRoute53RecordDelete,
+		Create: resourceRecordCreate,
+		Read:   resourceRecordRead,
+		Update: resourceRecordUpdate,
+		Delete: resourceRecordDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -248,7 +248,7 @@ func resourceAwsRoute53Record() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 	// Route 53 supports CREATE, DELETE, and UPSERT actions. We use UPSERT, and
 	// AWS dynamically determines if a record should be created or updated.
 	// Amazon Route 53 can update an existing resource record set only when all
@@ -259,7 +259,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 		// If neither type nor set_identifier changed we use UPSERT,
 		// for resource update here we simply fall through to
 		// our resource create function.
-		return resourceAwsRoute53RecordCreate(d, meta)
+		return resourceRecordCreate(d, meta)
 	}
 
 	// Otherwise, we delete the existing record and create a new record within
@@ -390,7 +390,7 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 	return err
 }
 
-func resourceAwsRoute53RecordCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRecordCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 	zone := cleanZoneID(d.Get("zone_id").(string))
 
@@ -510,7 +510,7 @@ func waitForRoute53RecordSetToSync(conn *route53.Route53, requestId string) erro
 	return err
 }
 
-func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRecordRead(d *schema.ResourceData, meta interface{}) error {
 	// If we don't have a zone ID, we're doing an import. Parse it from the ID.
 	if _, ok := d.GetOk("zone_id"); !ok {
 		parts := parseRecordId(d.Id())
@@ -725,7 +725,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	return record, nil
 }
 
-func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRecordDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 	// Get the records
 	rec, err := findRecord(d, meta)

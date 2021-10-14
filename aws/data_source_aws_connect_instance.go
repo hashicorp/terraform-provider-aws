@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsConnectInstance() *schema.Resource {
+func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsConnectInstanceRead,
+		ReadContext: dataSourceInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -83,7 +83,7 @@ func dataSourceAwsConnectInstance() *schema.Resource {
 	}
 }
 
-func dataSourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ConnectConn
 
 	var matchedInstance *connect.Instance

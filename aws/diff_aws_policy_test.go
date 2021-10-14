@@ -8,6 +8,7 @@ import (
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccCheckAwsPolicyMatch(resource, attr, expectedPolicy string) resource.TestCheckFunc {

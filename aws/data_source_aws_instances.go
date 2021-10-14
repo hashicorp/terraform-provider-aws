@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsInstances() *schema.Resource {
+func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsInstancesRead,
+		Read: dataSourceInstancesRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter":        dataSourceFiltersSchema(),
@@ -54,7 +54,7 @@ func dataSourceAwsInstances() *schema.Resource {
 	}
 }
 
-func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	filters, filtersOk := d.GetOk("filter")

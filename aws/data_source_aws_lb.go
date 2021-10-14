@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsLb() *schema.Resource {
+func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLbRead,
+		Read: dataSourceLoadBalancerRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:         schema.TypeString,
@@ -156,7 +156,7 @@ func dataSourceAwsLb() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudWatchDashboard() *schema.Resource {
+func ResourceDashboard() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCloudWatchDashboardPut,
-		Read:   resourceAwsCloudWatchDashboardRead,
+		Read:   resourceDashboardRead,
 		Update: resourceAwsCloudWatchDashboardPut,
-		Delete: resourceAwsCloudWatchDashboardDelete,
+		Delete: resourceDashboardDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -52,7 +52,7 @@ func resourceAwsCloudWatchDashboard() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 	dashboardName := d.Get("dashboard_name").(string)
 	log.Printf("[DEBUG] Reading CloudWatch Dashboard: %s", dashboardName)
 	conn := meta.(*conns.AWSClient).CloudWatchConn
@@ -93,10 +93,10 @@ func resourceAwsCloudWatchDashboardPut(d *schema.ResourceData, meta interface{})
 	d.SetId(d.Get("dashboard_name").(string))
 	log.Println("[INFO] CloudWatch Dashboard put finished")
 
-	return resourceAwsCloudWatchDashboardRead(d, meta)
+	return resourceDashboardRead(d, meta)
 }
 
-func resourceAwsCloudWatchDashboardDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDashboardDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting CloudWatch Dashboard %s", d.Id())
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 	params := cloudwatch.DeleteDashboardsInput{

@@ -24,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53Zone() *schema.Resource {
+func ResourceZone() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ZoneCreate,
-		Read:   resourceAwsRoute53ZoneRead,
-		Update: resourceAwsRoute53ZoneUpdate,
-		Delete: resourceAwsRoute53ZoneDelete,
+		Create: resourceZoneCreate,
+		Read:   resourceZoneRead,
+		Update: resourceZoneUpdate,
+		Delete: resourceZoneDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -113,7 +113,7 @@ func resourceAwsRoute53Zone() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -170,10 +170,10 @@ func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsRoute53ZoneRead(d, meta)
+	return resourceZoneRead(d, meta)
 }
 
-func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error {
+func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -265,7 +265,7 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 	region := meta.(*conns.AWSClient).Region
 
@@ -323,10 +323,10 @@ func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsRoute53ZoneRead(d, meta)
+	return resourceZoneRead(d, meta)
 }
 
-func resourceAwsRoute53ZoneDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceZoneDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	if d.Get("force_destroy").(bool) {

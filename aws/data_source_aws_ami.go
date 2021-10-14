@@ -18,9 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsAmi() *schema.Resource {
+func DataSourceAMI() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAmiRead,
+		Read: dataSourceAMIRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -200,7 +200,7 @@ func dataSourceAwsAmi() *schema.Resource {
 }
 
 // dataSourceAwsAmiDescriptionRead performs the AMI lookup.
-func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DescribeImagesInput{

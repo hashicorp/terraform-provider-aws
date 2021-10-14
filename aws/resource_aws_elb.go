@@ -26,12 +26,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func resourceAwsElb() *schema.Resource {
+func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsElbCreate,
-		Read:   resourceAwsElbRead,
-		Update: resourceAwsElbUpdate,
-		Delete: resourceAwsElbDelete,
+		Create: resourceLoadBalancerCreate,
+		Read:   resourceLoadBalancerRead,
+		Update: resourceLoadBalancerUpdate,
+		Delete: resourceLoadBalancerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -259,7 +259,7 @@ func resourceAwsElb() *schema.Resource {
 	}
 }
 
-func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*conns.AWSClient).ELBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -335,10 +335,10 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(elbName)
 	log.Printf("[INFO] ELB ID: %s", d.Id())
 
-	return resourceAwsElbUpdate(d, meta)
+	return resourceLoadBalancerUpdate(d, meta)
 }
 
-func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*conns.AWSClient).ELBConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -477,7 +477,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 	return nil
 }
 
-func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*conns.AWSClient).ELBConn
 
 	if d.HasChange("listener") {
@@ -782,10 +782,10 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsElbRead(d, meta)
+	return resourceLoadBalancerRead(d, meta)
 }
 
-func resourceAwsElbDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*conns.AWSClient).ELBConn
 
 	log.Printf("[INFO] Deleting ELB: %s", d.Id())

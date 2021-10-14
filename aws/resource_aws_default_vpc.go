@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDefaultVpc() *schema.Resource {
+func ResourceDefaultVPC() *schema.Resource {
 	// reuse aws_vpc schema, and methods for READ, UPDATE
-	dvpc := resourceAwsVpc()
-	dvpc.Create = resourceAwsDefaultVpcCreate
-	dvpc.Delete = resourceAwsDefaultVpcDelete
+	dvpc := ResourceVPC()
+	dvpc.Create = resourceDefaultVPCCreate
+	dvpc.Delete = resourceDefaultVPCDelete
 
 	// cidr_block is a computed value for Default VPCs
 	dvpc.Schema["cidr_block"] = &schema.Schema{
@@ -35,7 +35,7 @@ func resourceAwsDefaultVpc() *schema.Resource {
 	return dvpc
 }
 
-func resourceAwsDefaultVpcCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	req := &ec2.DescribeVpcsInput{
 		Filters: []*ec2.Filter{
@@ -57,10 +57,10 @@ func resourceAwsDefaultVpcCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(resp.Vpcs[0].VpcId))
 
-	return resourceAwsVpcUpdate(d, meta)
+	return resourceVPCUpdate(d, meta)
 }
 
-func resourceAwsDefaultVpcDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultVPCDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Cannot destroy Default VPC. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }

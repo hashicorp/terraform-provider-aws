@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsElb() *schema.Resource {
+func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsElbRead,
+		Read: dataSourceLoadBalancerRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -197,7 +197,7 @@ func dataSourceAwsElb() *schema.Resource {
 	}
 }
 
-func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

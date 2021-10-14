@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEip() *schema.Resource {
+func DataSourceEIP() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEipRead,
+		Read: dataSourceEIPRead,
 
 		Schema: map[string]*schema.Schema{
 			"association_id": {
@@ -80,7 +80,7 @@ func dataSourceAwsEip() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
