@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRamPrincipalAssociation() *schema.Resource {
+func ResourcePrincipalAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRamPrincipalAssociationCreate,
-		Read:   resourceAwsRamPrincipalAssociationRead,
-		Delete: resourceAwsRamPrincipalAssociationDelete,
+		Create: resourcePrincipalAssociationCreate,
+		Read:   resourcePrincipalAssociationRead,
+		Delete: resourcePrincipalAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -48,7 +48,7 @@ func resourceAwsRamPrincipalAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsRamPrincipalAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePrincipalAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareArn := d.Get("resource_share_arn").(string)
@@ -70,17 +70,17 @@ func resourceAwsRamPrincipalAssociationCreate(d *schema.ResourceData, meta inter
 
 	// AWS Account ID Principals need to be accepted to become ASSOCIATED
 	if ok, _ := regexp.MatchString(`^\d{12}$`, principal); ok {
-		return resourceAwsRamPrincipalAssociationRead(d, meta)
+		return resourcePrincipalAssociationRead(d, meta)
 	}
 
 	if _, err := waiter.ResourceSharePrincipalAssociated(conn, resourceShareArn, principal); err != nil {
 		return fmt.Errorf("error waiting for RAM principal association (%s) to become ready: %w", d.Id(), err)
 	}
 
-	return resourceAwsRamPrincipalAssociationRead(d, meta)
+	return resourcePrincipalAssociationRead(d, meta)
 }
 
-func resourceAwsRamPrincipalAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePrincipalAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareArn, principal, err := resourceAwsRamPrincipalAssociationParseId(d.Id())
@@ -123,7 +123,7 @@ func resourceAwsRamPrincipalAssociationRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsRamPrincipalAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePrincipalAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
 	resourceShareArn, principal, err := resourceAwsRamPrincipalAssociationParseId(d.Id())

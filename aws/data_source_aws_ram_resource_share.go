@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRamResourceShare() *schema.Resource {
+func DataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRamResourceShareRead,
+		Read: dataSourceResourceShareRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": {
@@ -68,7 +68,7 @@ func dataSourceAwsRamResourceShare() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
