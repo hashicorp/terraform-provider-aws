@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -43,14 +44,14 @@ func testSweepBatchJobQueues(region string) error {
 		name := jobQueue.JobQueueName
 
 		log.Printf("[INFO] Disabling Batch Job Queue: %s", *name)
-		err := disableBatchJobQueue(*name, conn)
+		err := tfbatch.DisableJobQueue(*name, conn)
 		if err != nil {
 			log.Printf("[ERROR] Failed to disable Batch Job Queue %s: %s", *name, err)
 			continue
 		}
 
 		log.Printf("[INFO] Deleting Batch Job Queue: %s", *name)
-		err = deleteBatchJobQueue(*name, conn)
+		err = tfbatch.DeleteJobQueue(*name, conn)
 		if err != nil {
 			log.Printf("[ERROR] Failed to delete Batch Job Queue %s: %s", *name, err)
 		}
@@ -269,7 +270,7 @@ func testAccCheckBatchJobQueueExists(n string, jq *batch.JobQueueDetail) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 		name := rs.Primary.Attributes["name"]
-		queue, err := getJobQueue(conn, name)
+		queue, err := tfbatch.GetJobQueue(conn, name)
 		if err != nil {
 			return err
 		}
@@ -288,7 +289,7 @@ func testAccCheckBatchJobQueueDestroy(s *terraform.State) error {
 			continue
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
-		jq, err := getJobQueue(conn, rs.Primary.Attributes["name"])
+		jq, err := tfbatch.GetJobQueue(conn, rs.Primary.Attributes["name"])
 		if err == nil {
 			if jq != nil {
 				return fmt.Errorf("Error: Job Queue still exists")
@@ -304,12 +305,12 @@ func testAccCheckBatchJobQueueDisappears(jobQueue *batch.JobQueueDetail) resourc
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 		name := aws.StringValue(jobQueue.JobQueueName)
 
-		err := disableBatchJobQueue(name, conn)
+		err := tfbatch.DisableJobQueue(name, conn)
 		if err != nil {
 			return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
 		}
 
-		return deleteBatchJobQueue(name, conn)
+		return tfbatch.DeleteJobQueue(name, conn)
 	}
 }
 

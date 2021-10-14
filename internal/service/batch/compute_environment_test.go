@@ -46,7 +46,7 @@ func testSweepBatchComputeEnvironments(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
-	r := ResourceComputeEnvironment()
+	r := tfbatch.ResourceComputeEnvironment()
 
 	err = conn.DescribeComputeEnvironmentsPages(input, func(page *batch.DescribeComputeEnvironmentsOutput, lastPage bool) bool {
 		if page == nil {
@@ -205,7 +205,7 @@ func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceComputeEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbatch.ResourceComputeEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

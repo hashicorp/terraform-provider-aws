@@ -127,7 +127,7 @@ func TestAccAWSBatchJobDefinition_disappears(t *testing.T) {
 				Config: testAccBatchJobDefinitionConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceJobDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbatch.ResourceJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -46,7 +46,7 @@ func ResourceJobDefinition() *schema.Resource {
 					return json
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentBatchContainerPropertiesJSON(old, new)
+					equal, _ := EquivalentContainerPropertiesJSON(old, new)
 
 					return equal
 				},

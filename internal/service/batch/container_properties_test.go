@@ -1,6 +1,7 @@
 package batch_test
 
 import (
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"testing"
 )
 
@@ -372,7 +373,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			got, err := equivalentBatchContainerPropertiesJSON(testCase.ConfigurationJson, testCase.ApiJson)
+			got, err := tfbatch.EquivalentContainerPropertiesJSON(testCase.ConfigurationJson, testCase.ApiJson)
 
 			if err != nil && !testCase.ExpectError {
 				t.Errorf("got unexpected error: %s", err)
