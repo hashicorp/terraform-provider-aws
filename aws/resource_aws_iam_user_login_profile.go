@@ -131,7 +131,7 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).IAMConn
 	username := d.Get("user").(string)
 
-	encryptionKey, err := encryption.RetrieveGPGKey(strings.TrimSpace(d.Get("pgp_key").(string)))
+	encryptionKey, err := RetrieveGPGKey(strings.TrimSpace(d.Get("pgp_key").(string)))
 	if err != nil {
 		return fmt.Errorf("error retrieving GPG Key during IAM User Login Profile (%s) creation: %s", username, err)
 	}
@@ -143,7 +143,7 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	fingerprint, encrypted, err := encryption.EncryptValue(encryptionKey, initialPassword, "Password")
+	fingerprint, encrypted, err := EncryptValue(encryptionKey, initialPassword, "Password")
 	if err != nil {
 		return fmt.Errorf("error encrypting password during IAM User Login Profile (%s) creation: %s", username, err)
 	}
