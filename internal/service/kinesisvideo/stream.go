@@ -129,7 +129,7 @@ func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{kinesisvideo.StatusCreating},
 		Target:     []string{kinesisvideo.StatusActive},
-		Refresh:    kinesisVideoStreamStateRefresh(conn, arn),
+		Refresh:    StreamStateRefresh(conn, arn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -228,7 +228,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{kinesisvideo.StatusUpdating},
 		Target:     []string{kinesisvideo.StatusActive},
-		Refresh:    kinesisVideoStreamStateRefresh(conn, d.Id()),
+		Refresh:    StreamStateRefresh(conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -257,7 +257,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{kinesisvideo.StatusDeleting},
 		Target:     []string{"DELETED"},
-		Refresh:    kinesisVideoStreamStateRefresh(conn, d.Id()),
+		Refresh:    StreamStateRefresh(conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -270,7 +270,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func kinesisVideoStreamStateRefresh(conn *kinesisvideo.KinesisVideo, arn string) resource.StateRefreshFunc {
+func StreamStateRefresh(conn *kinesisvideo.KinesisVideo, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		emptyResp := &kinesisvideo.DescribeStreamInput{}
 

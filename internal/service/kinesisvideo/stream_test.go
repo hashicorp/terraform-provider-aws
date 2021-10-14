@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfkinesisvideo "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisvideo"
 )
 
 func TestAccAWSKinesisVideoStream_basic(t *testing.T) {
@@ -195,7 +196,7 @@ func testAccCheckKinesisVideoStreamDisappears(resourceName string) resource.Test
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{kinesisvideo.StatusDeleting},
 			Target:     []string{"DELETED"},
-			Refresh:    kinesisVideoStreamStateRefresh(conn, rs.Primary.ID),
+			Refresh:    tfkinesisvideo.StreamStateRefresh(conn, rs.Primary.ID),
 			Timeout:    15 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
