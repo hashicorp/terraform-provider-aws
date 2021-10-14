@@ -16,92 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appmesh_route", &resource.Sweeper{
-		Name: "aws_appmesh_route",
-		F:    sweepRoutes,
-	})
-}
 
-func sweepRoutes(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AppMeshConn
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, mesh := range page.Meshes {
-			listVirtualRoutersInput := &appmesh.ListVirtualRoutersInput{
-				MeshName: mesh.MeshName,
-			}
-			meshName := aws.StringValue(mesh.MeshName)
-
-			err := conn.ListVirtualRoutersPages(listVirtualRoutersInput, func(page *appmesh.ListVirtualRoutersOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, virtualRouter := range page.VirtualRouters {
-					listRoutesInput := &appmesh.ListRoutesInput{
-						MeshName:          mesh.MeshName,
-						VirtualRouterName: virtualRouter.VirtualRouterName,
-					}
-					virtualRouterName := aws.StringValue(virtualRouter.VirtualRouterName)
-
-					err := conn.ListRoutesPages(listRoutesInput, func(page *appmesh.ListRoutesOutput, lastPage bool) bool {
-						if page == nil {
-							return !lastPage
-						}
-
-						for _, route := range page.Routes {
-							input := &appmesh.DeleteRouteInput{
-								MeshName:          mesh.MeshName,
-								RouteName:         route.RouteName,
-								VirtualRouterName: virtualRouter.VirtualRouterName,
-							}
-							routeName := aws.StringValue(route.RouteName)
-
-							log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Router (%s) Route: %s", meshName, virtualRouterName, routeName)
-							_, err := conn.DeleteRoute(input)
-
-							if err != nil {
-								log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Router (%s) Route (%s): %s", meshName, virtualRouterName, routeName, err)
-							}
-						}
-
-						return !lastPage
-					})
-
-					if err != nil {
-						log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Router (%s) Routes: %s", meshName, virtualRouterName, err)
-					}
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Routers: %s", meshName, err)
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Appmesh Mesh sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Appmesh Meshes: %s", err)
-	}
-
-	return nil
-}
 
 func testAccRoute_grpcRoute(t *testing.T) {
 	var r appmesh.RouteData

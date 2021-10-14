@@ -18,90 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appmesh_gateway_route", &resource.Sweeper{
-		Name: "aws_appmesh_gateway_route",
-		F:    sweepGatewayRoutes,
-	})
-}
 
-func sweepGatewayRoutes(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).AppMeshConn
 
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, mesh := range page.Meshes {
-			meshName := aws.StringValue(mesh.MeshName)
-
-			err = conn.ListVirtualGatewaysPages(&appmesh.ListVirtualGatewaysInput{MeshName: mesh.MeshName}, func(page *appmesh.ListVirtualGatewaysOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, virtualGateway := range page.VirtualGateways {
-					virtualGatewayName := aws.StringValue(virtualGateway.VirtualGatewayName)
-
-					err = conn.ListGatewayRoutesPages(&appmesh.ListGatewayRoutesInput{MeshName: mesh.MeshName, VirtualGatewayName: virtualGateway.VirtualGatewayName}, func(page *appmesh.ListGatewayRoutesOutput, lastPage bool) bool {
-						if page == nil {
-							return !lastPage
-						}
-
-						for _, gatewayRoute := range page.GatewayRoutes {
-							gatewayRouteName := aws.StringValue(gatewayRoute.GatewayRouteName)
-
-							log.Printf("[INFO] Deleting App Mesh service mesh (%s) virtual gateway (%s) gateway route: %s", meshName, virtualGatewayName, gatewayRouteName)
-							r := tfappmesh.ResourceGatewayRoute()
-							d := r.Data(nil)
-							d.SetId("????????????????") // ID not used in Delete.
-							d.Set("mesh_name", meshName)
-							d.Set("name", gatewayRouteName)
-							d.Set("virtual_gateway_name", virtualGatewayName)
-							err := r.Delete(d, client)
-
-							if err != nil {
-								log.Printf("[ERROR] %s", err)
-								sweeperErrs = multierror.Append(sweeperErrs, err)
-								continue
-							}
-						}
-
-						return !lastPage
-					})
-
-					if err != nil {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving App Mesh service mesh (%s) virtual gateway (%s) gateway routes: %w", meshName, virtualGatewayName, err))
-					}
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving App Mesh service mesh (%s) virtual gateways: %w", meshName, err))
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Appmesh virtual gateway sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving App Mesh virtual gateways: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccGatewayRoute_basic(t *testing.T) {
 	var v appmesh.GatewayRouteData

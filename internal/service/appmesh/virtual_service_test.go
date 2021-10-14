@@ -16,71 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appmesh_virtual_service", &resource.Sweeper{
-		Name: "aws_appmesh_virtual_service",
-		F:    sweepVirtualServices,
-	})
-}
 
-func sweepVirtualServices(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AppMeshConn
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, mesh := range page.Meshes {
-			listVirtualServicesInput := &appmesh.ListVirtualServicesInput{
-				MeshName: mesh.MeshName,
-			}
-			meshName := aws.StringValue(mesh.MeshName)
-
-			err := conn.ListVirtualServicesPages(listVirtualServicesInput, func(page *appmesh.ListVirtualServicesOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, virtualService := range page.VirtualServices {
-					input := &appmesh.DeleteVirtualServiceInput{
-						MeshName:           mesh.MeshName,
-						VirtualServiceName: virtualService.VirtualServiceName,
-					}
-					virtualServiceName := aws.StringValue(virtualService.VirtualServiceName)
-
-					log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Service: %s", meshName, virtualServiceName)
-					_, err := conn.DeleteVirtualService(input)
-
-					if err != nil {
-						log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Service (%s): %s", meshName, virtualServiceName, err)
-					}
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Services: %s", meshName, err)
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Appmesh Virtual Service sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Appmesh Virtual Services: %s", err)
-	}
-
-	return nil
-}
 
 func testAccVirtualService_virtualNode(t *testing.T) {
 	var vs appmesh.VirtualServiceData

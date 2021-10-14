@@ -19,76 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appmesh_virtual_node", &resource.Sweeper{
-		Name: "aws_appmesh_virtual_node",
-		F:    sweepVirtualNodes,
-	})
-}
 
-func sweepVirtualNodes(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).AppMeshConn
 
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, mesh := range page.Meshes {
-			listVirtualNodesInput := &appmesh.ListVirtualNodesInput{
-				MeshName: mesh.MeshName,
-			}
-			meshName := aws.StringValue(mesh.MeshName)
-
-			err := conn.ListVirtualNodesPages(listVirtualNodesInput, func(page *appmesh.ListVirtualNodesOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, virtualNode := range page.VirtualNodes {
-					input := &appmesh.DeleteVirtualNodeInput{
-						MeshName:        mesh.MeshName,
-						VirtualNodeName: virtualNode.VirtualNodeName,
-					}
-					virtualNodeName := aws.StringValue(virtualNode.VirtualNodeName)
-
-					log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Node: %s", meshName, virtualNodeName)
-					_, err := conn.DeleteVirtualNode(input)
-
-					if err != nil {
-						sweeperErr := fmt.Errorf("error deleting Appmesh Mesh (%s) Virtual Node (%s): %w", meshName, virtualNodeName, err)
-						log.Printf("[ERROR] %s", sweeperErr)
-						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-						continue
-					}
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Nodes: %s", meshName, err)
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Appmesh Virtual Node sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Appmesh Virtual Nodes: %w", err)
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccVirtualNode_basic(t *testing.T) {
 	var vn appmesh.VirtualNodeData

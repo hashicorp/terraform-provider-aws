@@ -16,74 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appmesh_virtual_router", &resource.Sweeper{
-		Name: "aws_appmesh_virtual_router",
-		F:    sweepVirtualRouters,
-		Dependencies: []string{
-			"aws_appmesh_route",
-		},
-	})
-}
 
-func sweepVirtualRouters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AppMeshConn
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, mesh := range page.Meshes {
-			listVirtualRoutersInput := &appmesh.ListVirtualRoutersInput{
-				MeshName: mesh.MeshName,
-			}
-			meshName := aws.StringValue(mesh.MeshName)
-
-			err := conn.ListVirtualRoutersPages(listVirtualRoutersInput, func(page *appmesh.ListVirtualRoutersOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, virtualRouter := range page.VirtualRouters {
-					input := &appmesh.DeleteVirtualRouterInput{
-						MeshName:          mesh.MeshName,
-						VirtualRouterName: virtualRouter.VirtualRouterName,
-					}
-					virtualRouterName := aws.StringValue(virtualRouter.VirtualRouterName)
-
-					log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Router: %s", meshName, virtualRouterName)
-					_, err := conn.DeleteVirtualRouter(input)
-
-					if err != nil {
-						log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Router (%s): %s", meshName, virtualRouterName, err)
-					}
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Routers: %s", meshName, err)
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Appmesh Virtual Router sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving Appmesh Virtual Routers: %s", err)
-	}
-
-	return nil
-}
 
 func testAccVirtualRouter_basic(t *testing.T) {
 	var vr appmesh.VirtualRouterData
