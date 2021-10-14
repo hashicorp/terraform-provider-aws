@@ -16,9 +16,10 @@ func TestAccAWSOrganizations_serial(t *testing.T) {
 			"DataSource":                 testAccDataSourceAwsOrganizationsOrganization_basic,
 		},
 		"Account": {
-			"basic":    testAccAwsOrganizationsAccount_basic,
-			"ParentId": testAccAwsOrganizationsAccount_ParentId,
-			"Tags":     testAccAwsOrganizationsAccount_Tags,
+			"basic":      testAccAwsOrganizationsAccount_basic,
+			"ParentId":   testAccAwsOrganizationsAccount_ParentId,
+			"Tags":       testAccAwsOrganizationsAccount_Tags,
+			"DataSource": testAccDataSourceAwsOrganizationsAccounts_basic,
 		},
 		"OrganizationalUnit": {
 			"basic":      testAccAwsOrganizationsOrganizationalUnit_basic,
