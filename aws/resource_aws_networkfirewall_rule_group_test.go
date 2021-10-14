@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepNetworkFirewallRuleGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).networkfirewallconn
+	conn := client.(*conns.AWSClient).NetworkFirewallConn
 	ctx := context.Background()
 	input := &networkfirewall.ListRuleGroupsInput{MaxResults: aws.Int64(100)}
 	var sweeperErrs *multierror.Error
@@ -822,7 +823,7 @@ func testAccCheckAwsNetworkFirewallRuleGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).networkfirewallconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
 		output, err := finder.RuleGroup(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
@@ -849,7 +850,7 @@ func testAccCheckAwsNetworkFirewallRuleGroupExists(n string) resource.TestCheckF
 			return fmt.Errorf("No NetworkFirewall Rule Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).networkfirewallconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
 		output, err := finder.RuleGroup(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err

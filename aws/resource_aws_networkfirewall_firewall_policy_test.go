@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepNetworkFirewallFirewallPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).networkfirewallconn
+	conn := client.(*conns.AWSClient).NetworkFirewallConn
 	ctx := context.Background()
 	input := &networkfirewall.ListFirewallPoliciesInput{MaxResults: aws.Int64(100)}
 	var sweeperErrs *multierror.Error
@@ -620,7 +621,7 @@ func testAccCheckAwsNetworkFirewallFirewallPolicyDestroy(s *terraform.State) err
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).networkfirewallconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
 		output, err := finder.FirewallPolicy(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
@@ -647,7 +648,7 @@ func testAccCheckAwsNetworkFirewallFirewallPolicyExists(n string) resource.TestC
 			return fmt.Errorf("No NetworkFirewall Firewall Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).networkfirewallconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
 		output, err := finder.FirewallPolicy(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
