@@ -97,11 +97,11 @@ func resourceAwsDmsEventSubscriptionCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok {
-		request.EventCategories = expandStringSet(v.(*schema.Set))
+		request.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("source_ids"); ok {
-		request.SourceIds = expandStringSet(v.(*schema.Set))
+		request.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	_, err := conn.CreateEventSubscription(request)
@@ -141,7 +141,7 @@ func resourceAwsDmsEventSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		}
 
 		if v, ok := d.GetOk("event_categories"); ok {
-			request.EventCategories = expandStringSet(v.(*schema.Set))
+			request.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		_, err := conn.ModifyEventSubscription(request)
@@ -218,8 +218,8 @@ func resourceAwsDmsEventSubscriptionRead(d *schema.ResourceData, meta interface{
 	d.Set("sns_topic_arn", subscription.SnsTopicArn)
 	d.Set("source_type", subscription.SourceType)
 	d.Set("name", d.Id())
-	d.Set("event_categories", flattenStringList(subscription.EventCategoriesList))
-	d.Set("source_ids", flattenStringList(subscription.SourceIdsList))
+	d.Set("event_categories", flex.FlattenStringList(subscription.EventCategoriesList))
+	d.Set("source_ids", flex.FlattenStringList(subscription.SourceIdsList))
 
 	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, arn)
 

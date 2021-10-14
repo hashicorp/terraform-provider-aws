@@ -170,7 +170,7 @@ func resourceAwsDmsReplicationInstanceCreate(d *schema.ResourceData, meta interf
 		request.ReplicationSubnetGroupIdentifier = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
-		request.VpcSecurityGroupIds = expandStringSet(v.(*schema.Set))
+		request.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	log.Println("[DEBUG] DMS create replication instance:", request)
@@ -336,7 +336,7 @@ func resourceAwsDmsReplicationInstanceUpdate(d *schema.ResourceData, meta interf
 
 	if d.HasChange("vpc_security_group_ids") {
 		if v, ok := d.GetOk("vpc_security_group_ids"); ok {
-			request.VpcSecurityGroupIds = expandStringSet(v.(*schema.Set))
+			request.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 			hasChanges = true
 		}
 	}
