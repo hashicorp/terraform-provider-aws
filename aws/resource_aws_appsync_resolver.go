@@ -124,7 +124,7 @@ func resourceAwsAppsyncResolverCreate(d *schema.ResourceData, meta interface{}) 
 	if v, ok := d.GetOk("pipeline_config"); ok {
 		config := v.([]interface{})[0].(map[string]interface{})
 		input.PipelineConfig = &appsync.PipelineConfig{
-			Functions: expandStringList(config["functions"].([]interface{})),
+			Functions: flex.ExpandStringList(config["functions"].([]interface{})),
 		}
 	}
 
@@ -221,7 +221,7 @@ func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) 
 	if v, ok := d.GetOk("pipeline_config"); ok {
 		config := v.([]interface{})[0].(map[string]interface{})
 		input.PipelineConfig = &appsync.PipelineConfig{
-			Functions: expandStringList(config["functions"].([]interface{})),
+			Functions: flex.ExpandStringList(config["functions"].([]interface{})),
 		}
 	}
 
@@ -298,7 +298,7 @@ func expandAppsyncResolverCachingConfig(l []interface{}) *appsync.CachingConfig 
 	m := l[0].(map[string]interface{})
 
 	cachingConfig := &appsync.CachingConfig{
-		CachingKeys: expandStringSet(m["caching_keys"].(*schema.Set)),
+		CachingKeys: flex.ExpandStringSet(m["caching_keys"].(*schema.Set)),
 	}
 
 	if v, ok := m["ttl"].(int); ok && v != 0 {
@@ -318,7 +318,7 @@ func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"functions": flattenStringList(c.Functions),
+		"functions": flex.FlattenStringList(c.Functions),
 	}
 
 	return []interface{}{m}
@@ -334,7 +334,7 @@ func flattenAppsyncCachingConfig(c *appsync.CachingConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"caching_keys": flattenStringSet(c.CachingKeys),
+		"caching_keys": flex.FlattenStringSet(c.CachingKeys),
 		"ttl":          int(aws.Int64Value(c.Ttl)),
 	}
 
