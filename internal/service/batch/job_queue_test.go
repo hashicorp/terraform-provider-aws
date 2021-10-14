@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_batch_job_queue", &resource.Sweeper{
 		Name: "aws_batch_job_queue",
-		F:    testSweepBatchJobQueues,
+		F:    sweepJobQueues,
 	})
 }
 
-func testSweepBatchJobQueues(region string) error {
+func sweepJobQueues(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -66,7 +66,7 @@ func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
@@ -98,10 +98,10 @@ func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		CheckDestroy: testAccCheckLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBatchJobQueueConfigState(rName, batch.JQStateEnabled),
@@ -122,7 +122,7 @@ func TestAccAWSBatchJobQueue_ComputeEnvironments_ExternalOrderUpdate(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
@@ -149,7 +149,7 @@ func TestAccAWSBatchJobQueue_Priority(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
@@ -183,7 +183,7 @@ func TestAccAWSBatchJobQueue_State(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
@@ -217,7 +217,7 @@ func TestAccAWSBatchJobQueue_Tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
@@ -507,7 +507,7 @@ resource "aws_batch_job_queue" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
+func testAccCheckLaunchTemplateDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {

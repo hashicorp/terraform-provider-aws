@@ -24,14 +24,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_batch_job_definition", &resource.Sweeper{
 		Name: "aws_batch_job_definition",
-		F:    testSweepBatchJobDefinitions,
+		F:    sweepJobDefinitions,
 		Dependencies: []string{
 			"aws_batch_job_queue",
 		},
 	})
 }
 
-func testSweepBatchJobDefinitions(region string) error {
+func sweepJobDefinitions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -81,7 +81,7 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
@@ -118,7 +118,7 @@ func TestAccAWSBatchJobDefinition_disappears(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
@@ -141,7 +141,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
@@ -179,7 +179,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate_ContainerProperti
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
@@ -217,7 +217,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
@@ -294,7 +294,7 @@ func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
@@ -321,7 +321,7 @@ func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
@@ -355,7 +355,7 @@ func TestAccAWSBatchJobDefinition_Tags(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
@@ -400,7 +400,7 @@ func TestAccAWSBatchJobDefinition_PropagateTags(t *testing.T) {
 	resourceName := "aws_batch_job_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,

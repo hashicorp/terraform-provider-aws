@@ -16,12 +16,12 @@ func TestAccDataSourceAwsBatchJobQueue_basic(t *testing.T) {
 	datasourceName := "data.aws_batch_job_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSBatch(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, batch.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsBatchJobQueueConfig(rName),
+				Config: testAccJobQueueDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
@@ -35,7 +35,7 @@ func TestAccDataSourceAwsBatchJobQueue_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsBatchJobQueueConfig(rName string) string {
+func testAccJobQueueDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
