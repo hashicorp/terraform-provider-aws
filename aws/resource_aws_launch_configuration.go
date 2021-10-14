@@ -2,6 +2,10 @@ package aws
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/base64"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -9,13 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -394,7 +400,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		createLaunchConfigurationOpts.SecurityGroups = expandStringSet(v.(*schema.Set))
+		createLaunchConfigurationOpts.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("vpc_classic_link_id"); ok {
@@ -406,7 +412,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok {
-		createLaunchConfigurationOpts.ClassicLinkVPCSecurityGroups = expandStringSet(v.(*schema.Set))
+		createLaunchConfigurationOpts.ClassicLinkVPCSecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	var blockDevices []*autoscaling.BlockDeviceMapping
@@ -600,7 +606,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	d.Set("spot_price", lc.SpotPrice)
 	d.Set("enable_monitoring", lc.InstanceMonitoring.Enabled)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
-	if err := d.Set("security_groups", flattenStringList(lc.SecurityGroups)); err != nil {
+	if err := d.Set("security_groups", flex.FlattenStringList(lc.SecurityGroups)); err != nil {
 		return fmt.Errorf("error setting security_groups: %s", err)
 	}
 	if v := aws.StringValue(lc.UserData); v != "" {
@@ -613,7 +619,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
-	if err := d.Set("vpc_classic_link_security_groups", flattenStringList(lc.ClassicLinkVPCSecurityGroups)); err != nil {
+	if err := d.Set("vpc_classic_link_security_groups", flex.FlattenStringList(lc.ClassicLinkVPCSecurityGroups)); err != nil {
 		return fmt.Errorf("error setting vpc_classic_link_security_groups: %s", err)
 	}
 
@@ -811,4 +817,72 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 		}
 	}
 	return blockDevices, nil
+}
+
+func userDataHashSum(user_data string) string {
+	// Check whether the user_data is not Base64 encoded.
+	// Always calculate hash of base64 decoded value since we
+	// check against double-encoding when setting it
+	v, base64DecodeError := base64.StdEncoding.DecodeString(user_data)
+	if base64DecodeError != nil {
+		v = []byte(user_data)
+	}
+
+	hash := sha1.Sum(v)
+	return hex.EncodeToString(hash[:])
+}
+
+func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
+	if ami == "" {
+		return nil, errors.New("Cannot fetch root device name for blank AMI ID.")
+	}
+
+	log.Printf("[DEBUG] Describing AMI %q to get root block device name", ami)
+	res, err := conn.DescribeImages(&ec2.DescribeImagesInput{
+		ImageIds: []*string{aws.String(ami)},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// For a bad image, we just return nil so we don't block a refresh
+	if len(res.Images) == 0 {
+		return nil, nil
+	}
+
+	image := res.Images[0]
+	rootDeviceName := image.RootDeviceName
+
+	// Instance store backed AMIs do not provide a root device name.
+	if aws.StringValue(image.RootDeviceType) == ec2.DeviceTypeInstanceStore {
+		return nil, nil
+	}
+
+	// Some AMIs have a RootDeviceName like "/dev/sda1" that does not appear as a
+	// DeviceName in the BlockDeviceMapping list (which will instead have
+	// something like "/dev/sda")
+	//
+	// While this seems like it breaks an invariant of AMIs, it ends up working
+	// on the AWS side, and AMIs like this are common enough that we need to
+	// special case it so Terraform does the right thing.
+	//
+	// Our heuristic is: if the RootDeviceName does not appear in the
+	// BlockDeviceMapping, assume that the DeviceName of the first
+	// BlockDeviceMapping entry serves as the root device.
+	rootDeviceNameInMapping := false
+	for _, bdm := range image.BlockDeviceMappings {
+		if aws.StringValue(bdm.DeviceName) == aws.StringValue(image.RootDeviceName) {
+			rootDeviceNameInMapping = true
+		}
+	}
+
+	if !rootDeviceNameInMapping && len(image.BlockDeviceMappings) > 0 {
+		rootDeviceName = image.BlockDeviceMappings[0].DeviceName
+	}
+
+	if rootDeviceName == nil {
+		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", ami)
+	}
+
+	return rootDeviceName, nil
 }

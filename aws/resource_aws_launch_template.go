@@ -1342,11 +1342,11 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 	}
 
 	if v, ok := d.GetOk("security_group_names"); ok {
-		opts.SecurityGroups = expandStringSet(v.(*schema.Set))
+		opts.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
-		opts.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+		opts.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("block_device_mappings"); ok {

@@ -204,11 +204,11 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DescribeImagesInput{
-		Owners: expandStringList(d.Get("owners").([]interface{})),
+		Owners: flex.ExpandStringList(d.Get("owners").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		params.ExecutableUsers = expandStringList(v.([]interface{}))
+		params.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("filter"); ok {
 		params.Filters = buildAwsDataSourceFilters(v.(*schema.Set))

@@ -297,11 +297,11 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	d.Set("auto_assign_elastic_ips", layer.AutoAssignElasticIps)
 	d.Set("auto_assign_public_ips", layer.AutoAssignPublicIps)
 	d.Set("custom_instance_profile_arn", layer.CustomInstanceProfileArn)
-	d.Set("custom_security_group_ids", flattenStringList(layer.CustomSecurityGroupIds))
+	d.Set("custom_security_group_ids", flex.FlattenStringList(layer.CustomSecurityGroupIds))
 	d.Set("auto_healing", layer.EnableAutoHealing)
 	d.Set("install_updates_on_boot", layer.InstallUpdatesOnBoot)
 	d.Set("name", layer.Name)
-	d.Set("system_packages", flattenStringList(layer.Packages))
+	d.Set("system_packages", flex.FlattenStringList(layer.Packages))
 	d.Set("stack_id", layer.StackId)
 	d.Set("use_ebs_optimized_instances", layer.UseEbsOptimizedInstances)
 
@@ -383,12 +383,12 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
 		CustomInstanceProfileArn:    aws.String(d.Get("custom_instance_profile_arn").(string)),
 		CustomRecipes:               lt.CustomRecipes(d),
-		CustomSecurityGroupIds:      expandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
+		CustomSecurityGroupIds:      flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
 		EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
 		InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
 		LifecycleEventConfiguration: lt.LifecycleEventConfiguration(d),
 		Name:                        aws.String(d.Get("name").(string)),
-		Packages:                    expandStringSet(d.Get("system_packages").(*schema.Set)),
+		Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
 		Type:                        aws.String(lt.TypeName),
 		StackId:                     aws.String(d.Get("stack_id").(string)),
 		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
@@ -456,12 +456,12 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
 		CustomInstanceProfileArn:    aws.String(d.Get("custom_instance_profile_arn").(string)),
 		CustomRecipes:               lt.CustomRecipes(d),
-		CustomSecurityGroupIds:      expandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
+		CustomSecurityGroupIds:      flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
 		EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
 		InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
 		LifecycleEventConfiguration: lt.LifecycleEventConfiguration(d),
 		Name:                        aws.String(d.Get("name").(string)),
-		Packages:                    expandStringSet(d.Get("system_packages").(*schema.Set)),
+		Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
 		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
 		Attributes:                  attributes,
 		VolumeConfigurations:        lt.VolumeConfigurations(d),
@@ -627,11 +627,11 @@ func (lt *opsworksLayerType) SetLifecycleEventConfiguration(d *schema.ResourceDa
 
 func (lt *opsworksLayerType) CustomRecipes(d *schema.ResourceData) *opsworks.Recipes {
 	return &opsworks.Recipes{
-		Configure: expandStringList(d.Get("custom_configure_recipes").([]interface{})),
-		Deploy:    expandStringList(d.Get("custom_deploy_recipes").([]interface{})),
-		Setup:     expandStringList(d.Get("custom_setup_recipes").([]interface{})),
-		Shutdown:  expandStringList(d.Get("custom_shutdown_recipes").([]interface{})),
-		Undeploy:  expandStringList(d.Get("custom_undeploy_recipes").([]interface{})),
+		Configure: flex.ExpandStringList(d.Get("custom_configure_recipes").([]interface{})),
+		Deploy:    flex.ExpandStringList(d.Get("custom_deploy_recipes").([]interface{})),
+		Setup:     flex.ExpandStringList(d.Get("custom_setup_recipes").([]interface{})),
+		Shutdown:  flex.ExpandStringList(d.Get("custom_shutdown_recipes").([]interface{})),
+		Undeploy:  flex.ExpandStringList(d.Get("custom_undeploy_recipes").([]interface{})),
 	}
 }
 
@@ -647,11 +647,11 @@ func (lt *opsworksLayerType) SetCustomRecipes(d *schema.ResourceData, v *opswork
 		return
 	}
 
-	d.Set("custom_configure_recipes", flattenStringList(v.Configure))
-	d.Set("custom_deploy_recipes", flattenStringList(v.Deploy))
-	d.Set("custom_setup_recipes", flattenStringList(v.Setup))
-	d.Set("custom_shutdown_recipes", flattenStringList(v.Shutdown))
-	d.Set("custom_undeploy_recipes", flattenStringList(v.Undeploy))
+	d.Set("custom_configure_recipes", flex.FlattenStringList(v.Configure))
+	d.Set("custom_deploy_recipes", flex.FlattenStringList(v.Deploy))
+	d.Set("custom_setup_recipes", flex.FlattenStringList(v.Setup))
+	d.Set("custom_shutdown_recipes", flex.FlattenStringList(v.Shutdown))
+	d.Set("custom_undeploy_recipes", flex.FlattenStringList(v.Undeploy))
 }
 
 func (lt *opsworksLayerType) VolumeConfigurations(d *schema.ResourceData) []*opsworks.VolumeConfiguration {

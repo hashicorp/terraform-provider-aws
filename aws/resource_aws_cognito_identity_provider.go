@@ -92,15 +92,15 @@ func resourceAwsCognitoIdentityProviderCreate(d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("attribute_mapping"); ok {
-		params.AttributeMapping = expandStringMap(v.(map[string]interface{}))
+		params.AttributeMapping = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("provider_details"); ok {
-		params.ProviderDetails = expandStringMap(v.(map[string]interface{}))
+		params.ProviderDetails = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("idp_identifiers"); ok {
-		params.IdpIdentifiers = expandStringList(v.([]interface{}))
+		params.IdpIdentifiers = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	_, err := conn.CreateIdentityProvider(params)
@@ -155,7 +155,7 @@ func resourceAwsCognitoIdentityProviderRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error setting provider_details error: %w", err)
 	}
 
-	if err := d.Set("idp_identifiers", flattenStringList(ip.IdpIdentifiers)); err != nil {
+	if err := d.Set("idp_identifiers", flex.FlattenStringList(ip.IdpIdentifiers)); err != nil {
 		return fmt.Errorf("error setting idp_identifiers error: %w", err)
 	}
 
@@ -177,15 +177,15 @@ func resourceAwsCognitoIdentityProviderUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("attribute_mapping") {
-		params.AttributeMapping = expandStringMap(d.Get("attribute_mapping").(map[string]interface{}))
+		params.AttributeMapping = flex.ExpandStringMap(d.Get("attribute_mapping").(map[string]interface{}))
 	}
 
 	if d.HasChange("provider_details") {
-		params.ProviderDetails = expandStringMap(d.Get("provider_details").(map[string]interface{}))
+		params.ProviderDetails = flex.ExpandStringMap(d.Get("provider_details").(map[string]interface{}))
 	}
 
 	if d.HasChange("idp_identifiers") {
-		params.IdpIdentifiers = expandStringList(d.Get("idp_identifiers").([]interface{}))
+		params.IdpIdentifiers = flex.ExpandStringList(d.Get("idp_identifiers").([]interface{}))
 	}
 
 	_, err = conn.UpdateIdentityProvider(params)

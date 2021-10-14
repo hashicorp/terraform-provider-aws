@@ -66,7 +66,7 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 
 	instanceStateNames := []*string{aws.String(ec2.InstanceStateNameRunning)}
 	if v, ok := d.GetOk("instance_state_names"); ok && len(v.(*schema.Set).List()) > 0 {
-		instanceStateNames = expandStringSet(v.(*schema.Set))
+		instanceStateNames = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	params := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{

@@ -131,19 +131,19 @@ func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("supported_login_providers"); ok {
-		params.SupportedLoginProviders = expandCognitoSupportedLoginProviders(v.(map[string]interface{}))
+		params.SupportedLoginProviders = expandSupportedLoginProviders(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("cognito_identity_providers"); ok {
-		params.CognitoIdentityProviders = expandCognitoIdentityProviders(v.(*schema.Set))
+		params.CognitoIdentityProviders = expandIdentityProviders(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("saml_provider_arns"); ok {
-		params.SamlProviderARNs = expandStringList(v.([]interface{}))
+		params.SamlProviderARNs = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
-		params.OpenIdConnectProviderARNs = expandStringSet(v.(*schema.Set))
+		params.OpenIdConnectProviderARNs = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if len(tags) > 0 {
@@ -201,19 +201,19 @@ func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("cognito_identity_providers", flattenCognitoIdentityProviders(ip.CognitoIdentityProviders)); err != nil {
+	if err := d.Set("cognito_identity_providers", flattenIdentityProviders(ip.CognitoIdentityProviders)); err != nil {
 		return fmt.Errorf("Error setting cognito_identity_providers error: %#v", err)
 	}
 
-	if err := d.Set("openid_connect_provider_arns", flattenStringList(ip.OpenIdConnectProviderARNs)); err != nil {
+	if err := d.Set("openid_connect_provider_arns", flex.FlattenStringList(ip.OpenIdConnectProviderARNs)); err != nil {
 		return fmt.Errorf("Error setting openid_connect_provider_arns error: %#v", err)
 	}
 
-	if err := d.Set("saml_provider_arns", flattenStringList(ip.SamlProviderARNs)); err != nil {
+	if err := d.Set("saml_provider_arns", flex.FlattenStringList(ip.SamlProviderARNs)); err != nil {
 		return fmt.Errorf("Error setting saml_provider_arns error: %#v", err)
 	}
 
-	if err := d.Set("supported_login_providers", flattenCognitoSupportedLoginProviders(ip.SupportedLoginProviders)); err != nil {
+	if err := d.Set("supported_login_providers", flattenSupportedLoginProviders(ip.SupportedLoginProviders)); err != nil {
 		return fmt.Errorf("Error setting supported_login_providers error: %#v", err)
 	}
 
@@ -236,19 +236,19 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("cognito_identity_providers"); ok {
-		params.CognitoIdentityProviders = expandCognitoIdentityProviders(v.(*schema.Set))
+		params.CognitoIdentityProviders = expandIdentityProviders(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("supported_login_providers"); ok {
-		params.SupportedLoginProviders = expandCognitoSupportedLoginProviders(v.(map[string]interface{}))
+		params.SupportedLoginProviders = expandSupportedLoginProviders(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
-		params.OpenIdConnectProviderARNs = expandStringSet(v.(*schema.Set))
+		params.OpenIdConnectProviderARNs = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("saml_provider_arns"); ok {
-		params.SamlProviderARNs = expandStringList(v.([]interface{}))
+		params.SamlProviderARNs = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating Cognito Identity Pool: %s", params)

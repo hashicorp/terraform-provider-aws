@@ -309,13 +309,13 @@ func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) 
 	if *dcb.TargetOriginId != "myS3Origin" {
 		t.Fatalf("Expected TargetOriginId to be allow-all, got %v", *dcb.TargetOriginId)
 	}
-	if !reflect.DeepEqual(dcb.ForwardedValues.Headers.Items, expandStringSet(headersConf())) {
+	if !reflect.DeepEqual(dcb.ForwardedValues.Headers.Items, flex.ExpandStringSet(headersConf())) {
 		t.Fatalf("Expected Items to be %v, got %v", headersConf(), dcb.ForwardedValues.Headers.Items)
 	}
 	if *dcb.MinTTL != 0 {
 		t.Fatalf("Expected MinTTL to be 0, got %v", *dcb.MinTTL)
 	}
-	if !reflect.DeepEqual(dcb.TrustedSigners.Items, expandStringList(trustedSignersConf())) {
+	if !reflect.DeepEqual(dcb.TrustedSigners.Items, flex.ExpandStringList(trustedSignersConf())) {
 		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", trustedSignersConf(), dcb.TrustedSigners.Items)
 	}
 	if *dcb.MaxTTL != 31536000 {
@@ -333,10 +333,10 @@ func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) 
 	if *dcb.FunctionAssociations.Quantity != 2 {
 		t.Fatalf("Expected FunctionAssociations to be 2, got %v", *dcb.FunctionAssociations.Quantity)
 	}
-	if !reflect.DeepEqual(dcb.AllowedMethods.Items, expandStringSet(allowedMethodsConf())) {
+	if !reflect.DeepEqual(dcb.AllowedMethods.Items, flex.ExpandStringSet(allowedMethodsConf())) {
 		t.Fatalf("Expected AllowedMethods.Items to be %v, got %v", allowedMethodsConf().List(), dcb.AllowedMethods.Items)
 	}
-	if !reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, expandStringSet(cachedMethodsConf())) {
+	if !reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, flex.ExpandStringSet(cachedMethodsConf())) {
 		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf().List(), dcb.AllowedMethods.CachedMethods.Items)
 	}
 }
@@ -350,7 +350,7 @@ func TestCloudFrontStructure_expandTrustedSigners(t *testing.T) {
 	if !*ts.Enabled {
 		t.Fatalf("Expected Enabled to be true, got %v", *ts.Enabled)
 	}
-	if !reflect.DeepEqual(ts.Items, expandStringList(data)) {
+	if !reflect.DeepEqual(ts.Items, flex.ExpandStringList(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, ts.Items)
 	}
 }
@@ -467,10 +467,10 @@ func TestCloudFrontStructure_expandForwardedValues(t *testing.T) {
 	if !*fv.QueryString {
 		t.Fatalf("Expected QueryString to be true, got %v", *fv.QueryString)
 	}
-	if !reflect.DeepEqual(fv.Cookies.WhitelistedNames.Items, expandStringSet(cookieNamesConf())) {
+	if !reflect.DeepEqual(fv.Cookies.WhitelistedNames.Items, flex.ExpandStringSet(cookieNamesConf())) {
 		t.Fatalf("Expected Cookies.WhitelistedNames.Items to be %v, got %v", cookieNamesConf(), fv.Cookies.WhitelistedNames.Items)
 	}
-	if !reflect.DeepEqual(fv.Headers.Items, expandStringSet(headersConf())) {
+	if !reflect.DeepEqual(fv.Headers.Items, flex.ExpandStringSet(headersConf())) {
 		t.Fatalf("Expected Headers.Items to be %v, got %v", headersConf(), fv.Headers.Items)
 	}
 }
@@ -491,7 +491,7 @@ func TestCloudFrontStructure_expandHeaders(t *testing.T) {
 	if *h.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *h.Quantity)
 	}
-	if !reflect.DeepEqual(h.Items, expandStringSet(data)) {
+	if !reflect.DeepEqual(h.Items, flex.ExpandStringSet(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, h.Items)
 	}
 }
@@ -512,7 +512,7 @@ func TestCloudFrontStructure_expandQueryStringCacheKeys(t *testing.T) {
 	if *k.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *k.Quantity)
 	}
-	if !reflect.DeepEqual(k.Items, expandStringList(data)) {
+	if !reflect.DeepEqual(k.Items, flex.ExpandStringList(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, k.Items)
 	}
 }
@@ -533,7 +533,7 @@ func TestCloudFrontStructure_expandCookiePreference(t *testing.T) {
 	if *cp.Forward != "whitelist" {
 		t.Fatalf("Expected Forward to be whitelist, got %v", *cp.Forward)
 	}
-	if !reflect.DeepEqual(cp.WhitelistedNames.Items, expandStringSet(cookieNamesConf())) {
+	if !reflect.DeepEqual(cp.WhitelistedNames.Items, flex.ExpandStringSet(cookieNamesConf())) {
 		t.Fatalf("Expected WhitelistedNames.Items to be %v, got %v", cookieNamesConf(), cp.WhitelistedNames.Items)
 	}
 }
@@ -554,7 +554,7 @@ func TestCloudFrontStructure_expandCookieNames(t *testing.T) {
 	if *cn.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *cn.Quantity)
 	}
-	if !reflect.DeepEqual(cn.Items, expandStringSet(data)) {
+	if !reflect.DeepEqual(cn.Items, flex.ExpandStringSet(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, cn.Items)
 	}
 }
@@ -575,7 +575,7 @@ func TestCloudFrontStructure_expandAllowedMethods(t *testing.T) {
 	if *am.Quantity != 7 {
 		t.Fatalf("Expected Quantity to be 7, got %v", *am.Quantity)
 	}
-	if !reflect.DeepEqual(am.Items, expandStringSet(data)) {
+	if !reflect.DeepEqual(am.Items, flex.ExpandStringSet(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, am.Items)
 	}
 }
@@ -596,7 +596,7 @@ func TestCloudFrontStructure_expandCachedMethods(t *testing.T) {
 	if *cm.Quantity != 3 {
 		t.Fatalf("Expected Quantity to be 3, got %v", *cm.Quantity)
 	}
-	if !reflect.DeepEqual(cm.Items, expandStringSet(data)) {
+	if !reflect.DeepEqual(cm.Items, flex.ExpandStringSet(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, cm.Items)
 	}
 }
@@ -964,7 +964,7 @@ func TestCloudFrontStructure_expandAliases(t *testing.T) {
 	if *a.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *a.Quantity)
 	}
-	if !reflect.DeepEqual(a.Items, expandStringSet(data)) {
+	if !reflect.DeepEqual(a.Items, flex.ExpandStringSet(data)) {
 		t.Fatalf("Expected Items to be [example.com www.example.com], got %v", a.Items)
 	}
 }

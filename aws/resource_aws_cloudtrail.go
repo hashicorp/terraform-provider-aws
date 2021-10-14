@@ -691,7 +691,7 @@ func flattenAwsCloudTrailEventSelectorDataResource(configured []*cloudtrail.Data
 	for _, raw := range configured {
 		item := make(map[string]interface{})
 		item["type"] = aws.StringValue(raw.Type)
-		item["values"] = flattenStringList(raw.Values)
+		item["values"] = flex.FlattenStringList(raw.Values)
 
 		dataResources = append(dataResources, item)
 	}
@@ -830,22 +830,22 @@ func flattenAwsCloudTrailAdvancedEventSelectorFieldSelector(configured []*cloudt
 		item := make(map[string]interface{})
 		item["field"] = aws.StringValue(raw.Field)
 		if raw.Equals != nil {
-			item["equals"] = flattenStringList(raw.Equals)
+			item["equals"] = flex.FlattenStringList(raw.Equals)
 		}
 		if raw.NotEquals != nil {
-			item["not_equals"] = flattenStringList(raw.NotEquals)
+			item["not_equals"] = flex.FlattenStringList(raw.NotEquals)
 		}
 		if raw.StartsWith != nil {
-			item["starts_with"] = flattenStringList(raw.StartsWith)
+			item["starts_with"] = flex.FlattenStringList(raw.StartsWith)
 		}
 		if raw.NotStartsWith != nil {
-			item["not_starts_with"] = flattenStringList(raw.NotStartsWith)
+			item["not_starts_with"] = flex.FlattenStringList(raw.NotStartsWith)
 		}
 		if raw.EndsWith != nil {
-			item["ends_with"] = flattenStringList(raw.EndsWith)
+			item["ends_with"] = flex.FlattenStringList(raw.EndsWith)
 		}
 		if raw.NotEndsWith != nil {
-			item["not_ends_with"] = flattenStringList(raw.NotEndsWith)
+			item["not_ends_with"] = flex.FlattenStringList(raw.NotEndsWith)
 		}
 
 		fieldSelectors = append(fieldSelectors, item)
