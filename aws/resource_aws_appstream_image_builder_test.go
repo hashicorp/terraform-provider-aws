@@ -10,11 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/lister"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -81,20 +82,20 @@ func testSweepAppStreamImageBuilder(region string) error {
 func TestAccAwsAppStreamImageBuilder_basic(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.small"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
-		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsAppStreamImageBuilderConfig(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamImageBuilderExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
 				),
 			},
@@ -111,19 +112,19 @@ func TestAccAwsAppStreamImageBuilder_basic(t *testing.T) {
 func TestAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.medium"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
-		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsAppStreamImageBuilderConfig(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamImageBuilderExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppStreamImageBuilder(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppStreamImageBuilder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,17 +134,17 @@ func TestAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 
 func TestAccAwsAppStreamImageBuilder_complete(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	description := "Description of a test"
 	descriptionUpdated := "Updated Description of a test"
 	instanceType := "stream.standard.small"
 	instanceTypeUpdate := "stream.standard.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
-		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsAppStreamImageBuilderConfigComplete(rName, description, instanceType),
@@ -153,7 +154,7 @@ func TestAccAwsAppStreamImageBuilder_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
 			{
@@ -170,7 +171,7 @@ func TestAccAwsAppStreamImageBuilder_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
 			{
@@ -185,14 +186,14 @@ func TestAccAwsAppStreamImageBuilder_complete(t *testing.T) {
 
 func TestAccAwsAppStreamImageBuilder_Tags(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	instanceType := "stream.standard.small"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsAppStreamImageBuilderDestroy,
-		ErrorCheck:        testAccErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsAppStreamImageBuilderConfigTags1(instanceType, rName, "key1", "value1"),
@@ -289,8 +290,8 @@ resource "aws_appstream_image_builder" "test" {
 }
 
 func testAccAwsAppStreamImageBuilderConfigComplete(name, description, instanceType string) string {
-	return composeConfig(
-		testAccAvailableAZsNoOptInConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
