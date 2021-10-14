@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -126,7 +127,7 @@ func TestAccAWSBatchJobDefinition_disappears(t *testing.T) {
 				Config: testAccBatchJobDefinitionConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBatchJobDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

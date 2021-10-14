@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsBatchComputeEnvironment() *schema.Resource {
+func DataSourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsBatchComputeEnvironmentRead,
+		Read: dataSourceComputeEnvironmentRead,
 
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
@@ -61,7 +61,7 @@ func dataSourceAwsBatchComputeEnvironment() *schema.Resource {
 	}
 }
 
-func dataSourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

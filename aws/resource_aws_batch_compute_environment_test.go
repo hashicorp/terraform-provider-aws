@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -45,7 +46,7 @@ func testSweepBatchComputeEnvironments(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
-	r := resourceAwsBatchComputeEnvironment()
+	r := ResourceComputeEnvironment()
 
 	err = conn.DescribeComputeEnvironmentsPages(input, func(page *batch.DescribeComputeEnvironmentsOutput, lastPage bool) bool {
 		if page == nil {
@@ -204,7 +205,7 @@ func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsBatchComputeEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceComputeEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

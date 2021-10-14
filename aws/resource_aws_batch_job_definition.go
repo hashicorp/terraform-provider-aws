@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBatchJobDefinition() *schema.Resource {
+func ResourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBatchJobDefinitionCreate,
-		Read:   resourceAwsBatchJobDefinitionRead,
-		Update: resourceAwsBatchJobDefinitionUpdate,
-		Delete: resourceAwsBatchJobDefinitionDelete,
+		Create: resourceJobDefinitionCreate,
+		Read:   resourceJobDefinitionRead,
+		Update: resourceJobDefinitionUpdate,
+		Delete: resourceJobDefinitionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -174,7 +174,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 	}
 }
 
-func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -223,10 +223,10 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(output.JobDefinitionArn))
 
-	return resourceAwsBatchJobDefinitionRead(d, meta)
+	return resourceJobDefinitionRead(d, meta)
 }
 
-func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -293,7 +293,7 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsBatchJobDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceJobDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 
 	if d.HasChange("tags_all") {
@@ -307,7 +307,7 @@ func resourceAwsBatchJobDefinitionUpdate(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsBatchJobDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceJobDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 
 	_, err := conn.DeregisterJobDefinition(&batch.DeregisterJobDefinitionInput{

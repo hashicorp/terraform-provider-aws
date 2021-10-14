@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsBatchJobQueue() *schema.Resource {
+func ResourceJobQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsBatchJobQueueCreate,
-		Read:   resourceAwsBatchJobQueueRead,
-		Update: resourceAwsBatchJobQueueUpdate,
-		Delete: resourceAwsBatchJobQueueDelete,
+		Create: resourceJobQueueCreate,
+		Read:   resourceJobQueueRead,
+		Update: resourceJobQueueUpdate,
+		Delete: resourceJobQueueDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -63,7 +63,7 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 	}
 }
 
-func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -102,10 +102,10 @@ func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] JobQueue created: %s", arn)
 	d.SetId(arn)
 
-	return resourceAwsBatchJobQueueRead(d, meta)
+	return resourceJobQueueRead(d, meta)
 }
 
-func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) error {
+func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -154,7 +154,7 @@ func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsBatchJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 
 	if d.HasChanges("compute_environments", "priority", "state") {
@@ -192,10 +192,10 @@ func resourceAwsBatchJobQueueUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsBatchJobQueueRead(d, meta)
+	return resourceJobQueueRead(d, meta)
 }
 
-func resourceAwsBatchJobQueueDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceJobQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BatchConn
 	name := d.Get("name").(string)
 
