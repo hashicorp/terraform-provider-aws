@@ -22,6 +22,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
 func init() {
@@ -442,7 +446,7 @@ func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
-		jobDefinition, err := finder.JobDefinitionByARN(conn, rs.Primary.ID)
+		jobDefinition, err := tfbatch.FindJobDefinitionByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -499,7 +503,7 @@ func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.JobDefinitionByARN(conn, rs.Primary.ID)
+		_, err := tfbatch.FindJobDefinitionByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

@@ -20,6 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
 func ResourceJobDefinition() *schema.Resource {
@@ -48,7 +53,7 @@ func ResourceJobDefinition() *schema.Resource {
 					return json
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalency.EquivalentBatchContainerPropertiesJSON(old, new)
+					equal, _ := tfbatch.equivalentBatchContainerPropertiesJSON(old, new)
 
 					return equal
 				},
@@ -233,7 +238,7 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	jobDefinition, err := finder.JobDefinitionByARN(conn, d.Id())
+	jobDefinition, err := tfbatch.FindJobDefinitionByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Batch Job Definition (%s) not found, removing from state", d.Id())

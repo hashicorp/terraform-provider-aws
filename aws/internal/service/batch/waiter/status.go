@@ -7,11 +7,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
-func ComputeEnvironmentStatus(conn *batch.Batch, name string) resource.StateRefreshFunc {
+func statusComputeEnvironment(conn *batch.Batch, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		computeEnvironmentDetail, err := finder.ComputeEnvironmentDetailByName(conn, name)
+		computeEnvironmentDetail, err := tfbatch.FindComputeEnvironmentDetailByName(conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

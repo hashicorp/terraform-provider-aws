@@ -24,6 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
 func init() {
@@ -1481,7 +1485,7 @@ func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ComputeEnvironmentDetailByName(conn, rs.Primary.ID)
+		_, err := tfbatch.FindComputeEnvironmentDetailByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1509,7 +1513,7 @@ func testAccCheckAwsBatchComputeEnvironmentExists(n string, v *batch.ComputeEnvi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
 
-		computeEnvironment, err := finder.ComputeEnvironmentDetailByName(conn, rs.Primary.ID)
+		computeEnvironment, err := tfbatch.FindComputeEnvironmentDetailByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

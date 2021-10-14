@@ -98,8 +98,8 @@ func (cp *containerProperties) Reduce() error {
 	return nil
 }
 
-// EquivalentBatchContainerPropertiesJSON determines equality between two Batch ContainerProperties JSON strings
-func EquivalentBatchContainerPropertiesJSON(str1, str2 string) (bool, error) {
+// equivalentBatchContainerPropertiesJSON determines equality between two Batch ContainerProperties JSON strings
+func equivalentBatchContainerPropertiesJSON(str1, str2 string) (bool, error) {
 	if str1 == "" {
 		str1 = "{}"
 	}

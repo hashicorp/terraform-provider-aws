@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ComputeEnvironmentCreated(conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+func waitComputeEnvironmentCreated(conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{batch.CEStatusCreating},
 		Target:  []string{batch.CEStatusValid},
-		Refresh: ComputeEnvironmentStatus(conn, name),
+		Refresh: statusComputeEnvironment(conn, name),
 		Timeout: timeout,
 	}
 
@@ -32,11 +32,11 @@ func ComputeEnvironmentCreated(conn *batch.Batch, name string, timeout time.Dura
 	return nil, err
 }
 
-func ComputeEnvironmentDeleted(conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+func waitComputeEnvironmentDeleted(conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{batch.CEStatusDeleting},
 		Target:  []string{},
-		Refresh: ComputeEnvironmentStatus(conn, name),
+		Refresh: statusComputeEnvironment(conn, name),
 		Timeout: timeout,
 	}
 
@@ -53,11 +53,11 @@ func ComputeEnvironmentDeleted(conn *batch.Batch, name string, timeout time.Dura
 	return nil, err
 }
 
-func ComputeEnvironmentDisabled(conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+func waitComputeEnvironmentDisabled(conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{batch.CEStatusUpdating},
 		Target:  []string{batch.CEStatusValid},
-		Refresh: ComputeEnvironmentStatus(conn, name),
+		Refresh: statusComputeEnvironment(conn, name),
 		Timeout: timeout,
 	}
 
@@ -74,11 +74,11 @@ func ComputeEnvironmentDisabled(conn *batch.Batch, name string, timeout time.Dur
 	return nil, err
 }
 
-func ComputeEnvironmentUpdated(conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+func waitComputeEnvironmentUpdated(conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{batch.CEStatusUpdating},
 		Target:  []string{batch.CEStatusValid},
-		Refresh: ComputeEnvironmentStatus(conn, name),
+		Refresh: statusComputeEnvironment(conn, name),
 		Timeout: timeout,
 	}
 
