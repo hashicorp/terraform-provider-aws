@@ -19,73 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_acmpca_certificate_authority", &resource.Sweeper{
-		Name: "aws_acmpca_certificate_authority",
-		F:    sweepCertificateAuthorities,
-	})
-}
 
-func sweepCertificateAuthorities(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).ACMPCAConn
 
-	certificateAuthorities, err := listAcmpcaCertificateAuthorities(conn)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ACM PCA Certificate Authorities sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving ACM PCA Certificate Authorities: %w", err)
-	}
-	if len(certificateAuthorities) == 0 {
-		log.Print("[DEBUG] No ACM PCA Certificate Authorities to sweep")
-		return nil
-	}
 
-	var sweeperErrs *multierror.Error
-
-	for _, certificateAuthority := range certificateAuthorities {
-		arn := aws.StringValue(certificateAuthority.Arn)
-
-		if aws.StringValue(certificateAuthority.Status) == acmpca.CertificateAuthorityStatusActive {
-			log.Printf("[INFO] Disabling ACM PCA Certificate Authority: %s", arn)
-			_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
-				CertificateAuthorityArn: aws.String(arn),
-				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
-			})
-			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error disabling ACM PCA Certificate Authority (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		log.Printf("[INFO] Deleting ACM PCA Certificate Authority: %s", arn)
-		_, err := conn.DeleteCertificateAuthority(&acmpca.DeleteCertificateAuthorityInput{
-			CertificateAuthorityArn:     aws.String(arn),
-			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
-		})
-		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			continue
-		}
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting ACM PCA Certificate Authority (%s): %w", arn, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
-		}
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
@@ -599,24 +535,7 @@ func testAccCheckCertificateAuthorityDestroy(s *terraform.State) error {
 	return nil
 }
 
-func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.CertificateAuthority, error) {
-	certificateAuthorities := []*acmpca.CertificateAuthority{}
-	input := &acmpca.ListCertificateAuthoritiesInput{}
 
-	for {
-		output, err := conn.ListCertificateAuthorities(input)
-		if err != nil {
-			return certificateAuthorities, err
-		}
-		certificateAuthorities = append(certificateAuthorities, output.CertificateAuthorities...)
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return certificateAuthorities, nil
-}
 
 func testAccCertificateAuthorityConfig_Enabled(commonName, certificateAuthorityType string, enabled bool) string {
 	return fmt.Sprintf(`
