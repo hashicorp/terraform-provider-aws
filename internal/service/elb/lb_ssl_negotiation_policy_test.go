@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func TestAccAWSLBSSLNegotiationPolicy_basic(t *testing.T) {
@@ -100,7 +101,7 @@ func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
 			}
 		} else {
 			// Check that the SSL Negotiation Policy is destroyed
-			elbName, _, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(rs.Primary.ID)
+			elbName, _, policyName, err := tfelb.SSLNegotiationPolicyParseID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
@@ -137,7 +138,7 @@ func testAccCheckLBSSLNegotiationPolicy(elbResource string, policyResource strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
-		elbName, _, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(policy.Primary.ID)
+		elbName, _, policyName, err := tfelb.SSLNegotiationPolicyParseID(policy.Primary.ID)
 		if err != nil {
 			return err
 		}

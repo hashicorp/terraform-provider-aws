@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func TestAccAWSLoadBalancerPolicy_basic(t *testing.T) {
@@ -115,7 +116,7 @@ func testAccCheckAWSLoadBalancerPolicyExists(resourceName string, policyDescript
 			return fmt.Errorf("No Load Balancer Policy ID is set for %s", resourceName)
 		}
 
-		loadBalancerName, policyName := resourceAwsLoadBalancerPolicyParseId(rs.Primary.ID)
+		loadBalancerName, policyName := tfelb.PolicyParseID(rs.Primary.ID)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
@@ -148,7 +149,7 @@ func testAccCheckAWSLoadBalancerPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		loadBalancerName, policyName := resourceAwsLoadBalancerPolicyParseId(rs.Primary.ID)
+		loadBalancerName, policyName := tfelb.PolicyParseID(rs.Primary.ID)
 		out, err := conn.DescribeLoadBalancerPolicies(
 			&elb.DescribeLoadBalancerPoliciesInput{
 				LoadBalancerName: aws.String(loadBalancerName),
@@ -199,7 +200,7 @@ func testAccCheckAWSLoadBalancerPolicyState(elbResource string, policyResource s
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
-		loadBalancerName, policyName := resourceAwsLoadBalancerPolicyParseId(policy.Primary.ID)
+		loadBalancerName, policyName := tfelb.PolicyParseID(policy.Primary.ID)
 		loadBalancerPolicies, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(loadBalancerName),
 			PolicyNames:      []*string{aws.String(policyName)},

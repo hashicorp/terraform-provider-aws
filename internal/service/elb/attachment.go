@@ -89,7 +89,7 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeLoadBalancers(describeElbOpts)
 	if err != nil {
-		if isLoadBalancerNotFound(err) {
+		if IsNotFound(err) {
 			log.Printf("[ERROR] ELB %s not found", elbName)
 			d.SetId("")
 			return nil

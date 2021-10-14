@@ -6,10 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 )
 
 func TestAccAWSElbServiceAccount_basic(t *testing.T) {
-	expectedAccountID := elbAccountIdPerRegionMap[acctest.Region()]
+	expectedAccountID := tfelb.AccountIdPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_elb_service_account.main"
 
@@ -30,7 +31,7 @@ func TestAccAWSElbServiceAccount_basic(t *testing.T) {
 }
 
 func TestAccAWSElbServiceAccount_Region(t *testing.T) {
-	expectedAccountID := elbAccountIdPerRegionMap[acctest.Region()]
+	expectedAccountID := tfelb.AccountIdPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_elb_service_account.regional"
 

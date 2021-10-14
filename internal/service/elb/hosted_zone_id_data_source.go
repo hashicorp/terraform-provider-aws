@@ -10,7 +10,7 @@ import (
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region
 // See https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#elb_region
-var elbHostedZoneIdPerRegionMap = map[string]string{
+var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z268VQBMOI5EKX",
 	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
 	endpoints.ApNortheast1RegionID: "Z14GRHDCWA56QT",
@@ -57,7 +57,7 @@ func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error 
 		region = v.(string)
 	}
 
-	if zoneId, ok := elbHostedZoneIdPerRegionMap[region]; ok {
+	if zoneId, ok := HostedZoneIdPerRegionMap[region]; ok {
 		d.SetId(zoneId)
 		return nil
 	}

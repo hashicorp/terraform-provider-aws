@@ -46,7 +46,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validName,
+				ValidateFunc:  ValidName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -146,7 +146,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      60,
-							ValidateFunc: validateAccessLogsInterval,
+							ValidateFunc: ValidAccessLogsInterval,
 						},
 						"bucket": {
 							Type:     schema.TypeString,
@@ -201,7 +201,7 @@ func ResourceLoadBalancer() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsElbListenerHash,
+				Set: ListenerHash,
 			},
 
 			"health_check": {
@@ -226,7 +226,7 @@ func ResourceLoadBalancer() *schema.Resource {
 						"target": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateHeathCheckTarget,
+							ValidateFunc: ValidHeathCheckTarget,
 						},
 
 						"interval": {
@@ -266,7 +266,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	// Expand the "listener" set to aws-sdk-go compat []*elb.Listener
-	listeners, err := expandListeners(d.Get("listener").(*schema.Set).List())
+	listeners, err := ExpandListeners(d.Get("listener").(*schema.Set).List())
 	if err != nil {
 		return err
 	}
@@ -362,7 +362,7 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 
 	describeResp, err := elbconn.DescribeLoadBalancers(describeElbOpts)
 	if err != nil {
-		if isLoadBalancerNotFound(err) {
+		if IsNotFound(err) {
 			// The ELB is gone now, so just remove it from the state
 			d.SetId("")
 			return nil
@@ -472,7 +472,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 	// There's only one health check, so save that to state as we
 	// currently can
 	if *lb.HealthCheck.Target != "" {
-		d.Set("health_check", flattenHealthCheck(lb.HealthCheck))
+		d.Set("health_check", FlattenHealthCheck(lb.HealthCheck))
 	}
 
 	return nil
@@ -486,8 +486,8 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		remove, _ := expandListeners(os.Difference(ns).List())
-		add, err := expandListeners(ns.Difference(os).List())
+		remove, _ := ExpandListeners(os.Difference(ns).List())
+		add, err := ExpandListeners(ns.Difference(os).List())
 		if err != nil {
 			return err
 		}
@@ -552,8 +552,8 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		o, n := d.GetChange("instances")
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandInstanceString(os.Difference(ns).List())
-		add := expandInstanceString(ns.Difference(os).List())
+		remove := ExpandInstanceString(os.Difference(ns).List())
+		add := ExpandInstanceString(ns.Difference(os).List())
 
 		if len(add) > 0 {
 			registerInstancesOpts := elb.RegisterInstancesWithLoadBalancerInput{
@@ -801,7 +801,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 
 	name := d.Get("name").(string)
 
-	err := cleanupELBNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn, name)
+	err := CleanupNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn, name)
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %#v", name, err)
 	}
@@ -809,7 +809,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsElbListenerHash(v interface{}) int {
+func ListenerHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["instance_port"].(int)))
@@ -826,12 +826,12 @@ func resourceAwsElbListenerHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func isLoadBalancerNotFound(err error) bool {
+func IsNotFound(err error) bool {
 	elberr, ok := err.(awserr.Error)
 	return ok && elberr.Code() == elb.ErrCodeAccessPointNotFoundException
 }
 
-func validateAccessLogsInterval(v interface{}, k string) (ws []string, errors []error) {
+func ValidAccessLogsInterval(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(int)
 
 	// Check if the value is either 5 or 60 (minutes).
@@ -844,7 +844,7 @@ func validateAccessLogsInterval(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []error) {
+func ValidHeathCheckTarget(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// Parse the Health Check target value.
@@ -941,7 +941,7 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func cleanupELBNetworkInterfaces(conn *ec2.EC2, name string) error {
+func CleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
 	out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{

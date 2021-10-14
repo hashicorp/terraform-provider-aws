@@ -53,7 +53,7 @@ func flattenBackendPolicies(backends []*elb.BackendServerDescription) map[int64]
 
 // Flattens a health check into something that flatmap.Flatten()
 // can handle
-func flattenHealthCheck(check *elb.HealthCheck) []map[string]interface{} {
+func FlattenHealthCheck(check *elb.HealthCheck) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	chk := make(map[string]interface{})
@@ -78,7 +78,7 @@ func flattenInstances(list []*elb.Instance) []string {
 }
 
 // Expands an array of String Instance IDs into a []Instances
-func expandInstanceString(list []interface{}) []*elb.Instance {
+func ExpandInstanceString(list []interface{}) []*elb.Instance {
 	result := make([]*elb.Instance, 0, len(list))
 	for _, i := range list {
 		result = append(result, &elb.Instance{InstanceId: aws.String(i.(string))})
@@ -88,7 +88,7 @@ func expandInstanceString(list []interface{}) []*elb.Instance {
 
 // Takes the result of flatmap.Expand for an array of listeners and
 // returns ELB API compatible objects
-func expandListeners(configured []interface{}) ([]*elb.Listener, error) {
+func ExpandListeners(configured []interface{}) ([]*elb.Listener, error) {
 	listeners := make([]*elb.Listener, 0, len(configured))
 
 	// Loop over our configured listeners and create
@@ -152,7 +152,7 @@ func flattenListeners(list []*elb.ListenerDescription) []map[string]interface{} 
 
 // Takes the result of flatmap.Expand for an array of policy attributes and
 // returns ELB API compatible objects
-func expandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
+func ExpandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
 	attributes := make([]*elb.PolicyAttribute, 0, len(configured))
 
 	// Loop over our configured attributes and create
@@ -173,7 +173,7 @@ func expandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
 }
 
 // Flattens an array of PolicyAttributes into a []interface{}
-func flattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface{} {
+func FlattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface{} {
 	attributes := []interface{}{}
 	for _, attrdef := range list {
 		attribute := map[string]string{

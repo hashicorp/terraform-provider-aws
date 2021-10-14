@@ -83,7 +83,7 @@ func resourceSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interface{}
 	// Check for Policy Attributes
 	if v, ok := d.GetOk("attribute"); ok {
 		// Expand the "attribute" set to aws-sdk-go compat []*elb.PolicyAttribute
-		lbspOpts.PolicyAttributes = expandPolicyAttributes(v.(*schema.Set).List())
+		lbspOpts.PolicyAttributes = ExpandPolicyAttributes(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Load Balancer Policy opts: %#v", lbspOpts)
@@ -112,7 +112,7 @@ func resourceSSLNegotiationPolicyCreate(d *schema.ResourceData, meta interface{}
 func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
-	lbName, lbPort, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(d.Id())
+	lbName, lbPort, policyName, err := SSLNegotiationPolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) 
 			// The policy is gone.
 			d.SetId("")
 			return nil
-		} else if isLoadBalancerNotFound(err) {
+		} else if IsNotFound(err) {
 			// The ELB is gone now, so just remove it from the state
 			d.SetId("")
 			return nil
@@ -154,7 +154,7 @@ func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) 
 
 	// We can get away with this because there's only one policy returned
 	// policyDesc := getResp.PolicyDescriptions[0]
-	// attributes := flattenPolicyAttributes(policyDesc.PolicyAttributeDescriptions)
+	// attributes := FlattenPolicyAttributes(policyDesc.PolicyAttributeDescriptions)
 	// if err := d.Set("attribute", attributes); err != nil {
 	// 	return fmt.Errorf("error setting attribute: %s", err)
 	// }
@@ -165,7 +165,7 @@ func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) 
 func resourceSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
-	lbName, _, policyName, err := resourceAwsLBSSLNegotiationPolicyParseId(d.Id())
+	lbName, _, policyName, err := SSLNegotiationPolicyParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -194,10 +194,10 @@ func resourceSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-// resourceAwsLBSSLNegotiationPolicyParseId takes an ID and parses it into
+// SSLNegotiationPolicyParseID takes an ID and parses it into
 // it's constituent parts. You need three axes (LB name, policy name, and LB
 // port) to create or identify an SSL negotiation policy in AWS's API.
-func resourceAwsLBSSLNegotiationPolicyParseId(id string) (string, int, string, error) {
+func SSLNegotiationPolicyParseID(id string) (string, int, string, error) {
 	parts := strings.SplitN(id, ":", 3)
 	if n := len(parts); n != 3 {
 		return "", 0, "", fmt.Errorf("incorrect format of SSL negotiation policy resource ID. Expected %d parts, got %d", 3, n)

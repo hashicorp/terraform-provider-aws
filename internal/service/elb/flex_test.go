@@ -25,7 +25,7 @@ func TestExpandListeners(t *testing.T) {
 			"ssl_certificate_id": "something",
 		},
 	}
-	listeners, err := expandListeners(expanded)
+	listeners, err := ExpandListeners(expanded)
 	if err != nil {
 		t.Fatalf("bad: %#v", err)
 	}
@@ -57,7 +57,7 @@ func TestExpandListeners_invalid(t *testing.T) {
 			"ssl_certificate_id": "something",
 		},
 	}
-	_, err := expandListeners(expanded)
+	_, err := ExpandListeners(expanded)
 	if err != nil {
 		// Check the error we got
 		if !strings.Contains(err.Error(), "ssl_certificate_id may be set only when protocol") {
@@ -96,7 +96,7 @@ func TestFlattenHealthCheck(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenHealthCheck(tc.Input)
+		output := FlattenHealthCheck(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}
@@ -115,7 +115,7 @@ func TestExpandInstanceString(t *testing.T) {
 		"test-two",
 	}
 
-	expanded := expandInstanceString(ids)
+	expanded := ExpandInstanceString(ids)
 
 	if !reflect.DeepEqual(expanded, expected) {
 		t.Fatalf("Expand Instance String output did not match.\nGot:\n%#v\n\nexpected:\n%#v", expanded, expected)
@@ -137,7 +137,7 @@ func TestExpandPolicyAttributes(t *testing.T) {
 			"value": "true",
 		},
 	}
-	attributes := expandPolicyAttributes(expanded)
+	attributes := ExpandPolicyAttributes(expanded)
 
 	if len(attributes) != 3 {
 		t.Fatalf("expected number of attributes to be 3, but got %d", len(attributes))
@@ -159,7 +159,7 @@ func TestExpandPolicyAttributes(t *testing.T) {
 func TestExpandPolicyAttributes_empty(t *testing.T) {
 	var expanded []interface{}
 
-	attributes := expandPolicyAttributes(expanded)
+	attributes := ExpandPolicyAttributes(expanded)
 
 	if len(attributes) != 0 {
 		t.Fatalf("expected number of attributes to be 0, but got %d", len(attributes))
@@ -173,7 +173,7 @@ func TestExpandPolicyAttributes_invalid(t *testing.T) {
 			"value": "true",
 		},
 	}
-	attributes := expandPolicyAttributes(expanded)
+	attributes := ExpandPolicyAttributes(expanded)
 
 	expected := &elb.PolicyAttribute{
 		AttributeName:  aws.String("Protocol-TLSv1.2"),
@@ -210,7 +210,7 @@ func TestFlattenPolicyAttributes(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenPolicyAttributes(tc.Input)
+		output := FlattenPolicyAttributes(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}

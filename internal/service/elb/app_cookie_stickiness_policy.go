@@ -95,7 +95,7 @@ func resourceAppCookieStickinessPolicyCreate(d *schema.ResourceData, meta interf
 func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
-	lbName, lbPort, policyName := resourceAwsAppCookieStickinessPolicyParseId(d.Id())
+	lbName, lbPort, policyName := AppCookieStickinessPolicyParseID(d.Id())
 
 	request := &elb.DescribeLoadBalancerPoliciesInput{
 		LoadBalancerName: aws.String(lbName),
@@ -187,7 +187,7 @@ func resourceAwsELBSticknessPolicyAssigned(policyName, lbName, lbPort string, co
 func resourceAppCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
-	lbName, _, policyName := resourceAwsAppCookieStickinessPolicyParseId(d.Id())
+	lbName, _, policyName := AppCookieStickinessPolicyParseID(d.Id())
 
 	// Perversely, if we Set an empty list of PolicyNames, we detach the
 	// policies attached to a listener, which is required to delete the
@@ -213,10 +213,10 @@ func resourceAppCookieStickinessPolicyDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-// resourceAwsAppCookieStickinessPolicyParseId takes an ID and parses it into
+// AppCookieStickinessPolicyParseID takes an ID and parses it into
 // it's constituent parts. You need three axes (LB name, policy name, and LB
 // port) to create or identify a stickiness policy in AWS's API.
-func resourceAwsAppCookieStickinessPolicyParseId(id string) (string, string, string) {
+func AppCookieStickinessPolicyParseID(id string) (string, string, string) {
 	parts := strings.SplitN(id, ":", 3)
 	return parts[0], parts[1], parts[2]
 }
