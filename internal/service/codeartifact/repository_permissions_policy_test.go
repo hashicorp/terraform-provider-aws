@@ -24,12 +24,12 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy,
+		CheckDestroy: testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyBasicConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
+					testAccCheckRepositoryPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_repository.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
@@ -42,9 +42,9 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyUpdatedConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
+					testAccCheckRepositoryPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_repository.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
@@ -64,12 +64,12 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_owner(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy,
+		CheckDestroy: testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyOwnerConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyOwnerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
+					testAccCheckRepositoryPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_repository.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
@@ -93,12 +93,12 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy,
+		CheckDestroy: testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyBasicConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
+					testAccCheckRepositoryPermissionsExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceRepositoryPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -115,12 +115,12 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears_domain(t *test
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy,
+		CheckDestroy: testAccCheckRepositoryPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyBasicConfig(rName),
+				Config: testAccRepositoryPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
+					testAccCheckRepositoryPermissionsExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceRepositoryPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -129,7 +129,7 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears_domain(t *test
 	})
 }
 
-func testAccCheckAWSCodeArtifactRepositoryPermissionsExists(n string) resource.TestCheckFunc {
+func testAccCheckRepositoryPermissionsExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -157,7 +157,7 @@ func testAccCheckAWSCodeArtifactRepositoryPermissionsExists(n string) resource.T
 	}
 }
 
-func testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy(s *terraform.State) error {
+func testAccCheckRepositoryPermissionsDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codeartifact_repository_permissions_policy" {
 			continue
@@ -192,7 +192,7 @@ func testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy(s *terraform.State)
 	return nil
 }
 
-func testAccAWSCodeArtifactRepositoryPermissionsPolicyBasicConfig(rName string) string {
+func testAccRepositoryPermissionsPolicyBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -229,7 +229,7 @@ EOF
 `, rName)
 }
 
-func testAccAWSCodeArtifactRepositoryPermissionsPolicyOwnerConfig(rName string) string {
+func testAccRepositoryPermissionsPolicyOwnerConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -267,7 +267,7 @@ EOF
 `, rName)
 }
 
-func testAccAWSCodeArtifactRepositoryPermissionsPolicyUpdatedConfig(rName string) string {
+func testAccRepositoryPermissionsPolicyUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q

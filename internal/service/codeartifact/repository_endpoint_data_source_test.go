@@ -20,28 +20,28 @@ func TestAccAWSCodeArtifactRepositoryEndpointDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, "npm"),
+				Config: testAccCheckRepositoryEndpointBasicConfig(rName, "npm"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 			{
-				Config: testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, "pypi"),
+				Config: testAccCheckRepositoryEndpointBasicConfig(rName, "pypi"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 			{
-				Config: testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, "maven"),
+				Config: testAccCheckRepositoryEndpointBasicConfig(rName, "maven"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 			{
-				Config: testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, "nuget"),
+				Config: testAccCheckRepositoryEndpointBasicConfig(rName, "nuget"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
@@ -61,7 +61,7 @@ func TestAccAWSCodeArtifactRepositoryEndpointDataSource_owner(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCodeArtifactRepositoryEndpointOwnerConfig(rName),
+				Config: testAccCheckRepositoryEndpointOwnerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
@@ -71,7 +71,7 @@ func TestAccAWSCodeArtifactRepositoryEndpointDataSource_owner(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCodeArtifactRepositoryEndpointBaseConfig(rName string) string {
+func testAccCheckRepositoryEndpointBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -90,9 +90,9 @@ resource "aws_codeartifact_repository" "test" {
 `, rName)
 }
 
-func testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, format string) string {
+func testAccCheckRepositoryEndpointBasicConfig(rName, format string) string {
 	return acctest.ConfigCompose(
-		testAccCheckAWSCodeArtifactRepositoryEndpointBaseConfig(rName),
+		testAccCheckRepositoryEndpointBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_codeartifact_repository_endpoint" "test" {
   domain     = aws_codeartifact_domain.test.domain
@@ -102,9 +102,9 @@ data "aws_codeartifact_repository_endpoint" "test" {
 `, format))
 }
 
-func testAccCheckAWSCodeArtifactRepositoryEndpointOwnerConfig(rName string) string {
+func testAccCheckRepositoryEndpointOwnerConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCheckAWSCodeArtifactRepositoryEndpointBaseConfig(rName),
+		testAccCheckRepositoryEndpointBaseConfig(rName),
 		`
 data "aws_codeartifact_repository_endpoint" "test" {
   domain       = aws_codeartifact_domain.test.domain

@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_codeartifact_domain", &resource.Sweeper{
 		Name: "aws_codeartifact_domain",
-		F:    testSweepCodeArtifactDomains,
+		F:    sweepDomains,
 	})
 }
 
-func testSweepCodeArtifactDomains(region string) error {
+func sweepDomains(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -80,12 +80,12 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactDomainBasicConfig(rName),
+				Config: testAccDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
@@ -113,12 +113,12 @@ func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName),
+				Config: testAccDomainDefaultEncryptionKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_key", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
@@ -145,12 +145,12 @@ func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactDomainConfigTags1(rName, "key1", "value1"),
+				Config: testAccDomainTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -161,18 +161,18 @@ func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodeArtifactDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSCodeArtifactDomainConfigTags1(rName, "key2", "value2"),
+				Config: testAccDomainTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
 			},
@@ -188,12 +188,12 @@ func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName),
+				Config: testAccDomainDefaultEncryptionKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -202,7 +202,7 @@ func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCodeArtifactDomainExists(n string) resource.TestCheckFunc {
+func testAccCheckDomainExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -229,7 +229,7 @@ func testAccCheckAWSCodeArtifactDomainExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSCodeArtifactDomainDestroy(s *terraform.State) error {
+func testAccCheckDomainDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codeartifact_domain" {
 			continue
@@ -263,7 +263,7 @@ func testAccCheckAWSCodeArtifactDomainDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCodeArtifactDomainBasicConfig(rName string) string {
+func testAccDomainBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -277,7 +277,7 @@ resource "aws_codeartifact_domain" "test" {
 `, rName)
 }
 
-func testAccAWSCodeArtifactDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccDomainTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codeartifact_domain" "test" {
   domain = %[1]q
@@ -289,7 +289,7 @@ resource "aws_codeartifact_domain" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSCodeArtifactDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDomainTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_codeartifact_domain" "test" {
   domain = %[1]q
@@ -302,7 +302,7 @@ resource "aws_codeartifact_domain" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName string) string {
+func testAccDomainDefaultEncryptionKeyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codeartifact_domain" "test" {
   domain = %[1]q

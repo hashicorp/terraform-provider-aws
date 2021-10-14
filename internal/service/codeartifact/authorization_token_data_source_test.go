@@ -20,7 +20,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCodeArtifactAuthorizationTokenBasicConfig(rName),
+				Config: testAccCheckAuthorizationTokenBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
@@ -41,7 +41,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_owner(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCodeArtifactAuthorizationTokenOwnerConfig(rName),
+				Config: testAccCheckAuthorizationTokenOwnerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
@@ -62,7 +62,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_duration(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCodeArtifactAuthorizationTokenDurationConfig(rName),
+				Config: testAccCheckAuthorizationTokenDurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
@@ -74,7 +74,7 @@ func TestAccAWSCodeArtifactAuthorizationTokenDataSource_duration(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCodeArtifactAuthorizationTokenBaseConfig(rName string) string {
+func testAccCheckAuthorizationTokenBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -88,9 +88,9 @@ resource "aws_codeartifact_domain" "test" {
 `, rName)
 }
 
-func testAccCheckAWSCodeArtifactAuthorizationTokenBasicConfig(rName string) string {
+func testAccCheckAuthorizationTokenBasicConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCheckAWSCodeArtifactAuthorizationTokenBaseConfig(rName),
+		testAccCheckAuthorizationTokenBaseConfig(rName),
 		`
 data "aws_codeartifact_authorization_token" "test" {
   domain = aws_codeartifact_domain.test.domain
@@ -98,9 +98,9 @@ data "aws_codeartifact_authorization_token" "test" {
 `)
 }
 
-func testAccCheckAWSCodeArtifactAuthorizationTokenOwnerConfig(rName string) string {
+func testAccCheckAuthorizationTokenOwnerConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCheckAWSCodeArtifactAuthorizationTokenBaseConfig(rName),
+		testAccCheckAuthorizationTokenBaseConfig(rName),
 		`
 data "aws_codeartifact_authorization_token" "test" {
   domain       = aws_codeartifact_domain.test.domain
@@ -109,9 +109,9 @@ data "aws_codeartifact_authorization_token" "test" {
 `)
 }
 
-func testAccCheckAWSCodeArtifactAuthorizationTokenDurationConfig(rName string) string {
+func testAccCheckAuthorizationTokenDurationConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCheckAWSCodeArtifactAuthorizationTokenBaseConfig(rName),
+		testAccCheckAuthorizationTokenBaseConfig(rName),
 		`
 data "aws_codeartifact_authorization_token" "test" {
   domain           = aws_codeartifact_domain.test.domain
