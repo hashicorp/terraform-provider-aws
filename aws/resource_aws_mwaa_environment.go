@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMwaaEnvironment() *schema.Resource {
+func ResourceEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMwaaEnvironmentCreate,
-		Read:   resourceAwsMwaaEnvironmentRead,
-		Update: resourceAwsMwaaEnvironmentUpdate,
-		Delete: resourceAwsMwaaEnvironmentDelete,
+		Create: resourceEnvironmentCreate,
+		Read:   resourceEnvironmentRead,
+		Update: resourceEnvironmentUpdate,
+		Delete: resourceEnvironmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -234,7 +234,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 	}
 }
 
-func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MWAAConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -315,10 +315,10 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error waiting for MWAA Environment (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsMwaaEnvironmentRead(d, meta)
+	return resourceEnvironmentRead(d, meta)
 }
 
-func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MWAAConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -386,7 +386,7 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MWAAConn
 
 	input := mwaa.UpdateEnvironmentInput{
@@ -483,10 +483,10 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsMwaaEnvironmentRead(d, meta)
+	return resourceEnvironmentRead(d, meta)
 }
 
-func resourceAwsMwaaEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MWAAConn
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
