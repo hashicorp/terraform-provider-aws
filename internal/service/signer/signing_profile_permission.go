@@ -25,7 +25,7 @@ func ResourceSigningProfilePermission() *schema.Resource {
 		Delete: resourceSigningProfilePermissionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsSignerSigningProfilePermissionImport,
+			State: resourceSigningProfilePermissionImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -310,7 +310,7 @@ func resourceSigningProfilePermissionDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsSignerSigningProfilePermissionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSigningProfilePermissionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected PROFILE_NAME/STATEMENT_ID", d.Id())
