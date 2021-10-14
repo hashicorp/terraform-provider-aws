@@ -121,7 +121,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.TagList = tags.IgnoreAws().Cloudhsmv2Tags()
+		input.TagList = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("source_backup_identifier"); ok {
@@ -204,7 +204,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error saving Subnet IDs to state for CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
-	tags := tftags.Cloudhsmv2KeyValueTags(cluster.TagList).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(cluster.TagList).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -223,7 +223,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Cloudhsmv2UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
