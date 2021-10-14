@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
@@ -108,7 +109,7 @@ func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
 }
 
 func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
 
@@ -156,7 +157,7 @@ func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, 
 }
 
 func resourceAwsConfigOrganizationConformancePackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	pack, err := configDescribeOrganizationConformancePack(conn, d.Id())
 
@@ -197,7 +198,7 @@ func resourceAwsConfigOrganizationConformancePackRead(d *schema.ResourceData, me
 }
 
 func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),
@@ -241,7 +242,7 @@ func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, 
 }
 
 func resourceAwsConfigOrganizationConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.DeleteOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),

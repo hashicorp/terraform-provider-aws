@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccConfigConfigRule_basic(t *testing.T) {
@@ -317,7 +318,7 @@ func testAccCheckConfigConfigRuleExists(n string, obj *configservice.ConfigRule)
 			return fmt.Errorf("No config rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 		out, err := conn.DescribeConfigRules(&configservice.DescribeConfigRulesInput{
 			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -336,7 +337,7 @@ func testAccCheckConfigConfigRuleExists(n string, obj *configservice.ConfigRule)
 }
 
 func testAccCheckConfigConfigRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_config_rule" {

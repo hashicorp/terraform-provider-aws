@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConfigConfigurationRecorder() *schema.Resource {
@@ -64,7 +65,7 @@ func resourceAwsConfigConfigurationRecorder() *schema.Resource {
 }
 
 func resourceAwsConfigConfigurationRecorderPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	name := d.Get("name").(string)
 	recorder := configservice.ConfigurationRecorder{
@@ -90,7 +91,7 @@ func resourceAwsConfigConfigurationRecorderPut(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsConfigConfigurationRecorderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := configservice.DescribeConfigurationRecordersInput{
 		ConfigurationRecorderNames: []*string{aws.String(d.Id())},
@@ -134,7 +135,7 @@ func resourceAwsConfigConfigurationRecorderRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsConfigConfigurationRecorderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 	input := configservice.DeleteConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
 	}

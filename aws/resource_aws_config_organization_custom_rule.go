@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsConfigOrganizationCustomRule() *schema.Resource {
@@ -121,7 +122,7 @@ func resourceAwsConfigOrganizationCustomRule() *schema.Resource {
 }
 
 func resourceAwsConfigOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 	name := d.Get("name").(string)
 
 	input := &configservice.PutOrganizationConfigRuleInput{
@@ -180,7 +181,7 @@ func resourceAwsConfigOrganizationCustomRuleCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsConfigOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	rule, err := configDescribeOrganizationConfigRule(conn, d.Id())
 
@@ -236,7 +237,7 @@ func resourceAwsConfigOrganizationCustomRuleRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsConfigOrganizationCustomRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -292,7 +293,7 @@ func resourceAwsConfigOrganizationCustomRuleUpdate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsConfigOrganizationCustomRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*conns.AWSClient).ConfigConn
 
 	input := &configservice.DeleteOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),

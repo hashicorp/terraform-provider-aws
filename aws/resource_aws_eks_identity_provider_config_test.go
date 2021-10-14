@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepEksIdentityProviderConfigs(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	ctx := context.TODO()
-	conn := client.(*AWSClient).eksconn
+	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*testSweepResource, 0)
@@ -262,7 +263,7 @@ func testAccCheckAWSEksIdentityProviderConfigExists(ctx context.Context, resourc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 		output, err := finder.OidcIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
@@ -278,7 +279,7 @@ func testAccCheckAWSEksIdentityProviderConfigExists(ctx context.Context, resourc
 
 func testAccCheckAWSEksIdentityProviderConfigDestroy(s *terraform.State) error {
 	ctx := context.TODO()
-	conn := acctest.Provider.Meta().(*AWSClient).eksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_identity_provider_config" {

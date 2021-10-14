@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccConfigConformancePack_basic(t *testing.T) {
@@ -416,7 +417,7 @@ func testAccConfigConformancePack_S3TemplateAndTemplateBody(t *testing.T) {
 }
 
 func testAccCheckConfigConformancePackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).configconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_conformance_pack" {
@@ -448,7 +449,7 @@ func testAccCheckConfigConformancePackExists(resourceName string, detail *config
 			return fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).configconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigConn
 
 		pack, err := configDescribeConformancePack(conn, rs.Primary.ID)
 
