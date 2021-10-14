@@ -280,7 +280,7 @@ func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().FsxTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating FSx ONTAP File System: %s", input)
@@ -360,7 +360,7 @@ func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting disk_iops_configuration: %w", err)
 	}
 
-	tags := tftags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -380,7 +380,7 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating FSx ONTAP File System (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

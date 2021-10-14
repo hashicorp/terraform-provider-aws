@@ -284,8 +284,8 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().FsxTags()
-		backupInput.Tags = tags.IgnoreAws().FsxTags()
+		input.Tags = Tags(tags.IgnoreAws())
+		backupInput.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -353,7 +353,7 @@ func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating FSx Lustre File System (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
@@ -464,7 +464,7 @@ func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
-	tags := tftags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

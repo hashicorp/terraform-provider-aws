@@ -340,8 +340,8 @@ func resourceWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().FsxTags()
-		backupInput.Tags = tags.IgnoreAws().FsxTags()
+		input.Tags = Tags(tags.IgnoreAws())
+		backupInput.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -389,7 +389,7 @@ func resourceWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating FSx Windows File System (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
@@ -512,7 +512,7 @@ func resourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
-	tags := tftags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
