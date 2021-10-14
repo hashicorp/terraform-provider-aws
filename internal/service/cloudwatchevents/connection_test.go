@@ -23,11 +23,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_cloudwatch_event_connection", &resource.Sweeper{
 		Name: "aws_cloudwatch_event_connection",
-		F:    testSweepCloudWatchEventConnection,
+		F:    sweepConnection,
 	})
 }
 
-func testSweepCloudWatchEventConnection(region string) error {
+func sweepConnection(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -87,10 +87,10 @@ func TestAccAWSCloudWatchEventConnection_apiKey(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_apiKey(
+				Config: testAccConnectionConfig_apiKey(
 					name,
 					description,
 					authorizationType,
@@ -112,7 +112,7 @@ func TestAccAWSCloudWatchEventConnection_apiKey(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"auth_parameters.0.api_key.0.value"},
 			},
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_apiKey(
+				Config: testAccConnectionConfig_apiKey(
 					nameModified,
 					descriptionModified,
 					authorizationType,
@@ -130,7 +130,7 @@ func TestAccAWSCloudWatchEventConnection_apiKey(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_apiKey(
+				Config: testAccConnectionConfig_apiKey(
 					nameModified,
 					descriptionModified,
 					authorizationType,
@@ -169,10 +169,10 @@ func TestAccAWSCloudWatchEventConnection_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_basic(
+				Config: testAccConnectionConfig_basic(
 					name,
 					description,
 					authorizationType,
@@ -194,7 +194,7 @@ func TestAccAWSCloudWatchEventConnection_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"auth_parameters.0.basic.0.password"},
 			},
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_basic(
+				Config: testAccConnectionConfig_basic(
 					nameModified,
 					descriptionModified,
 					authorizationType,
@@ -212,7 +212,7 @@ func TestAccAWSCloudWatchEventConnection_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_basic(
+				Config: testAccConnectionConfig_basic(
 					nameModified,
 					descriptionModified,
 					authorizationType,
@@ -288,10 +288,10 @@ func TestAccAWSCloudWatchEventConnection_oAuth(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_oauth(
+				Config: testAccConnectionConfig_oauth(
 					name,
 					description,
 					authorizationType,
@@ -337,7 +337,7 @@ func TestAccAWSCloudWatchEventConnection_oAuth(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_oauth(
+				Config: testAccConnectionConfig_oauth(
 					nameModified,
 					descriptionModified,
 					authorizationType,
@@ -374,7 +374,7 @@ func TestAccAWSCloudWatchEventConnection_oAuth(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_oauth(
+				Config: testAccConnectionConfig_oauth(
 					nameModified,
 					descriptionModified,
 					authorizationType,
@@ -453,10 +453,10 @@ func TestAccAWSCloudWatchEventConnection_invocationHttpParameters(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_invocationHttpParameters(
+				Config: testAccConnectionConfig_invocationHTTPParameters(
 					name,
 					description,
 					authorizationType,
@@ -507,7 +507,7 @@ func TestAccAWSCloudWatchEventConnection_invocationHttpParameters(t *testing.T) 
 				},
 			},
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_invocationHttpParameters(
+				Config: testAccConnectionConfig_invocationHTTPParameters(
 					name,
 					description,
 					authorizationType,
@@ -545,7 +545,7 @@ func TestAccAWSCloudWatchEventConnection_invocationHttpParameters(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_invocationHttpParameters(
+				Config: testAccConnectionConfig_invocationHTTPParameters(
 					name,
 					description,
 					authorizationType,
@@ -599,10 +599,10 @@ func TestAccAWSCloudWatchEventConnection_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
+		CheckDestroy: testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventConnectionConfig_apiKey(
+				Config: testAccConnectionConfig_apiKey(
 					name,
 					description,
 					authorizationType,
@@ -619,7 +619,7 @@ func TestAccAWSCloudWatchEventConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCloudWatchEventConnectionDestroy(s *terraform.State) error {
+func testAccCheckConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -682,7 +682,7 @@ func testAccCheckCloudWatchEventConnectionNotRecreated(i, j *events.DescribeConn
 	}
 }
 
-func testAccAWSCloudWatchEventConnectionConfig_apiKey(name, description, authorizationType, key, value string) string {
+func testAccConnectionConfig_apiKey(name, description, authorizationType, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_connection" "api_key" {
   name               = %[1]q
@@ -702,7 +702,7 @@ resource "aws_cloudwatch_event_connection" "api_key" {
 		value)
 }
 
-func testAccAWSCloudWatchEventConnectionConfig_basic(name, description, authorizationType, username, password string) string {
+func testAccConnectionConfig_basic(name, description, authorizationType, username, password string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_connection" "basic" {
   name               = %[1]q
@@ -722,7 +722,7 @@ resource "aws_cloudwatch_event_connection" "basic" {
 		password)
 }
 
-func testAccAWSCloudWatchEventConnectionConfig_oauth(
+func testAccConnectionConfig_oauth(
 	name,
 	description,
 	authorizationType,
@@ -793,7 +793,7 @@ resource "aws_cloudwatch_event_connection" "oauth" {
 		queryStringIsSecretValue)
 }
 
-func testAccAWSCloudWatchEventConnectionConfig_invocationHttpParameters(
+func testAccConnectionConfig_invocationHTTPParameters(
 	name,
 	description,
 	authorizationType,

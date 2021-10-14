@@ -32,7 +32,7 @@ func TestAccDataSourceAwsCloudWatchEventSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDataSourcePartnerEventSourceConfig(busName),
+				Config: testAccPartnerEventSourceDataSourceConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", busName),
 					resource.TestCheckResourceAttr(dataSourceName, "created_by", createdBy),
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsCloudWatchEventSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsDataSourcePartnerEventSourceConfig(namePrefix string) string {
+func testAccPartnerEventSourceDataSourceConfig(namePrefix string) string {
 	return fmt.Sprintf(`
 data "aws_cloudwatch_event_source" "test" {
   name_prefix = "%s"

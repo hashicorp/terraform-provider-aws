@@ -26,14 +26,14 @@ func init() {
 
 	resource.AddTestSweepers("aws_cloudwatch_event_rule", &resource.Sweeper{
 		Name: "aws_cloudwatch_event_rule",
-		F:    testSweepCloudWatchEventRules,
+		F:    sweepRules,
 		Dependencies: []string{
 			"aws_cloudwatch_event_target",
 		},
 	})
 }
 
-func testSweepCloudWatchEventRules(region string) error {
+func sweepRules(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -99,10 +99,10 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfig(rName),
+				Config: testAccRuleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName))),
@@ -126,11 +126,11 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudWatchEventRuleNoBusNameImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRuleNoBusNameImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfig(rName2),
+				Config: testAccRuleConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
 					testAccCheckCloudWatchEventRuleRecreated(&v1, &v2),
@@ -145,7 +145,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigDefaultEventBusName(rName2),
+				Config: testAccRuleDefaultEventBusNameConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v3),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
@@ -170,10 +170,10 @@ func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigEventBusName(rName, busName, "description 1"),
+				Config: testAccRuleEventBusNameConfig(rName, busName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -187,7 +187,7 @@ func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigEventBusName(rName, busName, "description 2"),
+				Config: testAccRuleEventBusNameConfig(rName, busName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
 					testAccCheckCloudWatchEventRuleNotRecreated(&v1, &v2),
@@ -196,7 +196,7 @@ func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigEventBusName(rName2, busName2, "description 2"),
+				Config: testAccRuleEventBusNameConfig(rName2, busName2, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v3),
 					testAccCheckCloudWatchEventRuleRecreated(&v2, &v3),
@@ -220,10 +220,10 @@ func TestAccAWSCloudWatchEventRule_role(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigRole(rName),
+				Config: testAccRuleRoleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -248,10 +248,10 @@ func TestAccAWSCloudWatchEventRule_description(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigDescription(rName, "description1"),
+				Config: testAccRuleDescriptionConfig(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -264,7 +264,7 @@ func TestAccAWSCloudWatchEventRule_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigDescription(rName, "description2"),
+				Config: testAccRuleDescriptionConfig(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -284,10 +284,10 @@ func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigPattern(rName, "{\"source\":[\"aws.ec2\"]}"),
+				Config: testAccRulePatternConfig(rName, "{\"source\":[\"aws.ec2\"]}"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -301,7 +301,7 @@ func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigPattern(rName, "{\"source\":[\"aws.lambda\"]}"),
+				Config: testAccRulePatternConfig(rName, "{\"source\":[\"aws.lambda\"]}"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -321,10 +321,10 @@ func TestAccAWSCloudWatchEventRule_ScheduleAndPattern(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigScheduleAndPattern(rName, "{\"source\":[\"aws.ec2\"]}"),
+				Config: testAccRuleScheduleAndPatternConfig(rName, "{\"source\":[\"aws.ec2\"]}"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -350,10 +350,10 @@ func TestAccAWSCloudWatchEventRule_NamePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigNamePrefix(rName),
+				Config: testAccRuleNamePrefixConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
@@ -377,10 +377,10 @@ func TestAccAWSCloudWatchEventRule_Name_Generated(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigNameGenerated,
+				Config: testAccRuleNameGeneratedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -405,10 +405,10 @@ func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigTags1(rName, "key1", "value1"),
+				Config: testAccRuleTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -421,7 +421,7 @@ func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRuleTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -430,7 +430,7 @@ func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigTags1(rName, "key2", "value2"),
+				Config: testAccRuleTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -438,7 +438,7 @@ func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigTags0(rName),
+				Config: testAccRuleTags0Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -457,10 +457,10 @@ func TestAccAWSCloudWatchEventRule_IsEnabled(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigIsEnabled(rName, false),
+				Config: testAccRuleIsEnabledConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
@@ -473,7 +473,7 @@ func TestAccAWSCloudWatchEventRule_IsEnabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigIsEnabled(rName, true),
+				Config: testAccRuleIsEnabledConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
@@ -481,7 +481,7 @@ func TestAccAWSCloudWatchEventRule_IsEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigIsEnabled(rName, false),
+				Config: testAccRuleIsEnabledConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
@@ -507,10 +507,10 @@ func TestAccAWSCloudWatchEventRule_PartnerEventBus(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRulePartnerEventBusConfig(rName, busName),
+				Config: testAccRulePartnerEventBusConfig(rName, busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
@@ -543,10 +543,10 @@ func TestAccAWSCloudWatchEventRule_EventBusArn(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		CheckDestroy: testAccCheckRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleEventBusArn(rName, eventBusName),
+				Config: testAccRuleEventBusARN(rName, eventBusName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
@@ -617,7 +617,7 @@ func testAccCheckCloudWatchEventRuleEnabled(n string, desired string) resource.T
 	}
 }
 
-func testAccCheckAWSCloudWatchEventRuleDestroy(s *terraform.State) error {
+func testAccCheckRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -659,7 +659,7 @@ func testAccCheckCloudWatchEventRuleNotRecreated(i, j *events.DescribeRuleOutput
 	}
 }
 
-func testAccAWSCloudWatchEventRuleNoBusNameImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccRuleNoBusNameImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -670,7 +670,7 @@ func testAccAWSCloudWatchEventRuleNoBusNameImportStateIdFunc(resourceName string
 	}
 }
 
-func testAccAWSCloudWatchEventRuleConfig(name string) string {
+func testAccRuleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = "%s"
@@ -679,7 +679,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name)
 }
 
-func testAccAWSCloudWatchEventRuleConfigDefaultEventBusName(name string) string {
+func testAccRuleDefaultEventBusNameConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
@@ -689,7 +689,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name)
 }
 
-func testAccAWSCloudWatchEventRuleConfigEventBusName(name, eventBusName, description string) string {
+func testAccRuleEventBusNameConfig(name, eventBusName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name           = %[1]q
@@ -710,7 +710,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, name, description, eventBusName)
 }
 
-func testAccAWSCloudWatchEventRuleConfigPattern(name, pattern string) string {
+func testAccRulePatternConfig(name, pattern string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name          = "%s"
@@ -721,7 +721,7 @@ PATTERN
 `, name, pattern)
 }
 
-func testAccAWSCloudWatchEventRuleConfigScheduleAndPattern(name, pattern string) string {
+func testAccRuleScheduleAndPatternConfig(name, pattern string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = "%s"
@@ -733,7 +733,7 @@ PATTERN
 `, name, pattern)
 }
 
-func testAccAWSCloudWatchEventRuleConfigDescription(name, description string) string {
+func testAccRuleDescriptionConfig(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
@@ -743,7 +743,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name, description)
 }
 
-func testAccAWSCloudWatchEventRuleConfigIsEnabled(name string, enabled bool) string {
+func testAccRuleIsEnabledConfig(name string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = "%s"
@@ -753,7 +753,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name, enabled)
 }
 
-func testAccAWSCloudWatchEventRuleConfigNamePrefix(name string) string {
+func testAccRuleNamePrefixConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name_prefix         = "%s"
@@ -762,13 +762,13 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name)
 }
 
-const testAccAWSCloudWatchEventRuleConfigNameGenerated = `
+const testAccRuleNameGeneratedConfig = `
 resource "aws_cloudwatch_event_rule" "test" {
   schedule_expression = "rate(5 minutes)"
 }
 `
 
-func testAccAWSCloudWatchEventRuleConfigTags1(name, tagKey1, tagValue1 string) string {
+func testAccRuleTags1Config(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
@@ -781,7 +781,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccAWSCloudWatchEventRuleConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccRuleTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
@@ -795,7 +795,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSCloudWatchEventRuleConfigTags0(name string) string {
+func testAccRuleTags0Config(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
@@ -804,7 +804,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name)
 }
 
-func testAccAWSCloudWatchEventRuleConfigRole(name string) string {
+func testAccRuleRoleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -834,7 +834,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name)
 }
 
-func testAccAWSCloudWatchEventRulePartnerEventBusConfig(rName, eventBusName string) string {
+func testAccRulePartnerEventBusConfig(rName, eventBusName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name           = %[1]q
@@ -849,7 +849,7 @@ PATTERN
 `, rName, eventBusName)
 }
 
-func testAccAWSCloudWatchEventRuleEventBusArn(rName, eventBusName string) string {
+func testAccRuleEventBusARN(rName, eventBusName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[2]q

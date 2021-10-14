@@ -24,20 +24,20 @@ func TestAccAWSCloudwatchEventBusPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
+		CheckDestroy: testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
+				Config: testAccBusPolicyConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
-					testAccAWSCloudwatchEventBusPolicyDocument(resourceName),
+					testAccCheckBusPolicyExists(resourceName),
+					testAccBusPolicyDocument(resourceName),
 				),
 			},
 			{
-				Config: testAccAWSCloudwatchEventBusPolicyConfigUpdate(rstring),
+				Config: testAccBusPolicyUpdateConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
-					testAccAWSCloudwatchEventBusPolicyDocument(resourceName),
+					testAccCheckBusPolicyExists(resourceName),
+					testAccBusPolicyDocument(resourceName),
 				),
 			},
 			{
@@ -57,12 +57,12 @@ func TestAccAWSCloudwatchEventBusPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
+		CheckDestroy: testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudwatchEventBusPolicyConfig(rstring),
+				Config: testAccBusPolicyConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudwatchEventBusPolicyExists(resourceName),
+					testAccCheckBusPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevents.ResourceBusPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -71,7 +71,7 @@ func TestAccAWSCloudwatchEventBusPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCloudwatchEventBusPolicyExists(pr string) resource.TestCheckFunc {
+func testAccCheckBusPolicyExists(pr string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		eventBusResource, ok := state.RootModule().Resources[pr]
 		if !ok {
@@ -102,7 +102,7 @@ func testAccCheckAWSCloudwatchEventBusPolicyExists(pr string) resource.TestCheck
 	}
 }
 
-func testAccAWSCloudwatchEventBusPolicyDocument(pr string) resource.TestCheckFunc {
+func testAccBusPolicyDocument(pr string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		eventBusPolicyResource, ok := state.RootModule().Resources[pr]
 		if !ok {
@@ -149,7 +149,7 @@ func testAccAWSCloudwatchEventBusPolicyDocument(pr string) resource.TestCheckFun
 	}
 }
 
-func testAccAWSCloudwatchEventBusPolicyConfig(name string) string {
+func testAccBusPolicyConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -180,7 +180,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 `, name)
 }
 
-func testAccAWSCloudwatchEventBusPolicyConfigUpdate(name string) string {
+func testAccBusPolicyUpdateConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q

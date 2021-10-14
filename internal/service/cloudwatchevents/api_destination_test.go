@@ -23,14 +23,14 @@ const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[
 func init() {
 	resource.AddTestSweepers("aws_cloudwatch_event_api_destination", &resource.Sweeper{
 		Name: "aws_cloudwatch_event_api_destination",
-		F:    testSweepCloudWatchEventApiDestination,
+		F:    sweepAPIDestination,
 		Dependencies: []string{
 			"aws_cloudwatch_event_connection",
 		},
 	})
 }
 
-func testSweepCloudWatchEventApiDestination(region string) error {
+func sweepAPIDestination(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -89,10 +89,10 @@ func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventApiDestinationDestroy,
+		CheckDestroy: testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventApiDestinationConfig(
+				Config: testAccAPIDestinationConfig(
 					name,
 					invocationEndpoint,
 					httpMethod,
@@ -111,7 +111,7 @@ func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchEventApiDestinationConfig(
+				Config: testAccAPIDestinationConfig(
 					nameModified,
 					invocationEndpointModified,
 					httpMethodModified,
@@ -126,7 +126,7 @@ func TestAccAWSCloudWatchEventApiDestination_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventApiDestinationConfig(
+				Config: testAccAPIDestinationConfig(
 					nameModified,
 					invocationEndpointModified,
 					httpMethodModified,
@@ -162,10 +162,10 @@ func TestAccAWSCloudWatchEventApiDestination_optional(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventApiDestinationDestroy,
+		CheckDestroy: testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventApiDestinationConfig_optional(
+				Config: testAccAPIDestinationConfig_optional(
 					name,
 					invocationEndpoint,
 					httpMethod,
@@ -187,7 +187,7 @@ func TestAccAWSCloudWatchEventApiDestination_optional(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchEventApiDestinationConfig_optional(
+				Config: testAccAPIDestinationConfig_optional(
 					nameModified,
 					invocationEndpointModified,
 					httpMethodModified,
@@ -205,7 +205,7 @@ func TestAccAWSCloudWatchEventApiDestination_optional(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventApiDestinationConfig_optional(
+				Config: testAccAPIDestinationConfig_optional(
 					nameModified,
 					invocationEndpointModified,
 					httpMethodModified,
@@ -238,10 +238,10 @@ func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, events.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchEventApiDestinationDestroy,
+		CheckDestroy: testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventApiDestinationConfig(
+				Config: testAccAPIDestinationConfig(
 					name,
 					invocationEndpoint,
 					httpMethod,
@@ -256,7 +256,7 @@ func TestAccAWSCloudWatchEventApiDestination_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCloudWatchEventApiDestinationDestroy(s *terraform.State) error {
+func testAccCheckAPIDestinationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchEventsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -321,7 +321,7 @@ func testAccCheckCloudWatchEventApiDestinationNotRecreated(i, j *events.Describe
 	}
 }
 
-func testAccAWSCloudWatchEventApiDestinationConfig(name, invocationEndpoint, httpMethod string) string {
+func testAccAPIDestinationConfig(name, invocationEndpoint, httpMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_api_destination" "basic" {
   name                = %[1]q
@@ -343,7 +343,7 @@ resource "aws_cloudwatch_event_connection" "test" {
 `, name, invocationEndpoint, httpMethod)
 }
 
-func testAccAWSCloudWatchEventApiDestinationConfig_optional(name, invocationEndpoint, httpMethod, description string, invocationRateLimitPerSecond int64) string {
+func testAccAPIDestinationConfig_optional(name, invocationEndpoint, httpMethod, description string, invocationRateLimitPerSecond int64) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_api_destination" "optional" {
   name                = %[1]q
