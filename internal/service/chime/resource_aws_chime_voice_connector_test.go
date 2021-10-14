@@ -1,4 +1,4 @@
-package aws
+package chime_test
 
 import (
 	"fmt"
