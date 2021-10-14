@@ -70,7 +70,7 @@ func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
 }
 
 func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
@@ -78,7 +78,7 @@ func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -103,7 +103,7 @@ func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17809
 func TestAccAWSStorageGatewayUploadBuffer_DiskPath(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
@@ -111,7 +111,7 @@ func TestAccAWSStorageGatewayUploadBuffer_DiskPath(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -141,7 +141,7 @@ func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resour
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := acctest.Provider.Meta().(*AWSClient).storagegatewayconn
 
 		gatewayARN, diskID, err := decodeStorageGatewayUploadBufferID(rs.Primary.ID)
 		if err != nil {
