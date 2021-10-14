@@ -1,4 +1,4 @@
-package aws
+package iot_test
 
 import (
 	"fmt"
