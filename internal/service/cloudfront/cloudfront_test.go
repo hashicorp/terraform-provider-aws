@@ -1,6 +1,9 @@
 package cloudfront_test
 
-import "github.com/aws/aws-sdk-go/aws/endpoints"
+import (
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
 
 // testAccCloudfrontRegionProviderConfig is the Terraform provider configuration for CloudFront region testing
 //
