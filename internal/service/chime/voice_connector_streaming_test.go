@@ -23,12 +23,12 @@ func TestAccAWSChimeVoiceConnectorStreaming_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorStreamingDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorStreamingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorStreamingConfig(name),
+				Config: testAccVoiceConnectorStreamingConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorStreamingExists(resourceName),
+					testAccCheckVoiceConnectorStreamingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_retention", "5"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "1"),
@@ -51,12 +51,12 @@ func TestAccAWSChimeVoiceConnectorStreaming_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorStreamingDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorStreamingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorStreamingConfig(name),
+				Config: testAccVoiceConnectorStreamingConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorStreamingExists(resourceName),
+					testAccCheckVoiceConnectorStreamingExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorStreaming(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,18 +73,18 @@ func TestAccAWSChimeVoiceConnectorStreaming_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorStreamingDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorStreamingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorStreamingConfig(name),
+				Config: testAccVoiceConnectorStreamingConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorStreamingExists(resourceName),
+					testAccCheckVoiceConnectorStreamingExists(resourceName),
 				),
 			},
 			{
-				Config: testAccAWSChimeVoiceConnectorStreamingUpdated(name),
+				Config: testAccVoiceConnectorStreamingUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorStreamingExists(resourceName),
+					testAccCheckVoiceConnectorStreamingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_retention", "2"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "2"),
@@ -99,7 +99,7 @@ func TestAccAWSChimeVoiceConnectorStreaming_update(t *testing.T) {
 	})
 }
 
-func testAccAWSChimeVoiceConnectorStreamingConfig(name string) string {
+func testAccVoiceConnectorStreamingConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -116,7 +116,7 @@ resource "aws_chime_voice_connector_streaming" "test" {
 `, name)
 }
 
-func testAccAWSChimeVoiceConnectorStreamingUpdated(name string) string {
+func testAccVoiceConnectorStreamingUpdated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -133,7 +133,7 @@ resource "aws_chime_voice_connector_streaming" "test" {
 `, name)
 }
 
-func testAccCheckAWSChimeVoiceConnectorStreamingExists(name string) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorStreamingExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -162,7 +162,7 @@ func testAccCheckAWSChimeVoiceConnectorStreamingExists(name string) resource.Tes
 	}
 }
 
-func testAccCheckAWSChimeVoiceConnectorStreamingDestroy(s *terraform.State) error {
+func testAccCheckVoiceConnectorStreamingDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_chime_voice_connector_termination" {
 			continue

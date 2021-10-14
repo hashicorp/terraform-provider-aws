@@ -24,12 +24,12 @@ func TestAccAWSChimeVoiceConnectorGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorGroupDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorGroupConfig(vcgName),
+				Config: testAccVoiceConnectorGroupConfig(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
+					testAccCheckVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
 					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "1"),
@@ -54,12 +54,12 @@ func TestAccAWSChimeVoiceConnectorGroup_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorGroupDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorGroupConfig(vcgName),
+				Config: testAccVoiceConnectorGroupConfig(vcgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
+					testAccCheckVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,18 +78,18 @@ func TestAccAWSChimeVoiceConnectorGroup_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorGroupDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorGroupConfig(vcgName),
+				Config: testAccVoiceConnectorGroupConfig(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
+					testAccCheckVoiceConnectorGroupExists(resourceName, voiceConnectorGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
 					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSChimeVoiceConnectorGroupUpdated(vcgName),
+				Config: testAccVoiceConnectorGroupUpdated(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-updated-%s", vcgName)),
 					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "10"),
@@ -104,7 +104,7 @@ func TestAccAWSChimeVoiceConnectorGroup_update(t *testing.T) {
 	})
 }
 
-func testAccAWSChimeVoiceConnectorGroupConfig(name string) string {
+func testAccVoiceConnectorGroupConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -122,7 +122,7 @@ resource "aws_chime_voice_connector_group" "test" {
 `, name)
 }
 
-func testAccAWSChimeVoiceConnectorGroupUpdated(name string) string {
+func testAccVoiceConnectorGroupUpdated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -140,7 +140,7 @@ resource "aws_chime_voice_connector_group" "test" {
 `, name)
 }
 
-func testAccCheckAWSChimeVoiceConnectorGroupExists(name string, vc *chime.VoiceConnectorGroup) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorGroupExists(name string, vc *chime.VoiceConnectorGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -166,7 +166,7 @@ func testAccCheckAWSChimeVoiceConnectorGroupExists(name string, vc *chime.VoiceC
 	}
 }
 
-func testAccCheckAWSChimeVoiceConnectorGroupDestroy(s *terraform.State) error {
+func testAccCheckVoiceConnectorGroupDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_chime_voice_connector" {
 			continue

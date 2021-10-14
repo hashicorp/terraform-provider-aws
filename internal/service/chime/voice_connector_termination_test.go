@@ -23,12 +23,12 @@ func TestAccAWSChimeVoiceConnectorTermination_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorTerminationConfig(name),
+				Config: testAccVoiceConnectorTerminationConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorTerminationExists(resourceName),
+					testAccCheckVoiceConnectorTerminationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", "1"),
@@ -52,12 +52,12 @@ func TestAccAWSChimeVoiceConnectorTermination_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorTerminationConfig(name),
+				Config: testAccVoiceConnectorTerminationConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorTerminationExists(resourceName),
+					testAccCheckVoiceConnectorTerminationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorTermination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -74,18 +74,18 @@ func TestAccAWSChimeVoiceConnectorTermination_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorTerminationConfig(name),
+				Config: testAccVoiceConnectorTerminationConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorTerminationExists(resourceName),
+					testAccCheckVoiceConnectorTerminationExists(resourceName),
 				),
 			},
 			{
-				Config: testAccAWSChimeVoiceConnectorTerminationUpdated(name),
+				Config: testAccVoiceConnectorTerminationUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorTerminationExists(resourceName),
+					testAccCheckVoiceConnectorTerminationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_allow_list.*", "100.35.78.97/32"),
@@ -102,7 +102,7 @@ func TestAccAWSChimeVoiceConnectorTermination_update(t *testing.T) {
 	})
 }
 
-func testAccAWSChimeVoiceConnectorTerminationConfig(name string) string {
+func testAccVoiceConnectorTerminationConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -118,7 +118,7 @@ resource "aws_chime_voice_connector_termination" "test" {
 `, name)
 }
 
-func testAccAWSChimeVoiceConnectorTerminationUpdated(name string) string {
+func testAccVoiceConnectorTerminationUpdated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -134,7 +134,7 @@ resource "aws_chime_voice_connector_termination" "test" {
 `, name)
 }
 
-func testAccCheckAWSChimeVoiceConnectorTerminationExists(name string) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorTerminationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -163,7 +163,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationExists(name string) resource.T
 	}
 }
 
-func testAccCheckAWSChimeVoiceConnectorTerminationDestroy(s *terraform.State) error {
+func testAccCheckVoiceConnectorTerminationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_chime_voice_connector_termination" {
 			continue

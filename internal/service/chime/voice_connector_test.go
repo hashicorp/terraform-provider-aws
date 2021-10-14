@@ -24,12 +24,12 @@ func TestAccAWSChimeVoiceConnector_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorConfig(vcName),
+				Config: testAccVoiceConnectorConfig(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorExists(resourceName, voiceConnector),
+					testAccCheckVoiceConnectorExists(resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
 					resource.TestCheckResourceAttr(resourceName, "aws_region", chime.VoiceConnectorAwsRegionUsEast1),
 					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
@@ -54,12 +54,12 @@ func TestAccAWSChimeVoiceConnector_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorConfig(vcName),
+				Config: testAccVoiceConnectorConfig(vcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorExists(resourceName, voiceConnector),
+					testAccCheckVoiceConnectorExists(resourceName, voiceConnector),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,19 +78,19 @@ func TestAccAWSChimeVoiceConnector_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorConfig(vcName),
+				Config: testAccVoiceConnectorConfig(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorExists(resourceName, voiceConnector),
+					testAccCheckVoiceConnectorExists(resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
 					resource.TestCheckResourceAttr(resourceName, "aws_region", chime.VoiceConnectorAwsRegionUsEast1),
 					resource.TestCheckResourceAttr(resourceName, "require_encryption", "true"),
 				),
 			},
 			{
-				Config: testAccAWSChimeVoiceConnectorUpdated(vcName),
+				Config: testAccVoiceConnectorUpdated(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "require_encryption", "false"),
 				),
@@ -104,7 +104,7 @@ func TestAccAWSChimeVoiceConnector_update(t *testing.T) {
 	})
 }
 
-func testAccAWSChimeVoiceConnectorConfig(name string) string {
+func testAccVoiceConnectorConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "test" {
   name               = "vc-%s"
@@ -113,7 +113,7 @@ resource "aws_chime_voice_connector" "test" {
 `, name)
 }
 
-func testAccAWSChimeVoiceConnectorUpdated(name string) string {
+func testAccVoiceConnectorUpdated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "test" {
   name               = "vc-%s"
@@ -122,7 +122,7 @@ resource "aws_chime_voice_connector" "test" {
 `, name)
 }
 
-func testAccCheckAWSChimeVoiceConnectorExists(name string, vc *chime.VoiceConnector) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorExists(name string, vc *chime.VoiceConnector) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -148,7 +148,7 @@ func testAccCheckAWSChimeVoiceConnectorExists(name string, vc *chime.VoiceConnec
 	}
 }
 
-func testAccCheckAWSChimeVoiceConnectorDestroy(s *terraform.State) error {
+func testAccCheckVoiceConnectorDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_chime_voice_connector" {
 			continue

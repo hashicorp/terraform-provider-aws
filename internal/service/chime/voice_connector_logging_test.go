@@ -22,12 +22,12 @@ func TestAccAWSChimeVoiceConnectorLogging_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
+				Config: testAccVoiceConnectorLoggingConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorLoggingExists(resourceName),
+					testAccCheckVoiceConnectorLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "true"),
 				),
 			},
@@ -48,12 +48,12 @@ func TestAccAWSChimeVoiceConnectorLogging_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
+				Config: testAccVoiceConnectorLoggingConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorLoggingExists(resourceName),
+					testAccCheckVoiceConnectorLoggingExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorLogging(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -70,18 +70,18 @@ func TestAccAWSChimeVoiceConnectorLogging_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorLoggingConfig(name),
+				Config: testAccVoiceConnectorLoggingConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorLoggingExists(resourceName),
+					testAccCheckVoiceConnectorLoggingExists(resourceName),
 				),
 			},
 			{
-				Config: testAccAWSChimeVoiceConnectorLoggingUpdated(name),
+				Config: testAccVoiceConnectorLoggingUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorLoggingExists(resourceName),
+					testAccCheckVoiceConnectorLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "false"),
 				),
 			},
@@ -94,7 +94,7 @@ func TestAccAWSChimeVoiceConnectorLogging_update(t *testing.T) {
 	})
 }
 
-func testAccAWSChimeVoiceConnectorLoggingConfig(name string) string {
+func testAccVoiceConnectorLoggingConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -108,7 +108,7 @@ resource "aws_chime_voice_connector_logging" "test" {
 `, name)
 }
 
-func testAccAWSChimeVoiceConnectorLoggingUpdated(name string) string {
+func testAccVoiceConnectorLoggingUpdated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -122,7 +122,7 @@ resource "aws_chime_voice_connector_logging" "test" {
 `, name)
 }
 
-func testAccCheckAWSChimeVoiceConnectorLoggingExists(name string) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorLoggingExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

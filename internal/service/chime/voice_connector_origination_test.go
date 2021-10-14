@@ -23,12 +23,12 @@ func TestAccAWSChimeVoiceConnectorOrigination_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorOriginationDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorOriginationConfig(name),
+				Config: testAccVoiceConnectorOriginationConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorOriginationExists(resourceName),
+					testAccCheckVoiceConnectorOriginationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"protocol": "TCP",
@@ -53,12 +53,12 @@ func TestAccAWSChimeVoiceConnectorOrigination_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorOriginationDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorOriginationConfig(name),
+				Config: testAccVoiceConnectorOriginationConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorOriginationExists(resourceName),
+					testAccCheckVoiceConnectorOriginationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorOrigination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -75,19 +75,19 @@ func TestAccAWSChimeVoiceConnectorOrigination_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSChimeVoiceConnectorOriginationDestroy,
+		CheckDestroy: testAccCheckVoiceConnectorOriginationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorOriginationConfig(name),
+				Config: testAccVoiceConnectorOriginationConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorOriginationExists(resourceName),
+					testAccCheckVoiceConnectorOriginationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 				),
 			},
 			{
-				Config: testAccAWSChimeVoiceConnectorOriginationUpdated(name),
+				Config: testAccVoiceConnectorOriginationUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSChimeVoiceConnectorOriginationExists(resourceName),
+					testAccCheckVoiceConnectorOriginationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"protocol": "TCP",
@@ -109,7 +109,7 @@ func TestAccAWSChimeVoiceConnectorOrigination_update(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSChimeVoiceConnectorOriginationExists(name string) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorOriginationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -138,7 +138,7 @@ func testAccCheckAWSChimeVoiceConnectorOriginationExists(name string) resource.T
 	}
 }
 
-func testAccCheckAWSChimeVoiceConnectorOriginationDestroy(s *terraform.State) error {
+func testAccCheckVoiceConnectorOriginationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_chime_voice_connector_origination" {
 			continue
@@ -166,7 +166,7 @@ func testAccCheckAWSChimeVoiceConnectorOriginationDestroy(s *terraform.State) er
 	return nil
 }
 
-func testAccAWSChimeVoiceConnectorOriginationConfig(name string) string {
+func testAccVoiceConnectorOriginationConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "test" {
   name               = "vc-%[1]s"
@@ -186,7 +186,7 @@ resource "aws_chime_voice_connector_origination" "test" {
 `, name)
 }
 
-func testAccAWSChimeVoiceConnectorOriginationUpdated(name string) string {
+func testAccVoiceConnectorOriginationUpdated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "test" {
   name               = "vc-%[1]s"
