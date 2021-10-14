@@ -84,11 +84,11 @@ func resourceAwsNeptuneClusterEndpointCreate(d *schema.ResourceData, meta interf
 	}
 
 	if attr := d.Get("static_members").(*schema.Set); attr.Len() > 0 {
-		input.StaticMembers = expandStringSet(attr)
+		input.StaticMembers = flex.ExpandStringSet(attr)
 	}
 
 	if attr := d.Get("excluded_members").(*schema.Set); attr.Len() > 0 {
-		input.ExcludedMembers = expandStringSet(attr)
+		input.ExcludedMembers = flex.ExpandStringSet(attr)
 	}
 
 	// Tags are currently only supported in AWS Commercial.
@@ -134,8 +134,8 @@ func resourceAwsNeptuneClusterEndpointRead(d *schema.ResourceData, meta interfac
 	d.Set("cluster_identifier", resp.DBClusterIdentifier)
 	d.Set("endpoint_type", resp.CustomEndpointType)
 	d.Set("endpoint", resp.Endpoint)
-	d.Set("excluded_members", flattenStringSet(resp.ExcludedMembers))
-	d.Set("static_members", flattenStringSet(resp.StaticMembers))
+	d.Set("excluded_members", flex.FlattenStringSet(resp.ExcludedMembers))
+	d.Set("static_members", flex.FlattenStringSet(resp.StaticMembers))
 
 	arn := aws.StringValue(resp.DBClusterEndpointArn)
 	d.Set("arn", arn)
@@ -179,11 +179,11 @@ func resourceAwsNeptuneClusterEndpointUpdate(d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("static_members") {
-			req.StaticMembers = expandStringSet(d.Get("static_members").(*schema.Set))
+			req.StaticMembers = flex.ExpandStringSet(d.Get("static_members").(*schema.Set))
 		}
 
 		if d.HasChange("excluded_members") {
-			req.ExcludedMembers = expandStringSet(d.Get("excluded_members").(*schema.Set))
+			req.ExcludedMembers = flex.ExpandStringSet(d.Get("excluded_members").(*schema.Set))
 		}
 
 		_, err := conn.ModifyDBClusterEndpoint(req)
