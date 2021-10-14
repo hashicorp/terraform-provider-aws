@@ -18,56 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ses_domain_identity", &resource.Sweeper{
-		Name: "aws_ses_domain_identity",
-		F:    func(region string) error { return sweepIdentities(region, ses.IdentityTypeDomain) },
-	})
-}
 
-func sweepIdentities(region, identityType string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SESConn
-	input := &ses.ListIdentitiesInput{
-		IdentityType: aws.String(identityType),
-	}
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListIdentitiesPages(input, func(page *ses.ListIdentitiesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, identity := range page.Identities {
-			identity := aws.StringValue(identity)
-
-			log.Printf("[INFO] Deleting SES Identity: %s", identity)
-			_, err = conn.DeleteIdentity(&ses.DeleteIdentityInput{
-				Identity: aws.String(identity),
-			})
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SES Identity (%s): %w", identity, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SES Identities sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SES Identities: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSESDomainIdentity_basic(t *testing.T) {
 	domain := acctest.RandomDomainName()

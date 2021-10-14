@@ -14,12 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ses_email_identity", &resource.Sweeper{
-		Name: "aws_ses_email_identity",
-		F:    func(region string) error { return sweepIdentities(region, ses.IdentityTypeEmailAddress) },
-	})
-}
+
 
 func TestAccSESEmailIdentity_basic(t *testing.T) {
 	email := acctest.DefaultEmailAddress

@@ -18,59 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ses_configuration_set", &resource.Sweeper{
-		Name: "aws_ses_configuration_set",
-		F:    sweepConfigurationSets,
-	})
-}
 
-func sweepConfigurationSets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SESConn
-	input := &ses.ListConfigurationSetsInput{}
-	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.ListConfigurationSets(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SES Configuration Sets sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SES Configuration Sets: %w", err))
-			return sweeperErrs
-		}
 
-		for _, configurationSet := range output.ConfigurationSets {
-			name := aws.StringValue(configurationSet.Name)
-
-			log.Printf("[INFO] Deleting SES Configuration Set: %s", name)
-			_, err := conn.DeleteConfigurationSet(&ses.DeleteConfigurationSetInput{
-				ConfigurationSetName: aws.String(name),
-			})
-			if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SES Configuration Set (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSESConfigurationSet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

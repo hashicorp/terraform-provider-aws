@@ -18,72 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ses_receipt_rule_set", &resource.Sweeper{
-		Name: "aws_ses_receipt_rule_set",
-		F:    sweepReceiptRuleSets,
-	})
-}
 
-func sweepReceiptRuleSets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).SESConn
 
-	// You cannot delete the receipt rule set that is currently active.
-	// Setting the name of the receipt rule set to make active to null disables all email receiving.
-	log.Printf("[INFO] Disabling any currently active SES Receipt Rule Set")
-	_, err = conn.SetActiveReceiptRuleSet(&ses.SetActiveReceiptRuleSetInput{})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error disabling any currently active SES Receipt Rule Set: %w", err)
-	}
 
-	input := &ses.ListReceiptRuleSetsInput{}
-	var sweeperErrs *multierror.Error
-
-	for {
-		output, err := conn.ListReceiptRuleSets(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SES Receipt Rule Sets sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SES Receipt Rule Sets: %w", err))
-			return sweeperErrs
-		}
-
-		for _, ruleSet := range output.RuleSets {
-			name := aws.StringValue(ruleSet.Name)
-
-			log.Printf("[INFO] Deleting SES Receipt Rule Set: %s", name)
-			_, err := conn.DeleteReceiptRuleSet(&ses.DeleteReceiptRuleSetInput{
-				RuleSetName: aws.String(name),
-			})
-			if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SES Receipt Rule Set (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSESReceiptRuleSet_basic(t *testing.T) {
 	resourceName := "aws_ses_receipt_rule_set.test"
