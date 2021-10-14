@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
+func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsGlueDataCatalogEncryptionSettingsPut,
-		Read:   resourceAwsGlueDataCatalogEncryptionSettingsRead,
+		Read:   resourceDataCatalogEncryptionSettingsRead,
 		Update: resourceAwsGlueDataCatalogEncryptionSettingsPut,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
@@ -93,10 +93,10 @@ func resourceAwsGlueDataCatalogEncryptionSettingsPut(d *schema.ResourceData, met
 
 	d.SetId(catalogID)
 
-	return resourceAwsGlueDataCatalogEncryptionSettingsRead(d, meta)
+	return resourceDataCatalogEncryptionSettingsRead(d, meta)
 }
 
-func resourceAwsGlueDataCatalogEncryptionSettingsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDataCatalogEncryptionSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.GetDataCatalogEncryptionSettingsInput{

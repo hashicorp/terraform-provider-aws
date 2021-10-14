@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSGluePartition_basic(t *testing.T) {
@@ -135,7 +136,7 @@ func TestAccAWSGluePartition_disappears(t *testing.T) {
 				Config: testAccGluePartitionBasicConfig(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGluePartition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePartition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,7 +159,7 @@ func TestAccAWSGluePartition_disappears_table(t *testing.T) {
 				Config: testAccGluePartitionBasicConfig(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogTable(), "aws_glue_catalog_table.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

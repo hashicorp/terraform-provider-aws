@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueWorkflow() *schema.Resource {
+func ResourceWorkflow() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueWorkflowCreate,
-		Read:   resourceAwsGlueWorkflowRead,
-		Update: resourceAwsGlueWorkflowUpdate,
-		Delete: resourceAwsGlueWorkflowDelete,
+		Create: resourceWorkflowCreate,
+		Read:   resourceWorkflowRead,
+		Update: resourceWorkflowUpdate,
+		Delete: resourceWorkflowDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -55,7 +55,7 @@ func resourceAwsGlueWorkflow() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -85,10 +85,10 @@ func resourceAwsGlueWorkflowCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.SetId(name)
 
-	return resourceAwsGlueWorkflowRead(d, meta)
+	return resourceWorkflowRead(d, meta)
 }
 
-func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -151,7 +151,7 @@ func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsGlueWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChanges("default_run_properties", "description", "max_concurrent_runs") {
@@ -185,10 +185,10 @@ func resourceAwsGlueWorkflowUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsGlueWorkflowRead(d, meta)
+	return resourceWorkflowRead(d, meta)
 }
 
-func resourceAwsGlueWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Workflow: %s", d.Id())

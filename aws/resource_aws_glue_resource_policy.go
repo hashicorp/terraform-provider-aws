@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueResourcePolicy() *schema.Resource {
+func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsGlueResourcePolicyPut(glue.ExistConditionNotExist),
-		Read:   resourceAwsGlueResourcePolicyRead,
+		Read:   resourceResourcePolicyRead,
 		Update: resourceAwsGlueResourcePolicyPut(glue.ExistConditionMustExist),
-		Delete: resourceAwsGlueResourcePolicyDelete,
+		Delete: resourceResourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -56,11 +56,11 @@ func resourceAwsGlueResourcePolicyPut(condition string) func(d *schema.ResourceD
 			return fmt.Errorf("error putting policy request: %s", err)
 		}
 		d.SetId(meta.(*conns.AWSClient).Region)
-		return resourceAwsGlueResourcePolicyRead(d, meta)
+		return resourceResourcePolicyRead(d, meta)
 	}
 }
 
-func resourceAwsGlueResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	resourcePolicy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
@@ -82,7 +82,7 @@ func resourceAwsGlueResourcePolicyRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsGlueResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	_, err := conn.DeleteResourcePolicy(&glue.DeleteResourcePolicyInput{})

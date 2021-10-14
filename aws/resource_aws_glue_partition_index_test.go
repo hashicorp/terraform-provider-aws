@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSGluePartitionIndex_basic(t *testing.T) {
@@ -59,8 +60,8 @@ func TestAccAWSGluePartitionIndex_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGluePartitionIndex(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGluePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,8 +84,8 @@ func TestAccAWSGluePartitionIndex_disappears_table(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueCatalogTable(), "aws_glue_catalog_table.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGluePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -107,8 +108,8 @@ func TestAccAWSGluePartitionIndex_disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGluePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

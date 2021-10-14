@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
+func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsGlueDataCatalogEncryptionSettingsRead,
+		ReadContext: dataSourceDataCatalogEncryptionSettingsRead,
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
 				Type:     schema.TypeString,
@@ -62,7 +62,7 @@ func dataSourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 	}
 }
 
-func dataSourceAwsGlueDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).GlueConn
 	id := d.Get("catalog_id").(string)
 	input := &glue.GetDataCatalogEncryptionSettingsInput{

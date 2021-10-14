@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueConnection() *schema.Resource {
+func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueConnectionCreate,
-		Read:   resourceAwsGlueConnectionRead,
-		Update: resourceAwsGlueConnectionUpdate,
-		Delete: resourceAwsGlueConnectionDelete,
+		Create: resourceConnectionCreate,
+		Read:   resourceConnectionRead,
+		Update: resourceConnectionUpdate,
+		Delete: resourceConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -100,7 +100,7 @@ func resourceAwsGlueConnection() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueConnectionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -127,10 +127,10 @@ func resourceAwsGlueConnectionCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, name))
 
-	return resourceAwsGlueConnectionRead(d, meta)
+	return resourceConnectionRead(d, meta)
 }
 
-func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -194,7 +194,7 @@ func resourceAwsGlueConnectionRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsGlueConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -226,7 +226,7 @@ func resourceAwsGlueConnectionUpdate(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsGlueConnectionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())

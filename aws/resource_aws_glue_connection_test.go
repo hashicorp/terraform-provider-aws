@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -43,7 +44,7 @@ func testSweepGlueConnections(region string) error {
 			id := fmt.Sprintf("%s:%s", catalogID, aws.StringValue(connection.Name))
 
 			log.Printf("[INFO] Deleting Glue Connection: %s", id)
-			r := resourceAwsGlueConnection()
+			r := ResourceConnection()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -398,8 +399,8 @@ func TestAccAWSGlueConnection_disappears(t *testing.T) {
 				Config: testAccAWSGlueConnectionConfig_Required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueConnection(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

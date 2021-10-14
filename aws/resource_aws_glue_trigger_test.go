@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepGlueTriggers(region string) error {
 			name := aws.StringValue(trigger.Name)
 
 			log.Printf("[INFO] Deleting Glue Trigger: %s", name)
-			r := resourceAwsGlueTrigger()
+			r := ResourceTrigger()
 			d := r.Data(nil)
 			d.SetId(name)
 			err := r.Delete(d, client)
@@ -528,7 +529,7 @@ func TestAccAWSGlueTrigger_disappears(t *testing.T) {
 				Config: testAccAWSGlueTriggerConfig_OnDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueTrigger(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTrigger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

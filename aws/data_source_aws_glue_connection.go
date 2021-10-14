@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsGlueConnection() *schema.Resource {
+func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsGlueConnectionRead,
+		ReadContext: dataSourceConnectionRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -83,7 +83,7 @@ func dataSourceAwsGlueConnection() *schema.Resource {
 	}
 }
 
-func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).GlueConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

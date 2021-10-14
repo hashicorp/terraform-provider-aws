@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGluePartitionIndex() *schema.Resource {
+func ResourcePartitionIndex() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGluePartitionIndexCreate,
-		Read:   resourceAwsGluePartitionIndexRead,
-		Delete: resourceAwsGluePartitionIndexDelete,
+		Create: resourcePartitionIndexCreate,
+		Read:   resourcePartitionIndexRead,
+		Delete: resourcePartitionIndexDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func resourceAwsGluePartitionIndex() *schema.Resource {
 	}
 }
 
-func resourceAwsGluePartitionIndexCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
@@ -98,10 +98,10 @@ func resourceAwsGluePartitionIndexCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error while waiting for Glue Partition Index (%s) to become available: %w", d.Id(), err)
 	}
 
-	return resourceAwsGluePartitionIndexRead(d, meta)
+	return resourcePartitionIndexRead(d, meta)
 }
 
-func resourceAwsGluePartitionIndexRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePartitionIndexRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, _, tableErr := tfglue.ReadAwsGluePartitionIndexID(d.Id())
@@ -132,7 +132,7 @@ func resourceAwsGluePartitionIndexRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsGluePartitionIndexDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePartitionIndexDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	catalogID, dbName, tableName, partIndex, tableErr := tfglue.ReadAwsGluePartitionIndexID(d.Id())

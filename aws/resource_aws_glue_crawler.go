@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlueCrawler() *schema.Resource {
+func ResourceCrawler() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueCrawlerCreate,
-		Read:   resourceAwsGlueCrawlerRead,
-		Update: resourceAwsGlueCrawlerUpdate,
-		Delete: resourceAwsGlueCrawlerDelete,
+		Create: resourceCrawlerCreate,
+		Read:   resourceCrawlerRead,
+		Update: resourceCrawlerUpdate,
+		Delete: resourceCrawlerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -275,7 +275,7 @@ func resourceAwsGlueCrawler() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*conns.AWSClient).GlueConn
 	name := d.Get("name").(string)
 
@@ -314,7 +314,7 @@ func resourceAwsGlueCrawlerCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 	d.SetId(name)
 
-	return resourceAwsGlueCrawlerRead(d, meta)
+	return resourceCrawlerRead(d, meta)
 }
 
 func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsConfig *keyvaluetags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
@@ -595,7 +595,7 @@ func expandGlueMongoDBTarget(cfg map[string]interface{}) *glue.MongoDBTarget {
 	return target
 }
 
-func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*conns.AWSClient).GlueConn
 	name := d.Get("name").(string)
 
@@ -644,10 +644,10 @@ func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsGlueCrawlerRead(d, meta)
+	return resourceCrawlerRead(d, meta)
 }
 
-func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*conns.AWSClient).GlueConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -826,7 +826,7 @@ func flattenGlueMongoDBTargets(mongoDBTargets []*glue.MongoDBTarget) []map[strin
 	return result
 }
 
-func resourceAwsGlueCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] deleting Glue crawler: %s", d.Id())
