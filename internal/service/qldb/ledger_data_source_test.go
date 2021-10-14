@@ -19,7 +19,7 @@ func TestAccDataSourceAwsQLDBLedger_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsQLDBLedgerConfig(rName),
+				Config: testAccLedgerDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "arn", "aws_qldb_ledger.tf_test", "arn"),
 					resource.TestCheckResourceAttrPair("data.aws_qldb_ledger.by_name", "deletion_protection", "aws_qldb_ledger.tf_test", "deletion_protection"),
@@ -31,7 +31,7 @@ func TestAccDataSourceAwsQLDBLedger_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsQLDBLedgerConfig(rName string) string {
+func testAccLedgerDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "tf_wrong1" {
   name                = "%[1]s1"

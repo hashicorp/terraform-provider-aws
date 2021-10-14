@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_qldb_ledger", &resource.Sweeper{
 		Name: "aws_qldb_ledger",
-		F:    testSweepQLDBLedgers,
+		F:    sweepLedgers,
 	})
 }
 
-func testSweepQLDBLedgers(region string) error {
+func sweepLedgers(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -76,12 +76,12 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
+		CheckDestroy: testAccCheckLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQLDBLedgerConfig_basic(rInt),
+				Config: testAccLedgerConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
+					testAccCheckLedgerExists(resourceName, &qldbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("test-ledger-[0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
@@ -107,19 +107,19 @@ func TestAccAWSQLDBLedger_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
+		CheckDestroy: testAccCheckLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQLDBLedgerConfig_basic(rInt),
+				Config: testAccLedgerConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
+					testAccCheckLedgerExists(resourceName, &qldbCluster),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 				),
 			},
 			{
-				Config: testAccAWSQLDBLedgerConfig_update(rInt),
+				Config: testAccLedgerConfig_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
+					testAccCheckLedgerExists(resourceName, &qldbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("test-ledger-[0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "STANDARD"),
@@ -136,11 +136,11 @@ func TestAccAWSQLDBLedger_update(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSQLDBLedgerDestroy(s *terraform.State) error {
-	return testAccCheckAWSLedgerDestroyWithProvider(s, acctest.Provider)
+func testAccCheckLedgerDestroy(s *terraform.State) error {
+	return testAccCheckLedgerDestroyWithProvider(s, acctest.Provider)
 }
 
-func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+func testAccCheckLedgerDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	conn := provider.Meta().(*conns.AWSClient).QLDBConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -174,7 +174,7 @@ func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *sche
 	return nil
 }
 
-func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) resource.TestCheckFunc {
+func testAccCheckLedgerExists(n string, v *qldb.DescribeLedgerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -203,7 +203,7 @@ func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) res
 	}
 }
 
-func testAccAWSQLDBLedgerConfig_basic(n int) string {
+func testAccLedgerConfig_basic(n int) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = "test-ledger-%d"
@@ -213,7 +213,7 @@ resource "aws_qldb_ledger" "test" {
 `, n)
 }
 
-func testAccAWSQLDBLedgerConfig_update(n int) string {
+func testAccLedgerConfig_update(n int) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = "test-ledger-%d"
@@ -232,12 +232,12 @@ func TestAccAWSQLDBLedger_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(qldb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, qldb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
+		CheckDestroy: testAccCheckLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQLDBLedgerConfigTags1(rName, "key1", "value1"),
+				Config: testAccLedgerTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBLedgerExists(resourceName, &cluster1),
+					testAccCheckLedgerExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -248,18 +248,18 @@ func TestAccAWSQLDBLedger_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSQLDBLedgerConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLedgerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBLedgerExists(resourceName, &cluster2),
+					testAccCheckLedgerExists(resourceName, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSQLDBLedgerConfigTags1(rName, "key2", "value2"),
+				Config: testAccLedgerTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBLedgerExists(resourceName, &cluster3),
+					testAccCheckLedgerExists(resourceName, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -268,7 +268,7 @@ func TestAccAWSQLDBLedger_Tags(t *testing.T) {
 	})
 }
 
-func testAccAWSQLDBLedgerConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccLedgerTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q
@@ -282,7 +282,7 @@ resource "aws_qldb_ledger" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSQLDBLedgerConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccLedgerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
   name                = %[1]q
