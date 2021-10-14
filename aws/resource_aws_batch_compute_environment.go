@@ -342,11 +342,11 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 			}
 
 			if d.HasChange("compute_resources.0.security_group_ids") {
-				computeResourceUpdate.SecurityGroupIds = expandStringSet(d.Get("compute_resources.0.security_group_ids").(*schema.Set))
+				computeResourceUpdate.SecurityGroupIds = flex.ExpandStringSet(d.Get("compute_resources.0.security_group_ids").(*schema.Set))
 			}
 
 			if d.HasChange("compute_resources.0.subnets") {
-				computeResourceUpdate.Subnets = expandStringSet(d.Get("compute_resources.0.subnets").(*schema.Set))
+				computeResourceUpdate.Subnets = flex.ExpandStringSet(d.Get("compute_resources.0.subnets").(*schema.Set))
 			}
 
 			input.ComputeResources = computeResourceUpdate
@@ -474,7 +474,7 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 	}
 
 	if v, ok := tfMap["instance_type"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.InstanceTypes = expandStringSet(v)
+		apiObject.InstanceTypes = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 {
@@ -492,7 +492,7 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 	}
 
 	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SecurityGroupIds = expandStringSet(v)
+		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["spot_iam_fleet_role"].(string); ok && v != "" {
@@ -500,7 +500,7 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 	}
 
 	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Subnets = expandStringSet(v)
+		apiObject.Subnets = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
