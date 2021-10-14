@@ -135,7 +135,7 @@ func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.IssueCertificate(input)
 	}
 

@@ -303,14 +303,14 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 		output, err = conn.CreateCertificateAuthority(input)
 		if err != nil {
 			// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
-			if isAWSErr(err, "ValidationException", "Check your S3 bucket permissions and try again") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Check your S3 bucket permissions and try again") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		output, err = conn.CreateCertificateAuthority(input)
 	}
 	if err != nil {
