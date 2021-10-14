@@ -81,7 +81,7 @@ func testAccErrorCheckSkipCognitoIdentityProvider(t *testing.T) resource.ErrorCh
 	)
 }
 
-func TestAccAWSCognitoUserPool_basic(t *testing.T) {
+func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -131,7 +131,7 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_recovery(t *testing.T) {
+func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -177,7 +177,7 @@ func TestAccAWSCognitoUserPool_recovery(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_withAdminCreateUser(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -216,7 +216,7 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11858
-func TestAccAWSCognitoUserPool_withAdminCreateUserConfigurationAndPasswordPolicy(t *testing.T) {
+func TestAccCognitoIDPUserPool_withAdminCreateUserAndPasswordPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -243,7 +243,7 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfigurationAndPasswordPolicy
 	})
 }
 
-func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
+func TestAccCognitoIDPUserPool_withAdvancedSecurityMode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -281,7 +281,7 @@ func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withDeviceConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_withDevice(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -315,7 +315,7 @@ func TestAccAWSCognitoUserPool_withDeviceConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withEmailVerificationMessage(t *testing.T) {
+func TestAccCognitoIDPUserPool_withEmailVerificationMessage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	subject := sdkacctest.RandString(10)
 	updatedSubject := sdkacctest.RandString(10)
@@ -353,7 +353,7 @@ func TestAccAWSCognitoUserPool_withEmailVerificationMessage(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_MfaConfiguration_SmsConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -401,7 +401,7 @@ func TestAccAWSCognitoUserPool_MfaConfiguration_SmsConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_MfaConfiguration_SmsConfigurationAndSoftwareTokenMfaConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -451,7 +451,7 @@ func TestAccAWSCognitoUserPool_MfaConfiguration_SmsConfigurationAndSoftwareToken
 	})
 }
 
-func TestAccAWSCognitoUserPool_MfaConfiguration_SmsConfigurationToSoftwareTokenMfaConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -490,7 +490,7 @@ func TestAccAWSCognitoUserPool_MfaConfiguration_SmsConfigurationToSoftwareTokenM
 	})
 }
 
-func TestAccAWSCognitoUserPool_MfaConfiguration_SoftwareTokenMfaConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -535,7 +535,7 @@ func TestAccAWSCognitoUserPool_MfaConfiguration_SoftwareTokenMfaConfiguration(t 
 	})
 }
 
-func TestAccAWSCognitoUserPool_MfaConfiguration_SoftwareTokenMfaConfigurationToSmsConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -574,7 +574,7 @@ func TestAccAWSCognitoUserPool_MfaConfiguration_SoftwareTokenMfaConfigurationToS
 	})
 }
 
-func TestAccAWSCognitoUserPool_SmsAuthenticationMessage(t *testing.T) {
+func TestAccCognitoIDPUserPool_smsAuthenticationMessage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	smsAuthenticationMessage1 := "test authentication message {####}"
 	smsAuthenticationMessage2 := "test authentication message updated {####}"
@@ -609,7 +609,7 @@ func TestAccAWSCognitoUserPool_SmsAuthenticationMessage(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_SmsConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -654,7 +654,7 @@ func TestAccAWSCognitoUserPool_SmsConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_SmsConfiguration_ExternalId(t *testing.T) {
+func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -692,7 +692,7 @@ func TestAccAWSCognitoUserPool_SmsConfiguration_ExternalId(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_SmsConfiguration_SnsCallerArn(t *testing.T) {
+func TestAccCognitoIDPUserPool_SMS_snsCallerARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -730,7 +730,7 @@ func TestAccAWSCognitoUserPool_SmsConfiguration_SnsCallerArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_SmsVerificationMessage(t *testing.T) {
+func TestAccCognitoIDPUserPool_smsVerificationMessage(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	smsVerificationMessage1 := "test verification message {####}"
 	smsVerificationMessage2 := "test verification message updated {####}"
@@ -765,7 +765,7 @@ func TestAccAWSCognitoUserPool_SmsVerificationMessage(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_withEmail(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -793,7 +793,7 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withEmailConfigurationSource(t *testing.T) {
+func TestAccCognitoIDPUserPool_withEmailSource(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	replyTo := acctest.DefaultEmailAddress
 	resourceName := "aws_cognito_user_pool.test"
@@ -826,7 +826,7 @@ func TestAccAWSCognitoUserPool_withEmailConfigurationSource(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
+func TestAccCognitoIDPUserPool_withTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -869,7 +869,7 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
+func TestAccCognitoIDPUserPool_withAliasAttributes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -907,7 +907,7 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withUsernameAttributes(t *testing.T) {
+func TestAccCognitoIDPUserPool_withUsernameAttributes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -945,7 +945,7 @@ func TestAccAWSCognitoUserPool_withUsernameAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
+func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -989,7 +989,7 @@ func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withUsernameConfiguration(t *testing.T) {
+func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1024,7 +1024,7 @@ func TestAccAWSCognitoUserPool_withUsernameConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
+func TestAccCognitoIDPUserPool_withLambda(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -1094,7 +1094,7 @@ func testAccCheckUserPoolNotRecreated(pool1, pool2 *cognitoidentityprovider.Desc
 	}
 }
 
-func TestAccAWSCognitoUserPool_withLambdaConfig_emailConfig(t *testing.T) {
+func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -1134,7 +1134,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig_emailConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withLambdaConfig_smsConfig(t *testing.T) {
+func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -1174,7 +1174,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig_smsConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_schemaAttributes(t *testing.T) {
+func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 	var pool1, pool2 cognitoidentityprovider.DescribeUserPoolOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
@@ -1260,7 +1260,7 @@ func TestAccAWSCognitoUserPool_schemaAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_schemaAttributesRemoved(t *testing.T) {
+func TestAccCognitoIDPUserPool_schemaAttributesRemoved(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1280,7 +1280,7 @@ func TestAccAWSCognitoUserPool_schemaAttributesRemoved(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_schemaAttributesModified(t *testing.T) {
+func TestAccCognitoIDPUserPool_schemaAttributesModified(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1300,7 +1300,7 @@ func TestAccAWSCognitoUserPool_schemaAttributesModified(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
+func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1354,7 +1354,7 @@ func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_update(t *testing.T) {
+func TestAccCognitoIDPUserPool_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	optionalMfa := "OPTIONAL"
 	offMfa := "OFF"
@@ -1443,7 +1443,7 @@ func TestAccAWSCognitoUserPool_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_disappears(t *testing.T) {
+func TestAccCognitoIDPUserPool_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 

@@ -78,7 +78,7 @@ func sweepUserPoolDomains(region string) error {
 	return nil
 }
 
-func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
+func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", sdkacctest.RandInt())
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
 
@@ -109,7 +109,7 @@ func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
+func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
@@ -147,7 +147,7 @@ func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolDomain_disappears(t *testing.T) {
+func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", sdkacctest.RandInt())
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
 	resourceName := "aws_cognito_user_pool_domain.main"

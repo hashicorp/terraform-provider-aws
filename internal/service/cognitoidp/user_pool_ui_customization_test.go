@@ -15,7 +15,7 @@ import (
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
-func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -67,7 +67,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 
@@ -91,7 +91,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T
 	})
 }
 
-func TestAccAWSCognitoUserPoolUICustomization_AllClients_ImageFile(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_imageFile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -143,7 +143,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_ImageFile(t *testing.T)
 	})
 }
 
-func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_cSSAndImageFile(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
@@ -210,7 +210,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 	})
 }
 
-func TestAccAWSCognitoUserPoolUICustomization_Client_CSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_Client_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
@@ -263,7 +263,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_CSS(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 
@@ -287,7 +287,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolUICustomization_Client_Image(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_Client_image(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
@@ -340,7 +340,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Image(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolUICustomization_ClientAndAll_CSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_ClientAndAll_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.ui_all"
 	clientUIResourceName := "aws_cognito_user_pool_ui_customization.ui_client"
@@ -415,7 +415,7 @@ func TestAccAWSCognitoUserPoolUICustomization_ClientAndAll_CSS(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolUICustomization_UpdateClientToAll_CSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_UpdateClientToAll_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
@@ -454,7 +454,7 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateClientToAll_CSS(t *testing.T
 	})
 }
 
-func TestAccAWSCognitoUserPoolUICustomization_UpdateAllToClient_CSS(t *testing.T) {
+func TestAccCognitoIDPUserPoolUICustomization_UpdateAllToClient_cSS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	clientResourceName := "aws_cognito_user_pool_client.test"
