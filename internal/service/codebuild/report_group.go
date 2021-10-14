@@ -113,7 +113,7 @@ func resourceReportGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:         aws.String(d.Get("name").(string)),
 		Type:         aws.String(d.Get("type").(string)),
 		ExportConfig: expandAwsCodeBuildReportGroupExportConfig(d.Get("export_config").([]interface{})),
-		Tags:         tags.IgnoreAws().CodebuildTags(),
+		Tags:         Tags(tags.IgnoreAws()),
 	}
 
 	resp, err := conn.CreateReportGroup(createOpts)
@@ -154,7 +154,7 @@ func resourceReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting export config: %w", err)
 	}
 
-	tags := tftags.CodebuildKeyValueTags(reportGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(reportGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -182,7 +182,7 @@ func resourceReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("tags_all") {
-		input.Tags = tags.IgnoreAws().CodebuildTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	_, err := conn.UpdateReportGroup(input)
