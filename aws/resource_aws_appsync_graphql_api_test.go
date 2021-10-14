@@ -980,7 +980,7 @@ func testAccCheckAwsAppsyncGraphqlApiDestroy(s *terraform.State) error {
 
 		_, err := conn.GetGraphqlApi(input)
 		if err != nil {
-			if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err

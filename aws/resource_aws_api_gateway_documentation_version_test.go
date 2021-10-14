@@ -167,7 +167,7 @@ func testAccCheckAWSAPIGatewayDocumentationVersionDestroy(s *terraform.State) er
 		}
 		_, err = conn.GetDocumentationVersion(req)
 		if err != nil {
-			if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err

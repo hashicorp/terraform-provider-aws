@@ -106,7 +106,7 @@ func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) e
 		IncludeValue: aws.Bool(true),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway API Key (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -206,7 +206,7 @@ func resourceAwsApiGatewayApiKeyDelete(d *schema.ResourceData, meta interface{})
 		ApiKey: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 

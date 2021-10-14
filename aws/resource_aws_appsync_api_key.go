@@ -144,7 +144,7 @@ func resourceAwsAppsyncApiKeyDelete(d *schema.ResourceData, meta interface{}) er
 	}
 	_, err = conn.DeleteApiKey(input)
 	if err != nil {
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return err

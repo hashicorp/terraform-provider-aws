@@ -111,7 +111,7 @@ func resourceAwsCloudWatchEventApiDestinationRead(d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Reading CloudWatchEvent API Destination (%s)", d.Id())
 	output, err := conn.DescribeApiDestination(input)
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatchEvent API Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -175,7 +175,7 @@ func resourceAwsCloudWatchEventApiDestinationDelete(d *schema.ResourceData, meta
 
 	_, err := conn.DeleteApiDestination(input)
 
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatchEvent API Destination (%s) not found", d.Id())
 		return nil
 	}

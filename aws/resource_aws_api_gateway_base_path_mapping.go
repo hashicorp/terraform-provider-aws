@@ -59,7 +59,7 @@ func resourceAwsApiGatewayBasePathMappingCreate(d *schema.ResourceData, meta int
 		_, err := conn.CreateBasePathMapping(input)
 
 		if err != nil {
-			if isAWSErr(err, apigateway.ErrCodeBadRequestException, "") {
+			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "") {
 				return resource.NonRetryableError(err)
 			}
 
@@ -71,7 +71,7 @@ func resourceAwsApiGatewayBasePathMappingCreate(d *schema.ResourceData, meta int
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateBasePathMapping(input)
 	}
 
@@ -158,7 +158,7 @@ func resourceAwsApiGatewayBasePathMappingRead(d *schema.ResourceData, meta inter
 		BasePath:   aws.String(basePath),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Base Path Mapping (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -195,7 +195,7 @@ func resourceAwsApiGatewayBasePathMappingDelete(d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			return nil
 		}
 

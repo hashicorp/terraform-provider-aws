@@ -48,7 +48,7 @@ func testSweepAPIGatewayV2Apis(region string) error {
 			_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
 				ApiId: api.ApiId,
 			})
-			if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -818,7 +818,7 @@ func testAccCheckAWSAPIGatewayV2ApiDestroy(s *terraform.State) error {
 		_, err := conn.GetApi(&apigatewayv2.GetApiInput{
 			ApiId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {

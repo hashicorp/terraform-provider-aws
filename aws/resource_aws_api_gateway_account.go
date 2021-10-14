@@ -100,8 +100,8 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 		out, err = conn.UpdateAccount(&input)
 
 		if err != nil {
-			if isAWSErr(err, "BadRequestException", expectedErrMsg) ||
-				isAWSErr(err, "BadRequestException", otherErrMsg) {
+			if tfawserr.ErrMessageContains(err, "BadRequestException", expectedErrMsg) ||
+				tfawserr.ErrMessageContains(err, "BadRequestException", otherErrMsg) {
 				log.Printf("[DEBUG] Retrying API Gateway Account update: %s", err)
 				return resource.RetryableError(err)
 			}
@@ -110,7 +110,7 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.UpdateAccount(&input)
 	}
 	if err != nil {

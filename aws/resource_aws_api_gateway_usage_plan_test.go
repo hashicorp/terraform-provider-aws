@@ -530,7 +530,7 @@ func testAccCheckAWSAPIGatewayUsagePlanDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			return err
 		}
 

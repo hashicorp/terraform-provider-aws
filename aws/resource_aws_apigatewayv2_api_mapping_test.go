@@ -187,7 +187,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
 			ApiMappingId: aws.String(rs.Primary.ID),
 			DomainName:   aws.String(rs.Primary.Attributes["domain_name"]),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {

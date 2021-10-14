@@ -127,7 +127,7 @@ func testAccCheckAwsAppsyncApiKeyDestroy(s *terraform.State) error {
 
 		apiKey, err := getAppsyncApiKey(apiID, keyID, conn)
 		if err == nil {
-			if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err

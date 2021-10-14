@@ -112,7 +112,7 @@ func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{
 		DeploymentId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Deployment (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -192,7 +192,7 @@ func resourceAwsApiGatewayDeploymentDelete(d *schema.ResourceData, meta interfac
 			RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		})
 
-		if err != nil && !isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if err != nil && !tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			return fmt.Errorf("error getting referenced stage: %s", err)
 		}
 
@@ -215,7 +215,7 @@ func resourceAwsApiGatewayDeploymentDelete(d *schema.ResourceData, meta interfac
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 

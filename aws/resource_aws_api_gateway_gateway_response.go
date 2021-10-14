@@ -114,7 +114,7 @@ func resourceAwsApiGatewayGatewayResponseRead(d *schema.ResourceData, meta inter
 		ResponseType: aws.String(d.Get("response_type").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Gateway Response (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -141,7 +141,7 @@ func resourceAwsApiGatewayGatewayResponseDelete(d *schema.ResourceData, meta int
 		ResponseType: aws.String(d.Get("response_type").(string)),
 	})
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
