@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityHubOrganizationAdminAccount() *schema.Resource {
+func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubOrganizationAdminAccountCreate,
-		Read:   resourceAwsSecurityHubOrganizationAdminAccountRead,
-		Delete: resourceAwsSecurityHubOrganizationAdminAccountDelete,
+		Create: resourceOrganizationAdminAccountCreate,
+		Read:   resourceOrganizationAdminAccountRead,
+		Delete: resourceOrganizationAdminAccountDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -34,7 +34,7 @@ func resourceAwsSecurityHubOrganizationAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	adminAccountID := d.Get("admin_account_id").(string)
@@ -55,10 +55,10 @@ func resourceAwsSecurityHubOrganizationAdminAccountCreate(d *schema.ResourceData
 		return fmt.Errorf("error waiting for Security Hub Organization Admin Account (%s) to enable: %w", d.Id(), err)
 	}
 
-	return resourceAwsSecurityHubOrganizationAdminAccountRead(d, meta)
+	return resourceOrganizationAdminAccountRead(d, meta)
 }
 
-func resourceAwsSecurityHubOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	adminAccount, err := finder.AdminAccount(conn, d.Id())
@@ -88,7 +88,7 @@ func resourceAwsSecurityHubOrganizationAdminAccountRead(d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsSecurityHubOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.DisableOrganizationAdminAccountInput{

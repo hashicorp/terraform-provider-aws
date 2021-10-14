@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsSecurityHubActionTarget_basic(t *testing.T) {
@@ -53,7 +54,7 @@ func testAccAwsSecurityHubActionTarget_disappears(t *testing.T) {
 				Config: testAccAwsSecurityHubActionTargetConfigIdentifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubActionTargetExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSecurityHubActionTarget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceActionTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

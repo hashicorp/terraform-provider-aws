@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityHubOrganizationConfiguration() *schema.Resource {
+func ResourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubOrganizationConfigurationUpdate,
-		Read:   resourceAwsSecurityHubOrganizationConfigurationRead,
-		Update: resourceAwsSecurityHubOrganizationConfigurationUpdate,
+		Create: resourceOrganizationConfigurationUpdate,
+		Read:   resourceOrganizationConfigurationRead,
+		Update: resourceOrganizationConfigurationUpdate,
 		Delete: schema.Noop,
 
 		Importer: &schema.ResourceImporter{
@@ -29,7 +29,7 @@ func resourceAwsSecurityHubOrganizationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.UpdateOrganizationConfigurationInput{
@@ -44,10 +44,10 @@ func resourceAwsSecurityHubOrganizationConfigurationUpdate(d *schema.ResourceDat
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceAwsSecurityHubOrganizationConfigurationRead(d, meta)
+	return resourceOrganizationConfigurationRead(d, meta)
 }
 
-func resourceAwsSecurityHubOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	output, err := conn.DescribeOrganizationConfiguration(&securityhub.DescribeOrganizationConfigurationInput{})

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAwsSecurityHubInsight_basic(t *testing.T) {
@@ -65,7 +66,7 @@ func testAccAwsSecurityHubInsight_disappears(t *testing.T) {
 				Config: testAccAwsSecurityHubInsightConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubInsightExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSecurityHubInsight(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceInsight(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

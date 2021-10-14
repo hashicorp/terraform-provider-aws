@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityHubStandardsSubscription() *schema.Resource {
+func ResourceStandardsSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubStandardsSubscriptionCreate,
-		Read:   resourceAwsSecurityHubStandardsSubscriptionRead,
-		Delete: resourceAwsSecurityHubStandardsSubscriptionDelete,
+		Create: resourceStandardsSubscriptionCreate,
+		Read:   resourceStandardsSubscriptionRead,
+		Delete: resourceStandardsSubscriptionDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -34,7 +34,7 @@ func resourceAwsSecurityHubStandardsSubscription() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	standardsARN := d.Get("standards_arn").(string)
@@ -61,10 +61,10 @@ func resourceAwsSecurityHubStandardsSubscriptionCreate(d *schema.ResourceData, m
 		return fmt.Errorf("error waiting for Security Hub Standards Subscription (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsSecurityHubStandardsSubscriptionRead(d, meta)
+	return resourceStandardsSubscriptionRead(d, meta)
 }
 
-func resourceAwsSecurityHubStandardsSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStandardsSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	output, err := finder.StandardsSubscriptionByARN(conn, d.Id())
@@ -80,7 +80,7 @@ func resourceAwsSecurityHubStandardsSubscriptionRead(d *schema.ResourceData, met
 	return nil
 }
 
-func resourceAwsSecurityHubStandardsSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStandardsSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Deleting Security Hub Standards Subscription: %s", d.Id())

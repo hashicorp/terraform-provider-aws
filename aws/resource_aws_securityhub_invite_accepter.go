@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityHubInviteAccepter() *schema.Resource {
+func ResourceInviteAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubInviteAccepterCreate,
-		Read:   resourceAwsSecurityHubInviteAccepterRead,
-		Delete: resourceAwsSecurityHubInviteAccepterDelete,
+		Create: resourceInviteAccepterCreate,
+		Read:   resourceInviteAccepterRead,
+		Delete: resourceInviteAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -35,7 +35,7 @@ func resourceAwsSecurityHubInviteAccepter() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Accepting Security Hub invitation")
 
@@ -56,7 +56,7 @@ func resourceAwsSecurityHubInviteAccepterCreate(d *schema.ResourceData, meta int
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceAwsSecurityHubInviteAccepterRead(d, meta)
+	return resourceInviteAccepterRead(d, meta)
 }
 
 func resourceAwsSecurityHubInviteAccepterGetInvitationId(conn *securityhub.SecurityHub, masterId string) (string, error) {
@@ -78,7 +78,7 @@ func resourceAwsSecurityHubInviteAccepterGetInvitationId(conn *securityhub.Secur
 	return "", fmt.Errorf("Cannot find InvitationId for MasterId %s", masterId)
 }
 
-func resourceAwsSecurityHubInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Reading Security Hub master account")
 
@@ -106,7 +106,7 @@ func resourceAwsSecurityHubInviteAccepterRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsSecurityHubInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Disassociating from Security Hub master account")
 

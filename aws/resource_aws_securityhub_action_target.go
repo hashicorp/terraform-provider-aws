@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityHubActionTarget() *schema.Resource {
+func ResourceActionTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubActionTargetCreate,
-		Read:   resourceAwsSecurityHubActionTargetRead,
-		Update: resourceAwsSecurityHubActionTargetUpdate,
-		Delete: resourceAwsSecurityHubActionTargetDelete,
+		Create: resourceActionTargetCreate,
+		Read:   resourceActionTargetRead,
+		Update: resourceActionTargetUpdate,
+		Delete: resourceActionTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsSecurityHubActionTarget() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubActionTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceActionTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	description := d.Get("description").(string)
 	name := d.Get("name").(string)
@@ -72,7 +72,7 @@ func resourceAwsSecurityHubActionTargetCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(resp.ActionTargetArn))
 
-	return resourceAwsSecurityHubActionTargetRead(d, meta)
+	return resourceActionTargetRead(d, meta)
 }
 
 func resourceAwsSecurityHubActionTargetParseIdentifier(identifier string) (string, error) {
@@ -85,7 +85,7 @@ func resourceAwsSecurityHubActionTargetParseIdentifier(identifier string) (strin
 	return parts[2], nil
 }
 
-func resourceAwsSecurityHubActionTargetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceActionTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Reading Security Hub custom action targets to find %s", d.Id())
@@ -116,7 +116,7 @@ func resourceAwsSecurityHubActionTargetRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsSecurityHubActionTargetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceActionTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	input := &securityhub.UpdateActionTargetInput{
@@ -152,7 +152,7 @@ func resourceAwsSecurityHubActionTargetCheckExists(conn *securityhub.SecurityHub
 	return found, nil
 }
 
-func resourceAwsSecurityHubActionTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceActionTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Printf("[DEBUG] Deleting Security Hub custom action target %s", d.Id())
 

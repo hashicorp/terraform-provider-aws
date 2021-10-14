@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSecurityHubAccount() *schema.Resource {
+func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSecurityHubAccountCreate,
-		Read:   resourceAwsSecurityHubAccountRead,
-		Delete: resourceAwsSecurityHubAccountDelete,
+		Create: resourceAccountCreate,
+		Read:   resourceAccountRead,
+		Delete: resourceAccountDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -26,7 +26,7 @@ func resourceAwsSecurityHubAccount() *schema.Resource {
 	}
 }
 
-func resourceAwsSecurityHubAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Enabling Security Hub for account")
 
@@ -38,10 +38,10 @@ func resourceAwsSecurityHubAccountCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceAwsSecurityHubAccountRead(d, meta)
+	return resourceAccountRead(d, meta)
 }
 
-func resourceAwsSecurityHubAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	log.Printf("[DEBUG] Checking if Security Hub is enabled")
@@ -59,7 +59,7 @@ func resourceAwsSecurityHubAccountRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsSecurityHubAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Disabling Security Hub for account")
 
