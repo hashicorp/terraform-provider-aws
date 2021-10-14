@@ -1,4 +1,4 @@
-package aws
+package licensemanager
 
 import (
 	"fmt"
