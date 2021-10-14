@@ -19,65 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_resolver_dnssec_config", &resource.Sweeper{
-		Name: "aws_route53_resolver_dnssec_config",
-		F:    sweepDNSSECConfig,
-	})
-}
 
-func sweepDNSSECConfig(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).Route53ResolverConn
 
-	var sweeperErrs *multierror.Error
-	err = conn.ListResolverDnssecConfigsPages(&route53resolver.ListResolverDnssecConfigsInput{}, func(page *route53resolver.ListResolverDnssecConfigsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, resolverDnssecConfig := range page.ResolverDnssecConfigs {
-			if resolverDnssecConfig == nil {
-				continue
-			}
-
-			id := aws.StringValue(resolverDnssecConfig.Id)
-			resourceId := aws.StringValue(resolverDnssecConfig.ResourceId)
-
-			log.Printf("[INFO] Deleting Route 53 Resolver Dnssec config: %s", id)
-
-			r := tfroute53resolver.ResourceDNSSECConfig()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(resolverDnssecConfig.Id))
-			d.Set("resource_id", resourceId)
-
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Route 53 Resolver Resolver Dnssec config (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route 53 Resolver Resolver Dnssec config sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route 53 Resolver Resolver Dnssec config: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_dnssec_config.test"

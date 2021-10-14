@@ -18,57 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_resolver_firewall_config", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_config",
-		F:    sweepFirewallsConfig,
-		Dependencies: []string{
-			"aws_route53_resolver_firewall_config_association",
-		},
-	})
-}
 
-func sweepFirewallsConfig(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).Route53ResolverConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListFirewallConfigsPages(&route53resolver.ListFirewallConfigsInput{}, func(page *route53resolver.ListFirewallConfigsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, firewallRuleGroup := range page.FirewallConfigs {
-			id := aws.StringValue(firewallRuleGroup.Id)
-
-			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall config: %s", id)
-			r := tfroute53resolver.ResourceFirewallConfig()
-			d := r.Data(nil)
-			d.SetId(id)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall configs sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 Resolver DNS Firewall configs: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccRoute53ResolverFirewallConfig_basic(t *testing.T) {
 	var v route53resolver.FirewallConfig

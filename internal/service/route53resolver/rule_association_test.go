@@ -19,67 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_resolver_rule_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_rule_association",
-		F:    sweepRuleAssociations,
-	})
-}
 
-func sweepRuleAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).Route53ResolverConn
 
-	var errors error
-	err = conn.ListResolverRuleAssociationsPages(&route53resolver.ListResolverRuleAssociationsInput{}, func(page *route53resolver.ListResolverRuleAssociationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, resolverRuleAssociation := range page.ResolverRuleAssociations {
-			id := aws.StringValue(resolverRuleAssociation.Id)
-
-			log.Printf("[INFO] Deleting Route53 Resolver rule association %q", id)
-			_, err := conn.DisassociateResolverRule(&route53resolver.DisassociateResolverRuleInput{
-				ResolverRuleId: resolverRuleAssociation.ResolverRuleId,
-				VPCId:          resolverRuleAssociation.VPCId,
-			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-				continue
-			}
-			if sweep.SkipSweepError(err) {
-				log.Printf("[INFO] Skipping Route53 Resolver rule association %q: %s", id, err)
-				continue
-			}
-			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error deleting Route53 Resolver rule association (%s): %w", id, err))
-				continue
-			}
-
-			err = tfroute53resolver.RuleAssociationWaitUntilTargetState(conn, id, 10*time.Minute,
-				[]string{route53resolver.ResolverRuleAssociationStatusDeleting},
-				[]string{tfroute53resolver.RuleAssociationStatusDeleted})
-			if err != nil {
-				errors = multierror.Append(errors, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver rule association sweep for %s: %s", region, err)
-			return nil
-		}
-		errors = multierror.Append(errors, fmt.Errorf("error retrievingRoute53 Resolver rule associations: %w", err))
-	}
-
-	return errors
-}
 
 func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	var assn route53resolver.ResolverRuleAssociation

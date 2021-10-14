@@ -18,57 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_resolver_firewall_domain_list", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_domain_list",
-		F:    sweepFirewallDomainLists,
-		Dependencies: []string{
-			"aws_route53_resolver_firewall_rule",
-		},
-	})
-}
 
-func sweepFirewallDomainLists(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).Route53ResolverConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListFirewallDomainListsPages(&route53resolver.ListFirewallDomainListsInput{}, func(page *route53resolver.ListFirewallDomainListsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, queryLogConfig := range page.FirewallDomainLists {
-			id := aws.StringValue(queryLogConfig.Id)
-
-			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall domain list: %s", id)
-			r := tfroute53resolver.ResourceFirewallDomainList()
-			d := r.Data(nil)
-			d.SetId(id)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall domain lists sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 Resolver DNS Firewall domain lists: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccRoute53ResolverFirewallDomainList_basic(t *testing.T) {
 	var v route53resolver.FirewallDomainList

@@ -18,57 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_resolver_query_log_config", &resource.Sweeper{
-		Name: "aws_route53_resolver_query_log_config",
-		F:    sweepQueryLogsConfig,
-		Dependencies: []string{
-			"aws_route53_resolver_query_log_config_association",
-		},
-	})
-}
 
-func sweepQueryLogsConfig(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).Route53ResolverConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListResolverQueryLogConfigsPages(&route53resolver.ListResolverQueryLogConfigsInput{}, func(page *route53resolver.ListResolverQueryLogConfigsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, queryLogConfig := range page.ResolverQueryLogConfigs {
-			id := aws.StringValue(queryLogConfig.Id)
-
-			log.Printf("[INFO] Deleting Route53 Resolver Query Log Config: %s", id)
-			r := tfroute53resolver.ResourceQueryLogConfig()
-			d := r.Data(nil)
-			d.SetId(id)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Resolver Query Log Configs sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 Resolver Query Log Configs: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfig

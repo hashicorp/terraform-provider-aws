@@ -18,57 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_resolver_query_log_config_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_query_log_config_association",
-		F:    sweepQueryLogAssociationsConfig,
-	})
-}
 
-func sweepQueryLogAssociationsConfig(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).Route53ResolverConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListResolverQueryLogConfigAssociationsPages(&route53resolver.ListResolverQueryLogConfigAssociationsInput{}, func(page *route53resolver.ListResolverQueryLogConfigAssociationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, queryLogConfigAssociation := range page.ResolverQueryLogConfigAssociations {
-			id := aws.StringValue(queryLogConfigAssociation.Id)
-
-			log.Printf("[INFO] Deleting Route53 Resolver Query Log Config Association: %s", id)
-			r := tfroute53resolver.ResourceQueryLogConfigAssociation()
-			d := r.Data(nil)
-			d.SetId(id)
-			// The following additional arguments are required during the resource's Delete operation
-			d.Set("resolver_query_log_config_id", queryLogConfigAssociation.ResolverQueryLogConfigId)
-			d.Set("resource_id", queryLogConfigAssociation.ResourceId)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Resolver Query Log Config Associations sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 Resolver Query Log Config Associations: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfigAssociation

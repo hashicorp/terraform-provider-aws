@@ -19,71 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_resolver_rule", &resource.Sweeper{
-		Name: "aws_route53_resolver_rule",
-		F:    sweepRules,
-		Dependencies: []string{
-			"aws_route53_resolver_rule_association",
-		},
-	})
-}
 
-func sweepRules(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).Route53ResolverConn
 
-	var errors error
-	err = conn.ListResolverRulesPages(&route53resolver.ListResolverRulesInput{}, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, resolverRule := range page.ResolverRules {
-			id := aws.StringValue(resolverRule.Id)
-
-			ownerID := aws.StringValue(resolverRule.OwnerId)
-			if ownerID != client.(*conns.AWSClient).AccountID {
-				log.Printf("[INFO] Skipping Route53 Resolver rule %q, owned by %q", id, ownerID)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting Route53 Resolver rule %q", id)
-			_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
-				ResolverRuleId: aws.String(id),
-			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error deleting Route53 Resolver rule (%s): %w", id, err))
-				continue
-			}
-
-			err = tfroute53resolver.RuleWaitUntilTargetState(conn, id, 10*time.Minute,
-				[]string{route53resolver.ResolverRuleStatusDeleting},
-				[]string{tfroute53resolver.RuleStatusDeleted})
-			if err != nil {
-				errors = multierror.Append(errors, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver rule sweep for %s: %s", region, err)
-			return nil
-		}
-		errors = multierror.Append(errors, fmt.Errorf("error retrievingRoute53 Resolver rules: %w", err))
-	}
-
-	return errors
-}
 
 func TestAccRoute53ResolverRule_basic(t *testing.T) {
 	var rule route53resolver.ResolverRule

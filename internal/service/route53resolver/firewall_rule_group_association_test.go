@@ -18,79 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_resolver_firewall_rule_group_association", &resource.Sweeper{
-		Name: "aws_route53_resolver_firewall_rule_group_association",
-		F:    sweepFirewallRuleGroupAssociations,
-	})
-}
 
-func sweepFirewallRuleGroupAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).Route53ResolverConn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListFirewallRuleGroupAssociationsPages(&route53resolver.ListFirewallRuleGroupAssociationsInput{}, func(page *route53resolver.ListFirewallRuleGroupAssociationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, firewallRuleGroupAssociation := range page.FirewallRuleGroupAssociations {
-			id := aws.StringValue(firewallRuleGroupAssociation.Id)
-
-			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall rule group association: %s", id)
-			r := tfroute53resolver.ResourceFirewallRuleGroupAssociation()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			if aws.StringValue(firewallRuleGroupAssociation.MutationProtection) == route53resolver.MutationProtectionStatusEnabled {
-				input := &route53resolver.UpdateFirewallRuleGroupAssociationInput{
-					FirewallRuleGroupAssociationId: firewallRuleGroupAssociation.Id,
-					Name:                           firewallRuleGroupAssociation.Name,
-					MutationProtection:             aws.String(route53resolver.MutationProtectionStatusDisabled),
-				}
-
-				_, err := conn.UpdateFirewallRuleGroupAssociation(input)
-
-				if err != nil {
-					log.Printf("[ERROR] %s", err)
-					sweeperErrs = multierror.Append(sweeperErrs, err)
-					continue
-				}
-
-				_, err = tfroute53resolver.WaitFirewallRuleGroupAssociationUpdated(conn, d.Id())
-
-				if err != nil {
-					log.Printf("[ERROR] error waiting for Route53 Resolver DNS Firewall rule group association (%s) to be updated: %s", d.Id(), err)
-					sweeperErrs = multierror.Append(sweeperErrs, err)
-					continue
-				}
-			}
-
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall rule group associations sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 Resolver DNS Firewall rule group associations: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccRoute53ResolverFirewallRuleGroupAssociation_basic(t *testing.T) {
 	var v route53resolver.FirewallRuleGroupAssociation

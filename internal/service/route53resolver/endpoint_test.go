@@ -19,65 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_resolver_endpoint", &resource.Sweeper{
-		Name: "aws_route53_resolver_endpoint",
-		F:    sweepEndpoints,
-		Dependencies: []string{
-			"aws_route53_resolver_rule",
-		},
-	})
-}
 
-func sweepEndpoints(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).Route53ResolverConn
 
-	var errors error
-	err = conn.ListResolverEndpointsPages(&route53resolver.ListResolverEndpointsInput{}, func(page *route53resolver.ListResolverEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, resolverEndpoint := range page.ResolverEndpoints {
-			id := aws.StringValue(resolverEndpoint.Id)
-
-			log.Printf("[INFO] Deleting Route53 Resolver endpoint: %s", id)
-			_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{
-				ResolverEndpointId: aws.String(id),
-			})
-			if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error deleting Route53 Resolver endpoint (%s): %w", id, err))
-				continue
-			}
-
-			err = tfroute53resolver.EndpointWaitUntilTargetState(conn, id, 10*time.Minute,
-				[]string{route53resolver.ResolverEndpointStatusDeleting},
-				[]string{tfroute53resolver.EndpointStatusDeleted})
-			if err != nil {
-				errors = multierror.Append(errors, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Route53 Resolver endpoint sweep for %s: %s", region, err)
-			return nil
-		}
-		errors = multierror.Append(errors, fmt.Errorf("error retrievingRoute53 Resolver endpoints: %w", err))
-	}
-
-	return errors
-}
 
 func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
