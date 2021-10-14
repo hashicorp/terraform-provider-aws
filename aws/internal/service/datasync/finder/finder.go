@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func AgentByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeAgentOutput, error) {
+func FindAgentByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeAgentOutput, error) {
 	input := &datasync.DescribeAgentInput{
 		AgentArn: aws.String(arn),
 	}
@@ -36,7 +36,7 @@ func AgentByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeAgentOut
 	return output, nil
 }
 
-func TaskByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeTaskOutput, error) {
+func FindTaskByARN(conn *datasync.DataSync, arn string) (*datasync.DescribeTaskOutput, error) {
 	input := &datasync.DescribeTaskInput{
 		TaskArn: aws.String(arn),
 	}

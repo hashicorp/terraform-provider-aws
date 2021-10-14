@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
 func init() {
@@ -267,7 +269,7 @@ func testAccCheckAWSDataSyncAgentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.AgentByARN(conn, rs.Primary.ID)
+		_, err := tfdatasync.FindAgentByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -292,7 +294,7 @@ func testAccCheckAWSDataSyncAgentExists(resourceName string, agent *datasync.Des
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
 
-		output, err := finder.AgentByARN(conn, rs.Primary.ID)
+		output, err := tfdatasync.FindAgentByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

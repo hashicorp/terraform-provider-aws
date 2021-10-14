@@ -16,6 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceLocationS3() *schema.Resource {
@@ -118,7 +120,7 @@ func resourceLocationS3Create(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating DataSync Location S3: %s", input)
 
 	var output *datasync.CreateLocationS3Output
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateLocationS3(input)
 

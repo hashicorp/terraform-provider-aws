@@ -7,15 +7,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
 const (
 	agentStatusReady = "ready"
 )
 
-func AgentStatus(conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
+func statusAgent(conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.AgentByARN(conn, arn)
+		output, err := tfdatasync.FindAgentByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -29,9 +31,9 @@ func AgentStatus(conn *datasync.DataSync, arn string) resource.StateRefreshFunc 
 	}
 }
 
-func TaskStatus(conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
+func statusTask(conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.TaskByARN(conn, arn)
+		output, err := tfdatasync.FindTaskByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

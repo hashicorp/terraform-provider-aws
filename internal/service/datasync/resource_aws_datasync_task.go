@@ -18,6 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
 func ResourceTask() *schema.Resource {
@@ -228,7 +234,7 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.TaskArn))
 
-	if _, err := waiter.TaskAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := tfdatasync.waitTaskAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for DataSync Task (%s) creation: %w", d.Id(), err)
 	}
 
@@ -240,7 +246,7 @@ func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.TaskByARN(conn, d.Id())
+	output, err := tfdatasync.FindTaskByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Task (%s) not found, removing from state", d.Id())

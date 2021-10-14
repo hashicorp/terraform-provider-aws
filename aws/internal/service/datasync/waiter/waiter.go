@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func AgentReady(conn *datasync.DataSync, arn string, timeout time.Duration) (*datasync.DescribeAgentOutput, error) {
+func waitAgentReady(conn *datasync.DataSync, arn string, timeout time.Duration) (*datasync.DescribeAgentOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{agentStatusReady},
-		Refresh: AgentStatus(conn, arn),
+		Refresh: statusAgent(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -28,11 +28,11 @@ func AgentReady(conn *datasync.DataSync, arn string, timeout time.Duration) (*da
 	return nil, err
 }
 
-func TaskAvailable(conn *datasync.DataSync, arn string, timeout time.Duration) (*datasync.DescribeTaskOutput, error) {
+func waitTaskAvailable(conn *datasync.DataSync, arn string, timeout time.Duration) (*datasync.DescribeTaskOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{datasync.TaskStatusCreating, datasync.TaskStatusUnavailable},
 		Target:  []string{datasync.TaskStatusAvailable, datasync.TaskStatusRunning},
-		Refresh: TaskStatus(conn, arn),
+		Refresh: statusTask(conn, arn),
 		Timeout: timeout,
 	}
 
