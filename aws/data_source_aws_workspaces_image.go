@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsWorkspacesImage() *schema.Resource {
@@ -42,7 +43,7 @@ func dataSourceAwsWorkspacesImage() *schema.Resource {
 }
 
 func dataSourceAwsWorkspacesImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
 	imageID := d.Get("image_id").(string)
 	input := &workspaces.DescribeWorkspaceImagesInput{

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepWorkspacesWorkspace(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).workspacesconn
+	conn := client.(*conns.AWSClient).WorkSpacesConn
 
 	var errors error
 	input := &workspaces.DescribeWorkspacesInput{}
@@ -364,7 +365,7 @@ func testAccAwsWorkspacesWorkspace_timeout(t *testing.T) {
 }
 
 func testAccCheckAwsWorkspacesWorkspaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_workspaces_workspace" {
@@ -398,7 +399,7 @@ func testAccCheckAwsWorkspacesWorkspaceExists(n string, v *workspaces.Workspace)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 
 		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: []*string{aws.String(rs.Primary.ID)},

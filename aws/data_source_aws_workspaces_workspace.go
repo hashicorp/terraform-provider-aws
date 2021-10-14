@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsWorkspacesWorkspace() *schema.Resource {
@@ -96,8 +97,8 @@ func dataSourceAwsWorkspacesWorkspace() *schema.Resource {
 }
 
 func dataSourceAwsWorkspacesWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var workspace *workspaces.Workspace
 

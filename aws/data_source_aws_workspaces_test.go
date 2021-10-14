@@ -3,6 +3,7 @@ package aws
 import (
 	"testing"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccDataSourceAwsWorkspaces_serial(t *testing.T) {
