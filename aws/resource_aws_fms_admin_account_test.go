@@ -43,7 +43,7 @@ func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
 
 		output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
 
-		if isAWSErr(err, fms.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, fms.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 

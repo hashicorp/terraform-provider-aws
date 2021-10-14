@@ -180,7 +180,7 @@ func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.GetPolicy(req)
 
 	if err != nil {
-		if isAWSErr(err, fms.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, fms.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] FMS Policy (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -282,7 +282,7 @@ func resourceAwsFmsPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		DeleteAllPolicyResources: aws.Bool(d.Get("delete_all_policy_resources").(bool)),
 	})
 
-	if isAWSErr(err, fms.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, fms.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 

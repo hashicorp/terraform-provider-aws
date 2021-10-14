@@ -192,7 +192,7 @@ func testAccCheckAwsFmsPolicyDestroy(s *terraform.State) error {
 
 		resp, err := conn.GetPolicy(input)
 
-		if isAWSErr(err, fms.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, fms.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
