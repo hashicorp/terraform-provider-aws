@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -24,7 +25,7 @@ func init() {
 }
 
 func testSweepDAXClusters(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
@@ -34,7 +35,7 @@ func testSweepDAXClusters(region string) error {
 	if err != nil {
 		// GovCloud (with no DAX support) has an endpoint that responds with:
 		// InvalidParameterValueException: Access Denied to API Version: DAX_V3
-		if testSweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
+		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 			log.Printf("[WARN] Skipping DAX Cluster sweep for %s: %s", region, err)
 			return nil
 		}
