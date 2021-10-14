@@ -419,7 +419,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		DeploymentController: deploymentController,
 		SchedulingStrategy:   aws.String(schedulingStrategy),
 		ServiceName:          aws.String(d.Get("name").(string)),
-		Tags:                 tags.IgnoreAws().EcsTags(),
+		Tags:                 Tags(tags.IgnoreAws()),
 		TaskDefinition:       aws.String(d.Get("task_definition").(string)),
 		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
 		EnableExecuteCommand: aws.Bool(d.Get("enable_execute_command").(bool)),
@@ -729,7 +729,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting service_registries for (%s): %w", d.Id(), err)
 	}
 
-	tags := tftags.EcsKeyValueTags(service.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(service.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1165,7 +1165,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ECS Service (%s) tags: %w", d.Id(), err)
 		}
 	}

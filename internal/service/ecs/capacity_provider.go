@@ -119,7 +119,7 @@ func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) er
 
 	// `CreateCapacityProviderInput` does not accept an empty array of tags
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().EcsTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating ECS Capacity Provider: %s", input)
@@ -159,7 +159,7 @@ func resourceCapacityProviderRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("name", output.Name)
 
-	tags := tftags.EcsKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -212,7 +212,7 @@ func resourceCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ECS Capacity Provider (%s) tags: %w", d.Id(), err)
 		}
 	}
