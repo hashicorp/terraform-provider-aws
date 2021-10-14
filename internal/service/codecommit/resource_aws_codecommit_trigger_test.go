@@ -1,4 +1,4 @@
-package aws
+package codecommit_test
 
 import (
 	"fmt"
