@@ -106,7 +106,7 @@ func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}
 		ApplicationId: aws.String(appId),
 		LocationUri:   aws.String(d.Get("location_uri").(string)),
 		Name:          aws.String(name),
-		Tags:          tags.IgnoreAws().AppconfigTags(),
+		Tags:          Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -190,7 +190,7 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("arn", arn)
 
-	tags, err := tftags.AppconfigListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for AppConfig Configuration Profile (%s): %w", d.Id(), err)
@@ -250,7 +250,7 @@ func resourceConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating AppConfig Configuration Profile (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

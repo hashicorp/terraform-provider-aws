@@ -88,7 +88,7 @@ func resourceDeploymentStrategyCreate(d *schema.ResourceData, meta interface{}) 
 		GrowthType:                  aws.String(d.Get("growth_type").(string)),
 		Name:                        aws.String(name),
 		ReplicateTo:                 aws.String(d.Get("replicate_to").(string)),
-		Tags:                        tags.IgnoreAws().AppconfigTags(),
+		Tags:                        Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -152,7 +152,7 @@ func resourceDeploymentStrategyRead(d *schema.ResourceData, meta interface{}) er
 	}.String()
 	d.Set("arn", arn)
 
-	tags, err := tftags.AppconfigListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for AppConfig Deployment Strategy (%s): %w", d.Id(), err)
@@ -209,7 +209,7 @@ func resourceDeploymentStrategyUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating AppConfig Deployment Strategy (%s) tags: %w", d.Id(), err)
 		}
 	}
