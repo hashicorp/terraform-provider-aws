@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
@@ -98,7 +98,7 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &rds.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
@@ -160,7 +160,7 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 	d.Set("enabled", sub.Enabled)
 	d.Set("event_categories", aws.StringValueSlice(sub.EventCategoriesList))
 	d.Set("name", sub.CustSubscriptionId)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(sub.CustSubscriptionId)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(sub.CustSubscriptionId)))
 	d.Set("sns_topic", sub.SnsTopicArn)
 	d.Set("source_ids", aws.StringValueSlice(sub.SourceIdsList))
 	d.Set("source_type", sub.SourceType)
