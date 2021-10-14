@@ -21,12 +21,12 @@ import (
  ADM_CLIENT_SECRET - Amazon ADM OAuth Credentials Client Secret
 **/
 
-type testAccAwsPinpointADMChannelConfiguration struct {
+type testAccAWSPinpointADMChannelConfiguration struct {
 	ClientID     string
 	ClientSecret string
 }
 
-func testAccAwsPinpointADMChannelConfigurationFromEnv(t *testing.T) *testAccAwsPinpointADMChannelConfiguration {
+func testAccADMChannelConfigurationFromEnv(t *testing.T) *testAccAWSPinpointADMChannelConfiguration {
 	if os.Getenv("ADM_CLIENT_ID") == "" {
 		t.Skipf("ADM_CLIENT_ID ENV is missing")
 	}
@@ -35,7 +35,7 @@ func testAccAwsPinpointADMChannelConfigurationFromEnv(t *testing.T) *testAccAwsP
 		t.Skipf("ADM_CLIENT_SECRET ENV is missing")
 	}
 
-	conf := testAccAwsPinpointADMChannelConfiguration{
+	conf := testAccAWSPinpointADMChannelConfiguration{
 		ClientID:     os.Getenv("ADM_CLIENT_ID"),
 		ClientSecret: os.Getenv("ADM_CLIENT_SECRET"),
 	}
@@ -47,18 +47,18 @@ func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
 	var channel pinpoint.ADMChannelResponse
 	resourceName := "aws_pinpoint_adm_channel.channel"
 
-	config := testAccAwsPinpointADMChannelConfigurationFromEnv(t)
+	config := testAccADMChannelConfigurationFromEnv(t)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointADMChannelDestroy,
+		CheckDestroy: testAccCheckADMChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointADMChannelConfig_basic(config),
+				Config: testAccADMChannelConfig_basic(config),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointADMChannelExists(resourceName, &channel),
+					testAccCheckADMChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -69,9 +69,9 @@ func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"client_id", "client_secret"},
 			},
 			{
-				Config: testAccAWSPinpointADMChannelConfig_basic(config),
+				Config: testAccADMChannelConfig_basic(config),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointADMChannelExists(resourceName, &channel),
+					testAccCheckADMChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -79,7 +79,7 @@ func TestAccAWSPinpointADMChannel_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSPinpointADMChannelExists(n string, channel *pinpoint.ADMChannelResponse) resource.TestCheckFunc {
+func testAccCheckADMChannelExists(n string, channel *pinpoint.ADMChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -108,7 +108,7 @@ func testAccCheckAWSPinpointADMChannelExists(n string, channel *pinpoint.ADMChan
 	}
 }
 
-func testAccAWSPinpointADMChannelConfig_basic(conf *testAccAwsPinpointADMChannelConfiguration) string {
+func testAccADMChannelConfig_basic(conf *testAccAWSPinpointADMChannelConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -122,7 +122,7 @@ resource "aws_pinpoint_adm_channel" "channel" {
 `, conf.ClientID, conf.ClientSecret)
 }
 
-func testAccCheckAWSPinpointADMChannelDestroy(s *terraform.State) error {
+func testAccCheckADMChannelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {

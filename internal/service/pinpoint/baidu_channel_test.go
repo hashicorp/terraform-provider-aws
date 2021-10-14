@@ -22,15 +22,15 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 	secretKey := "456"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointBaiduChannelDestroy,
+		CheckDestroy: testAccCheckBaiduChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointBaiduChannelConfig_basic(apiKey, secretKey),
+				Config: testAccBaiduChannelConfig_basic(apiKey, secretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointBaiduChannelExists(resourceName, &channel),
+					testAccCheckBaiduChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
 					resource.TestCheckResourceAttr(resourceName, "secret_key", secretKey),
@@ -43,9 +43,9 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"api_key", "secret_key"},
 			},
 			{
-				Config: testAccAWSPinpointBaiduChannelConfig_basic(apikeyUpdated, secretKey),
+				Config: testAccBaiduChannelConfig_basic(apikeyUpdated, secretKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointBaiduChannelExists(resourceName, &channel),
+					testAccCheckBaiduChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "api_key", apikeyUpdated),
 					resource.TestCheckResourceAttr(resourceName, "secret_key", secretKey),
@@ -55,7 +55,7 @@ func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSPinpointBaiduChannelExists(n string, channel *pinpoint.BaiduChannelResponse) resource.TestCheckFunc {
+func testAccCheckBaiduChannelExists(n string, channel *pinpoint.BaiduChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -84,7 +84,7 @@ func testAccCheckAWSPinpointBaiduChannelExists(n string, channel *pinpoint.Baidu
 	}
 }
 
-func testAccAWSPinpointBaiduChannelConfig_basic(apiKey, secretKey string) string {
+func testAccBaiduChannelConfig_basic(apiKey, secretKey string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -98,7 +98,7 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 `, apiKey, secretKey)
 }
 
-func testAccCheckAWSPinpointBaiduChannelDestroy(s *terraform.State) error {
+func testAccCheckBaiduChannelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {

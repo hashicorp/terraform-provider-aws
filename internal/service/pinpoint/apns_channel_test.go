@@ -31,26 +31,26 @@ import (
  APNS_CERTIFICATE_PRIVATE_KEY - APNs Certificate Private Key File content
 **/
 
-type testAccAwsPinpointAPNSChannelCertConfiguration struct {
+type testAccAWSPinpointAPNSChannelCertConfiguration struct {
 	Certificate string
 	PrivateKey  string
 }
 
-type testAccAwsPinpointAPNSChannelTokenConfiguration struct {
+type testAccAWSPinpointAPNSChannelTokenConfiguration struct {
 	BundleId   string
 	TeamId     string
 	TokenKey   string
 	TokenKeyId string
 }
 
-func testAccAwsPinpointAPNSChannelCertConfigurationFromEnv(t *testing.T) *testAccAwsPinpointAPNSChannelCertConfiguration {
-	var conf *testAccAwsPinpointAPNSChannelCertConfiguration
+func testAccAPNSChannelCertConfigurationFromEnv(t *testing.T) *testAccAWSPinpointAPNSChannelCertConfiguration {
+	var conf *testAccAWSPinpointAPNSChannelCertConfiguration
 	if os.Getenv("APNS_CERTIFICATE") != "" {
 		if os.Getenv("APNS_CERTIFICATE_PRIVATE_KEY") == "" {
 			t.Fatalf("APNS_CERTIFICATE set but missing APNS_CERTIFICATE_PRIVATE_KEY")
 		}
 
-		conf = &testAccAwsPinpointAPNSChannelCertConfiguration{
+		conf = &testAccAWSPinpointAPNSChannelCertConfiguration{
 			Certificate: fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_CERTIFICATE"))),
 			PrivateKey:  fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_CERTIFICATE_PRIVATE_KEY"))),
 		}
@@ -63,7 +63,7 @@ func testAccAwsPinpointAPNSChannelCertConfigurationFromEnv(t *testing.T) *testAc
 	return conf
 }
 
-func testAccAwsPinpointAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testAccAwsPinpointAPNSChannelTokenConfiguration {
+func testAccAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testAccAWSPinpointAPNSChannelTokenConfiguration {
 	if os.Getenv("APNS_BUNDLE_ID") == "" {
 		t.Skipf("APNS_BUNDLE_ID env is missing, skipping test")
 	}
@@ -80,7 +80,7 @@ func testAccAwsPinpointAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testA
 		t.Skipf("APNS_TOKEN_KEY_ID env is missing, skipping test")
 	}
 
-	conf := testAccAwsPinpointAPNSChannelTokenConfiguration{
+	conf := testAccAWSPinpointAPNSChannelTokenConfiguration{
 		BundleId:   strconv.Quote(strings.TrimSpace(os.Getenv("APNS_BUNDLE_ID"))),
 		TeamId:     strconv.Quote(strings.TrimSpace(os.Getenv("APNS_TEAM_ID"))),
 		TokenKey:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_TOKEN_KEY"))),
@@ -94,18 +94,18 @@ func TestAccAWSPinpointAPNSChannel_basicCertificate(t *testing.T) {
 	var channel pinpoint.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"
 
-	configuration := testAccAwsPinpointAPNSChannelCertConfigurationFromEnv(t)
+	configuration := testAccAPNSChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAPNSChannelDestroy,
+		CheckDestroy: testAccCheckAPNSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAPNSChannelConfig_basicCertificate(configuration),
+				Config: testAccAPNSChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSChannelExists(resourceName, &channel),
+					testAccCheckAPNSChannelExists(resourceName, &channel),
 				),
 			},
 			{
@@ -115,9 +115,9 @@ func TestAccAWSPinpointAPNSChannel_basicCertificate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"certificate", "private_key"},
 			},
 			{
-				Config: testAccAWSPinpointAPNSChannelConfig_basicCertificate(configuration),
+				Config: testAccAPNSChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSChannelExists(resourceName, &channel),
+					testAccCheckAPNSChannelExists(resourceName, &channel),
 				),
 			},
 		},
@@ -128,18 +128,18 @@ func TestAccAWSPinpointAPNSChannel_basicToken(t *testing.T) {
 	var channel pinpoint.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"
 
-	configuration := testAccAwsPinpointAPNSChannelTokenConfigurationFromEnv(t)
+	configuration := testAccAPNSChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAPNSChannelDestroy,
+		CheckDestroy: testAccCheckAPNSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAPNSChannelConfig_basicToken(configuration),
+				Config: testAccAPNSChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSChannelExists(resourceName, &channel),
+					testAccCheckAPNSChannelExists(resourceName, &channel),
 				),
 			},
 			{
@@ -149,16 +149,16 @@ func TestAccAWSPinpointAPNSChannel_basicToken(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"team_id", "bundle_id", "token_key", "token_key_id"},
 			},
 			{
-				Config: testAccAWSPinpointAPNSChannelConfig_basicToken(configuration),
+				Config: testAccAPNSChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSChannelExists(resourceName, &channel),
+					testAccCheckAPNSChannelExists(resourceName, &channel),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSPinpointAPNSChannelExists(n string, channel *pinpoint.APNSChannelResponse) resource.TestCheckFunc {
+func testAccCheckAPNSChannelExists(n string, channel *pinpoint.APNSChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -187,7 +187,7 @@ func testAccCheckAWSPinpointAPNSChannelExists(n string, channel *pinpoint.APNSCh
 	}
 }
 
-func testAccAWSPinpointAPNSChannelConfig_basicCertificate(conf *testAccAwsPinpointAPNSChannelCertConfiguration) string {
+func testAccAPNSChannelConfig_basicCertificate(conf *testAccAWSPinpointAPNSChannelCertConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -201,7 +201,7 @@ resource "aws_pinpoint_apns_channel" "test_apns_channel" {
 `, conf.Certificate, conf.PrivateKey)
 }
 
-func testAccAWSPinpointAPNSChannelConfig_basicToken(conf *testAccAwsPinpointAPNSChannelTokenConfiguration) string {
+func testAccAPNSChannelConfig_basicToken(conf *testAccAWSPinpointAPNSChannelTokenConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -219,7 +219,7 @@ resource "aws_pinpoint_apns_channel" "test_apns_channel" {
 `, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
 }
 
-func testAccCheckAWSPinpointAPNSChannelDestroy(s *terraform.State) error {
+func testAccCheckAPNSChannelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {

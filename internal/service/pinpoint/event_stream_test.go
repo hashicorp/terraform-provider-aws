@@ -22,15 +22,15 @@ func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointEventStreamDestroy,
+		CheckDestroy: testAccCheckEventStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointEventStreamConfig_basic(rName, rName),
+				Config: testAccEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointEventStreamExists(resourceName, &stream),
+					testAccCheckEventStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_pinpoint_app.test", "application_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_stream_arn", "aws_kinesis_stream.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
@@ -42,9 +42,9 @@ func TestAccAWSPinpointEventStream_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSPinpointEventStreamConfig_basic(rName, rName2),
+				Config: testAccEventStreamConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointEventStreamExists(resourceName, &stream),
+					testAccCheckEventStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_pinpoint_app.test", "application_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_stream_arn", "aws_kinesis_stream.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
@@ -60,15 +60,15 @@ func TestAccAWSPinpointEventStream_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointEventStreamDestroy,
+		CheckDestroy: testAccCheckEventStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointEventStreamConfig_basic(rName, rName),
+				Config: testAccEventStreamConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointEventStreamExists(resourceName, &stream),
+					testAccCheckEventStreamExists(resourceName, &stream),
 					acctest.CheckResourceDisappears(acctest.Provider, tfpinpoint.ResourceEventStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -77,7 +77,7 @@ func TestAccAWSPinpointEventStream_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSPinpointEventStreamExists(n string, stream *pinpoint.EventStream) resource.TestCheckFunc {
+func testAccCheckEventStreamExists(n string, stream *pinpoint.EventStream) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -106,7 +106,7 @@ func testAccCheckAWSPinpointEventStreamExists(n string, stream *pinpoint.EventSt
 	}
 }
 
-func testAccAWSPinpointEventStreamConfig_basic(rName, streamName string) string {
+func testAccEventStreamConfig_basic(rName, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {}
 
@@ -164,7 +164,7 @@ EOF
 `, rName, streamName)
 }
 
-func testAccCheckAWSPinpointEventStreamDestroy(s *terraform.State) error {
+func testAccCheckEventStreamDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {

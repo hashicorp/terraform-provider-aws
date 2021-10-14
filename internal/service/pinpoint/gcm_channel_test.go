@@ -31,15 +31,15 @@ func TestAccAWSPinpointGCMChannel_basic(t *testing.T) {
 	apiKey := os.Getenv("GCM_API_KEY")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointGCMChannelDestroy,
+		CheckDestroy: testAccCheckGCMChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointGCMChannelConfig_basic(apiKey),
+				Config: testAccGCMChannelConfig_basic(apiKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointGCMChannelExists(resourceName, &channel),
+					testAccCheckGCMChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -50,9 +50,9 @@ func TestAccAWSPinpointGCMChannel_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"api_key"},
 			},
 			{
-				Config: testAccAWSPinpointGCMChannelConfig_basic(apiKey),
+				Config: testAccGCMChannelConfig_basic(apiKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointGCMChannelExists(resourceName, &channel),
+					testAccCheckGCMChannelExists(resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -60,7 +60,7 @@ func TestAccAWSPinpointGCMChannel_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSPinpointGCMChannelExists(n string, channel *pinpoint.GCMChannelResponse) resource.TestCheckFunc {
+func testAccCheckGCMChannelExists(n string, channel *pinpoint.GCMChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -89,7 +89,7 @@ func testAccCheckAWSPinpointGCMChannelExists(n string, channel *pinpoint.GCMChan
 	}
 }
 
-func testAccAWSPinpointGCMChannelConfig_basic(apiKey string) string {
+func testAccGCMChannelConfig_basic(apiKey string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -101,7 +101,7 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
 `, apiKey)
 }
 
-func testAccCheckAWSPinpointGCMChannelDestroy(s *terraform.State) error {
+func testAccCheckGCMChannelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {

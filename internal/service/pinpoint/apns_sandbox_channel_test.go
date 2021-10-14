@@ -31,26 +31,26 @@ import (
  APNS_SANDBOX_CERTIFICATE_PRIVATE_KEY - APNs Certificate Private Key File content
 **/
 
-type testAccAwsPinpointAPNSSandboxChannelCertConfiguration struct {
+type testAccAWSPinpointAPNSSandboxChannelCertConfiguration struct {
 	Certificate string
 	PrivateKey  string
 }
 
-type testAccAwsPinpointAPNSSandboxChannelTokenConfiguration struct {
+type testAccAWSPinpointAPNSSandboxChannelTokenConfiguration struct {
 	BundleId   string
 	TeamId     string
 	TokenKey   string
 	TokenKeyId string
 }
 
-func testAccAwsPinpointAPNSSandboxChannelCertConfigurationFromEnv(t *testing.T) *testAccAwsPinpointAPNSSandboxChannelCertConfiguration {
-	var conf *testAccAwsPinpointAPNSSandboxChannelCertConfiguration
+func testAccAPNSSandboxChannelCertConfigurationFromEnv(t *testing.T) *testAccAWSPinpointAPNSSandboxChannelCertConfiguration {
+	var conf *testAccAWSPinpointAPNSSandboxChannelCertConfiguration
 	if os.Getenv("APNS_SANDBOX_CERTIFICATE") != "" {
 		if os.Getenv("APNS_SANDBOX_CERTIFICATE_PRIVATE_KEY") == "" {
 			t.Fatalf("APNS_SANDBOX_CERTIFICATE set but missing APNS_SANDBOX_CERTIFICATE_PRIVATE_KEY")
 		}
 
-		conf = &testAccAwsPinpointAPNSSandboxChannelCertConfiguration{
+		conf = &testAccAWSPinpointAPNSSandboxChannelCertConfiguration{
 			Certificate: fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CERTIFICATE"))),
 			PrivateKey:  fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CERTIFICATE_PRIVATE_KEY"))),
 		}
@@ -63,7 +63,7 @@ func testAccAwsPinpointAPNSSandboxChannelCertConfigurationFromEnv(t *testing.T) 
 	return conf
 }
 
-func testAccAwsPinpointAPNSSandboxChannelTokenConfigurationFromEnv(t *testing.T) *testAccAwsPinpointAPNSSandboxChannelTokenConfiguration {
+func testAccAPNSSandboxChannelTokenConfigurationFromEnv(t *testing.T) *testAccAWSPinpointAPNSSandboxChannelTokenConfiguration {
 	if os.Getenv("APNS_SANDBOX_BUNDLE_ID") == "" {
 		t.Skipf("APNS_SANDBOX_BUNDLE_ID env is missing, skipping test")
 	}
@@ -80,7 +80,7 @@ func testAccAwsPinpointAPNSSandboxChannelTokenConfigurationFromEnv(t *testing.T)
 		t.Skipf("APNS_SANDBOX_TOKEN_KEY_ID env is missing, skipping test")
 	}
 
-	conf := testAccAwsPinpointAPNSSandboxChannelTokenConfiguration{
+	conf := testAccAWSPinpointAPNSSandboxChannelTokenConfiguration{
 		BundleId:   strconv.Quote(strings.TrimSpace(os.Getenv("APNS_SANDBOX_BUNDLE_ID"))),
 		TeamId:     strconv.Quote(strings.TrimSpace(os.Getenv("APNS_SANDBOX_TEAM_ID"))),
 		TokenKey:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_TOKEN_KEY"))),
@@ -94,18 +94,18 @@ func TestAccAWSPinpointAPNSSandboxChannel_basicCertificate(t *testing.T) {
 	var channel pinpoint.APNSSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_sandbox_channel.test_channel"
 
-	configuration := testAccAwsPinpointAPNSSandboxChannelCertConfigurationFromEnv(t)
+	configuration := testAccAPNSSandboxChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAPNSSandboxChannelDestroy,
+		CheckDestroy: testAccCheckAPNSSandboxChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAPNSSandboxChannelConfig_basicCertificate(configuration),
+				Config: testAccAPNSSandboxChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSSandboxChannelExists(resourceName, &channel),
+					testAccCheckAPNSSandboxChannelExists(resourceName, &channel),
 				),
 			},
 			{
@@ -115,9 +115,9 @@ func TestAccAWSPinpointAPNSSandboxChannel_basicCertificate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"certificate", "private_key"},
 			},
 			{
-				Config: testAccAWSPinpointAPNSSandboxChannelConfig_basicCertificate(configuration),
+				Config: testAccAPNSSandboxChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSSandboxChannelExists(resourceName, &channel),
+					testAccCheckAPNSSandboxChannelExists(resourceName, &channel),
 				),
 			},
 		},
@@ -128,18 +128,18 @@ func TestAccAWSPinpointAPNSSandboxChannel_basicToken(t *testing.T) {
 	var channel pinpoint.APNSSandboxChannelResponse
 	resourceName := "aws_pinpoint_apns_sandbox_channel.test_channel"
 
-	configuration := testAccAwsPinpointAPNSSandboxChannelTokenConfigurationFromEnv(t)
+	configuration := testAccAPNSSandboxChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAPNSSandboxChannelDestroy,
+		CheckDestroy: testAccCheckAPNSSandboxChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAPNSSandboxChannelConfig_basicToken(configuration),
+				Config: testAccAPNSSandboxChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSSandboxChannelExists(resourceName, &channel),
+					testAccCheckAPNSSandboxChannelExists(resourceName, &channel),
 				),
 			},
 			{
@@ -149,16 +149,16 @@ func TestAccAWSPinpointAPNSSandboxChannel_basicToken(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"team_id", "bundle_id", "token_key", "token_key_id"},
 			},
 			{
-				Config: testAccAWSPinpointAPNSSandboxChannelConfig_basicToken(configuration),
+				Config: testAccAPNSSandboxChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSSandboxChannelExists(resourceName, &channel),
+					testAccCheckAPNSSandboxChannelExists(resourceName, &channel),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSPinpointAPNSSandboxChannelExists(n string, channel *pinpoint.APNSSandboxChannelResponse) resource.TestCheckFunc {
+func testAccCheckAPNSSandboxChannelExists(n string, channel *pinpoint.APNSSandboxChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -187,7 +187,7 @@ func testAccCheckAWSPinpointAPNSSandboxChannelExists(n string, channel *pinpoint
 	}
 }
 
-func testAccAWSPinpointAPNSSandboxChannelConfig_basicCertificate(conf *testAccAwsPinpointAPNSSandboxChannelCertConfiguration) string {
+func testAccAPNSSandboxChannelConfig_basicCertificate(conf *testAccAWSPinpointAPNSSandboxChannelCertConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -201,7 +201,7 @@ resource "aws_pinpoint_apns_sandbox_channel" "test_channel" {
 `, conf.Certificate, conf.PrivateKey)
 }
 
-func testAccAWSPinpointAPNSSandboxChannelConfig_basicToken(conf *testAccAwsPinpointAPNSSandboxChannelTokenConfiguration) string {
+func testAccAPNSSandboxChannelConfig_basicToken(conf *testAccAWSPinpointAPNSSandboxChannelTokenConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -219,7 +219,7 @@ resource "aws_pinpoint_apns_sandbox_channel" "test_channel" {
 `, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
 }
 
-func testAccCheckAWSPinpointAPNSSandboxChannelDestroy(s *terraform.State) error {
+func testAccCheckAPNSSandboxChannelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {

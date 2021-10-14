@@ -31,26 +31,26 @@ import (
  APNS_VOIP_CERTIFICATE_PRIVATE_KEY - APNs Certificate Private Key File content
 **/
 
-type testAccAwsPinpointAPNSVoipChannelCertConfiguration struct {
+type testAccAWSPinpointAPNSVoipChannelCertConfiguration struct {
 	Certificate string
 	PrivateKey  string
 }
 
-type testAccAwsPinpointAPNSVoipChannelTokenConfiguration struct {
+type testAccAWSPinpointAPNSVoipChannelTokenConfiguration struct {
 	BundleId   string
 	TeamId     string
 	TokenKey   string
 	TokenKeyId string
 }
 
-func testAccAwsPinpointAPNSVoipChannelCertConfigurationFromEnv(t *testing.T) *testAccAwsPinpointAPNSVoipChannelCertConfiguration {
-	var conf *testAccAwsPinpointAPNSVoipChannelCertConfiguration
+func testAccAPNSVoIPChannelCertConfigurationFromEnv(t *testing.T) *testAccAWSPinpointAPNSVoipChannelCertConfiguration {
+	var conf *testAccAWSPinpointAPNSVoipChannelCertConfiguration
 	if os.Getenv("APNS_VOIP_CERTIFICATE") != "" {
 		if os.Getenv("APNS_VOIP_CERTIFICATE_PRIVATE_KEY") == "" {
 			t.Fatalf("APNS_VOIP_CERTIFICATE set but missing APNS_VOIP_CERTIFICATE_PRIVATE_KEY")
 		}
 
-		conf = &testAccAwsPinpointAPNSVoipChannelCertConfiguration{
+		conf = &testAccAWSPinpointAPNSVoipChannelCertConfiguration{
 			Certificate: fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_VOIP_CERTIFICATE"))),
 			PrivateKey:  fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_VOIP_CERTIFICATE_PRIVATE_KEY"))),
 		}
@@ -63,7 +63,7 @@ func testAccAwsPinpointAPNSVoipChannelCertConfigurationFromEnv(t *testing.T) *te
 	return conf
 }
 
-func testAccAwsPinpointAPNSVoipChannelTokenConfigurationFromEnv(t *testing.T) *testAccAwsPinpointAPNSVoipChannelTokenConfiguration {
+func testAccAPNSVoIPChannelTokenConfigurationFromEnv(t *testing.T) *testAccAWSPinpointAPNSVoipChannelTokenConfiguration {
 	if os.Getenv("APNS_VOIP_BUNDLE_ID") == "" {
 		t.Skipf("APNS_VOIP_BUNDLE_ID env is missing, skipping test")
 	}
@@ -80,7 +80,7 @@ func testAccAwsPinpointAPNSVoipChannelTokenConfigurationFromEnv(t *testing.T) *t
 		t.Skipf("APNS_VOIP_TOKEN_KEY_ID env is missing, skipping test")
 	}
 
-	conf := testAccAwsPinpointAPNSVoipChannelTokenConfiguration{
+	conf := testAccAWSPinpointAPNSVoipChannelTokenConfiguration{
 		BundleId:   strconv.Quote(strings.TrimSpace(os.Getenv("APNS_VOIP_BUNDLE_ID"))),
 		TeamId:     strconv.Quote(strings.TrimSpace(os.Getenv("APNS_VOIP_TEAM_ID"))),
 		TokenKey:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_VOIP_TOKEN_KEY"))),
@@ -94,18 +94,18 @@ func TestAccAWSPinpointAPNSVoipChannel_basicCertificate(t *testing.T) {
 	var channel pinpoint.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
 
-	configuration := testAccAwsPinpointAPNSVoipChannelCertConfigurationFromEnv(t)
+	configuration := testAccAPNSVoIPChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAPNSVoipChannelDestroy,
+		CheckDestroy: testAccCheckAPNSVoIPChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAPNSVoipChannelConfig_basicCertificate(configuration),
+				Config: testAccAPNSVoIPChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSVoipChannelExists(resourceName, &channel),
+					testAccCheckAPNSVoIPChannelExists(resourceName, &channel),
 				),
 			},
 			{
@@ -115,9 +115,9 @@ func TestAccAWSPinpointAPNSVoipChannel_basicCertificate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"certificate", "private_key"},
 			},
 			{
-				Config: testAccAWSPinpointAPNSVoipChannelConfig_basicCertificate(configuration),
+				Config: testAccAPNSVoIPChannelConfig_basicCertificate(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSVoipChannelExists(resourceName, &channel),
+					testAccCheckAPNSVoIPChannelExists(resourceName, &channel),
 				),
 			},
 		},
@@ -128,18 +128,18 @@ func TestAccAWSPinpointAPNSVoipChannel_basicToken(t *testing.T) {
 	var channel pinpoint.APNSVoipChannelResponse
 	resourceName := "aws_pinpoint_apns_voip_channel.test_channel"
 
-	configuration := testAccAwsPinpointAPNSVoipChannelTokenConfigurationFromEnv(t)
+	configuration := testAccAPNSVoIPChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAPNSVoipChannelDestroy,
+		CheckDestroy: testAccCheckAPNSVoIPChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAPNSVoipChannelConfig_basicToken(configuration),
+				Config: testAccAPNSVoIPChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSVoipChannelExists(resourceName, &channel),
+					testAccCheckAPNSVoIPChannelExists(resourceName, &channel),
 				),
 			},
 			{
@@ -149,16 +149,16 @@ func TestAccAWSPinpointAPNSVoipChannel_basicToken(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"team_id", "bundle_id", "token_key", "token_key_id"},
 			},
 			{
-				Config: testAccAWSPinpointAPNSVoipChannelConfig_basicToken(configuration),
+				Config: testAccAPNSVoIPChannelConfig_basicToken(configuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAPNSVoipChannelExists(resourceName, &channel),
+					testAccCheckAPNSVoIPChannelExists(resourceName, &channel),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSPinpointAPNSVoipChannelExists(n string, channel *pinpoint.APNSVoipChannelResponse) resource.TestCheckFunc {
+func testAccCheckAPNSVoIPChannelExists(n string, channel *pinpoint.APNSVoipChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -187,7 +187,7 @@ func testAccCheckAWSPinpointAPNSVoipChannelExists(n string, channel *pinpoint.AP
 	}
 }
 
-func testAccAWSPinpointAPNSVoipChannelConfig_basicCertificate(conf *testAccAwsPinpointAPNSVoipChannelCertConfiguration) string {
+func testAccAPNSVoIPChannelConfig_basicCertificate(conf *testAccAWSPinpointAPNSVoipChannelCertConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -201,7 +201,7 @@ resource "aws_pinpoint_apns_voip_channel" "test_channel" {
 `, conf.Certificate, conf.PrivateKey)
 }
 
-func testAccAWSPinpointAPNSVoipChannelConfig_basicToken(conf *testAccAwsPinpointAPNSVoipChannelTokenConfiguration) string {
+func testAccAPNSVoIPChannelConfig_basicToken(conf *testAccAWSPinpointAPNSVoipChannelTokenConfiguration) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
@@ -219,7 +219,7 @@ resource "aws_pinpoint_apns_voip_channel" "test_channel" {
 `, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
 }
 
-func testAccCheckAWSPinpointAPNSVoipChannelDestroy(s *terraform.State) error {
+func testAccCheckAPNSVoIPChannelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {

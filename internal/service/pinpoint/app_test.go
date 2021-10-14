@@ -20,11 +20,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_pinpoint_app", &resource.Sweeper{
 		Name: "aws_pinpoint_app",
-		F:    testSweepPinpointApps,
+		F:    sweepApps,
 	})
 }
 
-func testSweepPinpointApps(region string) error {
+func sweepApps(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -74,15 +74,15 @@ func TestAccAWSPinpointApp_basic(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAppDestroy,
+		CheckDestroy: testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAppConfig_withGeneratedName,
+				Config: testAccAppConfig_withGeneratedName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					testAccCheckAppExists(resourceName, &application),
 				),
 			},
 			{
@@ -100,15 +100,15 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAppDestroy,
+		CheckDestroy: testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAppConfig_CampaignHookLambda(rName),
+				Config: testAccAppConfig_CampaignHookLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.0.mode", "DELIVERY"),
 				),
@@ -128,15 +128,15 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAppDestroy,
+		CheckDestroy: testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAppConfig_Limits(rName),
+				Config: testAccAppConfig_Limits(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "limits.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "limits.0.total", "100"),
 				),
@@ -156,15 +156,15 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPinpointAppDestroy,
+		CheckDestroy: testAccCheckAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAppConfig_QuietTime(rName),
+				Config: testAccAppConfig_QuietTime(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.0.start", "00:00"),
 				),
@@ -184,15 +184,15 @@ func TestAccAWSPinpointApp_Tags(t *testing.T) {
 	resourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
+		CheckDestroy: testAccCheckRAMResourceShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPinpointAppConfig_Tag1(rName, "key1", "value1"),
+				Config: testAccAppConfig_Tag1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -203,18 +203,18 @@ func TestAccAWSPinpointApp_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSPinpointAppConfig_Tag2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAppConfig_Tag2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSPinpointAppConfig_Tag1(rName, "key2", "value2"),
+				Config: testAccAppConfig_Tag1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					testAccCheckAppExists(resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -223,7 +223,7 @@ func TestAccAWSPinpointApp_Tags(t *testing.T) {
 	})
 }
 
-func testAccPreCheckAWSPinpointApp(t *testing.T) {
+func testAccPreCheckApp(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	input := &pinpoint.GetAppsInput{}
@@ -239,7 +239,7 @@ func testAccPreCheckAWSPinpointApp(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSPinpointAppExists(n string, application *pinpoint.ApplicationResponse) resource.TestCheckFunc {
+func testAccCheckAppExists(n string, application *pinpoint.ApplicationResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -268,11 +268,11 @@ func testAccCheckAWSPinpointAppExists(n string, application *pinpoint.Applicatio
 	}
 }
 
-const testAccAWSPinpointAppConfig_withGeneratedName = `
+const testAccAppConfig_withGeneratedName = `
 resource "aws_pinpoint_app" "test" {}
 `
 
-func testAccAWSPinpointAppConfig_CampaignHookLambda(rName string) string {
+func testAccAppConfig_CampaignHookLambda(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q
@@ -330,7 +330,7 @@ resource "aws_lambda_permission" "test" {
 `, rName)
 }
 
-func testAccAWSPinpointAppConfig_Limits(rName string) string {
+func testAccAppConfig_Limits(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q
@@ -345,7 +345,7 @@ resource "aws_pinpoint_app" "test" {
 `, rName)
 }
 
-func testAccAWSPinpointAppConfig_QuietTime(rName string) string {
+func testAccAppConfig_QuietTime(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q
@@ -358,7 +358,7 @@ resource "aws_pinpoint_app" "test" {
 `, rName)
 }
 
-func testAccAWSPinpointAppConfig_Tag1(rName, tagKey1, tagValue1 string) string {
+func testAccAppConfig_Tag1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q
@@ -370,7 +370,7 @@ resource "aws_pinpoint_app" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSPinpointAppConfig_Tag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAppConfig_Tag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test" {
   name = %[1]q
@@ -383,7 +383,7 @@ resource "aws_pinpoint_app" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccCheckAWSPinpointAppDestroy(s *terraform.State) error {
+func testAccCheckAppDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -408,7 +408,7 @@ func testAccCheckAWSPinpointAppDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsRamResourceShareDestroy(s *terraform.State) error {
+func testAccCheckRAMResourceShareDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
 
 	for _, rs := range s.RootModule().Resources {
