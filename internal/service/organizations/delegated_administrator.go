@@ -92,7 +92,7 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-	accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(d.Id())
+	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
 	}
@@ -135,7 +135,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-	accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(d.Id())
+	accountID, servicePrincipal, err := DecodeOrganizationDelegatedAdministratorID(d.Id())
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
 	}
@@ -151,7 +151,7 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func decodeOrganizationDelegatedAdministratorID(id string) (string, string, error) {
+func DecodeOrganizationDelegatedAdministratorID(id string) (string, string, error) {
 	idParts := strings.Split(id, "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return "", "", fmt.Errorf("expected ID in the form of account_id/service_principal, given: %q", id)

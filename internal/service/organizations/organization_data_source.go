@@ -222,7 +222,7 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("error setting non_master_accounts: %w", err)
 		}
 
-		if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
+		if err := d.Set("roots", FlattenRoots(roots)); err != nil {
 			return fmt.Errorf("error setting roots: %w", err)
 		}
 

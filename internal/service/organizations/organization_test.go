@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 )
 
 func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
@@ -392,7 +393,7 @@ func TestFlattenOrganizationsRoots(t *testing.T) {
 			},
 		},
 	}
-	result := flattenOrganizationsRoots(roots)
+	result := tforganizations.FlattenRoots(roots)
 
 	if len(result) != len(roots) {
 		t.Fatalf("expected result to have %d elements, got %d", len(roots), len(result))
