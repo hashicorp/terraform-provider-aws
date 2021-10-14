@@ -22,56 +22,10 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(transfer.EndpointsID, testAccErrorCheckSkipTransfer)
 
-	resource.AddTestSweepers("aws_transfer_server", &resource.Sweeper{
-		Name: "aws_transfer_server",
-		F:    sweepServers,
-	})
+
 }
 
-func sweepServers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).TransferConn
-	input := &transfer.ListServersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.ListServersPages(input, func(page *transfer.ListServersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, server := range page.Servers {
-			r := tftransfer.ResourceServer()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(server.ServerId))
-			d.Set("force_destroy", true) // In lieu of an aws_transfer_user sweeper.
-			d.Set("identity_provider_type", server.IdentityProviderType)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Transfer Server sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Transfer Servers (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Transfer Servers (%s): %w", region, err)
-	}
-
-	return nil
-}
 
 func testAccErrorCheckSkipTransfer(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
