@@ -113,7 +113,7 @@ func dataSourceResourcesRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("tag_filter"); ok {
-		input.TagFilters = expandAwsResourceGroupsTaggingAPITagFilters(v.([]interface{}))
+		input.TagFilters = expandTagFilters(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("resource_type_filters"); ok && v.(*schema.Set).Len() > 0 {
@@ -136,14 +136,14 @@ func dataSourceResourcesRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(meta.(*conns.AWSClient).Partition)
 
-	if err := d.Set("resource_tag_mapping_list", flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(taggings)); err != nil {
+	if err := d.Set("resource_tag_mapping_list", flattenResourcesTagMappingList(taggings)); err != nil {
 		return fmt.Errorf("error setting resource tag mapping list: %w", err)
 	}
 
 	return nil
 }
 
-func expandAwsResourceGroupsTaggingAPITagFilters(filters []interface{}) []*resourcegroupstaggingapi.TagFilter {
+func expandTagFilters(filters []interface{}) []*resourcegroupstaggingapi.TagFilter {
 	result := make([]*resourcegroupstaggingapi.TagFilter, len(filters))
 
 	for i, filter := range filters {
@@ -161,7 +161,7 @@ func expandAwsResourceGroupsTaggingAPITagFilters(filters []interface{}) []*resou
 	return result
 }
 
-func flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(list []*resourcegroupstaggingapi.ResourceTagMapping) []map[string]interface{} {
+func flattenResourcesTagMappingList(list []*resourcegroupstaggingapi.ResourceTagMapping) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 
 	for _, i := range list {
@@ -171,7 +171,7 @@ func flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(list []*resourceg
 		}
 
 		if i.ComplianceDetails != nil {
-			l["compliance_details"] = flattenAwsResourceGroupsTaggingAPIComplianceDetails(i.ComplianceDetails)
+			l["compliance_details"] = flattenComplianceDetails(i.ComplianceDetails)
 		}
 
 		result = append(result, l)
@@ -180,7 +180,7 @@ func flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(list []*resourceg
 	return result
 }
 
-func flattenAwsResourceGroupsTaggingAPIComplianceDetails(details *resourcegroupstaggingapi.ComplianceDetails) []map[string]interface{} {
+func flattenComplianceDetails(details *resourcegroupstaggingapi.ComplianceDetails) []map[string]interface{} {
 	if details == nil {
 		return []map[string]interface{}{}
 	}
