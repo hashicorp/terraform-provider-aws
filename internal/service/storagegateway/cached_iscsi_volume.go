@@ -121,7 +121,7 @@ func resourceCachediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) e
 		NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
 		TargetName:         aws.String(d.Get("target_name").(string)),
 		VolumeSizeInBytes:  aws.Int64(int64(d.Get("volume_size_in_bytes").(int))),
-		Tags:               tags.IgnoreAws().StoragegatewayTags(),
+		Tags:               Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("snapshot_id"); ok {
@@ -156,7 +156,7 @@ func resourceCachediSCSIVolumeUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -206,7 +206,7 @@ func resourceCachediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("kms_encrypted", false)
 	}
 
-	tags, err := tftags.StoragegatewayListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
 	}

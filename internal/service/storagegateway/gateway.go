@@ -329,7 +329,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 		GatewayName:     aws.String(d.Get("gateway_name").(string)),
 		GatewayTimezone: aws.String(d.Get("gateway_timezone").(string)),
 		GatewayType:     aws.String(d.Get("gateway_type").(string)),
-		Tags:            tags.IgnoreAws().StoragegatewayTags(),
+		Tags:            Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("medium_changer_type"); ok {
@@ -465,7 +465,7 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Storage Gateway Gateway: %w", err)
 	}
 
-	tags := tftags.StoragegatewayKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -610,7 +610,7 @@ func resourceGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

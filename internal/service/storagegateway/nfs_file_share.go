@@ -225,7 +225,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                 aws.String(d.Get("role_arn").(string)),
 		Squash:               aws.String(d.Get("squash").(string)),
-		Tags:                 tags.IgnoreAws().StoragegatewayTags(),
+		Tags:                 Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -319,7 +319,7 @@ func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("squash", fileshare.Squash)
 	d.Set("notification_policy", fileshare.NotificationPolicy)
 
-	tags := tftags.StoragegatewayKeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -338,7 +338,7 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

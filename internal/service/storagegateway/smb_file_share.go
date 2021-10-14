@@ -279,7 +279,7 @@ func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().StoragegatewayTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %s", input)
@@ -351,7 +351,7 @@ func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("valid_user_list", aws.StringValueSlice(fileshare.ValidUserList))
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
-	tags := tftags.StoragegatewayKeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -442,7 +442,7 @@ func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
