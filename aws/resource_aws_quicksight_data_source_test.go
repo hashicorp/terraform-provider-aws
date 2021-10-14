@@ -507,7 +507,7 @@ func testAccCheckQuickSightDataSourceDestroy(s *terraform.State) error {
 			DataSourceId: aws.String(dataSourceId),
 		})
 
-		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
