@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepSnsPlatformApplications(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).snsconn
+	conn := client.(*conns.AWSClient).SNSConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListPlatformApplicationsPages(&sns.ListPlatformApplicationsInput{}, func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
@@ -410,7 +411,7 @@ func testAccCheckAwsSnsPlatformApplicationExists(name string) resource.TestCheck
 			return fmt.Errorf("missing ID: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).snsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 		input := &sns.GetPlatformApplicationAttributesInput{
 			PlatformApplicationArn: aws.String(rs.Primary.ID),
@@ -424,7 +425,7 @@ func testAccCheckAwsSnsPlatformApplicationExists(name string) resource.TestCheck
 }
 
 func testAccCheckAWSSNSPlatformApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).snsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_platform_application" {

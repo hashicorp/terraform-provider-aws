@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSnsTopicSubscription() *schema.Resource {
@@ -122,7 +123,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 }
 
 func resourceAwsSnsTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	input := &sns.SubscribeInput{
 		Attributes:            expandSNSSubscriptionAttributes(d),
@@ -169,7 +170,7 @@ func resourceAwsSnsTopicSubscriptionCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	var output *sns.GetSubscriptionAttributesOutput
 
@@ -240,7 +241,7 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	if d.HasChange("raw_message_delivery") {
 		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "RawMessageDelivery", fmt.Sprintf("%t", d.Get("raw_message_delivery").(bool))); err != nil {
@@ -292,7 +293,7 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsSnsTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).snsconn
+	conn := meta.(*conns.AWSClient).SNSConn
 
 	log.Printf("[DEBUG] SNS delete topic subscription: %s", d.Id())
 	_, err := conn.Unsubscribe(&sns.UnsubscribeInput{

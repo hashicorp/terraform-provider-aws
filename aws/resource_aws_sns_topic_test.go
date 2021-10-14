@@ -16,6 +16,7 @@ import (
 	tfsns "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -52,7 +53,7 @@ func testSweepSnsTopics(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).snsconn
+	conn := client.(*conns.AWSClient).SNSConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListTopicsPages(&sns.ListTopicsInput{}, func(page *sns.ListTopicsOutput, lastPage bool) bool {
@@ -582,7 +583,7 @@ func testAccCheckAWSNSTopicHasPolicy(n string, expectedPolicyText string) resour
 			return fmt.Errorf("No SNS topic with that ARN exists")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).snsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 		params := &sns.GetTopicAttributesInput{
 			TopicArn: aws.String(rs.Primary.ID),
@@ -624,7 +625,7 @@ func testAccCheckAWSNSTopicHasDeliveryPolicy(n string, expectedPolicyText string
 			return fmt.Errorf("no Queue URL specified")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).snsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 		params := &sns.GetTopicAttributesInput{
 			TopicArn: aws.String(rs.Primary.ID),
@@ -654,7 +655,7 @@ func testAccCheckAWSNSTopicHasDeliveryPolicy(n string, expectedPolicyText string
 }
 
 func testAccCheckAWSSNSTopicDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).snsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_topic" {
@@ -689,7 +690,7 @@ func testAccCheckAWSSNSTopicExists(n string, attributes map[string]string) resou
 			return fmt.Errorf("No SNS topic with that ARN exists")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).snsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 		params := &sns.GetTopicAttributesInput{
 			TopicArn: aws.String(rs.Primary.ID),

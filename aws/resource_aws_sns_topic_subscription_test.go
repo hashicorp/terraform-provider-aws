@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
@@ -484,7 +485,7 @@ func TestAccAWSSNSTopicSubscription_disappears_topic(t *testing.T) {
 }
 
 func testAccCheckAWSSNSTopicSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).snsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_topic_subscription" {
@@ -517,7 +518,7 @@ func testAccCheckAWSSNSTopicSubscriptionExists(n string, attributes map[string]s
 			return fmt.Errorf("No SNS subscription with that ARN exists")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).snsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
 		output, err := finder.SubscriptionByARN(conn, rs.Primary.ID)
 		for k, v := range output.Attributes {
