@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsEmrManagedScalingPolicy_basic(t *testing.T) {
@@ -102,7 +103,7 @@ func TestAccAwsEmrManagedScalingPolicy_disappears(t *testing.T) {
 				Config: testAccAWSEmrManagedScalingPolicy_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrManagedScalingPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEMRManagedScalingPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceManagedScalingPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
