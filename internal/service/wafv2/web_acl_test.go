@@ -64,7 +64,7 @@ func testSweepWafv2WebAcls(region string) error {
 
 			id := aws.StringValue(webAcl.Id)
 
-			r := ResourceWebACL()
+			r := tfwafv2.ResourceWebACL()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("lock_token", webAcl.LockToken)
@@ -537,7 +537,7 @@ func TestAccAwsWafv2WebACL_disappears(t *testing.T) {
 				Config: testAccAwsWafv2WebACLConfig_Minimal(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceWebACL(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

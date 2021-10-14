@@ -51,7 +51,7 @@ func testSweepWafv2RegexPatternSets(region string) error {
 		for _, regexPatternSet := range page.RegexPatternSets {
 			id := aws.StringValue(regexPatternSet.Id)
 
-			r := ResourceRegexPatternSet()
+			r := tfwafv2.ResourceRegexPatternSet()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("lock_token", regexPatternSet.LockToken)
@@ -157,7 +157,7 @@ func TestAccAwsWafv2RegexPatternSet_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2RegexPatternSetConfig_Minimal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2RegexPatternSetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRegexPatternSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceRegexPatternSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

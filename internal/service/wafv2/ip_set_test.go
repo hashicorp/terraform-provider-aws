@@ -51,7 +51,7 @@ func testSweepWafv2IpSets(region string) error {
 		for _, ipSet := range page.IPSets {
 			id := aws.StringValue(ipSet.Id)
 
-			r := ResourceIPSet()
+			r := tfwafv2.ResourceIPSet()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("lock_token", ipSet.LockToken)
@@ -145,7 +145,7 @@ func TestAccAwsWafv2IPSet_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2IPSetConfig(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2IPSetExists(resourceName, &r),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceIPSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
