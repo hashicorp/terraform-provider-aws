@@ -14,14 +14,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func resourceAwsEMRCluster() *schema.Resource {
@@ -806,7 +809,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			instanceConfig.Ec2SubnetId = aws.String(v.(string))
 		}
 		if v, ok := attributes["subnet_ids"]; ok {
-			instanceConfig.Ec2SubnetIds = expandStringSet(v.(*schema.Set))
+			instanceConfig.Ec2SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := attributes["additional_master_security_groups"]; ok {
@@ -1455,7 +1458,7 @@ func countEMRRemainingInstances(resp *emr.ListInstancesOutput, emrClusterId stri
 func expandApplications(apps []interface{}) []*emr.Application {
 	appOut := make([]*emr.Application, 0, len(apps))
 
-	for _, appName := range expandStringList(apps) {
+	for _, appName := range flex.ExpandStringList(apps) {
 		app := &emr.Application{
 			Name: appName,
 		}
@@ -1484,7 +1487,7 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 		attrs["subnet_id"] = *ia.Ec2SubnetId
 	}
 	if ia.RequestedEc2SubnetIds != nil && len(ia.RequestedEc2SubnetIds) > 0 {
-		attrs["subnet_ids"] = flattenStringSet(ia.RequestedEc2SubnetIds)
+		attrs["subnet_ids"] = flex.FlattenStringSet(ia.RequestedEc2SubnetIds)
 	}
 	if ia.IamInstanceProfile != nil {
 		attrs["instance_profile"] = *ia.IamInstanceProfile
@@ -1722,7 +1725,7 @@ func flattenBootstrapArguments(actions []*emr.Command) []map[string]interface{} 
 		attrs := make(map[string]interface{})
 		attrs["name"] = *b.Name
 		attrs["path"] = *b.ScriptPath
-		attrs["args"] = flattenStringList(b.Args)
+		attrs["args"] = flex.FlattenStringList(b.Args)
 		result = append(result, attrs)
 	}
 
@@ -1751,7 +1754,7 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 			Name: aws.String(actionName),
 			ScriptBootstrapAction: &emr.ScriptBootstrapActionConfig{
 				Path: aws.String(actionPath),
-				Args: expandStringList(actionArgs),
+				Args: flex.ExpandStringList(actionArgs),
 			},
 		}
 		actionsOut = append(actionsOut, action)
@@ -1766,7 +1769,7 @@ func expandEmrHadoopJarStepConfig(m map[string]interface{}) *emr.HadoopJarStepCo
 	}
 
 	if v, ok := m["args"]; ok {
-		hadoopJarStepConfig.Args = expandStringList(v.([]interface{}))
+		hadoopJarStepConfig.Args = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := m["main_class"]; ok {
@@ -2088,7 +2091,6 @@ func flattenInstanceFleet(instanceFleet *emr.InstanceFleet) []interface{} {
 	}
 
 	return []interface{}{m}
-
 }
 
 func flatteninstanceTypeConfigs(instanceTypeSpecifications []*emr.InstanceTypeSpecification) *schema.Set {
@@ -2295,4 +2297,23 @@ func resourceAwsEMRInstanceTypeConfigHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%f-", v.(float64)))
 	}
 	return create.StringHashcode(buf.String())
+}
+
+func removeNil(data map[string]interface{}) map[string]interface{} {
+	withoutNil := make(map[string]interface{})
+
+	for k, v := range data {
+		if v == nil {
+			continue
+		}
+
+		switch v := v.(type) {
+		case map[string]interface{}:
+			withoutNil[k] = removeNil(v)
+		default:
+			withoutNil[k] = v
+		}
+	}
+
+	return withoutNil
 }
