@@ -21,59 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_batch_job_definition", &resource.Sweeper{
-		Name: "aws_batch_job_definition",
-		F:    sweepJobDefinitions,
-		Dependencies: []string{
-			"aws_batch_job_queue",
-		},
-	})
-}
 
-func sweepJobDefinitions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).BatchConn
-	input := &batch.DescribeJobDefinitionsInput{
-		Status: aws.String("ACTIVE"),
-	}
-	var sweeperErrs *multierror.Error
 
-	err = conn.DescribeJobDefinitionsPages(input, func(page *batch.DescribeJobDefinitionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, jobDefinition := range page.JobDefinitions {
-			arn := aws.StringValue(jobDefinition.JobDefinitionArn)
-
-			log.Printf("[INFO] Deleting Batch Job Definition: %s", arn)
-			_, err := conn.DeregisterJobDefinition(&batch.DeregisterJobDefinitionInput{
-				JobDefinition: aws.String(arn),
-			})
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Batch Job Definition (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Batch Job Definitions sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Batch Job Definitions: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccBatchJobDefinition_basic(t *testing.T) {
 	var jd batch.JobDefinition

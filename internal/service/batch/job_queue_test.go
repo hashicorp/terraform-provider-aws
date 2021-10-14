@@ -18,47 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_batch_job_queue", &resource.Sweeper{
-		Name: "aws_batch_job_queue",
-		F:    sweepJobQueues,
-	})
-}
 
-func sweepJobQueues(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).BatchConn
 
-	out, err := conn.DescribeJobQueues(&batch.DescribeJobQueuesInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Batch Job Queue sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Batch Job Queues: %s", err)
-	}
-	for _, jobQueue := range out.JobQueues {
-		name := jobQueue.JobQueueName
 
-		log.Printf("[INFO] Disabling Batch Job Queue: %s", *name)
-		err := tfbatch.DisableJobQueue(*name, conn)
-		if err != nil {
-			log.Printf("[ERROR] Failed to disable Batch Job Queue %s: %s", *name, err)
-			continue
-		}
-
-		log.Printf("[INFO] Deleting Batch Job Queue: %s", *name)
-		err = tfbatch.DeleteJobQueue(*name, conn)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Batch Job Queue %s: %s", *name, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccBatchJobQueue_basic(t *testing.T) {
 	var jobQueue1 batch.JobQueueDetail
