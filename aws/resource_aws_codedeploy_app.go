@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeDeployApp() *schema.Resource {
+func ResourceApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeDeployAppCreate,
-		Read:   resourceAwsCodeDeployAppRead,
+		Create: resourceAppCreate,
+		Read:   resourceAppRead,
 		Update: resourceAwsCodeDeployUpdate,
-		Delete: resourceAwsCodeDeployAppDelete,
+		Delete: resourceAppDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -91,7 +91,7 @@ func resourceAwsCodeDeployApp() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeDeployAppCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -117,10 +117,10 @@ func resourceAwsCodeDeployAppCreate(d *schema.ResourceData, meta interface{}) er
 	// it first from the TF config.
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(resp.ApplicationId), application))
 
-	return resourceAwsCodeDeployAppRead(d, meta)
+	return resourceAppRead(d, meta)
 }
 
-func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -211,10 +211,10 @@ func resourceAwsCodeDeployUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsCodeDeployAppRead(d, meta)
+	return resourceAppRead(d, meta)
 }
 
-func resourceAwsCodeDeployAppDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	_, err := conn.DeleteApplication(&codedeploy.DeleteApplicationInput{

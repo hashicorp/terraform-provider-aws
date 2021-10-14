@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
+func ResourceDeploymentGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeDeployDeploymentGroupCreate,
-		Read:   resourceAwsCodeDeployDeploymentGroupRead,
-		Update: resourceAwsCodeDeployDeploymentGroupUpdate,
-		Delete: resourceAwsCodeDeployDeploymentGroupDelete,
+		Create: resourceDeploymentGroupCreate,
+		Read:   resourceDeploymentGroupRead,
+		Update: resourceDeploymentGroupUpdate,
+		Delete: resourceDeploymentGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
@@ -480,7 +480,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -577,10 +577,10 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(resp.DeploymentGroupId))
 
-	return resourceAwsCodeDeployDeploymentGroupRead(d, meta)
+	return resourceDeploymentGroupRead(d, meta)
 }
 
-func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -691,7 +691,7 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -813,10 +813,10 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceAwsCodeDeployDeploymentGroupRead(d, meta)
+	return resourceDeploymentGroupRead(d, meta)
 }
 
-func resourceAwsCodeDeployDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())

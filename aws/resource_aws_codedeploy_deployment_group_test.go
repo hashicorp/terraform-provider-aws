@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
@@ -219,7 +220,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeDeployDeploymentGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDeploymentGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -242,7 +243,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears_app(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeDeployApp(), "aws_codedeploy_app.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceApp(), "aws_codedeploy_app.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
