@@ -27,14 +27,14 @@ func TestAccAWSSignerSigningProfilePermission_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
+		CheckDestroy: testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccAWSSignerSigningProfilePermissionConfig(profileName),
+				Config:  testAccSigningProfilePermissionConfig(profileName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
-					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName, profileName, &sppconf),
+					testAccCheckSigningProfileExists(profileResourceName, &conf),
+					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
 					create.TestCheckResourceAttrNameGenerated(resourceName, "statement_id"),
 				),
 			},
@@ -61,14 +61,14 @@ func TestAccAWSSignerSigningProfilePermission_GetSigningProfile(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
+		CheckDestroy: testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccAWSSignerSigningProfilePermissionGetSP(profileName),
+				Config:  testAccSigningProfilePermissionGetSP(profileName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
-					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName, profileName, &sppconf),
+					testAccCheckSigningProfileExists(profileResourceName, &conf),
+					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
 				),
 			},
 			{
@@ -78,11 +78,11 @@ func TestAccAWSSignerSigningProfilePermission_GetSigningProfile(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 			{
-				Config:  testAccAWSSignerSigningProfilePermissionRevokeSignature(profileName),
+				Config:  testAccSigningProfilePermissionRevokeSignature(profileName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
-					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName, profileName, &sppconf),
+					testAccCheckSigningProfileExists(profileResourceName, &conf),
+					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
 				),
 			},
 		},
@@ -103,14 +103,14 @@ func TestAccAWSSignerSigningProfilePermission_StartSigningJob_GetSP(t *testing.T
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
+		CheckDestroy: testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSignerSigningProfilePermissionStartSigningJobGetSP(profileName),
+				Config: testAccSigningProfilePermissionStartSigningJobGetSP(profileName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
-					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName1, profileName, &sppconf),
-					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName2, profileName, &sppconf),
+					testAccCheckSigningProfileExists(profileResourceName, &conf),
+					testAccCheckSigningProfilePermissionExists(resourceName1, profileName, &sppconf),
+					testAccCheckSigningProfilePermissionExists(resourceName2, profileName, &sppconf),
 				),
 			},
 			{
@@ -137,12 +137,12 @@ func TestAccAWSSignerSigningProfilePermission_StatementPrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
+		CheckDestroy: testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSignerSigningProfilePermissionStatementPrefix(statementNamePrefix, profileName),
+				Config: testAccSigningProfilePermissionStatementPrefix(statementNamePrefix, profileName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName, profileName, &sppconf),
+					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
 					create.TestCheckResourceAttrNameFromPrefix(resourceName, "statement_id", statementNamePrefix),
 				),
 			},
@@ -156,8 +156,8 @@ func TestAccAWSSignerSigningProfilePermission_StatementPrefix(t *testing.T) {
 	})
 }
 
-func testAccAWSSignerSigningProfilePermissionConfig(profileName string) string {
-	return fmt.Sprintf(testAccAWSSignerSigningProfilePermissionConfig_base(profileName) + `
+func testAccSigningProfilePermissionConfig(profileName string) string {
+	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName) + `
 data "aws_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "test_sp_permission" {
@@ -167,8 +167,8 @@ resource "aws_signer_signing_profile_permission" "test_sp_permission" {
 }`)
 }
 
-func testAccAWSSignerSigningProfilePermissionStartSigningJobGetSP(profileName string) string {
-	return fmt.Sprintf(testAccAWSSignerSigningProfilePermissionConfig_base(profileName) + `
+func testAccSigningProfilePermissionStartSigningJobGetSP(profileName string) string {
+	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName) + `
 data "aws_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "sp1_perm" {
@@ -186,8 +186,8 @@ resource "aws_signer_signing_profile_permission" "sp2_perm" {
 }`)
 }
 
-func testAccAWSSignerSigningProfilePermissionStatementPrefix(statementNamePrefix, profileName string) string {
-	return fmt.Sprintf(testAccAWSSignerSigningProfilePermissionConfig_base(profileName)+`
+func testAccSigningProfilePermissionStatementPrefix(statementNamePrefix, profileName string) string {
+	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName)+`
 data "aws_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "sp1_perm" {
@@ -198,8 +198,8 @@ resource "aws_signer_signing_profile_permission" "sp1_perm" {
 }`, statementNamePrefix)
 }
 
-func testAccAWSSignerSigningProfilePermissionGetSP(profileName string) string {
-	return fmt.Sprintf(testAccAWSSignerSigningProfilePermissionConfig_base(profileName) + `
+func testAccSigningProfilePermissionGetSP(profileName string) string {
+	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName) + `
 data "aws_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "test_sp_permission" {
@@ -209,8 +209,8 @@ resource "aws_signer_signing_profile_permission" "test_sp_permission" {
 }`)
 }
 
-func testAccAWSSignerSigningProfilePermissionRevokeSignature(profileName string) string {
-	return fmt.Sprintf(testAccAWSSignerSigningProfilePermissionConfig_base(profileName) + `
+func testAccSigningProfilePermissionRevokeSignature(profileName string) string {
+	return fmt.Sprintf(testAccSigningProfilePermissionConfig_base(profileName) + `
 data "aws_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile_permission" "test_sp_permission" {
@@ -220,7 +220,7 @@ resource "aws_signer_signing_profile_permission" "test_sp_permission" {
 }`)
 }
 
-func testAccAWSSignerSigningProfilePermissionConfig_base(profileName string) string {
+func testAccSigningProfilePermissionConfig_base(profileName string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -228,7 +228,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 }`, profileName)
 }
 
-func testAccCheckAWSSignerSigningProfilePermissionExists(res, profileName string, spp *signer.ListProfilePermissionsOutput) resource.TestCheckFunc {
+func testAccCheckSigningProfilePermissionExists(res, profileName string, spp *signer.ListProfilePermissionsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[res]
 		if !ok {

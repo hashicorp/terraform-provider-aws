@@ -28,10 +28,10 @@ func TestAccAWSSignerSigningJob_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSignerSigningJobConfig(rName),
+				Config: testAccSigningJobConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
-					testAccCheckAWSSignerSigningJobExists(resourceName, &job),
+					testAccCheckSigningProfileExists(profileResourceName, &conf),
+					testAccCheckSigningJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "status", "Succeeded"),
@@ -42,7 +42,7 @@ func TestAccAWSSignerSigningJob_basic(t *testing.T) {
 
 }
 
-func testAccAWSSignerSigningJobConfig(rName string) string {
+func testAccSigningJobConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -91,7 +91,7 @@ resource "aws_signer_signing_job" "test" {
 `, rName)
 }
 
-func testAccCheckAWSSignerSigningJobExists(res string, job *signer.DescribeSigningJobOutput) resource.TestCheckFunc {
+func testAccCheckSigningJobExists(res string, job *signer.DescribeSigningJobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[res]
 		if !ok {

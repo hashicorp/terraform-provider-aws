@@ -26,12 +26,12 @@ func TestAccAWSSignerSigningProfile_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
+		CheckDestroy: testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSignerSigningProfileConfigProvidedName(profileName),
+				Config: testAccSigningProfileProvidedNameConfig(profileName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(resourceName, &conf),
+					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "name",
 						regexp.MustCompile("^[a-zA-Z0-9_]{0,64}$")),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
@@ -57,12 +57,12 @@ func TestAccAWSSignerSigningProfile_GenerateNameWithNamePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
+		CheckDestroy: testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSignerSigningProfileConfig(namePrefix),
+				Config: testAccSigningProfileConfig(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(resourceName, &conf),
+					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 				),
 			},
@@ -79,12 +79,12 @@ func TestAccAWSSignerSigningProfile_GenerateName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
+		CheckDestroy: testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSignerSigningProfileConfigGenerateName(),
+				Config: testAccSigningProfileGenerateNameConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(resourceName, &conf),
+					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 				),
 			},
@@ -102,20 +102,20 @@ func TestAccAWSSignerSigningProfile_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
+		CheckDestroy: testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSignerSigningProfileConfigTags(namePrefix),
+				Config: testAccSigningProfileTagsConfig(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(resourceName, &conf),
+					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSSignerSigningProfileUpdateTags(),
+				Config: testAccSigningProfileUpdateTags(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(resourceName, &conf),
+					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "prod"),
 				),
 			},
@@ -133,20 +133,20 @@ func TestAccAWSSignerSigningProfile_SignatureValidityPeriod(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
+		CheckDestroy: testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSignerSigningProfileConfigSVP(namePrefix),
+				Config: testAccSigningProfileSVPConfig(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(resourceName, &conf),
+					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.type", "DAYS"),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.value", "10"),
 				),
 			},
 			{
-				Config: testAccAWSSignerSigningProfileUpdateSVP(),
+				Config: testAccSigningProfileUpdateSVP(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(resourceName, &conf),
+					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.type", "MONTHS"),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.value", "10"),
 				),
@@ -187,18 +187,18 @@ func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
 	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 }
 
-func testAccAWSSignerSigningProfileConfig(namePrefix string) string {
+func testAccSigningProfileConfig(namePrefix string) string {
 	return testAccSigningProfileBaseConfig(namePrefix)
 }
 
-func testAccAWSSignerSigningProfileConfigGenerateName() string {
+func testAccSigningProfileGenerateNameConfig() string {
 	return `
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
 }`
 }
 
-func testAccAWSSignerSigningProfileConfigProvidedName(profileName string) string {
+func testAccSigningProfileProvidedNameConfig(profileName string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -206,7 +206,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 }`, profileName)
 }
 
-func testAccAWSSignerSigningProfileConfigTags(namePrefix string) string {
+func testAccSigningProfileTagsConfig(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -218,7 +218,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 }`, namePrefix)
 }
 
-func testAccAWSSignerSigningProfileConfigSVP(namePrefix string) string {
+func testAccSigningProfileSVPConfig(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -232,7 +232,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 `, namePrefix)
 }
 
-func testAccAWSSignerSigningProfileUpdateSVP() string {
+func testAccSigningProfileUpdateSVP() string {
 	return `
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -245,7 +245,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 `
 }
 
-func testAccAWSSignerSigningProfileUpdateTags() string {
+func testAccSigningProfileUpdateTags() string {
 	return `
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -265,7 +265,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 `, namePrefix)
 }
 
-func testAccCheckAWSSignerSigningProfileExists(res string, sp *signer.GetSigningProfileOutput) resource.TestCheckFunc {
+func testAccCheckSigningProfileExists(res string, sp *signer.GetSigningProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[res]
 		if !ok {
@@ -293,7 +293,7 @@ func testAccCheckAWSSignerSigningProfileExists(res string, sp *signer.GetSigning
 	}
 }
 
-func testAccCheckAWSSignerSigningProfileDestroy(s *terraform.State) error {
+func testAccCheckSigningProfileDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
 
 	time.Sleep(5 * time.Second)

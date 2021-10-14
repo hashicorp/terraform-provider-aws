@@ -22,7 +22,7 @@ func TestAccDataSourceAWSSignerSigningProfile_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSSignerSigningProfileConfigBasic(profileName),
+				Config: testAccSigningProfileBasicDataSourceConfig(profileName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "platform_id", resourceName, "platform_id"),
@@ -38,7 +38,7 @@ func TestAccDataSourceAWSSignerSigningProfile_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSSignerSigningProfileConfigBasic(profileName string) string {
+func testAccSigningProfileBasicDataSourceConfig(profileName string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test" {
   platform_id = "AWSLambda-SHA384-ECDSA"

@@ -21,7 +21,7 @@ func TestAccDataSourceAWSSignerSigningJob_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSSignerSigningJobConfigBasic(rName),
+				Config: testAccSigningJobBasicDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "job_owner", resourceName, "job_owner"),
@@ -33,7 +33,7 @@ func TestAccDataSourceAWSSignerSigningJob_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSSignerSigningJobConfigBasic(rName string) string {
+func testAccSigningJobBasicDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
