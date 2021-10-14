@@ -82,7 +82,7 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 		ClientAffinity:   aws.String(d.Get("client_affinity").(string)),
 		IdempotencyToken: aws.String(resource.UniqueId()),
 		Protocol:         aws.String(d.Get("protocol").(string)),
-		PortRanges:       resourceAwsGlobalAcceleratorListenerExpandPortRanges(d.Get("port_range").(*schema.Set).List()),
+		PortRanges:       resourceListenerExpandPortRanges(d.Get("port_range").(*schema.Set).List()),
 	}
 
 	log.Printf("[DEBUG] Create Global Accelerator listener: %s", opts)
@@ -126,7 +126,7 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("accelerator_arn", acceleratorARN)
 	d.Set("client_affinity", listener.ClientAffinity)
 	d.Set("protocol", listener.Protocol)
-	if err := d.Set("port_range", resourceAwsGlobalAcceleratorListenerFlattenPortRanges(listener.PortRanges)); err != nil {
+	if err := d.Set("port_range", resourceListenerFlattenPortRanges(listener.PortRanges)); err != nil {
 		return fmt.Errorf("error setting port_range: %w", err)
 	}
 
@@ -141,7 +141,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 		ClientAffinity: aws.String(d.Get("client_affinity").(string)),
 		ListenerArn:    aws.String(d.Id()),
 		Protocol:       aws.String(d.Get("protocol").(string)),
-		PortRanges:     resourceAwsGlobalAcceleratorListenerExpandPortRanges(d.Get("port_range").(*schema.Set).List()),
+		PortRanges:     resourceListenerExpandPortRanges(d.Get("port_range").(*schema.Set).List()),
 	}
 
 	log.Printf("[DEBUG] Updating Global Accelerator listener: %s", input)
@@ -184,7 +184,7 @@ func resourceListenerDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsGlobalAcceleratorListenerExpandPortRanges(portRanges []interface{}) []*globalaccelerator.PortRange {
+func resourceListenerExpandPortRanges(portRanges []interface{}) []*globalaccelerator.PortRange {
 	out := make([]*globalaccelerator.PortRange, len(portRanges))
 
 	for i, raw := range portRanges {
@@ -200,7 +200,7 @@ func resourceAwsGlobalAcceleratorListenerExpandPortRanges(portRanges []interface
 	return out
 }
 
-func resourceAwsGlobalAcceleratorListenerFlattenPortRanges(portRanges []*globalaccelerator.PortRange) []interface{} {
+func resourceListenerFlattenPortRanges(portRanges []*globalaccelerator.PortRange) []interface{} {
 	out := make([]interface{}, len(portRanges))
 
 	for i, portRange := range portRanges {
