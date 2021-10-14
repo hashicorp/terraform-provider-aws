@@ -23,6 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkinesisanalytics "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
+	tfkinesisanalytics "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
+	tfkinesisanalytics "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
 )
 
 func init() {
@@ -41,7 +44,7 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 	input := &kinesisanalytics.ListApplicationsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = lister.ListApplicationsPages(conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
+	err = tfkinesisanalytics.ListApplicationsPages(conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -50,7 +53,7 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name := aws.StringValue(applicationSummary.ApplicationName)
 
-			application, err := finder.ApplicationDetailByName(conn, name)
+			application, err := tfkinesisanalytics.FindApplicationDetailByName(conn, name)
 
 			if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
 				continue
@@ -1961,7 +1964,7 @@ func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+		_, err := tfkinesisanalytics.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1989,7 +1992,7 @@ func testAccCheckKinesisAnalyticsApplicationExists(n string, v *kinesisanalytics
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsConn
 
-		application, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+		application, err := tfkinesisanalytics.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err

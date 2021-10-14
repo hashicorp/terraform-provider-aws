@@ -8,19 +8,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ApplicationDetailByName returns the application corresponding to the specified name.
+// FindApplicationDetailByName returns the application corresponding to the specified name.
 // Returns NotFoundError if no application is found.
-func ApplicationDetailByName(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+func FindApplicationDetailByName(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
 	input := &kinesisanalytics.DescribeApplicationInput{
 		ApplicationName: aws.String(name),
 	}
 
-	return ApplicationDetail(conn, input)
+	return FindApplicationDetail(conn, input)
 }
 
-// ApplicationDetail returns the application details corresponding to the specified name.
+// FindApplicationDetail returns the application details corresponding to the specified name.
 // Returns NotFoundError if no application is found.
-func ApplicationDetail(conn *kinesisanalytics.KinesisAnalytics, input *kinesisanalytics.DescribeApplicationInput) (*kinesisanalytics.ApplicationDetail, error) {
+func FindApplicationDetail(conn *kinesisanalytics.KinesisAnalytics, input *kinesisanalytics.DescribeApplicationInput) (*kinesisanalytics.ApplicationDetail, error) {
 	output, err := conn.DescribeApplication(input)
 
 	if tfawserr.ErrCodeEquals(err, kinesisanalytics.ErrCodeResourceNotFoundException) {
