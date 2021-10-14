@@ -416,11 +416,11 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("event_selector", flattenAwsCloudTrailEventSelector(eventSelectorsOut.EventSelectors)); err != nil {
+	if err := d.Set("event_selector", flattenEventSelector(eventSelectorsOut.EventSelectors)); err != nil {
 		return err
 	}
 
-	if err := d.Set("advanced_event_selector", flattenAwsCloudTrailAdvancedEventSelector(eventSelectorsOut.AdvancedEventSelectors)); err != nil {
+	if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventSelectorsOut.AdvancedEventSelectors)); err != nil {
 		return err
 	}
 
@@ -434,7 +434,7 @@ func resourceCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if insightSelectors != nil {
-		if err := d.Set("insight_selector", flattenAwsCloudTrailInsightSelector(insightSelectors.InsightSelectors)); err != nil {
+		if err := d.Set("insight_selector", flattenInsightSelector(insightSelectors.InsightSelectors)); err != nil {
 			return err
 		}
 	}
@@ -603,7 +603,7 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 		TrailName: aws.String(d.Id()),
 	}
 
-	eventSelectors := expandAwsCloudTrailEventSelector(d.Get("event_selector").([]interface{}))
+	eventSelectors := expandEventSelector(d.Get("event_selector").([]interface{}))
 	// If no defined selectors revert to the single default selector
 	if len(eventSelectors) == 0 {
 		es := &cloudtrail.EventSelector{
@@ -627,12 +627,12 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	return nil
 }
 
-func expandAwsCloudTrailEventSelector(configured []interface{}) []*cloudtrail.EventSelector {
+func expandEventSelector(configured []interface{}) []*cloudtrail.EventSelector {
 	eventSelectors := make([]*cloudtrail.EventSelector, 0, len(configured))
 
 	for _, raw := range configured {
 		data := raw.(map[string]interface{})
-		dataResources := expandAwsCloudTrailEventSelectorDataResource(data["data_resource"].([]interface{}))
+		dataResources := expandEventSelectorDataResource(data["data_resource"].([]interface{}))
 
 		es := &cloudtrail.EventSelector{
 			IncludeManagementEvents: aws.Bool(data["include_management_events"].(bool)),
@@ -645,7 +645,7 @@ func expandAwsCloudTrailEventSelector(configured []interface{}) []*cloudtrail.Ev
 	return eventSelectors
 }
 
-func expandAwsCloudTrailEventSelectorDataResource(configured []interface{}) []*cloudtrail.DataResource {
+func expandEventSelectorDataResource(configured []interface{}) []*cloudtrail.DataResource {
 	dataResources := make([]*cloudtrail.DataResource, 0, len(configured))
 
 	for _, raw := range configured {
@@ -668,7 +668,7 @@ func expandAwsCloudTrailEventSelectorDataResource(configured []interface{}) []*c
 	return dataResources
 }
 
-func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) []map[string]interface{} {
+func flattenEventSelector(configured []*cloudtrail.EventSelector) []map[string]interface{} {
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	// Prevent default configurations shows differences
@@ -680,7 +680,7 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 		item := make(map[string]interface{})
 		item["read_write_type"] = aws.StringValue(raw.ReadWriteType)
 		item["include_management_events"] = aws.BoolValue(raw.IncludeManagementEvents)
-		item["data_resource"] = flattenAwsCloudTrailEventSelectorDataResource(raw.DataResources)
+		item["data_resource"] = flattenEventSelectorDataResource(raw.DataResources)
 
 		eventSelectors = append(eventSelectors, item)
 	}
@@ -688,7 +688,7 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 	return eventSelectors
 }
 
-func flattenAwsCloudTrailEventSelectorDataResource(configured []*cloudtrail.DataResource) []map[string]interface{} {
+func flattenEventSelectorDataResource(configured []*cloudtrail.DataResource) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for _, raw := range configured {
@@ -707,7 +707,7 @@ func cloudTrailSetAdvancedEventSelectors(conn *cloudtrail.CloudTrail, d *schema.
 		TrailName: aws.String(d.Id()),
 	}
 
-	advancedEventSelectors := expandAwsCloudTrailAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+	advancedEventSelectors := expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
 
 	input.AdvancedEventSelectors = advancedEventSelectors
 
@@ -723,12 +723,12 @@ func cloudTrailSetAdvancedEventSelectors(conn *cloudtrail.CloudTrail, d *schema.
 	return nil
 }
 
-func expandAwsCloudTrailAdvancedEventSelector(configured []interface{}) []*cloudtrail.AdvancedEventSelector {
+func expandAdvancedEventSelector(configured []interface{}) []*cloudtrail.AdvancedEventSelector {
 	advancedEventSelectors := make([]*cloudtrail.AdvancedEventSelector, 0, len(configured))
 
 	for _, raw := range configured {
 		data := raw.(map[string]interface{})
-		fieldSelectors := expandAwsCloudTrailAdvancedEventSelectorFieldSelector(data["field_selector"].(*schema.Set))
+		fieldSelectors := expandAdvancedEventSelectorFieldSelector(data["field_selector"].(*schema.Set))
 
 		aes := &cloudtrail.AdvancedEventSelector{
 			Name:           aws.String(data["name"].(string)),
@@ -743,7 +743,7 @@ func expandAwsCloudTrailAdvancedEventSelector(configured []interface{}) []*cloud
 
 }
 
-func expandAwsCloudTrailAdvancedEventSelectorFieldSelector(configured *schema.Set) []*cloudtrail.AdvancedFieldSelector {
+func expandAdvancedEventSelectorFieldSelector(configured *schema.Set) []*cloudtrail.AdvancedFieldSelector {
 	fieldSelectors := make([]*cloudtrail.AdvancedFieldSelector, 0, configured.Len())
 
 	for _, raw := range configured.List() {
@@ -812,13 +812,13 @@ func expandAwsCloudTrailAdvancedEventSelectorFieldSelector(configured *schema.Se
 	return fieldSelectors
 }
 
-func flattenAwsCloudTrailAdvancedEventSelector(configured []*cloudtrail.AdvancedEventSelector) []map[string]interface{} {
+func flattenAdvancedEventSelector(configured []*cloudtrail.AdvancedEventSelector) []map[string]interface{} {
 	advancedEventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
 		item["name"] = aws.StringValue(raw.Name)
-		item["field_selector"] = flattenAwsCloudTrailAdvancedEventSelectorFieldSelector(raw.FieldSelectors)
+		item["field_selector"] = flattenAdvancedEventSelectorFieldSelector(raw.FieldSelectors)
 
 		advancedEventSelectors = append(advancedEventSelectors, item)
 	}
@@ -826,7 +826,7 @@ func flattenAwsCloudTrailAdvancedEventSelector(configured []*cloudtrail.Advanced
 	return advancedEventSelectors
 }
 
-func flattenAwsCloudTrailAdvancedEventSelectorFieldSelector(configured []*cloudtrail.AdvancedFieldSelector) []map[string]interface{} {
+func flattenAdvancedEventSelectorFieldSelector(configured []*cloudtrail.AdvancedFieldSelector) []map[string]interface{} {
 	fieldSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	for _, raw := range configured {
@@ -862,7 +862,7 @@ func cloudTrailSetInsightSelectors(conn *cloudtrail.CloudTrail, d *schema.Resour
 		TrailName: aws.String(d.Id()),
 	}
 
-	insightSelector := expandAwsCloudTrailInsightSelector(d.Get("insight_selector").([]interface{}))
+	insightSelector := expandInsightSelector(d.Get("insight_selector").([]interface{}))
 	input.InsightSelectors = insightSelector
 
 	if err := input.Validate(); err != nil {
@@ -877,7 +877,7 @@ func cloudTrailSetInsightSelectors(conn *cloudtrail.CloudTrail, d *schema.Resour
 	return nil
 }
 
-func expandAwsCloudTrailInsightSelector(configured []interface{}) []*cloudtrail.InsightSelector {
+func expandInsightSelector(configured []interface{}) []*cloudtrail.InsightSelector {
 	insightSelectors := make([]*cloudtrail.InsightSelector, 0, len(configured))
 
 	for _, raw := range configured {
@@ -892,7 +892,7 @@ func expandAwsCloudTrailInsightSelector(configured []interface{}) []*cloudtrail.
 	return insightSelectors
 }
 
-func flattenAwsCloudTrailInsightSelector(configured []*cloudtrail.InsightSelector) []map[string]interface{} {
+func flattenInsightSelector(configured []*cloudtrail.InsightSelector) []map[string]interface{} {
 	insightSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	for _, raw := range configured {
