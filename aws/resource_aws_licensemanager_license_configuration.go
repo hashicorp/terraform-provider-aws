@@ -100,7 +100,7 @@ func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("license_rules"); ok {
-		opts.LicenseRules = expandStringList(v.([]interface{}))
+		opts.LicenseRules = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -140,7 +140,7 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 	d.Set("license_count", resp.LicenseCount)
 	d.Set("license_count_hard_limit", resp.LicenseCountHardLimit)
 	d.Set("license_counting_type", resp.LicenseCountingType)
-	if err := d.Set("license_rules", flattenStringList(resp.LicenseRules)); err != nil {
+	if err := d.Set("license_rules", flex.FlattenStringList(resp.LicenseRules)); err != nil {
 		return fmt.Errorf("error setting license_rules: %s", err)
 	}
 	d.Set("name", resp.Name)
