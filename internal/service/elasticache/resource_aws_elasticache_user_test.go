@@ -17,6 +17,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func TestAccAWSElasticacheUser_basic(t *testing.T) {
@@ -175,7 +185,7 @@ func testAccCheckAWSElasticacheUserDestroyWithProvider(s *terraform.State, provi
 			continue
 		}
 
-		user, err := finder.ElastiCacheUserById(conn, rs.Primary.ID)
+		user, err := tfelasticache.FindElastiCacheUserByID(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) || tfresource.NotFound(err) {
 			continue
@@ -210,7 +220,7 @@ func testAccCheckAWSElasticacheUserExistsWithProvider(n string, v *elasticache.U
 
 		provider := providerF()
 		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		resp, err := finder.ElastiCacheUserById(conn, rs.Primary.ID)
+		resp, err := tfelasticache.FindElastiCacheUserByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User (%s) not found: %w", rs.Primary.ID, err)
 		}

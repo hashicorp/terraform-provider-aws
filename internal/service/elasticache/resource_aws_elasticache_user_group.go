@@ -19,6 +19,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func ResourceUserGroup() *schema.Resource {
@@ -117,7 +127,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := finder.ElastiCacheUserGroupById(conn, d.Id())
+	resp, err := tfelasticache.FindElastiCacheUserGroupByID(conn, d.Id())
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault)) {
 		d.SetId("")
 		log.Printf("[DEBUG] ElastiCache User Group (%s) not found", d.Id())
@@ -251,7 +261,7 @@ func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsElasticacheUserGroupStateRefreshFunc(id string, conn *elasticache.ElastiCache) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := finder.ElastiCacheUserGroupById(conn, id)
+		v, err := tfelasticache.FindElastiCacheUserGroupByID(conn, id)
 
 		if err != nil {
 			log.Printf("Error on retrieving ElastiCache User Group when waiting: %s", err)

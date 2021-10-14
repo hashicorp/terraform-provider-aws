@@ -25,6 +25,72 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func ResourceReplicationGroup() *schema.Resource {
@@ -110,8 +176,8 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      tfelasticache.EngineRedis,
-				ValidateFunc: validation.StringInSlice([]string{tfelasticache.EngineRedis}, true),
+				Default:      tfelasticache.engineRedis,
+				ValidateFunc: validation.StringInSlice([]string{tfelasticache.engineRedis}, true),
 			},
 			"engine_version": {
 				Type:         schema.TypeString,
@@ -298,9 +364,9 @@ func ResourceReplicationGroup() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.ReplicationGroupDefaultCreatedTimeout),
-			Delete: schema.DefaultTimeout(waiter.ReplicationGroupDefaultDeletedTimeout),
-			Update: schema.DefaultTimeout(waiter.ReplicationGroupDefaultUpdatedTimeout),
+			Create: schema.DefaultTimeout(tfelasticache.ReplicationGroupDefaultCreatedTimeout),
+			Delete: schema.DefaultTimeout(tfelasticache.ReplicationGroupDefaultDeletedTimeout),
+			Update: schema.DefaultTimeout(tfelasticache.ReplicationGroupDefaultUpdatedTimeout),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -436,7 +502,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(resp.ReplicationGroup.ReplicationGroupId))
 
-	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = tfelasticache.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("error creating ElastiCache Replication Group (%s): waiting for completion: %w", d.Id(), err)
 	}
@@ -446,7 +512,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// state, but the global replication group can still be in the "modifying" state. Wait for the replication group
 		// to be fully added to the global replication group.
 		// API calls to the global replication group can be made in any region.
-		if _, err := waiter.GlobalReplicationGroupAvailable(conn, v.(string), waiter.GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+		if _, err := tfelasticache.WaitGlobalReplicationGroupAvailable(conn, v.(string), tfelasticache.GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) availability: %w", v, err)
 		}
 	}
@@ -459,7 +525,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rgp, err := finder.ReplicationGroupByID(conn, d.Id())
+	rgp, err := tfelasticache.FindReplicationGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -469,7 +535,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	if aws.StringValue(rgp.Status) == waiter.ReplicationGroupStatusDeleting {
+	if aws.StringValue(rgp.Status) == tfelasticache.ReplicationGroupStatusDeleting {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) is currently in the `deleting` status, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -515,7 +581,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arn", rgp.ARN)
 
 	// Tags cannot be read when the replication group is not Available
-	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = tfelasticache.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %w", aws.StringValue(rgp.ARN), err)
 	}
@@ -695,7 +761,7 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	_, err := waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err := tfelasticache.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for modification: %w", err)
 	}
@@ -707,7 +773,7 @@ func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {
-		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*conns.AWSClient).Region, waiter.GlobalReplicationGroupDisassociationReadyTimeout)
+		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*conns.AWSClient).Region, tfelasticache.GlobalReplicationGroupDisassociationReadyTimeout)
 		if err != nil {
 			return fmt.Errorf("error disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", d.Id(), globalReplicationGroupID, err)
 		}
@@ -756,7 +822,7 @@ func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, glob
 		return err
 	}
 
-	_, err = waiter.GlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
+	_, err = tfelasticache.WaitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
 	if err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
@@ -800,7 +866,7 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		return err
 	}
 
-	_, err = waiter.ReplicationGroupDeleted(conn, replicationGroupID, timeout)
+	_, err = tfelasticache.WaitReplicationGroupDeleted(conn, replicationGroupID, timeout)
 	if err != nil {
 		return err
 	}
@@ -866,7 +932,7 @@ func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elas
 		return fmt.Errorf("error modifying ElastiCache Replication Group shard configuration: %w", err)
 	}
 
-	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = tfelasticache.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
 	}
@@ -889,7 +955,7 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 		if err != nil {
 			return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = tfelasticache.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
 		}
@@ -903,7 +969,7 @@ func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(con
 		if err != nil {
 			return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = tfelasticache.WaitReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
 		}
@@ -937,7 +1003,7 @@ func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.Elast
 		return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	_, err = waiter.ReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	_, err = tfelasticache.WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", replicationGroupID, err)
 	}
@@ -956,7 +1022,7 @@ func elasticacheReplicationGroupDecreaseNumCacheClusters(conn *elasticache.Elast
 		return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	_, err = waiter.ReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	_, err = tfelasticache.WaitReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
 	}

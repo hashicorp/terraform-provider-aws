@@ -7,6 +7,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 const (
@@ -22,10 +32,10 @@ const (
 	UserStatusModifying = "modifying"
 )
 
-// ReplicationGroupStatus fetches the Replication Group and its Status
-func ReplicationGroupStatus(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
+// StatusReplicationGroup fetches the Replication Group and its Status
+func StatusReplicationGroup(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		rg, err := finder.ReplicationGroupByID(conn, replicationGroupID)
+		rg, err := tfelasticache.FindReplicationGroupByID(conn, replicationGroupID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -37,11 +47,11 @@ func ReplicationGroupStatus(conn *elasticache.ElastiCache, replicationGroupID st
 	}
 }
 
-// ReplicationGroupMemberClustersStatus fetches the Replication Group's Member Clusters and either "available" or the first non-"available" status.
+// StatusReplicationGroupMemberClusters fetches the Replication Group's Member Clusters and either "available" or the first non-"available" status.
 // NOTE: This function assumes that the intended end-state is to have all member clusters in "available" status.
-func ReplicationGroupMemberClustersStatus(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
+func StatusReplicationGroupMemberClusters(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		clusters, err := finder.ReplicationGroupMemberClustersByID(conn, replicationGroupID)
+		clusters, err := tfelasticache.FindReplicationGroupMemberClustersByID(conn, replicationGroupID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -73,10 +83,10 @@ const (
 	CacheClusterStatusSnapshotting          = "snapshotting"
 )
 
-// CacheClusterStatus fetches the Cache Cluster and its Status
-func CacheClusterStatus(conn *elasticache.ElastiCache, cacheClusterID string) resource.StateRefreshFunc {
+// StatusCacheCluster fetches the Cache Cluster and its Status
+func StatusCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		c, err := finder.CacheClusterByID(conn, cacheClusterID)
+		c, err := tfelasticache.FindCacheClusterByID(conn, cacheClusterID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -97,10 +107,10 @@ const (
 	GlobalReplicationGroupStatusDeleted     = "deleted"
 )
 
-// GlobalReplicationGroupStatus fetches the Global Replication Group and its Status
-func GlobalReplicationGroupStatus(conn *elasticache.ElastiCache, globalReplicationGroupID string) resource.StateRefreshFunc {
+// StatusGlobalReplicationGroup fetches the Global Replication Group and its Status
+func StatusGlobalReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		grg, err := finder.GlobalReplicationGroupByID(conn, globalReplicationGroupID)
+		grg, err := tfelasticache.FindGlobalReplicationGroupByID(conn, globalReplicationGroupID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -116,10 +126,10 @@ const (
 	GlobalReplicationGroupMemberStatusAssociated = "associated"
 )
 
-// GlobalReplicationGroupStatus fetches the Global Replication Group and its Status
-func GlobalReplicationGroupMemberStatus(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) resource.StateRefreshFunc {
+// StatusGlobalReplicationGroup fetches the Global Replication Group and its Status
+func StatusGlobalReplicationGroupMember(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		member, err := finder.GlobalReplicationGroupMemberByID(conn, globalReplicationGroupID, id)
+		member, err := tfelasticache.FindGlobalReplicationGroupMemberByID(conn, globalReplicationGroupID, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -131,10 +141,10 @@ func GlobalReplicationGroupMemberStatus(conn *elasticache.ElastiCache, globalRep
 	}
 }
 
-// UserStatus fetches the ElastiCache user and its Status
-func UserStatus(conn *elasticache.ElastiCache, userId string) resource.StateRefreshFunc {
+// StatusUser fetches the ElastiCache user and its Status
+func StatusUser(conn *elasticache.ElastiCache, userId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		user, err := finder.ElastiCacheUserById(conn, userId)
+		user, err := tfelasticache.FindElastiCacheUserByID(conn, userId)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

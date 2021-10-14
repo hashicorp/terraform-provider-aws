@@ -12,6 +12,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func DataSourceCluster() *schema.Resource {
@@ -157,7 +167,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_id").(string)
-	cluster, err := finder.CacheClusterWithNodeInfoByID(conn, clusterID)
+	cluster, err := tfelasticache.FindCacheClusterWithNodeInfoByID(conn, clusterID)
 	if tfresource.NotFound(err) {
 		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
 	}

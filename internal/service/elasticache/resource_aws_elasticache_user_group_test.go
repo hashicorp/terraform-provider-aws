@@ -15,6 +15,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func TestAccAWSElasticacheUserGroup_basic(t *testing.T) {
@@ -164,7 +174,7 @@ func testAccCheckAWSElasticacheUserGroupDestroyWithProvider(s *terraform.State, 
 			continue
 		}
 
-		_, err := finder.ElastiCacheUserGroupById(conn, rs.Primary.ID)
+		_, err := tfelasticache.FindElastiCacheUserGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeUserGroupNotFoundFault, "") {
 				return nil
@@ -194,7 +204,7 @@ func testAccCheckAWSElasticacheUserGroupExistsWithProvider(n string, v *elastica
 
 		provider := providerF()
 		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		resp, err := finder.ElastiCacheUserGroupById(conn, rs.Primary.ID)
+		resp, err := tfelasticache.FindElastiCacheUserGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User Group (%s) not found: %w", rs.Primary.ID, err)
 		}
