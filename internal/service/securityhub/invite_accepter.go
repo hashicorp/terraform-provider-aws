@@ -39,7 +39,7 @@ func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 	log.Print("[DEBUG] Accepting Security Hub invitation")
 
-	invitationId, err := resourceAwsSecurityHubInviteAccepterGetInvitationId(conn, d.Get("master_id").(string))
+	invitationId, err := resourceInviteAccepterGetInvitationID(conn, d.Get("master_id").(string))
 
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) erro
 	return resourceInviteAccepterRead(d, meta)
 }
 
-func resourceAwsSecurityHubInviteAccepterGetInvitationId(conn *securityhub.SecurityHub, masterId string) (string, error) {
+func resourceInviteAccepterGetInvitationID(conn *securityhub.SecurityHub, masterId string) (string, error) {
 	log.Printf("[DEBUG] Getting InvitationId for MasterId %s", masterId)
 
 	resp, err := conn.ListInvitations(&securityhub.ListInvitationsInput{})

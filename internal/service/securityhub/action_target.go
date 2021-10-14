@@ -75,7 +75,7 @@ func resourceActionTargetCreate(d *schema.ResourceData, meta interface{}) error 
 	return resourceActionTargetRead(d, meta)
 }
 
-func resourceAwsSecurityHubActionTargetParseIdentifier(identifier string) (string, error) {
+func resourceActionTargetParseIdentifier(identifier string) (string, error) {
 	parts := strings.Split(identifier, "/")
 
 	if len(parts) != 3 {
@@ -90,7 +90,7 @@ func resourceActionTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading Security Hub custom action targets to find %s", d.Id())
 
-	actionTargetIdentifier, err := resourceAwsSecurityHubActionTargetParseIdentifier(d.Id())
+	actionTargetIdentifier, err := resourceActionTargetParseIdentifier(d.Id())
 
 	if err != nil {
 		return err

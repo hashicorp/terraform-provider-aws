@@ -17,9 +17,9 @@ import (
 
 func ResourceStandardsControl() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsSecurityHubStandardsControlPut,
+		CreateContext: resourceStandardsControlPut,
 		ReadContext:   resourceStandardsControlRead,
-		UpdateContext: resourceAwsSecurityHubStandardsControlPut,
+		UpdateContext: resourceStandardsControlPut,
 		DeleteContext: resourceStandardsControlDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -116,7 +116,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAwsSecurityHubStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
 	d.SetId(d.Get("standards_control_arn").(string))
