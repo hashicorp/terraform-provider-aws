@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
+func ResourceMaintenanceWindowTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmMaintenanceWindowTargetCreate,
-		Read:   resourceAwsSsmMaintenanceWindowTargetRead,
-		Update: resourceAwsSsmMaintenanceWindowTargetUpdate,
-		Delete: resourceAwsSsmMaintenanceWindowTargetDelete,
+		Create: resourceMaintenanceWindowTargetCreate,
+		Read:   resourceMaintenanceWindowTargetRead,
+		Update: resourceMaintenanceWindowTargetUpdate,
+		Delete: resourceMaintenanceWindowTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -92,7 +92,7 @@ func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Target")
@@ -122,10 +122,10 @@ func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(resp.WindowTargetId))
 
-	return resourceAwsSsmMaintenanceWindowTargetRead(d, meta)
+	return resourceMaintenanceWindowTargetRead(d, meta)
 }
 
-func resourceAwsSsmMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	windowID := d.Get("window_id").(string)
@@ -175,7 +175,7 @@ func resourceAwsSsmMaintenanceWindowTargetRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsSsmMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Updating SSM Maintenance Window Target: %s", d.Id())
@@ -206,7 +206,7 @@ func resourceAwsSsmMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsSsmMaintenanceWindowTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMaintenanceWindowTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Target: %s", d.Id())

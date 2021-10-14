@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSsmParameter() *schema.Resource {
+func DataSourceParameter() *schema.Resource {
 	return &schema.Resource{
 		Read: dataAwsSsmParameterRead,
 		Schema: map[string]*schema.Schema{

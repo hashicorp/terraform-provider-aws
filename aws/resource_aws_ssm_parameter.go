@@ -23,12 +23,12 @@ const (
 	ssmParameterCreationValidationTimeout = 2 * time.Minute
 )
 
-func resourceAwsSsmParameter() *schema.Resource {
+func ResourceParameter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmParameterCreate,
-		Read:   resourceAwsSsmParameterRead,
-		Update: resourceAwsSsmParameterUpdate,
-		Delete: resourceAwsSsmParameterDelete,
+		Create: resourceParameterCreate,
+		Read:   resourceParameterRead,
+		Update: resourceParameterUpdate,
+		Delete: resourceParameterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -113,7 +113,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmParameterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -172,10 +172,10 @@ func resourceAwsSsmParameterCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(name)
 
-	return resourceAwsSsmParameterRead(d, meta)
+	return resourceParameterRead(d, meta)
 }
 
-func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -274,7 +274,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsSsmParameterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -319,10 +319,10 @@ func resourceAwsSsmParameterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsSsmParameterRead(d, meta)
+	return resourceParameterRead(d, meta)
 }
 
-func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceParameterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	_, err := conn.DeleteParameter(&ssm.DeleteParameterInput{

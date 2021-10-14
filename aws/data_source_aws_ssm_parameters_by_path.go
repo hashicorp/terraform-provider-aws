@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSsmParametersByPath() *schema.Resource {
+func DataSourceParametersByPath() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsSsmParametersReadByPath,
 

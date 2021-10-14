@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSsmDocument() *schema.Resource {
+func DataSourceDocument() *schema.Resource {
 	return &schema.Resource{
 		Read: dataAwsSsmDocumentRead,
 		Schema: map[string]*schema.Schema{

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssm/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSSMPatchGroup_basic(t *testing.T) {
@@ -47,7 +48,7 @@ func TestAccAWSSSMPatchGroup_disappears(t *testing.T) {
 				Config: testAccAWSSSMPatchGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchGroupExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSsmPatchGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourcePatchGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

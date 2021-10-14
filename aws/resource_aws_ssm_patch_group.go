@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSsmPatchGroup() *schema.Resource {
+func ResourcePatchGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmPatchGroupCreate,
-		Read:   resourceAwsSsmPatchGroupRead,
-		Delete: resourceAwsSsmPatchGroupDelete,
+		Create: resourcePatchGroupCreate,
+		Read:   resourcePatchGroupRead,
+		Delete: resourcePatchGroupDelete,
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -43,7 +43,7 @@ func resourceAwsSsmPatchGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsSsmPatchGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePatchGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	baselineId := d.Get("baseline_id").(string)
@@ -61,10 +61,10 @@ func resourceAwsSsmPatchGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(resp.PatchGroup), aws.StringValue(resp.BaselineId)))
 
-	return resourceAwsSsmPatchGroupRead(d, meta)
+	return resourcePatchGroupRead(d, meta)
 }
 
-func resourceAwsSsmPatchGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	patchGroup, baselineId, err := parseSsmPatchGroupId(d.Id())
@@ -100,7 +100,7 @@ func resourceAwsSsmPatchGroupRead(d *schema.ResourceData, meta interface{}) erro
 
 }
 
-func resourceAwsSsmPatchGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePatchGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	patchGroup, baselineId, err := parseSsmPatchGroupId(d.Id())
