@@ -12,7 +12,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsns "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -113,7 +113,7 @@ func TestAccAWSSNSTopic_basic(t *testing.T) {
 				Config: testAccAWSSNSTopicConfigNameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
@@ -171,7 +171,7 @@ func TestAccAWSSNSTopic_NamePrefix(t *testing.T) {
 				Config: testAccAWSSNSTopicConfigNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
 				),
@@ -340,7 +340,7 @@ func TestAccAWSSNSTopic_Name_Generated_FIFOTopic(t *testing.T) {
 				Config: testAccAWSSNSTopicConfigNameGeneratedFIFOTopic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					naming.TestCheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsns.FifoTopicNameSuffix),
+					create.TestCheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsns.FifoTopicNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
 				),
@@ -397,7 +397,7 @@ func TestAccAWSSNSTopic_NamePrefix_FIFOTopic(t *testing.T) {
 				Config: testAccAWSSNSTopicConfigNamePrefixFIFOTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					naming.TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", rName, tfsns.FifoTopicNameSuffix),
+					create.TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", rName, tfsns.FifoTopicNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
 				),
