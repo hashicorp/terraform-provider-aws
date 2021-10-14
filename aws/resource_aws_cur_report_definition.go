@@ -103,7 +103,7 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
-	additionalArtifacts := expandStringSet(d.Get("additional_artifacts").(*schema.Set))
+	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := d.Get("compression").(string)
 	format := d.Get("format").(string)
 	prefix := d.Get("s3_prefix").(string)
@@ -133,7 +133,7 @@ func resourceAwsCurReportDefinitionCreate(d *schema.ResourceData, meta interface
 		TimeUnit:                 aws.String(d.Get("time_unit").(string)),
 		Format:                   aws.String(format),
 		Compression:              aws.String(compression),
-		AdditionalSchemaElements: expandStringSet(d.Get("additional_schema_elements").(*schema.Set)),
+		AdditionalSchemaElements: flex.ExpandStringSet(d.Get("additional_schema_elements").(*schema.Set)),
 		S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
 		S3Prefix:                 aws.String(prefix),
 		S3Region:                 aws.String(d.Get("s3_region").(string)),
@@ -206,7 +206,7 @@ func resourceAwsCurReportDefinitionRead(d *schema.ResourceData, meta interface{}
 func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CURConn
 
-	additionalArtifacts := expandStringSet(d.Get("additional_artifacts").(*schema.Set))
+	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := d.Get("compression").(string)
 	format := d.Get("format").(string)
 	prefix := d.Get("s3_prefix").(string)
@@ -236,7 +236,7 @@ func resourceAwsCurReportDefinitionUpdate(d *schema.ResourceData, meta interface
 		TimeUnit:                 aws.String(d.Get("time_unit").(string)),
 		Format:                   aws.String(format),
 		Compression:              aws.String(compression),
-		AdditionalSchemaElements: expandStringSet(d.Get("additional_schema_elements").(*schema.Set)),
+		AdditionalSchemaElements: flex.ExpandStringSet(d.Get("additional_schema_elements").(*schema.Set)),
 		S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
 		S3Prefix:                 aws.String(prefix),
 		S3Region:                 aws.String(d.Get("s3_region").(string)),
