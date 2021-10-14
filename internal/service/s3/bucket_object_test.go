@@ -28,85 +28,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_s3_bucket_object", &resource.Sweeper{
-		Name: "aws_s3_bucket_object",
-		F:    sweepBucketObjects,
-	})
-}
 
-func sweepBucketObjects(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).S3ConnURICleaningDisabled
-	input := &s3.ListBucketsInput{}
 
-	output, err := conn.ListBuckets(input)
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping S3 Bucket Objects sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing S3 Bucket Objects: %s", err)
-	}
-
-	if len(output.Buckets) == 0 {
-		log.Print("[DEBUG] No S3 Bucket Objects to sweep")
-		return nil
-	}
-
-	for _, bucket := range output.Buckets {
-		bucketName := aws.StringValue(bucket.Name)
-
-		hasPrefix := false
-		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
-
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(bucketName, prefix) {
-				hasPrefix = true
-				break
-			}
-		}
-
-		if !hasPrefix {
-			log.Printf("[INFO] Skipping S3 Bucket: %s", bucketName)
-			continue
-		}
-
-		bucketRegion, err := testS3BucketRegion(conn, bucketName)
-
-		if err != nil {
-			log.Printf("[ERROR] Error getting S3 Bucket (%s) Location: %s", bucketName, err)
-			continue
-		}
-
-		if bucketRegion != region {
-			log.Printf("[INFO] Skipping S3 Bucket (%s) in different region: %s", bucketName, bucketRegion)
-			continue
-		}
-
-		objectLockEnabled, err := testS3BucketObjectLockEnabled(conn, bucketName)
-
-		if err != nil {
-			log.Printf("[ERROR] Error getting S3 Bucket (%s) Object Lock: %s", bucketName, err)
-			continue
-		}
-
-		// Delete everything including locked objects. Ignore any object errors.
-		err = tfs3.DeleteAllObjectVersions(conn, bucketName, "", objectLockEnabled, true)
-
-		if err != nil {
-			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccS3BucketObject_noNameNoKey(t *testing.T) {
 	bucketError := regexp.MustCompile(`bucket must not be empty`)
