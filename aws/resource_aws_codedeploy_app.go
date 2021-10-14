@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeDeployApp() *schema.Resource {
@@ -28,7 +29,7 @@ func resourceAwsCodeDeployApp() *schema.Resource {
 				}
 
 				applicationName := d.Id()
-				conn := meta.(*AWSClient).codedeployconn
+				conn := meta.(*conns.AWSClient).CodeDeployConn
 
 				input := &codedeploy.GetApplicationInput{
 					ApplicationName: aws.String(applicationName),
@@ -91,8 +92,8 @@ func resourceAwsCodeDeployApp() *schema.Resource {
 }
 
 func resourceAwsCodeDeployAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodeDeployConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	application := d.Get("name").(string)
@@ -120,9 +121,9 @@ func resourceAwsCodeDeployAppCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeDeployConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	application := resourceAwsCodeDeployAppParseId(d.Id())
 	name := d.Get("name").(string)
@@ -152,10 +153,10 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	appArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "codedeploy",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("application:%s", appName),
 	}.String()
 
@@ -187,7 +188,7 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsCodeDeployUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
+	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	if d.HasChange("name") {
 		o, n := d.GetChange("name")
@@ -214,7 +215,7 @@ func resourceAwsCodeDeployUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsCodeDeployAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
+	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	_, err := conn.DeleteApplication(&codedeploy.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Get("name").(string)),

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeDeployDeploymentConfig() *schema.Resource {
@@ -139,7 +140,7 @@ func resourceAwsCodeDeployDeploymentConfig() *schema.Resource {
 }
 
 func resourceAwsCodeDeployDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
+	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	input := &codedeploy.CreateDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
@@ -159,7 +160,7 @@ func resourceAwsCodeDeployDeploymentConfigCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsCodeDeployDeploymentConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
+	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	input := &codedeploy.GetDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
@@ -197,7 +198,7 @@ func resourceAwsCodeDeployDeploymentConfigRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsCodeDeployDeploymentConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
+	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	input := &codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),

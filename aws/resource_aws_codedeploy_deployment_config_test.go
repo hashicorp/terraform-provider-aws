@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
@@ -227,7 +228,7 @@ func TestAccAWSCodeDeployDeploymentConfig_trafficLinear(t *testing.T) {
 }
 
 func testAccCheckAWSCodeDeployDeploymentConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeDeployConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_deployment_config" {
@@ -261,7 +262,7 @@ func testAccCheckAWSCodeDeployDeploymentConfigExists(name string, config *codede
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeDeployConn
 
 		resp, err := conn.GetDeploymentConfig(&codedeploy.GetDeploymentConfigInput{
 			DeploymentConfigName: aws.String(rs.Primary.ID),

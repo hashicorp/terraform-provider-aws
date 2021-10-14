@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepCodeDeployApps(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).codedeployconn
+	conn := client.(*conns.AWSClient).CodeDeployConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -297,7 +298,7 @@ func TestAccAWSCodeDeployApp_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSCodeDeployAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeDeployConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codedeploy_app" {
@@ -329,7 +330,7 @@ func testAccCheckAWSCodeDeployAppExists(name string, application *codedeploy.App
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codedeployconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeDeployConn
 
 		input := &codedeploy.GetApplicationInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["name"]),

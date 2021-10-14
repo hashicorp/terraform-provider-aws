@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
@@ -34,7 +35,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 
 				applicationName := idParts[0]
 				deploymentGroupName := idParts[1]
-				conn := meta.(*AWSClient).codedeployconn
+				conn := meta.(*conns.AWSClient).CodeDeployConn
 
 				input := &codedeploy.GetDeploymentGroupInput{
 					ApplicationName:     aws.String(applicationName),
@@ -480,8 +481,8 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 }
 
 func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodeDeployConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	// required fields
 	applicationName := d.Get("app_name").(string)
@@ -580,9 +581,9 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeDeployConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CodeDeploy DeploymentGroup %s", d.Id())
 
@@ -607,10 +608,10 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 	appName := aws.StringValue(group.ApplicationName)
 	groupName := aws.StringValue(group.DeploymentGroupName)
 	groupArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "codedeploy",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
 
@@ -691,7 +692,7 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
+	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// required fields
@@ -816,7 +817,7 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsCodeDeployDeploymentGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codedeployconn
+	conn := meta.(*conns.AWSClient).CodeDeployConn
 
 	log.Printf("[DEBUG] Deleting CodeDeploy DeploymentGroup %s", d.Id())
 	_, err := conn.DeleteDeploymentGroup(&codedeploy.DeleteDeploymentGroupInput{
