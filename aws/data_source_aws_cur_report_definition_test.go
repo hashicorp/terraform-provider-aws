@@ -5,21 +5,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -45,12 +46,12 @@ func TestAccDataSourceAwsCurReportDefinition_additional(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, costandusagereportservice.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -89,7 +90,7 @@ func testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resource
 }
 
 func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
@@ -157,7 +158,7 @@ data "aws_cur_report_definition" "test" {
 }
 
 func testAccDataSourceAwsCurReportDefinitionConfig_additional(reportName string, bucketName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}

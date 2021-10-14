@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/costandusagereportservice/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -73,12 +74,12 @@ func testSweepCurReportDefinitions(region string) error {
 func testAccAwsCurReportDefinition_basic(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +88,7 @@ func testAccAwsCurReportDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
 					//workaround for region being based on s3 bucket region
-					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "cur", fmt.Sprintf("definition/%s", reportName)),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "cur", fmt.Sprintf("definition/%s", reportName)),
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
@@ -108,7 +109,7 @@ func testAccAwsCurReportDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
 					//workaround for region being based on s3 bucket region
-					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "cur", fmt.Sprintf("definition/%s", reportName)),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "cur", fmt.Sprintf("definition/%s", reportName)),
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
@@ -126,8 +127,8 @@ func testAccAwsCurReportDefinition_basic(t *testing.T) {
 func testAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	bucketPrefix := ""
 	format := "textORcsv"
 	compression := "GZIP"
@@ -136,8 +137,8 @@ func testAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 	reportVersioning := "CREATE_NEW_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -170,8 +171,8 @@ func testAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 func testAccAwsCurReportDefinition_parquet(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	bucketPrefix := ""
 	format := "Parquet"
 	compression := "Parquet"
@@ -180,8 +181,8 @@ func testAccAwsCurReportDefinition_parquet(t *testing.T) {
 	reportVersioning := "CREATE_NEW_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -213,8 +214,8 @@ func testAccAwsCurReportDefinition_parquet(t *testing.T) {
 func testAccAwsCurReportDefinition_athena(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	bucketPrefix := "data"
 	format := "Parquet"
 	compression := "Parquet"
@@ -223,8 +224,8 @@ func testAccAwsCurReportDefinition_athena(t *testing.T) {
 	reportVersioning := "OVERWRITE_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -257,8 +258,8 @@ func testAccAwsCurReportDefinition_athena(t *testing.T) {
 func testAccAwsCurReportDefinition_refresh(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	bucketPrefix := ""
 	format := "textORcsv"
 	compression := "GZIP"
@@ -267,8 +268,8 @@ func testAccAwsCurReportDefinition_refresh(t *testing.T) {
 	reportVersioning := "CREATE_NEW_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -301,8 +302,8 @@ func testAccAwsCurReportDefinition_refresh(t *testing.T) {
 func testAccAwsCurReportDefinition_overwrite(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	bucketPrefix := ""
 	format := "textORcsv"
 	compression := "GZIP"
@@ -311,8 +312,8 @@ func testAccAwsCurReportDefinition_overwrite(t *testing.T) {
 	reportVersioning := "OVERWRITE_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -344,12 +345,12 @@ func testAccAwsCurReportDefinition_overwrite(t *testing.T) {
 
 func testAccAwsCurReportDefinition_disappears(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        testAccErrorCheck(t, cur.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -357,7 +358,7 @@ func testAccAwsCurReportDefinition_disappears(t *testing.T) {
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCurReportDefinition(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCurReportDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -411,7 +412,7 @@ func testAccCheckAwsCurReportDefinitionExists(resourceName string) resource.Test
 }
 
 func testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, prefix string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -481,7 +482,7 @@ func testAccAwsCurReportDefinitionConfig_additional(reportName string, bucketNam
 		artifactsStr = ""
 	}
 
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
