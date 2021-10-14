@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -24,7 +25,7 @@ func init() {
 }
 
 func testSweepGuarddutyPublishingDestinations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -69,7 +70,7 @@ func testSweepGuarddutyPublishingDestinations(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 	}
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GuardDuty Publishing Destination sweep for %s: %s", region, err)
 		return nil
 	}
