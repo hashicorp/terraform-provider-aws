@@ -22,12 +22,12 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
+		CheckDestroy:      testAccCheckReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName, bucketName),
+				Config: testAccReportDefinitionDataSourceConfig_basic(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resourceName),
+					testAccReportDefinitionCheckExistsDataSource(datasourceName, resourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_name", resourceName, "report_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "time_unit", resourceName, "time_unit"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compression", resourceName, "compression"),
@@ -53,12 +53,12 @@ func TestAccDataSourceAwsCurReportDefinition_additional(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
+		CheckDestroy:      testAccCheckReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsCurReportDefinitionConfig_additional(reportName, bucketName),
+				Config: testAccReportDefinitionDataSourceConfig_additional(reportName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resourceName),
+					testAccReportDefinitionCheckExistsDataSource(datasourceName, resourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_name", resourceName, "report_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "time_unit", resourceName, "time_unit"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compression", resourceName, "compression"),
@@ -75,7 +75,7 @@ func TestAccDataSourceAwsCurReportDefinition_additional(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resourceName string) resource.TestCheckFunc {
+func testAccReportDefinitionCheckExistsDataSource(datasourceName, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[datasourceName]
 		if !ok {
@@ -89,7 +89,7 @@ func testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resource
 	}
 }
 
-func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
+func testAccReportDefinitionDataSourceConfig_basic(reportName string, bucketName string) string {
 	return acctest.ConfigCompose(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`
@@ -157,7 +157,7 @@ data "aws_cur_report_definition" "test" {
 `, reportName, bucketName))
 }
 
-func testAccDataSourceAwsCurReportDefinitionConfig_additional(reportName string, bucketName string) string {
+func testAccReportDefinitionDataSourceConfig_additional(reportName string, bucketName string) string {
 	return acctest.ConfigCompose(
 		testAccCurRegionProviderConfig(),
 		fmt.Sprintf(`

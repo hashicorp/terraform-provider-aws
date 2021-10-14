@@ -9,13 +9,13 @@ import (
 func TestAccAwsCur_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"ReportDefinition": {
-			"basic":      testAccAwsCurReportDefinition_basic,
-			"disappears": testAccAwsCurReportDefinition_disappears,
-			"textOrCsv":  testAccAwsCurReportDefinition_textOrCsv,
-			"parquet":    testAccAwsCurReportDefinition_parquet,
-			"athena":     testAccAwsCurReportDefinition_athena,
-			"refresh":    testAccAwsCurReportDefinition_refresh,
-			"overwrite":  testAccAwsCurReportDefinition_overwrite,
+			"basic":      testAccReportDefinition_basic,
+			"disappears": testAccReportDefinition_disappears,
+			"textOrCsv":  testAccReportDefinition_textOrCSV,
+			"parquet":    testAccReportDefinition_parquet,
+			"athena":     testAccReportDefinition_athena,
+			"refresh":    testAccReportDefinition_refresh,
+			"overwrite":  testAccReportDefinition_overwrite,
 		},
 	}
 
