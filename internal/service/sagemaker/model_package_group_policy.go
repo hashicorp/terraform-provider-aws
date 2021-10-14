@@ -16,9 +16,9 @@ import (
 
 func ResourceModelPackageGroupPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerModelPackageGroupPolicyPut,
+		Create: resourceModelPackageGroupPolicyPut,
 		Read:   resourceModelPackageGroupPolicyRead,
-		Update: resourceAwsSagemakerModelPackageGroupPolicyPut,
+		Update: resourceModelPackageGroupPolicyPut,
 		Delete: resourceModelPackageGroupPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -40,7 +40,7 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("model_package_group_name").(string)
