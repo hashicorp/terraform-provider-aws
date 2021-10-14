@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsS3ControlBucketPolicy() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsS3ControlBucketPolicy() *schema.Resource {
 }
 
 func resourceAwsS3ControlBucketPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	bucket := d.Get("bucket").(string)
 
@@ -62,7 +63,7 @@ func resourceAwsS3ControlBucketPolicyCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsS3ControlBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -114,7 +115,7 @@ func resourceAwsS3ControlBucketPolicyRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsS3ControlBucketPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	input := &s3control.PutBucketPolicyInput{
 		Bucket: aws.String(d.Id()),
@@ -131,7 +132,7 @@ func resourceAwsS3ControlBucketPolicyUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsS3ControlBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	parsedArn, err := arn.Parse(d.Id())
 

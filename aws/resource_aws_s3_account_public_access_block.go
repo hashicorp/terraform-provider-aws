@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3control/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsS3AccountPublicAccessBlock() *schema.Resource {
@@ -56,9 +57,9 @@ func resourceAwsS3AccountPublicAccessBlock() *schema.Resource {
 }
 
 func resourceAwsS3AccountPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
-	accountID := meta.(*AWSClient).accountid
+	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
@@ -85,7 +86,7 @@ func resourceAwsS3AccountPublicAccessBlockCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsS3AccountPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	input := &s3control.GetPublicAccessBlockInput{
 		AccountId: aws.String(d.Id()),
@@ -136,7 +137,7 @@ func resourceAwsS3AccountPublicAccessBlockRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsS3AccountPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	input := &s3control.PutPublicAccessBlockInput{
 		AccountId: aws.String(d.Id()),
@@ -182,7 +183,7 @@ func resourceAwsS3AccountPublicAccessBlockUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsS3AccountPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3controlconn
+	conn := meta.(*conns.AWSClient).S3ControlConn
 
 	input := &s3control.DeletePublicAccessBlockInput{
 		AccountId: aws.String(d.Id()),
