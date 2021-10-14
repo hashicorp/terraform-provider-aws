@@ -109,7 +109,7 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().SchemasTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	id := SchemaCreateResourceID(name, registryName)
@@ -167,7 +167,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("version_created_date", nil)
 	}
 
-	tags, err := tftags.SchemasListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for EventBridge Schemas Schema (%s): %w", d.Id(), err)
@@ -220,7 +220,7 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.SchemasUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
