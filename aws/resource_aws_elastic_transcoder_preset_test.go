@@ -15,12 +15,12 @@ import (
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -41,12 +41,12 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -65,12 +65,12 @@ func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
 func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,12 +92,12 @@ func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 func TestAccAWSElasticTranscoderPreset_Description(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,12 +120,12 @@ func TestAccAWSElasticTranscoderPreset_Description(t *testing.T) {
 func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -170,12 +170,12 @@ func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
 func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -196,7 +196,7 @@ func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
 
 func testAccCheckElasticTranscoderPresetExists(name string, preset *elastictranscoder.Preset) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+		conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -222,7 +222,7 @@ func testAccCheckElasticTranscoderPresetExists(name string, preset *elastictrans
 
 func testAccCheckElasticTranscoderPresetDisappears(preset *elastictranscoder.Preset) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+		conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
 		_, err := conn.DeletePreset(&elastictranscoder.DeletePresetInput{
 			Id: preset.Id,
 		})
@@ -232,7 +232,7 @@ func testAccCheckElasticTranscoderPresetDisappears(preset *elastictranscoder.Pre
 }
 
 func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+	conn := acctest.Provider.Meta().(*AWSClient).elastictranscoderconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastictranscoder_preset" {
