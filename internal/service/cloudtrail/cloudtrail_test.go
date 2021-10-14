@@ -94,7 +94,7 @@ func sweeps(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudTrail_serial(t *testing.T) {
+func TestAccCloudTrail_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Trail": {
 			"basic":                 testAcc_basic,
