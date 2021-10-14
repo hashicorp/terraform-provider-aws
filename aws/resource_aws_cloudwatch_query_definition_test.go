@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {
@@ -104,7 +105,7 @@ func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", queryName),
 					resource.TestCheckResourceAttr(resourceName, "query_string", expectedQueryString),
 					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "0"),
-					resource.TestMatchResourceAttr(resourceName, "query_definition_id", regexp.MustCompile(uuidRegexPattern)),
+					resource.TestMatchResourceAttr(resourceName, "query_definition_id", regexp.MustCompile(verify.UUIDRegexPattern)),
 				),
 			},
 			{

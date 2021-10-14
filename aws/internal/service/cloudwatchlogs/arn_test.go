@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {

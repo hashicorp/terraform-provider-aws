@@ -2,6 +2,7 @@ package cloudwatchlogs
 
 import (
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (

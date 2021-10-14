@@ -14,6 +14,7 @@ import (
 	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceGroup() *schema.Resource {
@@ -33,13 +34,13 @@ func ResourceGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateLogGroupName,
+				ValidateFunc:  validLogGroupName,
 			},
 			"name_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLogGroupNamePrefix,
+				ValidateFunc: validLogGroupNamePrefix,
 			},
 
 			"retention_in_days": {
