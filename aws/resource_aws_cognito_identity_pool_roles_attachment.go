@@ -115,7 +115,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData,
 
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-		Roles:          expandCognitoIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
+		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("role_mapping"); ok {
@@ -125,7 +125,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData,
 			return fmt.Errorf("Error validating ambiguous role resolution: %v", errors)
 		}
 
-		params.RoleMappings = expandCognitoIdentityPoolRoleMappingsAttachment(v.(*schema.Set).List())
+		params.RoleMappings = expandIdentityPoolRoleMappingsAttachment(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Creating Cognito Identity Pool Roles Association: %#v", params)
@@ -157,11 +157,11 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, m
 
 	d.Set("identity_pool_id", ip.IdentityPoolId)
 
-	if err := d.Set("roles", flattenCognitoIdentityPoolRoles(ip.Roles)); err != nil {
+	if err := d.Set("roles", flattenIdentityPoolRoles(ip.Roles)); err != nil {
 		return fmt.Errorf("Error setting roles error: %#v", err)
 	}
 
-	if err := d.Set("role_mapping", flattenCognitoIdentityPoolRoleMappingsAttachment(ip.RoleMappings)); err != nil {
+	if err := d.Set("role_mapping", flattenIdentityPoolRoleMappingsAttachment(ip.RoleMappings)); err != nil {
 		return fmt.Errorf("Error setting role mappings error: %#v", err)
 	}
 
@@ -179,7 +179,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData,
 
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-		Roles:          expandCognitoIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
+		Roles:          expandIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
 	}
 
 	if d.HasChange("role_mapping") {
@@ -197,7 +197,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData,
 			mappings = []interface{}{}
 		}
 
-		params.RoleMappings = expandCognitoIdentityPoolRoleMappingsAttachment(mappings)
+		params.RoleMappings = expandIdentityPoolRoleMappingsAttachment(mappings)
 	}
 
 	log.Printf("[DEBUG] Updating Cognito Identity Pool Roles Association: %#v", params)
@@ -217,8 +217,8 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentDelete(d *schema.ResourceData,
 
 	_, err := conn.SetIdentityPoolRoles(&cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Id()),
-		Roles:          expandCognitoIdentityPoolRoles(make(map[string]interface{})),
-		RoleMappings:   expandCognitoIdentityPoolRoleMappingsAttachment([]interface{}{}),
+		Roles:          expandIdentityPoolRoles(make(map[string]interface{})),
+		RoleMappings:   expandIdentityPoolRoleMappingsAttachment([]interface{}{}),
 	})
 
 	if err != nil {
