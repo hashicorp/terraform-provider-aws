@@ -97,7 +97,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 		DBClusterIdentifier:         aws.String(clusterId),
 		DBClusterEndpointIdentifier: aws.String(endpointId),
 		EndpointType:                aws.String(endpointType),
-		Tags:                        tags.IgnoreAws().RdsTags(),
+		Tags:                        Tags(tags.IgnoreAws()),
 	}
 
 	if v := d.Get("static_members"); v != nil {
@@ -170,7 +170,7 @@ func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting static_members: %s", err)
 	}
 
-	tags, err := tftags.RdsListTags(conn, *arn)
+	tags, err := ListTags(conn, *arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Cluster Endpoint (%s): %s", *arn, err)
@@ -199,7 +199,7 @@ func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS Cluster Endpoint (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

@@ -526,7 +526,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
 			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			SnapshotIdentifier:   aws.String(d.Get("snapshot_identifier").(string)),
-			Tags:                 tags.IgnoreAws().RdsTags(),
+			Tags:                 Tags(tags.IgnoreAws()),
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -630,7 +630,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			S3Prefix:            aws.String(s3_bucket["bucket_prefix"].(string)),
 			SourceEngine:        aws.String(s3_bucket["source_engine"].(string)),
 			SourceEngineVersion: aws.String(s3_bucket["source_engine_version"].(string)),
-			Tags:                tags.IgnoreAws().RdsTags(),
+			Tags:                Tags(tags.IgnoreAws()),
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
@@ -731,7 +731,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
 			SourceDBClusterIdentifier: aws.String(pointInTime["source_cluster_identifier"].(string)),
-			Tags:                      tags.IgnoreAws().RdsTags(),
+			Tags:                      Tags(tags.IgnoreAws()),
 		}
 
 		if v, ok := pointInTime["restore_to_time"].(string); ok && v != "" {
@@ -831,7 +831,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
 			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
-			Tags:                 tags.IgnoreAws().RdsTags(),
+			Tags:                 Tags(tags.IgnoreAws()),
 		}
 
 		// Note: Username and password credentials are required and valid
@@ -1114,7 +1114,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
-	tags, err := tftags.RdsListTags(conn, aws.StringValue(dbc.DBClusterArn))
+	tags, err := ListTags(conn, aws.StringValue(dbc.DBClusterArn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterArn), err)
 	}
@@ -1352,7 +1352,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

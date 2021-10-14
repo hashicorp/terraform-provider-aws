@@ -123,7 +123,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 	params := &rds.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
 		DBClusterSnapshotIdentifier: aws.String(d.Get("db_cluster_snapshot_identifier").(string)),
-		Tags:                        tags.IgnoreAws().RdsTags(),
+		Tags:                        Tags(tags.IgnoreAws()),
 	}
 
 	err := resource.Retry(rdsDbClusterSnapshotCreateTimeout, func() *resource.RetryError {
@@ -207,7 +207,7 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := tftags.RdsListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
+	tags, err := ListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS DB Cluster Snapshot (%s): %s", d.Get("db_cluster_snapshot_arn").(string), err)
@@ -233,7 +233,7 @@ func resourceAwsdbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("db_cluster_snapshot_arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("db_cluster_snapshot_arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS DB Cluster Snapshot (%s) tags: %s", d.Get("db_cluster_snapshot_arn").(string), err)
 		}
 	}

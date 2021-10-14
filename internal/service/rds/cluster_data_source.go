@@ -265,7 +265,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_security_group_ids: %w", err)
 	}
 
-	tags, err := tftags.RdsListTags(conn, *arn)
+	tags, err := ListTags(conn, *arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Cluster (%s): %w", *arn, err)

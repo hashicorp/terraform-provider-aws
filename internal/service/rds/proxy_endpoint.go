@@ -100,7 +100,7 @@ func resourceProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
 		TargetRole:          aws.String(d.Get("target_role").(string)),
 		VpcSubnetIds:        flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
-		Tags:                tags.IgnoreAws().RdsTags(),
+		Tags:                Tags(tags.IgnoreAws()),
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
@@ -167,7 +167,7 @@ func resourceProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_subnet_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSubnetIds))
 	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSecurityGroupIds))
 
-	tags, err := tftags.RdsListTags(conn, endpointArn)
+	tags, err := ListTags(conn, endpointArn)
 
 	if err != nil {
 		return fmt.Errorf("Error listing tags for RDS DB Proxy Endpoint (%s): %w", endpointArn, err)
@@ -209,7 +209,7 @@ func resourceProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("Error updating RDS DB Proxy Endpoint (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

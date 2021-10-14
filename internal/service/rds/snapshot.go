@@ -126,7 +126,7 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	params := &rds.CreateDBSnapshotInput{
 		DBInstanceIdentifier: aws.String(dBInstanceIdentifier),
 		DBSnapshotIdentifier: aws.String(d.Get("db_snapshot_identifier").(string)),
-		Tags:                 tags.IgnoreAws().RdsTags(),
+		Tags:                 Tags(tags.IgnoreAws()),
 	}
 
 	resp, err := conn.CreateDBSnapshot(params)
@@ -195,7 +195,7 @@ func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", snapshot.Status)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := tftags.RdsListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS DB Snapshot (%s): %s", arn, err)
@@ -239,7 +239,7 @@ func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.RdsUpdateTags(conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
 		}
 	}
