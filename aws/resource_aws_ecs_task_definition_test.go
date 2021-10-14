@@ -9,13 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(ecs.EndpointsID, testAccErrorCheckSkipECS)
+	acctest.RegisterServiceErrorCheckFunc(ecs.EndpointsID, testAccErrorCheckSkipECS)
 
 	resource.AddTestSweepers("aws_ecs_task_definition", &resource.Sweeper{
 		Name: "aws_ecs_task_definition",
@@ -68,7 +69,7 @@ func testSweepEcsTaskDefinitions(region string) error {
 }
 
 func testAccErrorCheckSkipECS(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Unsupported field 'inferenceAccelerators'",
 	)
 }
@@ -76,12 +77,12 @@ func testAccErrorCheckSkipECS(t *testing.T) resource.ErrorCheckFunc {
 func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-basic")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-basic")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -89,14 +90,14 @@ func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinition(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
 				Config: testAccAWSEcsTaskDefinitionModified(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(`task-definition/.+`)),
 				),
 			},
 			{
@@ -113,12 +114,12 @@ func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-scratch-volume")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-scratch-volume")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -141,12 +142,12 @@ func TestAccAWSEcsTaskDefinition_withScratchVolume(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -183,12 +184,12 @@ func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -217,12 +218,12 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume-min")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume-min")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -251,12 +252,12 @@ func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -286,11 +287,11 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
 	resourceName := "aws_ecs_task_definition.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -322,12 +323,12 @@ func TestAccAWSEcsTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -362,16 +363,16 @@ func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withFsxWinFileSystem(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_task_definition.test"
 
-	if testAccGetPartition() == "aws-us-gov" {
+	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("Amazon FSx for Windows File Server volumes for ECS tasks are not supported in GovCloud partition")
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -404,12 +405,12 @@ func TestAccAWSEcsTaskDefinition_withFsxWinFileSystem(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-docker-volume")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -436,14 +437,14 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 	var def ecs.TaskDefinition
 	var service ecs.Service
 
-	clusterName := acctest.RandomWithPrefix("tf-acc-cluster-with-ecs-service")
-	svcName := acctest.RandomWithPrefix("tf-acc-td-with-ecs-service")
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-ecs-service")
+	clusterName := sdkacctest.RandomWithPrefix("tf-acc-cluster-with-ecs-service")
+	svcName := sdkacctest.RandomWithPrefix("tf-acc-td-with-ecs-service")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-ecs-service")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -474,14 +475,14 @@ func TestAccAWSEcsTaskDefinition_withEcsService(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := acctest.RandomWithPrefix("tf-acc-role-ecs-td-with-task-role-arn")
-	policyName := acctest.RandomWithPrefix("tf-acc-policy-ecs-td-with-task-role-arn")
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-task-role-arn")
+	roleName := sdkacctest.RandomWithPrefix("tf-acc-role-ecs-td-with-task-role-arn")
+	policyName := sdkacctest.RandomWithPrefix("tf-acc-policy-ecs-td-with-task-role-arn")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-task-role-arn")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -504,14 +505,14 @@ func TestAccAWSEcsTaskDefinition_withTaskRoleArn(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withNetworkMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := acctest.RandomWithPrefix("tf-acc-ecs-td-with-network-mode")
-	policyName := acctest.RandomWithPrefix("tf-acc-ecs-td-with-network-mode")
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-network-mode")
+	roleName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-network-mode")
+	policyName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-network-mode")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-network-mode")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -535,14 +536,14 @@ func TestAccAWSEcsTaskDefinition_withNetworkMode(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withIPCMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := acctest.RandomWithPrefix("tf-acc-ecs-td-with-ipc-mode")
-	policyName := acctest.RandomWithPrefix("tf-acc-ecs-td-with-ipc-mode")
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-ipc-mode")
+	roleName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-ipc-mode")
+	policyName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-ipc-mode")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-ipc-mode")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -566,14 +567,14 @@ func TestAccAWSEcsTaskDefinition_withIPCMode(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_withPidMode(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	roleName := acctest.RandomWithPrefix("tf-acc-ecs-td-with-pid-mode")
-	policyName := acctest.RandomWithPrefix("tf-acc-ecs-td-with-pid-mode")
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-pid-mode")
+	roleName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-pid-mode")
+	policyName := sdkacctest.RandomWithPrefix("tf-acc-ecs-td-with-pid-mode")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-with-pid-mode")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -597,12 +598,12 @@ func TestAccAWSEcsTaskDefinition_withPidMode(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_constraint(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-constraint")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-constraint")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -628,12 +629,12 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	var before ecs.TaskDefinition
 	var after ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-change-vol-forces-new-resource")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-change-vol-forces-new-resource")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -665,11 +666,11 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 	var conf ecs.TaskDefinition
 	resourceName := "aws_ecs_task_definition.test"
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-arrays")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-arrays")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -692,12 +693,12 @@ func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
 	var conf ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-fargate")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-fargate")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -728,12 +729,12 @@ func TestAccAWSEcsTaskDefinition_Fargate(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 	var conf ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-fargate")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-fargate")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -760,14 +761,14 @@ func TestAccAWSEcsTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 	var conf ecs.TaskDefinition
 
-	roleName := acctest.RandomWithPrefix("tf-acc-role-ecs-td-execution-role")
-	policyName := acctest.RandomWithPrefix("tf-acc-policy-ecs-td-execution-role")
-	tdName := acctest.RandomWithPrefix("tf-acc-td-execution-role")
+	roleName := sdkacctest.RandomWithPrefix("tf-acc-role-ecs-td-execution-role")
+	policyName := sdkacctest.RandomWithPrefix("tf-acc-policy-ecs-td-execution-role")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-execution-role")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -791,12 +792,12 @@ func TestAccAWSEcsTaskDefinition_ExecutionRole(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_disappears(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-basic")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-basic")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -804,7 +805,7 @@ func TestAccAWSEcsTaskDefinition_disappears(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinition(tdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcsTaskDefinition(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEcsTaskDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -818,12 +819,12 @@ func TestAccAWSEcsTaskDefinition_disappears(t *testing.T) {
 
 func TestAccAWSEcsTaskDefinition_Tags(t *testing.T) {
 	var taskDefinition ecs.TaskDefinition
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -864,7 +865,7 @@ func TestAccAWSEcsTaskDefinition_Tags(t *testing.T) {
 
 func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T) {
 	var taskDefinition ecs.TaskDefinition
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_task_definition.test"
 
 	containerName := "web"
@@ -878,8 +879,8 @@ func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T) {
 	egressIgnoredIPs := "169.254.170.2,169.254.169.254"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -903,12 +904,12 @@ func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T) {
 func TestAccAWSEcsTaskDefinition_inferenceAccelerator(t *testing.T) {
 	var def ecs.TaskDefinition
 
-	tdName := acctest.RandomWithPrefix("tf-acc-td-basic")
+	tdName := sdkacctest.RandomWithPrefix("tf-acc-td-basic")
 	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -1131,7 +1132,7 @@ func testAccCheckAWSTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(def 
 }
 
 func testAccAWSEcsTaskDefinition_constraint(tdName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = "%s"
 
@@ -2463,3 +2464,56 @@ func testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName string) resource.
 		return rs.Primary.Attributes["arn"], nil
 	}
 }
+func testAccAwsFsxWindowsFileSystemConfigBase() string {
+	return `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+}
+
+resource "aws_directory_service_directory" "test" {
+  edition  = "Standard"
+  name     = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    vpc_id     = aws_vpc.test.id
+  }
+}
+`
+}
+
+func testAccAwsFsxWindowsFileSystemConfigSubnetIds1() string {
+	return testAccAwsFsxWindowsFileSystemConfigBase() + `
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = aws_directory_service_directory.test.id
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test1.id]
+  throughput_capacity = 8
+}
+`
+}
+
