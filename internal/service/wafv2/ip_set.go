@@ -134,7 +134,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = tags.IgnoreAws().Wafv2Tags()
+		params.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateIPSet(params)
@@ -188,7 +188,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := aws.StringValue(resp.IPSet.ARN)
-	tags, err := tftags.Wafv2ListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("Error listing tags for WAFv2 IpSet (%s): %s", arn, err)
 	}
@@ -236,7 +236,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Wafv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("Error updating tags: %s", err)
 		}
 	}
