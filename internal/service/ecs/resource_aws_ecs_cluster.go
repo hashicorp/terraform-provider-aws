@@ -1,4 +1,4 @@
-package aws
+package ecs
 
 import (
 	"fmt"
@@ -12,43 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ecs/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
@@ -259,7 +227,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
-	if _, err := tfecs.waitClusterAvailable(conn, d.Id()); err != nil {
+	if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 	}
 
@@ -274,7 +242,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	var out *ecs.DescribeClustersOutput
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
-		out, err = tfecs.FindClusterByARN(conn, d.Id())
+		out, err = FindClusterByARN(conn, d.Id())
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -290,7 +258,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = tfecs.FindClusterByARN(conn, d.Id())
+		out, err = FindClusterByARN(conn, d.Id())
 	}
 
 	if tfresource.NotFound(err) {
@@ -379,7 +347,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error changing ECS cluster (%s): %w", d.Id(), err)
 		}
 
-		if _, err := tfecs.waitClusterAvailable(conn, d.Id()); err != nil {
+		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
@@ -422,7 +390,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %w", d.Id(), err)
 		}
 
-		if _, err := tfecs.waitClusterAvailable(conn, d.Id()); err != nil {
+		if _, err := waitClusterAvailable(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Cluster (%s) to become Available: %w", d.Id(), err)
 		}
 	}
@@ -466,7 +434,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting ECS cluster: %s", err)
 	}
 
-	if _, err := tfecs.waitClusterDeleted(conn, d.Id()); err != nil {
+	if _, err := waitClusterDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ECS Cluster (%s) to become Deleted: %w", d.Id(), err)
 	}
 
