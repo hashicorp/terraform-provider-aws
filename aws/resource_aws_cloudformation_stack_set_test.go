@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func init() {
 }
 
 func testSweepCloudformationStackSets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -37,7 +38,7 @@ func testSweepCloudformationStackSets(region string) error {
 	input := &cloudformation.ListStackSetsInput{
 		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.ListStackSetsPages(input, func(page *cloudformation.ListStackSetsOutput, lastPage bool) bool {
 		if page == nil {
@@ -49,13 +50,13 @@ func testSweepCloudformationStackSets(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(summary.StackSetName))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFormation StackSet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -64,7 +65,7 @@ func testSweepCloudformationStackSets(region string) error {
 		return fmt.Errorf("error listing CloudFormation StackSets (%s): %w", region, err)
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFormation StackSets (%s): %w", region, err)
