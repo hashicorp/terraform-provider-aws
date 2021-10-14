@@ -1,4 +1,4 @@
-package aws
+package kinesisanalyticsv2
 
 import (
 	"context"
@@ -15,32 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
-	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
 )
 
 func ResourceApplication() *schema.Resource {
@@ -963,7 +942,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application: %s", input)
 
-	outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+	outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 		return conn.CreateApplication(input)
 	})
 
@@ -991,7 +970,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	application, err := tfkinesisanalyticsv2.FindApplicationDetailByName(conn, d.Get("name").(string))
+	application, err := FindApplicationDetailByName(conn, d.Get("name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics v2 Application (%s) not found, removing from state", d.Id())
@@ -1097,7 +1076,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input: %s", d.Id(), input)
 
-						outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 							return conn.AddApplicationInput(input)
 						})
 
@@ -1107,7 +1086,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputOutput)
 
-						if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+						if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 						}
 
@@ -1136,7 +1115,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 								log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+								outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 									return conn.AddApplicationInputProcessingConfiguration(input)
 								})
 
@@ -1146,7 +1125,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 								output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput)
 
-								if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+								if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 									return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 								}
 
@@ -1161,7 +1140,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 								log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+								outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 									return conn.DeleteApplicationInputProcessingConfiguration(input)
 								})
 
@@ -1171,7 +1150,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 								output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput)
 
-								if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+								if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 									return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 								}
 
@@ -1223,7 +1202,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) output: %s", d.Id(), input)
 
-						outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 							return conn.DeleteApplicationOutput(input)
 						})
 
@@ -1233,7 +1212,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationOutputOutput)
 
-						if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+						if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 						}
 
@@ -1250,7 +1229,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) output: %s", d.Id(), input)
 
-						outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 							return conn.AddApplicationOutput(input)
 						})
 
@@ -1260,7 +1239,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationOutputOutput)
 
-						if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+						if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 						}
 
@@ -1281,7 +1260,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
 
-						outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 							return conn.AddApplicationReferenceDataSource(input)
 						})
 
@@ -1291,7 +1270,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationReferenceDataSourceOutput)
 
-						if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+						if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 						}
 
@@ -1308,7 +1287,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
 
-						outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 							return conn.DeleteApplicationReferenceDataSource(input)
 						})
 
@@ -1318,7 +1297,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationReferenceDataSourceOutput)
 
-						if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+						if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 						}
 
@@ -1349,7 +1328,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
 
-					outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+					outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 						return conn.AddApplicationVpcConfiguration(input)
 					})
 
@@ -1359,7 +1338,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					output := outputRaw.(*kinesisanalyticsv2.AddApplicationVpcConfigurationOutput)
 
-					if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+					if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 						return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 					}
 
@@ -1376,7 +1355,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
 
-					outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+					outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 						return conn.DeleteApplicationVpcConfiguration(input)
 					})
 
@@ -1386,7 +1365,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationVpcConfigurationOutput)
 
-					if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+					if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 						return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 					}
 
@@ -1421,7 +1400,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+				outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 					return conn.AddApplicationCloudWatchLoggingOption(input)
 				})
 
@@ -1431,7 +1410,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				output := outputRaw.(*kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput)
 
-				if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+				if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 					return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 				}
 
@@ -1448,7 +1427,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				outputRaw, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+				outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
 					return conn.DeleteApplicationCloudWatchLoggingOption(input)
 				})
 
@@ -1458,7 +1437,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput)
 
-				if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+				if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 					return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 				}
 
@@ -1490,7 +1469,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[DEBUG] Updating Kinesis Analytics v2 Application (%s): %s", d.Id(), input)
 
-			_, err := tfkinesisanalyticsv2.waitIAMPropagation(func() (interface{}, error) {
+			_, err := waitIAMPropagation(func() (interface{}, error) {
 				return conn.UpdateApplication(input)
 			})
 
@@ -1498,7 +1477,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 			}
 
-			if _, err := tfkinesisanalyticsv2.waitApplicationUpdated(conn, applicationName); err != nil {
+			if _, err := waitApplicationUpdated(conn, applicationName); err != nil {
 				return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 			}
 		}
@@ -1551,7 +1530,7 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfkinesisanalyticsv2.waitApplicationDeleted(conn, applicationName)
+	_, err = waitApplicationDeleted(conn, applicationName)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) deletion: %w", d.Id(), err)
@@ -1580,7 +1559,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationImport(d *schema.ResourceData, meta
 func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StartApplicationInput) error {
 	applicationName := aws.StringValue(input.ApplicationName)
 
-	application, err := tfkinesisanalyticsv2.FindApplicationDetailByName(conn, applicationName)
+	application, err := FindApplicationDetailByName(conn, applicationName)
 
 	if err != nil {
 		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
@@ -1609,7 +1588,7 @@ func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalytic
 		return fmt.Errorf("error starting Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
 	}
 
-	if _, err := tfkinesisanalyticsv2.waitApplicationStarted(conn, applicationName); err != nil {
+	if _, err := waitApplicationStarted(conn, applicationName); err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to start: %w", applicationARN, err)
 	}
 
@@ -1619,7 +1598,7 @@ func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalytic
 func kinesisAnalyticsV2StopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StopApplicationInput) error {
 	applicationName := aws.StringValue(input.ApplicationName)
 
-	application, err := tfkinesisanalyticsv2.FindApplicationDetailByName(conn, applicationName)
+	application, err := FindApplicationDetailByName(conn, applicationName)
 
 	if err != nil {
 		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
@@ -1638,7 +1617,7 @@ func kinesisAnalyticsV2StopApplication(conn *kinesisanalyticsv2.KinesisAnalytics
 		return fmt.Errorf("error stopping Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
 	}
 
-	if _, err := tfkinesisanalyticsv2.waitApplicationStopped(conn, applicationName); err != nil {
+	if _, err := waitApplicationStopped(conn, applicationName); err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to stop: %w", applicationARN, err)
 	}
 
