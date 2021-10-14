@@ -5,19 +5,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSKinesisStreamConsumerDataSource_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -36,14 +37,14 @@ func TestAccAWSKinesisStreamConsumerDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSKinesisStreamConsumerDataSource_Name(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -62,14 +63,14 @@ func TestAccAWSKinesisStreamConsumerDataSource_Name(t *testing.T) {
 }
 
 func TestAccAWSKinesisStreamConsumerDataSource_Arn(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
 	streamName := "aws_kinesis_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -97,7 +98,7 @@ resource "aws_kinesis_stream" "test" {
 }
 
 func testAccAWSKinesisStreamConsumerDataSourceConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSKinesisStreamConsumerDataSourceBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_kinesis_stream_consumer" "test" {
@@ -112,7 +113,7 @@ resource "aws_kinesis_stream_consumer" "test" {
 }
 
 func testAccAWSKinesisStreamConsumerDataSourceConfigName(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSKinesisStreamConsumerDataSourceBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_kinesis_stream_consumer" "test" {
@@ -128,7 +129,7 @@ resource "aws_kinesis_stream_consumer" "test" {
 }
 
 func testAccAWSKinesisStreamConsumerDataSourceConfigArn(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSKinesisStreamConsumerDataSourceBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_kinesis_stream_consumer" "test" {

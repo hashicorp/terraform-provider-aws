@@ -7,14 +7,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 	var stream kinesis.StreamDescription
 
-	sn := fmt.Sprintf("terraform-kinesis-test-%d", acctest.RandInt())
+	sn := fmt.Sprintf("terraform-kinesis-test-%d", sdkacctest.RandInt())
 	config := fmt.Sprintf(testAccCheckAwsKinesisStreamDataSourceConfig, sn)
 
 	updateShardCount := func() {
@@ -33,8 +34,8 @@ func TestAccAWSKinesisStreamDataSource_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesis.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesis.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
