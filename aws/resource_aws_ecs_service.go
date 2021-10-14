@@ -1235,7 +1235,7 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteService(&input)
 	}
 
