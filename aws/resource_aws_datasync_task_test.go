@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -144,7 +145,7 @@ func TestAccAWSDataSyncTask_disappears(t *testing.T) {
 				Config: testAccAWSDataSyncTaskConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDataSyncTask(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

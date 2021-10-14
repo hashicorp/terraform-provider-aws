@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDataSyncLocationNfs() *schema.Resource {
+func ResourceLocationNFS() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncLocationNfsCreate,
-		Read:   resourceAwsDataSyncLocationNfsRead,
-		Update: resourceAwsDataSyncLocationNfsUpdate,
-		Delete: resourceAwsDataSyncLocationNfsDelete,
+		Create: resourceLocationNFSCreate,
+		Read:   resourceLocationNFSRead,
+		Update: resourceLocationNFSUpdate,
+		Delete: resourceLocationNFSDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -97,7 +97,7 @@ func resourceAwsDataSyncLocationNfs() *schema.Resource {
 	}
 }
 
-func resourceAwsDataSyncLocationNfsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationNFSCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -121,10 +121,10 @@ func resourceAwsDataSyncLocationNfsCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceAwsDataSyncLocationNfsRead(d, meta)
+	return resourceLocationNFSRead(d, meta)
 }
 
-func resourceAwsDataSyncLocationNfsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationNFSRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -185,7 +185,7 @@ func resourceAwsDataSyncLocationNfsRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsDataSyncLocationNfsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationNFSUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChangesExcept("tags_all", "tags") {
@@ -213,10 +213,10 @@ func resourceAwsDataSyncLocationNfsUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsDataSyncLocationNfsRead(d, meta)
+	return resourceLocationNFSRead(d, meta)
 }
 
-func resourceAwsDataSyncLocationNfsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationNFSDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{

@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDataSyncLocationEfs() *schema.Resource {
+func ResourceLocationEFS() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncLocationEfsCreate,
-		Read:   resourceAwsDataSyncLocationEfsRead,
-		Update: resourceAwsDataSyncLocationEfsUpdate,
-		Delete: resourceAwsDataSyncLocationEfsDelete,
+		Create: resourceLocationEFSCreate,
+		Read:   resourceLocationEFSRead,
+		Update: resourceLocationEFSUpdate,
+		Delete: resourceLocationEFSDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -85,7 +85,7 @@ func resourceAwsDataSyncLocationEfs() *schema.Resource {
 	}
 }
 
-func resourceAwsDataSyncLocationEfsCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -105,10 +105,10 @@ func resourceAwsDataSyncLocationEfsCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceAwsDataSyncLocationEfsRead(d, meta)
+	return resourceLocationEFSRead(d, meta)
 }
 
-func resourceAwsDataSyncLocationEfsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -165,7 +165,7 @@ func resourceAwsDataSyncLocationEfsRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsDataSyncLocationEfsUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationEFSUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChange("tags_all") {
@@ -176,10 +176,10 @@ func resourceAwsDataSyncLocationEfsUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsDataSyncLocationEfsRead(d, meta)
+	return resourceLocationEFSRead(d, meta)
 }
 
-func resourceAwsDataSyncLocationEfsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationEFSDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{

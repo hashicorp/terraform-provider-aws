@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDataSyncLocationFsxWindowsFileSystem() *schema.Resource {
+func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncLocationFsxWindowsFileSystemCreate,
-		Read:   resourceAwsDataSyncLocationFsxWindowsFileSystemRead,
-		Update: resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate,
-		Delete: resourceAwsDataSyncLocationFsxWindowsFileSystemDelete,
+		Create: resourceLocationFSxWindowsFileSystemCreate,
+		Read:   resourceLocationFSxWindowsFileSystemRead,
+		Update: resourceLocationFSxWindowsFileSystemUpdate,
+		Delete: resourceLocationFSxWindowsFileSystemDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
@@ -102,7 +102,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystem() *schema.Resource {
 	}
 }
 
-func resourceAwsDataSyncLocationFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -132,10 +132,10 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemCreate(d *schema.ResourceDat
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d, meta)
+	return resourceLocationFSxWindowsFileSystemRead(d, meta)
 }
 
-func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -197,7 +197,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 	return nil
 }
 
-func resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChange("tags_all") {
@@ -208,10 +208,10 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemUpdate(d *schema.ResourceDat
 		}
 	}
 
-	return resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d, meta)
+	return resourceLocationFSxWindowsFileSystemRead(d, meta)
 }
 
-func resourceAwsDataSyncLocationFsxWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLocationFSxWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	input := &datasync.DeleteLocationInput{

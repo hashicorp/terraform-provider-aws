@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDataSyncAgent() *schema.Resource {
+func ResourceAgent() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDataSyncAgentCreate,
-		Read:   resourceAwsDataSyncAgentRead,
-		Update: resourceAwsDataSyncAgentUpdate,
-		Delete: resourceAwsDataSyncAgentDelete,
+		Create: resourceAgentCreate,
+		Read:   resourceAgentRead,
+		Update: resourceAgentUpdate,
+		Delete: resourceAgentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -87,7 +87,7 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 	}
 }
 
-func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -202,10 +202,10 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceAwsDataSyncAgentRead(d, meta)
+	return resourceAgentRead(d, meta)
 }
 
-func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAgentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -256,7 +256,7 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsDataSyncAgentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAgentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	if d.HasChange("name") {
@@ -281,10 +281,10 @@ func resourceAwsDataSyncAgentUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsDataSyncAgentRead(d, meta)
+	return resourceAgentRead(d, meta)
 }
 
-func resourceAwsDataSyncAgentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAgentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DataSyncConn
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -128,7 +129,7 @@ func TestAccAWSDataSyncAgent_disappears(t *testing.T) {
 				Config: testAccAWSDataSyncAgentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncAgentExists(resourceName, &agent1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDataSyncAgent(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAgent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
