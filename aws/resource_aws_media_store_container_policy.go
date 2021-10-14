@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMediaStoreContainerPolicy() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsMediaStoreContainerPolicy() *schema.Resource {
 }
 
 func resourceAwsMediaStoreContainerPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
+	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	input := &mediastore.PutContainerPolicyInput{
 		ContainerName: aws.String(d.Get("container_name").(string)),
@@ -52,7 +53,7 @@ func resourceAwsMediaStoreContainerPolicyPut(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsMediaStoreContainerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
+	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	input := &mediastore.GetContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
@@ -79,7 +80,7 @@ func resourceAwsMediaStoreContainerPolicyRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsMediaStoreContainerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
+	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	input := &mediastore.DeleteContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),

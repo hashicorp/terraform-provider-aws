@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMediaStoreContainer() *schema.Resource {
@@ -47,8 +48,8 @@ func resourceAwsMediaStoreContainer() *schema.Resource {
 }
 
 func resourceAwsMediaStoreContainerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).MediaStoreConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &mediastore.CreateContainerInput{
@@ -84,9 +85,9 @@ func resourceAwsMediaStoreContainerCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsMediaStoreContainerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MediaStoreConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &mediastore.DescribeContainerInput{
 		ContainerName: aws.String(d.Id()),
@@ -127,7 +128,7 @@ func resourceAwsMediaStoreContainerRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsMediaStoreContainerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
+	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
@@ -142,7 +143,7 @@ func resourceAwsMediaStoreContainerUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediastoreconn
+	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	input := &mediastore.DeleteContainerInput{
 		ContainerName: aws.String(d.Id()),

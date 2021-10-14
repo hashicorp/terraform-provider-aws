@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
@@ -48,7 +49,7 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAwsMediaStoreContainerPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).mediastoreconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_media_store_container_policy" {
@@ -85,7 +86,7 @@ func testAccCheckAwsMediaStoreContainerPolicyExists(name string) resource.TestCh
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).mediastoreconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
 
 		input := &mediastore.GetContainerPolicyInput{
 			ContainerName: aws.String(rs.Primary.ID),
