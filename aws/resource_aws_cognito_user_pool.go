@@ -606,11 +606,11 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("alias_attributes"); ok {
-		params.AliasAttributes = expandStringSet(v.(*schema.Set))
+		params.AliasAttributes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("auto_verified_attributes"); ok {
-		params.AutoVerifiedAttributes = expandStringSet(v.(*schema.Set))
+		params.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("email_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -680,7 +680,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("username_attributes"); ok {
-		params.UsernameAttributes = expandStringSet(v.(*schema.Set))
+		params.UsernameAttributes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("username_configuration"); ok {
@@ -827,7 +827,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("failed setting admin_create_user_config: %w", err)
 	}
 	if userPool.AliasAttributes != nil {
-		d.Set("alias_attributes", flattenStringSet(userPool.AliasAttributes))
+		d.Set("alias_attributes", flex.FlattenStringSet(userPool.AliasAttributes))
 	}
 
 	d.Set("arn", userPool.Arn)
@@ -835,7 +835,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("domain", userPool.Domain)
 	d.Set("estimated_number_of_users", userPool.EstimatedNumberOfUsers)
 	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*conns.AWSClient).RegionalHostname("cognito-idp"), d.Id()))
-	d.Set("auto_verified_attributes", flattenStringSet(userPool.AutoVerifiedAttributes))
+	d.Set("auto_verified_attributes", flex.FlattenStringSet(userPool.AutoVerifiedAttributes))
 
 	if userPool.EmailVerificationSubject != nil {
 		d.Set("email_verification_subject", userPool.EmailVerificationSubject)
@@ -886,7 +886,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if userPool.UsernameAttributes != nil {
-		d.Set("username_attributes", flattenStringSet(userPool.UsernameAttributes))
+		d.Set("username_attributes", flex.FlattenStringSet(userPool.UsernameAttributes))
 	}
 
 	if err := d.Set("username_configuration", flattenCognitoUserPoolUsernameConfiguration(userPool.UsernameConfiguration)); err != nil {
@@ -1036,7 +1036,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if v, ok := d.GetOk("auto_verified_attributes"); ok {
-			params.AutoVerifiedAttributes = expandStringSet(v.(*schema.Set))
+			params.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("account_recovery_setting"); ok {
