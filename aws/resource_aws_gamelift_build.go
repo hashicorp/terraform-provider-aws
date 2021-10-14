@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGameliftBuild() *schema.Resource {
@@ -77,8 +78,8 @@ func resourceAwsGameliftBuild() *schema.Resource {
 }
 
 func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	sl := expandGameliftStorageLocation(d.Get("storage_location").([]interface{}))
@@ -137,9 +138,9 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftBuildRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Gamelift Build: %s", d.Id())
 	out, err := conn.DescribeBuild(&gamelift.DescribeBuildInput{
@@ -182,7 +183,7 @@ func resourceAwsGameliftBuildRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsGameliftBuildUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Updating Gamelift Build: %s", d.Id())
 	input := gamelift.UpdateBuildInput{
@@ -211,7 +212,7 @@ func resourceAwsGameliftBuildUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftBuildDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Deleting Gamelift Build: %s", d.Id())
 	_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{

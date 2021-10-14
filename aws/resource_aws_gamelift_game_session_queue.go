@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGameliftGameSessionQueue() *schema.Resource {
@@ -70,8 +71,8 @@ func resourceAwsGameliftGameSessionQueue() *schema.Resource {
 }
 
 func resourceAwsGameliftGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := gamelift.CreateGameSessionQueueInput{
@@ -93,9 +94,9 @@ func resourceAwsGameliftGameSessionQueueCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsGameliftGameSessionQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Describing Gamelift Session Queues: %s", d.Id())
 	limit := int64(1)
@@ -181,7 +182,7 @@ func flattenGameliftPlayerLatencyPolicies(playerLatencyPolicies []*gamelift.Play
 }
 
 func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Updating Gamelift Session Queue: %s", d.Id())
 
@@ -210,7 +211,7 @@ func resourceAwsGameliftGameSessionQueueUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsGameliftGameSessionQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*conns.AWSClient).GameLiftConn
 	log.Printf("[INFO] Deleting Gamelift Session Queue: %s", d.Id())
 	_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
 		Name: aws.String(d.Id()),

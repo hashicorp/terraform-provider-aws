@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGameliftFleet() *schema.Resource {
@@ -201,8 +202,8 @@ func resourceAwsGameliftFleet() *schema.Resource {
 }
 
 func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := gamelift.CreateFleetInput{
@@ -314,9 +315,9 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Describing Gamelift Fleet: %s", d.Id())
 	out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
@@ -374,7 +375,7 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsGameliftFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Updating Gamelift Fleet: %s", d.Id())
 
@@ -429,7 +430,7 @@ func resourceAwsGameliftFleetUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*conns.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Deleting Gamelift Fleet: %s", d.Id())
 	// It can take ~ 1 hr as Gamelift will keep retrying on errors like

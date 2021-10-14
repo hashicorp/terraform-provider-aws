@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const testAccGameliftBuildPrefix = "tf_acc_build_"
@@ -28,7 +29,7 @@ func testSweepGameliftBuilds(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).gameliftconn
+	conn := client.(*conns.AWSClient).GameLiftConn
 
 	resp, err := conn.ListBuilds(&gamelift.ListBuildsInput{})
 	if err != nil {
@@ -246,7 +247,7 @@ func testAccCheckAWSGameliftBuildExists(n string, res *gamelift.Build) resource.
 			return fmt.Errorf("No Gamelift Build ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 		req := &gamelift.DescribeBuildInput{
 			BuildId: aws.String(rs.Primary.ID),
@@ -270,7 +271,7 @@ func testAccCheckAWSGameliftBuildExists(n string, res *gamelift.Build) resource.
 
 func testAccCheckAWSGameliftBuildDisappears(res *gamelift.Build) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 		input := &gamelift.DeleteBuildInput{BuildId: res.BuildId}
 
@@ -280,7 +281,7 @@ func testAccCheckAWSGameliftBuildDisappears(res *gamelift.Build) resource.TestCh
 }
 
 func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_build" {
@@ -307,7 +308,7 @@ func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSGamelift(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 	input := &gamelift.ListBuildsInput{}
 

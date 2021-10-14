@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepGameliftAliases(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).gameliftconn
+	conn := client.(*conns.AWSClient).GameLiftConn
 
 	err = listGameliftAliases(&gamelift.ListAliasesInput{}, conn, func(resp *gamelift.ListAliasesOutput) error {
 		if len(resp.Aliases) == 0 {
@@ -283,7 +284,7 @@ func TestAccAWSGameliftAlias_disappears(t *testing.T) {
 
 func testAccCheckAWSGameliftAliasDisappears(res *gamelift.Alias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 		input := &gamelift.DeleteAliasInput{AliasId: res.AliasId}
 
@@ -304,7 +305,7 @@ func testAccCheckAWSGameliftAliasExists(n string, res *gamelift.Alias) resource.
 			return fmt.Errorf("No Gamelift Alias ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 		out, err := conn.DescribeAlias(&gamelift.DescribeAliasInput{
 			AliasId: aws.String(rs.Primary.ID),
@@ -325,7 +326,7 @@ func testAccCheckAWSGameliftAliasExists(n string, res *gamelift.Alias) resource.
 }
 
 func testAccCheckAWSGameliftAliasDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_alias" {

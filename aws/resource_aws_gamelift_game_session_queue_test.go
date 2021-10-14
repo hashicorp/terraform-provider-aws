@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const testAccGameliftGameSessionQueuePrefix = "tfAccQueue-"
@@ -29,7 +30,7 @@ func testSweepGameliftGameSessionQueue(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).gameliftconn
+	conn := client.(*conns.AWSClient).GameLiftConn
 
 	out, err := conn.DescribeGameSessionQueues(&gamelift.DescribeGameSessionQueuesInput{})
 
@@ -252,7 +253,7 @@ func testAccCheckAWSGameliftGameSessionQueueExists(n string, res *gamelift.GameS
 			return fmt.Errorf("no Gamelift Session Queue Name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 		name := rs.Primary.Attributes["name"]
 		limit := int64(1)
@@ -285,7 +286,7 @@ func testAccCheckAWSGameliftGameSessionQueueExists(n string, res *gamelift.GameS
 
 func testAccCheckAWSGameliftGameSessionQueueDisappears(res *gamelift.GameSessionQueue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 		input := &gamelift.DeleteGameSessionQueueInput{Name: res.Name}
 
@@ -296,7 +297,7 @@ func testAccCheckAWSGameliftGameSessionQueueDisappears(res *gamelift.GameSession
 }
 
 func testAccCheckAWSGameliftGameSessionQueueDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_game_session_queue" {
