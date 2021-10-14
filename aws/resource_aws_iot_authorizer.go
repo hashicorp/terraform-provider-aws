@@ -93,7 +93,7 @@ func resourceAwsIotAuthorizerCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("token_signing_public_keys"); ok {
-		input.TokenSigningPublicKeys = expandStringMap(v.(map[string]interface{}))
+		input.TokenSigningPublicKeys = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	log.Printf("[INFO] Creating IoT Authorizer: %s", input)
@@ -154,7 +154,7 @@ func resourceAwsIotAuthorizerUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("token_signing_public_keys") {
-		input.TokenSigningPublicKeys = expandStringMap(d.Get("token_signing_public_keys").(map[string]interface{}))
+		input.TokenSigningPublicKeys = flex.ExpandStringMap(d.Get("token_signing_public_keys").(map[string]interface{}))
 	}
 
 	log.Printf("[INFO] Updating IoT Authorizer: %s", input)
