@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CreateThingType.html
@@ -33,20 +34,20 @@ func ResourceThingType() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateIotThingTypeName,
+				ValidateFunc: validThingTypeName,
 			},
 			"properties": {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateIotThingTypeDescription,
+							ValidateFunc: validThingTypeDescription,
 						},
 						"searchable_attributes": {
 							Type:     schema.TypeSet,
@@ -56,7 +57,7 @@ func ResourceThingType() *schema.Resource {
 							MaxItems: 3,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateIotThingTypeSearchableAttribute,
+								ValidateFunc: validThingTypeSearchableAttribute,
 							},
 						},
 					},

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceAuthorizer() *schema.Resource {
@@ -39,7 +40,7 @@ func ResourceAuthorizer() *schema.Resource {
 			"authorizer_function_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"name": {
 				Type:     schema.TypeString,
