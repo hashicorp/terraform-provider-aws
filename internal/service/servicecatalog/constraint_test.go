@@ -23,11 +23,11 @@ func init() {
 	resource.AddTestSweepers("aws_servicecatalog_constraint", &resource.Sweeper{
 		Name:         "aws_servicecatalog_constraint",
 		Dependencies: []string{},
-		F:            testSweepServiceCatalogConstraints,
+		F:            sweepConstraints,
 	})
 }
 
-func testSweepServiceCatalogConstraints(region string) error {
+func sweepConstraints(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -104,12 +104,12 @@ func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
+		CheckDestroy: testAccCheckConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
+				Config: testAccConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
+					testAccCheckConstraintExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "NOTIFICATION"),
@@ -137,12 +137,12 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
+		CheckDestroy: testAccCheckConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
+				Config: testAccConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
+					testAccCheckConstraintExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceConstraint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -160,16 +160,16 @@ func TestAccAWSServiceCatalogConstraint_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
+		CheckDestroy: testAccCheckConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
+				Config: testAccConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName2),
+				Config: testAccConstraintConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", rName2),
 				),
@@ -178,7 +178,7 @@ func TestAccAWSServiceCatalogConstraint_update(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsServiceCatalogConstraintDestroy(s *terraform.State) error {
+func testAccCheckConstraintDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -208,7 +208,7 @@ func testAccCheckAwsServiceCatalogConstraintDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsServiceCatalogConstraintExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckConstraintExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -232,7 +232,7 @@ func testAccCheckAwsServiceCatalogConstraintExists(resourceName string) resource
 	}
 }
 
-func testAccAWSServiceCatalogConstraintConfig_base(rName string) string {
+func testAccConstraintConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -296,8 +296,8 @@ resource "aws_servicecatalog_product_portfolio_association" "test" {
 `, rName)
 }
 
-func testAccAWSServiceCatalogConstraintConfig_basic(rName, description string) string {
-	return acctest.ConfigCompose(testAccAWSServiceCatalogConstraintConfig_base(rName), fmt.Sprintf(`
+func testAccConstraintConfig_basic(rName, description string) string {
+	return acctest.ConfigCompose(testAccConstraintConfig_base(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }

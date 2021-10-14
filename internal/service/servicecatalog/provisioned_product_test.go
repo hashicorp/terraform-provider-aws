@@ -24,11 +24,11 @@ func init() {
 	resource.AddTestSweepers("aws_servicecatalog_provisioned_product", &resource.Sweeper{
 		Name:         "aws_servicecatalog_provisioned_product",
 		Dependencies: []string{},
-		F:            testSweepServiceCatalogProvisionedProducts,
+		F:            sweepProvisionedProducts,
 	})
 }
 
-func testSweepServiceCatalogProvisionedProducts(region string) error {
+func sweepProvisionedProducts(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -92,12 +92,12 @@ func TestAccAWSServiceCatalogProvisionedProduct_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogProvisionedProductDestroy,
+		CheckDestroy: testAccCheckProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", servicecatalog.ServiceName, regexp.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -137,12 +137,12 @@ func TestAccAWSServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogProvisionedProductDestroy,
+		CheckDestroy: testAccCheckProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -161,20 +161,20 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogProvisionedProductDestroy,
+		CheckDestroy: testAccCheckProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_tags(rName, "Name", rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccProvisionedProductConfig_tags(rName, "Name", rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_tags(rName, "NotName", rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccProvisionedProductConfig_tags(rName, "NotName", rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.NotName", rName),
 				),
@@ -183,7 +183,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsServiceCatalogProvisionedProductDestroy(s *terraform.State) error {
+func testAccCheckProvisionedProductDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -205,7 +205,7 @@ func testAccCheckAwsServiceCatalogProvisionedProductDestroy(s *terraform.State) 
 	return nil
 }
 
-func testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckProvisionedProductExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -225,7 +225,7 @@ func testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName string) 
 	}
 }
 
-func testAccAWSServiceCatalogProvisionedProductConfigTemplateURLBase(rName, domain, email string) string {
+func testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -325,8 +325,8 @@ data "aws_servicecatalog_launch_paths" "test" {
 `, rName, domain, email)
 }
 
-func testAccAWSServiceCatalogProvisionedProductConfig_basic(rName, domain, email string) string {
-	return acctest.ConfigCompose(testAccAWSServiceCatalogProvisionedProductConfigTemplateURLBase(rName, domain, email),
+func testAccProvisionedProductConfig_basic(rName, domain, email string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = %[1]q
@@ -337,8 +337,8 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 `, rName))
 }
 
-func testAccAWSServiceCatalogProvisionedProductConfig_tags(rName, tagKey, tagValue, domain, email string) string {
-	return acctest.ConfigCompose(testAccAWSServiceCatalogProvisionedProductConfigTemplateURLBase(rName, domain, email),
+func testAccProvisionedProductConfig_tags(rName, tagKey, tagValue, domain, email string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = %[1]q

@@ -23,11 +23,11 @@ func init() {
 	resource.AddTestSweepers("aws_servicecatalog_tag_option_resource_association", &resource.Sweeper{
 		Name:         "aws_servicecatalog_tag_option_resource_association",
 		Dependencies: []string{},
-		F:            testSweepServiceCatalogTagOptionResourceAssociations,
+		F:            sweepTagOptionResourceAssociations,
 	})
 }
 
-func testSweepServiceCatalogTagOptionResourceAssociations(region string) error {
+func sweepTagOptionResourceAssociations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -102,12 +102,12 @@ func TestAccAWSServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionResourceAssociationDestroy,
+		CheckDestroy: testAccCheckTagOptionResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogTagOptionResourceAssociationConfig_basic(rName),
+				Config: testAccTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceName),
+					testAccCheckTagOptionResourceAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_id", "aws_servicecatalog_portfolio.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "tag_option_id", "aws_servicecatalog_tag_option.test", "id"),
 				),
@@ -129,12 +129,12 @@ func TestAccAWSServiceCatalogTagOptionResourceAssociation_disappears(t *testing.
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionResourceAssociationDestroy,
+		CheckDestroy: testAccCheckTagOptionResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogTagOptionResourceAssociationConfig_basic(rName),
+				Config: testAccTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceName),
+					testAccCheckTagOptionResourceAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceTagOptionResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -143,7 +143,7 @@ func TestAccAWSServiceCatalogTagOptionResourceAssociation_disappears(t *testing.
 	})
 }
 
-func testAccCheckAwsServiceCatalogTagOptionResourceAssociationDestroy(s *terraform.State) error {
+func testAccCheckTagOptionResourceAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -171,7 +171,7 @@ func testAccCheckAwsServiceCatalogTagOptionResourceAssociationDestroy(s *terrafo
 	return nil
 }
 
-func testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckTagOptionResourceAssociationExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -197,7 +197,7 @@ func testAccCheckAwsServiceCatalogTagOptionResourceAssociationExists(resourceNam
 	}
 }
 
-func testAccAWSServiceCatalogTagOptionResourceAssociationConfig_base(rName string) string {
+func testAccTagOptionResourceAssociationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
   name          = %[1]q
@@ -212,8 +212,8 @@ resource "aws_servicecatalog_tag_option" "test" {
 `, rName)
 }
 
-func testAccAWSServiceCatalogTagOptionResourceAssociationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAWSServiceCatalogTagOptionResourceAssociationConfig_base(rName), `
+func testAccTagOptionResourceAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccTagOptionResourceAssociationConfig_base(rName), `
 resource "aws_servicecatalog_tag_option_resource_association" "test" {
   resource_id   = aws_servicecatalog_portfolio.test.id
   tag_option_id = aws_servicecatalog_tag_option.test.id

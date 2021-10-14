@@ -24,7 +24,7 @@ func TestAccAWSServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogLaunchPathsDataSourceConfig_basic(rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccLaunchPathsDataSourceConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "accept_language", "en"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", resourceNameProduct, "id"),
@@ -37,7 +37,7 @@ func TestAccAWSServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSServiceCatalogLaunchPathsDataSourceConfig_base(rName, domain, email string) string {
+func testAccLaunchPathsDataSourceConfig_base(rName, domain, email string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
@@ -128,8 +128,8 @@ resource "aws_servicecatalog_principal_portfolio_association" "test" {
 `, rName, domain, email)
 }
 
-func testAccAWSServiceCatalogLaunchPathsDataSourceConfig_basic(rName, domain, email string) string {
-	return acctest.ConfigCompose(testAccAWSServiceCatalogLaunchPathsDataSourceConfig_base(rName, domain, email), `
+func testAccLaunchPathsDataSourceConfig_basic(rName, domain, email string) string {
+	return acctest.ConfigCompose(testAccLaunchPathsDataSourceConfig_base(rName, domain, email), `
 data "aws_servicecatalog_launch_paths" "test" {
   product_id = aws_servicecatalog_product_portfolio_association.test.product_id
 }

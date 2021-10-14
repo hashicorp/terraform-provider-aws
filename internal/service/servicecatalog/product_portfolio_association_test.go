@@ -25,11 +25,11 @@ func init() {
 	resource.AddTestSweepers("aws_servicecatalog_product_portfolio_association", &resource.Sweeper{
 		Name:         "aws_servicecatalog_product_portfolio_association",
 		Dependencies: []string{},
-		F:            testSweepServiceCatalogProductPortfolioAssociations,
+		F:            sweepProductPortfolioAssociations,
 	})
 }
 
-func testSweepServiceCatalogProductPortfolioAssociations(region string) error {
+func sweepProductPortfolioAssociations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -131,12 +131,12 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy,
+		CheckDestroy: testAccCheckProductPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName),
+					testAccCheckProductPortfolioAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 				),
@@ -160,12 +160,12 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_disappears(t *testing.T
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy,
+		CheckDestroy: testAccCheckProductPortfolioAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName),
+					testAccCheckProductPortfolioAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProductPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -174,7 +174,7 @@ func TestAccAWSServiceCatalogProductPortfolioAssociation_disappears(t *testing.T
 	})
 }
 
-func testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy(s *terraform.State) error {
+func testAccCheckProductPortfolioAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -202,7 +202,7 @@ func testAccCheckAwsServiceCatalogProductPortfolioAssociationDestroy(s *terrafor
 	return nil
 }
 
-func testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckProductPortfolioAssociationExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -228,7 +228,7 @@ func testAccCheckAwsServiceCatalogProductPortfolioAssociationExists(resourceName
 	}
 }
 
-func testAccAWSServiceCatalogProductPortfolioAssociationConfig_base(rName, domain, email string) string {
+func testAccProductPortfolioAssociationConfig_base(rName, domain, email string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
@@ -285,8 +285,8 @@ resource "aws_servicecatalog_portfolio" "test" {
 `, rName, domain, email)
 }
 
-func testAccAWSServiceCatalogProductPortfolioAssociationConfig_basic(rName, domain, email string) string {
-	return acctest.ConfigCompose(testAccAWSServiceCatalogProductPortfolioAssociationConfig_base(rName, domain, email), `
+func testAccProductPortfolioAssociationConfig_basic(rName, domain, email string) string {
+	return acctest.ConfigCompose(testAccProductPortfolioAssociationConfig_base(rName, domain, email), `
 resource "aws_servicecatalog_product_portfolio_association" "test" {
   portfolio_id = aws_servicecatalog_portfolio.test.id
   product_id   = aws_servicecatalog_product.test.id

@@ -21,10 +21,10 @@ func TestAccAWSServiceCatalogProductDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
+		CheckDestroy: testAccCheckProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductDataSourceConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
+				Config: testAccProductDataSourceConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -57,10 +57,10 @@ func TestAccAWSServiceCatalogProductDataSource_physicalID(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
+		CheckDestroy: testAccCheckProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductDataSourceConfig_physicalID(rName, domain, acctest.DefaultEmailAddress),
+				Config: testAccProductDataSourceConfig_physicalID(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -82,16 +82,16 @@ func TestAccAWSServiceCatalogProductDataSource_physicalID(t *testing.T) {
 	})
 }
 
-func testAccAWSServiceCatalogProductDataSourceConfig_basic(rName, description, supportDescription, domain, email string) string {
-	return acctest.ConfigCompose(testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription, domain, email), `
+func testAccProductDataSourceConfig_basic(rName, description, supportDescription, domain, email string) string {
+	return acctest.ConfigCompose(testAccProductConfig_basic(rName, description, supportDescription, domain, email), `
 data "aws_servicecatalog_product" "test" {
   id = aws_servicecatalog_product.test.id
 }
 `)
 }
 
-func testAccAWSServiceCatalogProductDataSourceConfig_physicalID(rName, domain, email string) string {
-	return acctest.ConfigCompose(testAccAWSServiceCatalogProductConfig_physicalID(rName, domain, email), `
+func testAccProductDataSourceConfig_physicalID(rName, domain, email string) string {
+	return acctest.ConfigCompose(testAccProductConfig_physicalID(rName, domain, email), `
 data "aws_servicecatalog_product" "test" {
   id = aws_servicecatalog_product.test.id
 }

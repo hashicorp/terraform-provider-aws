@@ -23,12 +23,12 @@ func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogOrganizationsAccessDestroy,
+		CheckDestroy: testAccCheckOrganizationsAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogOrganizationsAccessConfig_basic(),
+				Config: testAccOrganizationsAccessConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogOrganizationsAccessExists(resourceName),
+					testAccCheckOrganizationsAccessExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
@@ -36,7 +36,7 @@ func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsServiceCatalogOrganizationsAccessDestroy(s *terraform.State) error {
+func testAccCheckOrganizationsAccessDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -60,7 +60,7 @@ func testAccCheckAwsServiceCatalogOrganizationsAccessDestroy(s *terraform.State)
 	return nil
 }
 
-func testAccCheckAwsServiceCatalogOrganizationsAccessExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckOrganizationsAccessExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -92,7 +92,7 @@ func testAccCheckAwsServiceCatalogOrganizationsAccessExists(resourceName string)
 	}
 }
 
-func testAccAWSServiceCatalogOrganizationsAccessConfig_basic() string {
+func testAccOrganizationsAccessConfig_basic() string {
 	return `
 resource "aws_servicecatalog_organizations_access" "test" {
   enabled = "true"

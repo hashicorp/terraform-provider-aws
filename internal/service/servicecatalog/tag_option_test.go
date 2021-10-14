@@ -23,11 +23,11 @@ func init() {
 	resource.AddTestSweepers("aws_servicecatalog_tag_option", &resource.Sweeper{
 		Name:         "aws_servicecatalog_tag_option",
 		Dependencies: []string{},
-		F:            testSweepServiceCatalogTagOptions,
+		F:            sweepTagOptions,
 	})
 }
 
-func testSweepServiceCatalogTagOptions(region string) error {
+func sweepTagOptions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -86,12 +86,12 @@ func TestAccAWSServiceCatalogTagOption_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionDestroy,
+		CheckDestroy: testAccCheckTagOptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName, "värde", "active = true"),
+				Config: testAccTagOptionConfig_basic(rName, "värde", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogTagOptionExists(resourceName),
+					testAccCheckTagOptionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "owner"),
@@ -115,12 +115,12 @@ func TestAccAWSServiceCatalogTagOption_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionDestroy,
+		CheckDestroy: testAccCheckTagOptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName, "värde", "active = true"),
+				Config: testAccTagOptionConfig_basic(rName, "värde", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogTagOptionExists(resourceName),
+					testAccCheckTagOptionExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceTagOption(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -141,10 +141,10 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionDestroy,
+		CheckDestroy: testAccCheckTagOptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName, "värde ett", ""),
+				Config: testAccTagOptionConfig_basic(rName, "värde ett", ""),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
@@ -153,7 +153,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName, "värde två", "active = true"),
+				Config: testAccTagOptionConfig_basic(rName, "värde två", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
@@ -162,7 +162,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName, "värde två", "active = false"),
+				Config: testAccTagOptionConfig_basic(rName, "värde två", "active = false"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "false"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName), // cannot be updated in place
@@ -171,7 +171,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName, "värde två", "active = true"),
+				Config: testAccTagOptionConfig_basic(rName, "värde två", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName), // cannot be updated in place
@@ -180,7 +180,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName2, "värde ett", "active = true"),
+				Config: testAccTagOptionConfig_basic(rName2, "värde ett", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName2),
@@ -200,10 +200,10 @@ func TestAccAWSServiceCatalogTagOption_notActive(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogTagOptionDestroy,
+		CheckDestroy: testAccCheckTagOptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName, "värde ett", "active = false"),
+				Config: testAccTagOptionConfig_basic(rName, "värde ett", "active = false"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "false"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
@@ -215,7 +215,7 @@ func TestAccAWSServiceCatalogTagOption_notActive(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsServiceCatalogTagOptionDestroy(s *terraform.State) error {
+func testAccCheckTagOptionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -245,7 +245,7 @@ func testAccCheckAwsServiceCatalogTagOptionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsServiceCatalogTagOptionExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckTagOptionExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -269,7 +269,7 @@ func testAccCheckAwsServiceCatalogTagOptionExists(resourceName string) resource.
 	}
 }
 
-func testAccAWSServiceCatalogTagOptionConfig_basic(key, value, active string) string {
+func testAccTagOptionConfig_basic(key, value, active string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_tag_option" "test" {
   key   = %[1]q

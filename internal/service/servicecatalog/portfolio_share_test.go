@@ -30,12 +30,12 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsServiceCatalogPortfolioShareDestroy,
+		CheckDestroy:      testAccCheckPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioShareConfig_basic(rName),
+				Config: testAccPortfolioShareConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
+					testAccCheckPortfolioShareExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "accepted", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", dataSourceName, "account_id"),
@@ -70,12 +70,12 @@ func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioShareDestroy,
+		CheckDestroy: testAccCheckPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioShareConfig_organizationalUnit(rName),
+				Config: testAccPortfolioShareConfig_organizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
+					testAccCheckPortfolioShareExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "accepted", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", "id"),
@@ -96,7 +96,7 @@ func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsServiceCatalogPortfolioShareDestroy(s *terraform.State) error {
+func testAccCheckPortfolioShareDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -127,7 +127,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPortfolioShareExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -156,7 +156,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 	}
 }
 
-func testAccAWSServiceCatalogPortfolioShareConfig_basic(rName string) string {
+func testAccPortfolioShareConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "alternate" {
   provider = "awsalternate"
@@ -179,7 +179,7 @@ resource "aws_servicecatalog_portfolio_share" "test" {
 `, rName))
 }
 
-func testAccAWSServiceCatalogPortfolioShareConfig_organizationalUnit(rName string) string {
+func testAccPortfolioShareConfig_organizationalUnit(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

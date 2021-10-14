@@ -18,12 +18,12 @@ func TestAccAWSServiceCatalogConstraintDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
+		CheckDestroy: testAccCheckConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintDataSourceConfig_basic(rName, rName),
+				Config: testAccConstraintDataSourceConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
+					testAccCheckConstraintExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "accept_language", dataSourceName, "accept_language"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "owner", dataSourceName, "owner"),
@@ -38,8 +38,8 @@ func TestAccAWSServiceCatalogConstraintDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSServiceCatalogConstraintDataSourceConfig_basic(rName, description string) string {
-	return acctest.ConfigCompose(testAccAWSServiceCatalogConstraintConfig_basic(rName, description), `
+func testAccConstraintDataSourceConfig_basic(rName, description string) string {
+	return acctest.ConfigCompose(testAccConstraintConfig_basic(rName, description), `
 data "aws_servicecatalog_constraint" "test" {
   id = aws_servicecatalog_constraint.test.id
 }
