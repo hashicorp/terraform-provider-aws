@@ -22,12 +22,12 @@ func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3outposts.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3OutpostsEndpointDestroy,
+		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3OutpostsEndpointConfig(rInt),
+				Config: testAccEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3OutpostsEndpointExists(resourceName),
+					testAccCheckEndpointExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
@@ -40,7 +40,7 @@ func TestAccAWSS3OutpostsEndpoint_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSS3OutpostsEndpointImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccEndpointImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -55,12 +55,12 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, s3outposts.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSS3OutpostsEndpointDestroy,
+		CheckDestroy: testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3OutpostsEndpointConfig(rInt),
+				Config: testAccEndpointConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3OutpostsEndpointExists(resourceName),
+					testAccCheckEndpointExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3outposts.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -69,7 +69,7 @@ func TestAccAWSS3OutpostsEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSS3OutpostsEndpointDestroy(s *terraform.State) error {
+func testAccCheckEndpointDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).S3OutpostsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -91,7 +91,7 @@ func testAccCheckAWSS3OutpostsEndpointDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSS3OutpostsEndpointExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckEndpointExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -118,7 +118,7 @@ func testAccCheckAWSS3OutpostsEndpointExists(resourceName string) resource.TestC
 	}
 }
 
-func testAccAWSS3OutpostsEndpointImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccEndpointImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -129,7 +129,7 @@ func testAccAWSS3OutpostsEndpointImportStateIdFunc(resourceName string) resource
 	}
 }
 
-func testAccAWSS3OutpostsEndpointConfig(rInt int) string {
+func testAccEndpointConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
