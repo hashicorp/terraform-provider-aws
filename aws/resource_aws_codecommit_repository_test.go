@@ -20,7 +20,7 @@ func TestAccAWSCodeCommitRepository_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccAWSCodeCommitRepository_withChanges(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,7 +80,7 @@ func TestAccAWSCodeCommitRepository_create_default_branch(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +108,7 @@ func TestAccAWSCodeCommitRepository_create_and_update_default_branch(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -143,7 +143,7 @@ func TestAccAWSCodeCommitRepository_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, codecommit.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -191,7 +191,7 @@ func testAccCheckCodeCommitRepositoryExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("No ID is set")
 		}
 
-		codecommitconn := testAccProvider.Meta().(*AWSClient).codecommitconn
+		codecommitconn := acctest.Provider.Meta().(*AWSClient).codecommitconn
 		out, err := codecommitconn.GetRepository(&codecommit.GetRepositoryInput{
 			RepositoryName: aws.String(rs.Primary.ID),
 		})
@@ -214,7 +214,7 @@ func testAccCheckCodeCommitRepositoryExists(name string) resource.TestCheckFunc 
 }
 
 func testAccCheckCodeCommitRepositoryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codecommitconn
+	conn := acctest.Provider.Meta().(*AWSClient).codecommitconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codecommit_repository" {
