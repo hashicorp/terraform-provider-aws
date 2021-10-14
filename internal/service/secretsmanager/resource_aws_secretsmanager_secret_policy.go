@@ -1,4 +1,4 @@
-package aws
+package secretsmanager
 
 import (
 	"fmt"
@@ -11,14 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceSecretPolicy() *schema.Resource {
@@ -100,7 +98,7 @@ func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var res *secretsmanager.GetResourcePolicyOutput
 
-	err := resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		res, err = conn.GetResourcePolicy(input)

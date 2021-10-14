@@ -1,4 +1,4 @@
-package aws
+package secretsmanager
 
 import (
 	"bytes"
@@ -14,15 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceSecret() *schema.Resource {
@@ -186,7 +184,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry for secret recreation after deletion
 	var output *secretsmanager.CreateSecretOutput
-	err := resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateSecret(input)
 		// Temporarily retry on these errors to support immediate secret recreation:
@@ -275,7 +273,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 
 	var output *secretsmanager.DescribeSecretOutput
 
-	err := resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DescribeSecret(input)

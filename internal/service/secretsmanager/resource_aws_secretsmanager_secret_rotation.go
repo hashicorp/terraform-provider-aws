@@ -1,4 +1,4 @@
-package aws
+package secretsmanager
 
 import (
 	"fmt"
@@ -10,12 +10,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/secretsmanager/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 )
 
 func ResourceSecretRotation() *schema.Resource {
@@ -110,7 +108,7 @@ func resourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error 
 
 	var output *secretsmanager.DescribeSecretOutput
 
-	err := resource.Retry(tfsecretsmanager.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.DescribeSecret(input)

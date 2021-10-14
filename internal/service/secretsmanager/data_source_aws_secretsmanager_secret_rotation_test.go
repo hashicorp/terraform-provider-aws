@@ -1,4 +1,4 @@
-package aws
+package secretsmanager_test
 
 import (
 	"fmt"
