@@ -87,7 +87,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &swf.RegisterDomainInput{
 		Name:                                   aws.String(name),
 		WorkflowExecutionRetentionPeriodInDays: aws.String(d.Get("workflow_execution_retention_period_in_days").(string)),
-		Tags:                                   tags.IgnoreAws().SwfTags(),
+		Tags:                                   Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -130,7 +130,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := *resp.DomainInfo.Arn
-	tags, err := tftags.SwfListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SWF Domain (%s): %s", arn, err)
@@ -161,7 +161,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.SwfUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating SWF Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
