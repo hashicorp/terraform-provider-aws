@@ -1,10 +1,7 @@
 package elb
 
-
 import (
 	"testing"
-
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
 func TestValidName(t *testing.T) {
@@ -59,4 +56,3 @@ func TestValidNamePrefix(t *testing.T) {
 		}
 	}
 }
-
