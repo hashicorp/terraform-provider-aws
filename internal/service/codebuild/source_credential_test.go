@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
+func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 	var sourceCredentialsInfo codebuild.SourceCredentialsInfo
 	token := sdkacctest.RandomWithPrefix("token")
 	resourceName := "aws_codebuild_source_credential.test"
@@ -53,7 +53,7 @@ func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildSourceCredential_BasicAuth(t *testing.T) {
+func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 	var sourceCredentialsInfo codebuild.SourceCredentialsInfo
 	token := sdkacctest.RandomWithPrefix("token")
 	resourceName := "aws_codebuild_source_credential.test"

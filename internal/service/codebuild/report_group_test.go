@@ -71,7 +71,7 @@ func sweepReportGroups(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
+func TestAccCodeBuildReportGroup_basic(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"
@@ -103,7 +103,7 @@ func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildReportGroup_export_s3(t *testing.T) {
+func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"
@@ -153,7 +153,7 @@ func TestAccAWSCodeBuildReportGroup_export_s3(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildReportGroup_tags(t *testing.T) {
+func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"
@@ -199,7 +199,7 @@ func TestAccAWSCodeBuildReportGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildReportGroup_deleteReports(t *testing.T) {
+func TestAccCodeBuildReportGroup_deleteReports(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"
@@ -227,7 +227,7 @@ func TestAccAWSCodeBuildReportGroup_deleteReports(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
+func TestAccCodeBuildReportGroup_disappears(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_report_group.test"

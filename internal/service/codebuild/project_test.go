@@ -50,7 +50,7 @@ func testAccGitHubSourceLocationFromEnv() string {
 	return sourceLocation
 }
 
-func TestAccAWSCodeBuildProject_basic(t *testing.T) {
+func TestAccCodeBuildProject_basic(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -106,7 +106,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_BadgeEnabled(t *testing.T) {
+func TestAccCodeBuildProject_badgeEnabled(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -134,7 +134,7 @@ func TestAccAWSCodeBuildProject_BadgeEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_BuildTimeout(t *testing.T) {
+func TestAccCodeBuildProject_buildTimeout(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -168,7 +168,7 @@ func TestAccAWSCodeBuildProject_BuildTimeout(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_QueuedTimeout(t *testing.T) {
+func TestAccCodeBuildProject_queuedTimeout(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -202,7 +202,7 @@ func TestAccAWSCodeBuildProject_QueuedTimeout(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
+func TestAccCodeBuildProject_cache(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -279,7 +279,7 @@ func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Description(t *testing.T) {
+func TestAccCodeBuildProject_description(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -313,7 +313,7 @@ func TestAccAWSCodeBuildProject_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_FileSystemLocations(t *testing.T) {
+func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -363,7 +363,7 @@ func TestAccAWSCodeBuildProject_FileSystemLocations(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_SourceVersion(t *testing.T) {
+func TestAccCodeBuildProject_sourceVersion(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -385,7 +385,7 @@ func TestAccAWSCodeBuildProject_SourceVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_EncryptionKey(t *testing.T) {
+func TestAccCodeBuildProject_encryptionKey(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -412,7 +412,7 @@ func TestAccAWSCodeBuildProject_EncryptionKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable(t *testing.T) {
+func TestAccCodeBuildProject_Environment_environmentVariable(t *testing.T) {
 	var project1, project2, project3 codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -461,7 +461,7 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.T) {
+func TestAccCodeBuildProject_EnvironmentEnvironmentVariable_type(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -505,7 +505,7 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 	})
 }
 
-func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Value(t *testing.T) {
+func TestAccCodeBuildProject_EnvironmentEnvironmentVariable_value(t *testing.T) {
 	var project1, project2, project3 codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -553,7 +553,7 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Value(t *testing
 	})
 }
 
-func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
+func TestAccCodeBuildProject_Environment_certificate(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	oName := "certificate.pem"
@@ -581,7 +581,7 @@ func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_LogsConfig_CloudWatchLogs(t *testing.T) {
+func TestAccCodeBuildProject_Logs_cloudWatchLogs(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -626,7 +626,7 @@ func TestAccAWSCodeBuildProject_LogsConfig_CloudWatchLogs(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_LogsConfig_S3Logs(t *testing.T) {
+func TestAccCodeBuildProject_Logs_s3Logs(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -671,7 +671,7 @@ func TestAccAWSCodeBuildProject_LogsConfig_S3Logs(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_BuildBatchConfig(t *testing.T) {
+func TestAccCodeBuildProject_buildBatch(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -719,7 +719,7 @@ func TestAccAWSCodeBuildProject_BuildBatchConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
+func TestAccCodeBuildProject_Source_gitCloneDepth(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -753,7 +753,7 @@ func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_CodeCommit(t *testing.T) {
+func TestAccCodeBuildProject_SourceGitSubmodules_codeCommit(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -789,7 +789,7 @@ func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_CodeCommit(t *testing
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_GitHub(t *testing.T) {
+func TestAccCodeBuildProject_SourceGitSubmodules_gitHub(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -821,7 +821,7 @@ func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_GitHub(t *testing.T) 
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_GitHubEnterprise(t *testing.T) {
+func TestAccCodeBuildProject_SourceGitSubmodules_gitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -853,7 +853,7 @@ func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_GitHubEnterprise(t *t
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(t *testing.T) {
+func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_codeCommit(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -914,7 +914,7 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_GitHub(t *testing.T) {
+func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_gitHub(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -946,7 +946,7 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_GitHub(t *t
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_GitHubEnterprise(t *testing.T) {
+func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_gitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -978,7 +978,7 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_GitHubEnter
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_BuildStatusConfig_GitHubEnterprise(t *testing.T) {
+func TestAccCodeBuildProject_SourceBuildStatus_gitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1008,7 +1008,7 @@ func TestAccAWSCodeBuildProject_Source_BuildStatusConfig_GitHubEnterprise(t *tes
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
+func TestAccCodeBuildProject_Source_insecureSSL(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1042,7 +1042,7 @@ func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_Bitbucket(t *testing.T) {
+func TestAccCodeBuildProject_SourceReportBuildStatus_bitbucket(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1078,7 +1078,7 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_Bitbucket(t *testing.T)
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHub(t *testing.T) {
+func TestAccCodeBuildProject_SourceReportBuildStatus_gitHub(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1112,7 +1112,7 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHub(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHubEnterprise(t *testing.T) {
+func TestAccCodeBuildProject_SourceReportBuildStatus_gitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1146,7 +1146,7 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHubEnterprise(t *tes
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_Type_Bitbucket(t *testing.T) {
+func TestAccCodeBuildProject_SourceType_bitbucket(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1176,7 +1176,7 @@ func TestAccAWSCodeBuildProject_Source_Type_Bitbucket(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_Type_CodeCommit(t *testing.T) {
+func TestAccCodeBuildProject_SourceType_codeCommit(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1203,7 +1203,7 @@ func TestAccAWSCodeBuildProject_Source_Type_CodeCommit(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_Type_CodePipeline(t *testing.T) {
+func TestAccCodeBuildProject_SourceType_codePipeline(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1230,7 +1230,7 @@ func TestAccAWSCodeBuildProject_Source_Type_CodePipeline(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_Type_GitHubEnterprise(t *testing.T) {
+func TestAccCodeBuildProject_SourceType_gitHubEnterprise(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1257,7 +1257,7 @@ func TestAccAWSCodeBuildProject_Source_Type_GitHubEnterprise(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_Type_S3(t *testing.T) {
+func TestAccCodeBuildProject_SourceType_s3(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1283,7 +1283,7 @@ func TestAccAWSCodeBuildProject_Source_Type_S3(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_Type_NoSource(t *testing.T) {
+func TestAccCodeBuildProject_SourceType_noSource(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1317,7 +1317,7 @@ phases:
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_Type_NoSourceInvalid(t *testing.T) {
+func TestAccCodeBuildProject_SourceType_noSourceInvalid(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBuildspec := `
 version: 0.2
@@ -1345,7 +1345,7 @@ phases:
 	})
 }
 
-func TestAccAWSCodeBuildProject_Tags(t *testing.T) {
+func TestAccCodeBuildProject_tags(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1383,7 +1383,7 @@ func TestAccAWSCodeBuildProject_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_VpcConfig(t *testing.T) {
+func TestAccCodeBuildProject_vpc(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1430,7 +1430,7 @@ func TestAccAWSCodeBuildProject_VpcConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_WindowsServer2019Container(t *testing.T) {
+func TestAccCodeBuildProject_windowsServer2019Container(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1463,7 +1463,7 @@ func TestAccAWSCodeBuildProject_WindowsServer2019Container(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_ARMContainer(t *testing.T) {
+func TestAccCodeBuildProject_armContainer(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1489,7 +1489,7 @@ func TestAccAWSCodeBuildProject_ARMContainer(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Artifacts_ArtifactIdentifier(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_artifactIdentifier(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1528,7 +1528,7 @@ func TestAccAWSCodeBuildProject_Artifacts_ArtifactIdentifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_encryptionDisabled(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1564,7 +1564,7 @@ func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Artifacts_Location(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_location(t *testing.T) {
 	var project codebuild.Project
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1601,7 +1601,7 @@ func TestAccAWSCodeBuildProject_Artifacts_Location(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Artifacts_Name(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_name(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1640,7 +1640,7 @@ func TestAccAWSCodeBuildProject_Artifacts_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Artifacts_NamespaceType(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_namespaceType(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1676,7 +1676,7 @@ func TestAccAWSCodeBuildProject_Artifacts_NamespaceType(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Artifacts_OverrideArtifactName(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_overrideArtifactName(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1712,7 +1712,7 @@ func TestAccAWSCodeBuildProject_Artifacts_OverrideArtifactName(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Artifacts_Packaging(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_packaging(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1748,7 +1748,7 @@ func TestAccAWSCodeBuildProject_Artifacts_Packaging(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Artifacts_Path(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_path(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1784,7 +1784,7 @@ func TestAccAWSCodeBuildProject_Artifacts_Path(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Artifacts_Type(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_type(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1823,7 +1823,7 @@ func TestAccAWSCodeBuildProject_Artifacts_Type(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts(t *testing.T) {
+func TestAccCodeBuildProject_secondaryArtifacts(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1857,7 +1857,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts_ArtifactIdentifier(t *testing.T) {
+func TestAccCodeBuildProject_SecondaryArtifacts_artifactIdentifier(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1900,7 +1900,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_ArtifactIdentifier(t *testing
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts_OverrideArtifactName(t *testing.T) {
+func TestAccCodeBuildProject_SecondaryArtifacts_overrideArtifactName(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1940,7 +1940,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_OverrideArtifactName(t *testi
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts_EncryptionDisabled(t *testing.T) {
+func TestAccCodeBuildProject_SecondaryArtifacts_encryptionDisabled(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1980,7 +1980,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_EncryptionDisabled(t *testing
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts_Location(t *testing.T) {
+func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 	var project codebuild.Project
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2021,7 +2021,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Location(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
+func TestAccCodeBuildProject_SecondaryArtifacts_name(t *testing.T) {
 	acctest.Skip(t, "Currently no solution to allow updates on name attribute")
 
 	var project codebuild.Project
@@ -2066,7 +2066,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts_NamespaceType(t *testing.T) {
+func TestAccCodeBuildProject_SecondaryArtifacts_namespaceType(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -2106,7 +2106,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_NamespaceType(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts_Packaging(t *testing.T) {
+func TestAccCodeBuildProject_SecondaryArtifacts_packaging(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -2146,7 +2146,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Packaging(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts_Path(t *testing.T) {
+func TestAccCodeBuildProject_SecondaryArtifacts_path(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -2189,7 +2189,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Path(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondaryArtifacts_Type(t *testing.T) {
+func TestAccCodeBuildProject_SecondaryArtifacts_type(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -2219,7 +2219,7 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Type(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_SecondarySources_CodeCommit(t *testing.T) {
+func TestAccCodeBuildProject_SecondarySources_codeCommit(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -2273,7 +2273,7 @@ func TestProject_nameValidation(t *testing.T) {
 	}
 }
 
-func TestAccAWSCodeBuildProject_ConcurrentBuildLimit(t *testing.T) {
+func TestAccCodeBuildProject_concurrentBuildLimit(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -2307,7 +2307,7 @@ func TestAccAWSCodeBuildProject_ConcurrentBuildLimit(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Environment_RegistryCredential(t *testing.T) {
+func TestAccCodeBuildProject_Environment_registryCredential(t *testing.T) {
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
