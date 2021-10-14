@@ -12,14 +12,14 @@ import (
 )
 
 func TestAccDataSourceAwsWafRegionalRateBasedRule_basic(t *testing.T) {
-	name := sdkacctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	datasourceName := "data.aws_wafregional_rate_based_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, wafregional.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWafRegionalRateBasedRuleConfig_NonExistent,
