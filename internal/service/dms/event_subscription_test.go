@@ -159,7 +159,7 @@ func TestAccAWSDmsEventSubscription_Tags(t *testing.T) {
 	resourceName := "aws_dms_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEKS(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
@@ -394,7 +394,7 @@ resource "aws_dms_event_subscription" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccPreCheckAWSEks(t *testing.T) {
+func testAccPreCheckEKS(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	input := &eks.ListClustersInput{}

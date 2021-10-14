@@ -23,12 +23,12 @@ func TestAccAWSDmsCertificate_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
+		CheckDestroy: testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDmsCertificateConfig(randId),
+				Config: testAccCertificateConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSDmsCertificateExists(resourceName),
+					testAccCertificateExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_arn"),
 				),
 			},
@@ -52,9 +52,9 @@ func TestAccAWSDmsCertificate_disappears(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDmsCertificateConfig(randId),
+				Config: testAccCertificateConfig(randId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSDmsCertificateExists(resourceName),
+					testAccCertificateExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdms.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -71,12 +71,12 @@ func TestAccAWSDmsCertificate_CertificateWallet(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
+		CheckDestroy: testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDmsCertificateConfigCertificateWallet(rName),
+				Config: testAccCertificateCertificateWalletConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSDmsCertificateExists(resourceName),
+					testAccCertificateExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_wallet"),
 				),
 			},
@@ -97,12 +97,12 @@ func TestAccAWSDmsCertificate_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDmsCertificateDestroy,
+		CheckDestroy: testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDmsCertificateConfigTags1(randId, "key1", "value1"),
+				Config: testAccCertificateTags1Config(randId, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAWSDmsCertificateExists(resourceName),
+					testAccCertificateExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -113,18 +113,18 @@ func TestAccAWSDmsCertificate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDmsCertificateConfigTags2(randId, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCertificateTags2Config(randId, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAWSDmsCertificateExists(resourceName),
+					testAccCertificateExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSDmsCertificateConfigTags1(randId, "key2", "value2"),
+				Config: testAccCertificateTags1Config(randId, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAWSDmsCertificateExists(resourceName),
+					testAccCertificateExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -133,7 +133,7 @@ func TestAccAWSDmsCertificate_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDmsCertificateDestroy(s *terraform.State) error {
+func testAccCheckCertificateDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_certificate" {
 			continue
@@ -166,7 +166,7 @@ func testAccCheckAWSDmsCertificateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSDmsCertificateExists(n string) resource.TestCheckFunc {
+func testAccCertificateExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -200,7 +200,7 @@ func testAccAWSDmsCertificateExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSDmsCertificateConfig(randId string) string {
+func testAccCertificateConfig(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id  = "tf-test-dms-certificate-%[1]s"
@@ -209,7 +209,7 @@ resource "aws_dms_certificate" "dms_certificate" {
 `, randId)
 }
 
-func testAccAWSDmsCertificateConfigCertificateWallet(rName string) string {
+func testAccCertificateCertificateWalletConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id     = %q
@@ -218,7 +218,7 @@ resource "aws_dms_certificate" "dms_certificate" {
 `, rName)
 }
 
-func testAccAWSDmsCertificateConfigTags1(randId, tagKey1, tagValue1 string) string {
+func testAccCertificateTags1Config(randId, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id  = "tf-test-dms-certificate-%[1]s"
@@ -231,7 +231,7 @@ resource "aws_dms_certificate" "dms_certificate" {
 `, randId, tagKey1, tagValue1)
 }
 
-func testAccAWSDmsCertificateConfigTags2(randId, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCertificateTags2Config(randId, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_certificate" "dms_certificate" {
   certificate_id  = "tf-test-dms-certificate-%[1]s"
