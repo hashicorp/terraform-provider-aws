@@ -163,7 +163,7 @@ func expandLightsailPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
 	}
 
 	if v, ok := tfMap["cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Cidrs = expandStringSet(v)
+		apiObject.Cidrs = flex.ExpandStringSet(v)
 	}
 
 	return apiObject

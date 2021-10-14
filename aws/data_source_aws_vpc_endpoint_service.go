@@ -165,11 +165,11 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	d.Set("arn", arn)
 
 	d.Set("acceptance_required", sd.AcceptanceRequired)
-	err = d.Set("availability_zones", flattenStringSet(sd.AvailabilityZones))
+	err = d.Set("availability_zones", flex.FlattenStringSet(sd.AvailabilityZones))
 	if err != nil {
 		return fmt.Errorf("error setting availability_zones: %w", err)
 	}
-	err = d.Set("base_endpoint_dns_names", flattenStringSet(sd.BaseEndpointDnsNames))
+	err = d.Set("base_endpoint_dns_names", flex.FlattenStringSet(sd.BaseEndpointDnsNames))
 	if err != nil {
 		return fmt.Errorf("error setting base_endpoint_dns_names: %w", err)
 	}

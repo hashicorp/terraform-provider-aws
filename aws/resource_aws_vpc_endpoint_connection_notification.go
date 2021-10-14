@@ -62,7 +62,7 @@ func resourceAwsVpcEndpointConnectionNotificationCreate(d *schema.ResourceData, 
 
 	req := &ec2.CreateVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationArn: aws.String(d.Get("connection_notification_arn").(string)),
-		ConnectionEvents:          expandStringSet(d.Get("connection_events").(*schema.Set)),
+		ConnectionEvents:          flex.ExpandStringSet(d.Get("connection_events").(*schema.Set)),
 	}
 	if v, ok := d.GetOk("vpc_endpoint_service_id"); ok {
 		req.ServiceId = aws.String(v.(string))
@@ -115,7 +115,7 @@ func resourceAwsVpcEndpointConnectionNotificationUpdate(d *schema.ResourceData, 
 	}
 
 	if d.HasChange("connection_events") {
-		req.ConnectionEvents = expandStringSet(d.Get("connection_events").(*schema.Set))
+		req.ConnectionEvents = flex.ExpandStringSet(d.Get("connection_events").(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Updating VPC Endpoint connection notification: %#v", req)
@@ -148,7 +148,7 @@ func vpcEndpointConnectionNotificationAttributes(d *schema.ResourceData, cn *ec2
 	d.Set("vpc_endpoint_service_id", cn.ServiceId)
 	d.Set("vpc_endpoint_id", cn.VpcEndpointId)
 	d.Set("connection_notification_arn", cn.ConnectionNotificationArn)
-	d.Set("connection_events", flattenStringList(cn.ConnectionEvents))
+	d.Set("connection_events", flex.FlattenStringList(cn.ConnectionEvents))
 	d.Set("state", cn.ConnectionNotificationState)
 	d.Set("notification_type", cn.ConnectionNotificationType)
 

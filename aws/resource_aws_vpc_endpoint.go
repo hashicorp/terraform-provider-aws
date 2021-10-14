@@ -24,7 +24,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for VPC Endpoint creation
-	Ec2VpcEndpointCreationTimeout = 10 * time.Minute
+	VPCEndpointCreationTimeout = 10 * time.Minute
 )
 
 func resourceAwsVpcEndpoint() *schema.Resource {
@@ -148,7 +148,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(Ec2VpcEndpointCreationTimeout),
+			Create: schema.DefaultTimeout(VPCEndpointCreationTimeout),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
@@ -258,7 +258,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 		pl := respPl.PrefixLists[0]
 
 		d.Set("prefix_list_id", pl.PrefixListId)
-		err = d.Set("cidr_blocks", flattenStringList(pl.Cidrs))
+		err = d.Set("cidr_blocks", flex.FlattenStringList(pl.Cidrs))
 		if err != nil {
 			return fmt.Errorf("error setting cidr_blocks: %s", err)
 		}
@@ -268,7 +268,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return fmt.Errorf("error setting dns_entry: %s", err)
 	}
-	err = d.Set("network_interface_ids", flattenStringSet(vpce.NetworkInterfaceIds))
+	err = d.Set("network_interface_ids", flex.FlattenStringSet(vpce.NetworkInterfaceIds))
 	if err != nil {
 		return fmt.Errorf("error setting network_interface_ids: %s", err)
 	}
@@ -279,7 +279,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	}
 	d.Set("policy", policy)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
-	err = d.Set("route_table_ids", flattenStringSet(vpce.RouteTableIds))
+	err = d.Set("route_table_ids", flex.FlattenStringSet(vpce.RouteTableIds))
 	if err != nil {
 		return fmt.Errorf("error setting route_table_ids: %s", err)
 	}
@@ -288,7 +288,7 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return fmt.Errorf("error setting security_group_ids: %s", err)
 	}
-	err = d.Set("subnet_ids", flattenStringSet(vpce.SubnetIds))
+	err = d.Set("subnet_ids", flex.FlattenStringSet(vpce.SubnetIds))
 	if err != nil {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
@@ -440,7 +440,7 @@ func setVpcEndpointCreateList(d *schema.ResourceData, key string, c *[]*string) 
 	if v, ok := d.GetOk(key); ok {
 		list := v.(*schema.Set)
 		if list.Len() > 0 {
-			*c = expandStringSet(list)
+			*c = flex.ExpandStringSet(list)
 		}
 	}
 }
@@ -451,12 +451,12 @@ func setVpcEndpointUpdateLists(d *schema.ResourceData, key string, a, r *[]*stri
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		add := expandStringSet(ns.Difference(os))
+		add := flex.ExpandStringSet(ns.Difference(os))
 		if len(add) > 0 {
 			*a = add
 		}
 
-		remove := expandStringSet(os.Difference(ns))
+		remove := flex.ExpandStringSet(os.Difference(ns))
 		if len(remove) > 0 {
 			*r = remove
 		}

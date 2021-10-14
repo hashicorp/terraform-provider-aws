@@ -84,7 +84,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, met
 		sgReq := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
 			ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
 			VpcId:               targetNetwork.VpcId,
-			SecurityGroupIds:    expandStringSet(v.(*schema.Set)),
+			SecurityGroupIds:    flex.ExpandStringSet(v.(*schema.Set)),
 		}
 
 		_, err := conn.ApplySecurityGroupsToClientVpnTargetNetwork(sgReq)
@@ -102,7 +102,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationUpdate(d *schema.ResourceData, met
 	if d.HasChange("security_groups") {
 		input := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
 			ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
-			SecurityGroupIds:    expandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroupIds:    flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 			VpcId:               aws.String(d.Get("vpc_id").(string)),
 		}
 

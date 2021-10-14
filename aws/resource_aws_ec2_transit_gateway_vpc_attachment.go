@@ -101,7 +101,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentCreate(d *schema.ResourceData, met
 			DnsSupport:           aws.String(d.Get("dns_support").(string)),
 			Ipv6Support:          aws.String(d.Get("ipv6_support").(string)),
 		},
-		SubnetIds:         expandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		TransitGatewayId:  aws.String(transitGatewayID),
 		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
@@ -249,11 +249,11 @@ func resourceAwsEc2TransitGatewayVpcAttachmentUpdate(d *schema.ResourceData, met
 		newSet := newRaw.(*schema.Set)
 
 		if added := newSet.Difference(oldSet); added.Len() > 0 {
-			input.AddSubnetIds = expandStringSet(added)
+			input.AddSubnetIds = flex.ExpandStringSet(added)
 		}
 
 		if removed := oldSet.Difference(newSet); removed.Len() > 0 {
-			input.RemoveSubnetIds = expandStringSet(removed)
+			input.RemoveSubnetIds = flex.ExpandStringSet(removed)
 		}
 
 		if _, err := conn.ModifyTransitGatewayVpcAttachment(input); err != nil {

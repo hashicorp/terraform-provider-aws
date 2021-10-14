@@ -143,13 +143,13 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("gateway_load_balancer_arns"); ok {
 		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-			req.GatewayLoadBalancerArns = expandStringSet(v)
+			req.GatewayLoadBalancerArns = flex.ExpandStringSet(v)
 		}
 	}
 
 	if v, ok := d.GetOk("network_load_balancer_arns"); ok {
 		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
-			req.NetworkLoadBalancerArns = expandStringSet(v)
+			req.NetworkLoadBalancerArns = flex.ExpandStringSet(v)
 		}
 	}
 
@@ -168,7 +168,7 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("allowed_principals"); ok && v.(*schema.Set).Len() > 0 {
 		modifyPermReq := &ec2.ModifyVpcEndpointServicePermissionsInput{
 			ServiceId:            aws.String(d.Id()),
-			AddAllowedPrincipals: expandStringSet(v.(*schema.Set)),
+			AddAllowedPrincipals: flex.ExpandStringSet(v.(*schema.Set)),
 		}
 		log.Printf("[DEBUG] Adding VPC Endpoint Service permissions: %#v", modifyPermReq)
 		if _, err := conn.ModifyVpcEndpointServicePermissions(modifyPermReq); err != nil {
@@ -211,22 +211,22 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 
 	svcCfg := svcCfgRaw.(*ec2.ServiceConfiguration)
 	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
-	err = d.Set("availability_zones", flattenStringSet(svcCfg.AvailabilityZones))
+	err = d.Set("availability_zones", flex.FlattenStringSet(svcCfg.AvailabilityZones))
 	if err != nil {
 		return fmt.Errorf("error setting availability_zones: %s", err)
 	}
-	err = d.Set("base_endpoint_dns_names", flattenStringSet(svcCfg.BaseEndpointDnsNames))
+	err = d.Set("base_endpoint_dns_names", flex.FlattenStringSet(svcCfg.BaseEndpointDnsNames))
 	if err != nil {
 		return fmt.Errorf("error setting base_endpoint_dns_names: %s", err)
 	}
 
-	if err := d.Set("gateway_load_balancer_arns", flattenStringSet(svcCfg.GatewayLoadBalancerArns)); err != nil {
+	if err := d.Set("gateway_load_balancer_arns", flex.FlattenStringSet(svcCfg.GatewayLoadBalancerArns)); err != nil {
 		return fmt.Errorf("error setting gateway_load_balancer_arns: %w", err)
 	}
 
 	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)
 
-	if err := d.Set("network_load_balancer_arns", flattenStringSet(svcCfg.NetworkLoadBalancerArns)); err != nil {
+	if err := d.Set("network_load_balancer_arns", flex.FlattenStringSet(svcCfg.NetworkLoadBalancerArns)); err != nil {
 		return fmt.Errorf("error setting network_load_balancer_arns: %w", err)
 	}
 
@@ -446,12 +446,12 @@ func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		add := expandStringSet(ns.Difference(os))
+		add := flex.ExpandStringSet(ns.Difference(os))
 		if len(add) > 0 {
 			*a = add
 		}
 
-		remove := expandStringSet(os.Difference(ns))
+		remove := flex.ExpandStringSet(os.Difference(ns))
 		if len(remove) > 0 {
 			*r = remove
 		}

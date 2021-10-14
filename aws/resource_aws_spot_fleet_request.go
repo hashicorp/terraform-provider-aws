@@ -1331,7 +1331,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 			for _, lb := range lbConf.ClassicLoadBalancersConfig.ClassicLoadBalancers {
 				flatLbs = append(flatLbs, lb.Name)
 			}
-			if err := d.Set("load_balancers", flattenStringSet(flatLbs)); err != nil {
+			if err := d.Set("load_balancers", flex.FlattenStringSet(flatLbs)); err != nil {
 				return fmt.Errorf("error setting load_balancers: %w", err)
 			}
 		}
@@ -1341,7 +1341,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 			for _, tg := range lbConf.TargetGroupsConfig.TargetGroups {
 				flatTgs = append(flatTgs, tg.Arn)
 			}
-			if err := d.Set("target_group_arns", flattenStringSet(flatTgs)); err != nil {
+			if err := d.Set("target_group_arns", flex.FlattenStringSet(flatTgs)); err != nil {
 				return fmt.Errorf("error setting target_group_arns: %w", err)
 			}
 		}

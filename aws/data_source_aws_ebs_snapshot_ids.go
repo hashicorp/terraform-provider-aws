@@ -50,13 +50,13 @@ func dataSourceAwsEbsSnapshotIdsRead(d *schema.ResourceData, meta interface{}) e
 	params := &ec2.DescribeSnapshotsInput{}
 
 	if restorableUsersOk {
-		params.RestorableByUserIds = expandStringList(restorableUsers.([]interface{}))
+		params.RestorableByUserIds = flex.ExpandStringList(restorableUsers.([]interface{}))
 	}
 	if filtersOk {
 		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
 	}
 	if ownersOk {
-		params.OwnerIds = expandStringList(owners.([]interface{}))
+		params.OwnerIds = flex.ExpandStringList(owners.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Reading EBS Snapshot IDs: %s", params)

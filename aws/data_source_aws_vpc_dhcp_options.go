@@ -114,17 +114,17 @@ func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) e
 		case "domain-name":
 			d.Set(tfKey, dhcpConfiguration.Values[0].Value)
 		case "domain-name-servers":
-			if err := d.Set(tfKey, flattenEc2AttributeValues(dhcpConfiguration.Values)); err != nil {
+			if err := d.Set(tfKey, flattenAttributeValues(dhcpConfiguration.Values)); err != nil {
 				return fmt.Errorf("error setting %s: %w", tfKey, err)
 			}
 		case "netbios-name-servers":
-			if err := d.Set(tfKey, flattenEc2AttributeValues(dhcpConfiguration.Values)); err != nil {
+			if err := d.Set(tfKey, flattenAttributeValues(dhcpConfiguration.Values)); err != nil {
 				return fmt.Errorf("error setting %s: %w", tfKey, err)
 			}
 		case "netbios-node-type":
 			d.Set(tfKey, dhcpConfiguration.Values[0].Value)
 		case "ntp-servers":
-			if err := d.Set(tfKey, flattenEc2AttributeValues(dhcpConfiguration.Values)); err != nil {
+			if err := d.Set(tfKey, flattenAttributeValues(dhcpConfiguration.Values)); err != nil {
 				return fmt.Errorf("error setting %s: %w", tfKey, err)
 			}
 		}

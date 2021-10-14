@@ -359,7 +359,7 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 	for _, a := range networkAcl.Associations {
 		subnetIds = append(subnetIds, a.SubnetId)
 	}
-	if err := d.Set("subnet_ids", flattenStringSet(subnetIds)); err != nil {
+	if err := d.Set("subnet_ids", flex.FlattenStringSet(subnetIds)); err != nil {
 		return err
 	}
 

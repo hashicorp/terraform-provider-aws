@@ -84,7 +84,7 @@ func resourceAwsRedshiftSnapshotScheduleCreate(d *schema.ResourceData, meta inte
 	}
 	createOpts := &redshift.CreateSnapshotScheduleInput{
 		ScheduleIdentifier:  aws.String(identifier),
-		ScheduleDefinitions: expandStringSet(d.Get("definitions").(*schema.Set)),
+		ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
 		Tags:                tags.IgnoreAws().RedshiftTags(),
 	}
 	if attr, ok := d.GetOk("description"); ok {
@@ -124,7 +124,7 @@ func resourceAwsRedshiftSnapshotScheduleRead(d *schema.ResourceData, meta interf
 
 	d.Set("identifier", snapshotSchedule.ScheduleIdentifier)
 	d.Set("description", snapshotSchedule.ScheduleDescription)
-	if err := d.Set("definitions", flattenStringList(snapshotSchedule.ScheduleDefinitions)); err != nil {
+	if err := d.Set("definitions", flex.FlattenStringList(snapshotSchedule.ScheduleDefinitions)); err != nil {
 		return fmt.Errorf("Error setting definitions: %s", err)
 	}
 
@@ -166,7 +166,7 @@ func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta inte
 	if d.HasChange("definitions") {
 		modifyOpts := &redshift.ModifySnapshotScheduleInput{
 			ScheduleIdentifier:  aws.String(d.Id()),
-			ScheduleDefinitions: expandStringSet(d.Get("definitions").(*schema.Set)),
+			ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
 		}
 		_, err := conn.ModifySnapshotSchedule(modifyOpts)
 		if tfawserr.ErrMessageContains(err, redshift.ErrCodeSnapshotScheduleNotFoundFault, "") {

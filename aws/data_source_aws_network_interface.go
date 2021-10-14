@@ -176,7 +176,7 @@ func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(eni.NetworkInterfaceId))
 	if eni.Association != nil {
-		d.Set("association", flattenEc2NetworkInterfaceAssociation(eni.Association))
+		d.Set("association", flattenNetworkInterfaceAssociation(eni.Association))
 	}
 	if eni.Attachment != nil {
 		attachment := []interface{}{flattenAttachment(eni.Attachment)}
@@ -186,7 +186,7 @@ func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 	d.Set("description", eni.Description)
 	d.Set("security_groups", flattenGroupIdentifiers(eni.Groups))
 	d.Set("interface_type", eni.InterfaceType)
-	d.Set("ipv6_addresses", flattenEc2NetworkInterfaceIpv6Address(eni.Ipv6Addresses))
+	d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Address(eni.Ipv6Addresses))
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("owner_id", eni.OwnerId)
 	d.Set("private_dns_name", eni.PrivateDnsName)

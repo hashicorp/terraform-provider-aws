@@ -525,7 +525,7 @@ func expandSagemakerFlowDefinitionHumanLoopConfig(l []interface{}) *sagemaker.Hu
 	}
 
 	if v, ok := m["task_keywords"].(*schema.Set); ok && v.Len() > 0 {
-		config.TaskKeywords = expandStringSet(v)
+		config.TaskKeywords = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := m["task_availability_lifetime_in_seconds"].(int); ok {
@@ -557,7 +557,7 @@ func flattenSagemakerFlowDefinitionHumanLoopConfig(config *sagemaker.HumanLoopCo
 	}
 
 	if config.TaskKeywords != nil {
-		m["task_keywords"] = flattenStringSet(config.TaskKeywords)
+		m["task_keywords"] = flex.FlattenStringSet(config.TaskKeywords)
 	}
 
 	if config.TaskAvailabilityLifetimeInSeconds != nil {
