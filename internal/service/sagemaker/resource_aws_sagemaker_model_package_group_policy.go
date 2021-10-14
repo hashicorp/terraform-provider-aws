@@ -1,4 +1,4 @@
-package aws
+package sagemaker
 
 import (
 	"fmt"
@@ -9,30 +9,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
 func ResourceModelPackageGroupPolicy() *schema.Resource {
@@ -83,7 +63,7 @@ func resourceAwsSagemakerModelPackageGroupPolicyPut(d *schema.ResourceData, meta
 func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
-	mpg, err := tfsagemaker.FindModelPackageGroupPolicyByName(conn, d.Id())
+	mpg, err := FindModelPackageGroupPolicyByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Unable to find SageMaker Model Package Group Policy (%s); removing from state", d.Id())
 		d.SetId("")
@@ -108,8 +88,8 @@ func resourceModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := conn.DeleteModelPackageGroupPolicy(input); err != nil {
-		if tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "Cannot find Model Package Group") ||
-			tfawserr.ErrMessageContains(err, tfsagemaker.ErrCodeValidationException, "Cannot find resource policy") {
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find Model Package Group") ||
+			tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find resource policy") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker Model Package Group Policy (%s): %w", d.Id(), err)

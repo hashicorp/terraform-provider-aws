@@ -1,4 +1,4 @@
-package aws
+package sagemaker
 
 import (
 	"fmt"
@@ -10,29 +10,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
 func ResourceStudioLifecycleConfig() *schema.Resource {
@@ -112,7 +94,7 @@ func resourceStudioLifecycleConfigRead(d *schema.ResourceData, meta interface{})
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	image, err := tfsagemaker.FindStudioLifecycleConfigByName(conn, d.Id())
+	image, err := FindStudioLifecycleConfigByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Studio Lifecycle Config (%s) not found, removing from state", d.Id())

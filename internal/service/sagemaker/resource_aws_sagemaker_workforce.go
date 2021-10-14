@@ -1,4 +1,4 @@
-package aws
+package sagemaker
 
 import (
 	"fmt"
@@ -10,28 +10,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
 func ResourceWorkforce() *schema.Resource {
@@ -204,7 +186,7 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
-	workforce, err := tfsagemaker.FindWorkforceByName(conn, d.Id())
+	workforce, err := FindWorkforceByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Workforce (%s) not found, removing from state", d.Id())
