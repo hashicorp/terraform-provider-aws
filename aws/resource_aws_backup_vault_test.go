@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func init() {
 }
 
 func testSweepBackupVaults(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
@@ -36,7 +37,7 @@ func testSweepBackupVaults(region string) error {
 	conn := client.(*conns.AWSClient).BackupConn
 	input := &backup.ListBackupVaultsInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {
@@ -94,13 +95,13 @@ func testSweepBackupVaults(region string) error {
 			d := r.Data(nil)
 			d.SetId(name)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Backup Vaults sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -109,7 +110,7 @@ func testSweepBackupVaults(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Backup Vaults for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Backup Vaults for %s: %w", region, err))
 	}
 
