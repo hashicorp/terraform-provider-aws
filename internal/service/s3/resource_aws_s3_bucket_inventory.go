@@ -17,6 +17,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func ResourceBucketInventory() *schema.Resource {
@@ -226,7 +235,7 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Putting S3 bucket inventory configuration: %s", input)
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfs3.propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutBucketInventoryConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
@@ -302,7 +311,7 @@ func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
 	var output *s3.GetBucketInventoryConfigurationOutput
-	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfs3.propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GetBucketInventoryConfiguration(input)
 

@@ -32,6 +32,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func ResourceBucket() *schema.Resource {
@@ -807,7 +816,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(waiter.BucketCreatedTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfs3.bucketCreatedTimeout, func() *resource.RetryError {
 		_, err := conn.HeadBucket(input)
 
 		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
@@ -1961,7 +1970,7 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.PropagationTimeout,
+		tfs3.propagationTimeout,
 		func() (interface{}, error) {
 			return conn.PutBucketEncryption(i)
 		},

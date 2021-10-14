@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	BucketCreatedTimeout = 2 * time.Minute
-	PropagationTimeout   = 1 * time.Minute
+	bucketCreatedTimeout = 2 * time.Minute
+	propagationTimeout   = 1 * time.Minute
 )
 
-// RetryWhenBucketNotFound retries the specified function if the returned error indicates that a bucket is not found.
+// waitRetryWhenBucketNotFound retries the specified function if the returned error indicates that a bucket is not found.
 // If the retries time out the specified function is called one last time.
-func RetryWhenBucketNotFound(f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAwsErrCodeEquals(PropagationTimeout, f, s3.ErrCodeNoSuchBucket)
+func waitRetryWhenBucketNotFound(f func() (interface{}, error)) (interface{}, error) {
+	return tfresource.RetryWhenAwsErrCodeEquals(propagationTimeout, f, s3.ErrCodeNoSuchBucket)
 }
