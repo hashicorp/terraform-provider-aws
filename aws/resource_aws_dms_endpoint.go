@@ -23,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDmsEndpoint() *schema.Resource {
+func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsEndpointCreate,
-		Read:   resourceAwsDmsEndpointRead,
-		Update: resourceAwsDmsEndpointUpdate,
-		Delete: resourceAwsDmsEndpointDelete,
+		Create: resourceEndpointCreate,
+		Read:   resourceEndpointRead,
+		Update: resourceEndpointUpdate,
+		Delete: resourceEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -406,7 +406,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -528,10 +528,10 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.SetId(d.Get("endpoint_id").(string))
-	return resourceAwsDmsEndpointRead(d, meta)
+	return resourceEndpointRead(d, meta)
 }
 
-func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -574,7 +574,7 @@ func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.ModifyEndpointInput{
@@ -761,13 +761,13 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			return err
 		}
 
-		return resourceAwsDmsEndpointRead(d, meta)
+		return resourceEndpointRead(d, meta)
 	}
 
 	return nil
 }
 
-func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())

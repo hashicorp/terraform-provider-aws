@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDmsEventSubscription() *schema.Resource {
+func ResourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsEventSubscriptionCreate,
-		Read:   resourceAwsDmsEventSubscriptionRead,
-		Update: resourceAwsDmsEventSubscriptionUpdate,
-		Delete: resourceAwsDmsEventSubscriptionDelete,
+		Create: resourceEventSubscriptionCreate,
+		Read:   resourceEventSubscriptionRead,
+		Update: resourceEventSubscriptionUpdate,
+		Delete: resourceEventSubscriptionDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
@@ -83,7 +83,7 @@ func resourceAwsDmsEventSubscription() *schema.Resource {
 	}
 }
 
-func resourceAwsDmsEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -126,10 +126,10 @@ func resourceAwsDmsEventSubscriptionCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for DMS Event Subscription (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsDmsEventSubscriptionRead(d, meta)
+	return resourceEventSubscriptionRead(d, meta)
 }
 
-func resourceAwsDmsEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	if d.HasChanges("enabled", "event_categories", "sns_topic_arn", "source_type") {
@@ -173,10 +173,10 @@ func resourceAwsDmsEventSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsDmsEventSubscriptionRead(d, meta)
+	return resourceEventSubscriptionRead(d, meta)
 }
 
-func resourceAwsDmsEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -241,7 +241,7 @@ func resourceAwsDmsEventSubscriptionRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsDmsEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.DeleteEventSubscriptionInput{

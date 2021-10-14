@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDmsReplicationSubnetGroup() *schema.Resource {
+func ResourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDmsReplicationSubnetGroupCreate,
-		Read:   resourceAwsDmsReplicationSubnetGroupRead,
-		Update: resourceAwsDmsReplicationSubnetGroupUpdate,
-		Delete: resourceAwsDmsReplicationSubnetGroupDelete,
+		Create: resourceReplicationSubnetGroupCreate,
+		Read:   resourceReplicationSubnetGroupRead,
+		Update: resourceReplicationSubnetGroupUpdate,
+		Delete: resourceReplicationSubnetGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -56,7 +56,7 @@ func resourceAwsDmsReplicationSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDmsReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -76,10 +76,10 @@ func resourceAwsDmsReplicationSubnetGroupCreate(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(d.Get("replication_subnet_group_id").(string))
-	return resourceAwsDmsReplicationSubnetGroupRead(d, meta)
+	return resourceReplicationSubnetGroupRead(d, meta)
 }
 
-func resourceAwsDmsReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -136,7 +136,7 @@ func resourceAwsDmsReplicationSubnetGroupRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsDmsReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	// Updates to subnet groups are only valid when sending SubnetIds even if there are no
@@ -166,10 +166,10 @@ func resourceAwsDmsReplicationSubnetGroupUpdate(d *schema.ResourceData, meta int
 		return err
 	}
 
-	return resourceAwsDmsReplicationSubnetGroupRead(d, meta)
+	return resourceReplicationSubnetGroupRead(d, meta)
 }
 
-func resourceAwsDmsReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DMSConn
 
 	request := &dms.DeleteReplicationSubnetGroupInput{
