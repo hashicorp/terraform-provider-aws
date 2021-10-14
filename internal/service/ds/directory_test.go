@@ -22,7 +22,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_directory_service_directory", &resource.Sweeper{
 		Name: "aws_directory_service_directory",
-		F:    testSweepDirectoryServiceDirectories,
+		F:    sweepDirectories,
 		Dependencies: []string{
 			"aws_db_instance",
 			"aws_ec2_client_vpn_endpoint",
@@ -33,7 +33,7 @@ func init() {
 	})
 }
 
-func testSweepDirectoryServiceDirectories(region string) error {
+func sweepDirectories(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {

@@ -19,7 +19,7 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_NonExistent(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsDirectoryServiceDirectoryConfig_NonExistent,
+				Config:      testAccDirectoryDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`not found`),
 			},
 		},
@@ -39,7 +39,7 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_SimpleAD(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsDirectoryServiceDirectoryConfig_SimpleAD(alias, domainName),
+				Config: testAccDirectoryDataSourceConfig_SimpleAD(alias, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "type", directoryservice.DirectoryTypeSimpleAd),
 					resource.TestCheckResourceAttr(dataSourceName, "size", "Small"),
@@ -73,7 +73,7 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_MicrosoftAD(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsDirectoryServiceDirectoryConfig_MicrosoftAD(alias, domainName),
+				Config: testAccDirectoryDataSourceConfig_MicrosoftAD(alias, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "type", directoryservice.DirectoryTypeMicrosoftAd),
 					resource.TestCheckResourceAttr(dataSourceName, "edition", "Standard"),
@@ -119,13 +119,13 @@ func TestAccDataSourceAwsDirectoryServiceDirectory_connector(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsDirectoryServiceDirectoryConfig_NonExistent = `
+const testAccDirectoryDataSourceConfig_NonExistent = `
 data "aws_directory_service_directory" "test" {
   directory_id = "d-abc0123456"
 }
 `
 
-func testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites(adType string) string {
+func testAccDirectoryDataSourceConfig_Prerequisites(adType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
@@ -157,8 +157,8 @@ resource "aws_subnet" "secondary" {
 `, adType))
 }
 
-func testAccDataSourceAwsDirectoryServiceDirectoryConfig_SimpleAD(alias, domain string) string {
-	return acctest.ConfigCompose(testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("simple-ad"), fmt.Sprintf(`
+func testAccDirectoryDataSourceConfig_SimpleAD(alias, domain string) string {
+	return acctest.ConfigCompose(testAccDirectoryDataSourceConfig_Prerequisites("simple-ad"), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test-simple-ad" {
   type        = "SimpleAD"
   size        = "Small"
@@ -182,8 +182,8 @@ data "aws_directory_service_directory" "test-simple-ad" {
 `, alias, domain))
 }
 
-func testAccDataSourceAwsDirectoryServiceDirectoryConfig_MicrosoftAD(alias, domain string) string {
-	return acctest.ConfigCompose(testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("microsoft-ad"), fmt.Sprintf(`
+func testAccDirectoryDataSourceConfig_MicrosoftAD(alias, domain string) string {
+	return acctest.ConfigCompose(testAccDirectoryDataSourceConfig_Prerequisites("microsoft-ad"), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test-microsoft-ad" {
   type        = "MicrosoftAD"
   edition     = "Standard"
