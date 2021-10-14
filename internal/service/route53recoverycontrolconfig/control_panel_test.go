@@ -14,7 +14,7 @@ import (
 	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 )
 
-func testAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
+func testAccControlPanel_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
@@ -22,12 +22,12 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy,
+		CheckDestroy: testAccCheckControlPanelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryControlConfigControlPanelConfig(rName),
+				Config: testAccControlPanelConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryControlConfigControlPanelExists(resourceName),
+					testAccCheckControlPanelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "default_control_panel", "false"),
@@ -43,7 +43,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T) {
+func testAccControlPanel_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
@@ -51,12 +51,12 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, r53rcc.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy,
+		CheckDestroy: testAccCheckControlPanelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRoute53RecoveryControlConfigControlPanelConfig(rName),
+				Config: testAccControlPanelConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsRoute53RecoveryControlConfigControlPanelExists(resourceName),
+					testAccCheckControlPanelExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoverycontrolconfig.ResourceControlPanel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -65,7 +65,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T)
 	})
 }
 
-func testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy(s *terraform.State) error {
+func testAccCheckControlPanelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -87,7 +87,7 @@ func testAccCheckAwsRoute53RecoveryControlConfigControlPanelDestroy(s *terraform
 	return nil
 }
 
-func testAccAwsRoute53RecoveryControlConfigClusterSetUp(rName string) string {
+func testAccClusterSetUp(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q
@@ -95,8 +95,8 @@ resource "aws_route53recoverycontrolconfig_cluster" "test" {
 `, rName)
 }
 
-func testAccAwsRoute53RecoveryControlConfigControlPanelConfig(rName string) string {
-	return acctest.ConfigCompose(testAccAwsRoute53RecoveryControlConfigClusterSetUp(rName), fmt.Sprintf(`
+func testAccControlPanelConfig(rName string) string {
+	return acctest.ConfigCompose(testAccClusterSetUp(rName), fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_control_panel" "test" {
   name        = %[1]q
   cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
@@ -104,7 +104,7 @@ resource "aws_route53recoverycontrolconfig_control_panel" "test" {
 `, rName))
 }
 
-func testAccCheckAwsRoute53RecoveryControlConfigControlPanelExists(name string) resource.TestCheckFunc {
+func testAccCheckControlPanelExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

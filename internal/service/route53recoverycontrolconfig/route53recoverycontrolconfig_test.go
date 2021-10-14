@@ -9,22 +9,22 @@ func TestAccAWSRoute53RecoveryControlConfig_serial(t *testing.T) {
 	// ServiceQuotaExceededException: AwsAccountId(X) has 2 Meridian clusters. Limit 2
 	testCases := map[string]map[string]func(t *testing.T){
 		"Cluster": {
-			"basic":      testAccAWSRoute53RecoveryControlConfigCluster_basic,
-			"disappears": testAccAWSRoute53RecoveryControlConfigCluster_disappears,
+			"basic":      testAccCluster_basic,
+			"disappears": testAccCluster_disappears,
 		},
 		"ControlPanel": {
-			"basic":      testAccAWSRoute53RecoveryControlConfigControlPanel_basic,
-			"disappears": testAccAWSRoute53RecoveryControlConfigControlPanel_disappears,
+			"basic":      testAccControlPanel_basic,
+			"disappears": testAccControlPanel_disappears,
 		},
 		"RoutingControl": {
-			"basic":                 testAccAWSRoute53RecoveryControlConfigRoutingControl_basic,
-			"disappears":            testAccAWSRoute53RecoveryControlConfigRoutingControl_disappears,
-			"nonDefaultControlPane": testAccAWSRoute53RecoveryControlConfigRoutingControl_nonDefaultControlPanel,
+			"basic":                 testAccRoutingControl_basic,
+			"disappears":            testAccRoutingControl_disappears,
+			"nonDefaultControlPane": testAccRoutingControl_nonDefaultControlPanel,
 		},
 		"SafetyRule": {
-			"assertionRule": testAccAWSRoute53RecoveryControlConfigSafetyRule_assertionRule,
-			"gatingRule":    testAccAWSRoute53RecoveryControlConfigSafetyRule_gatingRule,
-			"disappears":    testAccAWSRoute53RecoveryControlConfigSafetyRule_disappears,
+			"assertionRule": testAccSafetyRule_assertionRule,
+			"gatingRule":    testAccSafetyRule_gatingRule,
+			"disappears":    testAccSafetyRule_disappears,
 		},
 	}
 
