@@ -212,7 +212,7 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
 	}
 
-	tags, err := tftags.WorkspacesListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags: %w", err)
 	}

@@ -156,7 +156,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		UserName:                    aws.String(d.Get("user_name").(string)),
 		RootVolumeEncryptionEnabled: aws.Bool(d.Get("root_volume_encryption_enabled").(bool)),
 		UserVolumeEncryptionEnabled: aws.Bool(d.Get("user_volume_encryption_enabled").(bool)),
-		Tags:                        tags.IgnoreAws().WorkspacesTags(),
+		Tags:                        Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("volume_encryption_key"); ok {
@@ -221,7 +221,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting workspace properties: %s", err)
 	}
 
-	tags, err := tftags.WorkspacesListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags: %s", err)
 	}
@@ -279,7 +279,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
