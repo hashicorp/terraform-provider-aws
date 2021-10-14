@@ -10,19 +10,19 @@ import (
 
 const (
 	// Maximum amount of time to wait for an Operation to return Success
-	UserPoolDomainDeleteTimeout = 1 * time.Minute
+	userPoolDomainDeleteTimeout = 1 * time.Minute
 )
 
-// UserPoolDomainDeleted waits for an Operation to return Success
-func UserPoolDomainDeleted(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
+// waitUserPoolDomainDeleted waits for an Operation to return Success
+func waitUserPoolDomainDeleted(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			cognitoidentityprovider.DomainStatusTypeUpdating,
 			cognitoidentityprovider.DomainStatusTypeDeleting,
 		},
 		Target:  []string{""},
-		Refresh: UserPoolDomainStatus(conn, domain),
-		Timeout: UserPoolDomainDeleteTimeout,
+		Refresh: statusUserPoolDomain(conn, domain),
+		Timeout: userPoolDomainDeleteTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -34,7 +34,7 @@ func UserPoolDomainDeleted(conn *cognitoidentityprovider.CognitoIdentityProvider
 	return nil, err
 }
 
-func UserPoolDomainCreated(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
+func waitUserPoolDomainCreated(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			cognitoidentityprovider.DomainStatusTypeCreating,
@@ -43,7 +43,7 @@ func UserPoolDomainCreated(conn *cognitoidentityprovider.CognitoIdentityProvider
 		Target: []string{
 			cognitoidentityprovider.DomainStatusTypeActive,
 		},
-		Refresh: UserPoolDomainStatus(conn, domain),
+		Refresh: statusUserPoolDomain(conn, domain),
 		Timeout: timeout,
 	}
 

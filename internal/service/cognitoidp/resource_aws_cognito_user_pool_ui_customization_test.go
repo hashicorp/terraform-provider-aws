@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
 func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
@@ -510,7 +511,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationDestroy(s *terraform.State) er
 			return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		output, err := finder.CognitoUserPoolUICustomization(conn, userPoolId, clientId)
+		output, err := tfcognitoidp.FindCognitoUserPoolUICustomization(conn, userPoolId, clientId)
 
 		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			continue
@@ -553,7 +554,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationExists(name string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
-		output, err := finder.CognitoUserPoolUICustomization(conn, userPoolId, clientId)
+		output, err := tfcognitoidp.FindCognitoUserPoolUICustomization(conn, userPoolId, clientId)
 
 		if err != nil {
 			return err

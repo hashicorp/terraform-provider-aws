@@ -12,8 +12,8 @@ const (
 	userPoolDomainStatusUnknown  = "Unknown"
 )
 
-// UserPoolDomainStatus fetches the Operation and its Status
-func UserPoolDomainStatus(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) resource.StateRefreshFunc {
+// statusUserPoolDomain fetches the Operation and its Status
+func statusUserPoolDomain(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &cognitoidentityprovider.DescribeUserPoolDomainInput{
 			Domain: aws.String(domain),
