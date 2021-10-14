@@ -110,7 +110,7 @@ func resourceAwsInspectorAssessmentTargetDelete(d *schema.ResourceData, meta int
 	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteAssessmentTarget(input)
 
-		if isAWSErr(err, inspector.ErrCodeAssessmentRunInProgressException, "") {
+		if tfawserr.ErrMessageContains(err, inspector.ErrCodeAssessmentRunInProgressException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -120,7 +120,7 @@ func resourceAwsInspectorAssessmentTargetDelete(d *schema.ResourceData, meta int
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteAssessmentTarget(input)
 	}
 	if err != nil {
@@ -136,7 +136,7 @@ func describeInspectorAssessmentTarget(conn *inspector.Inspector, arn string) (*
 
 	output, err := conn.DescribeAssessmentTargets(input)
 
-	if isAWSErr(err, inspector.ErrCodeInvalidInputException, "") {
+	if tfawserr.ErrMessageContains(err, inspector.ErrCodeInvalidInputException, "") {
 		return nil, nil
 	}
 
