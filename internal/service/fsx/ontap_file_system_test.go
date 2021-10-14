@@ -74,7 +74,7 @@ func sweepFSXOntapFileSystems(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
+func TestAccFSxOntapFileSystem_basic(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -127,7 +127,7 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_fsxAdminPassword(t *testing.T) {
+func TestAccFSxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	pass := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -164,7 +164,7 @@ func TestAccAWSFsxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_endpointIpAddressRange(t *testing.T) {
+func TestAccFSxOntapFileSystem_endpointIPAddressRange(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -191,7 +191,7 @@ func TestAccAWSFsxOntapFileSystem_endpointIpAddressRange(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_diskIopsConfiguration(t *testing.T) {
+func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -220,7 +220,7 @@ func TestAccAWSFsxOntapFileSystem_diskIopsConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_disappears(t *testing.T) {
+func TestAccFSxOntapFileSystem_disappears(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -242,7 +242,7 @@ func TestAccAWSFsxOntapFileSystem_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_SecurityGroupIds(t *testing.T) {
+func TestAccFSxOntapFileSystem_securityGroupIDs(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -277,7 +277,7 @@ func TestAccAWSFsxOntapFileSystem_SecurityGroupIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_routeTableIds(t *testing.T) {
+func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 	var filesystem1 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -305,7 +305,7 @@ func TestAccAWSFsxOntapFileSystem_routeTableIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_tags(t *testing.T) {
+func TestAccFSxOntapFileSystem_tags(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -352,7 +352,7 @@ func TestAccAWSFsxOntapFileSystem_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
+func TestAccFSxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -387,7 +387,7 @@ func TestAccAWSFsxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
+func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -429,7 +429,7 @@ func TestAccAWSFsxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
+func TestAccFSxOntapFileSystem_kmsKeyID(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 
@@ -456,7 +456,7 @@ func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
+func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 

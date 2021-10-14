@@ -75,7 +75,7 @@ func sweepFSXLustreFileSystems(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
+func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -125,7 +125,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_disappears(t *testing.T) {
+func TestAccFSxLustreFileSystem_disappears(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -147,7 +147,7 @@ func TestAccAWSFsxLustreFileSystem_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_dataCompression(t *testing.T) {
+func TestAccFSxLustreFileSystem_dataCompression(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -188,7 +188,7 @@ func TestAccAWSFsxLustreFileSystem_dataCompression(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
+func TestAccFSxLustreFileSystem_exportPath(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -227,7 +227,7 @@ func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 }
 
 // lintignore: AT002
-func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
+func TestAccFSxLustreFileSystem_importPath(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -264,7 +264,7 @@ func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
 }
 
 // lintignore: AT002
-func TestAccAWSFsxLustreFileSystem_ImportedFileChunkSize(t *testing.T) {
+func TestAccFSxLustreFileSystem_importedFileChunkSize(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -300,7 +300,7 @@ func TestAccAWSFsxLustreFileSystem_ImportedFileChunkSize(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_SecurityGroupIds(t *testing.T) {
+func TestAccFSxLustreFileSystem_securityGroupIDs(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -335,7 +335,7 @@ func TestAccAWSFsxLustreFileSystem_SecurityGroupIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_StorageCapacity(t *testing.T) {
+func TestAccFSxLustreFileSystem_storageCapacity(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -370,7 +370,7 @@ func TestAccAWSFsxLustreFileSystem_StorageCapacity(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_StorageCapacityUpdate(t *testing.T) {
+func TestAccFSxLustreFileSystem_storageCapacityUpdate(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -413,7 +413,7 @@ func TestAccAWSFsxLustreFileSystem_StorageCapacityUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_Tags(t *testing.T) {
+func TestAccFSxLustreFileSystem_tags(t *testing.T) {
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -460,7 +460,7 @@ func TestAccAWSFsxLustreFileSystem_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_WeeklyMaintenanceStartTime(t *testing.T) {
+func TestAccFSxLustreFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -495,7 +495,7 @@ func TestAccAWSFsxLustreFileSystem_WeeklyMaintenanceStartTime(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
+func TestAccFSxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -537,7 +537,7 @@ func TestAccAWSFsxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
+func TestAccFSxLustreFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -572,7 +572,7 @@ func TestAccAWSFsxLustreFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
+func TestAccFSxLustreFileSystem_deploymentTypePersistent1(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -605,7 +605,7 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_fromBackup(t *testing.T) {
+func TestAccFSxLustreFileSystem_fromBackup(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -634,7 +634,7 @@ func TestAccAWSFsxLustreFileSystem_fromBackup(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_KmsKeyId(t *testing.T) {
+func TestAccFSxLustreFileSystem_kmsKeyID(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 	kmsKeyResourceName1 := "aws_kms_key.test1"
@@ -673,7 +673,7 @@ func TestAccAWSFsxLustreFileSystem_KmsKeyId(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_DeploymentTypeScratch2(t *testing.T) {
+func TestAccFSxLustreFileSystem_deploymentTypeScratch2(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -702,7 +702,7 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypeScratch2(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheRead(t *testing.T) {
+func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheRead(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -730,7 +730,7 @@ func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheRead(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheNone(t *testing.T) {
+func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheNone(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -758,7 +758,7 @@ func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheNone(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_copyTagsToBackups(t *testing.T) {
+func TestAccFSxLustreFileSystem_copyTagsToBackups(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
@@ -785,7 +785,7 @@ func TestAccAWSFsxLustreFileSystem_copyTagsToBackups(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_autoImportPolicy(t *testing.T) {
+func TestAccFSxLustreFileSystem_autoImportPolicy(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
