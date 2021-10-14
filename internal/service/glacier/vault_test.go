@@ -79,7 +79,7 @@ func sweepVaults(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSGlacierVault_basic(t *testing.T) {
+func TestAccGlacierVault_basic(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glacier_vault.test"
@@ -110,7 +110,7 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlacierVault_notification(t *testing.T) {
+func TestAccGlacierVault_notification(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glacier_vault.test"
@@ -157,7 +157,7 @@ func TestAccAWSGlacierVault_notification(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlacierVault_policy(t *testing.T) {
+func TestAccGlacierVault_policy(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glacier_vault.test"
@@ -202,7 +202,7 @@ func TestAccAWSGlacierVault_policy(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlacierVault_tags(t *testing.T) {
+func TestAccGlacierVault_tags(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glacier_vault.test"
@@ -247,7 +247,7 @@ func TestAccAWSGlacierVault_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlacierVault_disappears(t *testing.T) {
+func TestAccGlacierVault_disappears(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glacier_vault.test"
