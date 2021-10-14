@@ -23,77 +23,10 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkipEKS)
 
-	resource.AddTestSweepers("aws_eks_node_group", &resource.Sweeper{
-		Name: "aws_eks_node_group",
-		F:    sweepNodeGroups,
-	})
+
 }
 
-func sweepNodeGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).EKSConn
-	input := &eks.ListClustersInput{}
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, cluster := range page.Clusters {
-			input := &eks.ListNodegroupsInput{
-				ClusterName: cluster,
-			}
-
-			err := conn.ListNodegroupsPages(input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, nodeGroup := range page.Nodegroups {
-					r := tfeks.ResourceNodeGroup()
-					d := r.Data(nil)
-					d.SetId(tfeks.NodeGroupCreateResourceID(aws.StringValue(cluster), aws.StringValue(nodeGroup)))
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if sweep.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Node Groups (%s): %w", region, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EKS Node Groups sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Node Groups (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccEKSNodeGroup_basic(t *testing.T) {
 	var nodeGroup eks.Nodegroup

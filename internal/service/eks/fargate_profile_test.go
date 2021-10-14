@@ -20,78 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_eks_fargate_profile", &resource.Sweeper{
-		Name: "aws_eks_fargate_profile",
-		F:    sweepFargateProfiles,
-	})
-}
 
-func sweepFargateProfiles(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).EKSConn
-	input := &eks.ListClustersInput{}
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, cluster := range page.Clusters {
-			input := &eks.ListFargateProfilesInput{
-				ClusterName: cluster,
-			}
-
-			err := conn.ListFargateProfilesPages(input, func(page *eks.ListFargateProfilesOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, profile := range page.FargateProfileNames {
-					r := tfeks.ResourceFargateProfile()
-					d := r.Data(nil)
-					d.SetId(tfeks.FargateProfileCreateResourceID(aws.StringValue(cluster), aws.StringValue(profile)))
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if sweep.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Fargate Profiles (%s): %w", region, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EKS Fargate Profiles sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Fargate Profiles (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccEKSFargateProfile_basic(t *testing.T) {
 	var fargateProfile eks.FargateProfile

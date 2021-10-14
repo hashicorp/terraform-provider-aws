@@ -22,79 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_eks_addon", &resource.Sweeper{
-		Name: "aws_eks_addon",
-		F:    sweepAddon,
-	})
-}
 
-func sweepAddon(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	ctx := context.TODO()
-	conn := client.(*conns.AWSClient).EKSConn
-	input := &eks.ListClustersInput{}
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, cluster := range page.Clusters {
-			input := &eks.ListAddonsInput{
-				ClusterName: cluster,
-			}
-
-			err := conn.ListAddonsPagesWithContext(ctx, input, func(page *eks.ListAddonsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, addon := range page.Addons {
-					r := tfeks.ResourceAddon()
-					d := r.Data(nil)
-					d.SetId(tfeks.AddonCreateResourceID(aws.StringValue(cluster), aws.StringValue(addon)))
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if sweep.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Add-Ons (%s): %w", region, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Print(fmt.Errorf("[WARN] Skipping EKS Add-Ons sweep for %s: %w", region, err))
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Add-Ons (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccEKSAddon_basic(t *testing.T) {
 	var addon eks.Addon

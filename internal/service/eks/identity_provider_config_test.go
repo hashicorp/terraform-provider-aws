@@ -20,79 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_eks_identity_provider_config", &resource.Sweeper{
-		Name: "aws_eks_identity_provider_config",
-		F:    sweepIdentityProvidersConfig,
-	})
-}
 
-func sweepIdentityProvidersConfig(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	ctx := context.TODO()
-	conn := client.(*conns.AWSClient).EKSConn
-	input := &eks.ListClustersInput{}
-	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, cluster := range page.Clusters {
-			input := &eks.ListIdentityProviderConfigsInput{
-				ClusterName: cluster,
-			}
-
-			err := conn.ListIdentityProviderConfigsPagesWithContext(ctx, input, func(page *eks.ListIdentityProviderConfigsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, identityProviderConfig := range page.IdentityProviderConfigs {
-					r := tfeks.ResourceIdentityProviderConfig()
-					d := r.Data(nil)
-					d.SetId(tfeks.IdentityProviderConfigCreateResourceID(aws.StringValue(cluster), aws.StringValue(identityProviderConfig.Name)))
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if sweep.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Identity Provider Configs (%s): %w", region, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Print(fmt.Errorf("[WARN] Skipping EKS Identity Provider Configs sweep for %s: %w", region, err))
-		return sweeperErrs // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Identity Provider Configs (%s): %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
