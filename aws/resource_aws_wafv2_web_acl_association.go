@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -40,13 +41,13 @@ func ResourceWebACLAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"web_acl_arn": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}

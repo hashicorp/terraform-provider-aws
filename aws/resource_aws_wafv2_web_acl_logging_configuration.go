@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceWebACLLoggingConfiguration() *schema.Resource {
@@ -36,7 +37,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 				MaxItems: 100,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 				Description: "AWS Kinesis Firehose Delivery Stream ARNs",
 			},
@@ -179,7 +180,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 				Description:  "AWS WebACL ARN",
 			},
 		},
