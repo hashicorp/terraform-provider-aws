@@ -11,14 +11,14 @@ import (
 )
 
 func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener.test"
 	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBListenerConfigBasic(rName),
@@ -46,14 +46,14 @@ func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_alb_listener.test"
 	dataSourceName2 := "data.aws_alb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBListenerConfigBackwardsCompatibility(rName),
@@ -79,19 +79,19 @@ func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLBListener_https(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	dataSourceName := "data.aws_lb_listener.test"
 	dataSourceName2 := "data.aws_lb_listener.from_lb_and_port"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLBListenerConfigHTTPS(rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)),
+				Config: testAccDataSourceAWSLBListenerConfigHTTPS(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
@@ -118,14 +118,14 @@ func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLBListener_DefaultAction_Forward(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener.test"
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBListenerConfigDefaultActionForward(rName),

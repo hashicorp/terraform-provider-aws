@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccDataSourceAWSLB_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_lb.alb_test_with_name"
 	dataSourceName3 := "data.aws_lb.alb_test_with_tags"
@@ -20,7 +20,7 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBConfigBasic(rName),
@@ -77,14 +77,14 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLB_outpost(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBConfigOutpost(rName),
@@ -112,7 +112,7 @@ func TestAccDataSourceAWSLB_outpost(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"
 	dataSourceName3 := "data.aws_alb.alb_test_with_tags"
@@ -121,7 +121,7 @@ func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBConfigBackwardsCompatibility(rName),
