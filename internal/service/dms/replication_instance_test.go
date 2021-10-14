@@ -20,52 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_dms_replication_instance", &resource.Sweeper{
-		Name: "aws_dms_replication_instance",
-		F:    sweepReplicationInstances,
-	})
-}
 
-func sweepReplicationInstances(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).DMSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	err = conn.DescribeReplicationInstancesPages(&dms.DescribeReplicationInstancesInput{}, func(page *dms.DescribeReplicationInstancesOutput, lastPage bool) bool {
-		for _, instance := range page.ReplicationInstances {
-			r := tfdms.ResourceReplicationInstance()
-			d := r.Data(nil)
-			d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
-			d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing DMS Replication Instances: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Replication Instances for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping DMS Replication Instance sweep for %s: %s", region, err)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccDMSReplicationInstance_basic(t *testing.T) {
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
