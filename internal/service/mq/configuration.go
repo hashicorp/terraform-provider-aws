@@ -105,7 +105,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error
 		input.AuthenticationStrategy = aws.String(v.(string))
 	}
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().MqTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[INFO] Creating MQ Configuration: %s", input)
@@ -161,7 +161,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("data", string(b))
 
-	tags := tftags.MqKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -200,7 +200,7 @@ func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.MqUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
