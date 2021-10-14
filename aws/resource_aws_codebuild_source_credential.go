@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeBuildSourceCredential() *schema.Resource {
+func ResourceSourceCredential() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeBuildSourceCredentialCreate,
-		Read:   resourceAwsCodeBuildSourceCredentialRead,
-		Delete: resourceAwsCodeBuildSourceCredentialDelete,
+		Create: resourceSourceCredentialCreate,
+		Read:   resourceSourceCredentialRead,
+		Delete: resourceSourceCredentialDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -60,7 +60,7 @@ func resourceAwsCodeBuildSourceCredential() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeBuildSourceCredentialCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSourceCredentialCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	authType := d.Get("auth_type").(string)
@@ -82,10 +82,10 @@ func resourceAwsCodeBuildSourceCredentialCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(resp.Arn))
 
-	return resourceAwsCodeBuildSourceCredentialRead(d, meta)
+	return resourceSourceCredentialRead(d, meta)
 }
 
-func resourceAwsCodeBuildSourceCredentialRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSourceCredentialRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
@@ -115,7 +115,7 @@ func resourceAwsCodeBuildSourceCredentialRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsCodeBuildSourceCredentialDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSourceCredentialDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	deleteOpts := &codebuild.DeleteSourceCredentialsInput{

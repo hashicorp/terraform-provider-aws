@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/codebuild/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -41,7 +42,7 @@ func testSweepCodeBuildReportGroups(region string) error {
 
 		for _, arn := range page.ReportGroups {
 			id := aws.StringValue(arn)
-			r := resourceAwsCodeBuildReportGroup()
+			r := ResourceReportGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("delete_reports", true)
@@ -241,7 +242,7 @@ func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
 				Config: testAccAWSCodeBuildReportGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCodeBuildReportGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceReportGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

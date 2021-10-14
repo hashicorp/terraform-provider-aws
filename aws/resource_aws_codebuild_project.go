@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCodeBuildProject() *schema.Resource {
+func ResourceProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCodeBuildProjectCreate,
-		Read:   resourceAwsCodeBuildProjectRead,
-		Update: resourceAwsCodeBuildProjectUpdate,
-		Delete: resourceAwsCodeBuildProjectDelete,
+		Create: resourceProjectCreate,
+		Read:   resourceProjectRead,
+		Update: resourceProjectUpdate,
+		Delete: resourceProjectDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -678,7 +678,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 	}
 }
 
-func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -783,7 +783,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(resp.Project.Arn))
 
-	return resourceAwsCodeBuildProjectRead(d, meta)
+	return resourceProjectRead(d, meta)
 }
 
 func expandProjectFileSystemLocations(d *schema.ResourceData) []*codebuild.ProjectFileSystemLocation {
@@ -1233,7 +1233,7 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 	return projectSource
 }
 
-func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1328,7 +1328,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -1463,10 +1463,10 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 			d.Id(), err)
 	}
 
-	return resourceAwsCodeBuildProjectRead(d, meta)
+	return resourceProjectRead(d, meta)
 }
 
-func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodeBuildConn
 
 	_, err := conn.DeleteProject(&codebuild.DeleteProjectInput{
