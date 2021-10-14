@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -55,8 +56,8 @@ func testSweepWafRegionalRuleGroups(region string) error {
 		if err != nil {
 			return err
 		}
-		oldRules := flattenWafActivatedRules(rResp.ActivatedRules)
-		err = deleteWafRegionalRuleGroup(*group.RuleGroupId, oldRules, conn, region)
+		oldRules := tfwafregional.FlattenWAFActivatedRules(rResp.ActivatedRules)
+		err = tfwafregional.DeleteRuleGroup(*group.RuleGroupId, oldRules, conn, region)
 		if err != nil {
 			return err
 		}
@@ -330,7 +331,7 @@ func testAccCheckAWSWafRegionalRuleGroupDisappears(group *waf.RuleGroup) resourc
 			return fmt.Errorf("error listing activated rules in WAF Regional Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
 		}
 
-		wr := newWafRegionalRetryer(conn, region)
+		wr := tfwafregional.NewRetryer(conn, region)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRuleGroupInput{
 				ChangeToken: token,
@@ -563,7 +564,7 @@ resource "aws_wafregional_rule_group" "test" {
 // which isn't static because ruleId is generated as part of the test
 func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		ruleResource := ResourceRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
+		ruleResource := tfwafregional.ResourceRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
 
 		m := map[string]interface{}{
 			"action": []interface{}{

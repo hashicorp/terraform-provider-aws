@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -55,7 +56,7 @@ func testSweepWafRegionalRules(region string) error {
 				RuleId: rule.RuleId,
 			}
 			id := aws.StringValue(rule.RuleId)
-			wr := newWafRegionalRetryer(conn, region)
+			wr := tfwafregional.NewRetryer(conn, region)
 
 			_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 				deleteInput.ChangeToken = token
@@ -346,7 +347,7 @@ func TestAccAWSWafRegionalRule_changePredicates(t *testing.T) {
 // Calculates the index which isn't static because dataId is generated as part of the test
 func computeWafRegionalRulePredicate(dataId **string, negated bool, pType string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		predicateResource := ResourceRule().Schema["predicate"].Elem.(*schema.Resource)
+		predicateResource := tfwafregional.ResourceRule().Schema["predicate"].Elem.(*schema.Resource)
 		m := map[string]interface{}{
 			"data_id": **dataId,
 			"negated": negated,
@@ -365,7 +366,7 @@ func testAccCheckAWSWafRegionalRuleDisappears(v *waf.Rule) resource.TestCheckFun
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
-		wr := newWafRegionalRetryer(conn, region)
+		wr := tfwafregional.NewRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRuleInput{
 				ChangeToken: token,

@@ -49,7 +49,7 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 				continue
 			}
 
-			err = deleteRegexMatchSetResource(conn, region, region, id, getRegexMatchTuplesFromAPIResource(set))
+			err = tfwafregional.DeleteRegexMatchSetResource(conn, region, region, id, tfwafregional.GetRegexMatchTuplesFromAPIResource(set))
 			if err != nil {
 				if !tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %w", id, err))
@@ -252,7 +252,7 @@ func testAccAWSWafRegionalRegexMatchSet_disappears(t *testing.T) {
 				Config: testAccAWSWafRegionalRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRegexMatchSetExists(resourceName, &matchSet),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRegexMatchSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwafregional.ResourceRegexMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -374,12 +374,12 @@ resource "aws_wafregional_regex_match_set" "test" {
 func computeWafRegexMatchSetTuple(patternSet *waf.RegexPatternSet, fieldToMatch *waf.FieldToMatch, textTransformation string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		m := map[string]interface{}{
-			"field_to_match":       flattenFieldToMatch(fieldToMatch),
+			"field_to_match":       tfwafregional.FlattenFieldToMatch(fieldToMatch),
 			"regex_pattern_set_id": *patternSet.RegexPatternSetId,
 			"text_transformation":  textTransformation,
 		}
 
-		*idx = resourceAwsWafRegexMatchSetTupleHash(m)
+		*idx = tfwafregional.WAFRegexMatchSetTupleHash(m)
 
 		return nil
 	}

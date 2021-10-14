@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 )
 
 func TestAccAWSWafRegionalGeoMatchSet_basic(t *testing.T) {
@@ -218,7 +219,7 @@ func testAccCheckAWSWafRegionalGeoMatchSetDisappears(v *waf.GeoMatchSet) resourc
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
-		wr := newWafRegionalRetryer(conn, region)
+		wr := tfwafregional.NewRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateGeoMatchSetInput{
 				ChangeToken:   token,
