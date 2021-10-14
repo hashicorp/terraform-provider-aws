@@ -61,7 +61,7 @@ func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{})
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.SetRepositoryPolicy(&input)
 
-		if isAWSErr(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -69,7 +69,7 @@ func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.SetRepositoryPolicy(&input)
 	}
 	if err != nil {
@@ -153,8 +153,8 @@ func resourceAwsEcrRepositoryPolicyDelete(d *schema.ResourceData, meta interface
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
-			isAWSErr(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
+			tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
 			return nil
 		}
 		return err

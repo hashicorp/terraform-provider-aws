@@ -45,7 +45,7 @@ func testSweepEcrRepositories(region string) error {
 				RepositoryName: repository.RepositoryName,
 			})
 			if err != nil {
-				if !isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+				if !tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 					sweeperErr := fmt.Errorf("Error deleting ECR repository (%s): %w", repositoryName, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					errors = multierror.Append(errors, sweeperErr)
@@ -313,7 +313,7 @@ func testAccCheckAWSEcrRepositoryDestroy(s *terraform.State) error {
 
 		out, err := conn.DescribeRepositories(&input)
 
-		if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 			return nil
 		}
 
