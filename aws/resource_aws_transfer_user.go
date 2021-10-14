@@ -17,13 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsTransferUser() *schema.Resource {
+func ResourceUser() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsTransferUserCreate,
-		Read:   resourceAwsTransferUserRead,
-		Update: resourceAwsTransferUserUpdate,
-		Delete: resourceAwsTransferUserDelete,
+		Create: resourceUserCreate,
+		Read:   resourceUserRead,
+		Update: resourceUserUpdate,
+		Delete: resourceUserDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -125,7 +125,7 @@ func resourceAwsTransferUser() *schema.Resource {
 	}
 }
 
-func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -172,10 +172,10 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(id)
 
-	return resourceAwsTransferUserRead(d, meta)
+	return resourceUserRead(d, meta)
 }
 
-func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -225,7 +225,7 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -279,10 +279,10 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsTransferUserRead(d, meta)
+	return resourceUserRead(d, meta)
 }
 
-func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())

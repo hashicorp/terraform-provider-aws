@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsTransferServer() *schema.Resource {
+func DataSourceServer() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -75,11 +75,11 @@ func dataSourceAwsTransferServer() *schema.Resource {
 			},
 		},
 
-		Read: dataSourceAwsTransferServerRead,
+		Read: dataSourceServerRead,
 	}
 }
 
-func dataSourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceServerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 
 	serverID := d.Get("server_id").(string)

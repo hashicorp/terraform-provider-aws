@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsTransferSshKey() *schema.Resource {
+func ResourceSSHKey() *schema.Resource {
 
 	return &schema.Resource{
-		Create: resourceAwsTransferSshKeyCreate,
-		Read:   resourceAwsTransferSshKeyRead,
-		Delete: resourceAwsTransferSshKeyDelete,
+		Create: resourceSSHKeyCreate,
+		Read:   resourceSSHKeyRead,
+		Delete: resourceSSHKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -49,7 +49,7 @@ func resourceAwsTransferSshKey() *schema.Resource {
 	}
 }
 
-func resourceAwsTransferSshKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 	userName := d.Get("user_name").(string)
 	serverID := d.Get("server_id").(string)
@@ -72,7 +72,7 @@ func resourceAwsTransferSshKeyCreate(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsTransferSshKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 	serverID, userName, sshKeyID, err := decodeTransferSshKeyId(d.Id())
 	if err != nil {
@@ -115,7 +115,7 @@ func resourceAwsTransferSshKeyRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsTransferSshKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).TransferConn
 	serverID, userName, sshKeyID, err := decodeTransferSshKeyId(d.Id())
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSTransferUser_basic(t *testing.T) {
@@ -148,7 +149,7 @@ func testAccAWSTransferUser_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists("aws_transfer_server.test", &serverConf),
 					testAccCheckAWSTransferUserExists("aws_transfer_user.test", &userConf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsTransferUser(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

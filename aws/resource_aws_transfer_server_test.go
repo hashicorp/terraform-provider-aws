@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func testSweepTransferServers(region string) error {
 		}
 
 		for _, server := range page.Servers {
-			r := resourceAwsTransferServer()
+			r := ResourceServer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(server.ServerId))
 			d.Set("force_destroy", true) // In lieu of an aws_transfer_user sweeper.
@@ -187,7 +188,7 @@ func testAccAWSTransferServer_disappears(t *testing.T) {
 				Config: testAccAWSTransferServerBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsTransferServer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
