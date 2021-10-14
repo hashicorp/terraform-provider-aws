@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceFleet() *schema.Resource {
@@ -244,7 +245,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Creating Gamelift Fleet: %s", input)
 	var out *gamelift.CreateFleetOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateFleet(&input)
 
