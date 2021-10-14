@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceSelection() *schema.Resource {
@@ -104,7 +106,7 @@ func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry for IAM eventual consistency
 	var output *backup.CreateBackupSelectionOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateBackupSelection(input)
 
@@ -152,7 +154,7 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *backup.GetBackupSelectionOutput
 
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfbackup.propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.GetBackupSelection(input)

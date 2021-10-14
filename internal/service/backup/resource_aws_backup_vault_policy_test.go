@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 )
 
 func init() {
@@ -160,7 +161,7 @@ func testAccCheckAwsBackupVaultPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.BackupVaultAccessPolicyByName(conn, rs.Primary.ID)
+		_, err := tfbackup.FindBackupVaultAccessPolicyByName(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -189,7 +190,7 @@ func testAccCheckAwsBackupVaultPolicyExists(name string, vault *backup.GetBackup
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
-		output, err := finder.BackupVaultAccessPolicyByName(conn, rs.Primary.ID)
+		output, err := tfbackup.FindBackupVaultAccessPolicyByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
