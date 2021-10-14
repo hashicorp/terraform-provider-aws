@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func init() {
 }
 
 func testSweepWafv2RuleGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
@@ -68,7 +69,7 @@ func testSweepWafv2RuleGroups(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAFv2 Rule Group sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
