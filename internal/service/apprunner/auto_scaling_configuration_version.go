@@ -18,10 +18,10 @@ import (
 
 func ResourceAutoScalingConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsAppRunnerAutoScalingConfigurationCreate,
-		ReadWithoutTimeout:   resourceAwsAppRunnerAutoScalingConfigurationRead,
-		UpdateWithoutTimeout: resourceAwsAppRunnerAutoScalingConfigurationUpdate,
-		DeleteWithoutTimeout: resourceAwsAppRunnerAutoScalingConfigurationDelete,
+		CreateWithoutTimeout: resourceAutoScalingConfigurationCreate,
+		ReadWithoutTimeout:   resourceAutoScalingConfigurationRead,
+		UpdateWithoutTimeout: resourceAutoScalingConfigurationUpdate,
+		DeleteWithoutTimeout: resourceAutoScalingConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -78,7 +78,7 @@ func ResourceAutoScalingConfigurationVersion() *schema.Resource {
 	}
 }
 
-func resourceAwsAppRunnerAutoScalingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -121,10 +121,10 @@ func resourceAwsAppRunnerAutoScalingConfigurationCreate(ctx context.Context, d *
 		return diag.FromErr(fmt.Errorf("error waiting for AutoScaling Configuration Version (%s) creation: %w", d.Id(), err))
 	}
 
-	return resourceAwsAppRunnerAutoScalingConfigurationRead(ctx, d, meta)
+	return resourceAutoScalingConfigurationRead(ctx, d, meta)
 }
 
-func resourceAwsAppRunnerAutoScalingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -190,7 +190,7 @@ func resourceAwsAppRunnerAutoScalingConfigurationRead(ctx context.Context, d *sc
 	return nil
 }
 
-func resourceAwsAppRunnerAutoScalingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	if d.HasChange("tags_all") {
@@ -201,10 +201,10 @@ func resourceAwsAppRunnerAutoScalingConfigurationUpdate(ctx context.Context, d *
 		}
 	}
 
-	return resourceAwsAppRunnerAutoScalingConfigurationRead(ctx, d, meta)
+	return resourceAutoScalingConfigurationRead(ctx, d, meta)
 }
 
-func resourceAwsAppRunnerAutoScalingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	input := &apprunner.DeleteAutoScalingConfigurationInput{
