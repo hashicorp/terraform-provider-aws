@@ -1,4 +1,4 @@
-package aws
+package mediapackage_test
 
 import (
 	"fmt"
