@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSnsTopic() *schema.Resource {
+func DataSourceTopic() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsSnsTopicsRead,
 

@@ -17,6 +17,7 @@ import (
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -556,7 +557,7 @@ func TestAccAWSSNSTopic_disappears(t *testing.T) {
 				Config: testAccAWSSNSTopicConfigNameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSnsTopic(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTopic(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

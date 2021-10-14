@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSnsTopicPolicy() *schema.Resource {
+func ResourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSnsTopicPolicyUpsert,
-		Read:   resourceAwsSnsTopicPolicyRead,
+		Read:   resourceTopicPolicyRead,
 		Update: resourceAwsSnsTopicPolicyUpsert,
-		Delete: resourceAwsSnsTopicPolicyDelete,
+		Delete: resourceTopicPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -64,10 +64,10 @@ func resourceAwsSnsTopicPolicyUpsert(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	return resourceAwsSnsTopicPolicyRead(d, meta)
+	return resourceTopicPolicyRead(d, meta)
 }
 
-func resourceAwsSnsTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	attributeOutput, err := conn.GetTopicAttributes(&sns.GetTopicAttributesInput{
@@ -104,7 +104,7 @@ func resourceAwsSnsTopicPolicyRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsSnsTopicPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	req := sns.SetTopicAttributesInput{
 		TopicArn:      aws.String(d.Id()),
 		AttributeName: aws.String("Policy"),

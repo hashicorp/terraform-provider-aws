@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
@@ -97,7 +98,7 @@ func TestAccAWSSNSTopicPolicy_disappears_topic(t *testing.T) {
 				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(topicResourceName, attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSnsTopic(), topicResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTopic(), topicResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,7 +121,7 @@ func TestAccAWSSNSTopicPolicy_disappears(t *testing.T) {
 				Config: testAccAWSSNSTopicPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSnsTopicPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTopicPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

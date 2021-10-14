@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSnsTopic() *schema.Resource {
+func ResourceTopic() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSnsTopicCreate,
-		Read:   resourceAwsSnsTopicRead,
-		Update: resourceAwsSnsTopicUpdate,
-		Delete: resourceAwsSnsTopicDelete,
+		Create: resourceTopicCreate,
+		Read:   resourceTopicRead,
+		Update: resourceTopicUpdate,
+		Delete: resourceTopicDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -179,7 +179,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 	}
 }
 
-func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -345,10 +345,10 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsSnsTopicRead(d, meta)
+	return resourceTopicRead(d, meta)
 }
 
-func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	// update mutable attributes
@@ -486,10 +486,10 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsSnsTopicRead(d, meta)
+	return resourceTopicRead(d, meta)
 }
 
-func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -627,7 +627,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsSnsTopicDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	log.Printf("[DEBUG] SNS Delete Topic: %s", d.Id())
