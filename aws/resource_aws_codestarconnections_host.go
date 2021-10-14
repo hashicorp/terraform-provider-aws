@@ -190,8 +190,8 @@ func expandCodeStarConnectionsHostVpcConfiguration(l []interface{}) *codestarcon
 	m := l[0].(map[string]interface{})
 
 	vc := &codestarconnections.VpcConfiguration{
-		SecurityGroupIds: expandStringSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:        expandStringSet(m["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		SubnetIds:        flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
 		VpcId:            aws.String(m["vpc_id"].(string)),
 	}
 
@@ -208,8 +208,8 @@ func flattenCodeStarConnectionsHostVpcConfiguration(vpcConfig *codestarconnectio
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flattenStringSet(vpcConfig.SecurityGroupIds),
-		"subnet_ids":         flattenStringSet(vpcConfig.SubnetIds),
+		"security_group_ids": flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
+		"subnet_ids":         flex.FlattenStringSet(vpcConfig.SubnetIds),
 		"vpc_id":             aws.StringValue(vpcConfig.VpcId),
 	}
 
