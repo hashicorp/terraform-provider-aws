@@ -7,11 +7,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 )
 
-func EndpointStatus(conn *dms.DatabaseMigrationService, id string) resource.StateRefreshFunc {
+func statusEndpoint(conn *dms.DatabaseMigrationService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.EndpointByID(conn, id)
+		output, err := tfdms.FindEndpointByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

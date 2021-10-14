@@ -7,18 +7,56 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfdms "github.com/hashicorp/terraform-provider-aws/aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 )
 
 const (
-	EndpointDeletedTimeout = 5 * time.Minute
+	endpointDeletedTimeout = 5 * time.Minute
 )
 
-func EndpointDeleted(conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
+func waitEndpointDeleted(conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{tfdms.EndpointStatusDeleting},
+		Pending: []string{tfdms.endpointStatusDeleting},
 		Target:  []string{},
-		Refresh: EndpointStatus(conn, id),
-		Timeout: EndpointDeletedTimeout,
+		Refresh: statusEndpoint(conn, id),
+		Timeout: endpointDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

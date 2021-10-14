@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 )
 
 func TestAccAwsDmsEndpoint_basic(t *testing.T) {
@@ -578,7 +579,7 @@ func testAccCheckAWSDmsEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.EndpointByID(conn, rs.Primary.ID)
+		_, err := tfdms.FindEndpointByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -607,7 +608,7 @@ func testAccCheckAWSDmsEndpointExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
 
-		_, err := finder.EndpointByID(conn, rs.Primary.ID)
+		_, err := tfdms.FindEndpointByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

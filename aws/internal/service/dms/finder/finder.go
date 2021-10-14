@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func EndpointByID(conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
+func FindEndpointByID(conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
 	input := &dms.DescribeEndpointsInput{
 		Filters: []*dms.Filter{
 			{
