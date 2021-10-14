@@ -24,16 +24,16 @@ func TestAccAWSShieldProtectionGroup_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheckAWSShield(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
+		CheckDestroy: testAccCheckProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShieldProtectionGroupConfig_basic_all(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation", shield.ProtectionGroupAggregationMax),
 					resource.TestCheckNoResourceAttr(resourceName, "members"),
 					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternAll),
@@ -59,16 +59,16 @@ func TestAccAWSShieldProtectionGroup_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheckAWSShield(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
+		CheckDestroy: testAccCheckProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShieldProtectionGroupConfig_basic_all(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfshield.ResourceProtectionGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,16 +85,16 @@ func TestAccAWSShieldProtectionGroup_aggregation(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheckAWSShield(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
+		CheckDestroy: testAccCheckProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShieldProtectionGroupConfig_aggregation(rName, shield.ProtectionGroupAggregationMean),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation", shield.ProtectionGroupAggregationMean),
 				),
 			},
@@ -106,7 +106,7 @@ func TestAccAWSShieldProtectionGroup_aggregation(t *testing.T) {
 			{
 				Config: testAccShieldProtectionGroupConfig_aggregation(rName, shield.ProtectionGroupAggregationSum),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation", shield.ProtectionGroupAggregationSum),
 				),
 			},
@@ -127,16 +127,16 @@ func TestAccAWSShieldProtectionGroup_members(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheckAWSShield(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
+		CheckDestroy: testAccCheckProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShieldProtectionGroupConfig_members(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternArbitrary),
 					resource.TestCheckResourceAttr(resourceName, "members.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexp.MustCompile(`eip-allocation/eipalloc-.+`)),
@@ -160,16 +160,16 @@ func TestAccAWSShieldProtectionGroup_protectionGroupId(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheckAWSShield(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
+		CheckDestroy: testAccCheckProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShieldProtectionGroupConfig_basic_all(testID1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "protection_group_id", testID1),
 				),
 			},
@@ -181,7 +181,7 @@ func TestAccAWSShieldProtectionGroup_protectionGroupId(t *testing.T) {
 			{
 				Config: testAccShieldProtectionGroupConfig_basic_all(testID2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "protection_group_id", testID2),
 				),
 			},
@@ -202,16 +202,16 @@ func TestAccAWSShieldProtectionGroup_resourceType(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheckAWSShield(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSShieldProtectionGroupDestroy,
+		CheckDestroy: testAccCheckProtectionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccShieldProtectionGroupConfig_resourceType(rName, shield.ProtectedResourceTypeElasticIpAllocation),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternByResourceType),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", shield.ProtectedResourceTypeElasticIpAllocation),
 				),
@@ -224,7 +224,7 @@ func TestAccAWSShieldProtectionGroup_resourceType(t *testing.T) {
 			{
 				Config: testAccShieldProtectionGroupConfig_resourceType(rName, shield.ProtectedResourceTypeApplicationLoadBalancer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldProtectionGroupExists(resourceName),
+					testAccCheckProtectionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternByResourceType),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", shield.ProtectedResourceTypeApplicationLoadBalancer),
 				),
@@ -238,7 +238,7 @@ func TestAccAWSShieldProtectionGroup_resourceType(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSShieldProtectionGroupDestroy(s *terraform.State) error {
+func testAccCheckProtectionGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -268,7 +268,7 @@ func testAccCheckAWSShieldProtectionGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSShieldProtectionGroupExists(name string) resource.TestCheckFunc {
+func testAccCheckProtectionGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
