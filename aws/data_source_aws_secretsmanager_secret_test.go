@@ -6,15 +6,16 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsSecretsManagerSecret_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck: testAccErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -34,13 +35,13 @@ func TestAccDataSourceAwsSecretsManagerSecret_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck: testAccErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -54,13 +55,13 @@ func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck: testAccErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -74,13 +75,13 @@ func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSecretsManagerSecret_Policy(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck: testAccErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck: acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

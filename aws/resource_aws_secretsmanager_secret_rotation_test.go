@@ -6,20 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsSecretsManagerSecretRotation_basic(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_rotation.test"
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		ErrorCheck:   testAccErrorCheck(t, secretsmanager.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretRotationDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +120,7 @@ func testAccCheckAwsSecretsManagerSecretRotationExists(resourceName string, secr
 }
 
 func testAccAwsSecretsManagerSecretRotationConfig(rName string, automaticallyAfterDays int) string {
-	return baseAccAWSLambdaConfig(rName, rName, rName) + fmt.Sprintf(`
+	return acctest.ConfigLambdaBase(rName, rName, rName) + fmt.Sprintf(`
 # Not a real rotation function
 resource "aws_lambda_function" "test1" {
   filename      = "test-fixtures/lambdatest.zip"
