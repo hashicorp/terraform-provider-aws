@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePolicy() *schema.Resource {
@@ -44,7 +45,7 @@ func ResourcePolicy() *schema.Resource {
 				Type:             schema.TypeList,
 				MaxItems:         1,
 				Optional:         true,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"account": {
@@ -69,7 +70,7 @@ func ResourcePolicy() *schema.Resource {
 				Type:             schema.TypeList,
 				MaxItems:         1,
 				Optional:         true,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"account": {
@@ -135,7 +136,7 @@ func ResourcePolicy() *schema.Resource {
 						"managed_service_data": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressEquivalentJsonDiffs,
+							DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 						},
 					},
 				},
