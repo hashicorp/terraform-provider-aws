@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSBackupPlanDataSource_basic(t *testing.T) {
+func TestAccBackupPlanDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_backup_plan.test"
 	resourceName := "aws_backup_plan.test"
 	rInt := sdkacctest.RandInt()

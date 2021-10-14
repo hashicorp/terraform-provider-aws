@@ -68,7 +68,7 @@ func sweepVaultPolicies(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsBackupVaultPolicy_basic(t *testing.T) {
+func TestAccBackupVaultPolicy_basic(t *testing.T) {
 	var vault backup.GetBackupVaultAccessPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault_policy.test"
@@ -102,7 +102,7 @@ func TestAccAwsBackupVaultPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupVaultPolicy_disappears(t *testing.T) {
+func TestAccBackupVaultPolicy_disappears(t *testing.T) {
 	var vault backup.GetBackupVaultAccessPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault_policy.test"
@@ -125,7 +125,7 @@ func TestAccAwsBackupVaultPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsBackupVaultPolicy_disappears_vault(t *testing.T) {
+func TestAccBackupVaultPolicy_Disappears_vault(t *testing.T) {
 	var vault backup.GetBackupVaultAccessPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_backup_vault_policy.test"
