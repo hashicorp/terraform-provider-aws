@@ -146,13 +146,13 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
 					// Remove existing if possible
-					conn := testAccProvider.Meta().(*AWSClient).iamconn
+					conn := acctest.Provider.Meta().(*AWSClient).iamconn
 					deletionID, err := deleteIamServiceLinkedRole(conn, name)
 					if err != nil {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
@@ -190,14 +190,14 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 func TestAccAWSIAMServiceLinkedRole_CustomSuffix(t *testing.T) {
 	resourceName := "aws_iam_service_linked_role.test"
 	awsServiceName := "autoscaling.amazonaws.com"
-	customSuffix := sdkacctest.RandomWithPrefix("tf-acc-test")
+	customSuffix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	name := fmt.Sprintf("AWSServiceRoleForAutoScaling_%s", customSuffix)
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,7 +226,7 @@ func TestAccAWSIAMServiceLinkedRole_CustomSuffix_DiffSuppressFunc(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,12 +250,12 @@ func TestAccAWSIAMServiceLinkedRole_CustomSuffix_DiffSuppressFunc(t *testing.T) 
 func TestAccAWSIAMServiceLinkedRole_Description(t *testing.T) {
 	resourceName := "aws_iam_service_linked_role.test"
 	awsServiceName := "autoscaling.amazonaws.com"
-	customSuffix := sdkacctest.RandomWithPrefix("tf-acc-test")
+	customSuffix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,7 +282,7 @@ func TestAccAWSIAMServiceLinkedRole_Description(t *testing.T) {
 }
 
 func testAccCheckAWSIAMServiceLinkedRoleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_service_linked_role" {
@@ -320,7 +320,7 @@ func testAccCheckAWSIAMServiceLinkedRoleExists(n string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*AWSClient).iamconn
 		_, roleName, _, err := decodeIamServiceLinkedRoleID(rs.Primary.ID)
 		if err != nil {
 			return err

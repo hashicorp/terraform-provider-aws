@@ -153,7 +153,7 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -189,7 +189,7 @@ func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -211,7 +211,7 @@ func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 }
 
 func testAccCheckAWSGroupDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_group" {
@@ -250,7 +250,7 @@ func testAccCheckAWSGroupExists(n string, res *iam.GetGroupOutput) resource.Test
 			return errors.New("No Group name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		resp, err := iamconn.GetGroup(&iam.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),

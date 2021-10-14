@@ -25,7 +25,7 @@ func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGroupPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,7 +79,7 @@ func testAccCheckAWSGroupPolicyAttachmentExists(n string, c int, out *iam.ListAt
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*AWSClient).iamconn
 		group := rs.Primary.Attributes["group"]
 
 		attachedPolicies, err := conn.ListAttachedGroupPolicies(&iam.ListAttachedGroupPoliciesInput{

@@ -11,14 +11,14 @@ import (
 )
 
 func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
-	roleName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_role.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMRoleDataSourceConfig(roleName),
@@ -39,14 +39,14 @@ func TestAccAWSDataSourceIAMRole_basic(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMRole_tags(t *testing.T) {
-	roleName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_role.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMRoleDataSourceConfig_tags(roleName),

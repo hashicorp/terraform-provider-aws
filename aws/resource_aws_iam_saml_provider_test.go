@@ -61,13 +61,13 @@ func testSweepIamSamlProvider(region string) error {
 }
 
 func TestAccAWSIAMSamlProvider_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,13 +99,13 @@ func TestAccAWSIAMSamlProvider_basic(t *testing.T) {
 }
 
 func TestAccAWSIAMSamlProvider_tags(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -143,20 +143,20 @@ func TestAccAWSIAMSamlProvider_tags(t *testing.T) {
 }
 
 func TestAccAWSIAMSamlProvider_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMSamlProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIamSamlProvider(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIamSamlProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,7 +165,7 @@ func TestAccAWSIAMSamlProvider_disappears(t *testing.T) {
 }
 
 func testAccCheckIAMSamlProviderDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_saml_provider" {
@@ -204,7 +204,7 @@ func testAccCheckIAMSamlProviderExists(id string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*AWSClient).iamconn
 		_, err := conn.GetSAMLProvider(&iam.GetSAMLProviderInput{
 			SAMLProviderArn: aws.String(rs.Primary.ID),
 		})

@@ -16,7 +16,7 @@ func TestAccAWSDataSourceIAMGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMGroupDataSourceConfig(groupName),
@@ -40,7 +40,7 @@ func TestAccAWSDataSourceIAMGroup_users(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMGroupDataSourceConfigWithUser(groupName, userName, groupMemberShipName, userCount),

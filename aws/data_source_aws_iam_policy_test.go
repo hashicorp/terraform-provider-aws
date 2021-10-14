@@ -87,7 +87,7 @@ func TestAccAWSDataSourceIAMPolicy_Arn(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig_Arn(policyName, "/"),
@@ -113,7 +113,7 @@ func TestAccAWSDataSourceIAMPolicy_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig_Name(policyName, "/"),
@@ -141,7 +141,7 @@ func TestAccAWSDataSourceIAMPolicy_NameAndPathPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig_PathPrefix(policyName, policyPath),
@@ -166,7 +166,7 @@ func TestAccAWSDataSourceIAMPolicy_NonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsDataSourceIamPolicyConfig_NonExistent(policyName, policyPath),

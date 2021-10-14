@@ -27,7 +27,7 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -70,7 +70,7 @@ func TestAccAWSIAMUserPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccAWSIAMUserPolicy_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +139,7 @@ func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,7 +181,7 @@ func TestAccAWSIAMUserPolicy_multiplePolicies(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -245,7 +245,7 @@ func testAccCheckIAMUserPolicyExists(resource string, res *iam.GetUserPolicyOutp
 			return err
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		resp, err := iamconn.GetUserPolicy(&iam.GetUserPolicyInput{
 			PolicyName: aws.String(name),
@@ -262,7 +262,7 @@ func testAccCheckIAMUserPolicyExists(resource string, res *iam.GetUserPolicyOutp
 }
 
 func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user_policy" {
@@ -298,7 +298,7 @@ func testAccCheckIAMUserPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckIAMUserPolicyDisappears(out *iam.GetUserPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		params := &iam.DeleteUserPolicyInput{
 			PolicyName: out.PolicyName,
@@ -328,7 +328,7 @@ func testAccCheckIAMUserPolicy(
 			return fmt.Errorf("Not Found: %s", iamUserPolicyResource)
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 		username, name, err := resourceAwsIamUserPolicyParseId(policy.Primary.ID)
 		if err != nil {
 			return err
@@ -354,7 +354,7 @@ func testAccCheckIAMUserPolicyExpectedPolicies(iamUserResource string, expected 
 			return fmt.Errorf("No ID is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 		userPolicies, err := iamconn.ListUserPolicies(&iam.ListUserPoliciesInput{
 			UserName: aws.String(rs.Primary.ID),
 		})

@@ -92,14 +92,14 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMSessionContext_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextConfig(rName, "/", "session-id"),
@@ -115,14 +115,14 @@ func TestAccAWSDataSourceIAMSessionContext_basic(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMSessionContext_withPath(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextConfig(rName, "/this/is/a/long/path/", "session-id"),
@@ -137,14 +137,14 @@ func TestAccAWSDataSourceIAMSessionContext_withPath(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMSessionContext_notAssumedRole(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/"),
@@ -159,14 +159,14 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRole(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleWithPath(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_session_context.test"
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextNotAssumedConfig(rName, "/this/is/a/long/path/"),
@@ -181,13 +181,13 @@ func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleWithPath(t *testing.T) 
 }
 
 func TestAccAWSDataSourceIAMSessionContext_notAssumedRoleUser(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_session_context.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIAMSessionContextUserConfig(rName),

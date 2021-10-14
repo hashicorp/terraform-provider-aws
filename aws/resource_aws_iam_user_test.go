@@ -207,7 +207,7 @@ func TestAccAWSUser_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -238,13 +238,13 @@ func TestAccAWSUser_basic(t *testing.T) {
 func TestAccAWSUser_disappears(t *testing.T) {
 	var user iam.GetUserOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -262,13 +262,13 @@ func TestAccAWSUser_disappears(t *testing.T) {
 func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
 	var user iam.GetUserOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -292,13 +292,13 @@ func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
 func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
 	var user iam.GetUserOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -322,13 +322,13 @@ func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
 func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
 	var user iam.GetUserOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -352,13 +352,13 @@ func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
 func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
 	var user iam.GetUserOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -381,13 +381,13 @@ func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
 func TestAccAWSUser_ForceDestroy_SigningCertificate(t *testing.T) {
 	var user iam.GetUserOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -419,7 +419,7 @@ func TestAccAWSUser_nameChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -456,7 +456,7 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -485,7 +485,7 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 	var user iam.GetUserOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.user"
 
 	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", acctest.Partition())
@@ -494,7 +494,7 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			// Test creation
@@ -563,13 +563,13 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 func TestAccAWSUser_tags(t *testing.T) {
 	var user iam.GetUserOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -601,7 +601,7 @@ func TestAccAWSUser_tags(t *testing.T) {
 }
 
 func testAccCheckAWSUserDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user" {
@@ -636,7 +636,7 @@ func testAccCheckAWSUserExists(n string, res *iam.GetUserOutput) resource.TestCh
 			return fmt.Errorf("No User name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		resp, err := iamconn.GetUser(&iam.GetUserInput{
 			UserName: aws.String(rs.Primary.ID),
@@ -667,7 +667,7 @@ func testAccCheckAWSUserAttributes(user *iam.GetUserOutput, name string, path st
 
 func testAccCheckAWSUserDisappears(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		userName := aws.StringValue(getUserOutput.User.UserName)
 
@@ -700,7 +700,7 @@ func testAccCheckAWSUserPermissionsBoundary(getUserOutput *iam.GetUserOutput, ex
 
 func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		input := &iam.CreateAccessKeyInput{
 			UserName: getUserOutput.User.UserName,
@@ -716,7 +716,7 @@ func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resou
 
 func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 		password, err := generateIAMPassword(32)
 		if err != nil {
 			return err
@@ -736,7 +736,7 @@ func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) re
 
 func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		createVirtualMFADeviceInput := &iam.CreateVirtualMFADeviceInput{
 			Path:                 getUserOutput.User.Path,
@@ -777,12 +777,12 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		publicKey, _, err := RandSSHKeyPairSize(2048, testAccDefaultEmailAddress)
+		publicKey, _, err := RandSSHKeyPairSize(2048, acctest.DefaultEmailAddress)
 		if err != nil {
 			return fmt.Errorf("error generating random SSH key: %w", err)
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		input := &iam.UploadSSHPublicKeyInput{
 			UserName:         getUserOutput.User.UserName,
@@ -800,7 +800,7 @@ func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource
 
 func testAccCheckAWSUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
 
 		signingCertificate, err := os.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
 		if err != nil {

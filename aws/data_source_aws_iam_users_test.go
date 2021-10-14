@@ -14,12 +14,12 @@ import (
 func TestAccAWSIAMUsersDataSource_nameRegex(t *testing.T) {
 	dataSourceName := "data.aws_iam_users.test"
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMUsersConfigDataSource_nameRegex(rCount, rName),
@@ -35,13 +35,13 @@ func TestAccAWSIAMUsersDataSource_nameRegex(t *testing.T) {
 func TestAccAWSIAMUsersDataSource_pathPrefix(t *testing.T) {
 	dataSourceName := "data.aws_iam_users.test"
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rPathPrefix := sdkacctest.RandomWithPrefix("tf-acc-path")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMUsersConfigDataSource_pathPrefix(rCount, rName, rPathPrefix),
@@ -60,7 +60,7 @@ func TestAccAWSIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMUsersConfigDataSource_nonExistentNameRegex,
@@ -79,7 +79,7 @@ func TestAccAWSIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMUsersConfigDataSource_nonExistentPathPrefix,
