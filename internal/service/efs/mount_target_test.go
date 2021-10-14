@@ -25,11 +25,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_efs_mount_target", &resource.Sweeper{
 		Name: "aws_efs_mount_target",
-		F:    testSweepEfsMountTargets,
+		F:    sweepMountTargets,
 	})
 }
 
-func testSweepEfsMountTargets(region string) error {
+func sweepMountTargets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -106,7 +106,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSMountTargetConfig(ct),
+				Config: testAccMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
@@ -125,7 +125,7 @@ func TestAccAWSEFSMountTarget_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEFSMountTargetConfigModified(ct),
+				Config: testAccMountTargetModifiedConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
 					testAccCheckEfsMountTarget(resourceName2, &mount),
@@ -149,7 +149,7 @@ func TestAccAWSEFSMountTarget_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSMountTargetConfig(ct),
+				Config: testAccMountTargetConfig(ct),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceMountTarget(), resourceName),
@@ -171,7 +171,7 @@ func TestAccAWSEFSMountTarget_IpAddress(t *testing.T) {
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSMountTargetConfigIpAddress("10.0.0.100"),
+				Config: testAccMountTargetIPAddressConfig("10.0.0.100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "10.0.0.100"),
@@ -198,7 +198,7 @@ func TestAccAWSEFSMountTarget_IpAddress_EmptyString(t *testing.T) {
 		CheckDestroy: testAccCheckEfsMountTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSMountTargetConfigIpAddress(""),
+				Config: testAccMountTargetIPAddressConfig(""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsMountTarget(resourceName, &mount),
 					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
@@ -213,7 +213,7 @@ func TestAccAWSEFSMountTarget_IpAddress_EmptyString(t *testing.T) {
 	})
 }
 
-func TestResourceAWSEFSMountTarget_hasEmptyMountTargets(t *testing.T) {
+func TestMountTarget_hasEmptyMountTargets(t *testing.T) {
 	mto := &efs.DescribeMountTargetsOutput{
 		MountTargets: []*efs.MountTargetDescription{},
 	}
@@ -292,7 +292,7 @@ func testAccCheckEfsMountTarget(resourceID string, mount *efs.MountTargetDescrip
 	}
 }
 
-func testAccAWSEFSMountTargetConfig(ct string) string {
+func testAccMountTargetConfig(ct string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -336,7 +336,7 @@ resource "aws_subnet" "test" {
 `, ct)
 }
 
-func testAccAWSEFSMountTargetConfigModified(ct string) string {
+func testAccMountTargetModifiedConfig(ct string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -395,7 +395,7 @@ resource "aws_subnet" "test2" {
 `, ct)
 }
 
-func testAccAWSEFSMountTargetConfigIpAddress(ipAddress string) string {
+func testAccMountTargetIPAddressConfig(ipAddress string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

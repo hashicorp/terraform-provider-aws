@@ -26,7 +26,7 @@ func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSFileSystemPolicyConfig(rName),
+				Config: testAccFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -39,7 +39,7 @@ func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bypass_policy_lockout_safety_check"},
 			},
 			{
-				Config: testAccAWSEFSFileSystemPolicyConfigUpdated(rName),
+				Config: testAccFileSystemPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -61,7 +61,7 @@ func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSFileSystemPolicyConfig(rName),
+				Config: testAccFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceFileSystemPolicy(), resourceName),
@@ -84,7 +84,7 @@ func TestAccAWSEFSFileSystemPolicy_PolicyBypass(t *testing.T) {
 		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSFileSystemPolicyConfig(rName),
+				Config: testAccFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
@@ -97,7 +97,7 @@ func TestAccAWSEFSFileSystemPolicy_PolicyBypass(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bypass_policy_lockout_safety_check"},
 			},
 			{
-				Config: testAccAWSEFSFileSystemPolicyBypassConfig(rName, true),
+				Config: testAccFileSystemPolicyBypassConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
@@ -156,7 +156,7 @@ func testAccCheckEfsFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPo
 	}
 }
 
-func testAccAWSEFSFileSystemPolicyConfig(rName string) string {
+func testAccFileSystemPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -194,7 +194,7 @@ POLICY
 `, rName)
 }
 
-func testAccAWSEFSFileSystemPolicyConfigUpdated(rName string) string {
+func testAccFileSystemPolicyUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -229,7 +229,7 @@ POLICY
 `, rName)
 }
 
-func testAccAWSEFSFileSystemPolicyBypassConfig(rName string, bypass bool) string {
+func testAccFileSystemPolicyBypassConfig(rName string, bypass bool) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q

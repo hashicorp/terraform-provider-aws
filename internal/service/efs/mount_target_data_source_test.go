@@ -21,7 +21,7 @@ func TestAccDataSourceAwsEfsMountTarget_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEfsMountTargetConfigByMountTargetId(rName),
+				Config: testAccMountTargetByMountTargetIDConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
@@ -51,7 +51,7 @@ func TestAccDataSourceAwsEfsMountTarget_byAccessPointID(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSMountTargetConfigByAccessPointId(rName),
+				Config: testAccMountTargetByAccessPointIDConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
@@ -81,7 +81,7 @@ func TestAccDataSourceAwsEfsMountTarget_byFileSystemID(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEFSMountTargetConfigByFileSystemId(rName),
+				Config: testAccMountTargetByFileSystemIDConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
@@ -100,7 +100,7 @@ func TestAccDataSourceAwsEfsMountTarget_byFileSystemID(t *testing.T) {
 	})
 }
 
-func testAccAwsEfsMountTargetDataSourceBaseConfig(rName string) string {
+func testAccMountTargetBaseDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -135,16 +135,16 @@ resource "aws_subnet" "test" {
 `, rName))
 }
 
-func testAccAwsEfsMountTargetConfigByMountTargetId(rName string) string {
-	return acctest.ConfigCompose(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
+func testAccMountTargetByMountTargetIDConfig(rName string) string {
+	return acctest.ConfigCompose(testAccMountTargetBaseDataSourceConfig(rName), `
 data "aws_efs_mount_target" "test" {
   mount_target_id = aws_efs_mount_target.test.id
 }
 `)
 }
 
-func testAccAWSEFSMountTargetConfigByAccessPointId(rName string) string {
-	return acctest.ConfigCompose(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
+func testAccMountTargetByAccessPointIDConfig(rName string) string {
+	return acctest.ConfigCompose(testAccMountTargetBaseDataSourceConfig(rName), `
 resource "aws_efs_access_point" "test" {
   file_system_id = aws_efs_file_system.test.id
 }
@@ -155,8 +155,8 @@ data "aws_efs_mount_target" "test" {
 `)
 }
 
-func testAccAWSEFSMountTargetConfigByFileSystemId(rName string) string {
-	return acctest.ConfigCompose(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
+func testAccMountTargetByFileSystemIDConfig(rName string) string {
+	return acctest.ConfigCompose(testAccMountTargetBaseDataSourceConfig(rName), `
 data "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
 

@@ -18,7 +18,7 @@ func TestAccDataSourceAWSEFSAccessPoints_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEFSAccessPointsConfig(),
+				Config: testAccAccessPointsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
@@ -28,7 +28,7 @@ func TestAccDataSourceAWSEFSAccessPoints_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSEFSAccessPointsConfig() string {
+func testAccAccessPointsDataSourceConfig() string {
 	return `
 resource "aws_efs_file_system" "test" {}
 

@@ -21,9 +21,9 @@ func TestAccDataSourceAwsEfsFileSystem_id(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEfsFileSystemIDConfig,
+				Config: testAccFileSystemIDDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsEfsFileSystemCheck(dataSourceName, resourceName),
+					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
@@ -51,9 +51,9 @@ func TestAccDataSourceAwsEfsFileSystem_tags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEfsFileSystemTagsConfig,
+				Config: testAccFileSystemTagsDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsEfsFileSystemCheck(dataSourceName, resourceName),
+					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
@@ -81,9 +81,9 @@ func TestAccDataSourceAwsEfsFileSystem_name(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEfsFileSystemNameConfig,
+				Config: testAccFileSystemNameDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsEfsFileSystemCheck(dataSourceName, resourceName),
+					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
@@ -111,9 +111,9 @@ func TestAccDataSourceAwsEfsFileSystem_availabilityZone(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEfsFileSystemAvailabilityZoneConfig,
+				Config: testAccFileSystemAvailabilityZoneDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsEfsFileSystemCheck(dataSourceName, resourceName),
+					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_id", resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_name", resourceName, "availability_zone_name"),
 				),
@@ -130,14 +130,14 @@ func TestAccDataSourceAwsEfsFileSystem_NonExistent(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsEfsFileSystemIDConfig_NonExistent,
+				Config:      testAccFileSystemIDDataSourceConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`error reading EFS FileSystem`),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsEfsFileSystemCheck(dName, rName string) resource.TestCheckFunc {
+func testAccFileSystemCheckDataSource(dName, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dName]
 		if !ok {
@@ -171,13 +171,13 @@ func testAccDataSourceAwsEfsFileSystemCheck(dName, rName string) resource.TestCh
 	}
 }
 
-const testAccDataSourceAwsEfsFileSystemIDConfig_NonExistent = `
+const testAccFileSystemIDDataSourceConfig_NonExistent = `
 data "aws_efs_file_system" "test" {
   file_system_id = "fs-nonexistent"
 }
 `
 
-const testAccDataSourceAwsEfsFileSystemNameConfig = `
+const testAccFileSystemNameDataSourceConfig = `
 resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
@@ -185,7 +185,7 @@ data "aws_efs_file_system" "test" {
 }
 `
 
-const testAccDataSourceAwsEfsFileSystemIDConfig = `
+const testAccFileSystemIDDataSourceConfig = `
 resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
@@ -193,7 +193,7 @@ data "aws_efs_file_system" "test" {
 }
 `
 
-const testAccDataSourceAwsEfsFileSystemTagsConfig = `
+const testAccFileSystemTagsDataSourceConfig = `
 resource "aws_efs_file_system" "test" {
   tags = {
     Name        = "default-efs"
@@ -214,7 +214,7 @@ data "aws_efs_file_system" "test" {
 }
 `
 
-const testAccDataSourceAwsEfsFileSystemAvailabilityZoneConfig = `
+const testAccFileSystemAvailabilityZoneDataSourceConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
