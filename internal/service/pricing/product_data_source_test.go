@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsPricingProduct_ec2(t *testing.T) {
+func TestAccPricingProductDataSource_ec2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
@@ -28,7 +28,7 @@ func TestAccDataSourceAwsPricingProduct_ec2(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsPricingProduct_redshift(t *testing.T) {
+func TestAccPricingProductDataSource_redshift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckPricing(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
