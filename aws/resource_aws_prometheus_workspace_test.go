@@ -6,18 +6,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAMPWorkspace_basic(t *testing.T) {
-	workspaceAlias := acctest.RandomWithPrefix("tf_amp_workspace")
+	workspaceAlias := sdkacctest.RandomWithPrefix("tf_amp_workspace")
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, prometheusservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
@@ -53,8 +54,8 @@ func TestAccAWSAMPWorkspace_basic(t *testing.T) {
 func TestAccAWSAMPWorkspace_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, prometheusservice.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func TestAccAWSAMPWorkspace_disappears(t *testing.T) {
 				Config: testAWSAMPWorkspaceConfigWithoutAlias(),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAWSAMPWorkspaceExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsPrometheusWorkspace(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsPrometheusWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
