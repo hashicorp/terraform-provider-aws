@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
 func TestLBListenerARNFromRuleARN(t *testing.T) {
@@ -51,7 +52,7 @@ func TestLBListenerARNFromRuleARN(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := lbListenerARNFromRuleARN(tc.arn)
+		actual := tfelbv2.ListenerARNFromRuleARN(tc.arn)
 		if actual != tc.expected {
 			t.Fatalf("incorrect arn returned: %q\nExpected: %s\n     Got: %s", tc.name, tc.expected, actual)
 		}

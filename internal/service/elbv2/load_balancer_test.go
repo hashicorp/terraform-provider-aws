@@ -104,7 +104,7 @@ func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := lbSuffixFromARN(tc.arn)
+		actual := tfelbv2.SuffixFromARN(tc.arn)
 		if actual != tc.suffix {
 			t.Fatalf("bad suffix: %q\nExpected: %s\n     Got: %s", tc.name, tc.suffix, actual)
 		}
