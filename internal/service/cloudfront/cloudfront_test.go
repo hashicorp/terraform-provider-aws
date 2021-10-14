@@ -1,4 +1,4 @@
-package aws
+package cloudfront_test
 
 import "github.com/aws/aws-sdk-go/aws/endpoints"
 

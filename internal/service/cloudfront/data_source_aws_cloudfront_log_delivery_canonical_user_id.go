@@ -1,4 +1,4 @@
-package aws
+package cloudfront
 
 import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"

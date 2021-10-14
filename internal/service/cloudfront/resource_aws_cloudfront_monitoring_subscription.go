@@ -1,4 +1,4 @@
-package aws
+package cloudfront
 
 import (
 	"fmt"
@@ -9,13 +9,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func ResourceMonitoringSubscription() *schema.Resource {
@@ -88,7 +84,7 @@ func resourceMonitoringSubscriptionCreate(d *schema.ResourceData, meta interface
 func resourceMonitoringSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
-	subscription, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(conn, d.Id())
+	subscription, err := FindMonitoringSubscriptionByDistributionID(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		log.Printf("[WARN] CloudFront Distribution (%s) not found, removing from state", d.Id())
