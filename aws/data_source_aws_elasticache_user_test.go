@@ -17,7 +17,7 @@ func TestAccDataSourceAWSElasticacheUser_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		ErrorCheck: acctest.ErrorCheck(t, elasticache.EndpointsID),
 		Steps: []resource.TestStep{
 			{
