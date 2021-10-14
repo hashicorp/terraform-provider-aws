@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsImageBuilderComponent() *schema.Resource {
@@ -74,8 +75,8 @@ func dataSourceAwsImageBuilderComponent() *schema.Resource {
 }
 
 func dataSourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetComponentInput{}
 

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepImageBuilderInfrastructureConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).imagebuilderconn
+	conn := client.(*conns.AWSClient).ImageBuilderConn
 
 	var sweeperErrs *multierror.Error
 
@@ -589,7 +590,7 @@ func TestAccAwsImageBuilderInfrastructureConfiguration_TerminateInstanceOnFailur
 }
 
 func testAccCheckAwsImageBuilderInfrastructureConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_infrastructure_configuration" {
@@ -625,7 +626,7 @@ func testAccCheckAwsImageBuilderInfrastructureConfigurationExists(resourceName s
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).imagebuilderconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
 
 		input := &imagebuilder.GetInfrastructureConfigurationInput{
 			InfrastructureConfigurationArn: aws.String(rs.Primary.ID),
