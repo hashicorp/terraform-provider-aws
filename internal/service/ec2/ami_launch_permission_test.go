@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
@@ -150,7 +151,7 @@ func testAccCheckAWSAMILaunchPermissionExists(resourceName string) resource.Test
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
-		if has, err := hasLaunchPermission(conn, imageID, accountID); err != nil {
+		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID); err != nil {
 			return err
 		} else if !has {
 			return fmt.Errorf("launch permission does not exist for '%s' on '%s'", accountID, imageID)
@@ -169,7 +170,7 @@ func testAccCheckAWSAMILaunchPermissionDestroy(s *terraform.State) error {
 		accountID := rs.Primary.Attributes["account_id"]
 		imageID := rs.Primary.Attributes["image_id"]
 
-		if has, err := hasLaunchPermission(conn, imageID, accountID); err != nil {
+		if has, err := tfec2.HasLaunchPermission(conn, imageID, accountID); err != nil {
 			return err
 		} else if has {
 			return fmt.Errorf("launch permission still exists for '%s' on '%s'", accountID, imageID)
@@ -255,7 +256,7 @@ func testAccAWSAMIDisappears(imageID *string) resource.TestCheckFunc {
 			return err
 		}
 
-		if err := resourceAwsAmiWaitForDestroy(AWSAMIDeleteRetryTimeout, *imageID, conn); err != nil {
+		if err := tfec2.AMIWaitForDestroy(tfec2.AMIDeleteRetryTimeout, *imageID, conn); err != nil {
 			return err
 		}
 		return nil

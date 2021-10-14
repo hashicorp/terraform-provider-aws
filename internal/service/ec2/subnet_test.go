@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
@@ -89,7 +90,7 @@ func testSweepSubnets(region string) error {
 				continue
 			}
 
-			r := ResourceSubnet()
+			r := tfec2.ResourceSubnet()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -720,7 +721,7 @@ func TestAccAWSSubnet_disappears(t *testing.T) {
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSubnet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

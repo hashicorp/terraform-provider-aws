@@ -171,7 +171,7 @@ func TestProtocolStateFunc(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		result := protocolStateFunc(c.input)
+		result := tfec2.ProtocolStateFunc(c.input)
 		if result != c.expected {
 			t.Errorf("Error matching protocol, expected (%s), got (%s)", c.expected, result)
 		}
@@ -238,7 +238,7 @@ func TestProtocolForValue(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		result := protocolForValue(c.input)
+		result := tfec2.ProtocolForValue(c.input)
 		if result != c.expected {
 			t.Errorf("Error matching protocol, expected (%s), got (%s)", c.expected, result)
 		}
@@ -248,7 +248,7 @@ func TestProtocolForValue(t *testing.T) {
 func calcSecurityGroupChecksum(rules []interface{}) int {
 	var sum int = 0
 	for _, rule := range rules {
-		sum += resourceAwsSecurityGroupRuleHash(rule)
+		sum += tfec2.SecurityGroupRuleHash(rule)
 	}
 	return sum
 }
@@ -437,17 +437,17 @@ func TestResourceAwsSecurityGroupExpandCollapseRules(t *testing.T) {
 		},
 	}
 
-	expected_compact_set := schema.NewSet(resourceAwsSecurityGroupRuleHash, expected_compact_list)
-	actual_expanded_list := resourceAwsSecurityGroupExpandRules(expected_compact_set).List()
+	expected_compact_set := schema.NewSet(tfec2.SecurityGroupRuleHash, expected_compact_list)
+	actual_expanded_list := tfec2.SecurityGroupExpandRules(expected_compact_set).List()
 
 	if calcSecurityGroupChecksum(expected_expanded_list) != calcSecurityGroupChecksum(actual_expanded_list) {
-		t.Fatalf("error matching expanded set for resourceAwsSecurityGroupExpandRules()")
+		t.Fatalf("error matching expanded set for tfec2.SecurityGroupExpandRules()")
 	}
 
-	actual_collapsed_list := resourceAwsSecurityGroupCollapseRules("ingress", expected_expanded_list)
+	actual_collapsed_list := tfec2.SecurityGroupCollapseRules("ingress", expected_expanded_list)
 
 	if calcSecurityGroupChecksum(expected_compact_list) != calcSecurityGroupChecksum(actual_collapsed_list) {
-		t.Fatalf("error matching collapsed set for resourceAwsSecurityGroupCollapseRules()")
+		t.Fatalf("error matching collapsed set for tfec2.SecurityGroupCollapseRules()")
 	}
 }
 
@@ -551,7 +551,7 @@ func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 		},
 	}
 
-	out := resourceAwsSecurityGroupIPPermGather("sg-11111", raw, aws.String("12345"))
+	out := tfec2.SecurityGroupIPPermGather("sg-11111", raw, aws.String("12345"))
 	for _, i := range out {
 		// loop and match rules, because the ordering is not guarneteed
 		for _, l := range local {

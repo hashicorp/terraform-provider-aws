@@ -57,7 +57,7 @@ func DataSourceNatGateway() *schema.Resource {
 				Computed: true,
 			},
 			"tags":   tftags.TagsSchemaComputed(),
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 		},
 	}
 }
@@ -97,12 +97,12 @@ func dataSourceNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if tags, ok := d.GetOk("tags"); ok {
-		req.Filter = append(req.Filter, buildEC2TagFilterList(
+		req.Filter = append(req.Filter, BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
-	req.Filter = append(req.Filter, buildEC2CustomFilterList(
+	req.Filter = append(req.Filter, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filter) == 0 {

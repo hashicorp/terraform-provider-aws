@@ -284,12 +284,12 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	region := *conn.Config.Region
 	d.Set("private_ip", address.PrivateIpAddress)
 	if address.PrivateIpAddress != nil {
-		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", convertIPToDashIP(*address.PrivateIpAddress), regionalPrivateDNSSuffix(region)))
+		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(*address.PrivateIpAddress), RegionalPrivateDNSSuffix(region)))
 	}
 
 	d.Set("public_ip", address.PublicIp)
 	if address.PublicIp != nil {
-		d.Set("public_dns", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(*address.PublicIp), resourceAwsEc2RegionalPublicDnsSuffix(region))))
+		d.Set("public_dns", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(*address.PublicIp), RegionalPublicDNSSuffix(region))))
 	}
 
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
@@ -573,6 +573,6 @@ func waitForEc2AddressAssociationClassic(conn *ec2.EC2, publicIP string, instanc
 	return nil
 }
 
-func convertIPToDashIP(ip string) string {
+func ConvertIPToDashIP(ip string) string {
 	return strings.Replace(ip, ".", "-", -1)
 }

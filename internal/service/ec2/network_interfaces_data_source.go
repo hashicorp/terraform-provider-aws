@@ -17,7 +17,7 @@ func DataSourceNetworkInterfaces() *schema.Resource {
 		Read: dataSourceNetworkInterfacesRead,
 		Schema: map[string]*schema.Schema{
 
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 
 			"tags": tftags.TagsSchemaComputed(),
 
@@ -40,13 +40,13 @@ func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) e
 	tags, tagsOk := d.GetOk("tags")
 
 	if tagsOk {
-		req.Filters = buildEC2TagFilterList(
+		req.Filters = BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)
 	}
 
 	if filtersOk {
-		req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		req.Filters = append(req.Filters, BuildCustomFilterList(
 			filters.(*schema.Set),
 		)...)
 	}

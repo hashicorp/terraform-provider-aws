@@ -28,7 +28,7 @@ func DataSourceSecurityGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 
 			"id": {
 				Type:     schema.TypeString,
@@ -67,10 +67,10 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 			"vpc-id":     d.Get("vpc_id").(string),
 		},
 	)
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
+	req.Filters = append(req.Filters, BuildTagFilterList(
 		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+	req.Filters = append(req.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {

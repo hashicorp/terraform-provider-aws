@@ -15,7 +15,7 @@ func DataSourceTransitGatewayRouteTables() *schema.Resource {
 		Read: dataSourceTransitGatewayRouteTablesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 
 			"ids": {
 				Type:     schema.TypeSet,
@@ -34,11 +34,11 @@ func dataSourceTransitGatewayRouteTablesRead(d *schema.ResourceData, meta interf
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
-	input.Filters = append(input.Filters, buildEC2TagFilterList(
+	input.Filters = append(input.Filters, BuildTagFilterList(
 		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
 
-	input.Filters = append(input.Filters, buildEC2CustomFilterList(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

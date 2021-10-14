@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -388,7 +389,7 @@ func TestAccAWSEc2CapacityReservation_disappears(t *testing.T) {
 				Config: testAccEc2CapacityReservationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCapacityReservation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCapacityReservation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

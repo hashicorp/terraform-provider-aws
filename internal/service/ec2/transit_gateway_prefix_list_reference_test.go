@@ -68,7 +68,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 				Config: testAccAwsEc2TransitGatewayPrefixListReferenceConfig_Blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGatewayPrefixListReference(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayPrefixListReference(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,7 +95,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t 
 				Config: testAccAwsEc2TransitGatewayPrefixListReferenceConfig_Blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGateway(), transitGatewayResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

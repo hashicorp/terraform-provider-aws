@@ -20,7 +20,7 @@ func ResourceAMICopy() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
 			Update: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Delete: schema.DefaultTimeout(AWSAMIDeleteRetryTimeout),
+			Delete: schema.DefaultTimeout(AMIDeleteRetryTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{

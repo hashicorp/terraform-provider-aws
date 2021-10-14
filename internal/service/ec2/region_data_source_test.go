@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestFindRegionByEc2Endpoint(t *testing.T) {
@@ -34,7 +35,7 @@ func TestFindRegionByEc2Endpoint(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := findRegionByEc2Endpoint(tc.Value)
+		_, err := tfec2.FindRegionByEndpoint(tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}
@@ -64,7 +65,7 @@ func TestFindRegionByName(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := findRegionByName(tc.Value)
+		_, err := tfec2.FindRegionByName(tc.Value)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Value, err)
 		}

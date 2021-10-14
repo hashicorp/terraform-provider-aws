@@ -32,7 +32,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsDefaultSecurityGroupMigrateState,
+		MigrateState:  DefaultSecurityGroupMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -89,7 +89,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 						"protocol": {
 							Type:      schema.TypeString,
 							Required:  true,
-							StateFunc: protocolStateFunc,
+							StateFunc: ProtocolStateFunc,
 						},
 						"security_groups": {
 							Type:     schema.TypeSet,
@@ -150,7 +150,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 						"protocol": {
 							Type:      schema.TypeString,
 							Required:  true,
-							StateFunc: protocolStateFunc,
+							StateFunc: ProtocolStateFunc,
 						},
 						"security_groups": {
 							Type:     schema.TypeSet,
@@ -278,16 +278,16 @@ func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	remoteIngressRules := resourceAwsSecurityGroupIPPermGather(d.Id(), group.IpPermissions, group.OwnerId)
-	remoteEgressRules := resourceAwsSecurityGroupIPPermGather(d.Id(), group.IpPermissionsEgress, group.OwnerId)
+	remoteIngressRules := SecurityGroupIPPermGather(d.Id(), group.IpPermissions, group.OwnerId)
+	remoteEgressRules := SecurityGroupIPPermGather(d.Id(), group.IpPermissionsEgress, group.OwnerId)
 
 	localIngressRules := d.Get("ingress").(*schema.Set).List()
 	localEgressRules := d.Get("egress").(*schema.Set).List()
 
 	// Loop through the local state of rules, doing a match against the remote
 	// ruleSet we built above.
-	ingressRules := matchRules("ingress", localIngressRules, remoteIngressRules)
-	egressRules := matchRules("egress", localEgressRules, remoteEgressRules)
+	ingressRules := MatchRules("ingress", localIngressRules, remoteIngressRules)
+	egressRules := MatchRules("egress", localEgressRules, remoteEgressRules)
 
 	sgArn := arn.ARN{
 		AccountID: aws.StringValue(group.OwnerId),
@@ -406,7 +406,7 @@ func resourceAwsDefaultSecurityGroupRuleHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", m["to_port"].(int)))
-	p := protocolForValue(m["protocol"].(string))
+	p := ProtocolForValue(m["protocol"].(string))
 	buf.WriteString(fmt.Sprintf("%s-", p))
 	buf.WriteString(fmt.Sprintf("%t-", m["self"].(bool)))
 
@@ -467,7 +467,7 @@ func resourceAwsDefaultSecurityGroupRuleHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func resourceAwsDefaultSecurityGroupMigrateState(
+func DefaultSecurityGroupMigrateState(
 	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:

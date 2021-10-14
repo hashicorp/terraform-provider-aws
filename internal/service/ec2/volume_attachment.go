@@ -213,7 +213,7 @@ func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error stopping instance (%s): %s", iID, err)
 		}
 
-		if err := waitForInstanceStopping(conn, iID, InstanceStopTimeout); err != nil {
+		if err := WaitForInstanceStopping(conn, iID, InstanceStopTimeout); err != nil {
 			return err
 		}
 	}

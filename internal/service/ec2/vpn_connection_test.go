@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -88,7 +89,7 @@ func testSweepEc2VpnConnections(region string) error {
 			return fmt.Errorf("error deleting EC2 VPN Connection (%s): %s", id, err)
 		}
 
-		if err := waitForEc2VpnConnectionDeletion(conn, id); err != nil {
+		if err := tfec2.WaitForVPNConnectionDeletion(conn, id); err != nil {
 			return fmt.Errorf("error waiting for VPN connection (%s) to delete: %s", id, err)
 		}
 	}
@@ -670,7 +671,7 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 				Config: testAccAwsVpnConnectionConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPNConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -757,12 +758,12 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 		Tunnel1InsideCidr     string
 		Tunnel1InsideIpv6Cidr string
 		ExpectError           bool
-		ExpectTunnelInfo      TunnelInfo
+		ExpectTunnelInfo      tfec2.TunnelInfo
 	}{
 		{
 			Name: "outside address sort",
 			XML:  testAccAwsVpnTunnelInfoXML,
-			ExpectTunnelInfo: TunnelInfo{
+			ExpectTunnelInfo: tfec2.TunnelInfo{
 				Tunnel1Address:          "1.1.1.1",
 				Tunnel1BGPASN:           "1111",
 				Tunnel1BGPHoldTime:      31,
@@ -781,7 +782,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 			Name:                "Tunnel1PreSharedKey",
 			XML:                 testAccAwsVpnTunnelInfoXML,
 			Tunnel1PreSharedKey: "SECOND_KEY",
-			ExpectTunnelInfo: TunnelInfo{
+			ExpectTunnelInfo: tfec2.TunnelInfo{
 				Tunnel1Address:          "2.2.2.2",
 				Tunnel1BGPASN:           "2222",
 				Tunnel1BGPHoldTime:      32,
@@ -800,7 +801,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 			Name:              "Tunnel1InsideCidr",
 			XML:               testAccAwsVpnTunnelInfoXML,
 			Tunnel1InsideCidr: "169.254.12.0/30",
-			ExpectTunnelInfo: TunnelInfo{
+			ExpectTunnelInfo: tfec2.TunnelInfo{
 				Tunnel1Address:          "2.2.2.2",
 				Tunnel1BGPASN:           "2222",
 				Tunnel1BGPHoldTime:      32,
@@ -820,7 +821,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 			Name:                  "Tunnel1InsideIpv6Cidr",
 			XML:                   testAccAwsVpnTunnelInfoXML,
 			Tunnel1InsideIpv6Cidr: "169.254.12.1",
-			ExpectTunnelInfo: TunnelInfo{
+			ExpectTunnelInfo: tfec2.TunnelInfo{
 				Tunnel1Address:          "2.2.2.2",
 				Tunnel1BGPASN:           "2222",
 				Tunnel1BGPHoldTime:      32,
@@ -841,7 +842,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.Name, func(t *testing.T) {
-			tunnelInfo, err := xmlConfigToTunnelInfo(testCase.XML, testCase.Tunnel1PreSharedKey, testCase.Tunnel1InsideCidr, testCase.Tunnel1InsideIpv6Cidr)
+			tunnelInfo, err := tfec2.XmlConfigToTunnelInfo(testCase.XML, testCase.Tunnel1PreSharedKey, testCase.Tunnel1InsideCidr, testCase.Tunnel1InsideIpv6Cidr)
 
 			if err == nil && testCase.ExpectError {
 				t.Fatalf("expected error, got none")
@@ -852,7 +853,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 			}
 
 			if actual, expected := *tunnelInfo, testCase.ExpectTunnelInfo; !reflect.DeepEqual(actual, expected) { // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment
-				t.Errorf("expected TunnelInfo:\n%+v\n\ngot:\n%+v\n\n", expected, actual)
+				t.Errorf("expected tfec2.TunnelInfo:\n%+v\n\ngot:\n%+v\n\n", expected, actual)
 			}
 		})
 	}

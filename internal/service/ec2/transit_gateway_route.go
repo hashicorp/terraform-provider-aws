@@ -82,7 +82,7 @@ func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{})
 func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, destination, err := decodeTransitGatewayRouteID(d.Id())
+	transitGatewayRouteTableID, destination, err := DecodeTransitGatewayRouteID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) e
 	var transitGatewayRoute *ec2.TransitGatewayRoute
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
-		transitGatewayRoute, err = ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+		transitGatewayRoute, err = DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -105,7 +105,7 @@ func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if tfresource.TimedOut(err) {
-		transitGatewayRoute, err = ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+		transitGatewayRoute, err = DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 	}
 
 	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
@@ -154,7 +154,7 @@ func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) e
 func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, destination, err := decodeTransitGatewayRouteID(d.Id())
+	transitGatewayRouteTableID, destination, err := DecodeTransitGatewayRouteID(d.Id())
 	if err != nil {
 		return err
 	}

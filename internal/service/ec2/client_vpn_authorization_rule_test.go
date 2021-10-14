@@ -190,7 +190,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceClientVPNAuthorizationRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNAuthorizationRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

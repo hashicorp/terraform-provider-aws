@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
@@ -388,7 +389,7 @@ func TestAccAWSSpotInstanceRequest_disappears(t *testing.T) {
 				Config: testAccAWSSpotInstanceRequestConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceSpotInstanceRequest(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotInstanceRequest(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -447,7 +448,7 @@ func testAccCheckAWSSpotInstanceRequestDestroy(s *terraform.State) error {
 
 		// Now check if the associated Spot Instance was also destroyed
 		instanceID := rs.Primary.Attributes["spot_instance_id"]
-		instance, instErr := resourceAwsInstanceFindByID(conn, instanceID)
+		instance, instErr := tfec2.InstanceFindByID(conn, instanceID)
 		if instErr == nil {
 			if instance != nil {
 				return fmt.Errorf("instance %q still exists", instanceID)
@@ -539,7 +540,7 @@ func testAccCheckAWSSpotInstanceRequestAttributesCheckSIRWithoutSpot(
 func testAccCheckAWSSpotInstanceRequest_InstanceAttributes(sir *ec2.SpotInstanceRequest, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		instance, err := resourceAwsInstanceFindByID(conn, aws.StringValue(sir.InstanceId))
+		instance, err := tfec2.InstanceFindByID(conn, aws.StringValue(sir.InstanceId))
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {
 				return fmt.Errorf("Spot Instance %q not found", aws.StringValue(sir.InstanceId))

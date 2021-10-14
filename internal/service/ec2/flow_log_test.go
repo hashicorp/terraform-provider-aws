@@ -40,7 +40,7 @@ func testSweepFlowLogs(region string) error {
 		}
 
 		for _, flowLog := range page.FlowLogs {
-			r := ResourceFlowLog()
+			r := tfec2.ResourceFlowLog()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(flowLog.FlowLogId))
 
@@ -502,7 +502,7 @@ func TestAccAWSFlowLog_disappears(t *testing.T) {
 				Config: testAccFlowLogConfig_VPCID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFlowLog(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceFlowLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

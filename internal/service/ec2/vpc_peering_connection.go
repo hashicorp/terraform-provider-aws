@@ -291,7 +291,7 @@ func resourceAwsVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error deleting VPC Peering Connection (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForEc2VpcPeeringConnectionDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := WaitForVPCPeeringConnectionDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("Error waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err)
 	}
 
@@ -398,7 +398,7 @@ func vpcPeeringConnectionWaitUntilAvailable(conn *ec2.EC2, id string, timeout ti
 	return nil
 }
 
-func waitForEc2VpcPeeringConnectionDeletion(conn *ec2.EC2, id string, timeout time.Duration) error {
+func WaitForVPCPeeringConnectionDeletion(conn *ec2.EC2, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.VpcPeeringConnectionStateReasonCodeActive,

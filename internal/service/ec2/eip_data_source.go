@@ -24,7 +24,7 @@ func DataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -96,12 +96,12 @@ func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 
 	req.Filters = []*ec2.Filter{}
 
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+	req.Filters = append(req.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, buildEC2TagFilterList(
+		req.Filters = append(req.Filters, BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
@@ -141,12 +141,12 @@ func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("private_ip", eip.PrivateIpAddress)
 	if eip.PrivateIpAddress != nil {
-		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", convertIPToDashIP(aws.StringValue(eip.PrivateIpAddress)), regionalPrivateDNSSuffix(region)))
+		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(aws.StringValue(eip.PrivateIpAddress)), RegionalPrivateDNSSuffix(region)))
 	}
 
 	d.Set("public_ip", eip.PublicIp)
 	if eip.PublicIp != nil {
-		d.Set("public_dns", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(aws.StringValue(eip.PublicIp)), resourceAwsEc2RegionalPublicDnsSuffix(region))))
+		d.Set("public_dns", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(aws.StringValue(eip.PublicIp)), RegionalPublicDNSSuffix(region))))
 	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 	d.Set("carrier_ip", eip.CarrierIp)

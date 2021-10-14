@@ -41,7 +41,7 @@ func dataSourceRegionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("endpoint"); ok {
 		endpoint := v.(string)
-		matchingRegion, err := findRegionByEc2Endpoint(endpoint)
+		matchingRegion, err := FindRegionByEndpoint(endpoint)
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ func dataSourceRegionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		matchingRegion, err := findRegionByName(name)
+		matchingRegion, err := FindRegionByName(name)
 		if err != nil {
 			return err
 		}
@@ -62,7 +62,7 @@ func dataSourceRegionRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Default to provider current region if no other filters matched
 	if region == nil {
-		matchingRegion, err := findRegionByName(providerRegion)
+		matchingRegion, err := FindRegionByName(providerRegion)
 		if err != nil {
 			return err
 		}
@@ -84,7 +84,7 @@ func dataSourceRegionRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func findRegionByEc2Endpoint(endpoint string) (*endpoints.Region, error) {
+func FindRegionByEndpoint(endpoint string) (*endpoints.Region, error) {
 	for _, partition := range endpoints.DefaultPartitions() {
 		for _, region := range partition.Regions() {
 			regionEndpointEc2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
@@ -99,7 +99,7 @@ func findRegionByEc2Endpoint(endpoint string) (*endpoints.Region, error) {
 	return nil, fmt.Errorf("region not found for endpoint: %s", endpoint)
 }
 
-func findRegionByName(name string) (*endpoints.Region, error) {
+func FindRegionByName(name string) (*endpoints.Region, error) {
 	for _, partition := range endpoints.DefaultPartitions() {
 		for _, region := range partition.Regions() {
 			if region.ID() == name {

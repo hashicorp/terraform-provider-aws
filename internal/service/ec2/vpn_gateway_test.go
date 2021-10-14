@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -61,7 +62,7 @@ func testSweepVPNGateways(region string) error {
 				continue
 			}
 
-			r := ResourceVPNGatewayAttachment()
+			r := tfec2.ResourceVPNGatewayAttachment()
 			d := r.Data(nil)
 			d.Set("vpc_id", vpcAttachment.VpcId)
 			d.Set("vpn_gateway_id", vpng.VpnGatewayId)
@@ -74,7 +75,7 @@ func testSweepVPNGateways(region string) error {
 			}
 		}
 
-		r := ResourceVPNGateway()
+		r := tfec2.ResourceVPNGateway()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(vpng.VpnGatewayId))
 		err := r.Delete(d, client)
@@ -209,7 +210,7 @@ func TestAccAWSVpnGateway_disappears(t *testing.T) {
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPNGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

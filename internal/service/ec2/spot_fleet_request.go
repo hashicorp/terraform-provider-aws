@@ -41,7 +41,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsSpotFleetRequestMigrateState,
+		MigrateState:  SpotFleetRequestMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"iam_fleet_role": {
@@ -781,7 +781,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 				ebs.Throughput = aws.Int64(int64(v))
 			}
 
-			if dn, err := fetchRootDeviceName(d["ami"].(string), conn); err == nil {
+			if dn, err := FetchRootDeviceName(d["ami"].(string), conn); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
 						"Expected 1 AMI for ID: %s, got none",
@@ -1386,7 +1386,7 @@ func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplate
 func launchSpecsToSet(launchSpecs []*ec2.SpotFleetLaunchSpecification, conn *ec2.EC2) (*schema.Set, error) {
 	specSet := &schema.Set{F: hashLaunchSpecification}
 	for _, spec := range launchSpecs {
-		rootDeviceName, err := fetchRootDeviceName(aws.StringValue(spec.ImageId), conn)
+		rootDeviceName, err := FetchRootDeviceName(aws.StringValue(spec.ImageId), conn)
 		if err != nil {
 			return nil, err
 		}

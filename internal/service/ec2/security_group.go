@@ -41,7 +41,7 @@ func ResourceSecurityGroup() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsSecurityGroupMigrateState,
+		MigrateState:  SecurityGroupMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -97,7 +97,7 @@ func ResourceSecurityGroup() *schema.Resource {
 						"protocol": {
 							Type:      schema.TypeString,
 							Required:  true,
-							StateFunc: protocolStateFunc,
+							StateFunc: ProtocolStateFunc,
 						},
 
 						"cidr_blocks": {
@@ -144,7 +144,7 @@ func ResourceSecurityGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsSecurityGroupRuleHash,
+				Set: SecurityGroupRuleHash,
 			},
 
 			"egress": {
@@ -167,7 +167,7 @@ func ResourceSecurityGroup() *schema.Resource {
 						"protocol": {
 							Type:      schema.TypeString,
 							Required:  true,
-							StateFunc: protocolStateFunc,
+							StateFunc: ProtocolStateFunc,
 						},
 
 						"cidr_blocks": {
@@ -214,7 +214,7 @@ func ResourceSecurityGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsSecurityGroupRuleHash,
+				Set: SecurityGroupRuleHash,
 			},
 
 			"arn": {
@@ -354,16 +354,16 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Security Group (%s): %w", d.Id(), err)
 	}
 
-	remoteIngressRules := resourceAwsSecurityGroupIPPermGather(d.Id(), sg.IpPermissions, sg.OwnerId)
-	remoteEgressRules := resourceAwsSecurityGroupIPPermGather(d.Id(), sg.IpPermissionsEgress, sg.OwnerId)
+	remoteIngressRules := SecurityGroupIPPermGather(d.Id(), sg.IpPermissions, sg.OwnerId)
+	remoteEgressRules := SecurityGroupIPPermGather(d.Id(), sg.IpPermissionsEgress, sg.OwnerId)
 
 	localIngressRules := d.Get("ingress").(*schema.Set).List()
 	localEgressRules := d.Get("egress").(*schema.Set).List()
 
 	// Loop through the local state of rules, doing a match against the remote
 	// ruleSet we built above.
-	ingressRules := matchRules("ingress", localIngressRules, remoteIngressRules)
-	egressRules := matchRules("egress", localEgressRules, remoteEgressRules)
+	ingressRules := MatchRules("ingress", localIngressRules, remoteIngressRules)
+	egressRules := MatchRules("egress", localEgressRules, remoteEgressRules)
 
 	sgArn := arn.ARN{
 		AccountID: aws.StringValue(sg.OwnerId),
@@ -525,12 +525,12 @@ func forceRevokeSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData) error 
 	return nil
 }
 
-func resourceAwsSecurityGroupRuleHash(v interface{}) int {
+func SecurityGroupRuleHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", m["to_port"].(int)))
-	p := protocolForValue(m["protocol"].(string))
+	p := ProtocolForValue(m["protocol"].(string))
 	buf.WriteString(fmt.Sprintf("%s-", p))
 	buf.WriteString(fmt.Sprintf("%t-", m["self"].(bool)))
 
@@ -591,7 +591,7 @@ func resourceAwsSecurityGroupRuleHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, ownerId *string) []map[string]interface{} {
+func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, ownerId *string) []map[string]interface{} {
 	ruleMap := make(map[string]map[string]interface{})
 	for _, perm := range permissions {
 		if len(perm.IpRanges) > 0 {
@@ -642,7 +642,7 @@ func resourceAwsSecurityGroupIPPermGather(groupId string, permissions []*ec2.IpP
 			}
 		}
 
-		groups := flattenSecurityGroups(perm.UserIdGroupPairs, ownerId)
+		groups := FlattenSecurityGroups(perm.UserIdGroupPairs, ownerId)
 		if len(groups) > 0 {
 			for _, g := range groups {
 				desc := aws.StringValue(g.Description)
@@ -692,14 +692,14 @@ func resourceAwsSecurityGroupUpdateRules(
 			n = new(schema.Set)
 		}
 
-		os := resourceAwsSecurityGroupExpandRules(o.(*schema.Set))
-		ns := resourceAwsSecurityGroupExpandRules(n.(*schema.Set))
+		os := SecurityGroupExpandRules(o.(*schema.Set))
+		ns := SecurityGroupExpandRules(n.(*schema.Set))
 
-		remove, err := expandIPPerms(group, resourceAwsSecurityGroupCollapseRules(ruleset, os.Difference(ns).List()))
+		remove, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleset, os.Difference(ns).List()))
 		if err != nil {
 			return err
 		}
-		add, err := expandIPPerms(group, resourceAwsSecurityGroupCollapseRules(ruleset, ns.Difference(os).List()))
+		add, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleset, ns.Difference(os).List()))
 		if err != nil {
 			return err
 		}
@@ -776,7 +776,7 @@ func resourceAwsSecurityGroupUpdateRules(
 	return nil
 }
 
-// matchRules receives the group id, type of rules, and the local / remote maps
+// MatchRules receives the group id, type of rules, and the local / remote maps
 // of rules. We iterate through the local set of rules trying to find a matching
 // remote rule, which may be structured differently because of how AWS
 // aggregates the rules under the to, from, and type.
@@ -787,7 +787,7 @@ func resourceAwsSecurityGroupUpdateRules(
 //
 // If no match is found, we'll write the remote rule to state and let the graph
 // sort things out
-func matchRules(rType string, local []interface{}, remote []map[string]interface{}) []map[string]interface{} {
+func MatchRules(rType string, local []interface{}, remote []map[string]interface{}) []map[string]interface{} {
 	// For each local ip or security_group, we need to match against the remote
 	// ruleSet until all ips or security_groups are found
 
@@ -803,7 +803,7 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 		}
 
 		// matching against self is required to detect rules that only include self
-		// as the rule. resourceAwsSecurityGroupIPPermGather parses the group out
+		// as the rule. SecurityGroupIPPermGather parses the group out
 		// and replaces it with self if it's ID is found
 		localHash := idHash(rType, l["protocol"].(string), int64(l["to_port"].(int)), int64(l["from_port"].(int)), selfVal)
 
@@ -1122,11 +1122,11 @@ func resourceAwsSecurityGroupCopyRule(src map[string]interface{}, self bool, k s
 // Given a set of SG rules (ingress/egress blocks), this function
 // will group the rules by from_port/to_port/protocol/description
 // tuples. This is inverse operation of
-// resourceAwsSecurityGroupExpandRules()
+// SecurityGroupExpandRules()
 //
 // For more detail, see comments for
-// resourceAwsSecurityGroupExpandRules()
-func resourceAwsSecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface{} {
+// SecurityGroupExpandRules()
+func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface{} {
 
 	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
 
@@ -1168,8 +1168,8 @@ func resourceAwsSecurityGroupCollapseRules(ruleset string, rules []interface{}) 
 	return values
 }
 
-// resourceAwsSecurityGroupExpandRules works in pair with
-// resourceAwsSecurityGroupCollapseRules and is used as a
+// SecurityGroupExpandRules works in pair with
+// SecurityGroupCollapseRules and is used as a
 // workaround for the problem explained in
 // https://github.com/hashicorp/terraform-provider-aws/pull/4726
 //
@@ -1209,15 +1209,15 @@ func resourceAwsSecurityGroupCollapseRules(ruleset string, rules []interface{}) 
 //
 // Then the Difference operation is executed on the new set
 // to find which rules got modified, and the resulting set
-// is then passed to resourceAwsSecurityGroupCollapseRules
+// is then passed to SecurityGroupCollapseRules
 // to convert the "diff" back to a more compact form for
 // execution. Such compact form helps reduce the number of
 // API calls.
 //
-func resourceAwsSecurityGroupExpandRules(rules *schema.Set) *schema.Set {
+func SecurityGroupExpandRules(rules *schema.Set) *schema.Set {
 	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
 
-	normalized := schema.NewSet(resourceAwsSecurityGroupRuleHash, nil)
+	normalized := schema.NewSet(SecurityGroupRuleHash, nil)
 
 	for _, rawRule := range rules.List() {
 		rule := rawRule.(map[string]interface{})
@@ -1281,11 +1281,11 @@ func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
 	return fmt.Sprintf("rule-%d", create.StringHashcode(buf.String()))
 }
 
-// protocolStateFunc ensures we only store a string in any protocol field
-func protocolStateFunc(v interface{}) string {
+// ProtocolStateFunc ensures we only store a string in any protocol field
+func ProtocolStateFunc(v interface{}) string {
 	switch v := v.(type) {
 	case string:
-		p := protocolForValue(v)
+		p := ProtocolForValue(v)
 		return p
 	default:
 		log.Printf("[WARN] Non String value given for Protocol: %#v", v)
@@ -1293,11 +1293,11 @@ func protocolStateFunc(v interface{}) string {
 	}
 }
 
-// protocolForValue converts a valid Internet Protocol number into it's name
+// ProtocolForValue converts a valid Internet Protocol number into it's name
 // representation. If a name is given, it validates that it's a proper protocol
 // name. Names/numbers are as defined at
 // https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
-func protocolForValue(v string) string {
+func ProtocolForValue(v string) string {
 	// special case -1
 	protocol := strings.ToLower(v)
 	if protocol == "-1" || protocol == "all" {

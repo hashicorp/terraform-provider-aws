@@ -73,7 +73,7 @@ func resourceAMILaunchPermissionCreate(d *schema.ResourceData, meta interface{})
 func resourceAMILaunchPermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	exists, err := hasLaunchPermission(conn, d.Get("image_id").(string), d.Get("account_id").(string))
+	exists, err := HasLaunchPermission(conn, d.Get("image_id").(string), d.Get("account_id").(string))
 	if err != nil {
 		return fmt.Errorf("error reading AMI launch permission (%s): %w", d.Id(), err)
 	}
@@ -112,7 +112,7 @@ func resourceAMILaunchPermissionDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func hasLaunchPermission(conn *ec2.EC2, image_id string, account_id string) (bool, error) {
+func HasLaunchPermission(conn *ec2.EC2, image_id string, account_id string) (bool, error) {
 	attrs, err := conn.DescribeImageAttribute(&ec2.DescribeImageAttributeInput{
 		ImageId:   aws.String(image_id),
 		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),

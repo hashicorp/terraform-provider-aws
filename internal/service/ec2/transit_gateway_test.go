@@ -99,7 +99,7 @@ func testSweepEc2TransitGateways(region string) error {
 				return fmt.Errorf("error deleting EC2 Transit Gateway (%s): %s", id, err)
 			}
 
-			if err := waitForTransitGatewayDeletion(conn, id); err != nil {
+			if err := tfec2.WaitForTransitGatewayDeletion(conn, id); err != nil {
 				return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) deletion: %s", id, err)
 			}
 		}
@@ -249,7 +249,7 @@ func testAccAWSEc2TransitGateway_disappears(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -597,7 +597,7 @@ func testAccCheckAWSEc2TransitGatewayExists(resourceName string, transitGateway 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		gateway, err := ec2DescribeTransitGateway(conn, rs.Primary.ID)
+		gateway, err := tfec2.DescribeTransitGateway(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -625,7 +625,7 @@ func testAccCheckAWSEc2TransitGatewayDestroy(s *terraform.State) error {
 			continue
 		}
 
-		transitGateway, err := ec2DescribeTransitGateway(conn, rs.Primary.ID)
+		transitGateway, err := tfec2.DescribeTransitGateway(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 			continue
@@ -673,7 +673,7 @@ func testAccCheckAWSEc2TransitGatewayAssociationDefaultRouteTableVpcAttachmentAs
 
 		attachmentID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		association, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, routeTableID, attachmentID)
+		association, err := tfec2.DescribeTransitGatewayRouteTableAssociation(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err
@@ -693,7 +693,7 @@ func testAccCheckAWSEc2TransitGatewayAssociationDefaultRouteTableVpcAttachmentNo
 
 		attachmentID := aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId)
 		routeTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId)
-		association, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, routeTableID, attachmentID)
+		association, err := tfec2.DescribeTransitGatewayRouteTableAssociation(conn, routeTableID, attachmentID)
 
 		if err != nil {
 			return err

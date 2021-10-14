@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
@@ -45,7 +46,7 @@ func testAccAwsVpnConnectionRouteDestroy(s *terraform.State) error {
 			continue
 		}
 
-		cidrBlock, vpnConnectionId := resourceAwsVpnConnectionRouteParseId(rs.Primary.ID)
+		cidrBlock, vpnConnectionId := tfec2.VPNConnectionRouteParseID(rs.Primary.ID)
 
 		routeFilters := []*ec2.Filter{
 			{
@@ -107,7 +108,7 @@ func testAccAwsVpnConnectionRoute(vpnConnectionRouteResource string) resource.Te
 			return fmt.Errorf("Not found: %s", vpnConnectionRouteResource)
 		}
 
-		cidrBlock, vpnConnectionId := resourceAwsVpnConnectionRouteParseId(route.Primary.ID)
+		cidrBlock, vpnConnectionId := tfec2.VPNConnectionRouteParseID(route.Primary.ID)
 
 		routeFilters := []*ec2.Filter{
 			{

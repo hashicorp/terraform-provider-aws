@@ -42,7 +42,7 @@ func DataSourceLocalGatewayRouteTable() *schema.Resource {
 
 			"tags": tftags.TagsSchemaComputed(),
 
-			"filter": ec2CustomFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 		},
 	}
 }
@@ -65,11 +65,11 @@ func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface
 		},
 	)
 
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
+	req.Filters = append(req.Filters, BuildTagFilterList(
 		tftags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
 	)...)
 
-	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+	req.Filters = append(req.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {

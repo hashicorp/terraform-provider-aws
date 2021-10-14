@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -74,7 +75,7 @@ func testSweepInstances(region string) error {
 					continue
 				}
 
-				r := ResourceInstance()
+				r := tfec2.ResourceInstance()
 				d := r.Data(nil)
 				d.SetId(id)
 				d.Set("disable_api_termination", false)
@@ -152,7 +153,7 @@ func TestFetchRootDevice(t *testing.T) {
 				data := r.Data.(*ec2.DescribeImagesOutput)
 				data.Images = tc.images
 			})
-			name, _ := fetchRootDeviceName("ami-123", conn)
+			name, _ := tfec2.FetchRootDeviceName("ami-123", conn)
 			if tc.name != aws.StringValue(name) {
 				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
 			}
@@ -3438,7 +3439,7 @@ func TestAccAWSInstance_disappears(t *testing.T) {
 				Config: testAccInstanceConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceInstance(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -3848,7 +3849,7 @@ func testAccCheckInstanceDestroyWithProvider(s *terraform.State, provider *schem
 		}
 
 		// Try to find the resource
-		instance, err := resourceAwsInstanceFindByID(conn, rs.Primary.ID)
+		instance, err := tfec2.InstanceFindByID(conn, rs.Primary.ID)
 		if err == nil {
 			if instance.State != nil && *instance.State.Name != "terminated" {
 				return fmt.Errorf("Found unterminated instance: %s", rs.Primary.ID)
@@ -3888,7 +3889,7 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 		provider := providerF()
 
 		conn := provider.Meta().(*conns.AWSClient).EC2Conn
-		instance, err := resourceAwsInstanceFindByID(conn, rs.Primary.ID)
+		instance, err := tfec2.InstanceFindByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -3913,12 +3914,12 @@ func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 			return err
 		}
 
-		return waitForInstanceStopping(conn, *instance.InstanceId, 10*time.Minute)
+		return tfec2.WaitForInstanceStopping(conn, *instance.InstanceId, 10*time.Minute)
 	}
 }
 
 func TestInstanceHostIDSchema(t *testing.T) {
-	actualSchema := ResourceInstance().Schema["host_id"]
+	actualSchema := tfec2.ResourceInstance().Schema["host_id"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
@@ -3934,7 +3935,7 @@ func TestInstanceHostIDSchema(t *testing.T) {
 }
 
 func TestInstanceCpuCoreCountSchema(t *testing.T) {
-	actualSchema := ResourceInstance().Schema["cpu_core_count"]
+	actualSchema := tfec2.ResourceInstance().Schema["cpu_core_count"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: true,
@@ -3950,7 +3951,7 @@ func TestInstanceCpuCoreCountSchema(t *testing.T) {
 }
 
 func TestInstanceCpuThreadsPerCoreSchema(t *testing.T) {
-	actualSchema := ResourceInstance().Schema["cpu_threads_per_core"]
+	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: true,

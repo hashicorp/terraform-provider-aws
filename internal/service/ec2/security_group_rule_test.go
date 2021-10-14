@@ -106,7 +106,7 @@ func TestIpPermissionIDHash(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := ipPermissionIDHash("sg-12345", tc.Type, tc.Input)
+		actual := tfec2.IPPermissionIDHash("sg-12345", tc.Type, tc.Input)
 		if actual != tc.Output {
 			t.Errorf("input: %s - %s\noutput: %s", tc.Type, tc.Input, actual)
 		}

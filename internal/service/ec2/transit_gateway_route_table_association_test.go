@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func testAccAWSEc2TransitGatewayRouteTableAssociation_basic(t *testing.T) {
@@ -54,7 +55,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableAssociationExists(resourceName st
 			return fmt.Errorf("No EC2 Transit Gateway Route ID is set")
 		}
 
-		transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeTransitGatewayRouteTableAssociationID(rs.Primary.ID)
+		transitGatewayRouteTableID, transitGatewayAttachmentID, err := tfec2.DecodeTransitGatewayRouteTableAssociationID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -62,7 +63,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableAssociationExists(resourceName st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		association, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		association, err := tfec2.DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if err != nil {
 			return err
@@ -86,13 +87,13 @@ func testAccCheckAWSEc2TransitGatewayRouteTableAssociationDestroy(s *terraform.S
 			continue
 		}
 
-		transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeTransitGatewayRouteTableAssociationID(rs.Primary.ID)
+		transitGatewayRouteTableID, transitGatewayAttachmentID, err := tfec2.DecodeTransitGatewayRouteTableAssociationID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		association, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		association, err := tfec2.DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			continue

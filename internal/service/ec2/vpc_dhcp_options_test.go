@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -44,7 +45,7 @@ func testSweepVpcDhcpOptions(region string) error {
 						continue
 					}
 
-					if aws.StringValue(dhcpConfiguration.Values[0].Value) == regionalPrivateDNSSuffix(region) {
+					if aws.StringValue(dhcpConfiguration.Values[0].Value) == tfec2.RegionalPrivateDNSSuffix(region) {
 						defaultDomainNameFound = true
 					}
 				} else if aws.StringValue(dhcpConfiguration.Key) == "domain-name-servers" {
@@ -205,7 +206,7 @@ func TestAccAWSDHCPOptions_disappears(t *testing.T) {
 				Config: testAccDHCPOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCDHCPOptions(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCDHCPOptions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -194,7 +194,7 @@ func TestAccAWSRouteTable_disappears(t *testing.T) {
 				Config: testAccAWSRouteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRouteTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -217,7 +217,7 @@ func TestAccAWSRouteTable_disappears_SubnetAssociation(t *testing.T) {
 				Config: testAccAWSRouteTableConfigSubnetAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRouteTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -76,12 +76,12 @@ func resourceSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, meta i
 func resourceSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	snapshotID, accountID, err := resourceAwsSnapshotCreateVolumePermissionParseID(d.Id())
+	snapshotID, accountID, err := SnapshotCreateVolumePermissionParseID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	exists, err := hasCreateVolumePermission(conn, snapshotID, accountID)
+	exists, err := HasCreateVolumePermission(conn, snapshotID, accountID)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func resourceSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta int
 func resourceSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	snapshotID, accountID, err := resourceAwsSnapshotCreateVolumePermissionParseID(d.Id())
+	snapshotID, accountID, err := SnapshotCreateVolumePermissionParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func resourceSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta i
 	return nil
 }
 
-func hasCreateVolumePermission(conn *ec2.EC2, snapshot_id string, account_id string) (bool, error) {
+func HasCreateVolumePermission(conn *ec2.EC2, snapshot_id string, account_id string) (bool, error) {
 	_, state, err := resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn, snapshot_id, account_id)()
 	if err != nil {
 		return false, err
@@ -164,7 +164,7 @@ func resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn *ec2.EC2, sn
 	}
 }
 
-func resourceAwsSnapshotCreateVolumePermissionParseID(id string) (string, string, error) {
+func SnapshotCreateVolumePermissionParseID(id string) (string, string, error) {
 	idParts := strings.SplitN(id, "-", 3)
 	if len(idParts) != 3 || idParts[0] != "snap" || idParts[1] == "" || idParts[2] == "" {
 		return "", "", fmt.Errorf("unexpected format of ID (%s), expected SNAPSHOT_ID-ACCOUNT_ID", id)

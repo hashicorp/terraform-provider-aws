@@ -48,7 +48,7 @@ func TestAccAWSVPNGatewayRoutePropagation_disappears(t *testing.T) {
 				Config: testAccAWSVPNGatewayRoutePropagationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVPNGatewayRoutePropagationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPNGatewayRoutePropagation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNGatewayRoutePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

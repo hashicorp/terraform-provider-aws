@@ -42,7 +42,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 		},
 
 		SchemaVersion: 2,
-		MigrateState:  resourceAwsSecurityGroupRuleMigrateState,
+		MigrateState:  SecurityGroupRuleMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"type": {
@@ -62,7 +62,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := protocolForValue(d.Get("protocol").(string))
+					protocol := ProtocolForValue(d.Get("protocol").(string))
 					if protocol == "-1" && old == "0" {
 						return true
 					}
@@ -76,7 +76,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := protocolForValue(d.Get("protocol").(string))
+					protocol := ProtocolForValue(d.Get("protocol").(string))
 					if protocol == "-1" && old == "0" {
 						return true
 					}
@@ -88,7 +88,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
-				StateFunc: protocolStateFunc,
+				StateFunc: ProtocolStateFunc,
 			},
 
 			"cidr_blocks": {
@@ -224,7 +224,7 @@ information and instructions for recovery. Error: %w`, sg_id, autherr)
 	}
 
 	var rules []*ec2.IpPermission
-	id := ipPermissionIDHash(sg_id, ruleType, perm)
+	id := IPPermissionIDHash(sg_id, ruleType, perm)
 	log.Printf("[DEBUG] Computed group rule ID %s", id)
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -333,7 +333,7 @@ func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) err
 
 	if strings.Contains(d.Id(), "_") {
 		// import so fix the id
-		id := ipPermissionIDHash(sg_id, ruleType, p)
+		id := IPPermissionIDHash(sg_id, ruleType, p)
 		d.SetId(id)
 	}
 
@@ -512,7 +512,7 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission, isVPC bool) *
 	return rule
 }
 
-func ipPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
+func IPPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("%s-", sg_id))
 	if ip.FromPort != nil && *ip.FromPort > 0 {
@@ -584,7 +584,7 @@ func ipPermissionIDHash(sg_id, ruleType string, ip *ec2.IpPermission) string {
 func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermission, error) {
 	var perm ec2.IpPermission
 
-	protocol := protocolForValue(d.Get("protocol").(string))
+	protocol := ProtocolForValue(d.Get("protocol").(string))
 	perm.IpProtocol = aws.String(protocol)
 
 	// InvalidParameterValue: When protocol is ALL, you cannot specify from-port.
@@ -976,7 +976,7 @@ func populateSecurityGroupRuleFromImport(d *schema.ResourceData, importParts []s
 		d.Set("type", "egress")
 	}
 
-	d.Set("protocol", protocolForValue(protocol))
+	d.Set("protocol", ProtocolForValue(protocol))
 	d.Set("from_port", fromPort)
 	d.Set("to_port", toPort)
 

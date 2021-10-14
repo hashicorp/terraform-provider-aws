@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -234,7 +235,7 @@ func TestAccAWSKeyPair_disappears(t *testing.T) {
 				Config: testAccAWSKeyPairConfig(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceKeyPair(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAWSVpcMigrateState(t *testing.T) {
@@ -35,7 +36,7 @@ func TestAWSVpcMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsVpcMigrateState(
+		is, err := tfec2.VPCMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

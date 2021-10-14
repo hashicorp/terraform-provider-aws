@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -72,7 +73,7 @@ func testSweepNetworkAcls(region string) error {
 		log.Printf("[DEBUG] Found %d Network ACL associations for %q", len(nacl.Associations), *nacl.NetworkAclId)
 		for _, a := range nacl.Associations {
 			log.Printf("[DEBUG] Replacing subnet associations for Network ACL %q", *nacl.NetworkAclId)
-			defaultAcl, err := getDefaultNetworkAcl(*nacl.VpcId, conn)
+			defaultAcl, err := tfec2.GetDefaultNetworkACL(*nacl.VpcId, conn)
 			if err != nil {
 				return fmt.Errorf("Failed to find default Network ACL for VPC %q", *nacl.VpcId)
 			}
@@ -192,7 +193,7 @@ func TestAccAWSNetworkAcl_disappears(t *testing.T) {
 				Config: testAccAWSNetworkAclEgressNIngressConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceNetworkACL(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

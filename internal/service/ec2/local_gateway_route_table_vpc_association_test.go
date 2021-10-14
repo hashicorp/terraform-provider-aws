@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_basic(t *testing.T) {
@@ -58,7 +59,7 @@ func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_disappears(t *testing.T) 
 				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceLocalGatewayRouteTableVPCAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceLocalGatewayRouteTableVPCAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,7 +124,7 @@ func testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationExists(resourceName s
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		association, err := getEc2LocalGatewayRouteTableVpcAssociation(conn, rs.Primary.ID)
+		association, err := tfec2.GetLocalGatewayRouteTableVPCAssociation(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -149,7 +150,7 @@ func testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationDestroy(s *terraform.
 			continue
 		}
 
-		association, err := getEc2LocalGatewayRouteTableVpcAssociation(conn, rs.Primary.ID)
+		association, err := tfec2.GetLocalGatewayRouteTableVPCAssociation(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

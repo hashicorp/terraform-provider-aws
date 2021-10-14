@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAWSInstanceMigrateState(t *testing.T) {
@@ -118,7 +119,7 @@ func TestAWSInstanceMigrateState(t *testing.T) {
 			ID:         "i-abc123",
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsInstanceMigrateState(
+		is, err := tfec2.InstanceMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {
@@ -140,7 +141,7 @@ func TestAWSInstanceMigrateState_empty(t *testing.T) {
 	var meta interface{}
 
 	// should handle nil
-	is, err := resourceAwsInstanceMigrateState(0, is, meta)
+	is, err := tfec2.InstanceMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)
@@ -151,7 +152,7 @@ func TestAWSInstanceMigrateState_empty(t *testing.T) {
 
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
-	_, err = resourceAwsInstanceMigrateState(0, is, meta)
+	_, err = tfec2.InstanceMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)

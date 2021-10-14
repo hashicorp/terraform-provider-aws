@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -71,7 +72,7 @@ func testSweepEc2VpcPeeringConnections(region string) error {
 				continue
 			}
 
-			if err := waitForEc2VpcPeeringConnectionDeletion(conn, id, 5*time.Minute); err != nil {
+			if err := tfec2.WaitForVPCPeeringConnectionDeletion(conn, id, 5*time.Minute); err != nil {
 				log.Printf("[ERROR] Error waiting for EC2 VPC Peering Connection (%s) to be deleted: %s", id, err)
 			}
 		}

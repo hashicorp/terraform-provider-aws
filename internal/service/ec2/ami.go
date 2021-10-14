@@ -23,10 +23,10 @@ import (
 )
 
 const (
-	AWSAMIRetryTimeout       = 40 * time.Minute
-	AWSAMIDeleteRetryTimeout = 90 * time.Minute
-	AWSAMIRetryDelay         = 5 * time.Second
-	AWSAMIRetryMinTimeout    = 3 * time.Second
+	AWSAMIRetryTimeout    = 40 * time.Minute
+	AMIDeleteRetryTimeout = 90 * time.Minute
+	AWSAMIRetryDelay      = 5 * time.Second
+	AWSAMIRetryMinTimeout = 3 * time.Second
 )
 
 func ResourceAMI() *schema.Resource {
@@ -46,7 +46,7 @@ func ResourceAMI() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
 			Update: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Delete: schema.DefaultTimeout(AWSAMIDeleteRetryTimeout),
+			Delete: schema.DefaultTimeout(AMIDeleteRetryTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -523,7 +523,7 @@ func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Verify that the image is actually removed, if not we need to wait for it to be removed
-	if err := resourceAwsAmiWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), client); err != nil {
+	if err := AMIWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), client); err != nil {
 		return err
 	}
 
@@ -554,7 +554,7 @@ func AMIStateRefreshFunc(client *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
-func resourceAwsAmiWaitForDestroy(timeout time.Duration, id string, client *ec2.EC2) error {
+func AMIWaitForDestroy(timeout time.Duration, id string, client *ec2.EC2) error {
 	log.Printf("Waiting for AMI %s to be deleted...", id)
 
 	stateConf := &resource.StateChangeConf{

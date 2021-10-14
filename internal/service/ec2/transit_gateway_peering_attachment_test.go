@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -61,7 +62,7 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 					continue
 				}
 
-				if err := waitForTransitGatewayPeeringAttachmentDeletion(conn, id); err != nil {
+				if err := tfec2.WaitForTransitGatewayPeeringAttachmentDeletion(conn, id); err != nil {
 					sweeperErr := fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) deletion: %w", id, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -261,7 +262,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentExists(resourceName string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		attachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
+		attachment, err := tfec2.DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -289,7 +290,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy(s *terraform.State
 			continue
 		}
 
-		peeringAttachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
+		peeringAttachment, err := tfec2.DescribeTransitGatewayPeeringAttachment(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			continue
@@ -323,7 +324,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDisappears(transitGatewayP
 			return err
 		}
 
-		return waitForTransitGatewayPeeringAttachmentDeletion(conn, aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
+		return tfec2.WaitForTransitGatewayPeeringAttachmentDeletion(conn, aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
 	}
 }
 

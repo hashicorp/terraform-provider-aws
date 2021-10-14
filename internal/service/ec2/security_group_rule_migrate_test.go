@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAWSSecurityGroupRuleMigrateState(t *testing.T) {
@@ -53,7 +54,7 @@ func TestAWSSecurityGroupRuleMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsSecurityGroupRuleMigrateState(
+		is, err := tfec2.SecurityGroupRuleMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

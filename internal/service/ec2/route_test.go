@@ -81,7 +81,7 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRoute(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +106,7 @@ func TestAccAWSRoute_disappears_RouteTable(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRouteTable(), rtResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceRouteTable(), rtResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

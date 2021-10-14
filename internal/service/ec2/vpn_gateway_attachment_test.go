@@ -50,7 +50,7 @@ func TestAccAWSVpnGatewayAttachment_disappears(t *testing.T) {
 				Config: testAccVpnGatewayAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayAttachmentExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPNGatewayAttachment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNGatewayAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

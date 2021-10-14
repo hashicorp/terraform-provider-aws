@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSNetworkAclRule_basic(t *testing.T) {
@@ -105,7 +106,7 @@ func TestAccAWSNetworkAclRule_disappears_NetworkAcl(t *testing.T) {
 				Config: testAccAWSNetworkAclRuleBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceNetworkACL(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -276,7 +277,7 @@ func TestResourceAWSNetworkAclRule_validateICMPArgumentValue(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := validateICMPArgumentValue(tc.Value, "icmp_type")
+		_, errors := tfec2.ValidICMPArgumentValue(tc.Value, "icmp_type")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
@@ -298,7 +299,7 @@ func TestResourceAWSNetworkAclRule_validateICMPArgumentValue(t *testing.T) {
 	}
 
 	for _, tc := range validCases {
-		_, errors := validateICMPArgumentValue(tc.Value, "icmp_type")
+		_, errors := tfec2.ValidICMPArgumentValue(tc.Value, "icmp_type")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}

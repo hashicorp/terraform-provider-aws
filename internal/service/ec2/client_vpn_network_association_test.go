@@ -57,7 +57,7 @@ func testSweepEc2ClientVpnNetworkAssociations(region string) error {
 					clientVpnEndpointID := aws.StringValue(networkAssociation.ClientVpnEndpointId)
 
 					log.Printf("[INFO] Deleting Client VPN network association (%s,%s)", clientVpnEndpointID, networkAssociationID)
-					err := deleteClientVpnNetworkAssociation(conn, networkAssociationID, clientVpnEndpointID)
+					err := tfec2.DeleteClientVPNNetworkAssociation(conn, networkAssociationID, clientVpnEndpointID)
 
 					if err != nil {
 						sweeperErr := fmt.Errorf("error deleting Client VPN network association (%s,%s): %w", clientVpnEndpointID, networkAssociationID, err)
@@ -195,7 +195,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceClientVPNNetworkAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNNetworkAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

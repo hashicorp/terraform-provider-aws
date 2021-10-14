@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAWSSecurityGroupMigrateState(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAWSSecurityGroupMigrateState(t *testing.T) {
 			ID:         "i-abc123",
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsSecurityGroupMigrateState(
+		is, err := tfec2.SecurityGroupMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {
@@ -52,7 +53,7 @@ func TestAWSSecurityGroupMigrateState_empty(t *testing.T) {
 	var meta interface{}
 
 	// should handle nil
-	is, err := resourceAwsSecurityGroupMigrateState(0, is, meta)
+	is, err := tfec2.SecurityGroupMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)
@@ -63,7 +64,7 @@ func TestAWSSecurityGroupMigrateState_empty(t *testing.T) {
 
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
-	_, err = resourceAwsSecurityGroupMigrateState(0, is, meta)
+	_, err = tfec2.SecurityGroupMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)

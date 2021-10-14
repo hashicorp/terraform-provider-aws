@@ -153,7 +153,7 @@ func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceEIPAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	request, err := describeAddressesById(d.Id(), meta.(*conns.AWSClient).SupportedPlatforms)
+	request, err := DescribeAddressesByID(d.Id(), meta.(*conns.AWSClient).SupportedPlatforms)
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func readAwsEipAssociation(d *schema.ResourceData, address *ec2.Address) error {
 	return nil
 }
 
-func describeAddressesById(id string, supportedPlatforms []string) (*ec2.DescribeAddressesInput, error) {
+func DescribeAddressesByID(id string, supportedPlatforms []string) (*ec2.DescribeAddressesInput, error) {
 	// We assume EC2 Classic if ID is a valid IPv4 address
 	ip := net.ParseIP(id)
 	if ip != nil {

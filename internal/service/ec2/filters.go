@@ -9,7 +9,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// buildEC2TagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
+// BuildTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
 // represents exact matches for all of the tag key/value pairs given in
 // the tag set.
 //
@@ -29,7 +29,7 @@ import (
 // tags {
 //   Name = "my-awesome-subnet"
 // }
-func buildEC2TagFilterList(tags []*ec2.Tag) []*ec2.Filter {
+func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
 	filters := make([]*ec2.Filter, len(tags))
 
 	for i, tag := range tags {
@@ -85,7 +85,7 @@ func ec2TagFiltersFromMap(m map[string]interface{}) []*ec2.Filter {
 	return filters
 }
 
-// ec2CustomFiltersSchema returns a *schema.Schema that represents
+// CustomFiltersSchema returns a *schema.Schema that represents
 // a set of custom filtering criteria that a user can specify as input
 // to a data source that wraps one of the many "Describe..." API calls
 // in the EC2 API.
@@ -100,7 +100,7 @@ func ec2TagFiltersFromMap(m map[string]interface{}) []*ec2.Filter {
 //   name   = "availabilityZone"
 //   values = ["us-west-2a", "us-west-2b"]
 // }
-func ec2CustomFiltersSchema() *schema.Schema {
+func CustomFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
@@ -122,8 +122,8 @@ func ec2CustomFiltersSchema() *schema.Schema {
 	}
 }
 
-// buildEC2CustomFilterList takes the set value extracted from a schema
-// attribute conforming to the schema returned by ec2CustomFiltersSchema,
+// BuildCustomFilterList takes the set value extracted from a schema
+// attribute conforming to the schema returned by CustomFiltersSchema,
 // and transforms it into a []*ec2.Filter representing the same filter
 // expressions which is ready to pass into the "Filters" attribute on most
 // of the "Describe..." functions in the EC2 API.
@@ -131,7 +131,7 @@ func ec2CustomFiltersSchema() *schema.Schema {
 // This function is intended only to be used in conjunction with
 // ec2CustomFitlersSchema. See the docs on that function for more details
 // on the configuration pattern this is intended to support.
-func buildEC2CustomFilterList(filterSet *schema.Set) []*ec2.Filter {
+func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 	if filterSet == nil {
 		return []*ec2.Filter{}
 	}

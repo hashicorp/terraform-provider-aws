@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func testAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
@@ -60,7 +61,7 @@ func testAccAWSEc2TransitGatewayRouteTable_disappears(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayRouteTableConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGatewayRouteTable(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,7 +86,7 @@ func testAccAWSEc2TransitGatewayRouteTable_disappears_TransitGateway(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTransitGateway(), transitGatewayResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,7 +153,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName string, trans
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		routeTable, err := ec2DescribeTransitGatewayRouteTable(conn, rs.Primary.ID)
+		routeTable, err := tfec2.DescribeTransitGatewayRouteTable(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -180,7 +181,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableDestroy(s *terraform.State) error
 			continue
 		}
 
-		routeTable, err := ec2DescribeTransitGatewayRouteTable(conn, rs.Primary.ID)
+		routeTable, err := tfec2.DescribeTransitGatewayRouteTable(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			continue

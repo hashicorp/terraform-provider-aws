@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func testAccAWSEc2TransitGatewayRoute_basic(t *testing.T) {
@@ -168,7 +169,7 @@ func testAccCheckAWSEc2TransitGatewayRouteExists(resourceName string, transitGat
 			return fmt.Errorf("No EC2 Transit Gateway Route ID is set")
 		}
 
-		transitGatewayRouteTableID, destination, err := decodeTransitGatewayRouteID(rs.Primary.ID)
+		transitGatewayRouteTableID, destination, err := tfec2.DecodeTransitGatewayRouteID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -176,7 +177,7 @@ func testAccCheckAWSEc2TransitGatewayRouteExists(resourceName string, transitGat
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		route, err := ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+		route, err := tfec2.DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
 		if err != nil {
 			return err
@@ -200,13 +201,13 @@ func testAccCheckAWSEc2TransitGatewayRouteDestroy(s *terraform.State) error {
 			continue
 		}
 
-		transitGatewayRouteTableID, destination, err := decodeTransitGatewayRouteID(rs.Primary.ID)
+		transitGatewayRouteTableID, destination, err := tfec2.DecodeTransitGatewayRouteID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		route, err := ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+		route, err := tfec2.DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
 		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			continue

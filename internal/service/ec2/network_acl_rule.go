@@ -111,13 +111,13 @@ func ResourceNetworkACLRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateICMPArgumentValue,
+				ValidateFunc: ValidICMPArgumentValue,
 			},
 			"icmp_code": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateICMPArgumentValue,
+				ValidateFunc: ValidICMPArgumentValue,
 			},
 		},
 	}
@@ -312,7 +312,7 @@ func networkAclIdRuleNumberEgressHash(networkAclId string, ruleNumber int, egres
 	return fmt.Sprintf("nacl-%d", create.StringHashcode(buf.String()))
 }
 
-func validateICMPArgumentValue(v interface{}, k string) (ws []string, errors []error) {
+func ValidICMPArgumentValue(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := strconv.Atoi(value)
 	if len(value) == 0 || err != nil {

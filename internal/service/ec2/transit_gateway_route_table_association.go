@@ -74,12 +74,12 @@ func resourceTransitGatewayRouteTableAssociationCreate(d *schema.ResourceData, m
 func resourceTransitGatewayRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeTransitGatewayRouteTableAssociationID(d.Id())
+	transitGatewayRouteTableID, transitGatewayAttachmentID, err := DecodeTransitGatewayRouteTableAssociationID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	transitGatewayAssociation, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+	transitGatewayAssociation, err := DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 	if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", transitGatewayRouteTableID)
@@ -114,7 +114,7 @@ func resourceTransitGatewayRouteTableAssociationRead(d *schema.ResourceData, met
 func resourceTransitGatewayRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeTransitGatewayRouteTableAssociationID(d.Id())
+	transitGatewayRouteTableID, transitGatewayAttachmentID, err := DecodeTransitGatewayRouteTableAssociationID(d.Id())
 	if err != nil {
 		return err
 	}

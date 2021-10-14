@@ -35,7 +35,7 @@ func ResourceSubnet() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsSubnetMigrateState,
+		MigrateState:  SubnetMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {

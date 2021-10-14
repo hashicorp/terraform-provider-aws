@@ -388,7 +388,7 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 func readInstance(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	instance, err := resourceAwsInstanceFindByID(conn, d.Get("spot_instance_id").(string))
+	instance, err := InstanceFindByID(conn, d.Get("spot_instance_id").(string))
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.

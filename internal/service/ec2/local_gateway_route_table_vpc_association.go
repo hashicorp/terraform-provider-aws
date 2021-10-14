@@ -82,7 +82,7 @@ func resourceLocalGatewayRouteTableVPCAssociationRead(d *schema.ResourceData, me
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	association, err := getEc2LocalGatewayRouteTableVpcAssociation(conn, d.Id())
+	association, err := GetLocalGatewayRouteTableVPCAssociation(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Local Gateway Route Table VPC Association (%s): %w", d.Id(), err)
@@ -157,7 +157,7 @@ func resourceLocalGatewayRouteTableVPCAssociationDelete(d *schema.ResourceData, 
 	return nil
 }
 
-func getEc2LocalGatewayRouteTableVpcAssociation(conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) (*ec2.LocalGatewayRouteTableVpcAssociation, error) {
+func GetLocalGatewayRouteTableVPCAssociation(conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) (*ec2.LocalGatewayRouteTableVpcAssociation, error) {
 	input := &ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput{
 		LocalGatewayRouteTableVpcAssociationIds: aws.StringSlice([]string{localGatewayRouteTableVpcAssociationID}),
 	}

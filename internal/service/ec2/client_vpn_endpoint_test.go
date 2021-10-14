@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -57,7 +58,7 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
 			id := aws.StringValue(clientVpnEndpoint.ClientVpnEndpointId)
 			log.Printf("[INFO] Deleting Client VPN endpoint: %s", id)
-			err := deleteClientVpnEndpoint(conn, id)
+			err := tfec2.DeleteClientVPNEndpoint(conn, id)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting Client VPN endpoint (%s): %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -178,7 +179,7 @@ func testAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnEndpointConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceClientVPNEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -32,7 +32,7 @@ func dataSourceSubnetsRead(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.DescribeSubnetsInput{}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, buildEC2TagFilterList(
+		input.Filters = append(input.Filters, BuildTagFilterList(
 			tftags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}

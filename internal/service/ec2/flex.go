@@ -10,7 +10,7 @@ import (
 )
 
 //Flattens network interface attachment into a map[string]interface
-func flattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{} {
+func FlattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{} {
 	att := make(map[string]interface{})
 	if a.InstanceId != nil {
 		att["instance"] = *a.InstanceId
@@ -33,7 +33,7 @@ func flattenAttributeValues(l []*ec2.AttributeValue) []string {
 }
 
 //Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
-func flattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
+func FlattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))
 	for _, v := range dtos {
 		group_id := *v.GroupId
@@ -69,7 +69,7 @@ func expandIP6Addresses(ips []interface{}) []*ec2.InstanceIpv6Address {
 // group rules and returns EC2 API compatible objects. This function will error
 // if it finds invalid permissions input, namely a protocol of "-1" with either
 // to_port or from_port set to a non-zero value.
-func expandIPPerms(
+func ExpandIPPerms(
 	group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.IpPermission, error) {
 	vpc := group.VpcId != nil && *group.VpcId != ""
 
@@ -212,7 +212,7 @@ func flattenNetworkInterfaceIPv6Address(niia []*ec2.NetworkInterfaceIpv6Address)
 }
 
 //Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
-func flattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePrivateIpAddress) []string {
+func FlattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePrivateIpAddress) []string {
 	ips := make([]string, 0, len(dtos))
 	for _, v := range dtos {
 		ip := *v.PrivateIpAddress
@@ -222,7 +222,7 @@ func flattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePriv
 }
 
 //Expands an array of IPs into a ec2 Private IP Address Spec
-func expandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
+func ExpandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
 	dtos := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
 	for i, v := range ips {
 		new_private_ip := &ec2.PrivateIpAddressSpecification{
@@ -237,7 +237,7 @@ func expandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecific
 }
 
 // Flattens an array of UserSecurityGroups into a []*GroupIdentifier
-func flattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*GroupIdentifier {
+func FlattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*GroupIdentifier {
 	result := make([]*GroupIdentifier, 0, len(list))
 	for _, g := range list {
 		var userId *string

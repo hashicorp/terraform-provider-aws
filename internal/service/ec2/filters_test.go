@@ -89,7 +89,7 @@ func TestBuildEC2TagFilterList(t *testing.T) {
 	}
 
 	for i, testCase := range testCases {
-		result := buildEC2TagFilterList(testCase.Tags)
+		result := tfec2.BuildTagFilterList(testCase.Tags)
 
 		if !reflect.DeepEqual(result, testCase.Expected) {
 			t.Errorf(
@@ -105,7 +105,7 @@ func TestBuildEC2CustomFilterList(t *testing.T) {
 	// We need to get a set with the appropriate hash function,
 	// so we'll use the schema to help us produce what would
 	// be produced in the normal case.
-	filtersSchema := ec2CustomFiltersSchema()
+	filtersSchema := tfec2.CustomFiltersSchema()
 
 	// The zero value of this schema will be an interface{}
 	// referring to a new, empty *schema.Set with the
@@ -147,7 +147,7 @@ func TestBuildEC2CustomFilterList(t *testing.T) {
 			Values: []*string{aws.String("bar"), aws.String("baz")},
 		},
 	}
-	result := buildEC2CustomFilterList(filters)
+	result := tfec2.BuildCustomFilterList(filters)
 
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf(

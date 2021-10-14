@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -93,7 +94,7 @@ func testSweepInternetGateways(region string) error {
 			stateConf := &resource.StateChangeConf{
 				Pending: []string{ec2.AttachmentStatusDetaching},
 				Target:  []string{ec2.AttachmentStatusDetached},
-				Refresh: detachIGStateRefreshFunc(conn, aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId)),
+				Refresh: tfec2.DetachIGStateRefreshFunc(conn, aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId)),
 				Timeout: 10 * time.Minute,
 				Delay:   10 * time.Second,
 			}
@@ -268,7 +269,7 @@ func TestAccAWSInternetGateway_disappears(t *testing.T) {
 				Config: testAccInternetGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceInternetGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInternetGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

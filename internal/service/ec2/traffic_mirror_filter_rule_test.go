@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSEc2TrafficMirrorFilterRule_basic(t *testing.T) {
@@ -125,7 +126,7 @@ func TestAccAWSEc2TrafficMirrorFilterRule_disappears(t *testing.T) {
 				Config: testAccEc2TrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, direction, ruleNum),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorFilterRuleExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceTrafficMirrorFilterRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorFilterRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

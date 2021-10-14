@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 // testing rulesForGroupPermissions
@@ -586,7 +587,7 @@ func TestRulesMixedMatching(t *testing.T) {
 		},
 	}
 	for i, c := range cases {
-		saves := matchRules("ingress", c.local, c.remote)
+		saves := tfec2.MatchRules("ingress", c.local, c.remote)
 		log.Printf("\n======\n\nSaves:\n%#v\n\nCS Saves:\n%#v\n\n======\n", saves, c.saves)
 		log.Printf("\n\tTest %d:\n", i)
 

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccAWSVolumeAttachment_basic(t *testing.T) {
@@ -99,7 +100,7 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopping},
 			Target:     []string{ec2.InstanceStateNameStopped},
-			Refresh:    InstanceStateRefreshFunc(conn, *i.InstanceId, []string{}),
+			Refresh:    tfec2.InstanceStateRefreshFunc(conn, *i.InstanceId, []string{}),
 			Timeout:    10 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -209,7 +210,7 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 					testAccCheckInstanceExists("aws_instance.test", &i),
 					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
 					testAccCheckVolumeAttachmentExists(resourceName, &i, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVolumeAttachment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVolumeAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

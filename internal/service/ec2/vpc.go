@@ -38,7 +38,7 @@ func ResourceVPC() *schema.Resource {
 		),
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsVpcMigrateState,
+		MigrateState:  VPCMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"cidr_block": {

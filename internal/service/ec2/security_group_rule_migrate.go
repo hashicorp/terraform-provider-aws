@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func resourceAwsSecurityGroupRuleMigrateState(
+func SecurityGroupRuleMigrateState(
 	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
@@ -41,7 +41,7 @@ func migrateSGRuleStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-	newID := ipPermissionIDHash(is.Attributes["security_group_id"], is.Attributes["type"], perm)
+	newID := IPPermissionIDHash(is.Attributes["security_group_id"], is.Attributes["type"], perm)
 	is.Attributes["id"] = newID
 	is.ID = newID
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, newID)

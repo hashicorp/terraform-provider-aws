@@ -161,7 +161,7 @@ func TestAccAwsEc2ManagedPrefixListEntry_disappears(t *testing.T) {
 				Config: testAccAwsEc2ManagedPrefixListEntryIpv4Config(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSEc2ManagedPrefixListEntryExists(resourceName, &entry),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceManagedPrefixListEntry(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceManagedPrefixListEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
