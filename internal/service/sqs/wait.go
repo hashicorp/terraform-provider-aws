@@ -7,10 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	awspolicy "github.com/jen20/awspolicyequivalence"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 const (
