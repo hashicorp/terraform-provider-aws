@@ -201,7 +201,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 		CheckDestroy: testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: createAwsDbParameterGroupsExceedDefaultAwsLimit(groupName),
+				Config: createParameterGroupsExceedDefaultAwsLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -380,7 +380,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: updateAwsDbParameterGroupsExceedDefaultAwsLimit(groupName),
+				Config: updateParameterGroupsExceedDefaultAwsLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -1314,7 +1314,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func createAwsDbParameterGroupsExceedDefaultAwsLimit(rName string) string {
+func createParameterGroupsExceedDefaultAwsLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name        = %[1]q
@@ -1534,7 +1534,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func updateAwsDbParameterGroupsExceedDefaultAwsLimit(rName string) string {
+func updateParameterGroupsExceedDefaultAwsLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name        = %[1]q

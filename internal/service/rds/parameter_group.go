@@ -81,7 +81,7 @@ func ResourceParameterGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsDbParameterHash,
+				Set: resourceParameterHash,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -370,7 +370,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsDbParameterHash(v interface{}) int {
+func resourceParameterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	// Store the value as a lower case string, to match how we store them in FlattenParameters

@@ -119,7 +119,7 @@ func ResourceOptionGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsDbOptionHash,
+				Set: resourceOptionHash,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -354,7 +354,7 @@ func flattenOptionNames(configured []interface{}) []*string {
 	return optionNames
 }
 
-func resourceAwsDbOptionHash(v interface{}) int {
+func resourceOptionHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["option_name"].(string)))

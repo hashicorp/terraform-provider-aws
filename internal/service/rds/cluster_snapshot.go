@@ -26,7 +26,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 		Create: resourceClusterSnapshotCreate,
 		Read:   resourceClusterSnapshotRead,
 		Delete: resourceClusterSnapshotDelete,
-		Update: resourceAwsdbClusterSnapshotUpdate,
+		Update: resourcedbClusterSnapshotUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -148,7 +148,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
-		Refresh:    resourceAwsDbClusterSnapshotStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceClusterSnapshotStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      5 * time.Second,
@@ -227,7 +227,7 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsdbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcedbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChange("tags_all") {
@@ -258,7 +258,7 @@ func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsDbClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string, conn *rds.RDS) resource.StateRefreshFunc {
+func resourceClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string, conn *rds.RDS) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		opts := &rds.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(dbClusterSnapshotIdentifier),

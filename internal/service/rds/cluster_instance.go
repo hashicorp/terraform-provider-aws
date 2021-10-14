@@ -330,9 +330,9 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 
 	// reuse db_instance refresh func
 	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsRdsClusterInstanceCreateUpdatePendingStates,
+		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
-		Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -603,9 +603,9 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 
 		// reuse db_instance refresh func
 		stateConf := &resource.StateChangeConf{
-			Pending:    resourceAwsRdsClusterInstanceCreateUpdatePendingStates,
+			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
-			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
+			Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -667,7 +667,7 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-var resourceAwsRdsClusterInstanceCreateUpdatePendingStates = []string{
+var resourceClusterInstanceCreateUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-enhanced-monitoring",
 	"configuring-iam-database-auth",

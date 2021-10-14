@@ -138,7 +138,7 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
-		Refresh:    resourceAwsDbSnapshotStateRefreshFunc(d, meta),
+		Refresh:    resourceSnapshotStateRefreshFunc(d, meta),
 		Timeout:    d.Timeout(schema.TimeoutRead),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -247,7 +247,7 @@ func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDbSnapshotStateRefreshFunc(
+func resourceSnapshotStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		conn := meta.(*conns.AWSClient).RDSConn

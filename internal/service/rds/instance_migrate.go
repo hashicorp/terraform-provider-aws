@@ -7,7 +7,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func resourceAwsDbInstanceResourceV0() *schema.Resource {
+func resourceInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"name": {

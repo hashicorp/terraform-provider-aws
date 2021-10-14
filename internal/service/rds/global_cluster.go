@@ -213,7 +213,7 @@ func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("engine_version") {
-		if err := resourceAwsRDSGlobalClusterUpgradeEngineVersion(d, conn); err != nil {
+		if err := resourceGlobalClusterUpgradeEngineVersion(d, conn); err != nil {
 			return err
 		}
 	}
@@ -236,7 +236,7 @@ func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	return resourceGlobalClusterRead(d, meta)
 }
 
-func resourceAwsRDSGlobalClusterGetIdByArn(conn *rds.RDS, arn string) string {
+func resourceGlobalClusterGetIdByARN(conn *rds.RDS, arn string) string {
 	result, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{})
 	if err != nil {
 		return ""
@@ -520,7 +520,7 @@ func waitForRdsGlobalClusterRemoval(conn *rds.RDS, dbClusterIdentifier string) e
 	return nil
 }
 
-func resourceAwsRDSGlobalClusterUpgradeMajorEngineVersion(clusterId string, engineVersion string, conn *rds.RDS) error {
+func resourceGlobalClusterUpgradeMajorEngineVersion(clusterId string, engineVersion string, conn *rds.RDS) error {
 	input := &rds.ModifyGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(clusterId),
 	}
@@ -547,7 +547,7 @@ func resourceAwsRDSGlobalClusterUpgradeMajorEngineVersion(clusterId string, engi
 	return err
 }
 
-func resourceAwsRDSGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, engineVersion string, conn *rds.RDS) error {
+func resourceGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema.Set, engineVersion string, conn *rds.RDS) error {
 	for _, clusterMemberRaw := range clusterMembers.List() {
 		clusterMember := clusterMemberRaw.(map[string]interface{})
 		if clusterMemberArn, ok := clusterMember["db_cluster_arn"]; ok && clusterMemberArn.(string) != "" {
@@ -588,11 +588,11 @@ func resourceAwsRDSGlobalClusterUpgradeMinorEngineVersion(clusterMembers *schema
 	return nil
 }
 
-func resourceAwsRDSGlobalClusterUpgradeEngineVersion(d *schema.ResourceData, conn *rds.RDS) error {
+func resourceGlobalClusterUpgradeEngineVersion(d *schema.ResourceData, conn *rds.RDS) error {
 	log.Printf("[DEBUG] Upgrading RDS Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
-	err := resourceAwsRDSGlobalClusterUpgradeMajorEngineVersion(d.Id(), d.Get("engine_version").(string), conn)
+	err := resourceGlobalClusterUpgradeMajorEngineVersion(d.Id(), d.Get("engine_version").(string), conn)
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "ModifyGlobalCluster only supports Major Version Upgrades. To patch the members of your global cluster to a newer minor version you need to call ModifyDbCluster in each one of them.") {
-		err = resourceAwsRDSGlobalClusterUpgradeMinorEngineVersion(d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string), conn)
+		err = resourceGlobalClusterUpgradeMinorEngineVersion(d.Get("global_cluster_members").(*schema.Set), d.Get("engine_version").(string), conn)
 		if err != nil {
 			return err
 		}
@@ -604,7 +604,7 @@ func resourceAwsRDSGlobalClusterUpgradeEngineVersion(d *schema.ResourceData, con
 		return err
 	}
 	for _, clusterMember := range globalCluster.GlobalClusterMembers {
-		err := waitForRDSClusterUpdate(conn, resourceAwsRDSGlobalClusterGetIdByArn(conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate))
+		err := waitForRDSClusterUpdate(conn, resourceGlobalClusterGetIdByARN(conn, aws.StringValue(clusterMember.DBClusterArn)), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return err
 		}

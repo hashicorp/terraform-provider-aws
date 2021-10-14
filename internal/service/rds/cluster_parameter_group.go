@@ -82,7 +82,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsDbParameterHash,
+				Set: resourceParameterHash,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -315,7 +315,7 @@ func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending"},
 		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsRDSClusterParameterGroupDeleteRefreshFunc(d, meta),
+		Refresh:    resourceClusterParameterGroupDeleteRefreshFunc(d, meta),
 		Timeout:    3 * time.Minute,
 		MinTimeout: 1 * time.Second,
 	}
@@ -323,7 +323,7 @@ func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{
 	return err
 }
 
-func resourceAwsRDSClusterParameterGroupDeleteRefreshFunc(
+func resourceClusterParameterGroupDeleteRefreshFunc(
 	d *schema.ResourceData,
 	meta interface{}) resource.StateRefreshFunc {
 	conn := meta.(*conns.AWSClient).RDSConn

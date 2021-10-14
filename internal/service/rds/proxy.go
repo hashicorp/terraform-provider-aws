@@ -162,7 +162,7 @@ func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{rds.DBProxyStatusCreating},
 		Target:  []string{rds.DBProxyStatusAvailable},
-		Refresh: resourceAwsDbProxyRefreshFunc(conn, d.Id()),
+		Refresh: resourceProxyRefreshFunc(conn, d.Id()),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -174,7 +174,7 @@ func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceProxyRead(d, meta)
 }
 
-func resourceAwsDbProxyRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
+func resourceProxyRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeDBProxies(&rds.DescribeDBProxiesInput{
 			DBProxyName: aws.String(proxyName),
@@ -362,7 +362,7 @@ func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 		stateChangeConf := &resource.StateChangeConf{
 			Pending: []string{rds.DBProxyStatusModifying},
 			Target:  []string{rds.DBProxyStatusAvailable},
-			Refresh: resourceAwsDbProxyRefreshFunc(conn, d.Id()),
+			Refresh: resourceProxyRefreshFunc(conn, d.Id()),
 			Timeout: d.Timeout(schema.TimeoutUpdate),
 		}
 
@@ -397,7 +397,7 @@ func resourceProxyDelete(d *schema.ResourceData, meta interface{}) error {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{rds.DBProxyStatusDeleting},
 		Target:  []string{""},
-		Refresh: resourceAwsDbProxyRefreshFunc(conn, d.Id()),
+		Refresh: resourceProxyRefreshFunc(conn, d.Id()),
 		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 

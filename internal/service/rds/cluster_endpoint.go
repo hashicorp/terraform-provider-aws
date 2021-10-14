@@ -114,7 +114,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(endpointId)
 
-	err = resourceAwsRDSClusterEndpointWaitForAvailable(AWSRDSClusterEndpointCreateTimeout, d.Id(), conn)
+	err = resourceClusterEndpointWaitForAvailable(AWSRDSClusterEndpointCreateTimeout, d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -238,14 +238,14 @@ func resourceClusterEndpointDelete(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error deleting RDS Cluster Endpoint: %s", err)
 	}
 
-	if err := resourceAwsRDSClusterEndpointWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), conn); err != nil {
+	if err := resourceClusterEndpointWaitForDestroy(d.Timeout(schema.TimeoutDelete), d.Id(), conn); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func resourceAwsRDSClusterEndpointWaitForDestroy(timeout time.Duration, id string, conn *rds.RDS) error {
+func resourceClusterEndpointWaitForDestroy(timeout time.Duration, id string, conn *rds.RDS) error {
 	log.Printf("Waiting for RDS Cluster Endpoint %s to be deleted...", id)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"available", "deleting"},
@@ -262,7 +262,7 @@ func resourceAwsRDSClusterEndpointWaitForDestroy(timeout time.Duration, id strin
 	return nil
 }
 
-func resourceAwsRDSClusterEndpointWaitForAvailable(timeout time.Duration, id string, conn *rds.RDS) error {
+func resourceClusterEndpointWaitForAvailable(timeout time.Duration, id string, conn *rds.RDS) error {
 	log.Printf("Waiting for RDS Cluster Endpoint %s to become available...", id)
 
 	stateConf := &resource.StateChangeConf{

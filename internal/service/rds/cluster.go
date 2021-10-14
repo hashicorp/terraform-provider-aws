@@ -35,7 +35,7 @@ func ResourceCluster() *schema.Resource {
 		Update: resourceClusterUpdate,
 		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsRdsClusterImport,
+			State: resourceClusterImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -484,7 +484,7 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsRdsClusterImport(
+func resourceClusterImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
@@ -957,9 +957,9 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		"[INFO] Waiting for RDS Cluster to be available")
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsRdsClusterCreatePendingStates,
+		Pending:    resourceClusterCreatePendingStates,
 		Target:     []string{"available"},
-		Refresh:    resourceAwsRDSClusterStateRefreshFunc(conn, d.Id()),
+		Refresh:    resourceClusterStateRefreshFunc(conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1429,7 +1429,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsRDSClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) resource.StateRefreshFunc {
+func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(dbClusterIdentifier),
@@ -1481,7 +1481,7 @@ func removeIamRoleFromRdsCluster(clusterIdentifier string, roleArn string, conn 
 	return err
 }
 
-var resourceAwsRdsClusterCreatePendingStates = []string{
+var resourceClusterCreatePendingStates = []string{
 	"creating",
 	"backing-up",
 	"modifying",
@@ -1490,14 +1490,14 @@ var resourceAwsRdsClusterCreatePendingStates = []string{
 	"resetting-master-credentials",
 }
 
-var resourceAwsRdsClusterDeletePendingStates = []string{
+var resourceClusterDeletePendingStates = []string{
 	"available",
 	"deleting",
 	"backing-up",
 	"modifying",
 }
 
-var resourceAwsRdsClusterUpdatePendingStates = []string{
+var resourceClusterUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-iam-database-auth",
 	"modifying",
@@ -1508,9 +1508,9 @@ var resourceAwsRdsClusterUpdatePendingStates = []string{
 
 func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsRdsClusterUpdatePendingStates,
+		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
-		Refresh:    resourceAwsRDSClusterStateRefreshFunc(conn, id),
+		Refresh:    resourceClusterStateRefreshFunc(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -1521,9 +1521,9 @@ func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) er
 
 func WaitForClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsRdsClusterDeletePendingStates,
+		Pending:    resourceClusterDeletePendingStates,
 		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsRDSClusterStateRefreshFunc(conn, id),
+		Refresh:    resourceClusterStateRefreshFunc(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

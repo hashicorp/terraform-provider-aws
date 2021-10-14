@@ -76,7 +76,7 @@ func ResourceSecurityGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsDbSecurityGroupIngressHash,
+				Set: resourceSecurityGroupIngressHash,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -111,14 +111,14 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[INFO] DB Security Group ID: %s", d.Id())
 
-	sg, err := resourceAwsDbSecurityGroupRetrieve(d, meta)
+	sg, err := resourceSecurityGroupRetrieve(d, meta)
 	if err != nil {
 		return err
 	}
 
 	ingresses := d.Get("ingress").(*schema.Set)
 	for _, ing := range ingresses.List() {
-		err := resourceAwsDbSecurityGroupAuthorizeRule(ing, *sg.DBSecurityGroupName, conn)
+		err := resourceSecurityGroupAuthorizeRule(ing, *sg.DBSecurityGroupName, conn)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -134,7 +134,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"authorizing"},
 		Target:  []string{"authorized"},
-		Refresh: resourceAwsDbSecurityGroupStateRefreshFunc(d, meta),
+		Refresh: resourceSecurityGroupStateRefreshFunc(d, meta),
 		Timeout: 10 * time.Minute,
 	}
 
@@ -151,7 +151,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	sg, err := resourceAwsDbSecurityGroupRetrieve(d, meta)
+	sg, err := resourceSecurityGroupRetrieve(d, meta)
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Create an empty schema.Set to hold all ingress rules
 	rules := &schema.Set{
-		F: resourceAwsDbSecurityGroupIngressHash,
+		F: resourceSecurityGroupIngressHash,
 	}
 
 	for _, v := range sg.IPRanges {
@@ -222,7 +222,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("ingress") {
-		sg, err := resourceAwsDbSecurityGroupRetrieve(d, meta)
+		sg, err := resourceSecurityGroupRetrieve(d, meta)
 		if err != nil {
 			return err
 		}
@@ -242,7 +242,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 
 		// DELETE old Ingress rules
 		for _, ing := range removeIngress {
-			err := resourceAwsDbSecurityGroupRevokeRule(ing, *sg.DBSecurityGroupName, conn)
+			err := resourceSecurityGroupRevokeRule(ing, *sg.DBSecurityGroupName, conn)
 			if err != nil {
 				return err
 			}
@@ -250,7 +250,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 
 		// ADD new/updated Ingress rules
 		for _, ing := range newIngress {
-			err := resourceAwsDbSecurityGroupAuthorizeRule(ing, *sg.DBSecurityGroupName, conn)
+			err := resourceSecurityGroupAuthorizeRule(ing, *sg.DBSecurityGroupName, conn)
 			if err != nil {
 				return err
 			}
@@ -280,7 +280,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsDbSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*rds.DBSecurityGroup, error) {
+func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*rds.DBSecurityGroup, error) {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	opts := rds.DescribeDBSecurityGroupsInput{
@@ -304,7 +304,7 @@ func resourceAwsDbSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}
 }
 
 // Authorizes the ingress rule on the db security group
-func resourceAwsDbSecurityGroupAuthorizeRule(ingress interface{}, dbSecurityGroupName string, conn *rds.RDS) error {
+func resourceSecurityGroupAuthorizeRule(ingress interface{}, dbSecurityGroupName string, conn *rds.RDS) error {
 	ing := ingress.(map[string]interface{})
 
 	opts := rds.AuthorizeDBSecurityGroupIngressInput{
@@ -339,7 +339,7 @@ func resourceAwsDbSecurityGroupAuthorizeRule(ingress interface{}, dbSecurityGrou
 }
 
 // Revokes the ingress rule on the db security group
-func resourceAwsDbSecurityGroupRevokeRule(ingress interface{}, dbSecurityGroupName string, conn *rds.RDS) error {
+func resourceSecurityGroupRevokeRule(ingress interface{}, dbSecurityGroupName string, conn *rds.RDS) error {
 	ing := ingress.(map[string]interface{})
 
 	opts := rds.RevokeDBSecurityGroupIngressInput{
@@ -373,7 +373,7 @@ func resourceAwsDbSecurityGroupRevokeRule(ingress interface{}, dbSecurityGroupNa
 	return nil
 }
 
-func resourceAwsDbSecurityGroupIngressHash(v interface{}) int {
+func resourceSecurityGroupIngressHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
@@ -396,10 +396,10 @@ func resourceAwsDbSecurityGroupIngressHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func resourceAwsDbSecurityGroupStateRefreshFunc(
+func resourceSecurityGroupStateRefreshFunc(
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := resourceAwsDbSecurityGroupRetrieve(d, meta)
+		v, err := resourceSecurityGroupRetrieve(d, meta)
 
 		if err != nil {
 			log.Printf("Error on retrieving DB Security Group when waiting: %s", err)

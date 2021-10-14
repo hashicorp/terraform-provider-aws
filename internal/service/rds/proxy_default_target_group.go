@@ -96,7 +96,7 @@ func ResourceProxyDefaultTargetGroup() *schema.Resource {
 func resourceProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
-	tg, err := resourceAwsDbProxyDefaultTargetGroupGet(conn, d.Id())
+	tg, err := resourceProxyDefaultTargetGroupGet(conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
@@ -125,14 +125,14 @@ func resourceProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{
 
 func resourceProxyDefaultTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("db_proxy_name").(string))
-	return resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutCreate)
+	return resourceProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutCreate)
 }
 
 func resourceProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutUpdate)
+	return resourceProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutUpdate)
 }
 
-func resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta interface{}, timeout string) error {
+func resourceProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta interface{}, timeout string) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := rds.ModifyDBProxyTargetGroupInput{
@@ -153,7 +153,7 @@ func resourceAwsDbProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, me
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{rds.DBProxyStatusModifying},
 		Target:  []string{rds.DBProxyStatusAvailable},
-		Refresh: resourceAwsDbProxyDefaultTargetGroupRefreshFunc(conn, d.Id()),
+		Refresh: resourceProxyDefaultTargetGroupRefreshFunc(conn, d.Id()),
 		Timeout: d.Timeout(timeout),
 	}
 
@@ -198,7 +198,7 @@ func flattenDbProxyTargetGroupConnectionPoolConfig(cpc *rds.ConnectionPoolConfig
 	return []interface{}{m}
 }
 
-func resourceAwsDbProxyDefaultTargetGroupGet(conn *rds.RDS, proxyName string) (*rds.DBProxyTargetGroup, error) {
+func resourceProxyDefaultTargetGroupGet(conn *rds.RDS, proxyName string) (*rds.DBProxyTargetGroup, error) {
 	params := &rds.DescribeDBProxyTargetGroupsInput{
 		DBProxyName: aws.String(proxyName),
 	}
@@ -222,9 +222,9 @@ func resourceAwsDbProxyDefaultTargetGroupGet(conn *rds.RDS, proxyName string) (*
 	return defaultTargetGroup, nil
 }
 
-func resourceAwsDbProxyDefaultTargetGroupRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
+func resourceProxyDefaultTargetGroupRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		tg, err := resourceAwsDbProxyDefaultTargetGroupGet(conn, proxyName)
+		tg, err := resourceProxyDefaultTargetGroupGet(conn, proxyName)
 
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {

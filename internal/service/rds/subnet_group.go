@@ -217,7 +217,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending"},
 		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsDbSubnetGroupDeleteRefreshFunc(d, meta),
+		Refresh:    resourceSubnetGroupDeleteRefreshFunc(d, meta),
 		Timeout:    3 * time.Minute,
 		MinTimeout: 1 * time.Second,
 	}
@@ -225,7 +225,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	return err
 }
 
-func resourceAwsDbSubnetGroupDeleteRefreshFunc(
+func resourceSubnetGroupDeleteRefreshFunc(
 	d *schema.ResourceData,
 	meta interface{}) resource.StateRefreshFunc {
 	conn := meta.(*conns.AWSClient).RDSConn
