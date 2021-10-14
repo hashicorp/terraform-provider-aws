@@ -13,8 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceStack() *schema.Resource {
@@ -172,8 +173,8 @@ func ResourceStack() *schema.Resource {
 				Default:  "Layer_Dependent",
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"use_custom_cookbooks": {
 				Type:     schema.TypeBool,
@@ -200,7 +201,7 @@ func ResourceStack() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -380,7 +381,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := keyvaluetags.OpsworksListTags(client, arn)
+	tags, err := tftags.OpsworksListTags(client, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
@@ -586,7 +587,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.OpsworksUpdateTags(client, arn, o, n); err != nil {
+		if err := tftags.OpsworksUpdateTags(client, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
 		}
 	}
