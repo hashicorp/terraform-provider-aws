@@ -22,6 +22,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 )
 
 func init() {
@@ -269,7 +294,7 @@ func testAccCheckAWSEksIdentityProviderConfigExists(ctx context.Context, resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
-		output, err := finder.OidcIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
+		output, err := tfeks.FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
 		if err != nil {
 			return err
@@ -296,7 +321,7 @@ func testAccCheckAWSEksIdentityProviderConfigDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.OidcIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
+		_, err = tfeks.FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
 		if tfresource.NotFound(err) {
 			continue

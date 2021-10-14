@@ -1,7 +1,7 @@
 package eks
 
 const (
-	IdentityProviderConfigTypeOidc = "oidc"
+	IdentityProviderConfigTypeOIDC = "oidc"
 )
 
 const (

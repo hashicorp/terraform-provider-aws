@@ -13,6 +13,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 )
 
 func TestAccAWSEksClusterAuthDataSource_basic(t *testing.T) {
@@ -48,7 +58,7 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 
 		name := rs.Primary.Attributes["name"]
 		tok := rs.Primary.Attributes["token"]
-		verifier := token.NewVerifier(name)
+		verifier := tfeks.NewVerifier(name)
 		identity, err := verifier.Verify(tok)
 		if err != nil {
 			return fmt.Errorf("Error verifying token for cluster %q: %v", name, err)
