@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const envVarGithubTokenUsageCodePipelineWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
 
 func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
-	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -51,7 +52,7 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 }
 
 func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
-	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -86,7 +87,7 @@ func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
 }
 
 func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
-	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -119,7 +120,7 @@ func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
 }
 
 func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
-	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v1, v2, v3 codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -183,7 +184,7 @@ func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
 }
 
 func TestAccAWSCodePipelineWebhook_UpdateAuthenticationConfiguration_SecretToken(t *testing.T) {
-	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageCodePipelineWebhook)
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v1, v2 codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -239,7 +240,7 @@ func testAccCheckAWSCodePipelineWebhookExists(n string, webhook *codepipeline.Li
 			return fmt.Errorf("No webhook ARN is set as ID")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codepipelineconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
 
 		resp, err := getCodePipelineWebhook(conn, rs.Primary.ID)
 

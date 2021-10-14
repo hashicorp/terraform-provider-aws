@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepCodepipelinePipelines(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).codepipelineconn
+	conn := client.(*conns.AWSClient).CodePipelineConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -532,7 +533,7 @@ func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
 }
 
 func TestAccAWSCodePipeline_WithGitHubv1SourceAction(t *testing.T) {
-	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, "token with GitHub permissions to repository for CodePipeline source configuration")
+	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, "token with GitHub permissions to repository for CodePipeline source configuration")
 
 	var v codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
@@ -618,7 +619,7 @@ func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.Pipeline
 			return fmt.Errorf("No CodePipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).codepipelineconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
 
 		out, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
 			Name: aws.String(rs.Primary.ID),
@@ -634,7 +635,7 @@ func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.Pipeline
 }
 
 func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).codepipelineconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codepipeline" {
@@ -660,14 +661,14 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 func testAccPreCheckAWSCodePipelineSupported(t *testing.T, regions ...string) {
 	regions = append(regions, acctest.Region())
 	for _, region := range regions {
-		conf := &Config{
+		conf := &conns.Config{
 			Region: region,
 		}
 		client, err := conf.Client()
 		if err != nil {
 			t.Fatalf("error getting AWS client for region %s", region)
 		}
-		conn := client.(*AWSClient).codepipelineconn
+		conn := client.(*conns.AWSClient).CodePipelineConn
 
 		input := &codepipeline.ListPipelinesInput{}
 		_, err = conn.ListPipelines(input)
