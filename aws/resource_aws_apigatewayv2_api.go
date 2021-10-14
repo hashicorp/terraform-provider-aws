@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceAPI() *schema.Resource {
@@ -88,7 +89,7 @@ func ResourceAPI() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -115,8 +116,8 @@ func ResourceAPI() *schema.Resource {
 			"body": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressEquivalentJsonOrYamlDiffs,
-				ValidateFunc:     validateStringIsJsonOrYaml,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
+				ValidateFunc:     verify.ValidStringIsJSONOrYAML,
 			},
 			"protocol_type": {
 				Type:         schema.TypeString,

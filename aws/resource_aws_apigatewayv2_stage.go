@@ -13,6 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -40,7 +41,7 @@ func ResourceStage() *schema.Resource {
 						"destination_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"format": {
 							Type:     schema.TypeString,
@@ -72,7 +73,7 @@ func ResourceStage() *schema.Resource {
 				Optional:         true,
 				MinItems:         0,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_trace_enabled": {
@@ -292,7 +293,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error setting route_settings: %s", err)
 	}
-	err = d.Set("stage_variables", pointersMapToStringList(resp.StageVariables))
+	err = d.Set("stage_variables", verify.PointersMapToStringList(resp.StageVariables))
 	if err != nil {
 		return fmt.Errorf("error setting stage_variables: %s", err)
 	}
@@ -394,7 +395,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
-			add, del, _ := diffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+			add, del, _ := verify.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 			// Variables are removed by setting the associated value to "".
 			for k := range del {
 				del[k] = aws.String("")
