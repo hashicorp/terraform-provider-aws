@@ -161,7 +161,7 @@ func resourceResourceShareAccepterRead(d *schema.ResourceData, meta interface{})
 	d.Set("status", resourceShare.Status)
 	d.Set("sender_account_id", resourceShare.OwningAccountId)
 	d.Set("share_arn", resourceShare.ResourceShareArn)
-	d.Set("share_id", resourceAwsRamResourceShareGetIDFromARN(d.Id()))
+	d.Set("share_id", resourceResourceShareGetIDFromARN(d.Id()))
 	d.Set("share_name", resourceShare.Name)
 
 	listInput := &ram.ListResourcesInput{
@@ -225,6 +225,6 @@ func resourceResourceShareAccepterDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsRamResourceShareGetIDFromARN(arn string) string {
+func resourceResourceShareGetIDFromARN(arn string) string {
 	return strings.Replace(arn[strings.LastIndex(arn, ":")+1:], "resource-share/", "rs-", -1)
 }
