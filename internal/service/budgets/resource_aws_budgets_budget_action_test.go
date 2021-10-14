@@ -21,6 +21,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 )
 
 func init() {
@@ -162,7 +173,7 @@ func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Ac
 			return err
 		}
 
-		output, err := finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+		output, err := tfbudgets.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 		if err != nil {
 			return err
@@ -188,7 +199,7 @@ func testAccAWSBudgetsBudgetActionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+		_, err = tfbudgets.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 		if tfresource.NotFound(err) {
 			continue

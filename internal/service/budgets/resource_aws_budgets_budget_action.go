@@ -19,6 +19,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceBudgetAction() *schema.Resource {
@@ -231,7 +246,7 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Creating Budget Action: %s", input)
-	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(iamwaiter.PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(tfiam.PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateBudgetAction(input)
 	}, budgets.ErrCodeAccessDeniedException)
 
@@ -245,7 +260,7 @@ func resourceBudgetActionCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(tfbudgets.BudgetActionCreateResourceID(accountID, actionID, budgetName))
 
-	if _, err := waiter.ActionAvailable(conn, accountID, actionID, budgetName); err != nil {
+	if _, err := tfbudgets.waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
 		return fmt.Errorf("error waiting for Budget Action (%s) to create: %w", d.Id(), err)
 	}
 
@@ -261,7 +276,7 @@ func resourceBudgetActionRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	output, err := finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+	output, err := tfbudgets.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget Action (%s) not found, removing from state", d.Id())
@@ -353,7 +368,7 @@ func resourceBudgetActionUpdate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error updating Budget Action (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ActionAvailable(conn, accountID, actionID, budgetName); err != nil {
+	if _, err := tfbudgets.waitActionAvailable(conn, accountID, actionID, budgetName); err != nil {
 		return fmt.Errorf("error waiting for Budget Action (%s) to update: %w", d.Id(), err)
 	}
 

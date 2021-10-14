@@ -34,7 +34,7 @@ func TimePeriodTimestampToString(ts *time.Time) string {
 	return aws.TimeValue(ts).Format(timePeriodLayout)
 }
 
-func ValidateTimePeriodTimestamp(v interface{}, k string) (ws []string, errors []error) {
+func ValidTimePeriodTimestamp(v interface{}, k string) (ws []string, errors []error) {
 	_, err := time.Parse(timePeriodLayout, v.(string))
 
 	if err != nil {

@@ -7,11 +7,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 )
 
-func ActionStatus(conn *budgets.Budgets, accountID, actionID, budgetName string) resource.StateRefreshFunc {
+func statusAction(conn *budgets.Budgets, accountID, actionID, budgetName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
+		output, err := tfbudgets.FindActionByAccountIDActionIDAndBudgetName(conn, accountID, actionID, budgetName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

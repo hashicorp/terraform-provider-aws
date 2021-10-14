@@ -19,6 +19,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 )
 
 func ResourceBudget() *schema.Resource {
@@ -209,13 +220,13 @@ func ResourceBudget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "2087-06-15_00:00",
-				ValidateFunc: tfbudgets.ValidateTimePeriodTimestamp,
+				ValidateFunc: tfbudgets.ValidTimePeriodTimestamp,
 			},
 			"time_period_start": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: tfbudgets.ValidateTimePeriodTimestamp,
+				ValidateFunc: tfbudgets.ValidTimePeriodTimestamp,
 			},
 			"time_unit": {
 				Type:         schema.TypeString,
@@ -274,7 +285,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	budget, err := finder.BudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+	budget, err := tfbudgets.FindBudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
@@ -323,7 +334,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("time_unit", budget.TimeUnit)
 
-	notifications, err := finder.NotificationsByAccountIDAndBudgetName(conn, accountID, budgetName)
+	notifications, err := tfbudgets.FindNotificationsByAccountIDAndBudgetName(conn, accountID, budgetName)
 
 	if tfresource.NotFound(err) {
 		return nil
@@ -350,7 +361,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 			tfMap["threshold_type"] = aws.StringValue(notification.ThresholdType)
 		}
 
-		subscribers, err := finder.SubscribersByAccountIDBudgetNameAndNotification(conn, accountID, budgetName, notification)
+		subscribers, err := tfbudgets.FindSubscribersByAccountIDBudgetNameAndNotification(conn, accountID, budgetName, notification)
 
 		if tfresource.NotFound(err) {
 			tfList = append(tfList, tfMap)
