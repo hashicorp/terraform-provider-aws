@@ -217,7 +217,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().AppstreamTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	output, err := conn.CreateImageBuilderWithContext(ctx, input)
@@ -283,7 +283,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("name", imageBuilder.Name)
 	d.Set("state", imageBuilder.State)
 
-	tags, err := tftags.AppstreamListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for AppStream ImageBuilder (%s): %w", arn, err))
 	}
@@ -308,7 +308,7 @@ func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.AppstreamUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags for AppStream ImageBuilder (%s): %w", d.Id(), err))
 		}
 	}

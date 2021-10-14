@@ -242,7 +242,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().AppstreamTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	var err error
@@ -356,7 +356,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 
-	tags := tftags.AppstreamKeyValueTags(tg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(tg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags", d.Id(), err))
@@ -458,7 +458,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		arn := aws.StringValue(resp.Fleet.Arn)
 
 		o, n := d.GetChange("tags")
-		if err := tftags.AppstreamUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Appstream Fleet tags (%s): %w", d.Id(), err))
 		}
 	}
