@@ -287,7 +287,7 @@ func expandAwsRoute53RecoveryReadinessResourceSetResources(rs []interface{}) []*
 			resource.ResourceArn = aws.String(v.(string))
 		}
 		if v, ok := r["readiness_scopes"]; ok {
-			resource.ReadinessScopes = expandStringList(v.([]interface{}))
+			resource.ReadinessScopes = flex.ExpandStringList(v.([]interface{}))
 		}
 		if v, ok := r["component_id"]; ok {
 			resource.ComponentId = aws.String(v.(string))

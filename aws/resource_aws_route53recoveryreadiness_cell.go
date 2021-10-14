@@ -67,7 +67,7 @@ func resourceAwsRoute53RecoveryReadinessCellCreate(d *schema.ResourceData, meta 
 
 	input := &route53recoveryreadiness.CreateCellInput{
 		CellName: aws.String(d.Get("cell_name").(string)),
-		Cells:    expandStringList(d.Get("cells").([]interface{})),
+		Cells:    flex.ExpandStringList(d.Get("cells").([]interface{})),
 	}
 
 	resp, err := conn.CreateCell(input)
@@ -138,7 +138,7 @@ func resourceAwsRoute53RecoveryReadinessCellUpdate(d *schema.ResourceData, meta 
 
 	input := &route53recoveryreadiness.UpdateCellInput{
 		CellName: aws.String(d.Id()),
-		Cells:    expandStringList(d.Get("cells").([]interface{})),
+		Cells:    flex.ExpandStringList(d.Get("cells").([]interface{})),
 	}
 
 	_, err := conn.UpdateCell(input)
