@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepEcrPublicRepositories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ecrpublicconn
+	conn := client.(*conns.AWSClient).ECRPublicConn
 	input := &ecrpublic.DescribeRepositoriesInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -368,7 +369,7 @@ func testAccCheckAWSEcrPublicRepositoryExists(name string, res *ecrpublic.Reposi
 			return fmt.Errorf("No ECR Public repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ecrpublicconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn
 
 		output, err := conn.DescribeRepositories(&ecrpublic.DescribeRepositoriesInput{
 			RepositoryNames: aws.StringSlice([]string{rs.Primary.ID}),
@@ -387,7 +388,7 @@ func testAccCheckAWSEcrPublicRepositoryExists(name string, res *ecrpublic.Reposi
 }
 
 func testAccCheckAWSEcrPublicRepositoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ecrpublicconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecrpublic_repository" {
@@ -506,11 +507,11 @@ func testAccPreCheckAwsEcrPublic(t *testing.T) {
 	// an InternalFailure when the region is not supported i.e. not us-east-1.
 	// TODO: Remove when ECRPublic is supported across other known regions
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18047
-	if region := acctest.Provider.Meta().(*AWSClient).region; region != endpoints.UsEast1RegionID {
+	if region := acctest.Provider.Meta().(*conns.AWSClient).Region; region != endpoints.UsEast1RegionID {
 		t.Skipf("skipping acceptance testing: region (%s) does not support ECR Public repositories", region)
 	}
 
-	conn := acctest.Provider.Meta().(*AWSClient).ecrpublicconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn
 	input := &ecrpublic.DescribeRepositoriesInput{}
 	_, err := conn.DescribeRepositories(input)
 	if acctest.PreCheckSkipError(err) {
