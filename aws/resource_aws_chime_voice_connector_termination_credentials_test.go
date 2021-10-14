@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
@@ -100,7 +101,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationCredentialsExists(name string)
 			return fmt.Errorf("no Chime Voice Connector termination credentials ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
 		input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -123,7 +124,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationCredentialsDestroy(s *terrafor
 		if rs.Type != "aws_chime_voice_connector_termination_credentials" {
 			continue
 		}
-		conn := acctest.Provider.Meta().(*AWSClient).chimeconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
 		input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}

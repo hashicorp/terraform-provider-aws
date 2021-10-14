@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsChimeVoiceConnectorStreaming() *schema.Resource {
@@ -53,7 +54,7 @@ func resourceAwsChimeVoiceConnectorStreaming() *schema.Resource {
 }
 
 func resourceAwsChimeVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
 	input := &chime.PutVoiceConnectorStreamingConfigurationInput{
@@ -81,7 +82,7 @@ func resourceAwsChimeVoiceConnectorStreamingCreate(ctx context.Context, d *schem
 }
 
 func resourceAwsChimeVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.GetVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -114,7 +115,7 @@ func resourceAwsChimeVoiceConnectorStreamingRead(ctx context.Context, d *schema.
 }
 
 func resourceAwsChimeVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -148,7 +149,7 @@ func resourceAwsChimeVoiceConnectorStreamingUpdate(ctx context.Context, d *schem
 }
 
 func resourceAwsChimeVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.DeleteVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),

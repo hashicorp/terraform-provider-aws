@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsChimeVoiceConnectorGroup() *schema.Resource {
@@ -52,7 +53,7 @@ func resourceAwsChimeVoiceConnectorGroup() *schema.Resource {
 }
 
 func resourceAwsChimeVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.CreateVoiceConnectorGroupInput{
 		Name: aws.String(d.Get("name").(string)),
@@ -73,7 +74,7 @@ func resourceAwsChimeVoiceConnectorGroupCreate(ctx context.Context, d *schema.Re
 }
 
 func resourceAwsChimeVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	getInput := &chime.GetVoiceConnectorGroupInput{
 		VoiceConnectorGroupId: aws.String(d.Id()),
@@ -98,7 +99,7 @@ func resourceAwsChimeVoiceConnectorGroupRead(ctx context.Context, d *schema.Reso
 }
 
 func resourceAwsChimeVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.UpdateVoiceConnectorGroupInput{
 		Name:                  aws.String(d.Get("name").(string)),
@@ -126,7 +127,7 @@ func resourceAwsChimeVoiceConnectorGroupUpdate(ctx context.Context, d *schema.Re
 }
 
 func resourceAwsChimeVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	if v, ok := d.GetOk("connector"); ok && v.(*schema.Set).Len() > 0 {
 		if err := resourceAwsChimeVoiceConnectorGroupUpdate(ctx, d, meta); err != nil {

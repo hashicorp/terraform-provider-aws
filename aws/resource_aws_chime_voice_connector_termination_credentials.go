@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsChimeVoiceConnectorTerminationCredentials() *schema.Resource {
@@ -54,7 +55,7 @@ func resourceAwsChimeVoiceConnectorTerminationCredentials() *schema.Resource {
 }
 
 func resourceAwsChimeVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -74,7 +75,7 @@ func resourceAwsChimeVoiceConnectorTerminationCredentialsCreate(ctx context.Cont
 }
 
 func resourceAwsChimeVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -97,7 +98,7 @@ func resourceAwsChimeVoiceConnectorTerminationCredentialsRead(ctx context.Contex
 }
 
 func resourceAwsChimeVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	if d.HasChanges("credentials") {
 		input := &chime.PutVoiceConnectorTerminationCredentialsInput{
@@ -116,7 +117,7 @@ func resourceAwsChimeVoiceConnectorTerminationCredentialsUpdate(ctx context.Cont
 }
 
 func resourceAwsChimeVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.DeleteVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(d.Id()),

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsChimeVoiceConnector() *schema.Resource {
@@ -48,7 +49,7 @@ func resourceAwsChimeVoiceConnector() *schema.Resource {
 }
 
 func resourceAwsChimeVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	createInput := &chime.CreateVoiceConnectorInput{
 		Name:              aws.String(d.Get("name").(string)),
@@ -70,7 +71,7 @@ func resourceAwsChimeVoiceConnectorCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsChimeVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	getInput := &chime.GetVoiceConnectorInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -96,7 +97,7 @@ func resourceAwsChimeVoiceConnectorRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAwsChimeVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	if d.HasChanges("name", "require_encryption") {
 		updateInput := &chime.UpdateVoiceConnectorInput{
@@ -118,7 +119,7 @@ func resourceAwsChimeVoiceConnectorUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAwsChimeVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.DeleteVoiceConnectorInput{
 		VoiceConnectorId: aws.String(d.Id()),

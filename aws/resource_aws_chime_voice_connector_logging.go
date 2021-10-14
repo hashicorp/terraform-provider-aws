@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsChimeVoiceConnectorLogging() *schema.Resource {
@@ -37,7 +38,7 @@ func resourceAwsChimeVoiceConnectorLogging() *schema.Resource {
 }
 
 func resourceAwsChimeVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	vcId := d.Get("voice_connector_id").(string)
 	input := &chime.PutVoiceConnectorLoggingConfigurationInput{
@@ -56,7 +57,7 @@ func resourceAwsChimeVoiceConnectorLoggingCreate(ctx context.Context, d *schema.
 }
 
 func resourceAwsChimeVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.GetVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -80,7 +81,7 @@ func resourceAwsChimeVoiceConnectorLoggingRead(ctx context.Context, d *schema.Re
 }
 
 func resourceAwsChimeVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	if d.HasChange("enable_sip_logs") {
 		input := &chime.PutVoiceConnectorLoggingConfigurationInput{
@@ -104,7 +105,7 @@ func resourceAwsChimeVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.
 }
 
 func resourceAwsChimeVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).chimeconn
+	conn := meta.(*conns.AWSClient).ChimeConn
 
 	input := &chime.PutVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
