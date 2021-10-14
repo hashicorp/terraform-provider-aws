@@ -124,7 +124,7 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 
 		for _, fileSystem := range describeResp.FileSystems {
 
-			tags := tftags.EfsKeyValueTags(fileSystem.Tags)
+			tags := KeyValueTags(fileSystem.Tags)
 
 			if !tags.ContainsAll(tagsToMatch) {
 				continue
@@ -159,7 +159,7 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
 	}
 
-	if err := d.Set("tags", tftags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

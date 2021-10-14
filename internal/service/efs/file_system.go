@@ -166,7 +166,7 @@ func resourceFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	createOpts := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
 		ThroughputMode: aws.String(throughputMode),
-		Tags:           tags.IgnoreAws().EfsTags(),
+		Tags:           Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("availability_zone_name"); ok {
@@ -273,7 +273,7 @@ func resourceFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.EfsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EFS file system (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -310,7 +310,7 @@ func resourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_id", fs.OwnerId)
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
 
-	tags := tftags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

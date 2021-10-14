@@ -131,7 +131,7 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := efs.CreateAccessPointInput{
 		FileSystemId: aws.String(fsId),
-		Tags:         tags.IgnoreAws().EfsTags(),
+		Tags:         Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("posix_user"); ok {
@@ -164,7 +164,7 @@ func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.EfsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EFS file system (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -218,7 +218,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting root directory: %w", err)
 	}
 
-	tags := tftags.EfsKeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
