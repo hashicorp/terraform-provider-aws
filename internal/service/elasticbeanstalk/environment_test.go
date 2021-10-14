@@ -71,7 +71,7 @@ func sweepEnvironments(region string) error {
 	return errors
 }
 
-func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_basic(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
@@ -114,7 +114,7 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_tier(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tier(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 	beanstalkQueuesNameRegexp := regexp.MustCompile("https://sqs.+?awseb[^,]+")
 
@@ -147,7 +147,7 @@ func TestAccAWSBeanstalkEnv_tier(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_cname_prefix(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnvCNAME_prefix(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
@@ -181,7 +181,7 @@ func TestAccAWSBeanstalkEnv_cname_prefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_config(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
@@ -228,7 +228,7 @@ func TestAccAWSBeanstalkEnv_config(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_resource(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_resource(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
@@ -259,7 +259,7 @@ func TestAccAWSBeanstalkEnv_resource(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_tags(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
@@ -305,7 +305,7 @@ func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_template_change(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnvTemplate_change(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
@@ -339,7 +339,7 @@ func TestAccAWSBeanstalkEnv_template_change(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_settings_update(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnvSettings_update(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
@@ -383,7 +383,7 @@ func TestAccAWSBeanstalkEnv_settings_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_version_label(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnvVersion_label(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
@@ -420,7 +420,7 @@ func TestAccAWSBeanstalkEnv_version_label(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_settingWithJSONValue(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"
@@ -455,7 +455,7 @@ func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkEnv_platformArn(t *testing.T) {
+func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_platformARN(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
 	resourceName := "aws_elastic_beanstalk_environment.test"

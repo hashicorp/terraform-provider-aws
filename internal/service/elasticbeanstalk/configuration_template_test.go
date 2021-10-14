@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
+func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_basic(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -33,7 +33,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkConfigurationTemplate_VPC(t *testing.T) {
+func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_vpc(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -52,7 +52,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_VPC(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkConfigurationTemplate_Setting(t *testing.T) {
+func TestAccElasticBeanstalkConfigurationTemplate_Beanstalk_setting(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
 	resource.ParallelTest(t, resource.TestCase{

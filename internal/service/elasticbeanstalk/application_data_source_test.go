@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAwsElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
+func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	dataSourceResourceName := "data.aws_elastic_beanstalk_application.test"
 	resourceName := "aws_elastic_beanstalk_application.tftest"

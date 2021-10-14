@@ -66,7 +66,7 @@ func sweepApplications(region string) error {
 	return errors
 }
 
-func TestAccAWSBeanstalkApp_basic(t *testing.T) {
+func TestAccElasticBeanstalkApplication_BeanstalkApp_basic(t *testing.T) {
 	var app elasticbeanstalk.ApplicationDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_application.tftest"
@@ -92,7 +92,7 @@ func TestAccAWSBeanstalkApp_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
+func TestAccElasticBeanstalkApplication_BeanstalkApp_appVersionLifecycle(t *testing.T) {
 	var app elasticbeanstalk.ApplicationDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -152,7 +152,7 @@ func TestAccAWSBeanstalkApp_appversionlifecycle(t *testing.T) {
 	})
 }
 
-func TestAccAWSBeanstalkApp_tags(t *testing.T) {
+func TestAccElasticBeanstalkApplication_BeanstalkApp_tags(t *testing.T) {
 	var app elasticbeanstalk.ApplicationDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_application.tftest"
