@@ -108,7 +108,7 @@ func sweepBucketObjects(region string) error {
 	return nil
 }
 
-func TestAccAWSS3BucketObject_noNameNoKey(t *testing.T) {
+func TestAccS3BucketObject_noNameNoKey(t *testing.T) {
 	bucketError := regexp.MustCompile(`bucket must not be empty`)
 	keyError := regexp.MustCompile(`key must not be empty`)
 
@@ -132,7 +132,7 @@ func TestAccAWSS3BucketObject_noNameNoKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_empty(t *testing.T) {
+func TestAccS3BucketObject_empty(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -162,7 +162,7 @@ func TestAccAWSS3BucketObject_empty(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_source(t *testing.T) {
+func TestAccS3BucketObject_source(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -194,7 +194,7 @@ func TestAccAWSS3BucketObject_source(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_content(t *testing.T) {
+func TestAccS3BucketObject_content(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -224,7 +224,7 @@ func TestAccAWSS3BucketObject_content(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_etagEncryption(t *testing.T) {
+func TestAccS3BucketObject_etagEncryption(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -257,7 +257,7 @@ func TestAccAWSS3BucketObject_etagEncryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_contentBase64(t *testing.T) {
+func TestAccS3BucketObject_contentBase64(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -280,7 +280,7 @@ func TestAccAWSS3BucketObject_contentBase64(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_sourceHashTrigger(t *testing.T) {
+func TestAccS3BucketObject_sourceHashTrigger(t *testing.T) {
 	var obj, updated_obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -336,7 +336,7 @@ func TestAccAWSS3BucketObject_sourceHashTrigger(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_withContentCharacteristics(t *testing.T) {
+func TestAccS3BucketObject_withContentCharacteristics(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -363,7 +363,7 @@ func TestAccAWSS3BucketObject_withContentCharacteristics(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_nonVersioned(t *testing.T) {
+func TestAccS3BucketObject_nonVersioned(t *testing.T) {
 	sourceInitial := testAccBucketObjectCreateTempFile(t, "initial object state")
 	defer os.Remove(sourceInitial)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -395,7 +395,7 @@ func TestAccAWSS3BucketObject_nonVersioned(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_updates(t *testing.T) {
+func TestAccS3BucketObject_updates(t *testing.T) {
 	var originalObj, modifiedObj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -444,7 +444,7 @@ func TestAccAWSS3BucketObject_updates(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_updateSameFile(t *testing.T) {
+func TestAccS3BucketObject_updateSameFile(t *testing.T) {
 	var originalObj, modifiedObj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -491,7 +491,7 @@ func TestAccAWSS3BucketObject_updateSameFile(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
+func TestAccS3BucketObject_updatesWithVersioning(t *testing.T) {
 	var originalObj, modifiedObj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -535,7 +535,7 @@ func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) {
+func TestAccS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) {
 	var originalObj, modifiedObj s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_object.test"
@@ -574,7 +574,7 @@ func TestAccAWSS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) 
 	})
 }
 
-func TestAccAWSS3BucketObject_kms(t *testing.T) {
+func TestAccS3BucketObject_kms(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -608,7 +608,7 @@ func TestAccAWSS3BucketObject_kms(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_sse(t *testing.T) {
+func TestAccS3BucketObject_sse(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -642,7 +642,7 @@ func TestAccAWSS3BucketObject_sse(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_acl(t *testing.T) {
+func TestAccS3BucketObject_acl(t *testing.T) {
 	var obj1, obj2, obj3 s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -693,7 +693,7 @@ func TestAccAWSS3BucketObject_acl(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_metadata(t *testing.T) {
+func TestAccS3BucketObject_metadata(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
@@ -740,7 +740,7 @@ func TestAccAWSS3BucketObject_metadata(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
+func TestAccS3BucketObject_storageClass(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -803,7 +803,7 @@ func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_tags(t *testing.T) {
+func TestAccS3BucketObject_tags(t *testing.T) {
 	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_object.object"
@@ -875,7 +875,7 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
+func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_object.object"
@@ -947,7 +947,7 @@ func TestAccAWSS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
+func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_object.object"
@@ -1012,7 +1012,7 @@ func TestAccAWSS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_tagsMultipleSlashes(t *testing.T) {
+func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_object.object"
@@ -1077,7 +1077,7 @@ func TestAccAWSS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
+func TestAccS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 	var obj1, obj2, obj3 s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1125,7 +1125,7 @@ func TestAccAWSS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_objectLockLegalHoldStartWithOn(t *testing.T) {
+func TestAccS3BucketObject_objectLockLegalHoldStartWithOn(t *testing.T) {
 	var obj1, obj2 s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1161,7 +1161,7 @@ func TestAccAWSS3BucketObject_objectLockLegalHoldStartWithOn(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
+func TestAccS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
 	var obj1, obj2, obj3 s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1210,7 +1210,7 @@ func TestAccAWSS3BucketObject_objectLockRetentionStartWithNone(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
+func TestAccS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1271,7 +1271,7 @@ func TestAccAWSS3BucketObject_objectLockRetentionStartWithSet(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_objectBucketKeyEnabled(t *testing.T) {
+func TestAccS3BucketObject_objectBucketKeyEnabled(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1294,7 +1294,7 @@ func TestAccAWSS3BucketObject_objectBucketKeyEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_bucketBucketKeyEnabled(t *testing.T) {
+func TestAccS3BucketObject_bucketBucketKeyEnabled(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1317,7 +1317,7 @@ func TestAccAWSS3BucketObject_bucketBucketKeyEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_defaultBucketSSE(t *testing.T) {
+func TestAccS3BucketObject_defaultBucketSSE(t *testing.T) {
 	var obj1 s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1339,7 +1339,7 @@ func TestAccAWSS3BucketObject_defaultBucketSSE(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketObject_ignoreTags(t *testing.T) {
+func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 	var obj s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_object.object"
