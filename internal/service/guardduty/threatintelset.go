@@ -88,7 +88,7 @@ func resourceThreatintelsetCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().GuarddutyTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateThreatIntelSet(input)
@@ -153,7 +153,7 @@ func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", resp.Name)
 	d.Set("activate", *resp.Status == guardduty.ThreatIntelSetStatusActive)
 
-	tags := tftags.GuarddutyKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -200,7 +200,7 @@ func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.GuarddutyUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating GuardDuty Threat Intel Set (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
