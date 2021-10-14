@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsOutpostsSites() *schema.Resource {
+func DataSourceSites() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOutpostsSitesRead,
+		Read: dataSourceSitesRead,
 
 		Schema: map[string]*schema.Schema{
 			"ids": {
@@ -23,7 +23,7 @@ func dataSourceAwsOutpostsSites() *schema.Resource {
 	}
 }
 
-func dataSourceAwsOutpostsSitesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSitesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OutpostsConn
 
 	input := &outposts.ListSitesInput{}
