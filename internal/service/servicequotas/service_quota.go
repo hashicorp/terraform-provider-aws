@@ -139,7 +139,7 @@ func resourceServiceQuotaCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
-	serviceCode, quotaCode, err := resourceAwsServiceQuotasServiceQuotaParseID(d.Id())
+	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -239,7 +239,7 @@ func resourceServiceQuotaUpdate(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*conns.AWSClient).ServiceQuotasConn
 
 	value := d.Get("value").(float64)
-	serviceCode, quotaCode, err := resourceAwsServiceQuotasServiceQuotaParseID(d.Id())
+	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -266,7 +266,7 @@ func resourceServiceQuotaUpdate(d *schema.ResourceData, meta interface{}) error 
 	return resourceServiceQuotaRead(d, meta)
 }
 
-func resourceAwsServiceQuotasServiceQuotaParseID(id string) (string, string, error) {
+func resourceServiceQuotaParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, "/", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
