@@ -14,18 +14,18 @@ import (
 )
 
 func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
-	privateKey1 := tlsRsaPrivateKeyPem(2048)
-	privateKey2 := tlsRsaPrivateKeyPem(2048)
-	publicKey1 := tlsRsaPublicKeyPem(privateKey1)
-	publicKey2 := tlsRsaPublicKeyPem(privateKey2)
-	certificate1 := tlsRsaX509SelfSignedCertificatePem(privateKey1, "example.com")
+	privateKey1 := acctest.TLSRSAPrivateKeyPEM(2048)
+	privateKey2 := acctest.TLSRSAPrivateKeyPEM(2048)
+	publicKey1 := acctest.TLSRSAPublicKeyPEM(privateKey1)
+	publicKey2 := acctest.TLSRSAPublicKeyPEM(privateKey2)
+	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey1, "example.com")
 	rString := sdkacctest.RandString(8)
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLoadBalancerBackendServerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -65,7 +65,7 @@ func policyInBackendServerPolicies(str string, list []string) bool {
 }
 
 func testAccCheckAWSLoadBalancerBackendServerPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbconn
+	conn := acctest.Provider.Meta().(*AWSClient).elbconn
 
 	for _, rs := range s.RootModule().Resources {
 		switch {
@@ -115,7 +115,7 @@ func testAccCheckAWSLoadBalancerBackendServerPolicyDestroy(s *terraform.State) e
 
 func testAccCheckAWSLoadBalancerBackendServerPolicyState(loadBalancerName string, loadBalancerBackendAuthPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		elbconn := testAccProvider.Meta().(*AWSClient).elbconn
+		elbconn := acctest.Provider.Meta().(*AWSClient).elbconn
 
 		loadBalancerDescription, err := elbconn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(loadBalancerName)},
@@ -206,7 +206,7 @@ resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-4
     aws_load_balancer_policy.test-backend-auth-policy0.policy_name,
   ]
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(privateKey), tlsPemEscapeNewlines(publicKey))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey), acctest.TLSPEMEscapeNewlines(publicKey))
 }
 
 func testAccAWSLoadBalancerBackendServerPolicyConfig_basic1(rName, privateKey1, publicKey1, certificate1, publicKey2 string) string {
@@ -284,7 +284,7 @@ resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-4
     aws_load_balancer_policy.test-backend-auth-policy0.policy_name,
   ]
 }
-`, rName, tlsPemEscapeNewlines(certificate1), tlsPemEscapeNewlines(privateKey1), tlsPemEscapeNewlines(publicKey1), tlsPemEscapeNewlines(publicKey2))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate1), acctest.TLSPEMEscapeNewlines(privateKey1), acctest.TLSPEMEscapeNewlines(publicKey1), acctest.TLSPEMEscapeNewlines(publicKey2))
 }
 
 func testAccAWSLoadBalancerBackendServerPolicyConfig_basic2(rName, privateKey, certificate string) string {
@@ -320,5 +320,5 @@ resource "aws_elb" "test-lb" {
     Name = "tf-acc-test"
   }
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(privateKey))
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey))
 }

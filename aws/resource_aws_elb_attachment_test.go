@@ -18,7 +18,7 @@ func TestAccAWSELBAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccAWSELBAttachment_drift(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	deregInstance := func() {
-		conn := testAccProvider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*AWSClient).elbconn
 
 		deRegisterInstancesOpts := elb.DeregisterInstancesFromLoadBalancerInput{
 			LoadBalancerName: conf.LoadBalancerName,
@@ -78,7 +78,7 @@ func TestAccAWSELBAttachment_drift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{

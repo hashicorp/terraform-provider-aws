@@ -72,7 +72,7 @@ func TestAccAWSELB_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +109,7 @@ func TestAccAWSELB_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -132,7 +132,7 @@ func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,7 +154,7 @@ func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -194,7 +194,7 @@ func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +233,7 @@ func TestAccAWSELB_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -255,7 +255,7 @@ func TestAccAWSELB_generatedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -277,7 +277,7 @@ func TestAccAWSELB_generatesNameForZeroValue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -298,7 +298,7 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -327,7 +327,7 @@ func TestAccAWSELB_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -369,8 +369,8 @@ func TestAccAWSELB_tags(t *testing.T) {
 
 func TestAccAWSELB_Listener_SSLCertificateID_IAMServerCertificate(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 	rName := fmt.Sprintf("tf-acctest-%s", sdkacctest.RandString(10))
 	resourceName := "aws_elb.test"
 
@@ -386,7 +386,7 @@ func TestAccAWSELB_Listener_SSLCertificateID_IAMServerCertificate(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -415,7 +415,7 @@ func TestAccAWSELB_swap_subnets(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -453,7 +453,7 @@ func TestAccAWSELB_InstanceAttaching(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -482,7 +482,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -546,7 +546,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener removal
-					conn := testAccProvider.Meta().(*AWSClient).elbconn
+					conn := acctest.Provider.Meta().(*AWSClient).elbconn
 					input := &elb.DeleteLoadBalancerListenersInput{
 						LoadBalancerName:  conf.LoadBalancerName,
 						LoadBalancerPorts: []*int64{aws.Int64(int64(80))},
@@ -570,7 +570,7 @@ func TestAccAWSELB_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener addition
-					conn := testAccProvider.Meta().(*AWSClient).elbconn
+					conn := acctest.Provider.Meta().(*AWSClient).elbconn
 					input := &elb.CreateLoadBalancerListenersInput{
 						LoadBalancerName: conf.LoadBalancerName,
 						Listeners: []*elb.Listener{
@@ -608,7 +608,7 @@ func TestAccAWSELB_HealthCheck(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -634,7 +634,7 @@ func TestAccAWSELB_Timeout(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -659,7 +659,7 @@ func TestAccAWSELB_ConnectionDraining(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -692,7 +692,7 @@ func TestAccAWSELB_SecurityGroups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -919,7 +919,7 @@ func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {
 }
 
 func testAccCheckAWSELBDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbconn
+	conn := acctest.Provider.Meta().(*AWSClient).elbconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" {
@@ -953,7 +953,7 @@ func testAccCheckAWSELBDestroy(s *terraform.State) error {
 
 func testAccCheckAWSELBDisappears(loadBalancer *elb.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*AWSClient).elbconn
 
 		input := elb.DeleteLoadBalancerInput{
 			LoadBalancerName: loadBalancer.LoadBalancerName,
@@ -999,7 +999,7 @@ func testAccCheckAWSELBExists(n string, res *elb.LoadBalancerDescription) resour
 			return fmt.Errorf("No ELB ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbconn
+		conn := acctest.Provider.Meta().(*AWSClient).elbconn
 
 		describe, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},
@@ -1689,7 +1689,7 @@ resource "aws_elb" "test" {
     ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
   }
 }
-`, certName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), lbProtocol)
+`, certName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), lbProtocol)
 }
 
 func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName, certificate, key string) string {
@@ -1729,7 +1729,7 @@ resource "aws_elb" "test" {
     ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
   }
 }
-`, certName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, certName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
 const testAccAWSELBConfig_subnets = `

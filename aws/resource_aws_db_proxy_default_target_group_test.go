@@ -16,12 +16,12 @@ import (
 func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,12 +51,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
 func TestAccAWSDBProxyDefaultTargetGroup_EmptyConnectionPoolConfig(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,12 +86,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_EmptyConnectionPoolConfig(t *testing.T)
 func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,12 +120,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,12 +154,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -188,12 +188,12 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -222,13 +222,13 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T)
 func TestAccAWSDBProxyDefaultTargetGroup_SessionPinningFilters(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sessionPinningFilters := "EXCLUDE_VARIABLE_SETS"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -259,11 +259,11 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 	var v rds.DBProxy
 	dbProxyResourceName := "aws_db_proxy.test"
 	resourceName := "aws_db_proxy_default_target_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccDBProxyPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -272,7 +272,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 					testAccCheckAWSDBProxyExists(resourceName, &v),
 					// DB Proxy default Target Group implicitly exists so it cannot be removed.
 					// Verify disappearance handling for DB Proxy removal instead.
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDbProxy(), dbProxyResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDbProxy(), dbProxyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -281,7 +281,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSDBProxyTargetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_proxy_default_target_group" {
@@ -321,7 +321,7 @@ func testAccCheckAWSDBProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup
 			return fmt.Errorf("No DB Proxy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
 
 		opts := rds.DescribeDBProxyTargetGroupsInput{
 			DBProxyName:     aws.String(rs.Primary.ID),

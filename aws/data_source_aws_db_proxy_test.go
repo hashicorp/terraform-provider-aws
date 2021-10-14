@@ -13,12 +13,12 @@ import (
 func TestAccAWSDBProxyDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_db_proxy.test"
 	resourceName := "aws_db_proxy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBProxyDataSourceConfig(rName),

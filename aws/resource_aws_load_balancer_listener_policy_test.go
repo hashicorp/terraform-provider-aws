@@ -21,7 +21,7 @@ func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLoadBalancerListenerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,7 +58,7 @@ func policyInListenerPolicies(str string, list []string) bool {
 }
 
 func testAccCheckAWSLoadBalancerListenerPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbconn
+	conn := acctest.Provider.Meta().(*AWSClient).elbconn
 
 	for _, rs := range s.RootModule().Resources {
 		switch {
@@ -117,7 +117,7 @@ func testAccCheckAWSLoadBalancerListenerPolicyDestroy(s *terraform.State) error 
 
 func testAccCheckAWSLoadBalancerListenerPolicyState(loadBalancerName string, loadBalancerListenerPort int64, loadBalancerListenerPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		elbconn := testAccProvider.Meta().(*AWSClient).elbconn
+		elbconn := acctest.Provider.Meta().(*AWSClient).elbconn
 
 		loadBalancerDescription, err := elbconn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(loadBalancerName)},

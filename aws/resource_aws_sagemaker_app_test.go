@@ -72,13 +72,13 @@ func testSweepSagemakerApps(region string) error {
 
 func testAccAWSSagemakerApp_basic(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,13 +106,13 @@ func testAccAWSSagemakerApp_basic(t *testing.T) {
 
 func testAccAWSSagemakerApp_resourceSpec(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -136,13 +136,13 @@ func testAccAWSSagemakerApp_resourceSpec(t *testing.T) {
 
 func testAccAWSSagemakerApp_tags(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,20 +181,20 @@ func testAccAWSSagemakerApp_tags(t *testing.T) {
 
 func testAccAWSSagemakerApp_disappears(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSagemakerAppBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerAppExists(resourceName, &app),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerApp(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -203,7 +203,7 @@ func testAccAWSSagemakerApp_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerAppDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_app" {
@@ -245,7 +245,7 @@ func testAccCheckAWSSagemakerAppExists(n string, app *sagemaker.DescribeAppOutpu
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
 		domainID := rs.Primary.Attributes["domain_id"]
 		userProfileName := rs.Primary.Attributes["user_profile_name"]
 		appType := rs.Primary.Attributes["app_type"]
