@@ -17,41 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_mwaa_environment", &resource.Sweeper{
-		Name: "aws_mwaa_environment",
-		F:    sweepEnvironment,
-	})
-}
 
-func sweepEnvironment(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).MWAAConn
 
-	listOutput, err := conn.ListEnvironments(&mwaa.ListEnvironmentsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
-			log.Printf("[WARN] Skipping MWAA Environment sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving MWAA Environment: %s", err)
-	}
-	for _, environment := range listOutput.Environments {
-		name := aws.StringValue(environment)
-		r := tfmwaa.ResourceEnvironment()
-		d := r.Data(nil)
-		d.SetId(name)
 
-		err := r.Delete(d, client)
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete MWAA Environment %s: %s", name, err)
-		}
-	}
-	return nil
-}
 
 func TestAccMWAAEnvironment_basic(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
