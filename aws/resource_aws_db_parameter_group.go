@@ -134,7 +134,7 @@ func resourceAwsDbParameterGroupRead(d *schema.ResourceData, meta interface{}) e
 
 	describeResp, err := rdsconn.DescribeDBParameterGroups(&describeOpts)
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBParameterGroupNotFoundFault, "") {
 			log.Printf("[WARN] DB Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -350,14 +350,14 @@ func resourceAwsDbParameterGroupDelete(d *schema.ResourceData, meta interface{})
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
 		if err != nil {
-			if isAWSErr(err, "DBParameterGroupNotFoundFault", "") || isAWSErr(err, "InvalidDBParameterGroupState", "") {
+			if tfawserr.ErrMessageContains(err, "DBParameterGroupNotFoundFault", "") || tfawserr.ErrMessageContains(err, "InvalidDBParameterGroupState", "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
 	}
 	if err != nil {

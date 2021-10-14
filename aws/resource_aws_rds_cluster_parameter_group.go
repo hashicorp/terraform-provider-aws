@@ -278,7 +278,7 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 				err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 					_, err := rdsconn.ResetDBClusterParameterGroup(&resetOpts)
 					if err != nil {
-						if isAWSErr(err, "InvalidDBParameterGroupState", "has pending changes") {
+						if tfawserr.ErrMessageContains(err, "InvalidDBParameterGroupState", "has pending changes") {
 							return resource.RetryableError(err)
 						}
 						return resource.NonRetryableError(err)

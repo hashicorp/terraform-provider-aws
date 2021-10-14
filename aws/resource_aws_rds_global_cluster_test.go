@@ -509,7 +509,7 @@ func testAccCheckAWSRdsGlobalClusterDestroy(s *terraform.State) error {
 
 		globalCluster, err := rdsDescribeGlobalCluster(conn, rs.Primary.ID)
 
-		if isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
 			continue
 		}
 
@@ -572,7 +572,7 @@ func testAccPreCheckAWSRdsGlobalCluster(t *testing.T) {
 
 	_, err := conn.DescribeGlobalClusters(input)
 
-	if testAccPreCheckSkipError(err) || isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

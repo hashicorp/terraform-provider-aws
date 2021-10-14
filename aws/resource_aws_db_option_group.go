@@ -175,7 +175,7 @@ func resourceAwsDbOptionGroupRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Describe DB Option Group: %#v", params)
 	options, err := rdsconn.DescribeOptionGroups(params)
 
-	if isAWSErr(err, rds.ErrCodeOptionGroupNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeOptionGroupNotFoundFault, "") {
 		log.Printf("[WARN] RDS Option Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -285,14 +285,14 @@ func resourceAwsDbOptionGroupUpdate(d *schema.ResourceData, meta interface{}) er
 				_, err := rdsconn.ModifyOptionGroup(modifyOpts)
 				if err != nil {
 					// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE
-					if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+					if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = rdsconn.ModifyOptionGroup(modifyOpts)
 			}
 			if err != nil {
@@ -323,7 +323,7 @@ func resourceAwsDbOptionGroupDelete(d *schema.ResourceData, meta interface{}) er
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := rdsconn.DeleteOptionGroup(deleteOpts)
 		if err != nil {
-			if isAWSErr(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
 				log.Printf(`[DEBUG] AWS believes the RDS Option Group is still in use, this could be because of a internal snapshot create by AWS, see github issue #4597 for more info. retrying...`)
 				return resource.RetryableError(err)
 			}
@@ -331,7 +331,7 @@ func resourceAwsDbOptionGroupDelete(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = rdsconn.DeleteOptionGroup(deleteOpts)
 	}
 	if err != nil {

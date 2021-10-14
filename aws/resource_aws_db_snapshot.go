@@ -160,7 +160,7 @@ func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	resp, err := conn.DescribeDBSnapshots(params)
 
-	if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
 		log.Printf("[WARN] AWS DB Snapshot (%s) is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -219,7 +219,7 @@ func resourceAwsDbSnapshotDelete(d *schema.ResourceData, meta interface{}) error
 		DBSnapshotIdentifier: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteDBSnapshot(params)
-	if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
 		return nil
 	}
 
@@ -256,7 +256,7 @@ func resourceAwsDbSnapshotStateRefreshFunc(
 		log.Printf("[DEBUG] DB Snapshot describe configuration: %#v", opts)
 
 		resp, err := conn.DescribeDBSnapshots(opts)
-		if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
 			return nil, "", nil
 		}
 		if err != nil {
