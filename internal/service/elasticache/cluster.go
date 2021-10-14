@@ -285,7 +285,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		req.CacheSecurityGroupNames = flex.ExpandStringSet(d.Get("security_group_names").(*schema.Set))
 		req.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
-		req.Tags = tags.IgnoreAws().ElasticacheTags()
+		req.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if v, ok := d.GetOk("cluster_id"); ok {
@@ -430,7 +430,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", c.ARN)
 
-	tags, err := tftags.ElasticacheListTags(conn, aws.StringValue(c.ARN))
+	tags, err := ListTags(conn, aws.StringValue(c.ARN))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ElastiCache Cluster (%s): %w", d.Id(), err)
@@ -496,7 +496,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ElastiCache Cluster (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

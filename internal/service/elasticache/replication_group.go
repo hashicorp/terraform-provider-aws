@@ -322,7 +322,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		ReplicationGroupId:          aws.String(d.Get("replication_group_id").(string)),
 		ReplicationGroupDescription: aws.String(d.Get("replication_group_description").(string)),
 		AutoMinorVersionUpgrade:     aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                        tags.IgnoreAws().ElasticacheTags(),
+		Tags:                        Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("global_replication_group_id"); ok {
@@ -516,7 +516,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %w", aws.StringValue(rgp.ARN), err)
 	}
-	tags, err := tftags.ElasticacheListTags(conn, aws.StringValue(rgp.ARN))
+	tags, err := ListTags(conn, aws.StringValue(rgp.ARN))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %w", aws.StringValue(rgp.ARN), err)
@@ -687,7 +687,7 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}

@@ -82,7 +82,7 @@ func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Tags are currently only supported in AWS Commercial.
 	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		input.Tags = tags.IgnoreAws().ElasticacheTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	out, err := conn.CreateUserGroup(input)
@@ -134,7 +134,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Tags are currently only supported in AWS Commercial.
 	if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		tags, err := tftags.ElasticacheListTags(conn, aws.StringValue(resp.ARN))
+		tags, err := ListTags(conn, aws.StringValue(resp.ARN))
 
 		if err != nil {
 			return fmt.Errorf("error listing tags for ElastiCache User (%s): %w", aws.StringValue(resp.ARN), err)
@@ -208,7 +208,7 @@ func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ElastiCache User Group (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
