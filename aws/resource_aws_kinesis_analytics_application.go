@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
+func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisAnalyticsApplicationCreate,
-		Read:   resourceAwsKinesisAnalyticsApplicationRead,
-		Update: resourceAwsKinesisAnalyticsApplicationUpdate,
-		Delete: resourceAwsKinesisAnalyticsApplicationDelete,
+		Create: resourceApplicationCreate,
+		Read:   resourceApplicationRead,
+		Update: resourceApplicationUpdate,
+		Delete: resourceApplicationDelete,
 
 		CustomizeDiff: customdiff.Sequence(
 			SetTagsDiff,
@@ -615,7 +615,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 	}
 }
 
-func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -697,10 +697,10 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsKinesisAnalyticsApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -763,7 +763,7 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn
 
 	if d.HasChanges("cloudwatch_logging_options", "code", "inputs", "outputs", "reference_data_sources") {
@@ -1155,10 +1155,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	return resourceAwsKinesisAnalyticsApplicationRead(d, meta)
+	return resourceApplicationRead(d, meta)
 }
 
-func resourceAwsKinesisAnalyticsApplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
