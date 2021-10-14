@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func CallerIdentity(conn *sts.STS) (*sts.GetCallerIdentityOutput, error) {
+func FindCallerIdentity(conn *sts.STS) (*sts.GetCallerIdentityOutput, error) {
 	input := &sts.GetCallerIdentityInput{}
 
 	output, err := conn.GetCallerIdentity(input)
