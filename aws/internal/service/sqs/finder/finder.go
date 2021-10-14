@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func QueueAttributesByURL(conn *sqs.SQS, url string) (map[string]string, error) {
+func FindQueueAttributesByURL(conn *sqs.SQS, url string) (map[string]string, error) {
 	input := &sqs.GetQueueAttributesInput{
 		AttributeNames: aws.StringSlice([]string{sqs.QueueAttributeNameAll}),
 		QueueUrl:       aws.String(url),
@@ -37,7 +37,7 @@ func QueueAttributesByURL(conn *sqs.SQS, url string) (map[string]string, error) 
 	return aws.StringValueMap(output.Attributes), nil
 }
 
-func QueuePolicyByURL(conn *sqs.SQS, url string) (string, error) {
+func FindQueuePolicyByURL(conn *sqs.SQS, url string) (string, error) {
 	input := &sqs.GetQueueAttributesInput{
 		AttributeNames: aws.StringSlice([]string{sqs.QueueAttributeNamePolicy}),
 		QueueUrl:       aws.String(url),

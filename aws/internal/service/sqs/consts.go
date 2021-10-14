@@ -5,12 +5,12 @@ const (
 )
 
 const (
-	FifoQueueNameSuffix = ".fifo"
+	FIFOQueueNameSuffix = ".fifo"
 )
 
 const (
 	DefaultQueueDelaySeconds                  = 0
-	DefaultQueueKmsDataKeyReusePeriodSeconds  = 300
+	DefaultQueueKMSDataKeyReusePeriodSeconds  = 300
 	DefaultQueueMaximumMessageSize            = 262_144 // 256 KiB.
 	DefaultQueueMessageRetentionPeriod        = 345_600 // 4 days.
 	DefaultQueueReceiveMessageWaitTimeSeconds = 0
@@ -30,13 +30,13 @@ func DeduplicationScope_Values() []string {
 }
 
 const (
-	FifoThroughputLimitPerMessageGroupId = "perMessageGroupId"
-	FifoThroughputLimitPerQueue          = "perQueue"
+	FIFOThroughputLimitPerMessageGroupID = "perMessageGroupId"
+	FIFOThroughputLimitPerQueue          = "perQueue"
 )
 
-func FifoThroughputLimit_Values() []string {
+func FIFOThroughputLimit_Values() []string {
 	return []string{
-		FifoThroughputLimitPerMessageGroupId,
-		FifoThroughputLimitPerQueue,
+		FIFOThroughputLimitPerMessageGroupID,
+		FIFOThroughputLimitPerQueue,
 	}
 }

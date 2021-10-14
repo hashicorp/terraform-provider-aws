@@ -6,11 +6,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 )
 
-func QueueState(conn *sqs.SQS, url string) resource.StateRefreshFunc {
+func statusQueueState(conn *sqs.SQS, url string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.QueueAttributesByURL(conn, url)
+		output, err := tfsqs.FindQueueAttributesByURL(conn, url)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

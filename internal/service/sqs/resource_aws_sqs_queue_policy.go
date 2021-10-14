@@ -15,6 +15,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 )
 
 var (
@@ -74,7 +82,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(url)
 
-	err = waiter.QueueAttributesPropagated(conn, d.Id(), policyAttributes)
+	err = tfsqs.waitQueueAttributesPropagated(conn, d.Id(), policyAttributes)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for SQS Queue Policy (%s) to be set: %w", d.Id(), err)
@@ -86,7 +94,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 func resourceQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
-	policy, err := finder.QueuePolicyByURL(conn, d.Id())
+	policy, err := tfsqs.FindQueuePolicyByURL(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SQS Queue Policy (%s) not found, removing from state", d.Id())
@@ -121,7 +129,7 @@ func resourceQueuePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting SQS Queue Policy (%s): %w", d.Id(), err)
 	}
 
-	err = waiter.QueueAttributesPropagated(conn, d.Id(), sqsQueueEmptyPolicyAttributes)
+	err = tfsqs.waitQueueAttributesPropagated(conn, d.Id(), sqsQueueEmptyPolicyAttributes)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for SQS Queue Policy (%s) to delete: %w", d.Id(), err)
