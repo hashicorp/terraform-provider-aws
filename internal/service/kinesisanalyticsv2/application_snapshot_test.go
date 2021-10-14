@@ -141,5 +141,5 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(n string, v *kinesi
 }
 
 func testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName string) string {
-	return testAccKinesisAnalyticsV2ApplicationConfigStartSnapshotableFlinkApplication(rName, "SKIP_RESTORE_FROM_SNAPSHOT", "")
+	return testAccKinesisAnalyticsV2ApplicationConfigStartSnapshotableFlinkApplication(rName, "SKIP_RESTORE_FROM_SNAPSHOT", "", false)
 }

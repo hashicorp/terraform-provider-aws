@@ -1380,6 +1380,20 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
+			if d.HasChange("application_configuration.0.run_configuration") {
+				application, err := finder.ApplicationDetailByName(conn, applicationName)
+
+				if err != nil {
+					return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+				}
+
+				if actual, expected := aws.StringValue(application.ApplicationStatus), kinesisanalyticsv2.ApplicationStatusRunning; actual == expected {
+					input.RunConfigurationUpdate = expandKinesisAnalyticsV2RunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]interface{}))
+
+					updateApplication = true
+				}
+			}
+
 			input.ApplicationConfigurationUpdate = applicationConfigurationUpdate
 		}
 
@@ -2481,6 +2495,46 @@ func expandKinesisAnalyticsV2VpcConfigurationUpdate(vVpcConfiguration []interfac
 	}
 
 	return vpcConfigurationUpdate
+}
+
+func expandKinesisAnalyticsV2RunConfigurationUpdate(vRunConfigurationUpdate []interface{}) *kinesisanalyticsv2.RunConfigurationUpdate {
+	if len(vRunConfigurationUpdate) == 0 || vRunConfigurationUpdate[0] == nil {
+		return nil
+	}
+
+	runConfigurationUpdate := &kinesisanalyticsv2.RunConfigurationUpdate{}
+
+	mRunConfiguration := vRunConfigurationUpdate[0].(map[string]interface{})
+
+	if vApplicationRestoreConfiguration, ok := mRunConfiguration["application_restore_configuration"].([]interface{}); ok && len(vApplicationRestoreConfiguration) > 0 && vApplicationRestoreConfiguration[0] != nil {
+		applicationRestoreConfiguration := &kinesisanalyticsv2.ApplicationRestoreConfiguration{}
+
+		mApplicationRestoreConfiguration := vApplicationRestoreConfiguration[0].(map[string]interface{})
+
+		if vApplicationRestoreType, ok := mApplicationRestoreConfiguration["application_restore_type"].(string); ok && vApplicationRestoreType != "" {
+			applicationRestoreConfiguration.ApplicationRestoreType = aws.String(vApplicationRestoreType)
+		}
+
+		if vSnapshotName, ok := mApplicationRestoreConfiguration["snapshot_name"].(string); ok && vSnapshotName != "" {
+			applicationRestoreConfiguration.SnapshotName = aws.String(vSnapshotName)
+		}
+
+		runConfigurationUpdate.ApplicationRestoreConfiguration = applicationRestoreConfiguration
+	}
+
+	if vFlinkRunConfiguration, ok := mRunConfiguration["flink_run_configuration"].([]interface{}); ok && len(vFlinkRunConfiguration) > 0 && vFlinkRunConfiguration[0] != nil {
+		flinkRunConfiguration := &kinesisanalyticsv2.FlinkRunConfiguration{}
+
+		mFlinkRunConfiguration := vFlinkRunConfiguration[0].(map[string]interface{})
+
+		if vAllowNonRestoredState, ok := mFlinkRunConfiguration["allow_non_restored_state"].(bool); ok {
+			flinkRunConfiguration.AllowNonRestoredState = aws.Bool(vAllowNonRestoredState)
+		}
+
+		runConfigurationUpdate.FlinkRunConfiguration = flinkRunConfiguration
+	}
+
+	return runConfigurationUpdate
 }
 
 func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationConfigurationDescription *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
