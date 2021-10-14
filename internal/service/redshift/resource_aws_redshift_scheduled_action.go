@@ -1,4 +1,4 @@
-package aws
+package redshift
 
 import (
 	"fmt"
@@ -10,40 +10,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
-	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceScheduledAction() *schema.Resource {
@@ -209,7 +181,7 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 			return conn.CreateScheduledAction(input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, tfredshift.errCodeInvalidParameterValue, "The IAM role must delegate access to Amazon Redshift scheduler") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "The IAM role must delegate access to Amazon Redshift scheduler") {
 				return true, err
 			}
 
@@ -229,7 +201,7 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
-	scheduledAction, err := tfredshift.FindScheduledActionByName(conn, d.Id())
+	scheduledAction, err := FindScheduledActionByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Scheduled Action (%s) not found, removing from state", d.Id())

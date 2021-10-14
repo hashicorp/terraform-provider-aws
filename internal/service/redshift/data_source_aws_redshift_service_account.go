@@ -1,4 +1,4 @@
-package aws
+package redshift
 
 import (
 	"fmt"
