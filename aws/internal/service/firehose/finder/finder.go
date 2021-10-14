@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DeliveryStreamByName(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
+func FindDeliveryStreamByName(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
 	input := &firehose.DescribeDeliveryStreamInput{
 		DeliveryStreamName: aws.String(name),
 	}
@@ -34,8 +34,8 @@ func DeliveryStreamByName(conn *firehose.Firehose, name string) (*firehose.Deliv
 	return output.DeliveryStreamDescription, nil
 }
 
-func DeliveryStreamEncryptionConfigurationByName(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
-	output, err := DeliveryStreamByName(conn, name)
+func FindDeliveryStreamEncryptionConfigurationByName(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
+	output, err := FindDeliveryStreamByName(conn, name)
 
 	if err != nil {
 		return nil, err

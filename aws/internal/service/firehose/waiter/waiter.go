@@ -12,19 +12,19 @@ import (
 )
 
 const (
-	DeliveryStreamCreatedTimeout = 20 * time.Minute
-	DeliveryStreamDeletedTimeout = 20 * time.Minute
+	deliveryStreamCreatedTimeout = 20 * time.Minute
+	deliveryStreamDeletedTimeout = 20 * time.Minute
 
-	DeliveryStreamEncryptionEnabledTimeout  = 10 * time.Minute
-	DeliveryStreamEncryptionDisabledTimeout = 10 * time.Minute
+	deliveryStreamEncryptionEnabledTimeout  = 10 * time.Minute
+	deliveryStreamEncryptionDisabledTimeout = 10 * time.Minute
 )
 
-func DeliveryStreamCreated(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
+func waitDeliveryStreamCreated(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamStatusCreating},
 		Target:  []string{firehose.DeliveryStreamStatusActive},
-		Refresh: DeliveryStreamStatus(conn, name),
-		Timeout: DeliveryStreamCreatedTimeout,
+		Refresh: statusDeliveryStream(conn, name),
+		Timeout: deliveryStreamCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -40,12 +40,12 @@ func DeliveryStreamCreated(conn *firehose.Firehose, name string) (*firehose.Deli
 	return nil, err
 }
 
-func DeliveryStreamDeleted(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
+func waitDeliveryStreamDeleted(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamStatusDeleting},
 		Target:  []string{},
-		Refresh: DeliveryStreamStatus(conn, name),
-		Timeout: DeliveryStreamDeletedTimeout,
+		Refresh: statusDeliveryStream(conn, name),
+		Timeout: deliveryStreamDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -61,12 +61,12 @@ func DeliveryStreamDeleted(conn *firehose.Firehose, name string) (*firehose.Deli
 	return nil, err
 }
 
-func DeliveryStreamEncryptionEnabled(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
+func waitDeliveryStreamEncryptionEnabled(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamEncryptionStatusEnabling},
 		Target:  []string{firehose.DeliveryStreamEncryptionStatusEnabled},
-		Refresh: DeliveryStreamEncryptionConfigurationStatus(conn, name),
-		Timeout: DeliveryStreamEncryptionEnabledTimeout,
+		Refresh: statusDeliveryStreamEncryptionConfiguration(conn, name),
+		Timeout: deliveryStreamEncryptionEnabledTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -82,12 +82,12 @@ func DeliveryStreamEncryptionEnabled(conn *firehose.Firehose, name string) (*fir
 	return nil, err
 }
 
-func DeliveryStreamEncryptionDisabled(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
+func waitDeliveryStreamEncryptionDisabled(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamEncryptionStatusDisabling},
 		Target:  []string{firehose.DeliveryStreamEncryptionStatusDisabled},
-		Refresh: DeliveryStreamEncryptionConfigurationStatus(conn, name),
-		Timeout: DeliveryStreamEncryptionDisabledTimeout,
+		Refresh: statusDeliveryStreamEncryptionConfiguration(conn, name),
+		Timeout: deliveryStreamEncryptionDisabledTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
