@@ -20,65 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_connect_instance", &resource.Sweeper{
-		Name: "aws_connect_instance",
-		F:    sweepInstance,
-	})
-}
 
-func sweepInstance(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).ConnectConn
-	ctx := context.Background()
-	var errs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	// MaxResults:  Maximum value of 10. https://docs.aws.amazon.com/connect/latest/APIReference/API_ListInstances.html
-	input := &connect.ListInstancesInput{MaxResults: aws.Int64(tfconnect.ListInstancesMaxResults)}
-
-	err = conn.ListInstancesPagesWithContext(ctx, input, func(page *connect.ListInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, instanceSummary := range page.InstanceSummaryList {
-			if instanceSummary == nil {
-				continue
-			}
-
-			id := aws.StringValue(instanceSummary.Id)
-
-			log.Printf("[INFO] Deleting Connect Instance (%s)", id)
-			r := tfconnect.ResourceInstance()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Connect Instances: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Connect Instances for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Connect Instances sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccConnectInstance_serial(t *testing.T) {
