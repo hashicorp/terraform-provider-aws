@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
+func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
@@ -45,7 +45,7 @@ func testAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T) {
+func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
@@ -80,14 +80,14 @@ func testAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T
 	})
 }
 
-func testAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t *testing.T) {
+func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsWorkspacesWorkspaceConfig_workspaceIDAndDirectoryIDConflict(),
+				Config:      testAccWorkspaceDataSourceConfig_workspaceIDAndDirectoryIDConflict(),
 				ExpectError: regexp.MustCompile("\"workspace_id\": conflicts with directory_id"),
 			},
 		},
@@ -96,7 +96,7 @@ func testAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t
 
 func testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName, domain),
+		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
@@ -124,7 +124,7 @@ data "aws_workspaces_workspace" "test" {
 
 func testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName, domain),
+		testAccWorkspaceConfig_Prerequisites(rName, domain),
 		`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
@@ -151,7 +151,7 @@ data "aws_workspaces_workspace" "test" {
 `)
 }
 
-func testAccDataSourceAwsWorkspacesWorkspaceConfig_workspaceIDAndDirectoryIDConflict() string {
+func testAccWorkspaceDataSourceConfig_workspaceIDAndDirectoryIDConflict() string {
 	return `
 data "aws_workspaces_workspace" "test" {
   workspace_id = "ws-cj5xcxsz5"

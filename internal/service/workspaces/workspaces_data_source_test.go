@@ -7,21 +7,21 @@ import (
 func TestAccDataSourceAwsWorkspaces_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Bundle": {
-			"basic":                   testAccDataSourceAwsWorkspaceBundle_basic,
-			"bundleIDAndNameConflict": testAccDataSourceAwsWorkspaceBundle_bundleIDAndNameConflict,
-			"byOwnerName":             testAccDataSourceAwsWorkspaceBundle_byOwnerName,
-			"privateOwner":            testAccDataSourceAwsWorkspaceBundle_privateOwner,
+			"basic":                   testAccWorkspaceBundleDataSource_basic,
+			"bundleIDAndNameConflict": testAccWorkspaceBundleDataSource_bundleIDAndNameConflict,
+			"byOwnerName":             testAccWorkspaceBundleDataSource_byOwnerName,
+			"privateOwner":            testAccWorkspaceBundleDataSource_privateOwner,
 		},
 		"Directory": {
-			"basic": testAccDataSourceAwsWorkspacesDirectory_basic,
+			"basic": testAccDirectoryDataSource_basic,
 		},
 		"Image": {
-			"basic": testAccDataSourceAwsWorkspacesImage_basic,
+			"basic": testAccImageDataSource_basic,
 		},
 		"Workspace": {
-			"byWorkspaceID":                     testAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID,
-			"byDirectoryID_userName":            testAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName,
-			"workspaceIDAndDirectoryIDConflict": testAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict,
+			"byWorkspaceID":                     testAccWorkspaceDataSource_byWorkspaceID,
+			"byDirectoryID_userName":            testAccWorkspaceDataSource_byDirectoryID_userName,
+			"workspaceIDAndDirectoryIDConflict": testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict,
 		},
 	}
 

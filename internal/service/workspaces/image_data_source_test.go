@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
+func testAccImageDataSource_basic(t *testing.T) {
 	var image workspaces.WorkspaceImage
 	imageID := os.Getenv("AWS_WORKSPACES_IMAGE_ID")
 	dataSourceName := "data.aws_workspaces_image.test"
@@ -27,7 +27,7 @@ func testAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsWorkspacesImageConfig(imageID),
+				Config: testAccImageDataSourceConfig(imageID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspacesImageExists(dataSourceName, &image),
 					testAccCheckWorkspacesImageAttributes(dataSourceName, &image),
@@ -43,7 +43,7 @@ func testAccWorkspacesImagePreCheck(t *testing.T) {
 	}
 }
 
-func testAccDataSourceAwsWorkspacesImageConfig(imageID string) string {
+func testAccImageDataSourceConfig(imageID string) string {
 	return fmt.Sprintf(`
 # TODO: Create aws_workspaces_image resource when API will be provided
 

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccDataSourceAwsWorkspaceBundle_basic(t *testing.T) {
+func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
@@ -20,7 +20,7 @@ func testAccDataSourceAwsWorkspaceBundle_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsWorkspaceBundleConfig("wsb-b0s22j3d7"),
+				Config: testAccWorkspaceBundleDataSourceConfig("wsb-b0s22j3d7"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-b0s22j3d7"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
@@ -38,7 +38,7 @@ func testAccDataSourceAwsWorkspaceBundle_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsWorkspaceBundle_byOwnerName(t *testing.T) {
+func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
@@ -47,7 +47,7 @@ func testAccDataSourceAwsWorkspaceBundle_byOwnerName(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsWorkspaceBundleConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
+				Config: testAccWorkspaceBundleDataSourceConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-df76rqys9"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
@@ -65,21 +65,21 @@ func testAccDataSourceAwsWorkspaceBundle_byOwnerName(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsWorkspaceBundle_bundleIDAndNameConflict(t *testing.T) {
+func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsWorkspaceBundleConfig_bundleIDAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
+				Config:      testAccWorkspaceBundleDataSourceConfig_bundleIDAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
 				ExpectError: regexp.MustCompile("\"bundle_id\": conflicts with owner"),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsWorkspaceBundle_privateOwner(t *testing.T) {
+func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 	bundleName := os.Getenv("AWS_WORKSPACES_BUNDLE_NAME")
 
@@ -92,7 +92,7 @@ func testAccDataSourceAwsWorkspaceBundle_privateOwner(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsWorkspaceBundleConfig_privateOwner(bundleName),
+				Config: testAccWorkspaceBundleDataSourceConfig_privateOwner(bundleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", bundleName),
 				),
@@ -107,7 +107,7 @@ func testAccWorkspacesBundlePreCheck(t *testing.T) {
 	}
 }
 
-func testAccDataSourceAwsWorkspaceBundleConfig(bundleID string) string {
+func testAccWorkspaceBundleDataSourceConfig(bundleID string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = %q
@@ -115,7 +115,7 @@ data "aws_workspaces_bundle" "test" {
 `, bundleID)
 }
 
-func testAccDataSourceAwsWorkspaceBundleConfig_byOwnerName(owner, name string) string {
+func testAccWorkspaceBundleDataSourceConfig_byOwnerName(owner, name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   owner = %q
@@ -124,7 +124,7 @@ data "aws_workspaces_bundle" "test" {
 `, owner, name)
 }
 
-func testAccDataSourceAwsWorkspaceBundleConfig_bundleIDAndOwnerNameConflict(bundleID, owner, name string) string {
+func testAccWorkspaceBundleDataSourceConfig_bundleIDAndOwnerNameConflict(bundleID, owner, name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = %q
@@ -134,7 +134,7 @@ data "aws_workspaces_bundle" "test" {
 `, bundleID, owner, name)
 }
 
-func testAccDataSourceAwsWorkspaceBundleConfig_privateOwner(name string) string {
+func testAccWorkspaceBundleDataSourceConfig_privateOwner(name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   name = %q

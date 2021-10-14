@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
+func testAccDirectoryDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
@@ -28,7 +28,7 @@ func testAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsWorkspacesDirectoryConfig(rName, domain),
+				Config: testAccDirectoryDataSourceConfig(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "alias", resourceName, "alias"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
@@ -68,9 +68,9 @@ func testAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsWorkspacesDirectoryConfig(rName, domain string) string {
+func testAccDirectoryDataSourceConfig(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = "tf-testacc-workspaces-directory-%[1]s"
