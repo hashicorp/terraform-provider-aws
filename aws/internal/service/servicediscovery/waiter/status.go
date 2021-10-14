@@ -7,12 +7,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 )
 
-// OperationStatus fetches the Operation and its Status
-func OperationStatus(conn *servicediscovery.ServiceDiscovery, id string) resource.StateRefreshFunc {
+// StatusOperation fetches the Operation and its Status
+func StatusOperation(conn *servicediscovery.ServiceDiscovery, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.OperationByID(conn, id)
+		output, err := tfservicediscovery.FindOperationByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

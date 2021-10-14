@@ -19,6 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 )
 
 func init() {
@@ -75,7 +78,7 @@ func testSweepServiceDiscoveryPublicDnsNamespaces(region string) error {
 			}
 
 			if output != nil && output.OperationId != nil {
-				if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+				if _, err := tfservicediscovery.WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
 					sweeperErr := fmt.Errorf("error waiting for Service Discovery Public DNS Namespace (%s) deletion: %w", id, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)

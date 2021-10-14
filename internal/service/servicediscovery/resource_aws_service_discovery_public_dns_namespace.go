@@ -12,6 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 )
 
 func ResourcePublicDNSNamespace() *schema.Resource {
@@ -82,7 +85,7 @@ func resourcePublicDNSNamespaceCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error creating Service Discovery Public DNS Namespace (%s): creation response missing Operation ID", name)
 	}
 
-	operation, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId))
+	operation, err := tfservicediscovery.WaitOperationSuccess(conn, aws.StringValue(output.OperationId))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Service Discovery Public DNS Namespace (%s) creation: %w", name, err)
@@ -172,7 +175,7 @@ func resourcePublicDNSNamespaceDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if output != nil && output.OperationId != nil {
-		if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := tfservicediscovery.WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
 			return fmt.Errorf("error waiting for Service Discovery Public DNS Namespace (%s) deletion: %w", d.Id(), err)
 		}
 	}

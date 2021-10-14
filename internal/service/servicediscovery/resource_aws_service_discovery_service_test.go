@@ -19,6 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 )
 
 func init() {
@@ -289,7 +292,7 @@ func testAccCheckAwsServiceDiscoveryServiceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ServiceByID(conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindServiceByID(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -318,7 +321,7 @@ func testAccCheckAwsServiceDiscoveryServiceExists(name string) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := finder.ServiceByID(conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindServiceByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -15,6 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 )
 
 func TestAccAWSServiceDiscoveryInstance_private(t *testing.T) {
@@ -287,7 +290,7 @@ func testAccCheckAwsServiceDiscoveryInstanceExists(name string) resource.TestChe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := finder.InstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
 		if err != nil {
 			return err
@@ -316,7 +319,7 @@ func testAccCheckAwsServiceDiscoveryInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.InstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
 		if tfresource.NotFound(err) {
 			continue

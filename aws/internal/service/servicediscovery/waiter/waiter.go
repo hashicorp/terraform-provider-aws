@@ -16,12 +16,12 @@ const (
 	OperationSuccessTimeout = 5 * time.Minute
 )
 
-// OperationSuccess waits for an Operation to return Success
-func OperationSuccess(conn *servicediscovery.ServiceDiscovery, operationID string) (*servicediscovery.Operation, error) {
+// WaitOperationSuccess waits for an Operation to return Success
+func WaitOperationSuccess(conn *servicediscovery.ServiceDiscovery, operationID string) (*servicediscovery.Operation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
 		Target:  []string{servicediscovery.OperationStatusSuccess},
-		Refresh: OperationStatus(conn, operationID),
+		Refresh: StatusOperation(conn, operationID),
 		Timeout: OperationSuccessTimeout,
 	}
 
