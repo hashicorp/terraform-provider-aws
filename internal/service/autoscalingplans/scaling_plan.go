@@ -23,7 +23,7 @@ func ResourceScalingPlan() *schema.Resource {
 		Update: resourceScalingPlanUpdate,
 		Delete: resourceScalingPlanDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsAutoScalingPlansScalingPlanImport,
+			State: resourceScalingPlanImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -447,7 +447,7 @@ func resourceScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsAutoScalingPlansScalingPlanImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceScalingPlanImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	scalingPlanName := d.Id()
 	scalingPlanVersion := 1
 
