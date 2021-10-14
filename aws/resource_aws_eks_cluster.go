@@ -538,7 +538,7 @@ func expandEksEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
 		}
 
 		if v, ok := tfMap["resources"].(*schema.Set); ok && v.Len() > 0 {
-			apiObject.Resources = expandStringSet(v)
+			apiObject.Resources = flex.ExpandStringSet(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -573,12 +573,12 @@ func expandEksVpcConfigRequest(l []interface{}) *eks.VpcConfigRequest {
 	vpcConfigRequest := &eks.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
-		SecurityGroupIds:      expandStringSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:             expandStringSet(m["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds:      flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		SubnetIds:             flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
 	}
 
 	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		vpcConfigRequest.PublicAccessCidrs = expandStringSet(v)
+		vpcConfigRequest.PublicAccessCidrs = flex.ExpandStringSet(v)
 	}
 
 	return vpcConfigRequest
@@ -597,7 +597,7 @@ func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
 	}
 
 	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		vpcConfigRequest.PublicAccessCidrs = expandStringSet(v)
+		vpcConfigRequest.PublicAccessCidrs = flex.ExpandStringSet(v)
 	}
 
 	return vpcConfigRequest
@@ -630,11 +630,11 @@ func expandEksLoggingTypes(vEnabledLogTypes *schema.Set) *eks.Logging {
 		ClusterLogging: []*eks.LogSetup{
 			{
 				Enabled: aws.Bool(true),
-				Types:   expandStringSet(vEnabledLogTypes),
+				Types:   flex.ExpandStringSet(vEnabledLogTypes),
 			},
 			{
 				Enabled: aws.Bool(false),
-				Types:   expandStringSet(vAllLogTypes.Difference(vEnabledLogTypes)),
+				Types:   flex.ExpandStringSet(vAllLogTypes.Difference(vEnabledLogTypes)),
 			},
 		},
 	}
@@ -716,9 +716,9 @@ func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]
 		"cluster_security_group_id": aws.StringValue(vpcConfig.ClusterSecurityGroupId),
 		"endpoint_private_access":   aws.BoolValue(vpcConfig.EndpointPrivateAccess),
 		"endpoint_public_access":    aws.BoolValue(vpcConfig.EndpointPublicAccess),
-		"security_group_ids":        flattenStringSet(vpcConfig.SecurityGroupIds),
-		"subnet_ids":                flattenStringSet(vpcConfig.SubnetIds),
-		"public_access_cidrs":       flattenStringSet(vpcConfig.PublicAccessCidrs),
+		"security_group_ids":        flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
+		"subnet_ids":                flex.FlattenStringSet(vpcConfig.SubnetIds),
+		"public_access_cidrs":       flex.FlattenStringSet(vpcConfig.PublicAccessCidrs),
 		"vpc_id":                    aws.StringValue(vpcConfig.VpcId),
 	}
 
@@ -739,7 +739,7 @@ func flattenEksEnabledLogTypes(logging *eks.Logging) *schema.Set {
 		}
 	}
 
-	return flattenStringSet(enabledLogTypes)
+	return flex.FlattenStringSet(enabledLogTypes)
 }
 
 func flattenEksNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []interface{} {

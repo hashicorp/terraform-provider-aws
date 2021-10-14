@@ -301,7 +301,7 @@ func expandEksOidcIdentityProviderConfigRequest(tfMap map[string]interface{}) (s
 	}
 
 	if v, ok := tfMap["required_claims"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.RequiredClaims = expandStringMap(v)
+		apiObject.RequiredClaims = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := tfMap["username_claim"].(string); ok && v != "" {

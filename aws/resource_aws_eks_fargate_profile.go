@@ -114,7 +114,7 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 		FargateProfileName:  aws.String(fargateProfileName),
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
 		Selectors:           expandEksFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
-		Subnets:             expandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		Subnets:             flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 
 	if len(tags) > 0 {
@@ -280,7 +280,7 @@ func expandEksFargateProfileSelectors(l []interface{}) []*eks.FargateProfileSele
 		fargateProfileSelector := &eks.FargateProfileSelector{}
 
 		if v, ok := m["labels"].(map[string]interface{}); ok && len(v) > 0 {
-			fargateProfileSelector.Labels = expandStringMap(v)
+			fargateProfileSelector.Labels = flex.ExpandStringMap(v)
 		}
 
 		if v, ok := m["namespace"].(string); ok && v != "" {

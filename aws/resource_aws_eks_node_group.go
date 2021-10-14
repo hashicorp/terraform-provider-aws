@@ -299,7 +299,7 @@ func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
-		Subnets:            expandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		Subnets:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("ami_type"); ok {
@@ -315,11 +315,11 @@ func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v := d.Get("instance_types").(*schema.Set); v.Len() > 0 {
-		input.InstanceTypes = expandStringSet(v)
+		input.InstanceTypes = flex.ExpandStringSet(v)
 	}
 
 	if v := d.Get("labels").(map[string]interface{}); len(v) > 0 {
-		input.Labels = expandStringMap(v)
+		input.Labels = flex.ExpandStringMap(v)
 	}
 
 	if v := d.Get("launch_template").([]interface{}); len(v) > 0 {
@@ -771,7 +771,7 @@ func expandEksRemoteAccessConfig(l []interface{}) *eks.RemoteAccessConfig {
 	}
 
 	if v, ok := m["source_security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.SourceSecurityGroups = expandStringSet(v)
+		config.SourceSecurityGroups = flex.ExpandStringSet(v)
 	}
 
 	return config
