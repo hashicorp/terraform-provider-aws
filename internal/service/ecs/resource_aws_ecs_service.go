@@ -23,6 +23,35 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceService() *schema.Resource {
@@ -530,7 +559,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating ECS service: %s", input)
 
 	// Retry due to AWS IAM & ECS eventual consistency
-	err := resource.Retry(iamwaiter.PropagationTimeout+waiter.ServiceCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout+tfecs.serviceCreateTimeout, func() *resource.RetryError {
 		output, err := conn.CreateService(&input)
 
 		if err != nil {
@@ -584,7 +613,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 			cluster = v.(string)
 		}
 
-		if err := waiter.ServiceStable(conn, d.Id(), cluster); err != nil {
+		if err := tfecs.waitServiceStable(conn, d.Id(), cluster); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
 		}
 	}
@@ -613,7 +642,7 @@ func resourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		output, err = waiter.ServiceDescribeReady(conn, d.Id(), d.Get("cluster").(string))
+		output, err = tfecs.waitServiceDescribeReady(conn, d.Id(), d.Get("cluster").(string))
 	}
 
 	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
@@ -1126,7 +1155,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if updateService {
 		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
-		err := resource.Retry(iamwaiter.PropagationTimeout+waiter.ServiceUpdateTimeout, func() *resource.RetryError {
+		err := resource.Retry(tfiam.PropagationTimeout+tfecs.serviceUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateService(&input)
 
 			if err != nil {
@@ -1158,7 +1187,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 			cluster = v.(string)
 		}
 
-		if err := waiter.ServiceStable(conn, d.Id(), cluster); err != nil {
+		if err := tfecs.waitServiceStable(conn, d.Id(), cluster); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
 		}
 	}
@@ -1246,7 +1275,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting ECS service (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.ServiceInactive(conn, d.Id(), d.Get("cluster").(string)); err != nil {
+	if err := tfecs.waitServiceInactive(conn, d.Id(), d.Get("cluster").(string)); err != nil {
 		return fmt.Errorf("error deleting ECS service (%s): %w", d.Id(), err)
 	}
 

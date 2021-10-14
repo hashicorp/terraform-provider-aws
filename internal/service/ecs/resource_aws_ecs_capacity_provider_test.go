@@ -20,6 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 )
 
 func init() {
@@ -43,7 +47,7 @@ func testSweepEcsCapacityProviders(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = lister.DescribeCapacityProvidersPages(conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
+	err = tfecs.DescribeCapacityProvidersPages(conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -281,7 +285,7 @@ func testAccCheckAWSEcsCapacityProviderDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.CapacityProviderByARN(conn, rs.Primary.ID)
+		_, err := tfecs.FindCapacityProviderByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -310,7 +314,7 @@ func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
-		output, err := finder.CapacityProviderByARN(conn, rs.Primary.ID)
+		output, err := tfecs.FindCapacityProviderByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -18,6 +18,36 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 )
 
 func ResourceCapacityProvider() *schema.Resource {
@@ -142,7 +172,7 @@ func resourceCapacityProviderRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := finder.CapacityProviderByARN(conn, d.Id())
+	output, err := tfecs.FindCapacityProviderByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Capacity Provider (%s) not found, removing from state", d.Id())
@@ -186,7 +216,7 @@ func resourceCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		log.Printf("[DEBUG] Updating ECS Capacity Provider: %s", input)
-		err := resource.Retry(waiter.CapacityProviderUpdateTimeout, func() *resource.RetryError {
+		err := resource.Retry(tfecs.capacityProviderUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateCapacityProvider(input)
 
 			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeUpdateInProgressException) {
@@ -208,7 +238,7 @@ func resourceCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error updating ECS Capacity Provider (%s): %w", d.Id(), err)
 		}
 
-		if _, err = waiter.CapacityProviderUpdated(conn, d.Id()); err != nil {
+		if _, err = tfecs.waitCapacityProviderUpdated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ECS Capacity Provider (%s) to update: %w", d.Id(), err)
 		}
 	}
@@ -240,7 +270,7 @@ func resourceCapacityProviderDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error deleting ECS Capacity Provider (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.CapacityProviderDeleted(conn, d.Id()); err != nil {
+	if _, err := tfecs.waitCapacityProviderDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ECS Capacity Provider (%s) to delete: %w", d.Id(), err)
 	}
 

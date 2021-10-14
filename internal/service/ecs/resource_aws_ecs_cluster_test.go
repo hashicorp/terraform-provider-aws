@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 )
 
 func init() {
@@ -398,7 +400,7 @@ func testAccCheckAWSEcsClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := finder.ClusterByARN(conn, rs.Primary.ID)
+		out, err := tfecs.FindClusterByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -422,7 +424,7 @@ func testAccCheckAWSEcsClusterExists(resourceName string, cluster *ecs.Cluster) 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
-		output, err := finder.ClusterByARN(conn, rs.Primary.ID)
+		output, err := tfecs.FindClusterByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading ECS Cluster (%s): %w", rs.Primary.ID, err)

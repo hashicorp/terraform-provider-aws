@@ -10,26 +10,26 @@ import (
 )
 
 const (
-	CapacityProviderDeleteTimeout = 20 * time.Minute
-	CapacityProviderUpdateTimeout = 10 * time.Minute
+	capacityProviderDeleteTimeout = 20 * time.Minute
+	capacityProviderUpdateTimeout = 10 * time.Minute
 
-	ServiceCreateTimeout      = 2 * time.Minute
-	ServiceInactiveTimeout    = 10 * time.Minute
-	ServiceInactiveTimeoutMin = 1 * time.Second
-	ServiceDescribeTimeout    = 2 * time.Minute
-	ServiceUpdateTimeout      = 2 * time.Minute
+	serviceCreateTimeout      = 2 * time.Minute
+	serviceInactiveTimeout    = 10 * time.Minute
+	serviceInactiveTimeoutMin = 1 * time.Second
+	serviceDescribeTimeout    = 2 * time.Minute
+	serviceUpdateTimeout      = 2 * time.Minute
 
-	ClusterAvailableTimeout = 10 * time.Minute
-	ClusterDeleteTimeout    = 10 * time.Minute
-	ClusterAvailableDelay   = 10 * time.Second
+	clusterAvailableTimeout = 10 * time.Minute
+	clusterDeleteTimeout    = 10 * time.Minute
+	clusterAvailableDelay   = 10 * time.Second
 )
 
-func CapacityProviderDeleted(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
+func waitCapacityProviderDeleted(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ecs.CapacityProviderStatusActive},
 		Target:  []string{},
-		Refresh: CapacityProviderStatus(conn, arn),
-		Timeout: CapacityProviderDeleteTimeout,
+		Refresh: statusCapacityProvider(conn, arn),
+		Timeout: capacityProviderDeleteTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -41,12 +41,12 @@ func CapacityProviderDeleted(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, 
 	return nil, err
 }
 
-func CapacityProviderUpdated(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
+func waitCapacityProviderUpdated(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ecs.CapacityProviderUpdateStatusUpdateInProgress},
 		Target:  []string{ecs.CapacityProviderUpdateStatusUpdateComplete},
-		Refresh: CapacityProviderUpdateStatus(conn, arn),
-		Timeout: CapacityProviderUpdateTimeout,
+		Refresh: statusCapacityProviderUpdate(conn, arn),
+		Timeout: capacityProviderUpdateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -58,7 +58,7 @@ func CapacityProviderUpdated(conn *ecs.ECS, arn string) (*ecs.CapacityProvider, 
 	return nil, err
 }
 
-func ServiceStable(conn *ecs.ECS, id, cluster string) error {
+func waitServiceStable(conn *ecs.ECS, id, cluster string) error {
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -73,7 +73,7 @@ func ServiceStable(conn *ecs.ECS, id, cluster string) error {
 	return nil
 }
 
-func ServiceInactive(conn *ecs.ECS, id, cluster string) error {
+func waitServiceInactive(conn *ecs.ECS, id, cluster string) error {
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -87,11 +87,11 @@ func ServiceInactive(conn *ecs.ECS, id, cluster string) error {
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ServiceStatusActive, ServiceStatusDraining},
-		Target:     []string{ServiceStatusInactive, ServiceStatusNone},
-		Refresh:    ServiceStatus(conn, id, cluster),
-		Timeout:    ServiceInactiveTimeout,
-		MinTimeout: ServiceInactiveTimeoutMin,
+		Pending:    []string{serviceStatusActive, serviceStatusDraining},
+		Target:     []string{serviceStatusInactive, serviceStatusNone},
+		Refresh:    statusService(conn, id, cluster),
+		Timeout:    serviceInactiveTimeout,
+		MinTimeout: serviceInactiveTimeoutMin,
 	}
 
 	_, err := stateConf.WaitForState()
@@ -103,12 +103,12 @@ func ServiceInactive(conn *ecs.ECS, id, cluster string) error {
 	return nil
 }
 
-func ServiceDescribeReady(conn *ecs.ECS, id, cluster string) (*ecs.DescribeServicesOutput, error) {
+func waitServiceDescribeReady(conn *ecs.ECS, id, cluster string) (*ecs.DescribeServicesOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ServiceStatusInactive, ServiceStatusDraining, ServiceStatusNone},
-		Target:  []string{ServiceStatusActive},
-		Refresh: ServiceStatus(conn, id, cluster),
-		Timeout: ServiceDescribeTimeout,
+		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusNone},
+		Target:  []string{serviceStatusActive},
+		Refresh: statusService(conn, id, cluster),
+		Timeout: serviceDescribeTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -120,13 +120,13 @@ func ServiceDescribeReady(conn *ecs.ECS, id, cluster string) (*ecs.DescribeServi
 	return nil, err
 }
 
-func ClusterAvailable(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
+func waitClusterAvailable(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"ACTIVE"},
-		Refresh: ClusterStatus(conn, arn),
-		Timeout: ClusterAvailableTimeout,
-		Delay:   ClusterAvailableDelay,
+		Refresh: statusCluster(conn, arn),
+		Timeout: clusterAvailableTimeout,
+		Delay:   clusterAvailableDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -138,12 +138,12 @@ func ClusterAvailable(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
 	return nil, err
 }
 
-func ClusterDeleted(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
+func waitClusterDeleted(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"ACTIVE", "DEPROVISIONING"},
 		Target:  []string{"INACTIVE"},
-		Refresh: ClusterStatus(conn, arn),
-		Timeout: ClusterDeleteTimeout,
+		Refresh: statusCluster(conn, arn),
+		Timeout: clusterDeleteTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
