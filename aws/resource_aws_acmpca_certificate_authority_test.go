@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).acmpcaconn
+	conn := client.(*conns.AWSClient).ACMPCAConn
 
 	certificateAuthorities, err := listAcmpcaCertificateAuthorities(conn)
 	if err != nil {
@@ -568,7 +569,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsAcmpcaCertificateAuthorityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).acmpcaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acmpca_certificate_authority" {

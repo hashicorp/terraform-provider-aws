@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
@@ -229,7 +230,7 @@ func TestAccAwsAcmpcaCertificate_Validity_Absolute(t *testing.T) {
 }
 
 func testAccCheckAwsAcmpcaCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).acmpcaconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acmpca_certificate" {
@@ -268,7 +269,7 @@ func testAccCheckAwsAcmpcaCertificateExists(resourceName string) resource.TestCh
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).acmpcaconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
 		input := &acmpca.GetCertificateInput{
 			CertificateArn:          aws.String(rs.Primary.ID),
 			CertificateAuthorityArn: aws.String(rs.Primary.Attributes["certificate_authority_arn"]),

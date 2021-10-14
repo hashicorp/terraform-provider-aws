@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/acmpca/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAcmpcaCertificate() *schema.Resource {
@@ -104,7 +105,7 @@ func resourceAwsAcmpcaCertificate() *schema.Resource {
 }
 
 func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
@@ -159,7 +160,7 @@ func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	getCertificateInput := &acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
@@ -192,7 +193,7 @@ func resourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsAcmpcaCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).acmpcaconn
+	conn := meta.(*conns.AWSClient).ACMPCAConn
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
 	if block == nil {
