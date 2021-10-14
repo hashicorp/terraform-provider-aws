@@ -3,6 +3,7 @@ package route53
 import (
 	"fmt"
 	"strings"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const KeySigningKeyResourceIDSeparator = ","
