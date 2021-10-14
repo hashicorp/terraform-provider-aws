@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDocDBClusterSnapshot_basic(t *testing.T) {
@@ -51,7 +52,7 @@ func TestAccAWSDocDBClusterSnapshot_basic(t *testing.T) {
 }
 
 func testAccCheckDocDBClusterSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).docdbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_docdb_cluster_snapshot" {
@@ -89,7 +90,7 @@ func testAccCheckDocDBClusterSnapshotExists(resourceName string, dbClusterSnapsh
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 		request := &docdb.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),

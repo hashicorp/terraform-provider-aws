@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
@@ -240,7 +241,7 @@ func testAccCheckAWSDocDBClusterInstanceAttributes(v *docdb.DBInstance) resource
 
 func testAccAWSDocDBClusterInstanceDisappears(v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 		opts := &docdb.DeleteDBInstanceInput{
 			DBInstanceIdentifier: v.DBInstanceIdentifier,
 		}
@@ -277,7 +278,7 @@ func testAccCheckAWSDocDBClusterInstanceExists(n string, v *docdb.DBInstance) re
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 		resp, err := conn.DescribeDBInstances(&docdb.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})

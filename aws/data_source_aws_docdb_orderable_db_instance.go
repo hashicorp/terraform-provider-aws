@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsDocdbOrderableDbInstance() *schema.Resource {
@@ -61,7 +62,7 @@ func dataSourceAwsDocdbOrderableDbInstance() *schema.Resource {
 }
 
 func dataSourceAwsDocdbOrderableDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*conns.AWSClient).DocDBConn
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{}
 

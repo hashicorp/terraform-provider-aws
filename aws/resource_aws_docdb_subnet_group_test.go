@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDocDBSubnetGroup_basic(t *testing.T) {
@@ -161,7 +162,7 @@ func TestAccAWSDocDBSubnetGroup_updateDescription(t *testing.T) {
 }
 
 func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).docdbconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_docdb_subnet_group" {
@@ -193,7 +194,7 @@ func testAccCheckDocDBSubnetGroupDestroy(s *terraform.State) error {
 func testAccCheckAWSDocDBSubnetGroupDisappears(group *docdb.DBSubnetGroup) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 
 		params := &docdb.DeleteDBSubnetGroupInput{
 			DBSubnetGroupName: group.DBSubnetGroupName,
@@ -219,7 +220,7 @@ func testAccCheckDocDBSubnetGroupExists(n string, v *docdb.DBSubnetGroup) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).docdbconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
 		resp, err := conn.DescribeDBSubnetGroups(
 			&docdb.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {

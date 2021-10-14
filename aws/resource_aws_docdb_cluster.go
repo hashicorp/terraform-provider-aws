@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDocDBCluster() *schema.Resource {
@@ -260,8 +261,8 @@ func resourceAwsDocDBClusterImport(
 }
 
 func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).DocDBConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
@@ -488,9 +489,9 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DocDBConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &docdb.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(d.Id()),
@@ -595,7 +596,7 @@ func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*conns.AWSClient).DocDBConn
 	requestUpdate := false
 
 	req := &docdb.ModifyDBClusterInput{
@@ -699,7 +700,7 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*conns.AWSClient).DocDBConn
 	log.Printf("[DEBUG] Destroying DocDB Cluster (%s)", d.Id())
 
 	deleteOpts := docdb.DeleteDBClusterInput{
