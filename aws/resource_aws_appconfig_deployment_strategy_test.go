@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepAppConfigDeploymentStrategies(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).appconfigconn
+	conn := client.(*conns.AWSClient).AppConfigConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -258,7 +259,7 @@ func TestAccAWSAppConfigDeploymentStrategy_Tags(t *testing.T) {
 }
 
 func testAccCheckAppConfigDeploymentStrategyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_deployment_strategy" {
@@ -298,7 +299,7 @@ func testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName string) resou
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 		input := &appconfig.GetDeploymentStrategyInput{
 			DeploymentStrategyId: aws.String(rs.Primary.ID),

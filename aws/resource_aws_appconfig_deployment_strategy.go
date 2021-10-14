@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppconfigDeploymentStrategy() *schema.Resource {
@@ -74,8 +75,8 @@ func resourceAwsAppconfigDeploymentStrategy() *schema.Resource {
 }
 
 func resourceAwsAppconfigDeploymentStrategyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AppConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -109,9 +110,9 @@ func resourceAwsAppconfigDeploymentStrategyCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsAppconfigDeploymentStrategyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &appconfig.GetDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),
@@ -142,9 +143,9 @@ func resourceAwsAppconfigDeploymentStrategyRead(d *schema.ResourceData, meta int
 	d.Set("replicate_to", output.ReplicateTo)
 
 	arn := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("deploymentstrategy/%s", d.Id()),
 		Service:   "appconfig",
 	}.String()
@@ -171,7 +172,7 @@ func resourceAwsAppconfigDeploymentStrategyRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsAppconfigDeploymentStrategyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateInput := &appconfig.UpdateDeploymentStrategyInput{
@@ -216,7 +217,7 @@ func resourceAwsAppconfigDeploymentStrategyUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsAppconfigDeploymentStrategyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	input := &appconfig.DeleteDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),

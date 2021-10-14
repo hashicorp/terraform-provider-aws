@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppconfigConfigurationProfile() *schema.Resource {
@@ -93,8 +94,8 @@ func resourceAwsAppconfigConfigurationProfile() *schema.Resource {
 }
 
 func resourceAwsAppconfigConfigurationProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AppConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	appId := d.Get("application_id").(string)
@@ -135,9 +136,9 @@ func resourceAwsAppconfigConfigurationProfileCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsAppconfigConfigurationProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppConfigConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	confProfID, appID, err := resourceAwsAppconfigConfigurationProfileParseID(d.Id())
 
@@ -179,9 +180,9 @@ func resourceAwsAppconfigConfigurationProfileRead(d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s", appID, confProfID),
 		Service:   "appconfig",
 	}.String()
@@ -209,7 +210,7 @@ func resourceAwsAppconfigConfigurationProfileRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsAppconfigConfigurationProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		confProfID, appID, err := resourceAwsAppconfigConfigurationProfileParseID(d.Id())
@@ -257,7 +258,7 @@ func resourceAwsAppconfigConfigurationProfileUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsAppconfigConfigurationProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	confProfID, appID, err := resourceAwsAppconfigConfigurationProfileParseID(d.Id())
 

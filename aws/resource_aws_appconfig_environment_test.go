@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepAppConfigEnvironments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).appconfigconn
+	conn := client.(*conns.AWSClient).AppConfigConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -376,7 +377,7 @@ func TestAccAWSAppConfigEnvironment_Tags(t *testing.T) {
 }
 
 func testAccCheckAppConfigEnvironmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_environment" {
@@ -429,7 +430,7 @@ func testAccCheckAWSAppConfigEnvironmentExists(resourceName string) resource.Tes
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 		input := &appconfig.GetEnvironmentInput{
 			ApplicationId: aws.String(appID),

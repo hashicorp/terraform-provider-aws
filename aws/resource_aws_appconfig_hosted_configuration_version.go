@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppconfigHostedConfigurationVersion() *schema.Resource {
@@ -68,7 +69,7 @@ func resourceAwsAppconfigHostedConfigurationVersion() *schema.Resource {
 }
 
 func resourceAwsAppconfigHostedConfigurationVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	appID := d.Get("application_id").(string)
 	profileID := d.Get("configuration_profile_id").(string)
@@ -96,7 +97,7 @@ func resourceAwsAppconfigHostedConfigurationVersionCreate(d *schema.ResourceData
 }
 
 func resourceAwsAppconfigHostedConfigurationVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(d.Id())
 
@@ -134,9 +135,9 @@ func resourceAwsAppconfigHostedConfigurationVersionRead(d *schema.ResourceData, 
 	d.Set("version_number", output.VersionNumber)
 
 	arn := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s/hostedconfigurationversion/%d", appID, confProfID, versionNumber),
 		Service:   "appconfig",
 	}.String()
@@ -147,7 +148,7 @@ func resourceAwsAppconfigHostedConfigurationVersionRead(d *schema.ResourceData, 
 }
 
 func resourceAwsAppconfigHostedConfigurationVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appconfigconn
+	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	appID, confProfID, versionNumber, err := resourceAwsAppconfigHostedConfigurationVersionParseID(d.Id())
 

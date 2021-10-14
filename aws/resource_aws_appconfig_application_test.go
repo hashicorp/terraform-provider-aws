@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -34,7 +35,7 @@ func testSweepAppConfigApplications(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).appconfigconn
+	conn := client.(*conns.AWSClient).AppConfigConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -253,7 +254,7 @@ func TestAccAWSAppConfigApplication_Tags(t *testing.T) {
 }
 
 func testAccCheckAppConfigApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_application" {
@@ -293,7 +294,7 @@ func testAccCheckAWSAppConfigApplicationExists(resourceName string) resource.Tes
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 		input := &appconfig.GetApplicationInput{
 			ApplicationId: aws.String(rs.Primary.ID),

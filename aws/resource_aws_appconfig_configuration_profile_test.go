@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepAppConfigConfigurationProfiles(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).appconfigconn
+	conn := client.(*conns.AWSClient).AppConfigConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -400,7 +401,7 @@ func TestAccAWSAppConfigConfigurationProfile_Tags(t *testing.T) {
 }
 
 func testAccCheckAppConfigConfigurationProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_configuration_profile" {
@@ -453,7 +454,7 @@ func testAccCheckAWSAppConfigConfigurationProfileExists(resourceName string) res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 		output, err := conn.GetConfigurationProfile(&appconfig.GetConfigurationProfileInput{
 			ApplicationId:          aws.String(appID),

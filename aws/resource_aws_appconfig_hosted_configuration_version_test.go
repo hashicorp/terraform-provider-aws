@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepAppConfigHostedConfigurationVersions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).appconfigconn
+	conn := client.(*conns.AWSClient).AppConfigConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -179,7 +180,7 @@ func TestAccAWSAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 }
 
 func testAccCheckAppConfigHostedConfigurationVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_hosted_configuration_version" {
@@ -233,7 +234,7 @@ func testAccCheckAWSAppConfigHostedConfigurationVersionExists(resourceName strin
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appconfigconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
 
 		output, err := conn.GetHostedConfigurationVersion(&appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),
