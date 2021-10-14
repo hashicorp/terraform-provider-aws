@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceMesh() *schema.Resource {
@@ -68,7 +69,7 @@ func DataSourceMesh() *schema.Resource {
 				},
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -107,7 +108,7 @@ func dataSourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	tags, err := keyvaluetags.AppmeshListTags(conn, arn)
+	tags, err := tftags.AppmeshListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for App Mesh service mesh (%s): %s", arn, err)
