@@ -149,7 +149,7 @@ func resourceAwsKinesisVideoStreamRead(d *schema.ResourceData, meta interface{})
 	}
 
 	resp, err := conn.DescribeStream(descOpts)
-	if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -206,7 +206,7 @@ func resourceAwsKinesisVideoStreamUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if _, err := conn.UpdateStream(updateOpts); err != nil {
-		if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -245,7 +245,7 @@ func resourceAwsKinesisVideoStreamDelete(d *schema.ResourceData, meta interface{
 		StreamARN:      aws.String(d.Id()),
 		CurrentVersion: aws.String(d.Get("version").(string)),
 	}); err != nil {
-		if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Kinesis Video Stream (%s): %s", d.Id(), err)
@@ -274,7 +274,7 @@ func kinesisVideoStreamStateRefresh(conn *kinesisvideo.KinesisVideo, arn string)
 		resp, err := conn.DescribeStream(&kinesisvideo.DescribeStreamInput{
 			StreamARN: aws.String(arn),
 		})
-		if isAWSErr(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, kinesisvideo.ErrCodeResourceNotFoundException, "") {
 			return emptyResp, "DELETED", nil
 		}
 		if err != nil {
