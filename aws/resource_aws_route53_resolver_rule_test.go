@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepRoute53ResolverRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).route53resolverconn
+	conn := client.(*conns.AWSClient).Route53ResolverConn
 
 	var errors error
 	err = conn.ListResolverRulesPages(&route53resolver.ListResolverRulesInput{}, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
@@ -42,7 +43,7 @@ func testSweepRoute53ResolverRules(region string) error {
 			id := aws.StringValue(resolverRule.Id)
 
 			ownerID := aws.StringValue(resolverRule.OwnerId)
-			if ownerID != client.(*AWSClient).accountid {
+			if ownerID != client.(*conns.AWSClient).AccountID {
 				log.Printf("[INFO] Skipping Route53 Resolver rule %q, owned by %q", id, ownerID)
 				continue
 			}
@@ -405,7 +406,7 @@ func testAccCheckRoute53ResolverRulesDifferent(before, after *route53resolver.Re
 }
 
 func testAccCheckRoute53ResolverRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_rule" {
@@ -439,7 +440,7 @@ func testAccCheckRoute53ResolverRuleExists(n string, rule *route53resolver.Resol
 			return fmt.Errorf("No Route 53 Resolver rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 		res, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
 			ResolverRuleId: aws.String(rs.Primary.ID),
 		})

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -115,8 +116,8 @@ func resourceAwsRoute53ResolverRule() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &route53resolver.CreateResolverRuleInput{
@@ -156,9 +157,9 @@ func resourceAwsRoute53ResolverRuleCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	ruleRaw, state, err := route53ResolverRuleRefresh(conn, d.Id())()
 	if err != nil {
@@ -205,7 +206,7 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsRoute53ResolverRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	if d.HasChanges("name", "resolver_endpoint_id", "target_ip") {
 		req := &route53resolver.UpdateResolverRuleInput{
@@ -247,7 +248,7 @@ func resourceAwsRoute53ResolverRuleUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsRoute53ResolverRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver rule: %s", d.Id())
 	_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{

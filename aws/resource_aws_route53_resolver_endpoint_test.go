@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepRoute53ResolverEndpoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).route53resolverconn
+	conn := client.(*conns.AWSClient).Route53ResolverConn
 
 	var errors error
 	err = conn.ListResolverEndpointsPages(&route53resolver.ListResolverEndpointsInput{}, func(page *route53resolver.ListResolverEndpointsOutput, lastPage bool) bool {
@@ -147,7 +148,7 @@ func TestAccAWSRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_endpoint" {
@@ -182,7 +183,7 @@ func testAccCheckRoute53ResolverEndpointExists(n string, ep *route53resolver.Res
 			return fmt.Errorf("No Route 53 Resolver endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 		resp, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
 			ResolverEndpointId: aws.String(rs.Primary.ID),
 		})
@@ -197,7 +198,7 @@ func testAccCheckRoute53ResolverEndpointExists(n string, ep *route53resolver.Res
 }
 
 func testAccPreCheckAWSRoute53Resolver(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.ListResolverEndpointsInput{}
 

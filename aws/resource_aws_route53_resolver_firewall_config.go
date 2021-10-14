@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53ResolverFirewallConfig() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsRoute53ResolverFirewallConfig() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverFirewallConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.UpdateFirewallConfigInput{
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -67,7 +68,7 @@ func resourceAwsRoute53ResolverFirewallConfigCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsRoute53ResolverFirewallConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	config, err := finder.FirewallConfigByID(conn, d.Id())
 
@@ -89,7 +90,7 @@ func resourceAwsRoute53ResolverFirewallConfigRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsRoute53ResolverFirewallConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.UpdateFirewallConfigInput{
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -109,7 +110,7 @@ func resourceAwsRoute53ResolverFirewallConfigUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsRoute53ResolverFirewallConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route 53 Resolver DNS Firewall config")
 	_, err := conn.UpdateFirewallConfig(&route53resolver.UpdateFirewallConfigInput{

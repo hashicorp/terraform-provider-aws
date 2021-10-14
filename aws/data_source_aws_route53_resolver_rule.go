@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRoute53ResolverRule() *schema.Resource {
@@ -79,8 +80,8 @@ func dataSourceAwsRoute53ResolverRule() *schema.Resource {
 }
 
 func dataSourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var rule *route53resolver.ResolverRule
 	if v, ok := d.GetOk("resolver_rule_id"); ok {

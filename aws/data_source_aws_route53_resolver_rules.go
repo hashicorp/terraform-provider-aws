@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRoute53ResolverRules() *schema.Resource {
@@ -61,7 +62,7 @@ func dataSourceAwsRoute53ResolverRules() *schema.Resource {
 }
 
 func dataSourceAwsRoute53ResolverRulesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	req := &route53resolver.ListResolverRulesInput{}
 	resolverRuleIds := []*string{}
@@ -90,7 +91,7 @@ func dataSourceAwsRoute53ResolverRulesRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error getting Route53 Resolver rules: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	err = d.Set("resolver_rule_ids", flattenStringSet(resolverRuleIds))
 	if err != nil {

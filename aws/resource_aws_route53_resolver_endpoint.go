@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -107,8 +108,8 @@ func resourceAwsRoute53ResolverEndpoint() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &route53resolver.CreateResolverEndpointInput{
@@ -143,9 +144,9 @@ func resourceAwsRoute53ResolverEndpointCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	epRaw, state, err := route53ResolverEndpointRefresh(conn, d.Id())()
 	if err != nil {
@@ -208,7 +209,7 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	if d.HasChange("name") {
 		req := &route53resolver.UpdateResolverEndpointInput{
@@ -284,7 +285,7 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRoute53ResolverEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver endpoint: %s", d.Id())
 	_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{
