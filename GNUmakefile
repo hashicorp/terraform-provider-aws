@@ -14,6 +14,7 @@ build: fmtcheck
 gen:
 	rm -f internal/service/**/*_gen.go
 	go generate ./...
+	goimports -w ./$(PKG_NAME)
 
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
