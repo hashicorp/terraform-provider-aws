@@ -883,7 +883,7 @@ func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSo
 			_, err := conn.UpdateEventSourceMapping(params)
 
 			if err != nil {
-				if isAWSErr(err, lambda.ErrCodeResourceInUseException, "") {
+				if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceInUseException, "") {
 					return resource.RetryableError(fmt.Errorf(
 						"Waiting for Lambda Event Source Mapping to be ready to be updated: %v", conf.UUID))
 				}

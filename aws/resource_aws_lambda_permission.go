@@ -135,7 +135,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		var err error
 		out, err = conn.AddPermission(&input)
 
-		if isAWSErr(err, lambda.ErrCodeResourceConflictException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -144,7 +144,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.AddPermission(&input)
 	}
 	if err != nil {
@@ -179,7 +179,7 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		err = resourceAwsLambdaPermissionRead(d, meta)
 	}
 	if err != nil {
@@ -220,7 +220,7 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		out, err = conn.GetPolicy(&input)
 
 		if err == nil {
@@ -349,7 +349,7 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 
 	resp, err := conn.GetPolicy(params)
 
-	if isAWSErr(err, "ResourceNotFoundException", "") {
+	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
 		return nil
 	}
 

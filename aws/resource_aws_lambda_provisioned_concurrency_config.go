@@ -91,7 +91,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigRead(d *schema.ResourceData, m
 
 	output, err := conn.GetProvisionedConcurrencyConfig(input)
 
-	if isAWSErr(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Lambda Provisioned Concurrency Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -152,7 +152,7 @@ func resourceAwsLambdaProvisionedConcurrencyConfigDelete(d *schema.ResourceData,
 
 	_, err = conn.DeleteProvisionedConcurrencyConfig(input)
 
-	if isAWSErr(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 

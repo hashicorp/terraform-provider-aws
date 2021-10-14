@@ -119,12 +119,12 @@ func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, me
 		_, err := conn.PutFunctionEventInvokeConfig(input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
-		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
 			return resource.RetryableError(err)
 		}
 
 		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
-		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
 			return resource.RetryableError(err)
 		}
 
@@ -135,7 +135,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, me
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.PutFunctionEventInvokeConfig(input)
 	}
 
@@ -167,7 +167,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigRead(d *schema.ResourceData, meta
 
 	output, err := conn.GetFunctionEventInvokeConfig(input)
 
-	if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Lambda Function Event Invoke Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -217,12 +217,12 @@ func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, me
 		_, err := conn.PutFunctionEventInvokeConfig(input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
-		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
 			return resource.RetryableError(err)
 		}
 
 		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
-		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
 			return resource.RetryableError(err)
 		}
 
@@ -233,7 +233,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, me
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.PutFunctionEventInvokeConfig(input)
 	}
 
@@ -263,7 +263,7 @@ func resourceAwsLambdaFunctionEventInvokeConfigDelete(d *schema.ResourceData, me
 
 	_, err = conn.DeleteFunctionEventInvokeConfig(input)
 
-	if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 

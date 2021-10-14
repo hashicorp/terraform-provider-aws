@@ -313,7 +313,7 @@ func testAccCheckLambdaLayerVersionDestroy(s *terraform.State) error {
 			LayerName:     aws.String(layerName),
 			VersionNumber: aws.Int64(version),
 		})
-		if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 		if err != nil {
