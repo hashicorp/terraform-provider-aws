@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceImagePipeline() *schema.Resource {
@@ -128,18 +129,18 @@ func ResourceImagePipeline() *schema.Resource {
 				Default:      imagebuilder.PipelineStatusEnabled,
 				ValidateFunc: validation.StringInSlice(imagebuilder.PipelineStatus_Values(), false),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceImagePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImagePipelineInput{
 		ClientToken:                  aws.String(resource.UniqueId()),
@@ -252,7 +253,7 @@ func resourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("status", imagePipeline.Status)
 
-	tags := keyvaluetags.ImagebuilderKeyValueTags(imagePipeline.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.ImagebuilderKeyValueTags(imagePipeline.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -323,7 +324,7 @@ func resourceImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags for Image Builder Image Pipeline (%s): %w", d.Id(), err)
 		}
 	}

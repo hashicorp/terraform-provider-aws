@@ -10,10 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceInfrastructureConfiguration() *schema.Resource {
@@ -94,7 +95,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_tags": tagsSchema(),
+			"resource_tags": tftags.TagsSchema(),
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -111,8 +112,8 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"terminate_instance_on_failure": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -120,14 +121,14 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceInfrastructureConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ImageBuilderConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateInfrastructureConfigurationInput{
 		ClientToken:                aws.String(resource.UniqueId()),
@@ -159,7 +160,7 @@ func resourceInfrastructureConfigurationCreate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResourceTags = keyvaluetags.New(v.(map[string]interface{})).ImagebuilderTags()
+		input.ResourceTags = tftags.New(v.(map[string]interface{})).ImagebuilderTags()
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -252,11 +253,11 @@ func resourceInfrastructureConfigurationRead(d *schema.ResourceData, meta interf
 		d.Set("logging", nil)
 	}
 	d.Set("name", infrastructureConfiguration.Name)
-	d.Set("resource_tags", keyvaluetags.ImagebuilderKeyValueTags(infrastructureConfiguration.ResourceTags).Map())
+	d.Set("resource_tags", tftags.ImagebuilderKeyValueTags(infrastructureConfiguration.ResourceTags).Map())
 	d.Set("security_group_ids", aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
 	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
 	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
-	tags := keyvaluetags.ImagebuilderKeyValueTags(infrastructureConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.ImagebuilderKeyValueTags(infrastructureConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -312,7 +313,7 @@ func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta inte
 		}
 
 		if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
-			input.ResourceTags = keyvaluetags.New(v.(map[string]interface{})).ImagebuilderTags()
+			input.ResourceTags = tftags.New(v.(map[string]interface{})).ImagebuilderTags()
 		}
 
 		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -353,7 +354,7 @@ func resourceInfrastructureConfigurationUpdate(d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags for Image Builder Infrastructure Configuration (%s): %w", d.Id(), err)
 		}
 	}

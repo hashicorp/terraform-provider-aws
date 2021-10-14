@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceDistributionConfiguration() *schema.Resource {
@@ -42,7 +43,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ami_tags": tagsSchemaComputed(),
+									"ami_tags": tftags.TagsSchemaComputed(),
 									"description": {
 										Type:     schema.TypeString,
 										Computed: true,
@@ -105,7 +106,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -139,7 +140,7 @@ func dataSourceDistributionConfigurationRead(d *schema.ResourceData, meta interf
 	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenImageBuilderDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
-	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(distributionConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("tags", tftags.ImagebuilderKeyValueTags(distributionConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 	return nil
 }
