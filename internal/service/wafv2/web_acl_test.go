@@ -20,78 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_wafv2_web_acl", &resource.Sweeper{
-		Name: "aws_wafv2_web_acl",
-		F:    sweepWebACLs,
-	})
-}
 
-func sweepWebACLs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).WAFV2Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &wafv2.ListWebACLsInput{
-		Scope: aws.String(wafv2.ScopeRegional),
-	}
-
-	err = tfwafv2.ListWebACLsPages(conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, webAcl := range page.WebACLs {
-			if webAcl == nil {
-				continue
-			}
-
-			name := aws.StringValue(webAcl.Name)
-
-			// Exclude WebACLs managed by Firewall Manager as deletion returns AccessDeniedException.
-			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19149
-			// Prefix Reference: https://docs.aws.amazon.com/waf/latest/developerguide/get-started-fms-create-security-policy.html
-			if strings.HasPrefix(name, "FMManagedWebACLV2") {
-				log.Printf("[WARN] Skipping WAFv2 Web ACL: %s", name)
-				continue
-			}
-
-			id := aws.StringValue(webAcl.Id)
-
-			r := tfwafv2.ResourceWebACL()
-			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("lock_token", webAcl.LockToken)
-			d.Set("name", name)
-			d.Set("scope", input.Scope)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing WAFv2 Web ACLs for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAFv2 Web ACLs for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAFv2 Web ACLs sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccWAFV2WebACL_basic(t *testing.T) {
 	var v wafv2.WebACL

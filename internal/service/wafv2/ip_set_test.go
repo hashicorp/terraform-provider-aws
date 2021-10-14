@@ -19,68 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_wafv2_ip_set", &resource.Sweeper{
-		Name: "aws_wafv2_ip_set",
-		F:    sweepIPSets,
-		Dependencies: []string{
-			"aws_wafv2_rule_group",
-			"aws_wafv2_web_acl",
-		},
-	})
-}
 
-func sweepIPSets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).WAFV2Conn
 
-	var sweeperErrs *multierror.Error
 
-	input := &wafv2.ListIPSetsInput{
-		Scope: aws.String(wafv2.ScopeRegional),
-	}
-
-	err = tfwafv2.ListIPSetsPages(conn, input, func(page *wafv2.ListIPSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, ipSet := range page.IPSets {
-			id := aws.StringValue(ipSet.Id)
-
-			r := tfwafv2.ResourceIPSet()
-			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("lock_token", ipSet.LockToken)
-			d.Set("name", ipSet.Name)
-			d.Set("scope", input.Scope)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting WAFv2 IP Set (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAFv2 IP Set sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAFv2 IP Sets: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccWAFV2IPSet_basic(t *testing.T) {
 	var v wafv2.IPSet

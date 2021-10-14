@@ -19,68 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_wafv2_regex_pattern_set", &resource.Sweeper{
-		Name: "aws_wafv2_regex_pattern_set",
-		F:    sweepRegexPatternSets,
-		Dependencies: []string{
-			"aws_wafv2_rule_group",
-			"aws_wafv2_web_acl",
-		},
-	})
-}
 
-func sweepRegexPatternSets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).WAFV2Conn
 
-	var sweeperErrs *multierror.Error
 
-	input := &wafv2.ListRegexPatternSetsInput{
-		Scope: aws.String(wafv2.ScopeRegional),
-	}
-
-	err = tfwafv2.ListRegexPatternSetsPages(conn, input, func(page *wafv2.ListRegexPatternSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, regexPatternSet := range page.RegexPatternSets {
-			id := aws.StringValue(regexPatternSet.Id)
-
-			r := tfwafv2.ResourceRegexPatternSet()
-			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("lock_token", regexPatternSet.LockToken)
-			d.Set("name", regexPatternSet.Name)
-			d.Set("scope", input.Scope)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting WAFv2 Regex Pattern Set (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAFv2 Regex Pattern Set sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAFv2 Regex Pattern Sets: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccWAFV2RegexPatternSet_basic(t *testing.T) {
 	var v wafv2.RegexPatternSet
