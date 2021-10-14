@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
+func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 	rname := sdkacctest.RandString(5)
 	resourceName := "aws_media_store_container_policy.test"
 
