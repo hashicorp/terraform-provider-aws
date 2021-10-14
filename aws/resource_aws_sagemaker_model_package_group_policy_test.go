@@ -5,21 +5,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSagemakerModelPackageGroupPolicy_basic(t *testing.T) {
 	var mpg sagemaker.GetModelPackageGroupPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_model_package_group_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -41,12 +42,12 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_basic(t *testing.T) {
 
 func TestAccAWSSagemakerModelPackageGroupPolicy_disappears(t *testing.T) {
 	var mpg sagemaker.GetModelPackageGroupPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_model_package_group_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -54,8 +55,8 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerModelPackageGroupPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupPolicyExists(resourceName, &mpg),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroupPolicy(), resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroupPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroupPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroupPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,12 +66,12 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_disappears(t *testing.T) {
 
 func TestAccAWSSagemakerModelPackageGroupPolicy_disappears_modelPackageGroup(t *testing.T) {
 	var mpg sagemaker.GetModelPackageGroupPolicyOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_model_package_group_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -78,8 +79,8 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_disappears_modelPackageGroup(t *
 				Config: testAccAWSSagemakerModelPackageGroupPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupPolicyExists(resourceName, &mpg),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroup(), "aws_sagemaker_model_package_group.test"),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroupPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroup(), "aws_sagemaker_model_package_group.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerModelPackageGroupPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

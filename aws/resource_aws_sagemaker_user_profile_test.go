@@ -10,10 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -68,12 +69,12 @@ func testSweepSagemakerUserProfiles(region string) error {
 
 func testAccAWSSagemakerUserProfile_basic(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +85,7 @@ func testAccAWSSagemakerUserProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_profile_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`user-profile/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`user-profile/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_uid"),
 				),
@@ -100,12 +101,12 @@ func testAccAWSSagemakerUserProfile_basic(t *testing.T) {
 
 func testAccAWSSagemakerUserProfile_tags(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -145,12 +146,12 @@ func testAccAWSSagemakerUserProfile_tags(t *testing.T) {
 
 func testAccAWSSagemakerUserProfile_tensorboardAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -175,12 +176,12 @@ func testAccAWSSagemakerUserProfile_tensorboardAppSettings(t *testing.T) {
 
 func testAccAWSSagemakerUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -206,12 +207,12 @@ func testAccAWSSagemakerUserProfile_tensorboardAppSettingsWithImage(t *testing.T
 
 func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -236,12 +237,12 @@ func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings(t *testing.T) {
 
 func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -267,12 +268,12 @@ func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *
 
 func testAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -297,12 +298,12 @@ func testAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
 
 func testAccAWSSagemakerUserProfile_disappears(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -310,7 +311,7 @@ func testAccAWSSagemakerUserProfile_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerUserProfileBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerUserProfileExists(resourceName, &domain),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerUserProfile(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerUserProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -8,11 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -82,12 +83,12 @@ func TestAccAWSSagemakerFeatureGroup_serial(t *testing.T) {
 
 func testAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
@@ -103,7 +104,7 @@ func testAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("feature-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("feature-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", "0"),
 				),
 			},
@@ -118,12 +119,12 @@ func testAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 
 func testAccAWSSagemakerFeatureGroup_description(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
@@ -146,12 +147,12 @@ func testAccAWSSagemakerFeatureGroup_description(t *testing.T) {
 
 func testAccAWSSagemakerFeatureGroup_tags(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
@@ -194,12 +195,12 @@ func testAccAWSSagemakerFeatureGroup_tags(t *testing.T) {
 
 func testAccAWSSagemakerFeatureGroup_multipleFeatures(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
@@ -226,12 +227,12 @@ func testAccAWSSagemakerFeatureGroup_multipleFeatures(t *testing.T) {
 
 func testAccAWSSagemakerFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
@@ -257,12 +258,12 @@ func testAccAWSSagemakerFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 
 func testAccAWSSagemakerFeatureGroup_offlineConfig_basic(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
@@ -289,12 +290,12 @@ func testAccAWSSagemakerFeatureGroup_offlineConfig_basic(t *testing.T) {
 
 func testAccAWSSagemakerFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
@@ -324,13 +325,13 @@ func testAccAWSSagemakerFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 
 func TestAccAWSSagemakerFeatureGroup_offlineConfig_providedCatalog(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 	glueTableResourceName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
@@ -360,12 +361,12 @@ func TestAccAWSSagemakerFeatureGroup_offlineConfig_providedCatalog(t *testing.T)
 
 func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_feature_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
 		Steps: []resource.TestStep{
@@ -373,7 +374,7 @@ func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerFeatureGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &featureGroup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerFeatureGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSagemakerFeatureGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -485,7 +486,7 @@ resource "aws_iam_policy" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupBasicConfig(rName string) string {
-	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -505,7 +506,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupDescriptionConfig(rName string) string {
-	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -526,7 +527,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupConfigMultiFeature(rName string) string {
-	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -551,7 +552,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupOnlineSecurityConfig(rName string) string {
-	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -580,7 +581,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupOfflineBasicConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSSagemakerFeatureGroupBaseConfig(rName),
 		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName),
 		fmt.Sprintf(`
@@ -609,7 +610,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSSagemakerFeatureGroupBaseConfig(rName),
 		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName),
 		fmt.Sprintf(`
@@ -638,7 +639,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfigProvidedCatalog(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSSagemakerFeatureGroupBaseConfig(rName),
 		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName),
 		fmt.Sprintf(`
@@ -682,7 +683,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupTags1(rName, tag1Key, tag1Value string) string {
-	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -706,7 +707,7 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return composeConfig(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSSagemakerFeatureGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
