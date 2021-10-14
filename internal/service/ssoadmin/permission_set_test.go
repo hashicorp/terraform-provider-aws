@@ -19,88 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ssoadmin_permission_set", &resource.Sweeper{
-		Name: "aws_ssoadmin_permission_set",
-		F:    sweepPermissionSets,
-		Dependencies: []string{
-			"aws_ssoadmin_account_assignment",
-		},
-	})
-}
 
-func sweepPermissionSets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).SSOAdminConn
-	var sweeperErrs *multierror.Error
 
-	// Need to Read the SSO Instance first; assumes the first instance returned
-	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := tfssoadmin.DataSourceInstances()
-	dsData := ds.Data(nil)
-
-	err = ds.Read(dsData, client)
-
-	if tfawserr.ErrCodeContains(err, "AccessDenied") {
-		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return err
-	}
-
-	instanceArn := dsData.Get("arns").(*schema.Set).List()[0].(string)
-
-	input := &ssoadmin.ListPermissionSetsInput{
-		InstanceArn: aws.String(instanceArn),
-	}
-
-	err = conn.ListPermissionSetsPages(input, func(page *ssoadmin.ListPermissionSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, permissionSet := range page.PermissionSets {
-			if permissionSet == nil {
-				continue
-			}
-
-			arn := aws.StringValue(permissionSet)
-
-			log.Printf("[INFO] Deleting SSO Permission Set: %s", arn)
-
-			r := tfssoadmin.ResourcePermissionSet()
-			d := r.Data(nil)
-			d.SetId(fmt.Sprintf("%s,%s", arn, instanceArn))
-
-			err = r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Permission Set: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccSSOAdminPermissionSet_basic(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set.test"
