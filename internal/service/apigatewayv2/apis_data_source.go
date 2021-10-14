@@ -58,7 +58,7 @@ func dataSourceAwsAwsApiGatewayV2ApisRead(d *schema.ResourceData, meta interface
 			continue
 		}
 
-		if len(tagsToMatch) > 0 && !tftags.Apigatewayv2KeyValueTags(api.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
+		if len(tagsToMatch) > 0 && !KeyValueTags(api.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
 			continue
 		}
 

@@ -146,7 +146,7 @@ func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{
 	d.Set("name", api.Name)
 	d.Set("protocol_type", api.ProtocolType)
 	d.Set("route_selection_expression", api.RouteSelectionExpression)
-	if err := d.Set("tags", tftags.Apigatewayv2KeyValueTags(api.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(api.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 	d.Set("version", api.Version)

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 )
 
 // These tests need to be serialized, else resources get orphaned after "TooManyRequests" errors.
@@ -164,9 +165,9 @@ func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certif
 		output, err := conn.ImportCertificate(&acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
 			PrivateKey:  []byte(privateKey),
-			Tags: tftags.New(map[string]interface{}{
+			Tags: tfacm.Tags(tftags.New(map[string]interface{}{
 				"Name": rName,
-			}).IgnoreAws().AcmTags(),
+			}).IgnoreAws()),
 		})
 		if err != nil {
 			return err

@@ -67,7 +67,7 @@ func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:             aws.String(d.Get("name").(string)),
 		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
 		SubnetIds:        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:             tags.IgnoreAws().Apigatewayv2Tags(),
+		Tags:             Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 VPC Link: %s", req)
@@ -116,7 +116,7 @@ func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	tags := tftags.Apigatewayv2KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -148,7 +148,7 @@ func resourceVPCLinkUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Apigatewayv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating API Gateway v2 VPC Link (%s) tags: %s", d.Id(), err)
 		}
 	}
