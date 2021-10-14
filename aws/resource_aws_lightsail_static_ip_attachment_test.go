@@ -8,20 +8,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 	var staticIp lightsail.StaticIp
-	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
-	instanceName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
-	keypairName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
+	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	instanceName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -38,9 +39,9 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 
 func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	var staticIp lightsail.StaticIp
-	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
-	instanceName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
-	keypairName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
+	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	instanceName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	staticIpDestroy := func(*terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
@@ -56,8 +57,8 @@ func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
