@@ -63,8 +63,8 @@ func resourceAwsApiGatewayV2VpcLinkCreate(d *schema.ResourceData, meta interface
 
 	req := &apigatewayv2.CreateVpcLinkInput{
 		Name:             aws.String(d.Get("name").(string)),
-		SecurityGroupIds: expandStringSet(d.Get("security_group_ids").(*schema.Set)),
-		SubnetIds:        expandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
+		SubnetIds:        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:             tags.IgnoreAws().Apigatewayv2Tags(),
 	}
 
@@ -107,10 +107,10 @@ func resourceAwsApiGatewayV2VpcLinkRead(d *schema.ResourceData, meta interface{}
 	}.String()
 	d.Set("arn", arn)
 	d.Set("name", output.Name)
-	if err := d.Set("security_group_ids", flattenStringSet(output.SecurityGroupIds)); err != nil {
+	if err := d.Set("security_group_ids", flex.FlattenStringSet(output.SecurityGroupIds)); err != nil {
 		return fmt.Errorf("error setting security_group_ids: %s", err)
 	}
-	if err := d.Set("subnet_ids", flattenStringSet(output.SubnetIds)); err != nil {
+	if err := d.Set("subnet_ids", flex.FlattenStringSet(output.SubnetIds)); err != nil {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 

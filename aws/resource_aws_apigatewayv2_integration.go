@@ -204,10 +204,10 @@ func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta inter
 		req.PayloadFormatVersion = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("request_parameters"); ok {
-		req.RequestParameters = expandStringMap(v.(map[string]interface{}))
+		req.RequestParameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("request_templates"); ok {
-		req.RequestTemplates = expandStringMap(v.(map[string]interface{}))
+		req.RequestTemplates = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("response_parameters"); ok && v.(*schema.Set).Len() > 0 {
 		req.ResponseParameters = expandApiGateway2IntegrationResponseParameters(v.(*schema.Set).List())
@@ -343,7 +343,7 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 		req.RequestParameters = variables
 	}
 	if d.HasChange("request_templates") {
-		req.RequestTemplates = expandStringMap(d.Get("request_templates").(map[string]interface{}))
+		req.RequestTemplates = flex.ExpandStringMap(d.Get("request_templates").(map[string]interface{}))
 	}
 	if d.HasChange("response_parameters") {
 		o, n := d.GetChange("response_parameters")
@@ -476,7 +476,7 @@ func expandApiGateway2IntegrationResponseParameters(tfList []interface{}) map[st
 
 		if vStatusCode, ok := tfMap["status_code"].(string); ok && vStatusCode != "" {
 			if v, ok := tfMap["mappings"].(map[string]interface{}); ok && len(v) > 0 {
-				responseParameters[vStatusCode] = expandStringMap(v)
+				responseParameters[vStatusCode] = flex.ExpandStringMap(v)
 			}
 		}
 	}

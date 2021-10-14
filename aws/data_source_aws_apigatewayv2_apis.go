@@ -67,7 +67,7 @@ func dataSourceAwsAwsApiGatewayV2ApisRead(d *schema.ResourceData, meta interface
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if err := d.Set("ids", flattenStringSet(ids)); err != nil {
+	if err := d.Set("ids", flex.FlattenStringSet(ids)); err != nil {
 		return fmt.Errorf("error setting ids: %w", err)
 	}
 

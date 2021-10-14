@@ -109,7 +109,7 @@ func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interf
 	req := &apigatewayv2.CreateAuthorizerInput{
 		ApiId:          aws.String(apiId),
 		AuthorizerType: aws.String(authorizerType),
-		IdentitySource: expandStringSet(d.Get("identity_sources").(*schema.Set)),
+		IdentitySource: flex.ExpandStringSet(d.Get("identity_sources").(*schema.Set)),
 		Name:           aws.String(d.Get("name").(string)),
 	}
 	if v, ok := d.GetOk("authorizer_credentials_arn"); ok {
@@ -168,7 +168,7 @@ func resourceAwsApiGatewayV2AuthorizerRead(d *schema.ResourceData, meta interfac
 	d.Set("authorizer_type", resp.AuthorizerType)
 	d.Set("authorizer_uri", resp.AuthorizerUri)
 	d.Set("enable_simple_responses", resp.EnableSimpleResponses)
-	if err := d.Set("identity_sources", flattenStringSet(resp.IdentitySource)); err != nil {
+	if err := d.Set("identity_sources", flex.FlattenStringSet(resp.IdentitySource)); err != nil {
 		return fmt.Errorf("error setting identity_sources: %s", err)
 	}
 	if err := d.Set("jwt_configuration", flattenApiGateway2JwtConfiguration(resp.JwtConfiguration)); err != nil {
@@ -205,7 +205,7 @@ func resourceAwsApiGatewayV2AuthorizerUpdate(d *schema.ResourceData, meta interf
 		req.EnableSimpleResponses = aws.Bool(d.Get("enable_simple_responses").(bool))
 	}
 	if d.HasChange("identity_sources") {
-		req.IdentitySource = expandStringSet(d.Get("identity_sources").(*schema.Set))
+		req.IdentitySource = flex.ExpandStringSet(d.Get("identity_sources").(*schema.Set))
 	}
 	if d.HasChange("name") {
 		req.Name = aws.String(d.Get("name").(string))
@@ -262,7 +262,7 @@ func expandApiGateway2JwtConfiguration(vConfiguration []interface{}) *apigateway
 	mConfiguration := vConfiguration[0].(map[string]interface{})
 
 	if vAudience, ok := mConfiguration["audience"].(*schema.Set); ok && vAudience.Len() > 0 {
-		configuration.Audience = expandStringSet(vAudience)
+		configuration.Audience = flex.ExpandStringSet(vAudience)
 	}
 	if vIssuer, ok := mConfiguration["issuer"].(string); ok && vIssuer != "" {
 		configuration.Issuer = aws.String(vIssuer)
@@ -277,7 +277,7 @@ func flattenApiGateway2JwtConfiguration(configuration *apigatewayv2.JWTConfigura
 	}
 
 	return []interface{}{map[string]interface{}{
-		"audience": flattenStringSet(configuration.Audience),
+		"audience": flex.FlattenStringSet(configuration.Audience),
 		"issuer":   aws.StringValue(configuration.Issuer),
 	}}
 }
