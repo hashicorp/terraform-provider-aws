@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceResources() *schema.Resource {
@@ -86,7 +87,7 @@ func DataSourceResources() *schema.Resource {
 								},
 							},
 						},
-						"tags": tagsSchemaComputed(),
+						"tags": tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -166,7 +167,7 @@ func flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(list []*resourceg
 	for _, i := range list {
 		l := map[string]interface{}{
 			"resource_arn": aws.StringValue(i.ResourceARN),
-			"tags":         keyvaluetags.ResourcegroupstaggingapiKeyValueTags(i.Tags).Map(),
+			"tags":         tftags.ResourcegroupstaggingapiKeyValueTags(i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {
