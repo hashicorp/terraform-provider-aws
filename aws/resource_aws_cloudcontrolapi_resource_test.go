@@ -8,30 +8,31 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudcontrolapi"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
-	RegisterServiceErrorCheckFunc(cloudcontrolapi.EndpointsID, testAccErrorCheckSkipCloudControlAPI)
+	acctest.RegisterServiceErrorCheckFunc(cloudcontrolapi.EndpointsID, testAccErrorCheckSkipCloudControlAPI)
 }
 
 func testAccErrorCheckSkipCloudControlAPI(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"UnsupportedActionException",
 	)
 }
 
 func TestAccAwsCloudControlApiResource_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -47,19 +48,19 @@ func TestAccAwsCloudControlApiResource_basic(t *testing.T) {
 }
 
 func TestAccAwsCloudControlApiResource_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsCloudControlApiResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudControlApiResource(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudControlApiResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,12 +69,12 @@ func TestAccAwsCloudControlApiResource_disappears(t *testing.T) {
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueAdded(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -94,12 +95,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueAdded(t *testing
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueRemoved(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -120,12 +121,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueRemoved(t *testi
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueUpdate(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -146,13 +147,13 @@ func TestAccAwsCloudControlApiResource_DesiredState_BooleanValueUpdate(t *testin
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_CreateOnly(t *testing.T) {
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -173,12 +174,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_CreateOnly(t *testing.T) {
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueAdded(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -199,12 +200,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueAdded(t *testing
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueRemoved(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -225,12 +226,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueRemoved(t *testi
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueUpdate(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -251,11 +252,11 @@ func TestAccAwsCloudControlApiResource_DesiredState_IntegerValueUpdate(t *testin
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyName(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -268,11 +269,11 @@ func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyName(t *testi
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyValue(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -285,12 +286,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_InvalidPropertyValue(t *test
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueAdded(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -311,12 +312,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueAdded(t *testing.
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueRemoved(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -337,12 +338,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueRemoved(t *testin
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueUpdate(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -369,12 +370,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_ObjectValueUpdate(t *testing
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_StringValueAdded(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -395,12 +396,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_StringValueAdded(t *testing.
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_StringValueRemoved(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -421,12 +422,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_StringValueRemoved(t *testin
 }
 
 func TestAccAwsCloudControlApiResource_DesiredState_StringValueUpdate(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
@@ -447,12 +448,12 @@ func TestAccAwsCloudControlApiResource_DesiredState_StringValueUpdate(t *testing
 }
 
 func TestAccAwsCloudControlApiResource_ResourceSchema(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudcontrolapi_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudcontrolapi.EndpointsID, cloudformation.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, cloudcontrolapi.EndpointsID, cloudformation.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudControlApiResourceDestroy,
 		Steps: []resource.TestStep{
