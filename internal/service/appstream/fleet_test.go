@@ -56,7 +56,7 @@ func testSweepAppStreamFleet(region string) error {
 
 			id := aws.StringValue(fleet.Name)
 
-			r := ResourceImageBuilder()
+			r := tfappstream.ResourceImageBuilder()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -142,7 +142,7 @@ func TestAccAwsAppStreamFleet_disappears(t *testing.T) {
 				Config: testAccAwsAppStreamFleetConfig(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamFleetExists(resourceName, &fleetOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFleet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

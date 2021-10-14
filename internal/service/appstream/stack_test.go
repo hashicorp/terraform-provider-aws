@@ -51,7 +51,7 @@ func testSweepAppStreamStack(region string) error {
 
 			id := aws.StringValue(stack.Name)
 
-			r := ResourceImageBuilder()
+			r := tfappstream.ResourceImageBuilder()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -120,7 +120,7 @@ func TestAccAwsAppStreamStack_disappears(t *testing.T) {
 				Config: testAccAwsAppStreamStackConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamStackExists(resourceName, &stackOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStack(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

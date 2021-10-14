@@ -54,7 +54,7 @@ func testSweepAppStreamImageBuilder(region string) error {
 
 			id := aws.StringValue(imageBuilder.Name)
 
-			r := ResourceImageBuilder()
+			r := tfappstream.ResourceImageBuilder()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -125,7 +125,7 @@ func TestAccAwsAppStreamImageBuilder_disappears(t *testing.T) {
 				Config: testAccAwsAppStreamImageBuilderConfig(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppStreamImageBuilderExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceImageBuilder(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceImageBuilder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
