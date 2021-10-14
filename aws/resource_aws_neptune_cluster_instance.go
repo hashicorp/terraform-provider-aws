@@ -14,6 +14,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceClusterInstance() *schema.Resource {
@@ -83,7 +84,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional:     true,
 				Default:      "neptune",
 				ForceNew:     true,
-				ValidateFunc: validateNeptuneEngine(),
+				ValidateFunc: validEngine(),
 			},
 
 			"engine_version": {
@@ -99,7 +100,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"identifier_prefix"},
-				ValidateFunc:  validateNeptuneIdentifier,
+				ValidateFunc:  validIdentifier,
 			},
 
 			"identifier_prefix": {
@@ -108,7 +109,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"identifier"},
-				ValidateFunc:  validateNeptuneIdentifierPrefix,
+				ValidateFunc:  validIdentifierPrefix,
 			},
 
 			"instance_class": {
@@ -145,7 +146,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateOnceADayWindowFormat,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 
 			"preferred_maintenance_window": {
@@ -158,7 +159,7 @@ func ResourceClusterInstance() *schema.Resource {
 					}
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 
 			"promotion_tier": {
