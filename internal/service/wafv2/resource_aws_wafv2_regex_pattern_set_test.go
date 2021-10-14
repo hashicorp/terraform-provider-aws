@@ -19,6 +19,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 )
 
 func init() {
@@ -45,7 +53,7 @@ func testSweepWafv2RegexPatternSets(region string) error {
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
 
-	err = lister.ListRegexPatternSetsPages(conn, input, func(page *wafv2.ListRegexPatternSetsOutput, lastPage bool) bool {
+	err = tfwafv2.ListRegexPatternSetsPages(conn, input, func(page *wafv2.ListRegexPatternSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

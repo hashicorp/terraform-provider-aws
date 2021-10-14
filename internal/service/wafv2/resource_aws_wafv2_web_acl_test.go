@@ -20,6 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 )
 
 func init() {
@@ -44,7 +52,7 @@ func testSweepWafv2WebAcls(region string) error {
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
 
-	err = lister.ListWebACLsPages(conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
+	err = tfwafv2.ListWebACLsPages(conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
