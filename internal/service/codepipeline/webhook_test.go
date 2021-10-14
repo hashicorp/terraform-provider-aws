@@ -16,7 +16,7 @@ import (
 
 const envVarGithubTokenUsageCodePipelineWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
 
-func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
+func TestAccCodePipelineWebhook_basic(t *testing.T) {
 	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v codepipeline.ListWebhookItem
@@ -51,7 +51,7 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
+func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v codepipeline.ListWebhookItem
@@ -86,7 +86,7 @@ func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
+func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v codepipeline.ListWebhookItem
@@ -119,7 +119,7 @@ func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
+func TestAccCodePipelineWebhook_tags(t *testing.T) {
 	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v1, v2, v3 codepipeline.ListWebhookItem
@@ -183,7 +183,7 @@ func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipelineWebhook_UpdateAuthenticationConfiguration_SecretToken(t *testing.T) {
+func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, envVarGithubTokenUsageCodePipelineWebhook)
 
 	var v1, v2 codepipeline.ListWebhookItem
