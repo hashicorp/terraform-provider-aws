@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
+	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
 func init() {
@@ -251,7 +253,7 @@ func testAccCheckAWSSSOAdminAccountAssignmentDestroy(s *terraform.State) error {
 		permissionSetArn := idParts[4]
 		instanceArn := idParts[5]
 
-		accountAssignment, err := finder.AccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+		accountAssignment, err := tfssoadmin.FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
 
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 			continue
@@ -294,7 +296,7 @@ func testAccCheckAWSSSOAdminAccountAssignmentExists(resourceName string) resourc
 		permissionSetArn := idParts[4]
 		instanceArn := idParts[5]
 
-		accountAssignment, err := finder.AccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+		accountAssignment, err := tfssoadmin.FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
 
 		if err != nil {
 			return err

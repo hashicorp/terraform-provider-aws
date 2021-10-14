@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
+	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
 func ResourceManagedPolicyAttachment() *schema.Resource {
@@ -90,7 +92,7 @@ func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error parsing SSO Managed Policy Attachment ID: %w", err)
 	}
 
-	policy, err := finder.ManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+	policy, err := tfssoadmin.FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", managedPolicyArn, permissionSetArn)
