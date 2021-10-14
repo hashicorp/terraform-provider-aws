@@ -124,7 +124,7 @@ func resourceAwsIotPolicyAttachmentDelete(d *schema.ResourceData, meta interface
 
 	// DetachPolicy doesn't return an error if the policy doesn't exist,
 	// but it returns an error if the Target is not found.
-	if isAWSErr(err, iot.ErrCodeInvalidRequestException, "Invalid Target") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "Invalid Target") {
 		log.Printf("[WARN] IOT target (%s) not found, removing attachment to policy (%s) from state", target, policyName)
 		return nil
 	}

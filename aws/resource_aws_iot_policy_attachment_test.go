@@ -159,7 +159,7 @@ func testAccCheckAWSIotPolicyAttchmentDestroy(s *terraform.State) error {
 			return true
 		})
 
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "The certificate given in the principal does not exist.") {
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "The certificate given in the principal does not exist.") {
 			continue
 		} else if err != nil {
 			return err

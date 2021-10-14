@@ -125,7 +125,7 @@ func resourceAwsIotThingTypeRead(d *schema.ResourceData, meta interface{}) error
 	out, err := conn.DescribeThingType(params)
 
 	if err != nil {
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] IoT Thing Type %q not found, removing from state", d.Id())
 			d.SetId("")
 		}
@@ -189,13 +189,13 @@ func resourceAwsIotThingTypeDelete(d *schema.ResourceData, meta interface{}) err
 		_, err := conn.DeleteThingType(deleteParams)
 
 		if err != nil {
-			if isAWSErr(err, iot.ErrCodeInvalidRequestException, "Please wait for 5 minutes after deprecation and then retry") {
+			if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "Please wait for 5 minutes after deprecation and then retry") {
 				return resource.RetryableError(err)
 			}
 
 			// As the delay post-deprecation is about 5 minutes, it may have been
 			// deleted in between, thus getting a Not Found Exception.
-			if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 
@@ -204,9 +204,9 @@ func resourceAwsIotThingTypeDelete(d *schema.ResourceData, meta interface{}) err
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteThingType(deleteParams)
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 	}

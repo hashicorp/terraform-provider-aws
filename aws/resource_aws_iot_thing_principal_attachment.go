@@ -53,7 +53,7 @@ func getIoTThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool
 	out, err := conn.ListThingPrincipals(&iot.ListThingPrincipalsInput{
 		ThingName: aws.String(thing),
 	})
-	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 		return false, nil
 	} else if err != nil {
 		return false, err
@@ -99,7 +99,7 @@ func resourceAwsIotThingPrincipalAttachmentDelete(d *schema.ResourceData, meta i
 		ThingName: aws.String(thing),
 	})
 
-	if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] IoT Principal %s or Thing %s not found, removing from state", principal, thing)
 	} else if err != nil {
 		return fmt.Errorf("error detaching principal %s from thing %s: %s", principal, thing, err)

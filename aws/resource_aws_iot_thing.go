@@ -90,7 +90,7 @@ func resourceAwsIotThingRead(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.DescribeThing(params)
 
 	if err != nil {
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] IoT Thing %q not found, removing from state", d.Id())
 			d.SetId("")
 		}
@@ -153,7 +153,7 @@ func resourceAwsIotThingDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.DeleteThing(params)
 	if err != nil {
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return err
