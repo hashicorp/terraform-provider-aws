@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceGroup() *schema.Resource {
@@ -33,7 +34,7 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -57,7 +58,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 	d.Set("kms_key_id", logGroup.KmsKeyId)
 
-	tags, err := keyvaluetags.CloudwatchlogsListTags(conn, name)
+	tags, err := tftags.CloudwatchlogsListTags(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudWatch Logs Group (%s): %w", name, err)
