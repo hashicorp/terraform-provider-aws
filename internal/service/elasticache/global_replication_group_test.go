@@ -121,7 +121,7 @@ func disassociateMembers(conn *elasticache.ElastiCache, globalReplicationGroup *
 	return membersGroup.Wait().ErrorOrNil()
 }
 
-func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	var primaryReplicationGroup elasticache.ReplicationGroup
 
@@ -166,7 +166,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_description(t *testing.T) {
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -203,7 +203,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_disappears(t *testing.T) {
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -227,7 +227,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheGlobalReplicationGroup_MultipleSecondaries(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_multipleSecondaries(t *testing.T) {
 	var providers []*schema.Provider
 	var globalReplcationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -252,7 +252,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_MultipleSecondaries(t *testing.
 	})
 }
 
-func TestAccAWSElasticacheGlobalReplicationGroup_ReplaceSecondary_DifferentRegion(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_ReplaceSecondary_differentRegion(t *testing.T) {
 	var providers []*schema.Provider
 	var globalReplcationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -283,7 +283,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_ReplaceSecondary_DifferentRegio
 	})
 }
 
-func TestAccAWSElasticacheGlobalReplicationGroup_ClusterMode(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_clusterMode(t *testing.T) {
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	var primaryReplicationGroup elasticache.ReplicationGroup
 

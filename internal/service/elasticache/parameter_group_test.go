@@ -72,7 +72,7 @@ func sweepParameterGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
+func TestAccElastiCacheParameterGroup_basic(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -103,7 +103,7 @@ func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheParameterGroup_addParameter(t *testing.T) {
+func TestAccElastiCacheParameterGroup_addParameter(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -150,7 +150,7 @@ func TestAccAWSElasticacheParameterGroup_addParameter(t *testing.T) {
 }
 
 // Regression for https://github.com/hashicorp/terraform-provider-aws/issues/116
-func TestAccAWSElasticacheParameterGroup_removeAllParameters(t *testing.T) {
+func TestAccElastiCacheParameterGroup_removeAllParameters(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -189,7 +189,7 @@ func TestAccAWSElasticacheParameterGroup_removeAllParameters(t *testing.T) {
 
 // The API returns errors when attempting to reset the reserved-memory parameter.
 // This covers our custom logic handling for this situation.
-func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_AllParameters(t *testing.T) {
+func TestAccElastiCacheParameterGroup_RemoveReservedMemoryParameter_allParameters(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -229,7 +229,7 @@ func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_AllParame
 
 // The API returns errors when attempting to reset the reserved-memory parameter.
 // This covers our custom logic handling for this situation.
-func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_RemainingParameters(t *testing.T) {
+func TestAccElastiCacheParameterGroup_RemoveReservedMemoryParameter_remainingParameters(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -277,7 +277,7 @@ func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_Remaining
 
 // The API returns errors when attempting to reset the reserved-memory parameter.
 // This covers our custom logic handling for this situation.
-func TestAccAWSElasticacheParameterGroup_switchReservedMemoryParameter(t *testing.T) {
+func TestAccElastiCacheParameterGroup_switchReservedMemoryParameter(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -321,7 +321,7 @@ func TestAccAWSElasticacheParameterGroup_switchReservedMemoryParameter(t *testin
 
 // The API returns errors when attempting to reset the reserved-memory parameter.
 // This covers our custom logic handling for this situation.
-func TestAccAWSElasticacheParameterGroup_updateReservedMemoryParameter(t *testing.T) {
+func TestAccElastiCacheParameterGroup_updateReservedMemoryParameter(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -363,7 +363,7 @@ func TestAccAWSElasticacheParameterGroup_updateReservedMemoryParameter(t *testin
 	})
 }
 
-func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
+func TestAccElastiCacheParameterGroup_uppercaseName(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rInt := sdkacctest.RandInt()
@@ -391,7 +391,7 @@ func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheParameterGroup_Description(t *testing.T) {
+func TestAccElastiCacheParameterGroup_description(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -418,7 +418,7 @@ func TestAccAWSElasticacheParameterGroup_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheParameterGroup_Tags(t *testing.T) {
+func TestAccElastiCacheParameterGroup_tags(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())

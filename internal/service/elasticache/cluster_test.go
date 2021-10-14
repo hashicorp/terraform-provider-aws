@@ -86,7 +86,7 @@ func testAccErrorCheckSkipElasticache(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func TestAccAWSElasticacheCluster_Engine_Memcached(t *testing.T) {
+func TestAccElastiCacheCluster_Engine_memcached(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -120,7 +120,7 @@ func TestAccAWSElasticacheCluster_Engine_Memcached(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_Engine_Redis(t *testing.T) {
+func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -152,7 +152,7 @@ func TestAccAWSElasticacheCluster_Engine_Redis(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_Port_Redis_Default(t *testing.T) {
+func TestAccElastiCacheCluster_PortRedis_default(t *testing.T) {
 	var ec elasticache.CacheCluster
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -172,7 +172,7 @@ func TestAccAWSElasticacheCluster_Port_Redis_Default(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_ParameterGroupName_Default(t *testing.T) {
+func TestAccElastiCacheCluster_ParameterGroupName_default(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -205,7 +205,7 @@ func TestAccAWSElasticacheCluster_ParameterGroupName_Default(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_Port(t *testing.T) {
+func TestAccElastiCacheCluster_port(t *testing.T) {
 	var ec elasticache.CacheCluster
 	port := 11212
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -240,7 +240,7 @@ func TestAccAWSElasticacheCluster_Port(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_SecurityGroup_Ec2Classic(t *testing.T) {
+func TestAccElastiCacheCluster_SecurityGroup_ec2Classic(t *testing.T) {
 	var ec elasticache.CacheCluster
 	resourceName := "aws_elasticache_cluster.test"
 	resourceSecurityGroupName := "aws_elasticache_security_group.test"
@@ -266,7 +266,7 @@ func TestAccAWSElasticacheCluster_SecurityGroup_Ec2Classic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_snapshotsWithUpdates(t *testing.T) {
+func TestAccElastiCacheCluster_snapshotsWithUpdates(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -296,7 +296,7 @@ func TestAccAWSElasticacheCluster_snapshotsWithUpdates(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_NumCacheNodes_Decrease(t *testing.T) {
+func TestAccElastiCacheCluster_NumCacheNodes_decrease(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -325,7 +325,7 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_Decrease(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_NumCacheNodes_Increase(t *testing.T) {
+func TestAccElastiCacheCluster_NumCacheNodes_increase(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -354,7 +354,7 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_Increase(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_NumCacheNodes_IncreaseWithPreferredAvailabilityZones(t *testing.T) {
+func TestAccElastiCacheCluster_NumCacheNodes_increaseWithPreferredAvailabilityZones(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -385,7 +385,7 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_IncreaseWithPreferredAvailabilit
 	})
 }
 
-func TestAccAWSElasticacheCluster_vpc(t *testing.T) {
+func TestAccElastiCacheCluster_vpc(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -408,7 +408,7 @@ func TestAccAWSElasticacheCluster_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_multiAZInVpc(t *testing.T) {
+func TestAccElastiCacheCluster_multiAZInVPC(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	var ec elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -431,7 +431,7 @@ func TestAccAWSElasticacheCluster_multiAZInVpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_AZMode_Memcached(t *testing.T) {
+func TestAccElastiCacheCluster_AZMode_memcached(t *testing.T) {
 	var cluster elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -465,7 +465,7 @@ func TestAccAWSElasticacheCluster_AZMode_Memcached(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_AZMode_Redis(t *testing.T) {
+func TestAccElastiCacheCluster_AZMode_redis(t *testing.T) {
 	var cluster elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -495,7 +495,7 @@ func TestAccAWSElasticacheCluster_AZMode_Redis(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_EngineVersion_Memcached(t *testing.T) {
+func TestAccElastiCacheCluster_EngineVersion_memcached(t *testing.T) {
 	var pre, mid, post elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -536,7 +536,7 @@ func TestAccAWSElasticacheCluster_EngineVersion_Memcached(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_EngineVersion_Redis(t *testing.T) {
+func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 	var v1, v2, v3, v4, v5 elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -595,7 +595,7 @@ func TestAccAWSElasticacheCluster_EngineVersion_Redis(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_NodeTypeResize_Memcached(t *testing.T) {
+func TestAccElastiCacheCluster_NodeTypeResize_memcached(t *testing.T) {
 	var pre, post elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -625,7 +625,7 @@ func TestAccAWSElasticacheCluster_NodeTypeResize_Memcached(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_NodeTypeResize_Redis(t *testing.T) {
+func TestAccElastiCacheCluster_NodeTypeResize_redis(t *testing.T) {
 	var pre, post elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"
@@ -655,7 +655,7 @@ func TestAccAWSElasticacheCluster_NodeTypeResize_Redis(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_NumCacheNodes_Redis(t *testing.T) {
+func TestAccElastiCacheCluster_NumCacheNodes_redis(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -672,7 +672,7 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_Redis(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_ReplicationGroupID_AvailabilityZone(t *testing.T) {
+func TestAccElastiCacheCluster_ReplicationGroupID_availabilityZone(t *testing.T) {
 	var cluster elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -697,7 +697,7 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_AvailabilityZone(t *testing
 	})
 }
 
-func TestAccAWSElasticacheCluster_ReplicationGroupID_SingleReplica(t *testing.T) {
+func TestAccElastiCacheCluster_ReplicationGroupID_singleReplica(t *testing.T) {
 	var cluster elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -725,7 +725,7 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_SingleReplica(t *testing.T)
 	})
 }
 
-func TestAccAWSElasticacheCluster_ReplicationGroupID_MultipleReplica(t *testing.T) {
+func TestAccElastiCacheCluster_ReplicationGroupID_multipleReplica(t *testing.T) {
 	var cluster1, cluster2 elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -761,7 +761,7 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_MultipleReplica(t *testing.
 	})
 }
 
-func TestAccAWSElasticacheCluster_Memcached_FinalSnapshot(t *testing.T) {
+func TestAccElastiCacheCluster_Memcached_finalSnapshot(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -778,7 +778,7 @@ func TestAccAWSElasticacheCluster_Memcached_FinalSnapshot(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_Redis_FinalSnapshot(t *testing.T) {
+func TestAccElastiCacheCluster_Redis_finalSnapshot(t *testing.T) {
 	var cluster elasticache.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_cluster.test"

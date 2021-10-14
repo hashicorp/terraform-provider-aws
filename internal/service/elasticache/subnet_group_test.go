@@ -63,7 +63,7 @@ func sweepSubnetGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
+func TestAccElastiCacheSubnetGroup_basic(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	resourceName := "aws_elasticache_subnet_group.test"
 
@@ -92,7 +92,7 @@ func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
+func TestAccElastiCacheSubnetGroup_update(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	resourceName := "aws_elasticache_subnet_group.test"
 	rInt := sdkacctest.RandInt()
@@ -128,7 +128,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheSubnetGroup_tags(t *testing.T) {
+func TestAccElastiCacheSubnetGroup_tags(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	resourceName := "aws_elasticache_subnet_group.test"
 	rInt := sdkacctest.RandInt()
