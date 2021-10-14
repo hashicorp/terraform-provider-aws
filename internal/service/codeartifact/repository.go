@@ -106,7 +106,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	params := &codeartifact.CreateRepositoryInput{
 		Repository: aws.String(d.Get("repository").(string)),
 		Domain:     aws.String(d.Get("domain").(string)),
-		Tags:       tags.IgnoreAws().CodeartifactTags(),
+		Tags:       Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -212,7 +212,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.CodeartifactUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating CodeArtifact Repository (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -265,7 +265,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tags, err := tftags.CodeartifactListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodeArtifact Repository (%s): %w", arn, err)

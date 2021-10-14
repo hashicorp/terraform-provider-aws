@@ -75,7 +75,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 	params := &codeartifact.CreateDomainInput{
 		Domain: aws.String(d.Get("domain").(string)),
-		Tags:   tags.IgnoreAws().CodeartifactTags(),
+		Tags:   Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("encryption_key"); ok {
@@ -126,7 +126,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("repository_count", sm.Domain.RepositoryCount)
 	d.Set("created_time", sm.Domain.CreatedTime.Format(time.RFC3339))
 
-	tags, err := tftags.CodeartifactListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodeArtifact Domain (%s): %w", arn, err)
@@ -151,7 +151,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.CodeartifactUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating CodeArtifact Domain (%s) tags: %w", d.Id(), err)
 		}
 	}
