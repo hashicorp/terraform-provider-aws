@@ -1,4 +1,7 @@
-package aws
+//go:build sweep
+// +build sweep
+
+package sweep
 
 import (
 	"context"
@@ -7,18 +10,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 const (
@@ -27,19 +27,14 @@ const (
 
 const defaultSweeperAssumeRoleDurationSeconds = 3600
 
-// sweeperAwsClients is a shared cache of regional conns.AWSClient
+// SweeperClients is a shared cache of regional conns.AWSClient
 // This prevents client re-initialization for every resource with no benefit.
-var sweeperAwsClients map[string]interface{}
+var SweeperClients map[string]interface{}
 
-func TestMain(m *testing.M) {
-	sweeperAwsClients = make(map[string]interface{})
-	resource.TestMain(m)
-}
-
-// sharedClientForRegion returns a common conns.AWSClient setup needed for the sweeper
+// SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
-func sharedClientForRegion(region string) (interface{}, error) {
-	if client, ok := sweeperAwsClients[region]; ok {
+func SharedRegionalSweepClient(region string) (interface{}, error) {
+	if client, ok := SweeperClients[region]; ok {
 		return client, nil
 	}
 
@@ -87,30 +82,30 @@ func sharedClientForRegion(region string) (interface{}, error) {
 		return nil, fmt.Errorf("error getting AWS client: %w", err)
 	}
 
-	sweeperAwsClients[region] = client
+	SweeperClients[region] = client
 
 	return client, nil
 }
 
-type testSweepResource struct {
+type SweepResource struct {
 	d        *schema.ResourceData
 	meta     interface{}
 	resource *schema.Resource
 }
 
-func NewTestSweepResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) *testSweepResource {
-	return &testSweepResource{
+func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) *SweepResource {
+	return &SweepResource{
 		d:        d,
 		meta:     meta,
 		resource: resource,
 	}
 }
 
-func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
-	return testSweepResourceOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+func SweepOrchestrator(sweepResources []*SweepResource) error {
+	return SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
 }
 
-func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []*testSweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
+func SweepOrchestratorContext(ctx context.Context, sweepResources []*SweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
 	var g multierror.Group
 
 	for _, sweepResource := range sweepResources {
@@ -118,7 +113,7 @@ func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []
 
 		g.Go(func() error {
 			err := tfresource.RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
-				err := acctest.DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+				err := DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 
 				if err != nil {
 					if strings.Contains(err.Error(), "Throttling") {
@@ -133,7 +128,7 @@ func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []
 			})
 
 			if tfresource.TimedOut(err) {
-				err = acctest.DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+				err = DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 			}
 
 			return err
@@ -145,7 +140,7 @@ func testSweepResourceOrchestratorContext(ctx context.Context, sweepResources []
 
 // Check sweeper API call error for reasons to skip sweeping
 // These include missing API endpoints and unsupported API calls
-func testSweepSkipSweepError(err error) bool {
+func SkipSweepError(err error) bool {
 	// Ignore missing API endpoints
 	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
@@ -197,4 +192,24 @@ func testSweepSkipSweepError(err error) bool {
 	return false
 }
 
+func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
+	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
+		var diags diag.Diagnostics
 
+		if resource.DeleteContext != nil {
+			diags = resource.DeleteContext(context.Background(), d, meta)
+		} else {
+			diags = resource.DeleteWithoutTimeout(context.Background(), d, meta)
+		}
+
+		for i := range diags {
+			if diags[i].Severity == diag.Error {
+				return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
+			}
+		}
+
+		return nil
+	}
+
+	return resource.Delete(d, meta)
+}
