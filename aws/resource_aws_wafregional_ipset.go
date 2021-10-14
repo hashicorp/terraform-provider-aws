@@ -13,6 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// WAF requires UpdateIPSet operations be split into batches of 1000 Updates
+const ipSetUpdatesLimit = 1000
+
 func resourceAwsWafRegionalIPSet() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsWafRegionalIPSetCreate,

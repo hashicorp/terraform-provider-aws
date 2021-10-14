@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
@@ -110,7 +111,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta
 	}
 
 	d.Set("name", resp.SqlInjectionMatchSet.Name)
-	d.Set("sql_injection_match_tuple", flattenWafSqlInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples))
+	d.Set("sql_injection_match_tuple", flattenSQLInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples))
 
 	return nil
 }
@@ -241,4 +242,16 @@ func resourceAwsWafRegionalSqlInjectionMatchSetTupleHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
 
 	return create.StringHashcode(buf.String())
+}
+
+func flattenSQLInjectionMatchTuples(ts []*waf.SqlInjectionMatchTuple) []interface{} {
+	out := make([]interface{}, len(ts))
+	for i, t := range ts {
+		m := make(map[string]interface{})
+		m["text_transformation"] = aws.StringValue(t.TextTransformation)
+		m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
+		out[i] = m
+	}
+
+	return out
 }
