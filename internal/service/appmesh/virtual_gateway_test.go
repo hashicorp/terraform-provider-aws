@@ -55,7 +55,7 @@ func testSweepAppmeshVirtualGateways(region string) error {
 					virtualGatewayName := aws.StringValue(virtualGateway.VirtualGatewayName)
 
 					log.Printf("[INFO] Deleting App Mesh service mesh (%s) virtual gateway: %s", meshName, virtualGatewayName)
-					r := ResourceVirtualGateway()
+					r := tfappmesh.ResourceVirtualGateway()
 					d := r.Data(nil)
 					d.SetId("????????????????") // ID not used in Delete.
 					d.Set("mesh_name", meshName)
@@ -151,7 +151,7 @@ func testAccAwsAppmeshVirtualGateway_disappears(t *testing.T) {
 				Config: testAccAppmeshVirtualGatewayConfig(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVirtualGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceVirtualGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
