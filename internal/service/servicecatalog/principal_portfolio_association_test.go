@@ -20,85 +20,9 @@ import (
 )
 
 // add sweeper to delete known test servicecat principal portfolio associations
-func init() {
-	resource.AddTestSweepers("aws_servicecatalog_principal_portfolio_association", &resource.Sweeper{
-		Name:         "aws_servicecatalog_principal_portfolio_association",
-		Dependencies: []string{},
-		F:            sweepPrincipalPortfolioAssociations,
-	})
-}
 
-func sweepPrincipalPortfolioAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &servicecatalog.ListPortfoliosInput{}
-
-	err = conn.ListPortfoliosPages(input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, detail := range page.PortfolioDetails {
-			if detail == nil {
-				continue
-			}
-
-			pInput := &servicecatalog.ListPrincipalsForPortfolioInput{
-				PortfolioId: detail.Id,
-			}
-
-			err = conn.ListPrincipalsForPortfolioPages(pInput, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, principal := range page.Principals {
-					if principal == nil {
-						continue
-					}
-
-					r := tfservicecatalog.ResourcePrincipalPortfolioAssociation()
-					d := r.Data(nil)
-					d.SetId(tfservicecatalog.PrincipalPortfolioAssociationID(tfservicecatalog.AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id)))
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Portfolios for Principals %s: %w", region, err))
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Principal Portfolio Associations for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Principal Portfolio Associations for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Principal Portfolio Associations sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_principal_portfolio_association.test"

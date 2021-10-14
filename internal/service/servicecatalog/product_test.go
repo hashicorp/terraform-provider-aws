@@ -20,66 +20,9 @@ import (
 )
 
 // add sweeper to delete known test servicecat products
-func init() {
-	resource.AddTestSweepers("aws_servicecatalog_product", &resource.Sweeper{
-		Name: "aws_servicecatalog_product",
-		Dependencies: []string{
-			"aws_servicecatalog_provisioning_artifact",
-		},
-		F: sweepProducts,
-	})
-}
 
-func sweepProducts(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &servicecatalog.SearchProductsAsAdminInput{}
-
-	err = conn.SearchProductsAsAdminPages(input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, pvd := range page.ProductViewDetails {
-			if pvd == nil || pvd.ProductViewSummary == nil {
-				continue
-			}
-
-			id := aws.StringValue(pvd.ProductViewSummary.ProductId)
-
-			r := tfservicecatalog.ResourceProduct()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Products for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Products sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccServiceCatalogProduct_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"

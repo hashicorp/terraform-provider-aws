@@ -19,82 +19,9 @@ import (
 )
 
 // add sweeper to delete known test servicecat constraints
-func init() {
-	resource.AddTestSweepers("aws_servicecatalog_constraint", &resource.Sweeper{
-		Name:         "aws_servicecatalog_constraint",
-		Dependencies: []string{},
-		F:            sweepConstraints,
-	})
-}
 
-func sweepConstraints(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	// no paginator or list operation for constraints directly, have to list portfolios and constraints of portfolios
-
-	input := &servicecatalog.ListPortfoliosInput{}
-
-	err = conn.ListPortfoliosPages(input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, detail := range page.PortfolioDetails {
-			if detail == nil {
-				continue
-			}
-
-			constraintInput := &servicecatalog.ListConstraintsForPortfolioInput{
-				PortfolioId: detail.Id,
-			}
-
-			err = conn.ListConstraintsForPortfolioPages(constraintInput, func(page *servicecatalog.ListConstraintsForPortfolioOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, detail := range page.ConstraintDetails {
-					if detail == nil {
-						continue
-					}
-
-					r := tfservicecatalog.ResourceConstraint()
-					d := r.Data(nil)
-					d.SetId(aws.StringValue(detail.ConstraintId))
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Constraints for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Constraints for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Constraints sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccServiceCatalogConstraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"

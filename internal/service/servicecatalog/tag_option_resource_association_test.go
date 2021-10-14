@@ -19,80 +19,9 @@ import (
 )
 
 // add sweeper to delete known test servicecat tag option resource associations
-func init() {
-	resource.AddTestSweepers("aws_servicecatalog_tag_option_resource_association", &resource.Sweeper{
-		Name:         "aws_servicecatalog_tag_option_resource_association",
-		Dependencies: []string{},
-		F:            sweepTagOptionResourceAssociations,
-	})
-}
 
-func sweepTagOptionResourceAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &servicecatalog.ListTagOptionsInput{}
-
-	err = conn.ListTagOptionsPages(input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, tag := range page.TagOptionDetails {
-			if tag == nil {
-				continue
-			}
-
-			resInput := &servicecatalog.ListResourcesForTagOptionInput{
-				TagOptionId: tag.Id,
-			}
-
-			err = conn.ListResourcesForTagOptionPages(resInput, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, resource := range page.ResourceDetails {
-					if resource == nil {
-						continue
-					}
-
-					r := tfservicecatalog.ResourceTagOptionResourceAssociation()
-					d := r.Data(nil)
-					d.SetId(aws.StringValue(resource.Id))
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Tag Option Resource Associations for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Tag Option Resource Associations for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Tag Option Resource Associations sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option_resource_association.test"

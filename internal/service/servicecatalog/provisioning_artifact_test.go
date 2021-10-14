@@ -19,94 +19,9 @@ import (
 )
 
 // add sweeper to delete known test servicecat provisioning artifacts
-func init() {
-	resource.AddTestSweepers("aws_servicecatalog_provisioning_artifact", &resource.Sweeper{
-		Name:         "aws_servicecatalog_provisioning_artifact",
-		Dependencies: []string{},
-		F:            sweepProvisioningArtifacts,
-	})
-}
 
-func sweepProvisioningArtifacts(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &servicecatalog.SearchProductsAsAdminInput{}
-
-	err = conn.SearchProductsAsAdminPages(input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, pvd := range page.ProductViewDetails {
-			if pvd == nil || pvd.ProductViewSummary == nil || pvd.ProductViewSummary.ProductId == nil {
-				continue
-			}
-
-			productID := aws.StringValue(pvd.ProductViewSummary.ProductId)
-
-			artInput := &servicecatalog.ListProvisioningArtifactsInput{
-				ProductId: aws.String(productID),
-			}
-
-			// there's no paginator for ListProvisioningArtifacts
-			for {
-				output, err := conn.ListProvisioningArtifacts(artInput)
-
-				if err != nil {
-					err := fmt.Errorf("error listing Service Catalog Provisioning Artifacts for product (%s): %w", productID, err)
-					log.Printf("[ERROR] %s", err)
-					errs = multierror.Append(errs, err)
-					break
-				}
-
-				for _, pad := range output.ProvisioningArtifactDetails {
-					r := tfservicecatalog.ResourceProvisioningArtifact()
-					d := r.Data(nil)
-
-					d.SetId(aws.StringValue(pad.Id))
-					d.Set("product_id", productID)
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				/*
-					// Currently, the API has no token field on input (AWS oops)
-					if aws.StringValue(output.NextPageToken) == "" {
-						break
-					}
-
-					artInput.NextPageToken = output.NextPageToken
-				*/
-				break
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioning Artifacts for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Provisioning Artifacts for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Provisioning Artifacts sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"

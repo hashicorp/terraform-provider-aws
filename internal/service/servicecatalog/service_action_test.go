@@ -19,64 +19,9 @@ import (
 )
 
 // add sweeper to delete known test servicecat service actions
-func init() {
-	resource.AddTestSweepers("aws_servicecatalog_service_action", &resource.Sweeper{
-		Name:         "aws_servicecatalog_service_action",
-		Dependencies: []string{},
-		F:            sweepServiceActions,
-	})
-}
 
-func sweepServiceActions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &servicecatalog.ListServiceActionsInput{}
-
-	err = conn.ListServiceActionsPages(input, func(page *servicecatalog.ListServiceActionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, sas := range page.ServiceActionSummaries {
-			if sas == nil {
-				continue
-			}
-
-			id := aws.StringValue(sas.Id)
-
-			r := tfservicecatalog.ResourceServiceAction()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Service Actions for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Service Actions for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Service Actions sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_service_action.test"

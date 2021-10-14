@@ -20,67 +20,9 @@ import (
 )
 
 // add sweeper to delete known test servicecat provisioned products
-func init() {
-	resource.AddTestSweepers("aws_servicecatalog_provisioned_product", &resource.Sweeper{
-		Name:         "aws_servicecatalog_provisioned_product",
-		Dependencies: []string{},
-		F:            sweepProvisionedProducts,
-	})
-}
 
-func sweepProvisionedProducts(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &servicecatalog.SearchProvisionedProductsInput{
-		AccessLevelFilter: &servicecatalog.AccessLevelFilter{
-			Key:   aws.String(servicecatalog.AccessLevelFilterKeyAccount),
-			Value: aws.String(client.(*conns.AWSClient).AccountID),
-		},
-	}
-
-	err = conn.SearchProvisionedProductsPages(input, func(page *servicecatalog.SearchProvisionedProductsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, detail := range page.ProvisionedProducts {
-			if detail == nil {
-				continue
-			}
-
-			r := tfservicecatalog.ResourceProvisionedProduct()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(detail.Id))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioned Products for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Provisioned Products for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Provisioned Products sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
