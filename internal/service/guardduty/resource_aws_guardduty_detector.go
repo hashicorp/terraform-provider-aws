@@ -1,4 +1,4 @@
-package aws
+package guardduty
 
 import (
 	"fmt"
@@ -9,25 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/guardduty/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
 func ResourceDetector() *schema.Resource {
@@ -225,7 +210,7 @@ func resourceDetectorDelete(d *schema.ResourceData, meta interface{}) error {
 		DetectorId: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(tfguardduty.membershipPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(membershipPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteDetector(input)
 
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {

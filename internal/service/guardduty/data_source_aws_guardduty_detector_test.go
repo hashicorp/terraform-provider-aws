@@ -1,4 +1,4 @@
-package aws
+package guardduty_test
 
 import (
 	"testing"
