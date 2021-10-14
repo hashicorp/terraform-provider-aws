@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepBackupVaults(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).backupconn
+	conn := client.(*conns.AWSClient).BackupConn
 	input := &backup.ListBackupVaultsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*testSweepResource, 0)
@@ -240,7 +241,7 @@ func TestAccAwsBackupVault_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsBackupVaultDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault" {
 			continue
@@ -269,7 +270,7 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 		params := &backup.DescribeBackupVaultInput{
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}
@@ -285,7 +286,7 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 }
 
 func testAccPreCheckAWSBackup(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
 	input := &backup.ListBackupVaultsInput{}
 

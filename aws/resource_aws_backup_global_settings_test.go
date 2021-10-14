@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 func testAccCheckAwsBackupGlobalSettingsExists(settings *backup.DescribeGlobalSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		conn := acctest.Provider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 		resp, err := conn.DescribeGlobalSettings(&backup.DescribeGlobalSettingsInput{})
 		if err != nil {
 			return err

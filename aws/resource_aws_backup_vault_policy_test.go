@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepBackupVaultPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).backupconn
+	conn := client.(*conns.AWSClient).BackupConn
 	input := &backup.ListBackupVaultsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*testSweepResource, 0)
@@ -148,7 +149,7 @@ func TestAccAwsBackupVaultPolicy_disappears_vault(t *testing.T) {
 }
 
 func testAccCheckAwsBackupVaultPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault_policy" {
@@ -182,7 +183,7 @@ func testAccCheckAwsBackupVaultPolicyExists(name string, vault *backup.GetBackup
 			return fmt.Errorf("No Backup Vault Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
 		output, err := finder.BackupVaultAccessPolicyByName(conn, rs.Primary.ID)
 

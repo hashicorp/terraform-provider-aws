@@ -12,6 +12,7 @@ import (
 	tfbackup "github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsBackupVaultPolicy() *schema.Resource {
@@ -45,7 +46,7 @@ func resourceAwsBackupVaultPolicy() *schema.Resource {
 }
 
 func resourceAwsBackupVaultPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	name := d.Get("backup_vault_name").(string)
 	input := &backup.PutBackupVaultAccessPolicyInput{
@@ -65,7 +66,7 @@ func resourceAwsBackupVaultPolicyPut(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsBackupVaultPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	output, err := finder.BackupVaultAccessPolicyByName(conn, d.Id())
 
@@ -87,7 +88,7 @@ func resourceAwsBackupVaultPolicyRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsBackupVaultPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	log.Printf("[DEBUG] Deleting Backup Vault Policy (%s)", d.Id())
 	_, err := conn.DeleteBackupVaultAccessPolicy(&backup.DeleteBackupVaultAccessPolicyInput{

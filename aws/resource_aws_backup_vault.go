@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsBackupVault() *schema.Resource {
@@ -53,8 +54,8 @@ func resourceAwsBackupVault() *schema.Resource {
 }
 
 func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &backup.CreateBackupVaultInput{
@@ -77,9 +78,9 @@ func resourceAwsBackupVaultCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(d.Id()),
@@ -124,7 +125,7 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -137,7 +138,7 @@ func resourceAwsBackupVaultUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsBackupVaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	log.Printf("[DEBUG] Deleting Backup Vault: %s", d.Id())
 	_, err := conn.DeleteBackupVault(&backup.DeleteBackupVaultInput{

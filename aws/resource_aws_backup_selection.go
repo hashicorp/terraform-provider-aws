@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/backup/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsBackupSelection() *schema.Resource {
@@ -85,7 +86,7 @@ func resourceAwsBackupSelection() *schema.Resource {
 }
 
 func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	selection := &backup.Selection{
 		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
@@ -140,7 +141,7 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.GetBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
@@ -224,7 +225,7 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsBackupSelectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),

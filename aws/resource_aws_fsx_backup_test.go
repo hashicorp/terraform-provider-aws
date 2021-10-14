@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepFSXBackups(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).fsxconn
+	conn := client.(*conns.AWSClient).FSxConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeBackupsInput{}
@@ -217,7 +218,7 @@ func testAccCheckFsxBackupExists(resourceName string, fs *fsx.Backup) resource.T
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).fsxconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
 		output, err := finder.BackupByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -235,7 +236,7 @@ func testAccCheckFsxBackupExists(resourceName string, fs *fsx.Backup) resource.T
 }
 
 func testAccCheckFsxBackupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).fsxconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fsx_backup" {

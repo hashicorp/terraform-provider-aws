@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
@@ -83,7 +84,7 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 func testAccCheckAwsBackupRegionSettingsExists(settings *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		conn := acctest.Provider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 		resp, err := conn.DescribeRegionSettings(&backup.DescribeRegionSettingsInput{})
 		if err != nil {
 			return err

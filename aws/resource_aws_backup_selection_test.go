@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsBackupSelection_basic(t *testing.T) {
@@ -178,7 +179,7 @@ func TestAccAwsBackupSelection_updateTag(t *testing.T) {
 }
 
 func testAccCheckAwsBackupSelectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_selection" {
 			continue
@@ -208,7 +209,7 @@ func testAccCheckAwsBackupSelectionExists(name string, selection *backup.GetBack
 			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 
 		input := &backup.GetBackupSelectionInput{
 			BackupPlanId: aws.String(rs.Primary.Attributes["plan_id"]),

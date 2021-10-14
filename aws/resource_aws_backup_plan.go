@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsBackupPlan() *schema.Resource {
@@ -161,8 +162,8 @@ func resourceAwsBackupPlan() *schema.Resource {
 }
 
 func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &backup.CreateBackupPlanInput{
@@ -186,9 +187,9 @@ func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BackupConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetBackupPlan(&backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
@@ -235,7 +236,7 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	if d.HasChanges("rule", "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
@@ -265,7 +266,7 @@ func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsBackupPlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).backupconn
+	conn := meta.(*conns.AWSClient).BackupConn
 
 	input := &backup.DeleteBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),

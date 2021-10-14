@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepBackupVaultNotifications(region string) error {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).backupconn
+	conn := client.(*conns.AWSClient).BackupConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -121,7 +122,7 @@ func TestAccAwsBackupVaultNotification_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsBackupVaultNotificationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).backupconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault_notifications" {
 			continue
@@ -150,7 +151,7 @@ func testAccCheckAwsBackupVaultNotificationExists(name string, vault *backup.Get
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 		params := &backup.GetBackupVaultNotificationsInput{
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}
