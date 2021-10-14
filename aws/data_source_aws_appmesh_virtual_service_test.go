@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccDataSourceAWSAppmeshVirtualService_virtualNode(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_service.test"
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
@@ -19,7 +19,7 @@ func TestAccDataSourceAWSAppmeshVirtualService_virtualNode(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -41,7 +41,7 @@ func TestAccDataSourceAWSAppmeshVirtualService_virtualNode(t *testing.T) {
 }
 
 func TestAccDataSourceAWSAppmeshVirtualService_virtualRouter(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_service.test"
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	vsName := fmt.Sprintf("tf-acc-test-%d.mesh.local", sdkacctest.RandInt())
@@ -49,7 +49,7 @@ func TestAccDataSourceAWSAppmeshVirtualService_virtualRouter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshVirtualServiceDestroy,
 		Steps: []resource.TestStep{
 			{

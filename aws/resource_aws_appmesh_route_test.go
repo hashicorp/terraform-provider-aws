@@ -103,16 +103,16 @@ func testSweepAppmeshRoutes(region string) error {
 func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -275,16 +275,16 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 func testAccAwsAppmeshRoute_grpcRouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -374,16 +374,16 @@ func testAccAwsAppmeshRoute_grpcRouteTimeout(t *testing.T) {
 func testAccAwsAppmeshRoute_grpcRouteEmptyMatch(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -427,16 +427,16 @@ func testAccAwsAppmeshRoute_grpcRouteEmptyMatch(t *testing.T) {
 func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -544,16 +544,16 @@ func testAccAwsAppmeshRoute_http2Route(t *testing.T) {
 func testAccAwsAppmeshRoute_http2RouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -647,16 +647,16 @@ func testAccAwsAppmeshRoute_http2RouteTimeout(t *testing.T) {
 func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -758,16 +758,16 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 func testAccAwsAppmeshRoute_httpRouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -853,16 +853,16 @@ func testAccAwsAppmeshRoute_httpRouteTimeout(t *testing.T) {
 func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -947,16 +947,16 @@ func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 func testAccAwsAppmeshRoute_tcpRouteTimeout(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1026,16 +1026,16 @@ func testAccAwsAppmeshRoute_tcpRouteTimeout(t *testing.T) {
 func testAccAwsAppmeshRoute_tags(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1076,16 +1076,16 @@ func testAccAwsAppmeshRoute_tags(t *testing.T) {
 func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1175,16 +1175,16 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 func testAccAwsAppmeshRoute_routePriority(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1258,16 +1258,16 @@ func testAccAwsAppmeshRoute_routePriority(t *testing.T) {
 func testAccAwsAppmeshRoute_httpRetryPolicy(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
-	meshName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vrName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn1Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	vn2Name := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, appmesh.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAppmeshRouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1364,7 +1364,7 @@ func testAccAwsAppmeshRouteImportStateIdFunc(resourceName string) resource.Impor
 }
 
 func testAccCheckAppmeshRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+	conn := acctest.Provider.Meta().(*AWSClient).appmeshconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_route" {
@@ -1390,7 +1390,7 @@ func testAccCheckAppmeshRouteDestroy(s *terraform.State) error {
 
 func testAccCheckAppmeshRouteExists(name string, v *appmesh.RouteData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+		conn := acctest.Provider.Meta().(*AWSClient).appmeshconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
