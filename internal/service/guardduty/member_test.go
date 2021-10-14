@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
 func testAccAwsGuardDutyMember_basic(t *testing.T) {
@@ -165,7 +166,7 @@ func testAccCheckAwsGuardDutyMemberDestroy(s *terraform.State) error {
 			continue
 		}
 
-		accountID, detectorID, err := decodeGuardDutyMemberID(rs.Primary.ID)
+		accountID, detectorID, err := tfguardduty.DecodeMemberID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -200,7 +201,7 @@ func testAccCheckAwsGuardDutyMemberExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		accountID, detectorID, err := decodeGuardDutyMemberID(rs.Primary.ID)
+		accountID, detectorID, err := tfguardduty.DecodeMemberID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
 func testAccAwsGuardDutyIpset_basic(t *testing.T) {
@@ -110,7 +111,7 @@ func testAccCheckAwsGuardDutyIpsetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		ipSetId, detectorId, err := decodeGuardDutyIpsetID(rs.Primary.ID)
+		ipSetId, detectorId, err := tfguardduty.DecodeIPSetID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -144,7 +145,7 @@ func testAccCheckAwsGuardDutyIpsetExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		ipSetId, detectorId, err := decodeGuardDutyIpsetID(rs.Primary.ID)
+		ipSetId, detectorId, err := tfguardduty.DecodeIPSetID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

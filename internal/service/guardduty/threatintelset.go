@@ -119,7 +119,7 @@ func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	threatIntelSetId, detectorId, err := decodeGuardDutyThreatintelsetID(d.Id())
+	threatIntelSetId, detectorId, err := DecodeThreatintelsetID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func resourceThreatintelsetRead(d *schema.ResourceData, meta interface{}) error 
 func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	threatIntelSetID, detectorId, err := decodeGuardDutyThreatintelsetID(d.Id())
+	threatIntelSetID, detectorId, err := DecodeThreatintelsetID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func resourceThreatintelsetUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceThreatintelsetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	threatIntelSetID, detectorId, err := decodeGuardDutyThreatintelsetID(d.Id())
+	threatIntelSetID, detectorId, err := DecodeThreatintelsetID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -261,7 +261,7 @@ func guardDutyThreatintelsetRefreshStatusFunc(conn *guardduty.GuardDuty, threatI
 	}
 }
 
-func decodeGuardDutyThreatintelsetID(id string) (threatIntelSetID, detectorID string, err error) {
+func DecodeThreatintelsetID(id string) (threatIntelSetID, detectorID string, err error) {
 	parts := strings.Split(id, ":")
 	if len(parts) != 2 {
 		err = fmt.Errorf("GuardDuty ThreatIntelSet ID must be of the form <Detector ID>:<ThreatIntelSet ID>, was provided: %s", id)

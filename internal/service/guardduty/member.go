@@ -119,7 +119,7 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
+	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 func resourceMemberUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
+	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func resourceMemberUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GuardDutyConn
 
-	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
+	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func guardDutyMemberInvited(out *guardduty.GetMembersOutput, accountID string) (
 	return false, fmt.Errorf("error inviting GuardDuty Member %q: invalid status: %s", accountID, status)
 }
 
-func decodeGuardDutyMemberID(id string) (accountID, detectorID string, err error) {
+func DecodeMemberID(id string) (accountID, detectorID string, err error) {
 	parts := strings.Split(id, ":")
 	if len(parts) != 2 {
 		err = fmt.Errorf("GuardDuty Member ID must be of the form <Detector ID>:<Member AWS Account ID>, was provided: %s", id)

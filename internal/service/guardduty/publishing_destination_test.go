@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -126,7 +127,7 @@ func testAccAwsGuardDutyPublishingDestination_disappears(t *testing.T) {
 				Config: testAccAwsGuardDutyPublishingDestinationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyPublishingDestinationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePublishingDestination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfguardduty.ResourcePublishingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -252,7 +253,7 @@ func testAccCheckAwsGuardDutyPublishingDestinationExists(name string) resource.T
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		destination_id, detector_id, err_state_read := decodeGuardDutyPublishDestinationID(rs.Primary.ID)
+		destination_id, detector_id, err_state_read := tfguardduty.DecodePublishDestinationID(rs.Primary.ID)
 
 		if err_state_read != nil {
 			return err_state_read
@@ -278,7 +279,7 @@ func testAccCheckAwsGuardDutyPublishingDestinationDestroy(s *terraform.State) er
 			continue
 		}
 
-		destination_id, detector_id, err_state_read := decodeGuardDutyPublishDestinationID(rs.Primary.ID)
+		destination_id, detector_id, err_state_read := tfguardduty.DecodePublishDestinationID(rs.Primary.ID)
 
 		if err_state_read != nil {
 			return err_state_read
