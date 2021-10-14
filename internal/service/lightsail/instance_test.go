@@ -75,7 +75,7 @@ func sweepInstances(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSLightsailInstance_basic(t *testing.T) {
+func TestAccLightsailInstance_basic(t *testing.T) {
 	var conf lightsail.Instance
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 
@@ -107,7 +107,7 @@ func TestAccAWSLightsailInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailInstance_Name(t *testing.T) {
+func TestAccLightsailInstance_name(t *testing.T) {
 	var conf lightsail.Instance
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	lightsailNameWithSpaces := fmt.Sprint(lightsailName, "string with spaces")
@@ -156,7 +156,7 @@ func TestAccAWSLightsailInstance_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailInstance_Tags(t *testing.T) {
+func TestAccLightsailInstance_tags(t *testing.T) {
 	var conf lightsail.Instance
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 
@@ -196,7 +196,7 @@ func TestAccAWSLightsailInstance_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailInstance_disapear(t *testing.T) {
+func TestAccLightsailInstance_disappears(t *testing.T) {
 	var conf lightsail.Instance
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 

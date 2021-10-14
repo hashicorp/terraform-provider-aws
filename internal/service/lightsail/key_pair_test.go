@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
+func TestAccLightsailKeyPair_basic(t *testing.T) {
 	var conf lightsail.KeyPair
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -41,7 +41,7 @@ func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailKeyPair_publicKey(t *testing.T) {
+func TestAccLightsailKeyPair_publicKey(t *testing.T) {
 	var conf lightsail.KeyPair
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -74,7 +74,7 @@ func TestAccAWSLightsailKeyPair_publicKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailKeyPair_encrypted(t *testing.T) {
+func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 	var conf lightsail.KeyPair
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -102,7 +102,7 @@ func TestAccAWSLightsailKeyPair_encrypted(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailKeyPair_nameprefix(t *testing.T) {
+func TestAccLightsailKeyPair_namePrefix(t *testing.T) {
 	var conf1, conf2 lightsail.KeyPair
 
 	resource.ParallelTest(t, resource.TestCase{
