@@ -1,4 +1,4 @@
-package aws
+package elbv2_test
 
 import (
 	"fmt"
