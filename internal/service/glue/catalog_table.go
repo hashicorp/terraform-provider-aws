@@ -358,7 +358,7 @@ func ReadTableID(id string) (catalogID string, dbName string, name string, error
 
 func resourceCatalogTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
-	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	name := d.Get("name").(string)
 

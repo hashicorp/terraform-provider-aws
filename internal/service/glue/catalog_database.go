@@ -85,7 +85,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 
 func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
-	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	name := d.Get("name").(string)
 
 	dbInput := &glue.DatabaseInput{
@@ -236,7 +236,7 @@ func ReadCatalogID(id string) (catalogID string, name string, err error) {
 	return idParts[0], idParts[1], nil
 }
 
-func createAwsGlueCatalogID(d *schema.ResourceData, accountid string) (catalogID string) {
+func createCatalogID(d *schema.ResourceData, accountid string) (catalogID string) {
 	if rawCatalogID, ok := d.GetOkExists("catalog_id"); ok {
 		catalogID = rawCatalogID.(string)
 	} else {

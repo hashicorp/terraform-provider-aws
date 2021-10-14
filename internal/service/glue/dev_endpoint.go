@@ -25,8 +25,8 @@ func ResourceDevEndpoint() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceDevEndpointCreate,
 		Read:   resourceDevEndpointRead,
-		Update: resourceAwsDevEndpointUpdate,
-		Delete: resourceAwsDevEndpointDelete,
+		Update: resourceDevEndpointUpdate,
+		Delete: resourceDevEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -401,7 +401,7 @@ func resourceDevEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDevEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	input := &glue.UpdateDevEndpointInput{
@@ -506,7 +506,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 	return resourceDevEndpointRead(d, meta)
 }
 
-func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDevEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
 
 	log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", d.Id())

@@ -13,9 +13,9 @@ import (
 
 func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueDataCatalogEncryptionSettingsPut,
+		Create: resourceDataCatalogEncryptionSettingsPut,
 		Read:   resourceDataCatalogEncryptionSettingsRead,
-		Update: resourceAwsGlueDataCatalogEncryptionSettingsPut,
+		Update: resourceDataCatalogEncryptionSettingsPut,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -78,9 +78,9 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueDataCatalogEncryptionSettingsPut(d *schema.ResourceData, meta interface{}) error {
+func resourceDataCatalogEncryptionSettingsPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
-	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
 		CatalogId:                     aws.String(catalogID),

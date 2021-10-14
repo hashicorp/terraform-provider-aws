@@ -200,7 +200,7 @@ func ResourcePartition() *schema.Resource {
 
 func resourcePartitionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
-	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
 	values := d.Get("partition_values").([]interface{})

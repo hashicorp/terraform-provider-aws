@@ -73,7 +73,7 @@ func ResourcePartitionIndex() *schema.Resource {
 
 func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
-	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
 
@@ -81,7 +81,7 @@ func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) erro
 		CatalogId:      aws.String(catalogID),
 		DatabaseName:   aws.String(dbName),
 		TableName:      aws.String(tableName),
-		PartitionIndex: expandAwsGluePartitionIndex(d.Get("partition_index").([]interface{})),
+		PartitionIndex: expandPartitionIndex(d.Get("partition_index").([]interface{})),
 	}
 
 	log.Printf("[DEBUG] Creating Glue Partition Index: %#v", input)
@@ -159,7 +159,7 @@ func resourcePartitionIndexDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandAwsGluePartitionIndex(l []interface{}) *glue.PartitionIndex {
+func expandPartitionIndex(l []interface{}) *glue.PartitionIndex {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}

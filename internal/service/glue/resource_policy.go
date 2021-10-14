@@ -15,9 +15,9 @@ import (
 
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlueResourcePolicyPut(glue.ExistConditionNotExist),
+		Create: resourceResourcePolicyPut(glue.ExistConditionNotExist),
 		Read:   resourceResourcePolicyRead,
-		Update: resourceAwsGlueResourcePolicyPut(glue.ExistConditionMustExist),
+		Update: resourceResourcePolicyPut(glue.ExistConditionMustExist),
 		Delete: resourceResourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -39,7 +39,7 @@ func ResourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsGlueResourcePolicyPut(condition string) func(d *schema.ResourceData, meta interface{}) error {
+func resourceResourcePolicyPut(condition string) func(d *schema.ResourceData, meta interface{}) error {
 	return func(d *schema.ResourceData, meta interface{}) error {
 		conn := meta.(*conns.AWSClient).GlueConn
 

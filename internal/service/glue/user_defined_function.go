@@ -90,14 +90,14 @@ func ResourceUserDefinedFunction() *schema.Resource {
 
 func resourceUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlueConn
-	catalogID := createAwsGlueCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	funcName := d.Get("name").(string)
 
 	input := &glue.CreateUserDefinedFunctionInput{
 		CatalogId:     aws.String(catalogID),
 		DatabaseName:  aws.String(dbName),
-		FunctionInput: expandAwsGlueUserDefinedFunctionInput(d),
+		FunctionInput: expandUserDefinedFunctionInput(d),
 	}
 
 	_, err := conn.CreateUserDefinedFunction(input)
@@ -122,7 +122,7 @@ func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{})
 		CatalogId:     aws.String(catalogID),
 		DatabaseName:  aws.String(dbName),
 		FunctionName:  aws.String(funcName),
-		FunctionInput: expandAwsGlueUserDefinedFunctionInput(d),
+		FunctionInput: expandUserDefinedFunctionInput(d),
 	}
 
 	if _, err := conn.UpdateUserDefinedFunction(input); err != nil {
@@ -178,7 +178,7 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 	if udf.CreateTime != nil {
 		d.Set("create_time", udf.CreateTime.Format(time.RFC3339))
 	}
-	if err := d.Set("resource_uris", flattenAwsGlueUserDefinedFunctionResourceUri(udf.ResourceUris)); err != nil {
+	if err := d.Set("resource_uris", flattenUserDefinedFunctionResourceURI(udf.ResourceUris)); err != nil {
 		return err
 	}
 
@@ -212,7 +212,7 @@ func ReadUDFID(id string) (catalogID string, dbName string, funcName string, err
 	return idParts[0], idParts[1], idParts[2], nil
 }
 
-func expandAwsGlueUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDefinedFunctionInput {
+func expandUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDefinedFunctionInput {
 
 	udf := &glue.UserDefinedFunctionInput{
 		ClassName:    aws.String(d.Get("class_name").(string)),
@@ -222,13 +222,13 @@ func expandAwsGlueUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDef
 	}
 
 	if v, ok := d.GetOk("resource_uris"); ok && v.(*schema.Set).Len() > 0 {
-		udf.ResourceUris = expandAwsGlueUserDefinedFunctionResourceUri(d.Get("resource_uris").(*schema.Set))
+		udf.ResourceUris = expandUserDefinedFunctionResourceURI(d.Get("resource_uris").(*schema.Set))
 	}
 
 	return udf
 }
 
-func expandAwsGlueUserDefinedFunctionResourceUri(conf *schema.Set) []*glue.ResourceUri {
+func expandUserDefinedFunctionResourceURI(conf *schema.Set) []*glue.ResourceUri {
 	result := make([]*glue.ResourceUri, 0, conf.Len())
 
 	for _, r := range conf.List() {
@@ -249,7 +249,7 @@ func expandAwsGlueUserDefinedFunctionResourceUri(conf *schema.Set) []*glue.Resou
 	return result
 }
 
-func flattenAwsGlueUserDefinedFunctionResourceUri(uris []*glue.ResourceUri) []map[string]interface{} {
+func flattenUserDefinedFunctionResourceURI(uris []*glue.ResourceUri) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(uris))
 
 	for _, i := range uris {
