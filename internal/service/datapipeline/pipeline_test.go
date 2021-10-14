@@ -15,7 +15,7 @@ import (
 	tfdatapipeline "github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 )
 
-func TestAccAWSDataPipelinePipeline_basic(t *testing.T) {
+func TestAccDataPipelinePipeline_basic(t *testing.T) {
 	var conf1, conf2 datapipeline.PipelineDescription
 	rName1 := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	rName2 := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
@@ -51,7 +51,7 @@ func TestAccAWSDataPipelinePipeline_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataPipelinePipeline_description(t *testing.T) {
+func TestAccDataPipelinePipeline_description(t *testing.T) {
 	var conf1, conf2 datapipeline.PipelineDescription
 	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
@@ -86,7 +86,7 @@ func TestAccAWSDataPipelinePipeline_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataPipelinePipeline_disappears(t *testing.T) {
+func TestAccDataPipelinePipeline_disappears(t *testing.T) {
 	var conf datapipeline.PipelineDescription
 	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
@@ -109,7 +109,7 @@ func TestAccAWSDataPipelinePipeline_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
+func TestAccDataPipelinePipeline_tags(t *testing.T) {
 	var conf datapipeline.PipelineDescription
 	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
 	resourceName := "aws_datapipeline_pipeline.default"
