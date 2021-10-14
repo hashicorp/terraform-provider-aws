@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // FindStackByName Retrieve a appstream stack by name
