@@ -1154,7 +1154,7 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sql", out.Rule.Sql)
 	d.Set("sql_version", out.Rule.AwsIotSqlVersion)
 
-	tags, err := tftags.IotListTags(conn, aws.StringValue(out.RuleArn))
+	tags, err := ListTags(conn, aws.StringValue(out.RuleArn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for IoT Topic Rule (%s): %w", aws.StringValue(out.RuleArn), err)
@@ -1278,7 +1278,7 @@ func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.IotUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
