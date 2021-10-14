@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsCloudFormationExport() *schema.Resource {
+func DataSourceExport() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCloudFormationExportRead,
+		Read: dataSourceExportRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -30,7 +30,7 @@ func dataSourceAwsCloudFormationExport() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudFormationExportRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 	var value string
 	name := d.Get("name").(string)

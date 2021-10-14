@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsCloudFormationStackSetInstance() *schema.Resource {
+func ResourceStackSetInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudFormationStackSetInstanceCreate,
-		Read:   resourceAwsCloudFormationStackSetInstanceRead,
-		Update: resourceAwsCloudFormationStackSetInstanceUpdate,
-		Delete: resourceAwsCloudFormationStackSetInstanceDelete,
+		Create: resourceStackSetInstanceCreate,
+		Read:   resourceStackSetInstanceRead,
+		Update: resourceStackSetInstanceUpdate,
+		Delete: resourceStackSetInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -99,7 +99,7 @@ func resourceAwsCloudFormationStackSetInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudFormationStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStackSetInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	region := meta.(*conns.AWSClient).Region
@@ -191,10 +191,10 @@ func resourceAwsCloudFormationStackSetInstanceCreate(d *schema.ResourceData, met
 		return err
 	}
 
-	return resourceAwsCloudFormationStackSetInstanceRead(d, meta)
+	return resourceStackSetInstanceRead(d, meta)
 }
 
-func resourceAwsCloudFormationStackSetInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStackSetInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	stackSetName, accountID, region, err := tfcloudformation.StackSetInstanceParseResourceID(d.Id())
@@ -242,7 +242,7 @@ func resourceAwsCloudFormationStackSetInstanceRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsCloudFormationStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStackSetInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	if d.HasChanges("deployment_targets", "parameter_overrides") {
@@ -282,10 +282,10 @@ func resourceAwsCloudFormationStackSetInstanceUpdate(d *schema.ResourceData, met
 		}
 	}
 
-	return resourceAwsCloudFormationStackSetInstanceRead(d, meta)
+	return resourceStackSetInstanceRead(d, meta)
 }
 
-func resourceAwsCloudFormationStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	stackSetName, accountID, region, err := tfcloudformation.StackSetInstanceParseResourceID(d.Id())

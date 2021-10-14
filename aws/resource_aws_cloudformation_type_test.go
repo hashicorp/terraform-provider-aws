@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsCloudformationType_basic(t *testing.T) {
@@ -77,9 +78,9 @@ func TestAccAwsCloudformationType_disappears(t *testing.T) {
 				Config: testAccCloudformationTypeConfigTypeName(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsCloudformationTypeExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFormationType(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceType(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFormationType(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -44,7 +45,7 @@ func testSweepCloudformationStackSets(region string) error {
 		}
 
 		for _, summary := range page.Summaries {
-			r := resourceAwsCloudFormationStackSet()
+			r := ResourceStackSet()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(summary.StackSetName))
 
@@ -129,7 +130,7 @@ func TestAccAWSCloudFormationStackSet_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackSetConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet1),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudFormationStackSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceStackSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
