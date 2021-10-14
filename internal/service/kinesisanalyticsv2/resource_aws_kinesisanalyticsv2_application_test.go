@@ -22,6 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
 )
 
 func init() {
@@ -40,7 +46,7 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 	input := &kinesisanalyticsv2.ListApplicationsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = lister.ListApplicationsPages(conn, input, func(page *kinesisanalyticsv2.ListApplicationsOutput, lastPage bool) bool {
+	err = tfkinesisanalyticsv2.ListApplicationsPages(conn, input, func(page *kinesisanalyticsv2.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -49,7 +55,7 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name := aws.StringValue(applicationSummary.ApplicationName)
 
-			application, err := finder.ApplicationDetailByName(conn, name)
+			application, err := tfkinesisanalyticsv2.FindApplicationDetailByName(conn, name)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", arn, err)
@@ -4001,7 +4007,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error 
 			continue
 		}
 
-		_, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+		_, err := tfkinesisanalyticsv2.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
 		if tfresource.NotFound(err) {
 			continue
@@ -4029,7 +4035,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, v *kinesisanalyti
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
 
-		application, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+		application, err := tfkinesisanalyticsv2.FindApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err

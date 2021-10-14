@@ -18,6 +18,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
+	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
 )
 
 func ResourceApplicationSnapshot() *schema.Resource {
@@ -82,9 +103,9 @@ func resourceApplicationSnapshotCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error creating Kinesis Analytics v2 Application Snapshot (%s/%s): %w", applicationName, snapshotName, err)
 	}
 
-	d.SetId(tfkinesisanalyticsv2.ApplicationSnapshotCreateID(applicationName, snapshotName))
+	d.SetId(tfkinesisanalyticsv2.applicationSnapshotCreateID(applicationName, snapshotName))
 
-	_, err = waiter.SnapshotCreated(conn, applicationName, snapshotName)
+	_, err = tfkinesisanalyticsv2.waitSnapshotCreated(conn, applicationName, snapshotName)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application Snapshot (%s) creation: %w", d.Id(), err)
@@ -96,13 +117,13 @@ func resourceApplicationSnapshotCreate(d *schema.ResourceData, meta interface{})
 func resourceApplicationSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
 
-	applicationName, snapshotName, err := tfkinesisanalyticsv2.ApplicationSnapshotParseID(d.Id())
+	applicationName, snapshotName, err := tfkinesisanalyticsv2.applicationSnapshotParseID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	snapshot, err := finder.SnapshotDetailsByApplicationAndSnapshotNames(conn, applicationName, snapshotName)
+	snapshot, err := tfkinesisanalyticsv2.FindSnapshotDetailsByApplicationAndSnapshotNames(conn, applicationName, snapshotName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics v2 Application Snapshot (%s) not found, removing from state", d.Id())
@@ -125,7 +146,7 @@ func resourceApplicationSnapshotRead(d *schema.ResourceData, meta interface{}) e
 func resourceApplicationSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
 
-	applicationName, snapshotName, err := tfkinesisanalyticsv2.ApplicationSnapshotParseID(d.Id())
+	applicationName, snapshotName, err := tfkinesisanalyticsv2.applicationSnapshotParseID(d.Id())
 
 	if err != nil {
 		return err
@@ -155,7 +176,7 @@ func resourceApplicationSnapshotDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error deleting Kinesis Analytics v2 Application Snapshot (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.SnapshotDeleted(conn, applicationName, snapshotName)
+	_, err = tfkinesisanalyticsv2.waitSnapshotDeleted(conn, applicationName, snapshotName)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application Snapshot (%s) deletion: %w", d.Id(), err)
