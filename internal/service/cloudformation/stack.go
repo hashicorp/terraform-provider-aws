@@ -168,7 +168,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		input.StackPolicyURL = aws.String(v.(string))
 	}
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().CloudformationTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 	if v, ok := d.GetOk("timeout_in_minutes"); ok {
 		m := int64(v.(int))
@@ -283,7 +283,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags := tftags.CloudformationKeyValueTags(stack.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(stack.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -347,7 +347,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().CloudformationTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	if d.HasChange("policy_body") {

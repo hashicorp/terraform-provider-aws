@@ -99,7 +99,7 @@ func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("parameters", flattenAllCloudFormationParameters(stack.Parameters))
-	if err := d.Set("tags", tftags.CloudformationKeyValueTags(stack.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(stack.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 	d.Set("outputs", flattenOutputs(stack.Outputs))
