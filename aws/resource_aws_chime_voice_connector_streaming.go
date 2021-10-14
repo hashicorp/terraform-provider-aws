@@ -88,7 +88,7 @@ func resourceAwsChimeVoiceConnectorStreamingRead(ctx context.Context, d *schema.
 	}
 
 	resp, err := conn.GetVoiceConnectorStreamingConfigurationWithContext(ctx, input)
-	if !d.IsNewResource() && isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Chime Voice Connector (%s) streaming not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -135,7 +135,7 @@ func resourceAwsChimeVoiceConnectorStreamingUpdate(ctx context.Context, d *schem
 		input.StreamingConfiguration = config
 
 		if _, err := conn.PutVoiceConnectorStreamingConfigurationWithContext(ctx, input); err != nil {
-			if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 				log.Printf("[WARN] error getting Chime Voice Connector (%s) streaming configuration", d.Id())
 				d.SetId("")
 				return nil
@@ -156,7 +156,7 @@ func resourceAwsChimeVoiceConnectorStreamingDelete(ctx context.Context, d *schem
 
 	_, err := conn.DeleteVoiceConnectorStreamingConfigurationWithContext(ctx, input)
 
-	if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		return nil
 	}
 

@@ -112,7 +112,7 @@ func resourceAwsChimeVoiceConnectorTerminationRead(ctx context.Context, d *schem
 
 	resp, err := conn.GetVoiceConnectorTerminationWithContext(ctx, input)
 
-	if !d.IsNewResource() && isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -184,7 +184,7 @@ func resourceAwsChimeVoiceConnectorTerminationDelete(ctx context.Context, d *sch
 
 	_, err := conn.DeleteVoiceConnectorTerminationWithContext(ctx, input)
 
-	if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		return nil
 	}
 

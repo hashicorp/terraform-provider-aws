@@ -63,7 +63,7 @@ func resourceAwsChimeVoiceConnectorLoggingRead(ctx context.Context, d *schema.Re
 	}
 
 	resp, err := conn.GetVoiceConnectorLoggingConfigurationWithContext(ctx, input)
-	if !d.IsNewResource() && isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
 		d.SetId("")
 		return nil
@@ -91,7 +91,7 @@ func resourceAwsChimeVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.
 		}
 
 		if _, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input); err != nil {
-			if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 				log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
 				d.SetId("")
 				return nil
@@ -115,7 +115,7 @@ func resourceAwsChimeVoiceConnectorLoggingDelete(ctx context.Context, d *schema.
 
 	_, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input)
 
-	if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		return nil
 	}
 

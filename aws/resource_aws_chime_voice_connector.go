@@ -77,7 +77,7 @@ func resourceAwsChimeVoiceConnectorRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	resp, err := conn.GetVoiceConnectorWithContext(ctx, getInput)
-	if !d.IsNewResource() && isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
 		d.SetId("")
 		return nil
@@ -106,7 +106,7 @@ func resourceAwsChimeVoiceConnectorUpdate(ctx context.Context, d *schema.Resourc
 		}
 
 		if _, err := conn.UpdateVoiceConnectorWithContext(ctx, updateInput); err != nil {
-			if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 				log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
 				d.SetId("")
 				return nil
@@ -125,7 +125,7 @@ func resourceAwsChimeVoiceConnectorDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	if _, err := conn.DeleteVoiceConnectorWithContext(ctx, input); err != nil {
-		if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
 			return nil
 		}

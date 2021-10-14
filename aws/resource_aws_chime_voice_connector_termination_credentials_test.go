@@ -128,7 +128,7 @@ func testAccCheckAWSChimeVoiceConnectorTerminationCredentialsDestroy(s *terrafor
 		}
 		resp, err := conn.ListVoiceConnectorTerminationCredentials(input)
 
-		if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 			continue
 		}
 

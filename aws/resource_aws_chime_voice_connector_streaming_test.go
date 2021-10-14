@@ -169,7 +169,7 @@ func testAccCheckAWSChimeVoiceConnectorStreamingDestroy(s *terraform.State) erro
 		}
 		resp, err := conn.GetVoiceConnectorStreamingConfiguration(input)
 
-		if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 			continue
 		}
 

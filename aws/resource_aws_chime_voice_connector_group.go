@@ -80,7 +80,7 @@ func resourceAwsChimeVoiceConnectorGroupRead(ctx context.Context, d *schema.Reso
 	}
 
 	resp, err := conn.GetVoiceConnectorGroupWithContext(ctx, getInput)
-	if !d.IsNewResource() && isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 		d.SetId("")
 		return nil
@@ -114,7 +114,7 @@ func resourceAwsChimeVoiceConnectorGroupUpdate(ctx context.Context, d *schema.Re
 	}
 
 	if _, err := conn.UpdateVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 			d.SetId("")
 			return nil
@@ -139,7 +139,7 @@ func resourceAwsChimeVoiceConnectorGroupDelete(ctx context.Context, d *schema.Re
 	}
 
 	if _, err := conn.DeleteVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if isAWSErr(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 			return nil
 		}
