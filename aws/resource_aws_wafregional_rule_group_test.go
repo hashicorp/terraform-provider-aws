@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepWafRegionalRuleGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafregionalconn
+	conn := client.(*conns.AWSClient).WAFRegionalConn
 
 	req := &waf.ListRuleGroupsInput{}
 	resp, err := conn.ListRuleGroups(req)
@@ -316,8 +317,8 @@ func TestAccAWSWafRegionalRuleGroup_noActivatedRules(t *testing.T) {
 
 func testAccCheckAWSWafRegionalRuleGroupDisappears(group *waf.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
-		region := acctest.Provider.Meta().(*AWSClient).region
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
@@ -367,7 +368,7 @@ func testAccCheckAWSWafRegionalRuleGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetRuleGroup(&waf.GetRuleGroupInput{
 			RuleGroupId: aws.String(rs.Primary.ID),
 		})
@@ -399,7 +400,7 @@ func testAccCheckAWSWafRegionalRuleGroupExists(n string, group *waf.RuleGroup) r
 			return fmt.Errorf("No WAF Regional Rule Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetRuleGroup(&waf.GetRuleGroupInput{
 			RuleGroupId: aws.String(rs.Primary.ID),
 		})

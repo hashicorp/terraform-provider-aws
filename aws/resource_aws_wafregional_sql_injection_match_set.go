@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
@@ -68,8 +69,8 @@ func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafRegionalSqlInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
 
@@ -92,7 +93,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	log.Printf("[INFO] Reading Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
 	params := &waf.GetSqlInjectionMatchSetInput{
 		SqlInjectionMatchSetId: aws.String(d.Id()),
@@ -115,8 +116,8 @@ func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("sql_injection_match_tuple") {
 		o, n := d.GetChange("sql_injection_match_tuple")
@@ -137,8 +138,8 @@ func resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d *schema.ResourceData, me
 }
 
 func resourceAwsWafRegionalSqlInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	oldTuples := d.Get("sql_injection_match_tuple").(*schema.Set).List()
 

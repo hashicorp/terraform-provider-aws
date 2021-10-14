@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRegionalSizeConstraintSet() *schema.Resource {
@@ -25,8 +26,8 @@ func resourceAwsWafRegionalSizeConstraintSet() *schema.Resource {
 }
 
 func resourceAwsWafRegionalSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get("name").(string)
 
@@ -52,7 +53,7 @@ func resourceAwsWafRegionalSizeConstraintSetCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsWafRegionalSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	log.Printf("[INFO] Reading WAF Regional SizeConstraintSet: %s", d.Get("name").(string))
 	params := &waf.GetSizeConstraintSetInput{
@@ -76,13 +77,13 @@ func resourceAwsWafRegionalSizeConstraintSetRead(d *schema.ResourceData, meta in
 }
 
 func resourceAwsWafRegionalSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient)
+	client := meta.(*conns.AWSClient)
 
 	if d.HasChange("size_constraints") {
 		o, n := d.GetChange("size_constraints")
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, client.wafregionalconn, client.region)
+		err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, client.WAFRegionalConn, client.Region)
 		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAF Regional SizeConstraintSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
@@ -97,8 +98,8 @@ func resourceAwsWafRegionalSizeConstraintSetUpdate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsWafRegionalSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	oldConstraints := d.Get("size_constraints").(*schema.Set).List()
 

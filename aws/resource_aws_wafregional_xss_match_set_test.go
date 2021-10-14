@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
@@ -212,7 +213,7 @@ func testAccCheckAWSWafRegionalXssMatchSetExists(n string, v *waf.XssMatchSet) r
 			return fmt.Errorf("No regional WAF XSS Match Set ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetXssMatchSet(&waf.GetXssMatchSetInput{
 			XssMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -236,7 +237,7 @@ func testAccCheckAWSWafRegionalXssMatchSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetXssMatchSet(
 			&waf.GetXssMatchSetInput{
 				XssMatchSetId: aws.String(rs.Primary.ID),

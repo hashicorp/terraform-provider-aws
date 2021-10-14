@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRegionalIPSet() *schema.Resource {
@@ -53,8 +54,8 @@ func resourceAwsWafRegionalIPSet() *schema.Resource {
 }
 
 func resourceAwsWafRegionalIPSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	wr := newWafRegionalRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -73,7 +74,7 @@ func resourceAwsWafRegionalIPSetCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsWafRegionalIPSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	params := &waf.GetIPSetInput{
 		IPSetId: aws.String(d.Id()),
@@ -94,10 +95,10 @@ func resourceAwsWafRegionalIPSetRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", resp.IPSet.Name)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "waf-regional",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("ipset/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -120,8 +121,8 @@ func flattenWafIpSetDescriptorWR(in []*waf.IPSetDescriptor) []interface{} {
 }
 
 func resourceAwsWafRegionalIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("ip_set_descriptor") {
 		o, n := d.GetChange("ip_set_descriptor")
@@ -136,8 +137,8 @@ func resourceAwsWafRegionalIPSetUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsWafRegionalIPSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	oldD := d.Get("ip_set_descriptor").(*schema.Set).List()
 

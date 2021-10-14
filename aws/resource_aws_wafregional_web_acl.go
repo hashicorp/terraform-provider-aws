@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRegionalWebAcl() *schema.Resource {
@@ -174,10 +175,10 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 }
 
 func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*AWSClient).region
+	region := meta.(*conns.AWSClient).Region
 
 	wr := newWafRegionalRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -204,9 +205,9 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 	webACLARN := aws.StringValue(resp.WebACL.WebACLArn)
 	if webACLARN == "" {
 		webACLARN = arn.ARN{
-			AccountID: meta.(*AWSClient).accountid,
-			Partition: meta.(*AWSClient).partition,
-			Region:    meta.(*AWSClient).region,
+			AccountID: meta.(*conns.AWSClient).AccountID,
+			Partition: meta.(*conns.AWSClient).Partition,
+			Region:    meta.(*conns.AWSClient).Region,
 			Resource:  fmt.Sprintf("webacl/%s", d.Id()),
 			Service:   "waf-regional",
 		}.String()
@@ -246,9 +247,9 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetWebACLInput{
 		WebACLId: aws.String(d.Id()),
@@ -275,9 +276,9 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 	webACLARN := aws.StringValue(resp.WebACL.WebACLArn)
 	if webACLARN == "" {
 		webACLARN = arn.ARN{
-			AccountID: meta.(*AWSClient).accountid,
-			Partition: meta.(*AWSClient).partition,
-			Region:    meta.(*AWSClient).region,
+			AccountID: meta.(*conns.AWSClient).AccountID,
+			Partition: meta.(*conns.AWSClient).Partition,
+			Region:    meta.(*conns.AWSClient).Region,
 			Resource:  fmt.Sprintf("webacl/%s", d.Id()),
 			Service:   "waf-regional",
 		}.String()
@@ -333,8 +334,8 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChanges("default_action", "rule") {
 		o, n := d.GetChange("rule")
@@ -391,8 +392,8 @@ func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	// First, need to delete all rules
 	rules := d.Get("rule").(*schema.Set).List()

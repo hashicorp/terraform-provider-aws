@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
@@ -340,8 +341,8 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 
 func testAccCheckAWSWafRegionalIPSetDisappears(v *waf.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
-		region := acctest.Provider.Meta().(*AWSClient).region
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -387,7 +388,7 @@ func testAccCheckAWSWafRegionalIPSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetIPSet(
 			&waf.GetIPSetInput{
 				IPSetId: aws.String(rs.Primary.ID),
@@ -423,7 +424,7 @@ func testAccCheckAWSWafRegionalIPSetExists(n string, v *waf.IPSet) resource.Test
 			return fmt.Errorf("No WAF IPSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetIPSet(&waf.GetIPSetInput{
 			IPSetId: aws.String(rs.Primary.ID),
 		})

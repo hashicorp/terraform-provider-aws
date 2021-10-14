@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRegionalGeoMatchSet() *schema.Resource {
@@ -47,8 +48,8 @@ func resourceAwsWafRegionalGeoMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafRegionalGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating WAF Regional Geo Match Set: %s", d.Get("name").(string))
 
@@ -72,7 +73,7 @@ func resourceAwsWafRegionalGeoMatchSetCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsWafRegionalGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	log.Printf("[INFO] Reading WAF Regional Geo Match Set: %s", d.Get("name").(string))
 	params := &waf.GetGeoMatchSetInput{
 		GeoMatchSetId: aws.String(d.Id()),
@@ -96,8 +97,8 @@ func resourceAwsWafRegionalGeoMatchSetRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsWafRegionalGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("geo_match_constraint") {
 		o, n := d.GetChange("geo_match_constraint")
@@ -118,8 +119,8 @@ func resourceAwsWafRegionalGeoMatchSetUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsWafRegionalGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	oldConstraints := d.Get("geo_match_constraint").(*schema.Set).List()
 	if len(oldConstraints) > 0 {

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRegionalRegexPatternSet() *schema.Resource {
@@ -36,8 +37,8 @@ func resourceAwsWafRegionalRegexPatternSet() *schema.Resource {
 }
 
 func resourceAwsWafRegionalRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating WAF Regional Regex Pattern Set: %s", d.Get("name").(string))
 
@@ -60,7 +61,7 @@ func resourceAwsWafRegionalRegexPatternSetCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsWafRegionalRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	log.Printf("[INFO] Reading WAF Regional Regex Pattern Set: %s", d.Get("name").(string))
 	params := &waf.GetRegexPatternSetInput{
@@ -85,8 +86,8 @@ func resourceAwsWafRegionalRegexPatternSetRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsWafRegionalRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Updating WAF Regional Regex Pattern Set: %s", d.Get("name").(string))
 
@@ -108,8 +109,8 @@ func resourceAwsWafRegionalRegexPatternSetUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsWafRegionalRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List()
 	if len(oldPatterns) > 0 {

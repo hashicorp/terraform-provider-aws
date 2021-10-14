@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepWafRegionalRateBasedRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafregionalconn
+	conn := client.(*conns.AWSClient).WAFRegionalConn
 
 	input := &waf.ListRateBasedRulesInput{}
 
@@ -383,7 +384,7 @@ func testAccCheckAWSWafRegionalRateBasedRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetRateBasedRule(
 			&waf.GetRateBasedRuleInput{
 				RuleId: aws.String(rs.Primary.ID),
@@ -417,7 +418,7 @@ func testAccCheckAWSWafRegionalRateBasedRuleExists(n string, v *waf.RateBasedRul
 			return fmt.Errorf("No WAF Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetRateBasedRule(&waf.GetRateBasedRuleInput{
 			RuleId: aws.String(rs.Primary.ID),
 		})

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafregional/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafRegionalRegexMatchSet() *schema.Resource {
@@ -71,8 +72,8 @@ func resourceAwsWafRegionalRegexMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafRegionalRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Creating WAF Regional Regex Match Set: %s", d.Get("name").(string))
 
@@ -95,7 +96,7 @@ func resourceAwsWafRegionalRegexMatchSetCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsWafRegionalRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	log.Printf("[INFO] Reading WAF Regional Regex Match Set: %s", d.Get("name").(string))
 	set, err := finder.RegexMatchSetByID(conn, d.Id())
@@ -115,8 +116,8 @@ func resourceAwsWafRegionalRegexMatchSetRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsWafRegionalRegexMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	log.Printf("[INFO] Updating WAF Regional Regex Match Set: %s", d.Get("name").(string))
 
@@ -138,8 +139,8 @@ func resourceAwsWafRegionalRegexMatchSetUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsWafRegionalRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
+	region := meta.(*conns.AWSClient).Region
 
 	err := deleteRegexMatchSetResource(conn, region, "global", d.Id(), getRegexMatchTuplesFromResourceData(d))
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {

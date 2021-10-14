@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsWafRegionalWebAcl() *schema.Resource {
@@ -22,7 +23,7 @@ func dataSourceAwsWafRegionalWebAcl() *schema.Resource {
 }
 
 func dataSourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	name := d.Get("name").(string)
 
 	acls := make([]*waf.WebACLSummary, 0)

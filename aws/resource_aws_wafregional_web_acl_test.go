@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepWafRegionalWebAcls(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafregionalconn
+	conn := client.(*conns.AWSClient).WAFRegionalConn
 
 	input := &waf.ListWebACLsInput{}
 
@@ -512,8 +513,8 @@ func computeWafRegionalWebAclRuleIndex(ruleId **string, priority int, ruleType s
 
 func testAccCheckAWSWafRegionalWebAclDisappears(v *waf.WebACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
-		region := acctest.Provider.Meta().(*AWSClient).region
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -560,7 +561,7 @@ func testAccCheckAWSWafRegionalWebAclDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetWebACL(
 			&waf.GetWebACLInput{
 				WebACLId: aws.String(rs.Primary.ID),
@@ -594,7 +595,7 @@ func testAccCheckAWSWafRegionalWebAclExists(n string, v *waf.WebACL) resource.Te
 			return fmt.Errorf("No WebACL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetWebACL(&waf.GetWebACLInput{
 			WebACLId: aws.String(rs.Primary.ID),
 		})

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
@@ -209,8 +210,8 @@ func TestAccAWSWafRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 
 func testAccCheckAWSWafRegionalSizeConstraintSetDisappears(constraints *waf.SizeConstraintSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
-		region := acctest.Provider.Meta().(*AWSClient).region
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -260,7 +261,7 @@ func testAccCheckAWSWafRegionalSizeConstraintSetExists(n string, constraints *wa
 			return fmt.Errorf("No WAF SizeConstraintSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetSizeConstraintSet(&waf.GetSizeConstraintSetInput{
 			SizeConstraintSetId: aws.String(rs.Primary.ID),
 		})
@@ -284,7 +285,7 @@ func testAccCheckAWSWafRegionalSizeConstraintSetDestroy(s *terraform.State) erro
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafregionalconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
 		resp, err := conn.GetSizeConstraintSet(
 			&waf.GetSizeConstraintSetInput{
 				SizeConstraintSetId: aws.String(rs.Primary.ID),
