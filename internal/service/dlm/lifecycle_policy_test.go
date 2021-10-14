@@ -20,7 +20,7 @@ func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDlm(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
@@ -57,7 +57,7 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDlm(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
@@ -107,7 +107,7 @@ func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDlm(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
@@ -199,7 +199,7 @@ func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPreCheckAWSDlm(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn
 
 	input := &dlm.GetLifecyclePoliciesInput{}
