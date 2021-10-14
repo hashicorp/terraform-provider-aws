@@ -50,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_model` can be imported using `REST-API-ID/NAME`, e.g.
+`aws_api_gateway_model` can be imported using `REST-API-ID/NAME`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_model.example 12345abcde/example

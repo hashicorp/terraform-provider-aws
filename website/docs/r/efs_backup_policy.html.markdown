@@ -43,11 +43,11 @@ For **backup_policy** the following attributes are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID that identifies the file system (e.g. fs-ccfc0d65).
+* `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 
 ## Import
 
-The EFS backup policies can be imported using the `id`, e.g.
+The EFS backup policies can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_efs_backup_policy.example fs-6fa144c6

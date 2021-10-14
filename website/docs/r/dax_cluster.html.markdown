@@ -77,7 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the DAX cluster
 
 * `nodes` - List of node objects including `id`, `address`, `port` and
-`availability_zone`. Referenceable e.g. as
+`availability_zone`. Referenceable e.g., as
 `${aws_dax_cluster.test.nodes.0.address}`
 
 * `configuration_endpoint` - The configuration endpoint for this DAX cluster,
@@ -100,7 +100,7 @@ consisting of a DNS name and a port number
 
 ## Import
 
-DAX Clusters can be imported using the `cluster_name`, e.g.
+DAX Clusters can be imported using the `cluster_name`, e.g.,
 
 ```
 $ terraform import aws_dax_cluster.my_cluster my_cluster

@@ -212,7 +212,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Roles can be imported using the `name`, e.g.
+IAM Roles can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_iam_role.developer developer_name

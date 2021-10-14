@@ -94,7 +94,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSM associations can be imported using the `association_id`, e.g.
+SSM associations can be imported using the `association_id`, e.g.,
 
 ```
 $ terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456

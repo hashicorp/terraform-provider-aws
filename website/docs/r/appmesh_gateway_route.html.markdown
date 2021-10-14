@@ -96,7 +96,7 @@ In addition to all arguments above, the following attributes are exported:
 ## Import
 
 App Mesh gateway routes can be imported using `mesh_name` and `virtual_gateway_name` together with the gateway route's `name`,
-e.g.
+e.g.,
 
 ```
 $ terraform import aws_appmesh_gateway_route.example mesh/gw1/example-gateway-route
