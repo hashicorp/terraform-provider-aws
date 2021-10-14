@@ -25,13 +25,13 @@ func TestAccAWSOpsworksApplication_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksApplicationDestroy,
+		CheckDestroy: testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksApplicationCreate(rName),
+				Config: testAccApplicationCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksApplicationExists(resourceName, &opsapp),
-					testAccCheckAWSOpsworksCreateAppAttributes(&opsapp),
+					testAccCheckApplicationExists(resourceName, &opsapp),
+					testAccCheckCreateAppAttributes(&opsapp),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "other"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ssl", "false"),
@@ -54,10 +54,10 @@ func TestAccAWSOpsworksApplication_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"environment"},
 			},
 			{
-				Config: testAccAwsOpsworksApplicationUpdate(rName),
+				Config: testAccApplicationUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksApplicationExists(resourceName, &opsapp),
-					testAccCheckAWSOpsworksUpdateAppAttributes(&opsapp),
+					testAccCheckApplicationExists(resourceName, &opsapp),
+					testAccCheckUpdateAppAttributes(&opsapp),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "rails"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ssl", "true"),
@@ -90,7 +90,7 @@ func TestAccAWSOpsworksApplication_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSOpsworksApplicationExists(
+func testAccCheckApplicationExists(
 	n string, opsapp *opsworks.App) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -123,7 +123,7 @@ func testAccCheckAWSOpsworksApplicationExists(
 	}
 }
 
-func testAccCheckAWSOpsworksCreateAppAttributes(
+func testAccCheckCreateAppAttributes(
 	opsapp *opsworks.App) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *opsapp.EnableSsl {
@@ -162,7 +162,7 @@ func testAccCheckAWSOpsworksCreateAppAttributes(
 	}
 }
 
-func testAccCheckAWSOpsworksUpdateAppAttributes(
+func testAccCheckUpdateAppAttributes(
 	opsapp *opsworks.App) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *opsapp.Type != "rails" {
@@ -232,7 +232,7 @@ func testAccCheckAWSOpsworksUpdateAppAttributes(
 	}
 }
 
-func testAccCheckAwsOpsworksApplicationDestroy(s *terraform.State) error {
+func testAccCheckApplicationDestroy(s *terraform.State) error {
 	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -261,8 +261,8 @@ func testAccCheckAwsOpsworksApplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsOpsworksApplicationCreate(name string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
+func testAccApplicationCreate(name string) string {
+	return testAccStackVPCCreateConfig(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   document_root = "foo"
@@ -284,8 +284,8 @@ resource "aws_opsworks_application" "test" {
 `, name)
 }
 
-func testAccAwsOpsworksApplicationUpdate(name string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
+func testAccApplicationUpdate(name string) string {
+	return testAccStackVPCCreateConfig(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   auto_bundle_on_deploy = "true"

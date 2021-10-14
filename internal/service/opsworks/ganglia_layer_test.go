@@ -19,12 +19,12 @@ func TestAccAWSOpsworksGangliaLayer_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksGangliaLayerDestroy,
+		CheckDestroy: testAccCheckGangliaLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksGangliaLayerConfigVpcCreate(stackName),
+				Config: testAccGangliaLayerVPCCreateConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName),
 				),
 			},
@@ -40,29 +40,29 @@ func TestAccAWSOpsworksGangliaLayer_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksGangliaLayerDestroy,
+		CheckDestroy: testAccCheckGangliaLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksGangliaLayerConfigTags1(stackName, "key1", "value1"),
+				Config: testAccGangliaLayerTags1Config(stackName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccAwsOpsworksGangliaLayerConfigTags2(stackName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGangliaLayerTags2Config(stackName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAwsOpsworksGangliaLayerConfigTags1(stackName, "key2", "value2"),
+				Config: testAccGangliaLayerTags1Config(stackName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -71,13 +71,13 @@ func TestAccAWSOpsworksGangliaLayer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsOpsworksGangliaLayerDestroy(s *terraform.State) error {
-	return testAccCheckAwsOpsworksLayerDestroy("aws_opsworks_ganglia_layer", s)
+func testAccCheckGangliaLayerDestroy(s *terraform.State) error {
+	return testAccCheckLayerDestroy("aws_opsworks_ganglia_layer", s)
 }
 
-func testAccAwsOpsworksGangliaLayerConfigVpcCreate(name string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
+func testAccGangliaLayerVPCCreateConfig(name string) string {
+	return testAccStackVPCCreateConfig(name) +
+		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_ganglia_layer" "test" {
   stack_id = aws_opsworks_stack.tf-acc.id
@@ -92,9 +92,9 @@ resource "aws_opsworks_ganglia_layer" "test" {
 `, name)
 }
 
-func testAccAwsOpsworksGangliaLayerConfigTags1(name, tagKey1, tagValue1 string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
+func testAccGangliaLayerTags1Config(name, tagKey1, tagValue1 string) string {
+	return testAccStackVPCCreateConfig(name) +
+		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_ganglia_layer" "test" {
   stack_id = aws_opsworks_stack.tf-acc.id
@@ -113,9 +113,9 @@ resource "aws_opsworks_ganglia_layer" "test" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccAwsOpsworksGangliaLayerConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
+func testAccGangliaLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccStackVPCCreateConfig(name) +
+		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_ganglia_layer" "test" {
   stack_id = aws_opsworks_stack.tf-acc.id

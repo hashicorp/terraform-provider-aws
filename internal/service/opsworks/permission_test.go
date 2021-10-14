@@ -21,14 +21,14 @@ func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksPermissionCreate(sName, "true", "true", "iam_only"),
+				Config: testAccPermissionCreate(sName, "true", "true", "iam_only"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksPermissionExists(
+					testAccCheckPermissionExists(
 						"aws_opsworks_permission.tf-acc-perm", &opsperm),
-					testAccCheckAWSOpsworksCreatePermissionAttributes(&opsperm, true, true, "iam_only"),
+					testAccCheckCreatePermissionAttributes(&opsperm, true, true, "iam_only"),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_permission.tf-acc-perm", "allow_ssh", "true",
 					),
@@ -41,11 +41,11 @@ func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsOpsworksPermissionCreate(sName, "true", "false", "iam_only"),
+				Config: testAccPermissionCreate(sName, "true", "false", "iam_only"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksPermissionExists(
+					testAccCheckPermissionExists(
 						"aws_opsworks_permission.tf-acc-perm", &opsperm),
-					testAccCheckAWSOpsworksCreatePermissionAttributes(&opsperm, true, false, "iam_only"),
+					testAccCheckCreatePermissionAttributes(&opsperm, true, false, "iam_only"),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_permission.tf-acc-perm", "allow_ssh", "true",
 					),
@@ -58,11 +58,11 @@ func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsOpsworksPermissionCreate(sName, "false", "false", "deny"),
+				Config: testAccPermissionCreate(sName, "false", "false", "deny"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksPermissionExists(
+					testAccCheckPermissionExists(
 						"aws_opsworks_permission.tf-acc-perm", &opsperm),
-					testAccCheckAWSOpsworksCreatePermissionAttributes(&opsperm, false, false, "deny"),
+					testAccCheckCreatePermissionAttributes(&opsperm, false, false, "deny"),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_permission.tf-acc-perm", "allow_ssh", "false",
 					),
@@ -75,11 +75,11 @@ func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsOpsworksPermissionCreate(sName, "false", "false", "show"),
+				Config: testAccPermissionCreate(sName, "false", "false", "show"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksPermissionExists(
+					testAccCheckPermissionExists(
 						"aws_opsworks_permission.tf-acc-perm", &opsperm),
-					testAccCheckAWSOpsworksCreatePermissionAttributes(&opsperm, false, false, "show"),
+					testAccCheckCreatePermissionAttributes(&opsperm, false, false, "show"),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_permission.tf-acc-perm", "allow_ssh", "false",
 					),
@@ -108,17 +108,17 @@ func TestAccAWSOpsworksPermission_Self(t *testing.T) {
 		CheckDestroy: nil, // Cannot delete own OpsWorks Permission
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksPermissionSelf(rName, true, true),
+				Config: testAccPermissionSelf(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksPermissionExists(resourceName, &opsperm),
+					testAccCheckPermissionExists(resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
 					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "true"),
 				),
 			},
 			{
-				Config: testAccAwsOpsworksPermissionSelf(rName, true, false),
+				Config: testAccPermissionSelf(rName, true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksPermissionExists(resourceName, &opsperm),
+					testAccCheckPermissionExists(resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
 					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "false"),
 				),
@@ -127,7 +127,7 @@ func TestAccAWSOpsworksPermission_Self(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSOpsworksPermissionExists(
+func testAccCheckPermissionExists(
 	n string, opsperm *opsworks.Permission) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -161,7 +161,7 @@ func testAccCheckAWSOpsworksPermissionExists(
 	}
 }
 
-func testAccCheckAWSOpsworksCreatePermissionAttributes(
+func testAccCheckCreatePermissionAttributes(
 	opsperm *opsworks.Permission, allowSsh bool, allowSudo bool, level string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *opsperm.AllowSsh != allowSsh {
@@ -180,7 +180,7 @@ func testAccCheckAWSOpsworksCreatePermissionAttributes(
 	}
 }
 
-func testAccCheckAwsOpsworksPermissionDestroy(s *terraform.State) error {
+func testAccCheckPermissionDestroy(s *terraform.State) error {
 	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -208,7 +208,7 @@ func testAccCheckAwsOpsworksPermissionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsOpsworksPermissionBase(rName string) string {
+func testAccPermissionBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -321,7 +321,7 @@ resource "aws_iam_instance_profile" "test" {
 `, rName)
 }
 
-func testAccAwsOpsworksPermissionCreate(name, ssh, sudo, level string) string {
+func testAccPermissionCreate(name, ssh, sudo, level string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_permission" "tf-acc-perm" {
   stack_id = aws_opsworks_stack.tf-acc.id
@@ -342,11 +342,11 @@ resource "aws_iam_user" "user" {
   path = "/"
 }
 %s
-`, ssh, sudo, level, name, testAccAwsOpsworksStackConfigVpcCreate(name))
+`, ssh, sudo, level, name, testAccStackVPCCreateConfig(name))
 }
 
-func testAccAwsOpsworksPermissionSelf(rName string, allowSsh bool, allowSudo bool) string {
-	return testAccAwsOpsworksPermissionBase(rName) + fmt.Sprintf(`
+func testAccPermissionSelf(rName string, allowSsh bool, allowSudo bool) string {
+	return testAccPermissionBase(rName) + fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_opsworks_permission" "test" {

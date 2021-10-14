@@ -24,13 +24,13 @@ func TestAccAWSOpsworksInstance_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
+		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksInstanceConfigCreate(stackName),
+				Config: testAccInstanceCreateConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksInstanceExists(resourceName, &opsinst),
-					testAccCheckAWSOpsworksInstanceAttributes(&opsinst),
+					testAccCheckInstanceExists(resourceName, &opsinst),
+					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "state", "stopped"),
@@ -50,10 +50,10 @@ func TestAccAWSOpsworksInstance_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"state"}, //state is something we pass to the API and get back as status :(
 			},
 			{
-				Config: testAccAwsOpsworksInstanceConfigUpdate(stackName),
+				Config: testAccInstanceUpdateConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksInstanceExists(resourceName, &opsinst),
-					testAccCheckAWSOpsworksInstanceAttributes(&opsinst),
+					testAccCheckInstanceExists(resourceName, &opsinst),
+					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small"),
 					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", "2"),
@@ -74,12 +74,12 @@ func TestAccAWSOpsworksInstance_UpdateHostNameForceNew(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
+		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksInstanceConfigCreate(stackName),
+				Config: testAccInstanceCreateConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksInstanceExists(resourceName, &before),
+					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
 				),
 			},
@@ -90,18 +90,18 @@ func TestAccAWSOpsworksInstance_UpdateHostNameForceNew(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"state"},
 			},
 			{
-				Config: testAccAwsOpsworksInstanceConfigUpdateHostName(stackName),
+				Config: testAccInstanceUpdateHostNameConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksInstanceExists(resourceName, &after),
+					testAccCheckInstanceExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc2"),
-					testAccCheckAwsOpsworksInstanceRecreated(t, &before, &after),
+					testAccCheckInstanceRecreated(t, &before, &after),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsOpsworksInstanceRecreated(t *testing.T,
+func testAccCheckInstanceRecreated(t *testing.T,
 	before, after *opsworks.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.InstanceId == *after.InstanceId {
@@ -111,7 +111,7 @@ func testAccCheckAwsOpsworksInstanceRecreated(t *testing.T,
 	}
 }
 
-func testAccCheckAWSOpsworksInstanceExists(
+func testAccCheckInstanceExists(
 	n string, opsinst *opsworks.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -144,7 +144,7 @@ func testAccCheckAWSOpsworksInstanceExists(
 	}
 }
 
-func testAccCheckAWSOpsworksInstanceAttributes(
+func testAccCheckInstanceAttributes(
 	opsinst *opsworks.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Depending on the timing, the state could be requested or stopped
@@ -170,7 +170,7 @@ func testAccCheckAWSOpsworksInstanceAttributes(
 	}
 }
 
-func testAccCheckAwsOpsworksInstanceDestroy(s *terraform.State) error {
+func testAccCheckInstanceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_instance" {
@@ -197,7 +197,7 @@ func testAccCheckAwsOpsworksInstanceDestroy(s *terraform.State) error {
 	return fmt.Errorf("Fall through error on OpsWorks instance test")
 }
 
-func testAccAwsOpsworksInstanceConfigUpdateHostName(name string) string {
+func testAccInstanceUpdateHostNameConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
   name = "%s-web"
@@ -250,10 +250,10 @@ resource "aws_opsworks_instance" "tf-acc" {
 }
 
 %s
-`, name, name, testAccAwsOpsworksStackConfigVpcCreate(name))
+`, name, name, testAccStackVPCCreateConfig(name))
 }
 
-func testAccAwsOpsworksInstanceConfigCreate(name string) string {
+func testAccInstanceCreateConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
   name = "%s-web"
@@ -306,10 +306,10 @@ resource "aws_opsworks_instance" "tf-acc" {
 }
 
 %s
-`, name, name, testAccAwsOpsworksStackConfigVpcCreate(name))
+`, name, name, testAccStackVPCCreateConfig(name))
 }
 
-func testAccAwsOpsworksInstanceConfigUpdate(name string) string {
+func testAccInstanceUpdateConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
   name = "%s-web"
@@ -368,5 +368,5 @@ resource "aws_opsworks_instance" "tf-acc" {
 }
 
 %s
-`, name, name, testAccAwsOpsworksStackConfigVpcCreate(name))
+`, name, name, testAccStackVPCCreateConfig(name))
 }

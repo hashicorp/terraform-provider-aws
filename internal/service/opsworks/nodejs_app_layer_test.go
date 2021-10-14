@@ -22,12 +22,12 @@ func TestAccAWSOpsworksNodejsAppLayer_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksNodejsAppLayerDestroy,
+		CheckDestroy: testAccCheckNodejsAppLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksNodejsAppLayerConfigVpcCreate(stackName),
+				Config: testAccNodejsAppLayerVPCCreateConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName)),
 			},
 		},
@@ -42,29 +42,29 @@ func TestAccAWSOpsworksNodejsAppLayer_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksNodejsAppLayerDestroy,
+		CheckDestroy: testAccCheckNodejsAppLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksNodejsAppLayerConfigTags1(stackName, "key1", "value1"),
+				Config: testAccNodejsAppLayerTags1Config(stackName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccAwsOpsworksNodejsAppLayerConfigTags2(stackName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNodejsAppLayerTags2Config(stackName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAwsOpsworksNodejsAppLayerConfigTags1(stackName, "key2", "value2"),
+				Config: testAccNodejsAppLayerTags1Config(stackName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -73,13 +73,13 @@ func TestAccAWSOpsworksNodejsAppLayer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsOpsworksNodejsAppLayerDestroy(s *terraform.State) error {
-	return testAccCheckAwsOpsworksLayerDestroy("aws_opsworks_nodejs_app_layer", s)
+func testAccCheckNodejsAppLayerDestroy(s *terraform.State) error {
+	return testAccCheckLayerDestroy("aws_opsworks_nodejs_app_layer", s)
 }
 
-func testAccAwsOpsworksNodejsAppLayerConfigVpcCreate(name string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
+func testAccNodejsAppLayerVPCCreateConfig(name string) string {
+	return testAccStackVPCCreateConfig(name) +
+		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_nodejs_app_layer" "test" {
   stack_id = aws_opsworks_stack.tf-acc.id
@@ -93,9 +93,9 @@ resource "aws_opsworks_nodejs_app_layer" "test" {
 `, name)
 }
 
-func testAccAwsOpsworksNodejsAppLayerConfigTags1(name, tagKey1, tagValue1 string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
+func testAccNodejsAppLayerTags1Config(name, tagKey1, tagValue1 string) string {
+	return testAccStackVPCCreateConfig(name) +
+		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_nodejs_app_layer" "test" {
   stack_id = aws_opsworks_stack.tf-acc.id
@@ -113,9 +113,9 @@ resource "aws_opsworks_nodejs_app_layer" "test" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccAwsOpsworksNodejsAppLayerConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
+func testAccNodejsAppLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccStackVPCCreateConfig(name) +
+		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_nodejs_app_layer" "test" {
   stack_id = aws_opsworks_stack.tf-acc.id

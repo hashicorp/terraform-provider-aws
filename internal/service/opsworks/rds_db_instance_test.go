@@ -21,47 +21,47 @@ func TestAccAWSOpsworksRdsDbInstance_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksRdsDbDestroy,
+		CheckDestroy: testAccCheckRDSDBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksRdsDbInstance(sName, "foo", "barbarbarbar"),
+				Config: testAccRDSDBInstance(sName, "foo", "barbarbarbar"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksRdsDbExists(
+					testAccCheckRDSDBExists(
 						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
-					testAccCheckAWSOpsworksCreateRdsDbAttributes(&opsdb, "foo"),
+					testAccCheckCreateRDSDBAttributes(&opsdb, "foo"),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "foo",
 					),
 				),
 			},
 			{
-				Config: testAccAwsOpsworksRdsDbInstance(sName, "bar", "barbarbarbar"),
+				Config: testAccRDSDBInstance(sName, "bar", "barbarbarbar"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksRdsDbExists(
+					testAccCheckRDSDBExists(
 						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
-					testAccCheckAWSOpsworksCreateRdsDbAttributes(&opsdb, "bar"),
+					testAccCheckCreateRDSDBAttributes(&opsdb, "bar"),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "bar",
 					),
 				),
 			},
 			{
-				Config: testAccAwsOpsworksRdsDbInstance(sName, "bar", "foofoofoofoofoo"),
+				Config: testAccRDSDBInstance(sName, "bar", "foofoofoofoofoo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksRdsDbExists(
+					testAccCheckRDSDBExists(
 						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
-					testAccCheckAWSOpsworksCreateRdsDbAttributes(&opsdb, "bar"),
+					testAccCheckCreateRDSDBAttributes(&opsdb, "bar"),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "bar",
 					),
 				),
 			},
 			{
-				Config: testAccAwsOpsworksRdsDbInstanceForceNew(sName),
+				Config: testAccRDSDBInstanceForceNew(sName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksRdsDbExists(
+					testAccCheckRDSDBExists(
 						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", &opsdb),
-					testAccCheckAWSOpsworksCreateRdsDbAttributes(&opsdb, "foo"),
+					testAccCheckCreateRDSDBAttributes(&opsdb, "foo"),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_rds_db_instance.tf-acc-opsworks-db", "db_user", "foo",
 					),
@@ -71,7 +71,7 @@ func TestAccAWSOpsworksRdsDbInstance_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSOpsworksRdsDbExists(
+func testAccCheckRDSDBExists(
 	n string, opsdb *opsworks.RdsDbInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -108,7 +108,7 @@ func testAccCheckAWSOpsworksRdsDbExists(
 	}
 }
 
-func testAccCheckAWSOpsworksCreateRdsDbAttributes(
+func testAccCheckCreateRDSDBAttributes(
 	opsdb *opsworks.RdsDbInstance, user string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *opsdb.DbUser != user {
@@ -121,7 +121,7 @@ func testAccCheckAWSOpsworksCreateRdsDbAttributes(
 	}
 }
 
-func testAccCheckAwsOpsworksRdsDbDestroy(s *terraform.State) error {
+func testAccCheckRDSDBDestroy(s *terraform.State) error {
 	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -149,7 +149,7 @@ func testAccCheckAwsOpsworksRdsDbDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsOpsworksRdsDbInstance(name, userName, password string) string {
+func testAccRDSDBInstance(name, userName, password string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
   stack_id = aws_opsworks_stack.tf-acc.id
@@ -160,10 +160,10 @@ resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
 }
 %s
 %s
-`, userName, password, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAWSDBInstanceBasicConfig())
+`, userName, password, testAccStackVPCCreateConfig(name), testAccDBInstanceBasicConfig())
 }
 
-func testAccAwsOpsworksRdsDbInstanceForceNew(name string) string {
+func testAccRDSDBInstanceForceNew(name string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
   stack_id = aws_opsworks_stack.tf-acc.id
@@ -186,11 +186,11 @@ resource "aws_db_instance" "foo" {
 
   skip_final_snapshot = true
 }
-`, testAccAwsOpsworksStackConfigVpcCreate(name))
+`, testAccStackVPCCreateConfig(name))
 }
 
-func testAccAWSDBInstanceBasicConfig() string {
-	return acctest.ConfigCompose(testAccAWSDBInstanceConfig_orderableClassMysql(), `
+func testAccDBInstanceBasicConfig() string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_orderableClassMySQL(), `
 resource "aws_db_instance" "bar" {
   allocated_storage       = 10
   backup_retention_period = 0
@@ -211,7 +211,7 @@ resource "aws_db_instance" "bar" {
 `)
 }
 
-func testAccAWSDBInstanceConfig_orderableClass(engine, version, license string) string {
+func testAccDBInstanceConfig_orderableClass(engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine         = %q
@@ -224,6 +224,6 @@ data "aws_rds_orderable_db_instance" "test" {
 `, engine, version, license)
 }
 
-func testAccAWSDBInstanceConfig_orderableClassMysql() string {
-	return testAccAWSDBInstanceConfig_orderableClass("mysql", "5.6.35", "general-public-license")
+func testAccDBInstanceConfig_orderableClassMySQL() string {
+	return testAccDBInstanceConfig_orderableClass("mysql", "5.6.35", "general-public-license")
 }

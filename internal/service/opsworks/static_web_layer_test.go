@@ -22,12 +22,12 @@ func TestAccAWSOpsworksStaticWebLayer_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksStaticWebLayerDestroy,
+		CheckDestroy: testAccCheckStaticWebLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksStaticWebLayerConfigVpcCreate(stackName),
+				Config: testAccStaticWebLayerVPCCreateConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName)),
 			},
 			{
@@ -47,12 +47,12 @@ func TestAccAWSOpsworksStaticWebLayer_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksStaticWebLayerDestroy,
+		CheckDestroy: testAccCheckStaticWebLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksStaticWebLayerConfigTags1(stackName, "key1", "value1"),
+				Config: testAccStaticWebLayerTags1Config(stackName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -63,18 +63,18 @@ func TestAccAWSOpsworksStaticWebLayer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsOpsworksStaticWebLayerConfigTags2(stackName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStaticWebLayerTags2Config(stackName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAwsOpsworksStaticWebLayerConfigTags1(stackName, "key2", "value2"),
+				Config: testAccStaticWebLayerTags1Config(stackName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksLayerExists(resourceName, &opslayer),
+					testAccCheckLayerExists(resourceName, &opslayer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -83,13 +83,13 @@ func TestAccAWSOpsworksStaticWebLayer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsOpsworksStaticWebLayerDestroy(s *terraform.State) error {
-	return testAccCheckAwsOpsworksLayerDestroy("aws_opsworks_static_web_layer", s)
+func testAccCheckStaticWebLayerDestroy(s *terraform.State) error {
+	return testAccCheckLayerDestroy("aws_opsworks_static_web_layer", s)
 }
 
-func testAccAwsOpsworksStaticWebLayerConfigVpcCreate(name string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
+func testAccStaticWebLayerVPCCreateConfig(name string) string {
+	return testAccStackVPCCreateConfig(name) +
+		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_static_web_layer" "test" {
   stack_id = aws_opsworks_stack.tf-acc.id
@@ -103,9 +103,9 @@ resource "aws_opsworks_static_web_layer" "test" {
 `, name)
 }
 
-func testAccAwsOpsworksStaticWebLayerConfigTags1(name, tagKey1, tagValue1 string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
+func testAccStaticWebLayerTags1Config(name, tagKey1, tagValue1 string) string {
+	return testAccStackVPCCreateConfig(name) +
+		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_static_web_layer" "test" {
   stack_id = aws_opsworks_stack.tf-acc.id
@@ -123,9 +123,9 @@ resource "aws_opsworks_static_web_layer" "test" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccAwsOpsworksStaticWebLayerConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAwsOpsworksStackConfigVpcCreate(name) +
-		testAccAwsOpsworksCustomLayerSecurityGroups(name) +
+func testAccStaticWebLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccStackVPCCreateConfig(name) +
+		testAccCustomLayerSecurityGroups(name) +
 		fmt.Sprintf(`
 resource "aws_opsworks_static_web_layer" "test" {
   stack_id = aws_opsworks_stack.tf-acc.id

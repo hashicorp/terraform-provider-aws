@@ -21,12 +21,12 @@ func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOpsworksUserProfileDestroy,
+		CheckDestroy: testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksUserProfileCreate(rName),
+				Config: testAccUserProfileCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksUserProfileExists(
+					testAccCheckUserProfileExists(
 						"aws_opsworks_user_profile.user", rName),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_user_profile.user", "ssh_public_key", "",
@@ -40,9 +40,9 @@ func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsOpsworksUserProfileUpdate(rName, updateRName),
+				Config: testAccUserProfileUpdate(rName, updateRName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksUserProfileExists(
+					testAccCheckUserProfileExists(
 						"aws_opsworks_user_profile.user", updateRName),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_user_profile.user", "ssh_public_key", "",
@@ -59,7 +59,7 @@ func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSOpsworksUserProfileExists(
+func testAccCheckUserProfileExists(
 	n, username string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -105,7 +105,7 @@ func testAccCheckAWSOpsworksUserProfileExists(
 	}
 }
 
-func testAccCheckAwsOpsworksUserProfileDestroy(s *terraform.State) error {
+func testAccCheckUserProfileDestroy(s *terraform.State) error {
 	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -133,7 +133,7 @@ func testAccCheckAwsOpsworksUserProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsOpsworksUserProfileCreate(rn string) string {
+func testAccUserProfileCreate(rn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
   user_arn     = aws_iam_user.user.arn
@@ -147,7 +147,7 @@ resource "aws_iam_user" "user" {
 `, rn)
 }
 
-func testAccAwsOpsworksUserProfileUpdate(rn, updateRn string) string {
+func testAccUserProfileUpdate(rn, updateRn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
   user_arn     = aws_iam_user.new-user.arn
