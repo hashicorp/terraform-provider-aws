@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDynamodbTag_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
@@ -38,12 +39,12 @@ func TestAccAWSDynamodbTag_basic(t *testing.T) {
 }
 
 func TestAccAWSDynamodbTag_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
@@ -51,7 +52,7 @@ func TestAccAWSDynamodbTag_disappears(t *testing.T) {
 				Config: testAccDynamodbTagConfig(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDynamodbTagExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamodbTag(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDynamodbTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -62,16 +63,16 @@ func TestAccAWSDynamodbTag_disappears(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13725
 func TestAccAWSDynamodbTag_ResourceArn_TableReplica(t *testing.T) {
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,12 +92,12 @@ func TestAccAWSDynamodbTag_ResourceArn_TableReplica(t *testing.T) {
 }
 
 func TestAccAWSDynamodbTag_Value(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
@@ -152,8 +153,8 @@ resource "aws_dynamodb_tag" "test" {
 }
 
 func testAccDynamodbTagConfigResourceArnTableReplica(rName string) string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(2),
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
 data "aws_region" "alternate" {
   provider = "awsalternate"
