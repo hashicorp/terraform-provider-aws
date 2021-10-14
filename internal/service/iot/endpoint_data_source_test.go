@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSIotEndpointDataSource_basic(t *testing.T) {
+func TestAccIoTEndpointDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,7 +28,7 @@ func TestAccAWSIotEndpointDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIotEndpointDataSource_EndpointType_IOTCredentialProvider(t *testing.T) {
+func TestAccIoTEndpointDataSource_EndpointType_iotCredentialProvider(t *testing.T) {
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,7 +46,7 @@ func TestAccAWSIotEndpointDataSource_EndpointType_IOTCredentialProvider(t *testi
 	})
 }
 
-func TestAccAWSIotEndpointDataSource_EndpointType_IOTData(t *testing.T) {
+func TestAccIoTEndpointDataSource_EndpointType_iotData(t *testing.T) {
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -64,7 +64,7 @@ func TestAccAWSIotEndpointDataSource_EndpointType_IOTData(t *testing.T) {
 	})
 }
 
-func TestAccAWSIotEndpointDataSource_EndpointType_IOTDataATS(t *testing.T) {
+func TestAccIoTEndpointDataSource_EndpointType_iotDataATS(t *testing.T) {
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -82,7 +82,7 @@ func TestAccAWSIotEndpointDataSource_EndpointType_IOTDataATS(t *testing.T) {
 	})
 }
 
-func TestAccAWSIotEndpointDataSource_EndpointType_IOTJobs(t *testing.T) {
+func TestAccIoTEndpointDataSource_EndpointType_iotJobs(t *testing.T) {
 	dataSourceName := "data.aws_iot_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{

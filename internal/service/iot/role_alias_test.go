@@ -72,7 +72,7 @@ func sweepRoleAliases(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSIotRoleAlias_basic(t *testing.T) {
+func TestAccIoTRoleAlias_basic(t *testing.T) {
 	alias := sdkacctest.RandomWithPrefix("RoleAlias-")
 	alias2 := sdkacctest.RandomWithPrefix("RoleAlias2-")
 

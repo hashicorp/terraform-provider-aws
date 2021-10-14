@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
+func TestAccIoTAuthorizer_basic(t *testing.T) {
 	var conf iot.AuthorizerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
@@ -47,7 +47,7 @@ func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
+func TestAccIoTAuthorizer_disappears(t *testing.T) {
 	var conf iot.AuthorizerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
@@ -70,7 +70,7 @@ func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTAuthorizer_SigningDisabled(t *testing.T) {
+func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 	var conf iot.AuthorizerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"
@@ -102,7 +102,7 @@ func TestAccAWSIoTAuthorizer_SigningDisabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTAuthorizer_Update(t *testing.T) {
+func TestAccIoTAuthorizer_update(t *testing.T) {
 	var conf iot.AuthorizerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_authorizer.test"

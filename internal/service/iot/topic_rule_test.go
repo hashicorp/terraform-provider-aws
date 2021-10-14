@@ -71,7 +71,7 @@ func sweepTopicRules(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSIoTTopicRule_basic(t *testing.T) {
+func TestAccIoTTopicRule_basic(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -102,7 +102,7 @@ func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
+func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -127,7 +127,7 @@ func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
+func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -152,7 +152,7 @@ func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_dynamodb(t *testing.T) {
+func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -183,7 +183,7 @@ func TestAccAWSIoTTopicRule_dynamodb(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_dynamoDbv2(t *testing.T) {
+func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -202,7 +202,7 @@ func TestAccAWSIoTTopicRule_dynamoDbv2(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
+func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -227,7 +227,7 @@ func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
+func TestAccIoTTopicRule_firehose(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -252,7 +252,7 @@ func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
+func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -283,7 +283,7 @@ func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
+func TestAccIoTTopicRule_kinesis(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -308,7 +308,7 @@ func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
+func TestAccIoTTopicRule_lambda(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -333,7 +333,7 @@ func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_republish(t *testing.T) {
+func TestAccIoTTopicRule_republish(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -358,7 +358,7 @@ func TestAccAWSIoTTopicRule_republish(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_republish_with_qos(t *testing.T) {
+func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -383,7 +383,7 @@ func TestAccAWSIoTTopicRule_republish_with_qos(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_s3(t *testing.T) {
+func TestAccIoTTopicRule_s3(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -408,7 +408,7 @@ func TestAccAWSIoTTopicRule_s3(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_sns(t *testing.T) {
+func TestAccIoTTopicRule_sns(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -433,7 +433,7 @@ func TestAccAWSIoTTopicRule_sns(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
+func TestAccIoTTopicRule_sqs(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -458,7 +458,7 @@ func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_step_functions(t *testing.T) {
+func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -483,7 +483,7 @@ func TestAccAWSIoTTopicRule_step_functions(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_iot_analytics(t *testing.T) {
+func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -502,7 +502,7 @@ func TestAccAWSIoTTopicRule_iot_analytics(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_iot_events(t *testing.T) {
+func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -521,7 +521,7 @@ func TestAccAWSIoTTopicRule_iot_events(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_Tags(t *testing.T) {
+func TestAccIoTTopicRule_tags(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.test"
 
@@ -565,7 +565,7 @@ func TestAccAWSIoTTopicRule_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTTopicRule_errorAction(t *testing.T) {
+func TestAccIoTTopicRule_errorAction(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 
@@ -591,7 +591,7 @@ func TestAccAWSIoTTopicRule_errorAction(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16115
-func TestAccAWSIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
+func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
 

@@ -74,7 +74,7 @@ func sweepCertifcates(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSIoTCertificate_csr(t *testing.T) {
+func TestAccIoTCertificate_csr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
@@ -96,7 +96,7 @@ func TestAccAWSIoTCertificate_csr(t *testing.T) {
 	})
 }
 
-func TestAccAWSIoTCertificate_keys_certificate(t *testing.T) {
+func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
