@@ -12,6 +12,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAcmCertificateValidation() *schema.Resource {
@@ -43,12 +44,12 @@ func resourceAwsAcmCertificateValidation() *schema.Resource {
 func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta interface{}) error {
 	certificate_arn := d.Get("certificate_arn").(string)
 
-	acmconn := meta.(*AWSClient).acmconn
+	conn := meta.(*conns.AWSClient).ACMConn
 	params := &acm.DescribeCertificateInput{
 		CertificateArn: aws.String(certificate_arn),
 	}
 
-	resp, err := acmconn.DescribeCertificate(params)
+	resp, err := conn.DescribeCertificate(params)
 
 	if err != nil {
 		return fmt.Errorf("Error describing certificate: %w", err)
@@ -63,7 +64,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 	}
 
 	if validation_record_fqdns, ok := d.GetOk("validation_record_fqdns"); ok {
-		err := resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns.(*schema.Set).List(), resp.Certificate, acmconn)
+		err := resourceAwsAcmCertificateCheckValidationRecords(validation_record_fqdns.(*schema.Set).List(), resp.Certificate, conn)
 		if err != nil {
 			return err
 		}
@@ -72,7 +73,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 	}
 
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		resp, err := acmconn.DescribeCertificate(params)
+		resp, err := conn.DescribeCertificate(params)
 
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %w", err))
@@ -89,7 +90,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = acmconn.DescribeCertificate(params)
+		resp, err = conn.DescribeCertificate(params)
 		if aws.StringValue(resp.Certificate.Status) != acm.CertificateStatusIssued {
 			return fmt.Errorf("Expected certificate to be issued but was in state %s", aws.StringValue(resp.Certificate.Status))
 		}
@@ -170,13 +171,13 @@ func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []int
 }
 
 func resourceAwsAcmCertificateValidationRead(d *schema.ResourceData, meta interface{}) error {
-	acmconn := meta.(*AWSClient).acmconn
+	conn := meta.(*conns.AWSClient).ACMConn
 
 	params := &acm.DescribeCertificateInput{
 		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
 	}
 
-	resp, err := acmconn.DescribeCertificate(params)
+	resp, err := conn.DescribeCertificate(params)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] ACM Certificate (%s) not found, removing from state", d.Id())

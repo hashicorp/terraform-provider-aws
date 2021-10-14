@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepAcmCertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).acmconn
+	conn := client.(*conns.AWSClient).ACMConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListCertificatesPages(&acm.ListCertificatesInput{}, func(page *acm.ListCertificatesOutput, lastPage bool) bool {
@@ -830,13 +831,13 @@ resource "aws_acm_certificate" "cert" {
 }
 
 func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
-	acmconn := acctest.Provider.Meta().(*AWSClient).acmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acm_certificate" {
 			continue
 		}
-		_, err := acmconn.DescribeCertificate(&acm.DescribeCertificateInput{
+		_, err := conn.DescribeCertificate(&acm.DescribeCertificateInput{
 			CertificateArn: aws.String(rs.Primary.ID),
 		})
 
