@@ -1,4 +1,4 @@
-package aws
+package wafv2_test
 
 import (
 	"fmt"
