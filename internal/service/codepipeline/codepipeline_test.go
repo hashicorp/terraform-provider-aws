@@ -2,7 +2,6 @@ package codepipeline_test
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccCodePipeline_basic(t *testing.T) {
