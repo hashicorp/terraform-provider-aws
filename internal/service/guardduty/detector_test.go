@@ -17,59 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_guardduty_detector", &resource.Sweeper{
-		Name:         "aws_guardduty_detector",
-		F:            sweepDetectors,
-		Dependencies: []string{"aws_guardduty_publishing_destination"},
-	})
-}
 
-func sweepDetectors(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).GuardDutyConn
-	input := &guardduty.ListDetectorsInput{}
-	var sweeperErrs *multierror.Error
-
-	err = conn.ListDetectorsPages(input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
-		for _, detectorID := range page.DetectorIds {
-			id := aws.StringValue(detectorID)
-			input := &guardduty.DeleteDetectorInput{
-				DetectorId: detectorID,
-			}
-
-			log.Printf("[INFO] Deleting GuardDuty Detector: %s", id)
-			_, err := conn.DeleteDetector(input)
-			if tfawserr.ErrCodeContains(err, "AccessDenied") {
-				log.Printf("[WARN] Skipping GuardDuty Detector (%s): %s", id, err)
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting GuardDuty Detector (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping GuardDuty Detector sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error retrieving GuardDuty Detectors: %w", err)
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccDetector_basic(t *testing.T) {
 	resourceName := "aws_guardduty_detector.test"

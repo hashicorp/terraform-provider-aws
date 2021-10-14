@@ -17,70 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_guardduty_publishing_destination", &resource.Sweeper{
-		Name: "aws_guardduty_publishing_destination",
-		F:    sweepPublishingDestinations,
-	})
-}
 
-func sweepPublishingDestinations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).GuardDutyConn
-	var sweeperErrs *multierror.Error
-
-	detect_input := &guardduty.ListDetectorsInput{}
-
-	err = conn.ListDetectorsPages(detect_input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
-		for _, detectorID := range page.DetectorIds {
-			list_input := &guardduty.ListPublishingDestinationsInput{
-				DetectorId: detectorID,
-			}
-
-			err = conn.ListPublishingDestinationsPages(list_input, func(page *guardduty.ListPublishingDestinationsOutput, lastPage bool) bool {
-				for _, destination_element := range page.Destinations {
-					input := &guardduty.DeletePublishingDestinationInput{
-						DestinationId: destination_element.DestinationId,
-						DetectorId:    detectorID,
-					}
-
-					log.Printf("[INFO] Deleting GuardDuty Publishing Destination: %s", *destination_element.DestinationId)
-					_, err := conn.DeletePublishingDestination(input)
-
-					if err != nil {
-						sweeperErr := fmt.Errorf("error deleting GuardDuty Publishing Destination (%s): %w", *destination_element.DestinationId, err)
-						log.Printf("[ERROR] %s", sweeperErr)
-						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					}
-				}
-				return !lastPage
-			})
-		}
-		return !lastPage
-	})
-
-	if err != nil {
-		sweeperErr := fmt.Errorf("Error receiving Guardduty detectors for publishing sweep : %w", err)
-		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping GuardDuty Publishing Destination sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error retrieving GuardDuty Publishing Destinations: %s", err)
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccPublishingDestination_basic(t *testing.T) {
 	resourceName := "aws_guardduty_publishing_destination.test"
