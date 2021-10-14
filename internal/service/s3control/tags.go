@@ -1,7 +1,7 @@
 //go:build !generate
 // +build !generate
 
-package keyvaluetags
+package s3control
 
 import (
 	"fmt"
@@ -10,17 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // Custom S3control tagging functions using similar formatting as other service generated code.
 
-// S3controlBucketListTags lists S3control bucket tags.
+// bucketListTags lists S3control bucket tags.
 // The identifier is the bucket ARN.
-func S3controlBucketListTags(conn *s3control.S3Control, identifier string) (KeyValueTags, error) {
+func bucketListTags(conn *s3control.S3Control, identifier string) (tftags.KeyValueTags, error) {
 	parsedArn, err := arn.Parse(identifier)
 
 	if err != nil {
-		return New(nil), fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", identifier, err)
+		return tftags.New(nil), fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", identifier, err)
 	}
 
 	input := &s3control.GetBucketTaggingInput{
@@ -31,30 +32,30 @@ func S3controlBucketListTags(conn *s3control.S3Control, identifier string) (KeyV
 	output, err := conn.GetBucketTagging(input)
 
 	if tfawserr.ErrCodeEquals(err, "NoSuchTagSet") {
-		return New(nil), nil
+		return tftags.New(nil), nil
 	}
 
 	if err != nil {
-		return New(nil), err
+		return tftags.New(nil), err
 	}
 
 	return S3controlKeyValueTags(output.TagSet), nil
 }
 
-// S3controlBucketUpdateTags updates S3control bucket tags.
+// bucketUpdateTags updates S3control bucket tags.
 // The identifier is the bucket ARN.
-func S3controlBucketUpdateTags(conn *s3control.S3Control, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func bucketUpdateTags(conn *s3control.S3Control, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	parsedArn, err := arn.Parse(identifier)
 
 	if err != nil {
 		return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", identifier, err)
 	}
 
-	oldTags := New(oldTagsMap)
-	newTags := New(newTagsMap)
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := S3controlBucketListTags(conn, identifier)
+	allTags, err := bucketListTags(conn, identifier)
 
 	if err != nil {
 		return fmt.Errorf("error listing resource tags (%s): %w", identifier, err)
