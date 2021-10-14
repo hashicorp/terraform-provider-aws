@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
+func ResourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalWebAclAssociationCreate,
-		Read:   resourceAwsWafRegionalWebAclAssociationRead,
-		Delete: resourceAwsWafRegionalWebAclAssociationDelete,
+		Create: resourceWebACLAssociationCreate,
+		Read:   resourceWebACLAssociationRead,
+		Delete: resourceWebACLAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -37,7 +37,7 @@ func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	log.Printf(
@@ -76,7 +76,7 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
@@ -109,7 +109,7 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsWafRegionalWebAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())

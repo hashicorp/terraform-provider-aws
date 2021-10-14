@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -246,7 +247,7 @@ func TestAccAWSWafRegionalRateBasedRule_disappears(t *testing.T) {
 				Config: testAccAWSWafRegionalRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafRegionalRateBasedRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRateBasedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalWebAcl() *schema.Resource {
+func ResourceWebACL() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalWebAclCreate,
-		Read:   resourceAwsWafRegionalWebAclRead,
-		Update: resourceAwsWafRegionalWebAclUpdate,
-		Delete: resourceAwsWafRegionalWebAclDelete,
+		Create: resourceWebACLCreate,
+		Read:   resourceWebACLRead,
+		Update: resourceWebACLUpdate,
+		Delete: resourceWebACLDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -174,7 +174,7 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -243,10 +243,10 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsWafRegionalWebAclRead(d, meta)
+	return resourceWebACLRead(d, meta)
 }
 
-func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -333,7 +333,7 @@ func resourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -388,10 +388,10 @@ func resourceAwsWafRegionalWebAclUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsWafRegionalWebAclRead(d, meta)
+	return resourceWebACLRead(d, meta)
 }
 
-func resourceAwsWafRegionalWebAclDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 

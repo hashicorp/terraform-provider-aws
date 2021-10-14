@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalRuleGroup() *schema.Resource {
+func ResourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalRuleGroupCreate,
-		Read:   resourceAwsWafRegionalRuleGroupRead,
-		Update: resourceAwsWafRegionalRuleGroupUpdate,
-		Delete: resourceAwsWafRegionalRuleGroupDelete,
+		Create: resourceRuleGroupCreate,
+		Read:   resourceRuleGroupRead,
+		Update: resourceRuleGroupUpdate,
+		Delete: resourceRuleGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -81,7 +81,7 @@ func resourceAwsWafRegionalRuleGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -117,10 +117,10 @@ func resourceAwsWafRegionalRuleGroupCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsWafRegionalRuleGroupRead(d, meta)
+	return resourceRuleGroupRead(d, meta)
 }
 
-func resourceAwsWafRegionalRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -178,7 +178,7 @@ func resourceAwsWafRegionalRuleGroupRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsWafRegionalRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -200,10 +200,10 @@ func resourceAwsWafRegionalRuleGroupUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsWafRegionalRuleGroupRead(d, meta)
+	return resourceRuleGroupRead(d, meta)
 }
 
-func resourceAwsWafRegionalRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 

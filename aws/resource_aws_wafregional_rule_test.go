@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -345,7 +346,7 @@ func TestAccAWSWafRegionalRule_changePredicates(t *testing.T) {
 // Calculates the index which isn't static because dataId is generated as part of the test
 func computeWafRegionalRulePredicate(dataId **string, negated bool, pType string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		predicateResource := resourceAwsWafRegionalRule().Schema["predicate"].Elem.(*schema.Resource)
+		predicateResource := ResourceRule().Schema["predicate"].Elem.(*schema.Resource)
 		m := map[string]interface{}{
 			"data_id": **dataId,
 			"negated": negated,

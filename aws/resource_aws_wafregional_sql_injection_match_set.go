@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
-func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
+func ResourceSQLInjectionMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalSqlInjectionMatchSetCreate,
-		Read:   resourceAwsWafRegionalSqlInjectionMatchSetRead,
-		Update: resourceAwsWafRegionalSqlInjectionMatchSetUpdate,
-		Delete: resourceAwsWafRegionalSqlInjectionMatchSetDelete,
+		Create: resourceSQLInjectionMatchSetCreate,
+		Read:   resourceSQLInjectionMatchSetRead,
+		Update: resourceSQLInjectionMatchSetUpdate,
+		Delete: resourceSQLInjectionMatchSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -69,7 +69,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalSqlInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSQLInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -90,10 +90,10 @@ func resourceAwsWafRegionalSqlInjectionMatchSetCreate(d *schema.ResourceData, me
 	resp := out.(*waf.CreateSqlInjectionMatchSetOutput)
 	d.SetId(aws.StringValue(resp.SqlInjectionMatchSet.SqlInjectionMatchSetId))
 
-	return resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d, meta)
+	return resourceSQLInjectionMatchSetUpdate(d, meta)
 }
 
-func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSQLInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	log.Printf("[INFO] Reading Regional WAF SQL Injection Match Set: %s", d.Get("name").(string))
 	params := &waf.GetSqlInjectionMatchSetInput{
@@ -116,7 +116,7 @@ func resourceAwsWafRegionalSqlInjectionMatchSetRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSQLInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -135,10 +135,10 @@ func resourceAwsWafRegionalSqlInjectionMatchSetUpdate(d *schema.ResourceData, me
 		}
 	}
 
-	return resourceAwsWafRegionalSqlInjectionMatchSetRead(d, meta)
+	return resourceSQLInjectionMatchSetRead(d, meta)
 }
 
-func resourceAwsWafRegionalSqlInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSQLInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 

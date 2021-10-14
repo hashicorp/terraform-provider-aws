@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalRule() *schema.Resource {
+func ResourceRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalRuleCreate,
-		Read:   resourceAwsWafRegionalRuleRead,
-		Update: resourceAwsWafRegionalRuleUpdate,
-		Delete: resourceAwsWafRegionalRuleDelete,
+		Create: resourceRuleCreate,
+		Read:   resourceRuleRead,
+		Update: resourceRuleUpdate,
+		Delete: resourceRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -69,7 +69,7 @@ func resourceAwsWafRegionalRule() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -103,10 +103,10 @@ func resourceAwsWafRegionalRuleCreate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("Error Updating WAF Regional Rule: %s", err)
 		}
 	}
-	return resourceAwsWafRegionalRuleRead(d, meta)
+	return resourceRuleRead(d, meta)
 }
 
-func resourceAwsWafRegionalRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -159,7 +159,7 @@ func resourceAwsWafRegionalRuleRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsWafRegionalRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
 	if d.HasChange("predicate") {
@@ -180,10 +180,10 @@ func resourceAwsWafRegionalRuleUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsWafRegionalRuleRead(d, meta)
+	return resourceRuleRead(d, meta)
 }
 
-func resourceAwsWafRegionalRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 

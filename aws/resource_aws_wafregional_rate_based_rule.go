@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
+func ResourceRateBasedRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafRegionalRateBasedRuleCreate,
-		Read:   resourceAwsWafRegionalRateBasedRuleRead,
-		Update: resourceAwsWafRegionalRateBasedRuleUpdate,
-		Delete: resourceAwsWafRegionalRateBasedRuleDelete,
+		Create: resourceRateBasedRuleCreate,
+		Read:   resourceRateBasedRuleRead,
+		Update: resourceRateBasedRuleUpdate,
+		Delete: resourceRateBasedRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -79,7 +79,7 @@ func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
 	}
 }
 
-func resourceAwsWafRegionalRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -116,10 +116,10 @@ func resourceAwsWafRegionalRateBasedRuleCreate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsWafRegionalRateBasedRuleRead(d, meta)
+	return resourceRateBasedRuleRead(d, meta)
 }
 
-func resourceAwsWafRegionalRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -182,7 +182,7 @@ func resourceAwsWafRegionalRateBasedRuleRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsWafRegionalRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -210,10 +210,10 @@ func resourceAwsWafRegionalRateBasedRuleUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsWafRegionalRateBasedRuleRead(d, meta)
+	return resourceRateBasedRuleRead(d, meta)
 }
 
-func resourceAwsWafRegionalRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
