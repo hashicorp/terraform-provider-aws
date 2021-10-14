@@ -1,4 +1,4 @@
-package aws
+package lambda
 
 import (
 	"fmt"
@@ -15,36 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lambda/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lambda/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceEventSourceMapping() *schema.Resource {
@@ -435,7 +411,7 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
 
-	if _, err := tflambda.waitEventSourceMappingCreate(conn, d.Id()); err != nil {
+	if _, err := waitEventSourceMappingCreate(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to create: %w", d.Id(), err)
 	}
 
@@ -445,7 +421,7 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn
 
-	eventSourceMappingConfiguration, err := tflambda.FindEventSourceMappingConfigurationByID(conn, d.Id())
+	eventSourceMappingConfiguration, err := FindEventSourceMappingConfigurationByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[DEBUG] Lambda Event Source Mapping (%s) not found", d.Id())
@@ -504,9 +480,9 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("uuid", eventSourceMappingConfiguration.UUID)
 
 	switch state := d.Get("state").(string); state {
-	case tflambda.eventSourceMappingStateEnabled, tflambda.eventSourceMappingStateEnabling:
+	case eventSourceMappingStateEnabled, eventSourceMappingStateEnabling:
 		d.Set("enabled", true)
-	case tflambda.eventSourceMappingStateDisabled, tflambda.eventSourceMappingStateDisabling:
+	case eventSourceMappingStateDisabled, eventSourceMappingStateDisabling:
 		d.Set("enabled", false)
 	default:
 		log.Printf("[WARN] Lambda Event Source Mapping (%s) is neither enabled nor disabled, but %s", d.Id(), state)
@@ -577,7 +553,7 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 		input.TumblingWindowInSeconds = aws.Int64(int64(d.Get("tumbling_window_in_seconds").(int)))
 	}
 
-	err := resource.Retry(tflambda.eventSourceMappingPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(eventSourceMappingPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
@@ -599,7 +575,7 @@ func resourceEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error updating Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
-	if _, err := tflambda.waitEventSourceMappingUpdate(conn, d.Id()); err != nil {
+	if _, err := waitEventSourceMappingUpdate(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to update: %w", d.Id(), err)
 	}
 
@@ -615,7 +591,7 @@ func resourceEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) 
 		UUID: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(tflambda.eventSourceMappingPropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(eventSourceMappingPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteEventSourceMapping(input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
@@ -641,7 +617,7 @@ func resourceEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error deleting Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
-	if _, err := tflambda.waitEventSourceMappingDelete(conn, d.Id()); err != nil {
+	if _, err := waitEventSourceMappingDelete(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to delete: %w", d.Id(), err)
 	}
 

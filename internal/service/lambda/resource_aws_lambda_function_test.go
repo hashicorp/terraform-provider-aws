@@ -1,4 +1,4 @@
-package aws
+package lambda_test
 
 import (
 	"archive/zip"
