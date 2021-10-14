@@ -91,7 +91,7 @@ func resourceRepositoryPermissionsPolicyRead(d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Reading CodeArtifact Repository Permissions Policy: %s", d.Id())
 
-	domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(d.Id())
+	domainOwner, domainName, repoName, err := DecodeRepositoryID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func resourceRepositoryPermissionsPolicyDelete(d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).CodeArtifactConn
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository Permissions Policy: %s", d.Id())
 
-	domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(d.Id())
+	domainOwner, domainName, repoName, err := DecodeRepositoryID(d.Id())
 	if err != nil {
 		return err
 	}

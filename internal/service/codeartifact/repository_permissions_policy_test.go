@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 )
 
 func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_basic(t *testing.T) {
@@ -98,7 +99,7 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears(t *testing.T) 
 				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRepositoryPermissionsPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceRepositoryPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,7 +121,7 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears_domain(t *test
 				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRepositoryPermissionsPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceRepositoryPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,7 +142,7 @@ func testAccCheckAWSCodeArtifactRepositoryPermissionsExists(n string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 
-		domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
+		domainOwner, domainName, repoName, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -164,7 +165,7 @@ func testAccCheckAWSCodeArtifactRepositoryPermissionsDestroy(s *terraform.State)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 
-		domainOwner, domainName, repoName, err := decodeCodeArtifactRepositoryID(rs.Primary.ID)
+		domainOwner, domainName, repoName, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

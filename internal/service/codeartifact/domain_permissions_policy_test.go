@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 )
 
 func TestAccAWSCodeArtifactDomainPermissionsPolicy_basic(t *testing.T) {
@@ -98,7 +99,7 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_disappears(t *testing.T) {
 				Config: testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomainPermissionsPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomainPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,7 +121,7 @@ func TestAccAWSCodeArtifactDomainPermissionsPolicy_disappears_domain(t *testing.
 				Config: testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,7 +142,7 @@ func testAccCheckAWSCodeArtifactDomainPermissionsExists(n string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 
-		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
+		domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -163,7 +164,7 @@ func testAccCheckAWSCodeArtifactDomainPermissionsDestroy(s *terraform.State) err
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
 
-		domainOwner, domainName, err := decodeCodeArtifactDomainID(rs.Primary.ID)
+		domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
