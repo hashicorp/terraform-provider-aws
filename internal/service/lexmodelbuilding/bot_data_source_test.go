@@ -24,9 +24,9 @@ func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccAwsLexBotConfig_intent(rName),
-					testAccAwsLexBotConfig_basic(rName),
-					testAccDataSourceAwsLexBotConfig_basic(),
+					testAccBotConfig_intent(rName),
+					testAccBotConfig_basic(rName),
+					testAccBotDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -50,7 +50,7 @@ func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
+func testAccBotDataSource_withVersion(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
@@ -66,9 +66,9 @@ func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccAwsLexBotConfig_intent(rName),
-					testAccAwsLexBotConfig_createVersion(rName),
-					testAccDataSourceAwsLexBotConfig_withVersion(),
+					testAccBotConfig_intent(rName),
+					testAccBotConfig_createVersion(rName),
+					testAccBotDataSourceConfig_withVersion(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -94,7 +94,7 @@ func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsLexBotConfig_basic() string {
+func testAccBotDataSourceConfig_basic() string {
 	return `
 data "aws_lex_bot" "test" {
   name = aws_lex_bot.test.name
@@ -102,7 +102,7 @@ data "aws_lex_bot" "test" {
 `
 }
 
-func testAccDataSourceAwsLexBotConfig_withVersion() string {
+func testAccBotDataSourceConfig_withVersion() string {
 	return `
 data "aws_lex_bot" "test" {
   name    = aws_lex_bot.test.name

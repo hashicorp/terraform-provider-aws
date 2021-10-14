@@ -23,12 +23,12 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_lex_intent", &resource.Sweeper{
 		Name:         "aws_lex_intent",
-		F:            testSweepLexIntents,
+		F:            sweepIntents,
 		Dependencies: []string{"aws_lex_bot"},
 	})
 }
 
-func testSweepLexIntents(region string) error {
+func sweepIntents(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -86,13 +86,13 @@ func TestAccAwsLexIntent_basic(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsLexIntentConfig_basic(testIntentID),
+				Config: testAccIntentConfig_basic(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
-					testAccCheckAwsLexIntentNotExists(testIntentID, "1"),
+					testAccCheckIntentExists(rName, &v),
+					testAccCheckIntentNotExists(testIntentID, "1"),
 
 					resource.TestCheckResourceAttrSet(rName, "arn"),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
@@ -135,13 +135,13 @@ func TestAccAwsLexIntent_createVersion(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsLexIntentConfig_basic(testIntentID),
+				Config: testAccIntentConfig_basic(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
-					testAccCheckAwsLexIntentNotExists(testIntentID, "1"),
+					testAccCheckIntentExists(rName, &v),
+					testAccCheckIntentNotExists(testIntentID, "1"),
 				),
 			},
 			{
@@ -151,10 +151,10 @@ func TestAccAwsLexIntent_createVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"create_version"},
 			},
 			{
-				Config: testAccAwsLexIntentConfig_createVersion(testIntentID),
+				Config: testAccIntentConfig_createVersion(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
-					testAccCheckAwsLexIntentExistsWithVersion(rName, "1", &v),
+					testAccCheckIntentExists(rName, &v),
+					testAccCheckIntentExistsWithVersion(rName, "1", &v),
 					resource.TestCheckResourceAttr(rName, "version", "1"),
 				),
 			},
@@ -180,12 +180,12 @@ func TestAccAwsLexIntent_conclusionStatement(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsLexIntentConfig_conclusionStatement(testIntentID),
+				Config: testAccIntentConfig_conclusionStatement(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.#", "1"),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.#", "1"),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.0.content", "Your order for {FlowerType} has been placed and will be ready by {PickupTime} on {PickupDate}"),
@@ -201,9 +201,9 @@ func TestAccAwsLexIntent_conclusionStatement(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"create_version"},
 			},
 			{
-				Config: testAccAwsLexIntentConfig_conclusionStatementUpdate(testIntentID),
+				Config: testAccIntentConfig_conclusionStatementUpdate(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.#", "2"),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.0.content", "Your order for {FlowerType} has been placed and will be ready by {PickupTime} on {PickupDate}"),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.0.content_type", "PlainText"),
@@ -236,12 +236,12 @@ func TestAccAwsLexIntent_confirmationPromptAndRejectionStatement(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsLexIntentConfig_confirmationPromptAndRejectionStatement(testIntentID),
+				Config: testAccIntentConfig_confirmationPromptAndRejectionStatement(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.#", "1"),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.max_attempts", "1"),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.message.#", "1"),
@@ -262,9 +262,9 @@ func TestAccAwsLexIntent_confirmationPromptAndRejectionStatement(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"create_version"},
 			},
 			{
-				Config: testAccAwsLexIntentConfig_confirmationPromptAndRejectionStatementUpdate(testIntentID),
+				Config: testAccIntentConfig_confirmationPromptAndRejectionStatementUpdate(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.max_attempts", "2"),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.message.#", "2"),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.message.0.content", "Okay, your {FlowerType} will be ready for pickup by {PickupTime} on {PickupDate}. Does this sound okay?"),
@@ -302,15 +302,15 @@ func TestAccAwsLexIntent_dialogCodeHook(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccAwsLexIntentConfig_lambda(testIntentID),
-					testAccAwsLexIntentConfig_dialogCodeHook(testIntentID),
+					testAccIntentConfig_lambda(testIntentID),
+					testAccIntentConfig_dialogCodeHook(testIntentID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "dialog_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(rName, "dialog_code_hook.0.message_version", "1"),
 					resource.TestCheckResourceAttrSet(rName, "dialog_code_hook.0.uri"),
@@ -338,12 +338,12 @@ func TestAccAwsLexIntent_followUpPrompt(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsLexIntentConfig_followUpPrompt(testIntentID),
+				Config: testAccIntentConfig_followUpPrompt(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.#", "1"),
 
@@ -368,9 +368,9 @@ func TestAccAwsLexIntent_followUpPrompt(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"create_version"},
 			},
 			{
-				Config: testAccAwsLexIntentConfig_followUpPromptUpdate(testIntentID),
+				Config: testAccIntentConfig_followUpPromptUpdate(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.max_attempts", "2"),
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.#", "2"),
@@ -410,15 +410,15 @@ func TestAccAwsLexIntent_fulfillmentActivity(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccAwsLexIntentConfig_lambda(testIntentID),
-					testAccAwsLexIntentConfig_fulfillmentActivity(testIntentID),
+					testAccIntentConfig_lambda(testIntentID),
+					testAccIntentConfig_fulfillmentActivity(testIntentID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "fulfillment_activity.#", "1"),
 					resource.TestCheckResourceAttr(rName, "fulfillment_activity.0.code_hook.#", "1"),
 					resource.TestCheckResourceAttr(rName, "fulfillment_activity.0.code_hook.0.message_version", "1"),
@@ -448,12 +448,12 @@ func TestAccAwsLexIntent_sampleUtterances(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsLexIntentConfig_sampleUtterances(testIntentID),
+				Config: testAccIntentConfig_sampleUtterances(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "sample_utterances.#", "1"),
 					resource.TestCheckResourceAttr(rName, "sample_utterances.0", "I would like to pick up flowers"),
 				),
@@ -465,9 +465,9 @@ func TestAccAwsLexIntent_sampleUtterances(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"create_version"},
 			},
 			{
-				Config: testAccAwsLexIntentConfig_sampleUtterancesUpdate(testIntentID),
+				Config: testAccIntentConfig_sampleUtterancesUpdate(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "sample_utterances.#", "2"),
 				),
 			},
@@ -493,12 +493,12 @@ func TestAccAwsLexIntent_slots(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsLexIntentConfig_slots(testIntentID),
+				Config: testAccIntentConfig_slots(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "slot.#", "1"),
 					resource.TestCheckResourceAttr(rName, "slot.0.description", "The date to pick up the flowers"),
 					resource.TestCheckResourceAttr(rName, "slot.0.name", "PickupDate"),
@@ -521,9 +521,9 @@ func TestAccAwsLexIntent_slots(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"create_version"},
 			},
 			{
-				Config: testAccAwsLexIntentConfig_slotsUpdate(testIntentID),
+				Config: testAccIntentConfig_slotsUpdate(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "slot.#", "2"),
 				),
 			},
@@ -549,15 +549,15 @@ func TestAccAwsLexIntent_slotsCustom(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccAwsLexSlotTypeConfig_basic(testIntentID),
-					testAccAwsLexIntentConfig_slotsCustom(testIntentID),
+					testAccSlotTypeConfig_basic(testIntentID),
+					testAccIntentConfig_slotsCustom(testIntentID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					resource.TestCheckResourceAttr(rName, "slot.#", "1"),
 					resource.TestCheckResourceAttr(rName, "slot.0.description", "Types of flowers to pick up"),
 					resource.TestCheckResourceAttr(rName, "slot.0.name", "FlowerType"),
@@ -596,12 +596,12 @@ func TestAccAwsLexIntent_disappears(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsLexIntentConfig_basic(testIntentID),
+				Config: testAccIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tflexmodelbuilding.ResourceIntent(), rName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -615,7 +615,7 @@ func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	testAccCheckAwsLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
+	testAccCheckAWSLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
 			conn := provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
@@ -659,20 +659,20 @@ func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsLexIntentConfig_basic(testIntentID),
+				Config: testAccIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
-					testAccCheckAwsLexIntentUpdateDescription(acctest.Provider, tflexmodelbuilding.ResourceIntent(), rName),
+					testAccCheckIntentExists(rName, &v),
+					testAccCheckAWSLexIntentUpdateDescription(acctest.Provider, tflexmodelbuilding.ResourceIntent(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAwsLexIntentConfig_basic(testIntentID),
+				Config: testAccIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLexIntentExists(rName, &v),
+					testAccCheckIntentExists(rName, &v),
 				),
 			},
 		},
@@ -697,34 +697,34 @@ func TestAccAwsLexIntent_computeVersion(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy,
+		CheckDestroy: testAccCheckIntentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccAwsLexBotConfig_intent(testIntentID),
-					testAccAwsLexBotConfig_createVersion(testIntentID),
+					testAccBotConfig_intent(testIntentID),
+					testAccBotConfig_createVersion(testIntentID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, version, &v1),
+					testAccCheckIntentExistsWithVersion(intentResourceName, version, &v1),
 					resource.TestCheckResourceAttr(intentResourceName, "version", version),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would like to pick up flowers"),
-					testAccCheckAwsLexBotExistsWithVersion(botResourceName, version, &v2),
+					testAccCheckBotExistsWithVersion(botResourceName, version, &v2),
 					resource.TestCheckResourceAttr(botResourceName, "version", version),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", version),
 				),
 			},
 			{
 				Config: acctest.ConfigCompose(
-					testAccAwsLexIntentConfig_sampleUtterancesWithVersion(testIntentID),
-					testAccAwsLexBotConfig_createVersion(testIntentID),
+					testAccIntentConfig_sampleUtterancesWithVersion(testIntentID),
+					testAccBotConfig_createVersion(testIntentID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExistsWithVersion(intentResourceName, updatedVersion, &v1),
+					testAccCheckIntentExistsWithVersion(intentResourceName, updatedVersion, &v1),
 					resource.TestCheckResourceAttr(intentResourceName, "version", updatedVersion),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would not like to pick up flowers"),
-					testAccCheckAwsLexBotExistsWithVersion(botResourceName, updatedVersion, &v2),
+					testAccCheckBotExistsWithVersion(botResourceName, updatedVersion, &v2),
 					resource.TestCheckResourceAttr(botResourceName, "version", updatedVersion),
 					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", updatedVersion),
 				),
@@ -733,7 +733,7 @@ func TestAccAwsLexIntent_computeVersion(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsLexIntentExistsWithVersion(rName, intentVersion string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
+func testAccCheckIntentExistsWithVersion(rName, intentVersion string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rName]
 		if !ok {
@@ -762,11 +762,11 @@ func testAccCheckAwsLexIntentExistsWithVersion(rName, intentVersion string, outp
 	}
 }
 
-func testAccCheckAwsLexIntentExists(rName string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
-	return testAccCheckAwsLexIntentExistsWithVersion(rName, tflexmodelbuilding.IntentVersionLatest, output)
+func testAccCheckIntentExists(rName string, output *lexmodelbuildingservice.GetIntentOutput) resource.TestCheckFunc {
+	return testAccCheckIntentExistsWithVersion(rName, tflexmodelbuilding.IntentVersionLatest, output)
 }
 
-func testAccCheckAwsLexIntentNotExists(intentName, intentVersion string) resource.TestCheckFunc {
+func testAccCheckIntentNotExists(intentName, intentVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
@@ -785,7 +785,7 @@ func testAccCheckAwsLexIntentNotExists(intentName, intentVersion string) resourc
 	}
 }
 
-func testAccCheckAwsLexIntentDestroy(s *terraform.State) error {
+func testAccCheckIntentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelBuildingConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -813,7 +813,7 @@ func testAccCheckAwsLexIntentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsLexIntentConfig_lambda(rName string) string {
+func testAccIntentConfig_lambda(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "lambda_assume_role" {
   statement {
@@ -846,7 +846,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_basic(rName string) string {
+func testAccIntentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -857,7 +857,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_createVersion(rName string) string {
+func testAccIntentConfig_createVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   create_version = true
@@ -869,7 +869,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_conclusionStatement(rName string) string {
+func testAccIntentConfig_conclusionStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -887,7 +887,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_conclusionStatementUpdate(rName string) string {
+func testAccIntentConfig_conclusionStatementUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -911,7 +911,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_confirmationPromptAndRejectionStatement(rName string) string {
+func testAccIntentConfig_confirmationPromptAndRejectionStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -937,7 +937,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_confirmationPromptAndRejectionStatementUpdate(rName string) string {
+func testAccIntentConfig_confirmationPromptAndRejectionStatementUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -971,7 +971,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_dialogCodeHook(rName string) string {
+func testAccIntentConfig_dialogCodeHook(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -986,7 +986,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_followUpPrompt(rName string) string {
+func testAccIntentConfig_followUpPrompt(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -1014,7 +1014,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_followUpPromptUpdate(rName string) string {
+func testAccIntentConfig_followUpPromptUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -1050,7 +1050,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_fulfillmentActivity(rName string) string {
+func testAccIntentConfig_fulfillmentActivity(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -1065,7 +1065,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_sampleUtterances(rName string) string {
+func testAccIntentConfig_sampleUtterances(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -1079,7 +1079,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_sampleUtterancesUpdate(rName string) string {
+func testAccIntentConfig_sampleUtterancesUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -1094,7 +1094,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_slots(rName string) string {
+func testAccIntentConfig_slots(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -1122,7 +1122,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_slotsUpdate(rName string) string {
+func testAccIntentConfig_slotsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -1167,7 +1167,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_slotsCustom(rName string) string {
+func testAccIntentConfig_slotsCustom(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   name = "%s"
@@ -1197,7 +1197,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_sampleUtterancesWithVersion(rName string) string {
+func testAccIntentConfig_sampleUtterancesWithVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   create_version = true
@@ -1212,7 +1212,7 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
-func testAccAwsLexIntentConfig_slotsWithVersion(rName string) string {
+func testAccIntentConfig_slotsWithVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
   create_version = true

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccDataSourceAwsLexBotAlias_basic(t *testing.T) {
+func testAccBotAliasDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot_alias.test"
 	resourceName := "aws_lex_bot_alias.test"
@@ -25,10 +25,10 @@ func testAccDataSourceAwsLexBotAlias_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccAwsLexBotConfig_intent(rName),
-					testAccAwsLexBotConfig_createVersion(rName),
-					testAccAwsLexBotAliasConfig_basic(rName),
-					testAccDataSourceAwsLexBotAliasConfig_basic(),
+					testAccBotConfig_intent(rName),
+					testAccBotConfig_createVersion(rName),
+					testAccBotAliasConfig_basic(rName),
+					testAccBotAliasDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -45,7 +45,7 @@ func testAccDataSourceAwsLexBotAlias_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsLexBotAliasConfig_basic() string {
+func testAccBotAliasDataSourceConfig_basic() string {
 	return `
 data "aws_lex_bot_alias" "test" {
   name     = aws_lex_bot_alias.test.name
