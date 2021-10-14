@@ -20,11 +20,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_glue_registry", &resource.Sweeper{
 		Name: "aws_glue_registry",
-		F:    testSweepGlueRegistry,
+		F:    sweepRegistry,
 	})
 }
 
-func testSweepGlueRegistry(region string) error {
+func sweepRegistry(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -61,15 +61,15 @@ func TestAccAWSGlueRegistry_basic(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
+		CheckDestroy: testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueRegistryBasicConfig(rName),
+				Config: testAccRegistryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
+					testAccCheckRegistryExists(resourceName, &registry),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("registry/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "registry_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -92,22 +92,22 @@ func TestAccAWSGlueRegistry_Description(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
+		CheckDestroy: testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueRegistryDescriptionConfig(rName, "First Description"),
+				Config: testAccRegistryDescriptionConfig(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
+					testAccCheckRegistryExists(resourceName, &registry),
 					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
 				),
 			},
 			{
-				Config: testAccAWSGlueRegistryDescriptionConfig(rName, "Second Description"),
+				Config: testAccRegistryDescriptionConfig(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
+					testAccCheckRegistryExists(resourceName, &registry),
 					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
 				),
 			},
@@ -126,15 +126,15 @@ func TestAccAWSGlueRegistry_Tags(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
+		CheckDestroy: testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueRegistryConfigTags1(rName, "key1", "value1"),
+				Config: testAccRegistryTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
+					testAccCheckRegistryExists(resourceName, &registry),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -145,18 +145,18 @@ func TestAccAWSGlueRegistry_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSGlueRegistryConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRegistryTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
+					testAccCheckRegistryExists(resourceName, &registry),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSGlueRegistryConfigTags1(rName, "key2", "value2"),
+				Config: testAccRegistryTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
+					testAccCheckRegistryExists(resourceName, &registry),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -172,15 +172,15 @@ func TestAccAWSGlueRegistry_disappears(t *testing.T) {
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckRegistry(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
+		CheckDestroy: testAccCheckRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueRegistryBasicConfig(rName),
+				Config: testAccRegistryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
+					testAccCheckRegistryExists(resourceName, &registry),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -189,7 +189,7 @@ func TestAccAWSGlueRegistry_disappears(t *testing.T) {
 	})
 }
 
-func testAccPreCheckAWSGlueRegistry(t *testing.T) {
+func testAccPreCheckRegistry(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
@@ -204,7 +204,7 @@ func testAccPreCheckAWSGlueRegistry(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSGlueRegistryExists(resourceName string, registry *glue.GetRegistryOutput) resource.TestCheckFunc {
+func testAccCheckRegistryExists(resourceName string, registry *glue.GetRegistryOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -234,7 +234,7 @@ func testAccCheckAWSGlueRegistryExists(resourceName string, registry *glue.GetRe
 	}
 }
 
-func testAccCheckAWSGlueRegistryDestroy(s *terraform.State) error {
+func testAccCheckRegistryDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_registry" {
 			continue
@@ -259,7 +259,7 @@ func testAccCheckAWSGlueRegistryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSGlueRegistryDescriptionConfig(rName, description string) string {
+func testAccRegistryDescriptionConfig(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_registry" "test" {
   registry_name = %[1]q
@@ -268,7 +268,7 @@ resource "aws_glue_registry" "test" {
 `, rName, description)
 }
 
-func testAccAWSGlueRegistryBasicConfig(rName string) string {
+func testAccRegistryBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_registry" "test" {
   registry_name = %[1]q
@@ -276,7 +276,7 @@ resource "aws_glue_registry" "test" {
 `, rName)
 }
 
-func testAccAWSGlueRegistryConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccRegistryTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_registry" "test" {
   registry_name = %[1]q
@@ -288,7 +288,7 @@ resource "aws_glue_registry" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSGlueRegistryConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccRegistryTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_registry" "test" {
   registry_name = %[1]q

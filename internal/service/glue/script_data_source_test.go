@@ -18,7 +18,7 @@ func TestAccDataSourceAWSGlueScript_Language_Python(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSGlueScriptConfigPython(),
+				Config: testAccScriptPythonDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "python_script", regexp.MustCompile(`from awsglue\.job import Job`)),
 				),
@@ -36,7 +36,7 @@ func TestAccDataSourceAWSGlueScript_Language_Scala(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSGlueScriptConfigScala(),
+				Config: testAccScriptScalaDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "scala_code", regexp.MustCompile(`import com\.amazonaws\.services\.glue\.util\.Job`)),
 				),
@@ -45,7 +45,7 @@ func TestAccDataSourceAWSGlueScript_Language_Scala(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSGlueScriptConfigPython() string {
+func testAccScriptPythonDataSourceConfig() string {
 	return `
 data "aws_glue_script" "test" {
   language = "PYTHON"
@@ -143,7 +143,7 @@ data "aws_glue_script" "test" {
 `
 }
 
-func testAccDataSourceAWSGlueScriptConfigScala() string {
+func testAccScriptScalaDataSourceConfig() string {
 	return `
 data "aws_glue_script" "test" {
   language = "SCALA"

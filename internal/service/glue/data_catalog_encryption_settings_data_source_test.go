@@ -20,9 +20,9 @@ func TestAccDataSourceAwsGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsGlueDataCatalogEncryptionSettingsConfig(),
+				Config: testAccDataCatalogEncryptionSettingsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsGlueDataCatalogEncryptionSettingsCheck(datasourceName),
+					testAccDataCatalogEncryptionSettingsCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "data_catalog_encryption_settings", resourceName, "data_catalog_encryption_settings"),
 				),
@@ -31,7 +31,7 @@ func TestAccDataSourceAwsGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsGlueDataCatalogEncryptionSettingsCheck(name string) resource.TestCheckFunc {
+func testAccDataCatalogEncryptionSettingsCheckDataSource(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -42,7 +42,7 @@ func testAccDataSourceAwsGlueDataCatalogEncryptionSettingsCheck(name string) res
 	}
 }
 
-func testAccDataSourceAwsGlueDataCatalogEncryptionSettingsConfig() string {
+func testAccDataCatalogEncryptionSettingsDataSourceConfig() string {
 	return `
 resource "aws_glue_data_catalog_encryption_settings" "test" {
   data_catalog_encryption_settings {

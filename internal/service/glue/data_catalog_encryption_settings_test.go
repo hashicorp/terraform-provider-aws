@@ -27,9 +27,9 @@ func TestAccAWSDataCatalogEncryptionSettings_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDataCatalogEncryptionSettingsNonEncryptedConfig(),
+				Config: testAccDataCatalogEncryptionSettingsNonEncryptedConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataCatalogEncryptionSettingsExists(resourceName, &settings),
+					testAccCheckDataCatalogEncryptionSettingsExists(resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", "false"),
@@ -45,9 +45,9 @@ func TestAccAWSDataCatalogEncryptionSettings_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDataCatalogEncryptionSettingsEncryptedConfig(rName),
+				Config: testAccDataCatalogEncryptionSettingsEncryptedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataCatalogEncryptionSettingsExists(resourceName, &settings),
+					testAccCheckDataCatalogEncryptionSettingsExists(resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", "true"),
@@ -58,9 +58,9 @@ func TestAccAWSDataCatalogEncryptionSettings_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSDataCatalogEncryptionSettingsNonEncryptedConfig(),
+				Config: testAccDataCatalogEncryptionSettingsNonEncryptedConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDataCatalogEncryptionSettingsExists(resourceName, &settings),
+					testAccCheckDataCatalogEncryptionSettingsExists(resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", "false"),
@@ -74,7 +74,7 @@ func TestAccAWSDataCatalogEncryptionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDataCatalogEncryptionSettingsExists(resourceName string, settings *glue.DataCatalogEncryptionSettings) resource.TestCheckFunc {
+func testAccCheckDataCatalogEncryptionSettingsExists(resourceName string, settings *glue.DataCatalogEncryptionSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -100,7 +100,7 @@ func testAccCheckAWSDataCatalogEncryptionSettingsExists(resourceName string, set
 	}
 }
 
-func testAccAWSDataCatalogEncryptionSettingsEncryptedConfig(rName string) string {
+func testAccDataCatalogEncryptionSettingsEncryptedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -139,7 +139,7 @@ resource "aws_glue_data_catalog_encryption_settings" "test" {
 `, rName)
 }
 
-func testAccAWSDataCatalogEncryptionSettingsNonEncryptedConfig() string {
+func testAccDataCatalogEncryptionSettingsNonEncryptedConfig() string {
 	return `
 resource "aws_glue_data_catalog_encryption_settings" "test" {
   data_catalog_encryption_settings {

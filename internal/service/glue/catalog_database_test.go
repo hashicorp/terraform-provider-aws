@@ -20,11 +20,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_glue_catalog_database", &resource.Sweeper{
 		Name: "aws_glue_catalog_database",
-		F:    testSweepGlueCatalogDatabases,
+		F:    sweepCatalogDatabases,
 	})
 }
 
-func testSweepGlueCatalogDatabases(region string) error {
+func sweepCatalogDatabases(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

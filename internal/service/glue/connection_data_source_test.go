@@ -24,9 +24,9 @@ func TestAccDataSourceAwsGlueConnection_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsGlueConnectionConfig(rName, jdbcConnectionUrl),
+				Config: testAccConnectionDataSourceConfig(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsGlueConnectionCheck(datasourceName),
+					testAccConnectionCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "connection_type", resourceName, "connection_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -42,7 +42,7 @@ func TestAccDataSourceAwsGlueConnection_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsGlueConnectionCheck(name string) resource.TestCheckFunc {
+func testAccConnectionCheckDataSource(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -53,7 +53,7 @@ func testAccDataSourceAwsGlueConnectionCheck(name string) resource.TestCheckFunc
 	}
 }
 
-func testAccDataSourceAwsGlueConnectionConfig(rName, jdbcConnectionUrl string) string {
+func testAccConnectionDataSourceConfig(rName, jdbcConnectionUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_connection" "test" {
   name = %[1]q
