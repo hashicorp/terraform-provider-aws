@@ -15,7 +15,7 @@ func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsCloudTrailServiceAccountConfig,
@@ -36,7 +36,7 @@ func TestAccAWSCloudTrailServiceAccount_Region(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsCloudTrailServiceAccountConfigRegion,
