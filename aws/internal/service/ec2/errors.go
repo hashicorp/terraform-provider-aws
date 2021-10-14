@@ -46,10 +46,10 @@ const (
 )
 
 const (
-	ErrCodeClientVpnEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
-	ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
-	ErrCodeClientVpnAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"
-	ErrCodeClientVpnRouteNotFound             = "InvalidClientVpnRouteNotFound"
+	ErrCodeClientVPNEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
+	ErrCodeClientVPNAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
+	ErrCodeClientVPNAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"
+	ErrCodeClientVPNRouteNotFound             = "InvalidClientVpnRouteNotFound"
 )
 
 const (
@@ -71,22 +71,22 @@ const (
 )
 
 const (
-	ErrCodeInvalidVpcIDNotFound = "InvalidVpcID.NotFound"
+	ErrCodeInvalidVPCIDNotFound = "InvalidVpcID.NotFound"
 )
 
 const (
-	ErrCodeInvalidVpcEndpointIdNotFound        = "InvalidVpcEndpointId.NotFound"
-	ErrCodeInvalidVpcEndpointNotFound          = "InvalidVpcEndpoint.NotFound"
-	ErrCodeInvalidVpcEndpointServiceIdNotFound = "InvalidVpcEndpointServiceId.NotFound"
+	ErrCodeInvalidVPCEndpointIdNotFound        = "InvalidVpcEndpointId.NotFound"
+	ErrCodeInvalidVPCEndpointNotFound          = "InvalidVpcEndpoint.NotFound"
+	ErrCodeInvalidVPCEndpointServiceIdNotFound = "InvalidVpcEndpointServiceId.NotFound"
 )
 
 const (
-	ErrCodeInvalidVpcPeeringConnectionIDNotFound = "InvalidVpcPeeringConnectionID.NotFound"
+	ErrCodeInvalidVPCPeeringConnectionIDNotFound = "InvalidVpcPeeringConnectionID.NotFound"
 )
 
 const (
-	InvalidVpnGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
-	InvalidVpnGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
+	InvalidVPNGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
+	InvalidVPNGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
 )
 
 const (

@@ -15,6 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
@@ -100,7 +104,7 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 func testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey() (*arn.ARN, error) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
-	alias, err := kmsfinder.AliasByName(conn, "alias/aws/ebs")
+	alias, err := tfkms.FindAliasByName(conn, "alias/aws/ebs")
 	if err != nil {
 		return nil, err
 	}

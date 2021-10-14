@@ -10,7 +10,7 @@ import (
 
 const clientVpnAuthorizationRuleIDSeparator = ","
 
-func ClientVpnAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID string) string {
+func ClientVPNAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID string) string {
 	parts := []string{endpointID, targetNetworkCidr}
 	if accessGroupID != "" {
 		parts = append(parts, accessGroupID)
@@ -19,7 +19,7 @@ func ClientVpnAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGro
 	return id
 }
 
-func ClientVpnAuthorizationRuleParseID(id string) (string, string, string, error) {
+func ClientVPNAuthorizationRuleParseID(id string) (string, string, string, error) {
 	parts := strings.Split(id, clientVpnAuthorizationRuleIDSeparator)
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], "", nil
@@ -36,13 +36,13 @@ func ClientVpnAuthorizationRuleParseID(id string) (string, string, string, error
 
 const clientVpnNetworkAssociationIDSeparator = ","
 
-func ClientVpnNetworkAssociationCreateID(endpointID, associationID string) string {
+func ClientVPNNetworkAssociationCreateID(endpointID, associationID string) string {
 	parts := []string{endpointID, associationID}
 	id := strings.Join(parts, clientVpnNetworkAssociationIDSeparator)
 	return id
 }
 
-func ClientVpnNetworkAssociationParseID(id string) (string, string, error) {
+func ClientVPNNetworkAssociationParseID(id string) (string, string, error) {
 	parts := strings.Split(id, clientVpnNetworkAssociationIDSeparator)
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
@@ -55,13 +55,13 @@ func ClientVpnNetworkAssociationParseID(id string) (string, string, error) {
 
 const clientVpnRouteIDSeparator = ","
 
-func ClientVpnRouteCreateID(endpointID, targetSubnetID, destinationCidr string) string {
+func ClientVPNRouteCreateID(endpointID, targetSubnetID, destinationCidr string) string {
 	parts := []string{endpointID, targetSubnetID, destinationCidr}
 	id := strings.Join(parts, clientVpnRouteIDSeparator)
 	return id
 }
 
-func ClientVpnRouteParseID(id string) (string, string, string, error) {
+func ClientVPNRouteParseID(id string) (string, string, string, error) {
 	parts := strings.Split(id, clientVpnRouteIDSeparator)
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
 		return parts[0], parts[1], parts[2], nil
@@ -114,27 +114,27 @@ func TransitGatewayPrefixListReferenceParseID(id string) (string, string, error)
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected transit-gateway-route-table-id%[2]sprefix-list-id", id, transitGatewayPrefixListReferenceSeparator)
 }
 
-func VpcEndpointRouteTableAssociationCreateID(vpcEndpointID, routeTableID string) string {
+func VPCEndpointRouteTableAssociationCreateID(vpcEndpointID, routeTableID string) string {
 	return fmt.Sprintf("a-%s%d", vpcEndpointID, create.StringHashcode(routeTableID))
 }
 
-func VpcEndpointSubnetAssociationCreateID(vpcEndpointID, subnetID string) string {
+func VPCEndpointSubnetAssociationCreateID(vpcEndpointID, subnetID string) string {
 	return fmt.Sprintf("a-%s%d", vpcEndpointID, create.StringHashcode(subnetID))
 }
 
-func VpnGatewayVpcAttachmentCreateID(vpnGatewayID, vpcID string) string {
+func VPNGatewayVPCAttachmentCreateID(vpnGatewayID, vpcID string) string {
 	return fmt.Sprintf("vpn-attachment-%x", create.StringHashcode(fmt.Sprintf("%s-%s", vpcID, vpnGatewayID)))
 }
 
 const vpnGatewayRoutePropagationIDSeparator = "_"
 
-func VpnGatewayRoutePropagationCreateID(routeTableID, gatewayID string) string {
+func VPNGatewayRoutePropagationCreateID(routeTableID, gatewayID string) string {
 	parts := []string{gatewayID, routeTableID}
 	id := strings.Join(parts, vpnGatewayRoutePropagationIDSeparator)
 	return id
 }
 
-func VpnGatewayRoutePropagationParseID(id string) (string, string, error) {
+func VPNGatewayRoutePropagationParseID(id string) (string, string, error) {
 	parts := strings.Split(id, vpnGatewayRoutePropagationIDSeparator)
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[1], parts[0], nil

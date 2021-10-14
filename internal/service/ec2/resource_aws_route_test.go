@@ -16,6 +16,52 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 // IPv4 to Internet Gateway.
@@ -1999,11 +2045,11 @@ func testAccCheckAWSRouteExists(n string, v *ec2.Route) resource.TestCheckFunc {
 		var route *ec2.Route
 		var err error
 		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
-			route, err = finder.RouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = tfec2.FindRouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
-			route, err = finder.RouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = tfec2.FindRouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
-			route, err = finder.RouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = tfec2.FindRouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
 		}
 
 		if err != nil {
@@ -2026,11 +2072,11 @@ func testAccCheckAWSRouteDestroy(s *terraform.State) error {
 
 		var err error
 		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
-			_, err = finder.RouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+			_, err = tfec2.FindRouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
-			_, err = finder.RouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+			_, err = tfec2.FindRouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
-			_, err = finder.RouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
+			_, err = tfec2.FindRouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
 		}
 
 		if tfresource.NotFound(err) {
