@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -70,13 +71,13 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domainName := testAccRandomDomainName()
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	domainName := acctest.RandomDomainName()
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53QueryLog(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +85,7 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					testAccMatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("queryloggingconfig/.+")),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("queryloggingconfig/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", cloudwatchLogGroupResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "zone_id", route53ZoneResourceName, "zone_id"),
 				),
@@ -101,13 +102,13 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 func TestAccAWSRoute53QueryLog_disappears(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domainName := testAccRandomDomainName()
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	domainName := acctest.RandomDomainName()
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53QueryLog(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
@@ -115,7 +116,7 @@ func TestAccAWSRoute53QueryLog_disappears(t *testing.T) {
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53QueryLog(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53QueryLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,13 +128,13 @@ func TestAccAWSRoute53QueryLog_disappears_hostedZone(t *testing.T) {
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domainName := testAccRandomDomainName()
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	domainName := acctest.RandomDomainName()
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53QueryLog(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ func TestAccAWSRoute53QueryLog_disappears_hostedZone(t *testing.T) {
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53Zone(), route53ZoneResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53Zone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -206,7 +207,7 @@ func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName, domainName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccRoute53QueryLogRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {

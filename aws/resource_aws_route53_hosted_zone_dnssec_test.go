@@ -7,23 +7,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsRoute53HostedZoneDnssec_basic(t *testing.T) {
 	route53ZoneResourceName := "aws_route53_zone.test"
 	resourceName := "aws_route53_hosted_zone_dnssec.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domainName := testAccRandomDomainName()
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53HostedZoneDnssecDestroy,
 		Steps: []resource.TestStep{
@@ -46,13 +47,13 @@ func TestAccAwsRoute53HostedZoneDnssec_basic(t *testing.T) {
 
 func TestAccAwsRoute53HostedZoneDnssec_disappears(t *testing.T) {
 	resourceName := "aws_route53_hosted_zone_dnssec.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domainName := testAccRandomDomainName()
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53HostedZoneDnssecDestroy,
 		Steps: []resource.TestStep{
@@ -60,7 +61,7 @@ func TestAccAwsRoute53HostedZoneDnssec_disappears(t *testing.T) {
 				Config: testAccAwsRoute53HostedZoneDnssecConfig(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsRoute53HostedZoneDnssecExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53HostedZoneDnssec(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53HostedZoneDnssec(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,13 +71,13 @@ func TestAccAwsRoute53HostedZoneDnssec_disappears(t *testing.T) {
 
 func TestAccAwsRoute53HostedZoneDnssec_SigningStatus(t *testing.T) {
 	resourceName := "aws_route53_hosted_zone_dnssec.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	domainName := testAccRandomDomainName()
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckRoute53KeySigningKey(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53HostedZoneDnssecDestroy,
 		Steps: []resource.TestStep{
@@ -169,7 +170,7 @@ func testAccAwsRoute53HostedZoneDnssecExists(resourceName string) resource.TestC
 }
 
 func testAccAwsRoute53HostedZoneDnssecConfig_Base(rName, domainName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccRoute53KeySigningKeyRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -217,7 +218,7 @@ resource "aws_route53_key_signing_key" "test" {
 }
 
 func testAccAwsRoute53HostedZoneDnssecConfig(rName, domainName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsRoute53HostedZoneDnssecConfig_Base(rName, domainName), `
 resource "aws_route53_hosted_zone_dnssec" "test" {
   hosted_zone_id = aws_route53_key_signing_key.test.hosted_zone_id
@@ -226,7 +227,7 @@ resource "aws_route53_hosted_zone_dnssec" "test" {
 }
 
 func testAccAwsRoute53HostedZoneDnssecConfig_SigningStatus(rName, domainName, signingStatus string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsRoute53HostedZoneDnssecConfig_Base(rName, domainName),
 		fmt.Sprintf(`
 resource "aws_route53_hosted_zone_dnssec" "test" {
