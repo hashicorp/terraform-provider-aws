@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEBSEncryptionByDefault_basic(t *testing.T) {
@@ -39,7 +40,7 @@ func TestAccAWSEBSEncryptionByDefault_basic(t *testing.T) {
 }
 
 func testAccCheckAwsEncryptionByDefaultDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	response, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
@@ -64,7 +65,7 @@ func testAccCheckEbsEncryptionByDefault(n string, enabled bool) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		response, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
 		if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -49,7 +50,7 @@ func resourceAwsVpcIpv4CidrBlockAssociation() *schema.Resource {
 }
 
 func resourceAwsVpcIpv4CidrBlockAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.AssociateVpcCidrBlockInput{
 		VpcId:     aws.String(d.Get("vpc_id").(string)),
@@ -80,7 +81,7 @@ func resourceAwsVpcIpv4CidrBlockAssociationCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsVpcIpv4CidrBlockAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeVpcsInput{
 		Filters: tfec2.BuildAttributeFilterList(
@@ -125,7 +126,7 @@ func resourceAwsVpcIpv4CidrBlockAssociationRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsVpcIpv4CidrBlockAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting VPC IPv4 CIDR block association: %s", d.Id())
 	_, err := conn.DisassociateVpcCidrBlock(&ec2.DisassociateVpcCidrBlockInput{

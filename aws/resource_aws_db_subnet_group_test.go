@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepRdsDbSubnetGroups(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 	input := &rds.DescribeDBSubnetGroupsInput{}
 
 	err = conn.DescribeDBSubnetGroupsPages(input, func(out *rds.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
@@ -209,7 +210,7 @@ func TestAccAWSDBSubnetGroup_updateDescription(t *testing.T) {
 }
 
 func testAccCheckDBSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_subnet_group" {
@@ -251,7 +252,7 @@ func testAccCheckDBSubnetGroupExists(n string, v *rds.DBSubnetGroup) resource.Te
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 		resp, err := conn.DescribeDBSubnetGroups(
 			&rds.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {

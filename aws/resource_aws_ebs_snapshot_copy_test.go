@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
@@ -165,7 +166,7 @@ func TestAccAWSEbsSnapshotCopy_disappears(t *testing.T) {
 }
 
 func testAccCheckEbsSnapshotCopyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ebs_snapshot_copy" {
@@ -205,7 +206,7 @@ func testAccCheckEbsSnapshotCopyExists(n string, v *ec2.Snapshot) resource.TestC
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		input := &ec2.DescribeSnapshotsInput{
 			SnapshotIds: []*string{aws.String(rs.Primary.ID)},

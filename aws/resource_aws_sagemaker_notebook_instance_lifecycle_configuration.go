@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration() *schema.Resour
 }
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -86,7 +87,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationCreate(d *schema.
 }
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	request := &sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),
@@ -126,7 +127,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationRead(d *schema.Re
 }
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	updateOpts := &sagemaker.UpdateNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Get("name").(string)),
@@ -150,7 +151,7 @@ func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationUpdate(d *schema.
 }
 
 func resourceAwsSagemakerNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	deleteOpts := &sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),

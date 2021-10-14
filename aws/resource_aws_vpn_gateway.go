@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVpnGateway() *schema.Resource {
@@ -61,8 +62,8 @@ func resourceAwsVpnGateway() *schema.Resource {
 }
 
 func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &ec2.CreateVpnGatewayInput{
@@ -98,9 +99,9 @@ func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
 		VpnGatewayIds: []*string{aws.String(d.Id())},
@@ -148,10 +149,10 @@ func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
 	}.String()
 
@@ -173,7 +174,7 @@ func resourceAwsVpnGatewayUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -187,7 +188,7 @@ func resourceAwsVpnGatewayUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Detach if it is attached
 	if err := resourceAwsVpnGatewayDetach(d, meta); err != nil {
@@ -227,7 +228,7 @@ func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
 
@@ -276,7 +277,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Get the old VPC ID to detach from
 	vpcIdRaw, _ := d.GetChange("vpc_id")

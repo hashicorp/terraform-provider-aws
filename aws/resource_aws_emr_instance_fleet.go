@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEMRInstanceFleet() *schema.Resource {
@@ -211,7 +212,7 @@ func resourceAwsEMRInstanceFleet() *schema.Resource {
 }
 
 func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	addInstanceFleetInput := &emr.AddInstanceFleetInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
@@ -242,7 +243,7 @@ func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsEMRInstanceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 	instanceFleets, err := fetchAllEMRInstanceFleets(conn, d.Get("cluster_id").(string))
 
 	if err != nil {
@@ -285,7 +286,7 @@ func findInstanceFleetById(instanceFleets []*emr.InstanceFleet, fleetId string) 
 }
 
 func resourceAwsEMRInstanceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	log.Printf("[DEBUG] Modify EMR task fleet")
 
@@ -346,7 +347,7 @@ func instanceFleetStateRefresh(conn *emr.EMR, clusterID, ifID string) resource.S
 
 func resourceAwsEMRInstanceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] AWS EMR Instance Fleet does not support DELETE; resizing cluster to zero before removing from state")
-	conn := meta.(*AWSClient).emrconn
+	conn := meta.(*conns.AWSClient).EMRConn
 
 	clusterId := d.Get("cluster_id").(string)
 

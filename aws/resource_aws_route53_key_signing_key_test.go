@@ -19,6 +19,7 @@ import (
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // add sweeper to delete resources
@@ -36,7 +37,7 @@ func testSweepRoute53KeySigningKeys(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).r53conn
+	conn := client.(*conns.AWSClient).Route53Conn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -218,7 +219,7 @@ func TestAccAwsRoute53KeySigningKey_Status(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53KeySigningKeyDestroy(s *terraform.State) error {
-	conn := testAccProviderRoute53KeySigningKey.Meta().(*AWSClient).r53conn
+	conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_key_signing_key" {
@@ -259,7 +260,7 @@ func testAccAwsRoute53KeySigningKeyExists(resourceName string) resource.TestChec
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := testAccProviderRoute53KeySigningKey.Meta().(*AWSClient).r53conn
+		conn := testAccProviderRoute53KeySigningKey.Meta().(*conns.AWSClient).Route53Conn
 
 		keySigningKey, err := finder.KeySigningKeyByResourceID(conn, rs.Primary.ID)
 

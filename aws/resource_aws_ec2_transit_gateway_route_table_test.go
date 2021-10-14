@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
@@ -148,7 +149,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName string, trans
 			return fmt.Errorf("No EC2 Transit Gateway Route Table ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		routeTable, err := ec2DescribeTransitGatewayRouteTable(conn, rs.Primary.ID)
 
@@ -171,7 +172,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName string, trans
 }
 
 func testAccCheckAWSEc2TransitGatewayRouteTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_route_table" {

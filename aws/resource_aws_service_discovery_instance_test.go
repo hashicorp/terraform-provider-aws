@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSServiceDiscoveryInstance_private(t *testing.T) {
@@ -281,7 +282,7 @@ func testAccCheckAwsServiceDiscoveryInstanceExists(name string) resource.TestChe
 			return fmt.Errorf("No Service Discovery Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sdconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 		_, err := finder.InstanceByServiceIDAndInstanceID(conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
@@ -305,7 +306,7 @@ func testAccAWSServiceDiscoveryInstanceImportStateIdFunc(resourceName string) re
 }
 
 func testAccCheckAwsServiceDiscoveryInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sdconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_instance" {

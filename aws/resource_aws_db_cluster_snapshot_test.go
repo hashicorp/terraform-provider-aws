@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepDbClusterSnapshots(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		// "InvalidDBClusterSnapshotStateFault: Only manual snapshots may be deleted."
 		Filters: []*rds.Filter{{
@@ -168,7 +169,7 @@ func TestAccAWSDBClusterSnapshot_Tags(t *testing.T) {
 }
 
 func testAccCheckDbClusterSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_cluster_snapshot" {
@@ -206,7 +207,7 @@ func testAccCheckDbClusterSnapshotExists(resourceName string, dbClusterSnapshot 
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		request := &rds.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),

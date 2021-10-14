@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // Constants not currently provided by the AWS Go SDK
@@ -51,7 +52,7 @@ func resourceAwsDbInstanceRoleAssociation() *schema.Resource {
 }
 
 func resourceAwsDbInstanceRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbInstanceIdentifier := d.Get("db_instance_identifier").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -79,7 +80,7 @@ func resourceAwsDbInstanceRoleAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDbInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(d.Id())
 
@@ -113,7 +114,7 @@ func resourceAwsDbInstanceRoleAssociationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsDbInstanceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*conns.AWSClient).RDSConn
 
 	dbInstanceIdentifier, roleArn, err := resourceAwsDbInstanceRoleAssociationDecodeId(d.Id())
 

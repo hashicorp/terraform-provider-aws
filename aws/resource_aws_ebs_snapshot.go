@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEbsSnapshot() *schema.Resource {
@@ -76,8 +77,8 @@ func resourceAwsEbsSnapshot() *schema.Resource {
 }
 
 func resourceAwsEbsSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ec2.CreateSnapshotInput{
@@ -121,9 +122,9 @@ func resourceAwsEbsSnapshotCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeSnapshotsInput{
 		SnapshotIds: []*string{aws.String(d.Id())},
@@ -167,8 +168,8 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	snapshotArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}.String()
@@ -179,7 +180,7 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsEbsSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -192,7 +193,7 @@ func resourceAwsEbsSnapshotUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsEbsSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	input := &ec2.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),
 	}

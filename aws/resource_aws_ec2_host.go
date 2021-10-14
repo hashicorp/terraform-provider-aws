@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2Host() *schema.Resource {
@@ -73,8 +74,8 @@ func resourceAwsEc2Host() *schema.Resource {
 }
 
 func resourceAwsEc2HostCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.AllocateHostsInput{
@@ -113,9 +114,9 @@ func resourceAwsEc2HostCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	host, err := finder.HostByID(conn, d.Id())
 
@@ -130,9 +131,9 @@ func resourceAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: aws.StringValue(host.OwnerId),
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
@@ -159,7 +160,7 @@ func resourceAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEc2HostUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyHostsInput{
@@ -208,7 +209,7 @@ func resourceAwsEc2HostUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEc2HostDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting EC2 Host: %s", d.Id())
 	output, err := conn.ReleaseHosts(&ec2.ReleaseHostsInput{

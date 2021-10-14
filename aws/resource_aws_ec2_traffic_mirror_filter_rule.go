@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
@@ -112,7 +113,7 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 }
 
 func resourceAwsEc2TrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	filterId := d.Get("traffic_mirror_filter_id")
 
@@ -151,7 +152,7 @@ func resourceAwsEc2TrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsEc2TrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	ruleId := d.Id()
 
 	var rule *ec2.TrafficMirrorFilterRule
@@ -195,10 +196,10 @@ func resourceAwsEc2TrafficMirrorFilterRuleRead(d *schema.ResourceData, meta inte
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("traffic-mirror-filter-rule/%s", d.Id()),
 	}.String()
 
@@ -234,7 +235,7 @@ func findEc2TrafficMirrorFilterRule(ruleId string, filters []*ec2.TrafficMirrorF
 }
 
 func resourceAwsEc2TrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	ruleId := d.Id()
 
 	input := &ec2.ModifyTrafficMirrorFilterRuleInput{
@@ -317,7 +318,7 @@ func resourceAwsEc2TrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsEc2TrafficMirrorFilterRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	ruleId := d.Id()
 	input := &ec2.DeleteTrafficMirrorFilterRuleInput{

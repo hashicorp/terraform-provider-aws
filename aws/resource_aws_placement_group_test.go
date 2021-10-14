@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepEc2PlacementGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribePlacementGroupsInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -191,7 +192,7 @@ func TestAccAWSPlacementGroup_PartitionCount(t *testing.T) {
 }
 
 func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_placement_group" {
@@ -225,7 +226,7 @@ func testAccCheckAWSPlacementGroupExists(n string, v *ec2.PlacementGroup) resour
 			return fmt.Errorf("No EC2 Placement Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		output, err := finder.PlacementGroupByName(conn, rs.Primary.ID)
 

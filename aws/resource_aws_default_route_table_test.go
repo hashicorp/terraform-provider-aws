@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
@@ -508,7 +509,7 @@ func TestAccAWSDefaultRouteTable_RevokeExistingRules(t *testing.T) {
 }
 
 func testAccCheckDefaultRouteTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_default_route_table" {
@@ -1210,7 +1211,7 @@ resource "aws_default_route_table" "test" {
 }
 
 func testAccPreCheckElbv2GatewayLoadBalancer(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).elbv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
 	input := &elbv2.DescribeAccountLimitsInput{}
 

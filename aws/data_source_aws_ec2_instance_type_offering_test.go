@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSEc2InstanceTypeOfferingDataSource_Filter(t *testing.T) {
@@ -67,7 +68,7 @@ func TestAccAWSEc2InstanceTypeOfferingDataSource_PreferredInstanceTypes(t *testi
 }
 
 func testAccPreCheckAWSEc2InstanceTypeOffering(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{
 		MaxResults: aws.Int64(5),

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
@@ -52,11 +53,11 @@ func resourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 }
 
 func resourceAwsEc2TransitGatewayPeeringAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	peerAccountId := meta.(*AWSClient).accountid
+	peerAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("peer_account_id"); ok {
 		peerAccountId = v.(string)
 	}
@@ -84,9 +85,9 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentCreate(d *schema.ResourceData,
 }
 
 func resourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	transitGatewayPeeringAttachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, d.Id())
 
@@ -132,7 +133,7 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData, m
 }
 
 func resourceAwsEc2TransitGatewayPeeringAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -146,7 +147,7 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsEc2TransitGatewayPeeringAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTransitGatewayPeeringAttachmentInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),

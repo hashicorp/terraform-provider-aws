@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSEc2TransitGatewayRoute_basic(t *testing.T) {
@@ -172,7 +173,7 @@ func testAccCheckAWSEc2TransitGatewayRouteExists(resourceName string, transitGat
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		route, err := ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
@@ -191,7 +192,7 @@ func testAccCheckAWSEc2TransitGatewayRouteExists(resourceName string, transitGat
 }
 
 func testAccCheckAWSEc2TransitGatewayRouteDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_route" {
@@ -226,7 +227,7 @@ func testAccCheckAWSEc2TransitGatewayRouteDestroy(s *terraform.State) error {
 
 func testAccCheckAWSEc2TransitGatewayRouteDisappears(transitGateway *ec2.TransitGateway, transitGatewayRoute *ec2.TransitGatewayRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		input := &ec2.DeleteTransitGatewayRouteInput{
 			DestinationCidrBlock:       transitGatewayRoute.DestinationCidrBlock,

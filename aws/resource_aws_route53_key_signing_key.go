@@ -14,6 +14,7 @@ import (
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53KeySigningKey() *schema.Resource {
@@ -101,7 +102,7 @@ func resourceAwsRoute53KeySigningKey() *schema.Resource {
 }
 
 func resourceAwsRoute53KeySigningKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	hostedZoneID := d.Get("hosted_zone_id").(string)
 	name := d.Get("name").(string)
@@ -140,7 +141,7 @@ func resourceAwsRoute53KeySigningKeyCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsRoute53KeySigningKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	hostedZoneID, name, err := tfroute53.KeySigningKeyParseResourceID(d.Id())
 
@@ -195,7 +196,7 @@ func resourceAwsRoute53KeySigningKeyRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsRoute53KeySigningKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	if d.HasChange("status") {
 		status := d.Get("status").(string)
@@ -248,7 +249,7 @@ func resourceAwsRoute53KeySigningKeyUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsRoute53KeySigningKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	status := d.Get("status").(string)
 

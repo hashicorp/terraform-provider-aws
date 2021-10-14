@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepDbInstances(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 	sweepResources := make([]*testSweepResource, 0)
 
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
@@ -533,7 +534,7 @@ func TestAccAWSDBInstance_IsAlreadyBeingDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(rName),
 						SkipFinalSnapshot:    aws.Bool(true),
@@ -2668,7 +2669,7 @@ func TestAccAWSDBInstance_NoDeleteAutomatedBackups(t *testing.T) {
 }
 
 func testAccCheckAWSDBInstanceAutomatedBackups(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -2702,7 +2703,7 @@ func testAccCheckAWSDBInstanceAutomatedBackups(s *terraform.State) error {
 }
 
 func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -2807,8 +2808,8 @@ func testAccCheckAWSDBInstanceSnapshot(s *terraform.State) error {
 			continue
 		}
 
-		awsClient := acctest.Provider.Meta().(*AWSClient)
-		conn := awsClient.rdsconn
+		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := awsClient.RDSConn
 
 		log.Printf("[INFO] Trying to locate the DBInstance Final Snapshot")
 		snapOutput, err := conn.DescribeDBSnapshots(
@@ -2879,7 +2880,7 @@ func testAccCheckAWSDBInstanceSnapshot(s *terraform.State) error {
 }
 
 func testAccCheckAWSDBInstanceNoSnapshot(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -2932,7 +2933,7 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
 
@@ -2947,7 +2948,7 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 }
 
 func testAccCheckAWSDBInstanceEc2ClassicDestroy(s *terraform.State) error {
-	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).rdsconn
+	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
@@ -2982,7 +2983,7 @@ func testAccCheckAWSDBInstanceEc2ClassicExists(resourceName string, v *rds.DBIns
 			return fmt.Errorf("resource ID not set")
 		}
 
-		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).rdsconn
+		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
 
 		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
 

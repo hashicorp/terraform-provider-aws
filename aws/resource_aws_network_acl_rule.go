@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNetworkAclRule() *schema.Resource {
@@ -125,7 +126,7 @@ func resourceAwsNetworkAclRule() *schema.Resource {
 }
 
 func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	egress := d.Get("egress").(bool)
 	networkAclID := d.Get("network_acl_id").(string)
 	ruleNumber := d.Get("rule_number").(int)
@@ -203,7 +204,7 @@ func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsNetworkAclRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	egress := d.Get("egress").(bool)
 	networkAclID := d.Get("network_acl_id").(string)
 	ruleNumber := d.Get("rule_number").(int)
@@ -287,7 +288,7 @@ func resourceAwsNetworkAclRuleRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsNetworkAclRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DeleteNetworkAclEntryInput{
 		NetworkAclId: aws.String(d.Get("network_acl_id").(string)),

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2TransitGateway() *schema.Resource {
@@ -116,8 +117,8 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 }
 
 func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTransitGatewayInput{
@@ -155,9 +156,9 @@ func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	transitGateway, err := ec2DescribeTransitGateway(conn, d.Id())
 
@@ -215,7 +216,7 @@ func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	modifyTransitGatewayInput := &ec2.ModifyTransitGatewayInput{}
 	transitGatewayModified := false
@@ -271,7 +272,7 @@ func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTransitGatewayInput{
 		TransitGatewayId: aws.String(d.Id()),

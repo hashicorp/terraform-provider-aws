@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRedshiftSecurityGroup_basic(t *testing.T) {
@@ -205,7 +206,7 @@ func testAccCheckAWSRedshiftSecurityGroupExists(n string, v *redshift.ClusterSec
 			return fmt.Errorf("No Redshift Security Group ID is set")
 		}
 
-		conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).redshiftconn
+		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RedshiftConn
 
 		opts := redshift.DescribeClusterSecurityGroupsInput{
 			ClusterSecurityGroupName: aws.String(rs.Primary.ID),
@@ -229,7 +230,7 @@ func testAccCheckAWSRedshiftSecurityGroupExists(n string, v *redshift.ClusterSec
 }
 
 func testAccCheckAWSRedshiftSecurityGroupDestroy(s *terraform.State) error {
-	conn := acctest.ProviderEC2Classic.Meta().(*AWSClient).redshiftconn
+	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_security_group" {

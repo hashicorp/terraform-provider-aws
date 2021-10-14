@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSpotFleetRequest() *schema.Resource {
@@ -552,7 +553,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 }
 
 func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{}) (*ec2.SpotFleetLaunchSpecification, error) {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &ec2.SpotFleetLaunchSpecification{
 		ImageId:      aws.String(d["ami"].(string)),
@@ -923,8 +924,8 @@ func expandSpotCapacityRebalance(l []interface{}) *ec2.SpotCapacityRebalance {
 
 func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
@@ -1103,7 +1104,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotStateConf := &resource.StateChangeConf{
 			Pending:    []string{ec2.ActivityStatusPendingFulfillment},
 			Target:     []string{ec2.ActivityStatusFulfilled},
-			Refresh:    resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d.Id(), meta.(*AWSClient).ec2conn),
+			Refresh:    resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d.Id(), meta.(*conns.AWSClient).EC2Conn),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -1121,7 +1122,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).ec2conn
+		conn := meta.(*conns.AWSClient).EC2Conn
 		req := &ec2.DescribeSpotFleetRequestsInput{
 			SpotFleetRequestIds: []*string{aws.String(d.Id())},
 		}
@@ -1209,9 +1210,9 @@ func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2)
 
 func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotFleetRequests.html
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeSpotFleetRequestsInput{
 		SpotFleetRequestIds: []*string{aws.String(d.Id())},
@@ -1596,7 +1597,7 @@ func rootBlockDeviceToSet(
 
 func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		req := &ec2.ModifySpotFleetRequestInput{
@@ -1650,7 +1651,7 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CancelSpotFleetRequests.html
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
 
 	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())

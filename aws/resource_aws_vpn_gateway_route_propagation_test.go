@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
@@ -73,7 +74,7 @@ func testAccCheckAWSVPNGatewayRoutePropagationExists(n string) resource.TestChec
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		err = finder.VpnGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
 
@@ -97,7 +98,7 @@ func testAccCheckAWSVPNGatewayRoutePropagationDestroy(s *terraform.State) error 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		err = finder.VpnGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
 

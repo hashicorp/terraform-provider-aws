@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepDbSnapshots(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).rdsconn
+	conn := client.(*conns.AWSClient).RDSConn
 	input := &rds.DescribeDBSnapshotsInput{}
 	var sweeperErrs error
 
@@ -182,7 +183,7 @@ func TestAccAWSDBSnapshot_disappears(t *testing.T) {
 }
 
 func testAccCheckDbSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_snapshot" {
@@ -224,7 +225,7 @@ func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		request := &rds.DescribeDBSnapshotsInput{
 			DBSnapshotIdentifier: aws.String(rs.Primary.ID),
@@ -243,7 +244,7 @@ func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 
 func testAccCheckDbSnapshotDisappears(snapshot *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		if _, err := conn.DeleteDBSnapshot(&rds.DeleteDBSnapshotInput{
 			DBSnapshotIdentifier: snapshot.DBSnapshotIdentifier,

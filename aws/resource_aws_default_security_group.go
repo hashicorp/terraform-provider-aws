@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const DefaultSecurityGroupName = "default"
@@ -193,8 +194,8 @@ func resourceAwsDefaultSecurityGroup() *schema.Resource {
 }
 
 func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	securityGroupOpts := &ec2.DescribeSecurityGroupsInput{
 		Filters: []*ec2.Filter{
@@ -263,9 +264,9 @@ func resourceAwsDefaultSecurityGroupCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	group, err := finder.SecurityGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -290,8 +291,8 @@ func resourceAwsDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{
 
 	sgArn := arn.ARN{
 		AccountID: aws.StringValue(group.OwnerId),
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)),
 		Service:   ec2.ServiceName,
 	}
@@ -325,7 +326,7 @@ func resourceAwsDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	group, err := finder.SecurityGroupByID(conn, d.Id())
 	if err != nil {
@@ -361,7 +362,7 @@ func resourceAwsDefaultSecurityGroupDelete(d *schema.ResourceData, meta interfac
 }
 
 func revokeDefaultSecurityGroupRules(meta interface{}, g *ec2.SecurityGroup) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	groupID := aws.StringValue(g.GroupId)
 	log.Printf("[WARN] Removing all ingress and egress rules found on Default Security Group (%s)", groupID)

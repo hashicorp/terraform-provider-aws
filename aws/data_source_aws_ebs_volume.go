@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEbsVolume() *schema.Resource {
@@ -77,7 +78,7 @@ func dataSourceAwsEbsVolume() *schema.Resource {
 }
 
 func dataSourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	filters, filtersOk := d.GetOk("filter")
 
@@ -114,7 +115,7 @@ func dataSourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] aws_ebs_volume - Single Volume found: %s", *volume.VolumeId)
-	return volumeDescriptionAttributes(d, meta.(*AWSClient), volume)
+	return volumeDescriptionAttributes(d, meta.(*conns.AWSClient), volume)
 }
 
 type volumeSort []*ec2.Volume
@@ -133,15 +134,15 @@ func mostRecentVolume(volumes []*ec2.Volume) *ec2.Volume {
 	return sortedVolumes[len(sortedVolumes)-1]
 }
 
-func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volume *ec2.Volume) error {
+func volumeDescriptionAttributes(d *schema.ResourceData, client *conns.AWSClient, volume *ec2.Volume) error {
 	d.SetId(aws.StringValue(volume.VolumeId))
 	d.Set("volume_id", volume.VolumeId)
 
 	arn := arn.ARN{
-		Partition: client.partition,
-		Region:    client.region,
+		Partition: client.Partition,
+		Region:    client.Region,
 		Service:   ec2.ServiceName,
-		AccountID: client.accountid,
+		AccountID: client.AccountID,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())

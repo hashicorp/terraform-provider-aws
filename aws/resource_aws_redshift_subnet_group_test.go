@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepRedshiftSubnetGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).redshiftconn
+	conn := client.(*conns.AWSClient).RedshiftConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -254,7 +255,7 @@ func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 }
 
 func testAccCheckRedshiftSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_subnet_group" {
@@ -295,7 +296,7 @@ func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGr
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 		resp, err := conn.DescribeClusterSubnetGroups(
 			&redshift.DescribeClusterSubnetGroupsInput{ClusterSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {

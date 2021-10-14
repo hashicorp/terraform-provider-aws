@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsPlacementGroup() *schema.Resource {
@@ -68,8 +69,8 @@ func resourceAwsPlacementGroup() *schema.Resource {
 }
 
 func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -102,9 +103,9 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	pg, err := finder.PlacementGroupByName(conn, d.Id())
 
@@ -135,10 +136,10 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
 	}.String()
 
@@ -148,7 +149,7 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsPlacementGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -162,7 +163,7 @@ func resourceAwsPlacementGroupUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
 	_, err := conn.DeletePlacementGroup(&ec2.DeletePlacementGroupInput{

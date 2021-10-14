@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAMI_basic(t *testing.T) {
@@ -361,7 +362,7 @@ func TestAccAWSAMI_tags(t *testing.T) {
 }
 
 func testAccCheckAmiDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami" {
@@ -402,7 +403,7 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 			return fmt.Errorf("No AMI ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		var resp *ec2.DescribeImagesOutput
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {

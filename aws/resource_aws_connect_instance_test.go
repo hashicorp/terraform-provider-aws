@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepConnectInstance(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).connectconn
+	conn := client.(*conns.AWSClient).ConnectConn
 	ctx := context.Background()
 	var errs *multierror.Error
 	sweepResources := make([]*testSweepResource, 0)
@@ -215,7 +216,7 @@ func testAccCheckAwsConnectInstanceExists(resourceName string, instance *connect
 			return fmt.Errorf("Connect instance ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
 		input := &connect.DescribeInstanceInput{
 			InstanceId: aws.String(rs.Primary.ID),
@@ -241,7 +242,7 @@ func testAccCheckAwsConnectInstanceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
 		instanceID := rs.Primary.ID
 

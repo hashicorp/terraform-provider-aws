@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/vault/helper/pgpkeys"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSAccessKey_basic(t *testing.T) {
@@ -128,7 +129,7 @@ func TestAccAWSAccessKey_status(t *testing.T) {
 }
 
 func testAccCheckAWSAccessKeyDestroy(s *terraform.State) error {
-	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_access_key" {
@@ -136,7 +137,7 @@ func testAccCheckAWSAccessKeyDestroy(s *terraform.State) error {
 		}
 
 		// Try to get access key
-		resp, err := iamconn.ListAccessKeys(&iam.ListAccessKeysInput{
+		resp, err := conn.ListAccessKeys(&iam.ListAccessKeysInput{
 			UserName: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
@@ -170,10 +171,10 @@ func testAccCheckAWSAccessKeyExists(n string, res *iam.AccessKeyMetadata) resour
 			return fmt.Errorf("No Role name is set")
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		name := rs.Primary.Attributes["user"]
 
-		resp, err := iamconn.ListAccessKeys(&iam.ListAccessKeysInput{
+		resp, err := conn.ListAccessKeys(&iam.ListAccessKeysInput{
 			UserName: aws.String(name),
 		})
 		if err != nil {

@@ -10,6 +10,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVpnGatewayRoutePropagation() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceAwsVpnGatewayRoutePropagation() *schema.Resource {
 }
 
 func resourceAwsVpnGatewayRoutePropagationEnable(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	gatewayID := d.Get("vpn_gateway_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -55,7 +56,7 @@ func resourceAwsVpnGatewayRoutePropagationEnable(d *schema.ResourceData, meta in
 }
 
 func resourceAwsVpnGatewayRoutePropagationDisable(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTableID, gatewayID, err := tfec2.VpnGatewayRoutePropagationParseID(d.Id())
 
@@ -77,7 +78,7 @@ func resourceAwsVpnGatewayRoutePropagationDisable(d *schema.ResourceData, meta i
 }
 
 func resourceAwsVpnGatewayRoutePropagationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTableID, gatewayID, err := tfec2.VpnGatewayRoutePropagationParseID(d.Id())
 

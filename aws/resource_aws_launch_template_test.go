@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepLaunchTemplates(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeLaunchTemplatesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -1400,7 +1401,7 @@ func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resour
 			return fmt.Errorf("No Launch Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		resp, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
 			LaunchTemplateIds: []*string{aws.String(rs.Primary.ID)},
@@ -1420,7 +1421,7 @@ func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resour
 }
 
 func testAccCheckAWSLaunchTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_launch_template" {
@@ -2338,7 +2339,7 @@ func testAccCheckAWSAutoScalingGroupExists(n string, group *autoscaling.Group) r
 			return fmt.Errorf("No Auto Scaling Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).autoscalingconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
 		describeGroups, err := conn.DescribeAutoScalingGroups(
 			&autoscaling.DescribeAutoScalingGroupsInput{

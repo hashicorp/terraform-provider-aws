@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsAmiIds() *schema.Resource {
@@ -54,7 +55,7 @@ func dataSourceAwsAmiIds() *schema.Resource {
 }
 
 func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DescribeImagesInput{
 		Owners: expandStringList(d.Get("owners").([]interface{})),

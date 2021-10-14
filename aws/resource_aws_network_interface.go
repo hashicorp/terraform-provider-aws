@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNetworkInterface() *schema.Resource {
@@ -144,8 +145,8 @@ func resourceAwsNetworkInterface() *schema.Resource {
 
 func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ec2.CreateNetworkInterfaceInput{
@@ -224,9 +225,9 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
 		NetworkInterfaceIds: []*string{aws.String(d.Id())},
@@ -326,7 +327,7 @@ func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId s
 			AttachmentId: aws.String(old_attachment["attachment_id"].(string)),
 			Force:        aws.Bool(true),
 		}
-		conn := meta.(*AWSClient).ec2conn
+		conn := meta.(*conns.AWSClient).EC2Conn
 		_, detach_err := conn.DetachNetworkInterface(detach_request)
 		if detach_err != nil {
 			if !tfawserr.ErrMessageContains(detach_err, "InvalidAttachmentID.NotFound", "") {
@@ -351,7 +352,7 @@ func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId s
 }
 
 func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("attachment") {
 		oa, na := d.GetChange("attachment")
@@ -577,7 +578,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting ENI: %s", d.Id())
 

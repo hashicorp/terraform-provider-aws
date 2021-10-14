@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepVpcDhcpOptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
@@ -211,7 +212,7 @@ func TestAccAWSDHCPOptions_disappears(t *testing.T) {
 }
 
 func testAccCheckDHCPOptionsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_dhcp_options" {
@@ -254,7 +255,7 @@ func testAccCheckDHCPOptionsExists(n string, d *ec2.DhcpOptions) resource.TestCh
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		resp, err := conn.DescribeDhcpOptions(&ec2.DescribeDhcpOptionsInput{
 			DhcpOptionsIds: []*string{
 				aws.String(rs.Primary.ID),
@@ -284,7 +285,7 @@ func testAccCheckDHCPOptionsDelete(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		_, err := conn.DeleteDhcpOptions(&ec2.DeleteDhcpOptionsInput{
 			DhcpOptionsId: aws.String(rs.Primary.ID),
 		})

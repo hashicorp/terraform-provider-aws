@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamInstanceProfile() *schema.Resource {
@@ -78,8 +79,8 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 }
 
 func resourceAwsIamInstanceProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -174,7 +175,7 @@ func instanceProfileRemoveAllRoles(d *schema.ResourceData, conn *iam.IAM) error 
 }
 
 func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("role") {
 		oldRole, newRole := d.GetChange("role")
@@ -206,7 +207,7 @@ func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.GetInstanceProfileInput{
 		InstanceProfileName: aws.String(d.Id()),
@@ -245,7 +246,7 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	if err := instanceProfileRemoveAllRoles(d, conn); err != nil {
 		return err
@@ -266,8 +267,8 @@ func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{
 }
 
 func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfile, meta interface{}) error {
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	d.SetId(aws.StringValue(result.InstanceProfileName))
 	if err := d.Set("name", result.InstanceProfileName); err != nil {

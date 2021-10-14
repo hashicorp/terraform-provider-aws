@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,11 +33,11 @@ func testSweepKeyPairs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	ec2conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 
-	log.Printf("Destroying the tmp keys in (%s)", client.(*AWSClient).region)
+	log.Printf("Destroying the tmp keys in (%s)", client.(*conns.AWSClient).Region)
 
-	resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{})
+	resp, err := conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping EC2 Key Pair sweep for %s: %s", region, err)
@@ -47,7 +48,7 @@ func testSweepKeyPairs(region string) error {
 
 	keyPairs := resp.KeyPairs
 	for _, d := range keyPairs {
-		_, err := ec2conn.DeleteKeyPair(&ec2.DeleteKeyPairInput{
+		_, err := conn.DeleteKeyPair(&ec2.DeleteKeyPairInput{
 			KeyName: d.KeyName,
 		})
 
@@ -240,7 +241,7 @@ func TestAccAWSKeyPair_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
-	ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_key_pair" {
@@ -248,7 +249,7 @@ func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 		}
 
 		// Try to find key pair
-		resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
+		resp, err := conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
 			KeyNames: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err == nil {
@@ -286,9 +287,9 @@ func testAccCheckAWSKeyPairExists(n string, res *ec2.KeyPairInfo) resource.TestC
 			return fmt.Errorf("No KeyPair name is set")
 		}
 
-		ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
+		resp, err := conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
 			KeyNames: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {

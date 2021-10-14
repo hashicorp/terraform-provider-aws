@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSNeptuneClusterSnapshot_basic(t *testing.T) {
@@ -53,7 +54,7 @@ func TestAccAWSNeptuneClusterSnapshot_basic(t *testing.T) {
 }
 
 func testAccCheckNeptuneClusterSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_cluster_snapshot" {
@@ -91,7 +92,7 @@ func testAccCheckNeptuneClusterSnapshotExists(resourceName string, dbClusterSnap
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 		input := &neptune.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(rs.Primary.ID),

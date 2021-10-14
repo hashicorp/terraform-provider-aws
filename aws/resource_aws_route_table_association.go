@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRouteTableAssociation() *schema.Resource {
@@ -49,7 +50,7 @@ func resourceAwsRouteTableAssociation() *schema.Resource {
 }
 
 func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTableID := d.Get("route_table_id").(string)
 	input := &ec2.AssociateRouteTableInput{
@@ -88,7 +89,7 @@ func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	association, err := finder.RouteTableAssociationByID(conn, d.Id())
 
@@ -110,7 +111,7 @@ func resourceAwsRouteTableAssociationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: aws.String(d.Id()),
@@ -146,7 +147,7 @@ func resourceAwsRouteTableAssociationUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	return ec2RouteTableAssociationDelete(conn, d.Id())
 }
@@ -162,7 +163,7 @@ func resourceAwsRouteTableAssociationImport(d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Importing route table association, target: %s, route table: %s", targetID, routeTableID)
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTable, err := finder.RouteTableByID(conn, routeTableID)
 

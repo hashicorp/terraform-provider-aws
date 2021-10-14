@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepRedshiftSnapshotSchedules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).redshiftconn
+	conn := client.(*conns.AWSClient).RedshiftConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -293,7 +294,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 			ScheduleIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -325,7 +326,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleExists(n string, v *redshift.Snapsho
 			return fmt.Errorf("No Redshift Cluster Snapshot Schedule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 			ScheduleIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -347,7 +348,7 @@ func testAccCheckAWSRedshiftSnapshotScheduleExists(n string, v *redshift.Snapsho
 
 func testAccCheckAWSRedshiftSnapshotScheduleCreateSnapshotScheduleAssociation(cluster *redshift.Cluster, snapshotSchedule *redshift.SnapshotSchedule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 		if _, err := conn.ModifyClusterSnapshotSchedule(&redshift.ModifyClusterSnapshotScheduleInput{
 			ClusterIdentifier:    cluster.ClusterIdentifier,

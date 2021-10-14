@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepSagemakerFlowDefinitions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*conns.AWSClient).SageMakerConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListFlowDefinitionsPages(&sagemaker.ListFlowDefinitionsInput{}, func(page *sagemaker.ListFlowDefinitionsOutput, lastPage bool) bool {
@@ -236,7 +237,7 @@ func testAccAWSSagemakerFlowDefinition_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerFlowDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_flow_definition" {
@@ -270,7 +271,7 @@ func testAccCheckAWSSagemakerFlowDefinitionExists(n string, flowDefinition *sage
 			return fmt.Errorf("No SageMaker Flow Definition ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 		output, err := finder.FlowDefinitionByName(conn, rs.Primary.ID)
 

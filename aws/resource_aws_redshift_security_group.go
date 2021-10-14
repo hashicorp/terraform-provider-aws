@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRedshiftSecurityGroup() *schema.Resource {
@@ -76,7 +77,7 @@ func resourceAwsRedshiftSecurityGroup() *schema.Resource {
 }
 
 func resourceAwsRedshiftSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	var err error
 	var errs []error
@@ -160,7 +161,7 @@ func resourceAwsRedshiftSecurityGroupRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsRedshiftSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.HasChange("ingress") {
 		o, n := d.GetChange("ingress")
@@ -203,7 +204,7 @@ func resourceAwsRedshiftSecurityGroupUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRedshiftSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	log.Printf("[DEBUG] Redshift Security Group destroy: %v", d.Id())
 	opts := redshift.DeleteClusterSecurityGroupInput{
@@ -225,7 +226,7 @@ func resourceAwsRedshiftSecurityGroupDelete(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRedshiftSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*redshift.ClusterSecurityGroup, error) {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	opts := redshift.DescribeClusterSecurityGroupsInput{
 		ClusterSecurityGroupName: aws.String(d.Id()),

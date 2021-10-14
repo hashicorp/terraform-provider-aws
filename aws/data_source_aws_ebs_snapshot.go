@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEbsSnapshot() *schema.Resource {
@@ -90,7 +91,7 @@ func dataSourceAwsEbsSnapshot() *schema.Resource {
 }
 
 func dataSourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	restorableUsers, restorableUsersOk := d.GetOk("restorable_by_user_ids")
 	filters, filtersOk := d.GetOk("filter")
@@ -140,7 +141,7 @@ func dataSourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *ec2.Snapshot, meta interface{}) error {
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	d.SetId(aws.StringValue(snapshot.SnapshotId))
 	d.Set("snapshot_id", snapshot.SnapshotId)
@@ -159,8 +160,8 @@ func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *ec2.Snapsho
 	}
 
 	snapshotArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}.String()

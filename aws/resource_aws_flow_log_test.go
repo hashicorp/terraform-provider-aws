@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepFlowLogs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 	input := &ec2.DescribeFlowLogsInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -519,7 +520,7 @@ func testAccCheckFlowLogExists(n string, v *ec2.FlowLog) resource.TestCheckFunc 
 			return fmt.Errorf("No Flow Log ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		output, err := finder.FlowLogByID(conn, rs.Primary.ID)
 
@@ -534,7 +535,7 @@ func testAccCheckFlowLogExists(n string, v *ec2.FlowLog) resource.TestCheckFunc 
 }
 
 func testAccCheckFlowLogDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_flow_log" {

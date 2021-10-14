@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEc2Host() *schema.Resource {
@@ -69,8 +70,8 @@ func dataSourceAwsEc2Host() *schema.Resource {
 }
 
 func dataSourceAwsAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	host, err := finder.HostByIDAndFilters(conn, d.Get("host_id").(string), buildAwsDataSourceFilters(d.Get("filter").(*schema.Set)))
 
@@ -81,9 +82,9 @@ func dataSourceAwsAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(aws.StringValue(host.HostId))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: aws.StringValue(host.OwnerId),
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()

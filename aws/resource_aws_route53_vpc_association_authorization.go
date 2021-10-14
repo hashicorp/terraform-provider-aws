@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
@@ -43,13 +44,13 @@ func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	req := &route53.CreateVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
 		VPC: &route53.VPC{
 			VPCId:     aws.String(d.Get("vpc_id").(string)),
-			VPCRegion: aws.String(meta.(*AWSClient).region),
+			VPCRegion: aws.String(meta.(*conns.AWSClient).Region),
 		},
 	}
 
@@ -70,7 +71,7 @@ func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData,
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
 	if err != nil {
@@ -119,7 +120,7 @@ func resourceAwsRoute53VPCAssociationAuthorizationRead(d *schema.ResourceData, m
 }
 
 func resourceAwsRoute53VPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).r53conn
+	conn := meta.(*conns.AWSClient).Route53Conn
 
 	zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(d.Id())
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVpnGatewayAttachment() *schema.Resource {
@@ -35,7 +36,7 @@ func resourceAwsVpnGatewayAttachment() *schema.Resource {
 }
 
 func resourceAwsVpnGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
 	vgwId := d.Get("vpn_gateway_id").(string)
@@ -64,7 +65,7 @@ func resourceAwsVpnGatewayAttachmentCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsVpnGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
 	vgwId := d.Get("vpn_gateway_id").(string)
@@ -91,7 +92,7 @@ func resourceAwsVpnGatewayAttachmentRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsVpnGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
 	vgwId := d.Get("vpn_gateway_id").(string)

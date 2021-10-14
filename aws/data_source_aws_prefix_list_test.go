@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccDataSourceAwsPrefixList_basic(t *testing.T) {
@@ -64,7 +65,7 @@ func TestAccDataSourceAwsPrefixList_nameDoesNotOverrideFilter(t *testing.T) {
 
 func testAccDataSourceAwsPrefixListCheck(name string) resource.TestCheckFunc {
 	getPrefixListId := func(name string) (string, error) {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		input := ec2.DescribePrefixListsInput{
 			Filters: tfec2.BuildAttributeFilterList(map[string]string{

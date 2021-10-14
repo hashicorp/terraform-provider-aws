@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // This will currently skip EIPs with associations,
@@ -41,7 +42,7 @@ func testSweepEC2Eips(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 
 	// There is currently no paginator or Marker/NextToken
 	input := &ec2.DescribeAddressesInput{}
@@ -749,7 +750,7 @@ func TestAccAWSEIP_BYOIPAddress_custom_with_PublicIpv4Pool(t *testing.T) {
 }
 
 func testAccCheckAWSEIPDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eip" {
@@ -825,10 +826,10 @@ func testAccCheckAWSEIPExists(n string, ec2classic bool, res *ec2.Address) resou
 			return fmt.Errorf("No EIP ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		if ec2classic {
-			conn = acctest.ProviderEC2Classic.Meta().(*AWSClient).ec2conn
+			conn = acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
 		}
 
 		input := &ec2.DescribeAddressesInput{}

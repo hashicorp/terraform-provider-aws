@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNeptuneSubnetGroup() *schema.Resource {
@@ -67,8 +68,8 @@ func resourceAwsNeptuneSubnetGroup() *schema.Resource {
 }
 
 func resourceAwsNeptuneSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
@@ -105,9 +106,9 @@ func resourceAwsNeptuneSubnetGroupCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describeOpts := neptune.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(d.Id()),
@@ -174,7 +175,7 @@ func resourceAwsNeptuneSubnetGroupRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsNeptuneSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
@@ -210,7 +211,7 @@ func resourceAwsNeptuneSubnetGroupUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsNeptuneSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := neptune.DeleteDBSubnetGroupInput{
 		DBSubnetGroupName: aws.String(d.Id()),

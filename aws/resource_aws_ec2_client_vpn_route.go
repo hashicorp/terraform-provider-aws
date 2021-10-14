@@ -10,6 +10,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2ClientVpnRoute() *schema.Resource {
@@ -56,7 +57,7 @@ func resourceAwsEc2ClientVpnRoute() *schema.Resource {
 }
 
 func resourceAwsEc2ClientVpnRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetSubnetID := d.Get("target_vpc_subnet_id").(string)
@@ -86,7 +87,7 @@ func resourceAwsEc2ClientVpnRouteCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEc2ClientVpnRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	resp, err := finder.ClientVpnRoute(conn,
 		d.Get("client_vpn_endpoint_id").(string),
@@ -126,7 +127,7 @@ func resourceAwsEc2ClientVpnRouteRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEc2ClientVpnRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	err := deleteClientVpnRoute(conn, &ec2.DeleteClientVpnRouteInput{
 		ClientVpnEndpointId:  aws.String(d.Get("client_vpn_endpoint_id").(string)),

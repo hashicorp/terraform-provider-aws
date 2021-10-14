@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsEc2ManagedPrefixListEntry_ipv4(t *testing.T) {
@@ -170,7 +171,7 @@ func TestAccAwsEc2ManagedPrefixListEntry_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSEc2ManagedPrefixListEntryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_managed_prefix_list_entry" {
@@ -210,7 +211,7 @@ func testAccCheckAWSEc2ManagedPrefixListEntryExists(n string, v *ec2.PrefixListE
 			return fmt.Errorf("No EC2 Managed Prefix List Entry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		plID, cidr, err := tfec2.ManagedPrefixListEntryParseID(rs.Primary.ID)
 

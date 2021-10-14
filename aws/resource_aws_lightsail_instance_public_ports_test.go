@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLightsailInstancePublicPorts_basic(t *testing.T) {
@@ -118,7 +119,7 @@ func testAccCheckAWSLightsailInstancePublicPortsExists(resourceName string) reso
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		input := &lightsail.GetInstancePortStatesInput{
 			InstanceName: aws.String(rs.Primary.Attributes["instance_name"]),
@@ -135,7 +136,7 @@ func testAccCheckAWSLightsailInstancePublicPortsExists(resourceName string) reso
 }
 
 func testAccCheckAWSLightsailInstancePublicPortsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lightsailconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_instance_public_ports" {

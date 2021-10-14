@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepInternetGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DescribeInternetGatewaysInput{}
 	resp, err := conn.DescribeInternetGateways(req)
@@ -274,7 +275,7 @@ func TestAccAWSInternetGateway_disappears(t *testing.T) {
 }
 
 func testAccCheckInternetGatewayDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_internet_gateway" {
@@ -313,7 +314,7 @@ func testAccCheckInternetGatewayExists(n string, ig *ec2.InternetGateway) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		resp, err := conn.DescribeInternetGateways(&ec2.DescribeInternetGatewaysInput{
 			InternetGatewayIds: []*string{aws.String(rs.Primary.ID)},
 		})

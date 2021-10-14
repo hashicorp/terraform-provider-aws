@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
@@ -83,7 +84,7 @@ func TestAccAWSRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(fmt.Sprintf("tf-cluster-instance-%d", rInt)),
 						SkipFinalSnapshot:    aws.Bool(true),
@@ -875,7 +876,7 @@ func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
 }
 
 func testAccRDSPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine string) {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		DefaultOnly: aws.Bool(true),
@@ -895,7 +896,7 @@ func testAccRDSPerformanceInsightsDefaultVersionPreCheck(t *testing.T, engine st
 }
 
 func testAccRDSPerformanceInsightsPreCheck(t *testing.T, engine string, engineVersion string) {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:        aws.String(engine),
@@ -955,7 +956,7 @@ func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.
 			return fmt.Errorf("No RDS Cluster Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 		output, err := finder.DBInstanceByID(conn, rs.Primary.ID)
 
@@ -970,7 +971,7 @@ func testAccCheckAWSClusterInstanceExists(n string, v *rds.DBInstance) resource.
 }
 
 func testAccCheckAWSClusterInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).rdsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {

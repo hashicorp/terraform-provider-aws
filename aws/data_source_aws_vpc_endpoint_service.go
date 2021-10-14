@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsVpcEndpointService() *schema.Resource {
@@ -83,8 +84,8 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 }
 
 func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
 	tags, tagsOk := d.GetOk("tags")
@@ -95,7 +96,7 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 		serviceName = v.(string)
 		serviceNameOk = true
 	} else if v, ok := d.GetOk("service"); ok {
-		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*AWSClient).region, v.(string))
+		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*conns.AWSClient).Region, v.(string))
 		serviceNameOk = true
 	}
 
@@ -155,10 +156,10 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	d.SetId(strconv.Itoa(hashcode.String(serviceName)))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceId),
 	}.String()
 	d.Set("arn", arn)

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // add sweeper to delete known test VPN Gateways
@@ -31,7 +32,7 @@ func testSweepVPNGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 	var sweeperErrs *multierror.Error
 
 	req := &ec2.DescribeVpnGatewaysInput{}
@@ -388,7 +389,7 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 }
 
 func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
-	ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway" {
@@ -396,7 +397,7 @@ func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		resp, err := ec2conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
+		resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
 			VpnGatewayIds: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err == nil {
@@ -442,8 +443,8 @@ func testAccCheckVpnGatewayExists(n string, ig *ec2.VpnGateway) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		ec2conn := acctest.Provider.Meta().(*AWSClient).ec2conn
-		resp, err := ec2conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
 			VpnGatewayIds: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {

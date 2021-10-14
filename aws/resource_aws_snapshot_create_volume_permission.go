@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSnapshotCreateVolumePermission() *schema.Resource {
@@ -34,7 +35,7 @@ func resourceAwsSnapshotCreateVolumePermission() *schema.Resource {
 }
 
 func resourceAwsSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	snapshot_id := d.Get("snapshot_id").(string)
 	account_id := d.Get("account_id").(string)
@@ -73,7 +74,7 @@ func resourceAwsSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	snapshotID, accountID, err := resourceAwsSnapshotCreateVolumePermissionParseID(d.Id())
 	if err != nil {
@@ -94,7 +95,7 @@ func resourceAwsSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	snapshotID, accountID, err := resourceAwsSnapshotCreateVolumePermissionParseID(d.Id())
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
@@ -408,7 +409,7 @@ func testAccAWSSpotInstanceRequestTime(t *testing.T, duration string) string {
 }
 
 func testAccCheckAWSSpotInstanceRequestDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_spot_instance_request" {
@@ -474,7 +475,7 @@ func testAccCheckAWSSpotInstanceRequestExists(
 			return fmt.Errorf("No SNS subscription with that ARN exists")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		params := &ec2.DescribeSpotInstanceRequestsInput{
 			SpotInstanceRequestIds: []*string{&rs.Primary.ID},
@@ -536,7 +537,7 @@ func testAccCheckAWSSpotInstanceRequestAttributesCheckSIRWithoutSpot(
 
 func testAccCheckAWSSpotInstanceRequest_InstanceAttributes(sir *ec2.SpotInstanceRequest, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		instance, err := resourceAwsInstanceFindByID(conn, aws.StringValue(sir.InstanceId))
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidInstanceID.NotFound", "") {

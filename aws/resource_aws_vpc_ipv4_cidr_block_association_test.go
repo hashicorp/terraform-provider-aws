@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAwsVpcIpv4CidrBlockAssociation_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func testAccCheckAdditionalAwsVpcIpv4CidrBlock(association *ec2.VpcCidrBlockAsso
 }
 
 func testAccCheckAwsVpcIpv4CidrBlockAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_ipv4_cidr_block_association" {
@@ -104,7 +105,7 @@ func testAccCheckAwsVpcIpv4CidrBlockAssociationExists(n string, association *ec2
 			return fmt.Errorf("No VPC ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		DescribeVpcOpts := &ec2.DescribeVpcsInput{
 			VpcIds: []*string{aws.String(rs.Primary.Attributes["vpc_id"])},
 		}

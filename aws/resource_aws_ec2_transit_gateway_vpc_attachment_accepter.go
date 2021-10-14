@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepter() *schema.Resource {
@@ -75,8 +76,8 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepter() *schema.Resource {
 }
 
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.AcceptTransitGatewayVpcAttachmentInput{
@@ -123,9 +124,9 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterCreate(d *schema.ResourceD
 }
 
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	transitGatewayVpcAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, d.Id())
 
@@ -207,7 +208,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterRead(d *schema.ResourceDat
 }
 
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get("transit_gateway_id").(string)
@@ -246,7 +247,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterUpdate(d *schema.ResourceD
 }
 
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DeleteTransitGatewayVpcAttachmentInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),

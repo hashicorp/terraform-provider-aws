@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccDataSourceAwsEBSEncryptionByDefault_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccDataSourceAwsEBSEncryptionByDefault_basic(t *testing.T) {
 
 func testAccCheckDataSourceAwsEBSEncryptionByDefault(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

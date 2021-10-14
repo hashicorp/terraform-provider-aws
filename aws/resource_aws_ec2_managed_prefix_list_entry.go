@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEc2ManagedPrefixListEntry() *schema.Resource {
@@ -47,7 +48,7 @@ func resourceAwsEc2ManagedPrefixListEntry() *schema.Resource {
 }
 
 func resourceAwsEc2ManagedPrefixListEntryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidr := d.Get("cidr").(string)
 	plID := d.Get("prefix_list_id").(string)
@@ -87,7 +88,7 @@ func resourceAwsEc2ManagedPrefixListEntryCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsEc2ManagedPrefixListEntryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	plID, cidr, err := tfec2.ManagedPrefixListEntryParseID(d.Id())
 
@@ -118,7 +119,7 @@ func resourceAwsEc2ManagedPrefixListEntryRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsEc2ManagedPrefixListEntryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	plID, cidr, err := tfec2.ManagedPrefixListEntryParseID(d.Id())
 

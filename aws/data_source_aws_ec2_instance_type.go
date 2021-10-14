@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEc2InstanceType() *schema.Resource {
@@ -343,7 +344,7 @@ func dataSourceAwsEc2InstanceType() *schema.Resource {
 }
 
 func dataSourceAwsEc2InstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	params := &ec2.DescribeInstanceTypesInput{}
 

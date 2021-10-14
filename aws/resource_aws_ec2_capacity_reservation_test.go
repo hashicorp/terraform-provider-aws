@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepEc2CapacityReservations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).ec2conn
+	conn := client.(*conns.AWSClient).EC2Conn
 
 	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{})
 
@@ -433,7 +434,7 @@ func testAccCheckEc2CapacityReservationExists(resourceName string, cr *ec2.Capac
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{
 			CapacityReservationIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -458,7 +459,7 @@ func testAccCheckEc2CapacityReservationExists(resourceName string, cr *ec2.Capac
 }
 
 func testAccCheckEc2CapacityReservationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_capacity_reservation" {
@@ -485,7 +486,7 @@ func testAccCheckEc2CapacityReservationDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSEc2CapacityReservation(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeCapacityReservationsInput{
 		MaxResults: aws.Int64(1),

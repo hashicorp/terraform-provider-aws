@@ -12,6 +12,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
@@ -145,7 +146,7 @@ func testAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId(t
 }
 
 func testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_prefix_list_reference" {
@@ -182,7 +183,7 @@ func testAccAwsEc2TransitGatewayPrefixListReferenceExists(resourceName string) r
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		transitGatewayPrefixListReference, err := finder.TransitGatewayPrefixListReferenceByID(conn, rs.Primary.ID)
 

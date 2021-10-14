@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kms/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSKmsExternalKey_basic(t *testing.T) {
@@ -453,7 +454,7 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 		output, err := finder.KeyPolicyByKeyIDAndPolicyName(conn, rs.Primary.ID, tfkms.PolicyNameDefault)
 
@@ -477,7 +478,7 @@ func testAccCheckAWSKmsExternalKeyHasPolicy(name string, expectedPolicyText stri
 }
 
 func testAccCheckAWSKmsExternalKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).kmsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_external_key" {
@@ -511,7 +512,7 @@ func testAccCheckAWSKmsExternalKeyExists(name string, key *kms.KeyMetadata) reso
 			return fmt.Errorf("No KMS External Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kmsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 		outputRaw, err := tfresource.RetryWhenNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
 			return finder.KeyByID(conn, rs.Primary.ID)

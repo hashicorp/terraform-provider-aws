@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
@@ -49,8 +50,8 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 }
 
 func resourceAwsRedshiftSnapshotCopyGrantCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	grantName := d.Get("snapshot_copy_grant_name").(string)
@@ -103,9 +104,9 @@ func resourceAwsRedshiftSnapshotCopyGrantCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	grantName := d.Id()
 	log.Printf("[DEBUG] Looking for grant: %s", grantName)
@@ -122,10 +123,10 @@ func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta inter
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "redshift",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("snapshotcopygrant:%s", grantName),
 	}.String()
 
@@ -148,7 +149,7 @@ func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRedshiftSnapshotCopyGrantUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -162,7 +163,7 @@ func resourceAwsRedshiftSnapshotCopyGrantUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsRedshiftSnapshotCopyGrantDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	grantName := d.Id()
 

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRouteTable() *schema.Resource {
@@ -166,8 +167,8 @@ func dataSourceAwsRouteTable() *schema.Resource {
 }
 
 func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeRouteTablesInput{}
 	vpcId, vpcIdOk := d.GetOk("vpc_id")
@@ -213,9 +214,9 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 
 	ownerID := aws.StringValue(rt.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
 	}.String()

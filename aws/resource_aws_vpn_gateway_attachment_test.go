@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSVpnGatewayAttachment_basic(t *testing.T) {
@@ -68,7 +69,7 @@ func testAccCheckVpnGatewayAttachmentExists(n string, v *ec2.VpcAttachment) reso
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		out, err := finder.VpnGatewayVpcAttachment(conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
 		if err != nil {
 			return err
@@ -87,7 +88,7 @@ func testAccCheckVpnGatewayAttachmentExists(n string, v *ec2.VpcAttachment) reso
 }
 
 func testAccCheckVpnGatewayAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway_attachment" {

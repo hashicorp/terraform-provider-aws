@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNetworkInterfaceSGAttachment() *schema.Resource {
@@ -44,7 +45,7 @@ func resourceAwsNetworkInterfaceSGAttachmentCreate(d *schema.ResourceData, meta 
 	sgID := d.Get("security_group_id").(string)
 	interfaceID := d.Get("network_interface_id").(string)
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	iface, err := finder.NetworkInterfaceByID(conn, interfaceID)
 
@@ -88,7 +89,7 @@ func resourceAwsNetworkInterfaceSGAttachmentRead(d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Checking association of security group %s to network interface ID %s", sgID, interfaceID)
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	var groupIdentifier *ec2.GroupIdentifier
 
@@ -154,7 +155,7 @@ func resourceAwsNetworkInterfaceSGAttachmentDelete(d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Removing security group %s from interface ID %s", sgID, interfaceID)
 
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	iface, err := finder.NetworkInterfaceByID(conn, interfaceID)
 

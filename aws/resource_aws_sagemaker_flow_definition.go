@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSagemakerFlowDefinition() *schema.Resource {
@@ -240,8 +241,8 @@ func resourceAwsSagemakerFlowDefinition() *schema.Resource {
 }
 
 func resourceAwsSagemakerFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("flow_definition_name").(string)
@@ -287,9 +288,9 @@ func resourceAwsSagemakerFlowDefinitionCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerFlowDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	flowDefinition, err := finder.FlowDefinitionByName(conn, d.Id())
 
@@ -345,7 +346,7 @@ func resourceAwsSagemakerFlowDefinitionRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSagemakerFlowDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -359,7 +360,7 @@ func resourceAwsSagemakerFlowDefinitionUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsSagemakerFlowDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	log.Printf("[DEBUG] Deleting SageMaker Flow Definition: %s", d.Id())
 	_, err := conn.DeleteFlowDefinition(&sagemaker.DeleteFlowDefinitionInput{

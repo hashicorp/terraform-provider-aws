@@ -12,6 +12,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
@@ -198,7 +199,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_client_vpn_authorization_rule" {
@@ -229,7 +230,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		result, err := finder.ClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
 		if err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsDefaultVpcDhcpOptions() *schema.Resource {
@@ -42,7 +43,7 @@ func resourceAwsDefaultVpcDhcpOptions() *schema.Resource {
 }
 
 func resourceAwsDefaultVpcDhcpOptionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	filters := []*ec2.Filter{
 		{
@@ -51,7 +52,7 @@ func resourceAwsDefaultVpcDhcpOptionsCreate(d *schema.ResourceData, meta interfa
 		},
 		{
 			Name:   aws.String("value"),
-			Values: aws.StringSlice([]string{regionalPrivateDNSSuffix(meta.(*AWSClient).region)}),
+			Values: aws.StringSlice([]string{regionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
 		},
 		{
 			Name:   aws.String("key"),

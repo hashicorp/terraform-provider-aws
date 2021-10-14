@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
@@ -63,7 +64,7 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckAWSNeptuneOrderableDbInstance(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("mysql"),

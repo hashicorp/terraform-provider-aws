@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsVpcDhcpOptionsAssociation() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsVpcDhcpOptionsAssociation() *schema.Resource {
 }
 
 func resourceAwsVpcDhcpOptionsAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 	// Provide the vpc_id as the id to import
 	vpcRaw, _, err := VPCStateRefreshFunc(conn, d.Id())()
 	if err != nil {
@@ -62,7 +63,7 @@ func resourceAwsVpcDhcpOptionsAssociationImport(d *schema.ResourceData, meta int
 }
 
 func resourceAwsVpcDhcpOptionsAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
 	optsID := d.Get("dhcp_options_id").(string)
@@ -85,7 +86,7 @@ func resourceAwsVpcDhcpOptionsAssociationCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsVpcDhcpOptionsAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	var vpc *ec2.Vpc
 
@@ -145,7 +146,7 @@ const VPCDefaultOptionsID = "default"
 // AWS does not provide an API to disassociate a DHCP Options set from a VPC.
 // So, we do this by setting the VPC to the default DHCP Options Set.
 func resourceAwsVpcDhcpOptionsAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Disassociating DHCP Options Set %s from VPC %s...", d.Get("dhcp_options_id"), d.Get("vpc_id"))
 

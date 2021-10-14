@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSOpsworksInstance_basic(t *testing.T) {
@@ -122,7 +123,7 @@ func testAccCheckAWSOpsworksInstanceExists(
 			return fmt.Errorf("No Opsworks Instance is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 		params := &opsworks.DescribeInstancesInput{
 			InstanceIds: []*string{&rs.Primary.ID},
@@ -170,7 +171,7 @@ func testAccCheckAWSOpsworksInstanceAttributes(
 }
 
 func testAccCheckAwsOpsworksInstanceDestroy(s *terraform.State) error {
-	opsworksconn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_instance" {
 			continue
@@ -181,7 +182,7 @@ func testAccCheckAwsOpsworksInstanceDestroy(s *terraform.State) error {
 			},
 		}
 
-		_, err := opsworksconn.DescribeInstances(req)
+		_, err := conn.DescribeInstances(req)
 		if err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
 				if awserr.Code() == "ResourceNotFoundException" {

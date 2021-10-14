@@ -16,6 +16,7 @@ import (
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -30,7 +31,7 @@ func testSweepSagemakerNotebookInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).sagemakerconn
+	conn := client.(*conns.AWSClient).SageMakerConn
 
 	err = conn.ListNotebookInstancesPages(&sagemaker.ListNotebookInstancesInput{}, func(page *sagemaker.ListNotebookInstancesOutput, lastPage bool) bool {
 		for _, instance := range page.NotebookInstances {
@@ -329,7 +330,7 @@ func TestAccAWSSagemakerNotebookInstance_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSSagemakerNotebookInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_notebook_instance" {
@@ -368,7 +369,7 @@ func testAccCheckAWSSagemakerNotebookInstanceExists(n string, notebook *sagemake
 			return fmt.Errorf("No sagmaker Notebook Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sagemakerconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 		opts := &sagemaker.DescribeNotebookInstanceInput{
 			NotebookInstanceName: aws.String(rs.Primary.ID),
 		}

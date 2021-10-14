@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
@@ -172,7 +173,7 @@ func testAccCheckAwsConnectContactFlowExists(resourceName string, function *conn
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
 		params := &connect.DescribeContactFlowInput{
 			ContactFlowId: aws.String(contactFlowID),
@@ -196,7 +197,7 @@ func testAccCheckAwsConnectContactFlowDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).connectconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
 
 		instanceID, contactFlowID, err := resourceAwsConnectContactFlowParseID(rs.Primary.ID)
 

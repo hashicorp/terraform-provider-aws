@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestIpPermissionIDHash(t *testing.T) {
@@ -654,7 +655,7 @@ func TestAccAWSSecurityGroupRule_PrefixListEgress(t *testing.T) {
 	// This function creates the expected IPPermission with the prefix list ID from
 	// the VPC Endpoint created in the test
 	setupSG := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		prefixListInput := &ec2.DescribePrefixListsInput{
 			Filters: []*ec2.Filter{
 				{Name: aws.String("prefix-list-name"), Values: []*string{endpoint.ServiceName}},
@@ -1054,7 +1055,7 @@ func TestAccAWSSecurityGroupRule_MultiDescription(t *testing.T) {
 	// This function creates the expected IPPermission with the prefix list ID from
 	// the VPC Endpoint created in the test
 	setupPL := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		prefixListInput := &ec2.DescribePrefixListsInput{
 			Filters: []*ec2.Filter{
 				{Name: aws.String("prefix-list-name"), Values: []*string{endpoint.ServiceName}},
@@ -1177,7 +1178,7 @@ func TestAccAWSSecurityGroupRule_MultiDescription(t *testing.T) {
 }
 
 func testAccCheckAWSSecurityGroupRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_security_group" {
@@ -1209,7 +1210,7 @@ func testAccCheckAWSSecurityGroupRuleExists(n string, group *ec2.SecurityGroup) 
 			return fmt.Errorf("No Security Group is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ec2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 		sg, err := finder.SecurityGroupByID(conn, rs.Primary.ID)
 		if err != nil {
