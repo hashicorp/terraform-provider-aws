@@ -20,11 +20,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_lightsail_static_ip", &resource.Sweeper{
 		Name: "aws_lightsail_static_ip",
-		F:    testSweepLightsailStaticIps,
+		F:    sweepStaticIPs,
 	})
 }
 
-func testSweepLightsailStaticIps(region string) error {
+func sweepStaticIPs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
@@ -74,15 +74,15 @@ func TestAccAWSLightsailStaticIp_basic(t *testing.T) {
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,
+		CheckDestroy: testAccCheckStaticIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailStaticIpConfig_basic(staticIpName),
+				Config: testAccStaticIPConfig_basic(staticIpName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailStaticIpExists("aws_lightsail_static_ip.test", &staticIp),
+					testAccCheckStaticIPExists("aws_lightsail_static_ip.test", &staticIp),
 				),
 			},
 		},
@@ -107,15 +107,15 @@ func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,
+		CheckDestroy: testAccCheckStaticIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailStaticIpConfig_basic(staticIpName),
+				Config: testAccStaticIPConfig_basic(staticIpName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailStaticIpExists("aws_lightsail_static_ip.test", &staticIp),
+					testAccCheckStaticIPExists("aws_lightsail_static_ip.test", &staticIp),
 					staticIpDestroy,
 				),
 				ExpectNonEmptyPlan: true,
@@ -124,7 +124,7 @@ func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSLightsailStaticIpExists(n string, staticIp *lightsail.StaticIp) resource.TestCheckFunc {
+func testAccCheckStaticIPExists(n string, staticIp *lightsail.StaticIp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -153,7 +153,7 @@ func testAccCheckAWSLightsailStaticIpExists(n string, staticIp *lightsail.Static
 	}
 }
 
-func testAccCheckAWSLightsailStaticIpDestroy(s *terraform.State) error {
+func testAccCheckStaticIPDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_static_ip" {
 			continue
@@ -183,7 +183,7 @@ func testAccCheckAWSLightsailStaticIpDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSLightsailStaticIpConfig_basic(staticIpName string) string {
+func testAccStaticIPConfig_basic(staticIpName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_static_ip" "test" {
   name = "%s"

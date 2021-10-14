@@ -22,15 +22,15 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
+		CheckDestroy: testAccCheckStaticIPAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName),
+				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailStaticIpAttachmentExists("aws_lightsail_static_ip_attachment.test", &staticIp),
+					testAccCheckStaticIPAttachmentExists("aws_lightsail_static_ip_attachment.test", &staticIp),
 					resource.TestCheckResourceAttrSet("aws_lightsail_static_ip_attachment.test", "ip_address"),
 				),
 			},
@@ -58,15 +58,15 @@ func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
+		CheckDestroy: testAccCheckStaticIPAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName),
+				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailStaticIpAttachmentExists("aws_lightsail_static_ip_attachment.test", &staticIp),
+					testAccCheckStaticIPAttachmentExists("aws_lightsail_static_ip_attachment.test", &staticIp),
 					staticIpDestroy,
 				),
 				ExpectNonEmptyPlan: true,
@@ -75,7 +75,7 @@ func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSLightsailStaticIpAttachmentExists(n string, staticIp *lightsail.StaticIp) resource.TestCheckFunc {
+func testAccCheckStaticIPAttachmentExists(n string, staticIp *lightsail.StaticIp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -108,7 +108,7 @@ func testAccCheckAWSLightsailStaticIpAttachmentExists(n string, staticIp *lights
 	}
 }
 
-func testAccCheckAWSLightsailStaticIpAttachmentDestroy(s *terraform.State) error {
+func testAccCheckStaticIPAttachmentDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_static_ip_attachment" {
 			continue
@@ -138,7 +138,7 @@ func testAccCheckAWSLightsailStaticIpAttachmentDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName string) string {
+func testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

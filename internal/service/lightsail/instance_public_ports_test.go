@@ -22,16 +22,16 @@ func TestAccAWSLightsailInstancePublicPorts_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheckAWSLightsail(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
+		CheckDestroy: testAccCheckInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailInstancePublicPortsConfig_basic(rName),
+				Config: testAccInstancePublicPortsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailInstancePublicPortsExists(resourceName),
+					testAccCheckInstancePublicPortsExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						"protocol":  "tcp",
@@ -52,16 +52,16 @@ func TestAccAWSLightsailInstancePublicPorts_multiple(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheckAWSLightsail(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
+		CheckDestroy: testAccCheckInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailInstancePublicPortsConfig_multiple(rName),
+				Config: testAccInstancePublicPortsConfig_multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailInstancePublicPortsExists(resourceName),
+					testAccCheckInstancePublicPortsExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						"protocol":  "tcp",
@@ -87,16 +87,16 @@ func TestAccAWSLightsailInstancePublicPorts_cidrs(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheckAWSLightsail(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
+		CheckDestroy: testAccCheckInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailInstancePublicPortsConfig_cidrs(rName),
+				Config: testAccInstancePublicPortsConfig_cidrs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailInstancePublicPortsExists(resourceName),
+					testAccCheckInstancePublicPortsExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						"protocol":  "tcp",
@@ -112,7 +112,7 @@ func TestAccAWSLightsailInstancePublicPorts_cidrs(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSLightsailInstancePublicPortsExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckInstancePublicPortsExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -135,7 +135,7 @@ func testAccCheckAWSLightsailInstancePublicPortsExists(resourceName string) reso
 	}
 }
 
-func testAccCheckAWSLightsailInstancePublicPortsDestroy(s *terraform.State) error {
+func testAccCheckInstancePublicPortsDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -165,7 +165,7 @@ func testAccCheckAWSLightsailInstancePublicPortsDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccAWSLightsailInstancePublicPortsConfig_basic(rName string) string {
+func testAccInstancePublicPortsConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -195,7 +195,7 @@ resource "aws_lightsail_instance_public_ports" "test" {
 `, rName)
 }
 
-func testAccAWSLightsailInstancePublicPortsConfig_multiple(rName string) string {
+func testAccInstancePublicPortsConfig_multiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -231,7 +231,7 @@ resource "aws_lightsail_instance_public_ports" "test" {
 `, rName)
 }
 
-func testAccAWSLightsailInstancePublicPortsConfig_cidrs(rName string) string {
+func testAccInstancePublicPortsConfig_cidrs(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
