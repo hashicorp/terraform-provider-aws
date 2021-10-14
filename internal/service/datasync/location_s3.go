@@ -105,7 +105,7 @@ func resourceLocationS3Create(d *schema.ResourceData, meta interface{}) error {
 		S3BucketArn:  aws.String(d.Get("s3_bucket_arn").(string)),
 		S3Config:     expandDataSyncS3Config(d.Get("s3_config").([]interface{})),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
-		Tags:         tags.IgnoreAws().DatasyncTags(),
+		Tags:         Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("agent_arns"); ok {
@@ -192,7 +192,7 @@ func resourceLocationS3Read(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
 
-	tags, err := tftags.DatasyncListTags(conn, d.Id())
+	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DataSync Location S3 (%s): %s", d.Id(), err)
@@ -218,7 +218,7 @@ func resourceLocationS3Update(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating DataSync Location S3 (%s) tags: %s", d.Id(), err)
 		}
 	}

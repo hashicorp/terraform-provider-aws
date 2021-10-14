@@ -116,7 +116,7 @@ func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 		Password:       aws.String(d.Get("password").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           tags.IgnoreAws().DatasyncTags(),
+		Tags:           Tags(tags.IgnoreAws()),
 		User:           aws.String(d.Get("user").(string)),
 	}
 
@@ -186,7 +186,7 @@ func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("subdirectory", subdirectory)
 
-	tags := tftags.DatasyncKeyValueTags(tagsOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(tagsOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -230,7 +230,7 @@ func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Datasync SMB location (%s) tags: %w", d.Id(), err)
 		}
 	}
