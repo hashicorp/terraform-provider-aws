@@ -21,64 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudwatch_query_definition", &resource.Sweeper{
-		Name: "aws_cloudwatch_query_definition",
-		F:    sweeplogQueryDefinitions,
-	})
-}
 
-func sweeplogQueryDefinitions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).CloudWatchLogsConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
-
-	// AWS SDK Go does not currently provide paginator
-	for {
-		output, err := conn.DescribeQueryDefinitions(input)
-
-		if err != nil {
-			err := fmt.Errorf("error reading CloudWatch Log Query Definition: %w", err)
-			log.Printf("[ERROR] %s", err)
-			errs = multierror.Append(errs, err)
-			break
-		}
-
-		for _, queryDefinition := range output.QueryDefinitions {
-			r := tfcloudwatchlogs.ResourceQueryDefinition()
-			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(queryDefinition.QueryDefinitionId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping CloudWatch Log Query Definition for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping CloudWatch Log Query Definition sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccCloudWatchLogsQueryDefinition_basic(t *testing.T) {
 	var v cloudwatchlogs.QueryDefinition

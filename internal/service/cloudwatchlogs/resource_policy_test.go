@@ -16,55 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_cloudwatch_log_resource_policy", &resource.Sweeper{
-		Name: "aws_cloudwatch_log_resource_policy",
-		F:    sweepResourcePolicies,
-	})
-}
 
-func sweepResourcePolicies(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).CloudWatchLogsConn
 
-	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
 
-	for {
-		output, err := conn.DescribeResourcePolicies(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudWatchLog Resource Policy sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error describing CloudWatchLog Resource Policy: %s", err)
-		}
-
-		for _, resourcePolicy := range output.ResourcePolicies {
-			policyName := aws.StringValue(resourcePolicy.PolicyName)
-			deleteInput := &cloudwatchlogs.DeleteResourcePolicyInput{
-				PolicyName: resourcePolicy.PolicyName,
-			}
-
-			log.Printf("[INFO] Deleting CloudWatch Log Resource Policy: %s", policyName)
-
-			if _, err := conn.DeleteResourcePolicy(deleteInput); err != nil {
-				return fmt.Errorf("error deleting CloudWatch log resource policy (%s): %s", policyName, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccCloudWatchLogsResourcePolicy_basic(t *testing.T) {
 	name := sdkacctest.RandString(5)
