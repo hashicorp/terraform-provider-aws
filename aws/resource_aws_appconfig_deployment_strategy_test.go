@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -81,12 +82,12 @@ func testSweepAppConfigDeploymentStrategies(region string) error {
 }
 
 func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +95,7 @@ func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
 				Config: testAccAWSAppConfigDeploymentStrategyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`deploymentstrategy/[a-z0-9]{4,7}`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`deploymentstrategy/[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_duration_in_minutes", "3"),
 					resource.TestCheckResourceAttr(resourceName, "growth_factor", "10"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -112,13 +113,13 @@ func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
 }
 
 func TestAccAWSAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	description := acctest.RandomWithPrefix("tf-acc-test-update")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
@@ -146,12 +147,12 @@ func TestAccAWSAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
 }
 
 func TestAccAWSAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
@@ -191,12 +192,12 @@ func TestAccAWSAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 }
 
 func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
@@ -204,7 +205,7 @@ func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
 				Config: testAccAWSAppConfigDeploymentStrategyConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppConfigDeploymentStrategyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppconfigDeploymentStrategy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAppconfigDeploymentStrategy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -213,12 +214,12 @@ func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
 }
 
 func TestAccAWSAppConfigDeploymentStrategy_Tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigDeploymentStrategyDestroy,
 		Steps: []resource.TestStep{
