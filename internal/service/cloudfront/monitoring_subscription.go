@@ -19,7 +19,7 @@ func ResourceMonitoringSubscription() *schema.Resource {
 		Update: resourceMonitoringSubscriptionCreate,
 		Delete: resourceMonitoringSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudFrontMonitoringSubscriptionImport,
+			State: resourceMonitoringSubscriptionImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -161,7 +161,7 @@ func flattenCloudFrontRealtimeMetricsSubscriptionConfig(config *cloudfront.Realt
 	return []interface{}{map[string]interface{}{"realtime_metrics_subscription_status": config.RealtimeMetricsSubscriptionStatus}}
 }
 
-func resourceAwsCloudFrontMonitoringSubscriptionImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceMonitoringSubscriptionImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	d.Set("distribution_id", d.Id())
 	return []*schema.ResourceData{d}, nil
 }

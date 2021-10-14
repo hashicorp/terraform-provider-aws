@@ -33,7 +33,7 @@ func ResourceDistribution() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-		MigrateState:  resourceAwsCloudFrontDistributionMigrateState,
+		MigrateState:  resourceDistributionMigrateState,
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
@@ -1134,7 +1134,7 @@ func DistributionWaitUntilDeployed(id string, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
-		Refresh:    resourceAwsCloudFrontWebDistributionStateRefreshFunc(id, meta),
+		Refresh:    resourceWebDistributionStateRefreshFunc(id, meta),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      1 * time.Minute,
@@ -1145,7 +1145,7 @@ func DistributionWaitUntilDeployed(id string, meta interface{}) error {
 }
 
 // The refresh function for resourceAwsCloudFrontWebDistributionWaitUntilDeployed.
-func resourceAwsCloudFrontWebDistributionStateRefreshFunc(id string, meta interface{}) resource.StateRefreshFunc {
+func resourceWebDistributionStateRefreshFunc(id string, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		conn := meta.(*conns.AWSClient).CloudFrontConn
 		params := &cloudfront.GetDistributionInput{

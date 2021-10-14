@@ -142,7 +142,7 @@ func dataSourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
 	if d.Id() == "" {
-		if err := dataSourceAwsCloudFrontCachePolicyFindByName(d, conn); err != nil {
+		if err := dataSourceCachePolicyFindByName(d, conn); err != nil {
 			return fmt.Errorf("unable to locate cache policy by name: %s", err.Error())
 		}
 	}
@@ -165,7 +165,7 @@ func dataSourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func dataSourceAwsCloudFrontCachePolicyFindByName(d *schema.ResourceData, conn *cloudfront.CloudFront) error {
+func dataSourceCachePolicyFindByName(d *schema.ResourceData, conn *cloudfront.CloudFront) error {
 	var cachePolicy *cloudfront.CachePolicy
 	request := &cloudfront.ListCachePoliciesInput{}
 	resp, err := conn.ListCachePolicies(request)
