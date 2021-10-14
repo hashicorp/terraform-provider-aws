@@ -21,52 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_elb", &resource.Sweeper{
-		Name: "aws_elb",
-		F:    sweepLoadBalancers,
-	})
-}
 
-func sweepLoadBalancers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ELBConn
 
-	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, lastPage bool) bool {
-		if len(out.LoadBalancerDescriptions) == 0 {
-			log.Println("[INFO] No ELBs found for sweeping")
-			return false
-		}
 
-		for _, lb := range out.LoadBalancerDescriptions {
-			log.Printf("[INFO] Deleting ELB: %s", *lb.LoadBalancerName)
-
-			_, err := conn.DeleteLoadBalancer(&elb.DeleteLoadBalancerInput{
-				LoadBalancerName: lb.LoadBalancerName,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete ELB %s: %s", *lb.LoadBalancerName, err)
-				continue
-			}
-			err = tfelb.CleanupNetworkInterfaces(client.(*conns.AWSClient).EC2Conn, *lb.LoadBalancerName)
-			if err != nil {
-				log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %s", *lb.LoadBalancerName, err)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ELB sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving ELBs: %s", err)
-	}
-	return nil
-}
 
 func TestAccELBLoadBalancer_basic(t *testing.T) {
 	var conf elb.LoadBalancerDescription
