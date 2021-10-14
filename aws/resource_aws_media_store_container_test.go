@@ -95,7 +95,7 @@ func testAccCheckAwsMediaStoreContainerDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeContainer(input)
 		if err != nil {
-			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 				return nil
 			}
 			return err

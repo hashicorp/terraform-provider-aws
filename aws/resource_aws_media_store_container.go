@@ -92,7 +92,7 @@ func resourceAwsMediaStoreContainerRead(d *schema.ResourceData, meta interface{}
 		ContainerName: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeContainer(input)
-	if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 		log.Printf("[WARN] No Container found: %s, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -149,7 +149,7 @@ func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface
 	}
 	_, err := conn.DeleteContainer(input)
 	if err != nil {
-		if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 			return nil
 		}
 		return err
@@ -161,14 +161,14 @@ func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeContainer(dcinput)
 		if err != nil {
-			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
 		}
 		return resource.RetryableError(fmt.Errorf("Media Store Container (%s) still exists", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeContainer(dcinput)
 	}
 	if err != nil {

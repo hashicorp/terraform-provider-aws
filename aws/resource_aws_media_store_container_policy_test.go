@@ -60,13 +60,13 @@ func testAccCheckAwsMediaStoreContainerPolicyDestroy(s *terraform.State) error {
 
 		_, err := conn.GetContainerPolicy(input)
 		if err != nil {
-			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 				return nil
 			}
-			if isAWSErr(err, mediastore.ErrCodePolicyNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
 				return nil
 			}
-			if isAWSErr(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
+			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
 				return nil
 			}
 			return err

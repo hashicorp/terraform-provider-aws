@@ -60,12 +60,12 @@ func resourceAwsMediaStoreContainerPolicyRead(d *schema.ResourceData, meta inter
 
 	resp, err := conn.GetContainerPolicy(input)
 	if err != nil {
-		if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if isAWSErr(err, mediastore.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
 			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -87,10 +87,10 @@ func resourceAwsMediaStoreContainerPolicyDelete(d *schema.ResourceData, meta int
 
 	_, err := conn.DeleteContainerPolicy(input)
 	if err != nil {
-		if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
 			return nil
 		}
-		if isAWSErr(err, mediastore.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
 			return nil
 		}
 		// if isAWSErr(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
