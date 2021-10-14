@@ -2,7 +2,6 @@ package elb_test
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"reflect"
 	"regexp"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccELBLoadBalancer_basic(t *testing.T) {
