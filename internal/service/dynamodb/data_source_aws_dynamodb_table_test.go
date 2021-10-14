@@ -1,4 +1,4 @@
-package aws
+package dynamodb_test
 
 import (
 	"fmt"
