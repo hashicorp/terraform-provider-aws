@@ -34,10 +34,10 @@ func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
+		CheckDestroy:      testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
+				Config: testAccMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -65,10 +65,10 @@ func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
+		CheckDestroy:      testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigNoName(),
+				Config: testAccMetricStreamNoNameConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 				),
@@ -90,10 +90,10 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudwatch.EndpointsID, t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
+		CheckDestroy:      testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigNamePrefix(rName),
+				Config: testAccMetricStreamNamePrefixConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resourceName, acctest.ResourcePrefix),
@@ -116,10 +116,10 @@ func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
+		CheckDestroy:      testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigIncludeFilters(rName),
+				Config: testAccMetricStreamIncludeFiltersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -144,10 +144,10 @@ func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
+		CheckDestroy:      testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigExcludeFilters(rName),
+				Config: testAccMetricStreamExcludeFiltersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -172,10 +172,10 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
+		CheckDestroy:      testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigUpdateArn(rName),
+				Config: testAccMetricStreamUpdateARNConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -188,7 +188,7 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
+				Config: testAccMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -208,21 +208,21 @@ func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
+		CheckDestroy:      testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
+				Config: testAccMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfig(rName2),
+				Config: testAccMetricStreamConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(rName),
+					testAccCheckMetricStreamDestroyPrevious(rName),
 				),
 			},
 		},
@@ -237,10 +237,10 @@ func TestAccAWSCloudWatchMetricStream_tags(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
+		CheckDestroy:      testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigTags(rName),
+				Config: testAccMetricStreamTagsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -294,7 +294,7 @@ func testAccCheckCloudWatchMetricStreamExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSCloudWatchMetricStreamDestroy(s *terraform.State) error {
+func testAccCheckMetricStreamDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -318,7 +318,7 @@ func testAccCheckAWSCloudWatchMetricStreamDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(name string) resource.TestCheckFunc {
+func testAccCheckMetricStreamDestroyPrevious(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
@@ -340,7 +340,7 @@ func testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(name string) resource.
 	}
 }
 
-func testAccAWSCloudWatchMetricStreamConfig(rName string) string {
+func testAccMetricStreamConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -455,7 +455,7 @@ resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
 `, rName)
 }
 
-func testAccAWSCloudWatchMetricStreamConfigUpdateArn(rName string) string {
+func testAccMetricStreamUpdateARNConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -470,7 +470,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
-func testAccAWSCloudWatchMetricStreamConfigIncludeFilters(rName string) string {
+func testAccMetricStreamIncludeFiltersConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -493,7 +493,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
-func testAccAWSCloudWatchMetricStreamConfigNoName() string {
+func testAccMetricStreamNoNameConfig() string {
 	return `
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -507,7 +507,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `
 }
 
-func testAccAWSCloudWatchMetricStreamConfigNamePrefix(rName string) string {
+func testAccMetricStreamNamePrefixConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -522,7 +522,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
-func testAccAWSCloudWatchMetricStreamConfigExcludeFilters(rName string) string {
+func testAccMetricStreamExcludeFiltersConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -545,7 +545,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
-func testAccAWSCloudWatchMetricStreamConfigTags(rName string) string {
+func testAccMetricStreamTagsConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}

@@ -26,13 +26,13 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
+		CheckDestroy: testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchDashboardConfig(rInt),
+				Config: testAccDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
-					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
 			{
@@ -53,14 +53,14 @@ func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
+		CheckDestroy: testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchDashboardConfig(rInt),
+				Config: testAccDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
 					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, basicWidget),
-					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
 			{
@@ -69,11 +69,11 @@ func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchDashboardConfig_updateBody(rInt),
+				Config: testAccDashboardConfig_updateBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
 					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, updatedWidget),
-					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
 		},
@@ -89,23 +89,23 @@ func TestAccAWSCloudWatchDashboard_updateName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
+		CheckDestroy: testAccCheckDashboardDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchDashboardConfig(rInt),
+				Config: testAccDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
 					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, basicWidget),
-					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchDashboardConfig(rInt2),
+				Config: testAccDashboardConfig(rInt2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
 					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, basicWidget),
-					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt2)),
-					testAccCheckAWSCloudWatchDashboardDestroyPrevious(testAccAWSCloudWatchDashboardName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccDashboardName(rInt2)),
+					testAccCheckDashboardDestroyPrevious(testAccDashboardName(rInt)),
 				),
 			},
 		},
@@ -135,7 +135,7 @@ func testAccCheckCloudWatchDashboardExists(n string, dashboard *cloudwatch.GetDa
 	}
 }
 
-func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
+func testAccCheckDashboardDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -159,7 +159,7 @@ func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSCloudWatchDashboardDestroyPrevious(dashboardName string) resource.TestCheckFunc {
+func testAccCheckDashboardDestroyPrevious(dashboardName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
@@ -213,11 +213,11 @@ const (
 }`
 )
 
-func testAccAWSCloudWatchDashboardName(rInt int) string {
+func testAccDashboardName(rInt int) string {
 	return fmt.Sprintf("terraform-test-dashboard-%d", rInt)
 }
 
-func testAccAWSCloudWatchDashboardConfig(rInt int) string {
+func testAccDashboardConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_dashboard" "test" {
   dashboard_name = "terraform-test-dashboard-%d"
@@ -229,7 +229,7 @@ EOF
 `, rInt, basicWidget)
 }
 
-func testAccAWSCloudWatchDashboardConfig_updateBody(rInt int) string {
+func testAccDashboardConfig_updateBody(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_dashboard" "test" {
   dashboard_name = "terraform-test-dashboard-%d"

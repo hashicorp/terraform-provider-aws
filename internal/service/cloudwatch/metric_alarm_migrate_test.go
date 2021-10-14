@@ -7,7 +7,7 @@ import (
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
-func TestAWSCloudWatchMetricAlarmMigrateState(t *testing.T) {
+func TestMetricAlarmMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		ID           string
