@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53RecoveryControlConfigSafetyRule() *schema.Resource {
+func ResourceSafetyRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53RecoveryControlConfigSafetyRuleCreate,
-		Read:   resourceAwsRoute53RecoveryControlConfigSafetyRuleRead,
-		Update: resourceAwsRoute53RecoveryControlConfigSafetyRuleUpdate,
-		Delete: resourceAwsRoute53RecoveryControlConfigSafetyRuleDelete,
+		Create: resourceSafetyRuleCreate,
+		Read:   resourceSafetyRuleRead,
+		Update: resourceSafetyRuleUpdate,
+		Delete: resourceSafetyRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -108,7 +108,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRule() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53RecoveryControlConfigSafetyRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSafetyRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("asserted_controls"); ok {
 		return createAssertionRule(d, meta)
 	}
@@ -120,7 +120,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleCreate(d *schema.ResourceD
 	return fmt.Errorf("Expecting either asserted_controls or gating_controls,  but none found")
 }
 
-func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DescribeSafetyRuleInput{
@@ -190,7 +190,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d *schema.ResourceDat
 	return nil
 }
 
-func resourceAwsRoute53RecoveryControlConfigSafetyRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSafetyRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("asserted_controls"); ok {
 		return updateAssertionRule(d, meta)
 	}
@@ -202,7 +202,7 @@ func resourceAwsRoute53RecoveryControlConfigSafetyRuleUpdate(d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsRoute53RecoveryControlConfigSafetyRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSafetyRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DeleteSafetyRuleInput{
@@ -265,7 +265,7 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
 	}
 
-	return resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d, meta)
+	return resourceSafetyRuleRead(d, meta)
 }
 
 func createGatingRule(d *schema.ResourceData, meta interface{}) error {
@@ -302,7 +302,7 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
 	}
 
-	return resourceAwsRoute53RecoveryControlConfigSafetyRuleRead(d, meta)
+	return resourceSafetyRuleRead(d, meta)
 }
 
 func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
@@ -330,7 +330,7 @@ func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Route53 Recovery Control Config Assertion Rule: %s", err)
 	}
 
-	return resourceAwsRoute53RecoveryControlConfigControlPanelRead(d, meta)
+	return resourceControlPanelRead(d, meta)
 }
 
 func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
@@ -358,7 +358,7 @@ func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Route53 Recovery Control Config Gating Rule: %s", err)
 	}
 
-	return resourceAwsRoute53RecoveryControlConfigControlPanelRead(d, meta)
+	return resourceControlPanelRead(d, meta)
 }
 
 func expandRoute53RecoveryControlConfigRuleConfig(tfMap map[string]interface{}) *r53rcc.RuleConfig {

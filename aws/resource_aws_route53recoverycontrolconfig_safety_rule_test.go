@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSRoute53RecoveryControlConfigSafetyRule_assertionRule(t *testing.T) {
@@ -57,7 +58,7 @@ func testAccAWSRoute53RecoveryControlConfigSafetyRule_disappears(t *testing.T) {
 				Config: testAccAwsRoute53RecoveryControlConfigRoutingControlConfigSafetyRuleAssertion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryControlConfigSafetyRuleExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53RecoveryControlConfigSafetyRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSafetyRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

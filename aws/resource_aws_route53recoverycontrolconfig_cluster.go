@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53RecoveryControlConfigClusterCreate,
-		Read:   resourceAwsRoute53RecoveryControlConfigClusterRead,
-		Delete: resourceAwsRoute53RecoveryControlConfigClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func resourceAwsRoute53RecoveryControlConfigCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53RecoveryControlConfigClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.CreateClusterInput{
@@ -81,10 +81,10 @@ func resourceAwsRoute53RecoveryControlConfigClusterCreate(d *schema.ResourceData
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Cluster (%s) to be Deployed: %w", d.Id(), err)
 	}
 
-	return resourceAwsRoute53RecoveryControlConfigClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DescribeClusterInput{
@@ -119,7 +119,7 @@ func resourceAwsRoute53RecoveryControlConfigClusterRead(d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsRoute53RecoveryControlConfigClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DeleteClusterInput{

@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53RecoveryControlConfigControlPanel() *schema.Resource {
+func ResourceControlPanel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53RecoveryControlConfigControlPanelCreate,
-		Read:   resourceAwsRoute53RecoveryControlConfigControlPanelRead,
-		Update: resourceAwsRoute53RecoveryControlConfigControlPanelUpdate,
-		Delete: resourceAwsRoute53RecoveryControlConfigControlPanelDelete,
+		Create: resourceControlPanelCreate,
+		Read:   resourceControlPanelRead,
+		Update: resourceControlPanelUpdate,
+		Delete: resourceControlPanelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanel() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53RecoveryControlConfigControlPanelCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceControlPanelCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.CreateControlPanelInput{
@@ -78,10 +78,10 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelCreate(d *schema.Resourc
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Control Panel (%s) to be Deployed: %w", d.Id(), err)
 	}
 
-	return resourceAwsRoute53RecoveryControlConfigControlPanelRead(d, meta)
+	return resourceControlPanelRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryControlConfigControlPanelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceControlPanelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DescribeControlPanelInput{
@@ -115,7 +115,7 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelRead(d *schema.ResourceD
 	return nil
 }
 
-func resourceAwsRoute53RecoveryControlConfigControlPanelUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceControlPanelUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.UpdateControlPanelInput{
@@ -129,10 +129,10 @@ func resourceAwsRoute53RecoveryControlConfigControlPanelUpdate(d *schema.Resourc
 		return fmt.Errorf("error updating Route53 Recovery Control Config Control Panel: %s", err)
 	}
 
-	return resourceAwsRoute53RecoveryControlConfigControlPanelRead(d, meta)
+	return resourceControlPanelRead(d, meta)
 }
 
-func resourceAwsRoute53RecoveryControlConfigControlPanelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceControlPanelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
 
 	input := &r53rcc.DeleteControlPanelInput{
