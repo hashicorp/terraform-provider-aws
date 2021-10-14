@@ -3,7 +3,6 @@ package servicecatalog
 import (
 	"fmt"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func PortfolioShareParseResourceID(id string) (string, string, string, error) {

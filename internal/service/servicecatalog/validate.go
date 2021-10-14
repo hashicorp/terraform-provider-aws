@@ -3,6 +3,8 @@ package servicecatalog
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func validSharePrincipal(v interface{}, k string) (ws []string, errors []error) {
