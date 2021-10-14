@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -26,13 +27,13 @@ func init() {
 }
 
 func testSweepRedshiftScheduledActions(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).RedshiftConn
 	input := &redshift.DescribeScheduledActionsInput{}
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeScheduledActionsPages(input, func(page *redshift.DescribeScheduledActionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -44,13 +45,13 @@ func testSweepRedshiftScheduledActions(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(scheduledAction.ScheduledActionName))
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Redshift Scheduled Action sweep for %s: %s", region, err)
 		return nil
 	}
@@ -59,7 +60,7 @@ func testSweepRedshiftScheduledActions(region string) error {
 		return fmt.Errorf("error listing Redshift Scheduled Actions (%s): %w", region, err)
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Redshift Scheduled Actions (%s): %w", region, err)
