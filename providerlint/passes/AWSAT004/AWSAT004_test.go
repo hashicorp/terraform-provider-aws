@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	_ "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/awsproviderlint/passes/AWSAT004"
+	"github.com/hashicorp/terraform-provider-aws/providerlint/passes/AWSAT004"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 

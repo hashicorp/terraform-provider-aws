@@ -37,7 +37,7 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) $(filter-out ./awsproviderlint/go% ./awsproviderlint/README.md ./awsproviderlint/vendor, $(wildcard ./awsproviderlint/*))
+	gofmt -s -w ./$(PKG_NAME) $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -82,13 +82,13 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
-lint: golangci-lint awsproviderlint importlint
+lint: golangci-lint providerlint importlint
 
 golangci-lint:
 	@golangci-lint run ./$(PKG_NAME)/...
 
-awsproviderlint:
-	@awsproviderlint \
+providerlint:
+	@providerlint \
 		-c 1 \
 		-AWSAT006=false \
 		-AWSR002=false \
@@ -116,7 +116,7 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd awsproviderlint && go install .
+	cd providerlint && go install .
 	cd tools && go install github.com/bflad/tfproviderdocs
 	cd tools && go install github.com/client9/misspell/cmd/misspell
 	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -162,4 +162,4 @@ semgrep:
 	@echo "==> Running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
 
-.PHONY: awsproviderlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
+.PHONY: providerlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
