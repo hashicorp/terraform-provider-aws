@@ -64,7 +64,7 @@ func resourceAwsApiGatewayAccountRead(d *schema.ResourceData, meta interface{}) 
 		// (e.g. for referencing throttle_settings)
 		d.Set("cloudwatch_role_arn", account.CloudwatchRoleArn)
 	}
-	d.Set("throttle_settings", flattenApiGatewayThrottleSettings(account.ThrottleSettings))
+	d.Set("throttle_settings", flattenAPIGatewayThrottleSettings(account.ThrottleSettings))
 
 	return nil
 }

@@ -272,7 +272,7 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting variables: %s", err)
 	}
 
-	d.Set("invoke_url", buildApiGatewayInvokeURL(meta.(*conns.AWSClient), restApiId, stageName))
+	d.Set("invoke_url", buildInvokeURL(meta.(*conns.AWSClient), restApiId, stageName))
 
 	executionArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,

@@ -59,7 +59,7 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 
 	input := &apigateway.CreateVpcLinkInput{
 		Name:       aws.String(d.Get("name").(string)),
-		TargetArns: expandStringList(d.Get("target_arns").([]interface{})),
+		TargetArns: flex.ExpandStringList(d.Get("target_arns").([]interface{})),
 		Tags:       tags.IgnoreAws().ApigatewayTags(),
 	}
 	if v, ok := d.GetOk("description"); ok {
@@ -120,7 +120,7 @@ func resourceAwsApiGatewayVpcLinkRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("name", resp.Name)
 	d.Set("description", resp.Description)
-	d.Set("target_arns", flattenStringList(resp.TargetArns))
+	d.Set("target_arns", flex.FlattenStringList(resp.TargetArns))
 	return nil
 }
 
