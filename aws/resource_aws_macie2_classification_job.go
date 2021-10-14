@@ -379,7 +379,7 @@ func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.Resour
 	}
 
 	if v, ok := d.GetOk("custom_data_identifier_ids"); ok {
-		input.CustomDataIdentifierIds = expandStringList(v.([]interface{}))
+		input.CustomDataIdentifierIds = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("schedule_frequency"); ok {
 		input.ScheduleFrequency = expandScheduleFrequency(v.([]interface{}))
@@ -450,7 +450,7 @@ func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error reading Macie ClassificationJob (%s): %w", d.Id(), err))
 	}
 
-	if err = d.Set("custom_data_identifier_ids", flattenStringList(resp.CustomDataIdentifierIds)); err != nil {
+	if err = d.Set("custom_data_identifier_ids", flex.FlattenStringList(resp.CustomDataIdentifierIds)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie ClassificationJob (%s): %w", "custom_data_identifier_ids", d.Id(), err))
 	}
 	if err = d.Set("schedule_frequency", flattenScheduleFrequency(resp.ScheduleFrequency)); err != nil {
@@ -565,7 +565,7 @@ func expandBucketDefinitions(definitions []interface{}) []*macie2.S3BucketDefini
 		v1 := v.(map[string]interface{})
 
 		bucketDefinition := &macie2.S3BucketDefinitionForJob{
-			Buckets:   expandStringList(v1["buckets"].([]interface{})),
+			Buckets:   flex.ExpandStringList(v1["buckets"].([]interface{})),
 			AccountId: aws.String(v1["account_id"].(string)),
 		}
 
@@ -642,7 +642,7 @@ func expandSimpleScopeTerm(simpleScopeTerm []interface{}) *macie2.SimpleScopeTer
 		simpleTerm.Key = aws.String(v.(string))
 	}
 	if v, ok := simpleScopeTermMap["values"]; ok && len(v.([]interface{})) > 0 {
-		simpleTerm.Values = expandStringList(v.([]interface{}))
+		simpleTerm.Values = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := simpleScopeTermMap["comparator"]; ok && v.(string) != "" {
 		simpleTerm.Comparator = aws.String(v.(string))
@@ -774,7 +774,7 @@ func flattenBucketDefinition(bucketDefinitions []*macie2.S3BucketDefinitionForJo
 		}
 		bucketDefinitionList = append(bucketDefinitionList, map[string]interface{}{
 			"account_id": aws.StringValue(bucket.AccountId),
-			"buckets":    flattenStringList(bucket.Buckets),
+			"buckets":    flex.FlattenStringList(bucket.Buckets),
 		})
 	}
 
@@ -837,7 +837,7 @@ func flattenSimpleScopeTerm(simpleScopeTerm *macie2.SimpleScopeTerm) []map[strin
 	simpleScopeTermList = append(simpleScopeTermList, map[string]interface{}{
 		"key":        aws.StringValue(simpleScopeTerm.Key),
 		"comparator": aws.StringValue(simpleScopeTerm.Comparator),
-		"values":     flattenStringList(simpleScopeTerm.Values),
+		"values":     flex.FlattenStringList(simpleScopeTerm.Values),
 	})
 
 	return simpleScopeTermList

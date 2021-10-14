@@ -112,10 +112,10 @@ func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.Res
 		input.Regex = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("keywords"); ok {
-		input.Keywords = expandStringSet(v.(*schema.Set))
+		input.Keywords = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("ignore_words"); ok {
-		input.IgnoreWords = expandStringSet(v.(*schema.Set))
+		input.IgnoreWords = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	input.Name = aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string)))
 	if v, ok := d.GetOk("description"); ok {
@@ -179,10 +179,10 @@ func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set("regex", resp.Regex)
-	if err = d.Set("keywords", flattenStringList(resp.Keywords)); err != nil {
+	if err = d.Set("keywords", flex.FlattenStringList(resp.Keywords)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "keywords", d.Id(), err))
 	}
-	if err = d.Set("ignore_words", flattenStringList(resp.IgnoreWords)); err != nil {
+	if err = d.Set("ignore_words", flex.FlattenStringList(resp.IgnoreWords)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "ignore_words", d.Id(), err))
 	}
 	d.Set("name", resp.Name)
