@@ -9,22 +9,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 	var conf s3.InventoryConfiguration
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	resourceName := "aws_s3_bucket_inventory.test"
 
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
@@ -45,8 +46,8 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.#", "1"),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "destination.0.bucket.0.bucket_arn", "s3", bucketName),
-					testAccCheckResourceAttrAccountID(resourceName, "destination.0.bucket.0.account_id"),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "destination.0.bucket.0.bucket_arn", "s3", bucketName),
+					acctest.CheckResourceAttrAccountID(resourceName, "destination.0.bucket.0.account_id"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.format", "ORC"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.prefix", "inventory"),
 				),
@@ -62,15 +63,15 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 
 func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
 	var conf s3.InventoryConfiguration
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	resourceName := "aws_s3_bucket_inventory.test"
 
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
@@ -92,15 +93,15 @@ func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
 
 func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	var conf s3.InventoryConfiguration
-	rString := acctest.RandString(8)
+	rString := sdkacctest.RandString(8)
 	resourceName := "aws_s3_bucket_inventory.test"
 
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
@@ -109,7 +110,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexp.MustCompile(fmt.Sprintf("^arn:%s:kms:", testAccGetPartition()))),
+					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexp.MustCompile(fmt.Sprintf("^arn:%s:kms:", acctest.Partition()))),
 				),
 			},
 			{

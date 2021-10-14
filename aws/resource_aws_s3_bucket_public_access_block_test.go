@@ -8,20 +8,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
 	var config s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -48,12 +49,12 @@ func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
 
 func TestAccAWSS3BucketPublicAccessBlock_disappears(t *testing.T) {
 	var config s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -71,13 +72,13 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears(t *testing.T) {
 
 func TestAccAWSS3BucketPublicAccessBlock_disappears_Bucket(t *testing.T) {
 	var config s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 	bucketResourceName := "aws_s3_bucket.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -95,12 +96,12 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears_Bucket(t *testing.T) {
 
 func TestAccAWSS3BucketPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 	var config1, config2, config3 s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -136,12 +137,12 @@ func TestAccAWSS3BucketPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 
 func TestAccAWSS3BucketPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	var config1, config2, config3 s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -177,12 +178,12 @@ func TestAccAWSS3BucketPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 
 func TestAccAWSS3BucketPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
 	var config1, config2, config3 s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -218,12 +219,12 @@ func TestAccAWSS3BucketPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
 
 func TestAccAWSS3BucketPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	var config1, config2, config3 s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
