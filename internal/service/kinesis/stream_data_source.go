@@ -84,7 +84,7 @@ func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("retention_period", state.retentionPeriod)
 	d.Set("shard_level_metrics", state.shardLevelMetrics)
 
-	tags, err := tftags.KinesisListTags(conn, sn)
+	tags, err := ListTags(conn, sn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %w", sn, err)

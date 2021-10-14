@@ -161,7 +161,7 @@ func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.KinesisUpdateTags(conn, sn, o, n); err != nil {
+		if err := UpdateTags(conn, sn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Stream (%s) tags: %s", sn, err)
 		}
 	}
@@ -214,7 +214,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("shard_level_metrics", state.shardLevelMetrics)
 	}
 
-	tags, err := tftags.KinesisListTags(conn, sn)
+	tags, err := ListTags(conn, sn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %s", sn, err)
