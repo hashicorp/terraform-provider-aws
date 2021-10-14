@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWorkspacesDirectory() *schema.Resource {
+func DataSourceDirectory() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWorkspacesDirectoryRead,
+		Read: dataSourceDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
 			"alias": {
@@ -163,7 +163,7 @@ func dataSourceAwsWorkspacesDirectory() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
