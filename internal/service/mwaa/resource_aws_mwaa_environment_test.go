@@ -1,4 +1,4 @@
-package aws
+package mwaa_test
 
 import (
 	"fmt"
