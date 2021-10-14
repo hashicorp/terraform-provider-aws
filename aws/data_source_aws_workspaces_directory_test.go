@@ -5,25 +5,26 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
-	rName := acctest.RandString(8)
-	domain := testAccRandomDomainName()
+	rName := sdkacctest.RandString(8)
+	domain := acctest.RandomDomainName()
 
 	resourceName := "aws_workspaces_directory.test"
 	dataSourceName := "data.aws_workspaces_directory.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckWorkspacesDirectory(t)
-			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
-			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -68,7 +69,7 @@ func testAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsWorkspacesDirectoryConfig(rName, domain string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName, domain),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
