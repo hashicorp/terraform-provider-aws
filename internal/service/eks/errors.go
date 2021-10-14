@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/eks"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func AddonIssueError(apiObject *eks.AddonIssue) error {
