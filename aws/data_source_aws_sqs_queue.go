@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSqsQueue() *schema.Resource {
@@ -31,8 +32,8 @@ func dataSourceAwsSqsQueue() *schema.Resource {
 }
 
 func dataSourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SQSConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 

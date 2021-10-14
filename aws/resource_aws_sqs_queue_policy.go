@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 var (
@@ -51,7 +52,7 @@ func resourceAwsSqsQueuePolicy() *schema.Resource {
 }
 
 func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
+	conn := meta.(*conns.AWSClient).SQSConn
 
 	policyAttributes := map[string]string{
 		sqs.QueueAttributeNamePolicy: d.Get("policy").(string),
@@ -81,7 +82,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
+	conn := meta.(*conns.AWSClient).SQSConn
 
 	policy, err := finder.QueuePolicyByURL(conn, d.Id())
 
@@ -102,7 +103,7 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSqsQueuePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
+	conn := meta.(*conns.AWSClient).SQSConn
 
 	log.Printf("[DEBUG] Deleting SQS Queue Policy: %s", d.Id())
 	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{

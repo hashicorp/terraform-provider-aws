@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 var (
@@ -187,8 +188,8 @@ func resourceAwsSqsQueue() *schema.Resource {
 }
 
 func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SQSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -213,7 +214,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	input.Attributes = aws.StringMap(attributes)
 
 	// Tag-on-create is currently only supported in AWS Commercial
-	if len(tags) > 0 && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		input.Tags = tags.IgnoreAws().SqsTags()
 	}
 
@@ -252,7 +253,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Tag-on-create is currently only supported in AWS Commercial
-	if len(tags) > 0 && meta.(*AWSClient).partition != endpoints.AwsPartitionID {
+	if len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
 		if err := keyvaluetags.SqsUpdateTags(conn, d.Id(), nil, tags); err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) tags: %w", d.Id(), err)
 		}
@@ -262,9 +263,9 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SQSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.QueueAttributesByURL(conn, d.Id())
 
@@ -329,7 +330,7 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
+	conn := meta.(*conns.AWSClient).SQSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := sqsQueueAttributeMap.ResourceDataToApiAttributesUpdate(d)
@@ -368,7 +369,7 @@ func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSqsQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
+	conn := meta.(*conns.AWSClient).SQSConn
 
 	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
 	_, err := conn.DeleteQueue(&sqs.DeleteQueueInput{

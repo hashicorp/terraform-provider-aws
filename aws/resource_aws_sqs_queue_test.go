@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sqs/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func testSweepSqsQueues(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).sqsconn
+	conn := client.(*conns.AWSClient).SQSConn
 	input := &sqs.ListQueuesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -729,7 +730,7 @@ func testAccCheckAWSSQSQueueExists(resourceName string, v *map[string]string) re
 			return fmt.Errorf("No SQS Queue URL is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sqsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn
 
 		output, err := finder.QueueAttributesByURL(conn, rs.Primary.ID)
 
@@ -744,7 +745,7 @@ func testAccCheckAWSSQSQueueExists(resourceName string, v *map[string]string) re
 }
 
 func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sqsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sqs_queue" {
