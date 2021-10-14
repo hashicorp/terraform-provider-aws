@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -29,7 +30,7 @@ func testSweepWorkspacesDirectories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).workspacesconn
+	conn := client.(*conns.AWSClient).WorkSpacesConn
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -727,7 +728,7 @@ func TestFlattenWorkspaceCreationProperties(t *testing.T) {
 }
 
 func testAccCheckAwsWorkspacesDirectoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_workspaces_directory" {
@@ -761,7 +762,7 @@ func testAccCheckAwsWorkspacesDirectoryExists(n string, v *workspaces.WorkspaceD
 			return fmt.Errorf("No WorkSpaces Directory ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 
 		output, err := finder.DirectoryByID(conn, rs.Primary.ID)
 
@@ -776,7 +777,7 @@ func testAccCheckAwsWorkspacesDirectoryExists(n string, v *workspaces.WorkspaceD
 }
 
 func testAccPreCheckWorkspacesDirectory(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 

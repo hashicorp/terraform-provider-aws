@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
@@ -53,7 +54,7 @@ func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
 }
 
 func testAccCheckAwsDirectoryServiceConditionalForwarderDestroy(s *terraform.State) error {
-	dsconn := acctest.Provider.Meta().(*AWSClient).dsconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_conditional_forwarder" {
@@ -65,7 +66,7 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderDestroy(s *terraform.Sta
 			return err
 		}
 
-		res, err := dsconn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
+		res, err := conn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
 			DirectoryId:       aws.String(directoryId),
 			RemoteDomainNames: []*string{aws.String(domainName)},
 		})
@@ -102,9 +103,9 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderExists(name string, dnsI
 			return err
 		}
 
-		dsconn := acctest.Provider.Meta().(*AWSClient).dsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectoryServiceConn
 
-		res, err := dsconn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
+		res, err := conn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
 			DirectoryId:       aws.String(directoryId),
 			RemoteDomainNames: []*string{aws.String(domainName)},
 		})
