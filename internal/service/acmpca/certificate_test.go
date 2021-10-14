@@ -17,7 +17,7 @@ import (
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
-func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
+func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 
@@ -59,7 +59,7 @@ func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificate_SubordinateCertificate(t *testing.T) {
+func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 	rootCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.root"
 	subordinateCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
@@ -102,7 +102,7 @@ func TestAccAwsAcmpcaCertificate_SubordinateCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
+func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
@@ -144,7 +144,7 @@ func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificate_Validity_EndDate(t *testing.T) {
+func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
@@ -187,7 +187,7 @@ func TestAccAwsAcmpcaCertificate_Validity_EndDate(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaCertificate_Validity_Absolute(t *testing.T) {
+func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 
 	csrDomain := acctest.RandomDomainName()
