@@ -21,15 +21,15 @@ func TestAccAwsConnectInstanceDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsConnectInstanceDataSourceConfig_nonExistentId,
+				Config:      testAccInstanceDataSourceConfig_nonExistentID,
 				ExpectError: regexp.MustCompile(`error getting Connect Instance by instance_id`),
 			},
 			{
-				Config:      testAccAwsConnectInstanceDataSourceConfig_nonExistentAlias,
+				Config:      testAccInstanceDataSourceConfig_nonExistentAlias,
 				ExpectError: regexp.MustCompile(`error finding Connect Instance Summary by instance_alias`),
 			},
 			{
-				Config: testAccAwsConnectInstanceDataSourceConfigBasic(rName),
+				Config: testAccInstanceBasicDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -46,7 +46,7 @@ func TestAccAwsConnectInstanceDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsConnectInstanceDataSourceConfigAlias(rName),
+				Config: testAccInstanceAliasDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -66,19 +66,19 @@ func TestAccAwsConnectInstanceDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccAwsConnectInstanceDataSourceConfig_nonExistentId = `
+const testAccInstanceDataSourceConfig_nonExistentID = `
 data "aws_connect_instance" "test" {
   instance_id = "97afc98d-101a-ba98-ab97-ae114fc115ec"
 }
 `
 
-const testAccAwsConnectInstanceDataSourceConfig_nonExistentAlias = `
+const testAccInstanceDataSourceConfig_nonExistentAlias = `
 data "aws_connect_instance" "test" {
   instance_alias = "tf-acc-test-does-not-exist"
 }
 `
 
-func testAccAwsConnectInstanceDataSourceConfigBasic(rName string) string {
+func testAccInstanceBasicDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q
@@ -93,7 +93,7 @@ data "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccAwsConnectInstanceDataSourceConfigAlias(rName string) string {
+func testAccInstanceAliasDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q

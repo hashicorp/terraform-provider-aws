@@ -18,9 +18,9 @@ import (
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
 func TestAccAwsConnectContactFlow_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccAwsConnectContactFlow_basic,
-		"filename":   testAccAwsConnectContactFlow_filename,
-		"disappears": testAccAwsConnectContactFlow_disappears_ConnectInstance,
+		"basic":      testAccContactFlow_basic,
+		"filename":   testAccContactFlow_filename,
+		"disappears": testAccContactFlow_disappears_ConnectInstance,
 	}
 
 	for name, tc := range testCases {
@@ -31,7 +31,7 @@ func TestAccAwsConnectContactFlow_serial(t *testing.T) {
 	}
 }
 
-func testAccAwsConnectContactFlow_basic(t *testing.T) {
+func testAccContactFlow_basic(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -41,12 +41,12 @@ func testAccAwsConnectContactFlow_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
+		CheckDestroy: testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectContactFlowConfigBasic(rName, rName2, "Created"),
+				Config: testAccContactFlowBasicConfig(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
+					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -63,9 +63,9 @@ func testAccAwsConnectContactFlow_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsConnectContactFlowConfigBasic(rName, rName2, "Updated"),
+				Config: testAccContactFlowBasicConfig(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
+					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -80,7 +80,7 @@ func testAccAwsConnectContactFlow_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsConnectContactFlow_filename(t *testing.T) {
+func testAccContactFlow_filename(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -90,12 +90,12 @@ func testAccAwsConnectContactFlow_filename(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
+		CheckDestroy: testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Created", "testdata/connect_contact_flow.json"),
+				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "testdata/connect_contact_flow.json"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
+					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -115,9 +115,9 @@ func testAccAwsConnectContactFlow_filename(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Updated", "testdata/connect_contact_flow_updated.json"),
+				Config: testAccContactFlowConfig_filename(rName, rName2, "Updated", "testdata/connect_contact_flow_updated.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
+					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -132,7 +132,7 @@ func testAccAwsConnectContactFlow_filename(t *testing.T) {
 }
 
 // Can't delete an contact flow. Test deletion of entire connect instance
-func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
+func testAccContactFlow_disappears_ConnectInstance(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	// var v2 connect.DescribeInstanceOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -144,12 +144,12 @@ func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
+		CheckDestroy: testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectContactFlowConfigBasic(rName, rName2, "Disappear"),
+				Config: testAccContactFlowBasicConfig(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
+					testAccCheckContactFlowExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceInstance(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -158,7 +158,7 @@ func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsConnectContactFlowExists(resourceName string, function *connect.DescribeContactFlowOutput) resource.TestCheckFunc {
+func testAccCheckContactFlowExists(resourceName string, function *connect.DescribeContactFlowOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -192,7 +192,7 @@ func testAccCheckAwsConnectContactFlowExists(resourceName string, function *conn
 	}
 }
 
-func testAccCheckAwsConnectContactFlowDestroy(s *terraform.State) error {
+func testAccCheckContactFlowDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_connect_contact_flow" {
 			continue
@@ -223,7 +223,7 @@ func testAccCheckAwsConnectContactFlowDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsConnectContactFlowConfigBase(rName string) string {
+func testAccContactFlowBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -234,9 +234,9 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccAwsConnectContactFlowConfigBasic(rName, rName2, label string) string {
+func testAccContactFlowBasicConfig(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccAwsConnectContactFlowConfigBase(rName),
+		testAccContactFlowBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_connect_contact_flow" "test" {
   instance_id = aws_connect_instance.test.id
@@ -277,9 +277,9 @@ resource "aws_connect_contact_flow" "test" {
 `, rName2, label))
 }
 
-func testAccAwsConnectContactFlowConfig_filename(rName, rName2 string, label string, filepath string) string {
+func testAccContactFlowConfig_filename(rName, rName2 string, label string, filepath string) string {
 	return acctest.ConfigCompose(
-		testAccAwsConnectContactFlowConfigBase(rName),
+		testAccContactFlowBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_connect_contact_flow" "test" {
   instance_id  = aws_connect_instance.test.id
