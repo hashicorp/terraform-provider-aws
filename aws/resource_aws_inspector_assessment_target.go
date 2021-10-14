@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAWSInspectorAssessmentTarget() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAWSInspectorAssessmentTarget() *schema.Resource {
 }
 
 func resourceAwsInspectorAssessmentTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*conns.AWSClient).InspectorConn
 
 	input := &inspector.CreateAssessmentTargetInput{
 		AssessmentTargetName: aws.String(d.Get("name").(string)),
@@ -61,7 +62,7 @@ func resourceAwsInspectorAssessmentTargetCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsInspectorAssessmentTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*conns.AWSClient).InspectorConn
 
 	assessmentTarget, err := describeInspectorAssessmentTarget(conn, d.Id())
 
@@ -83,7 +84,7 @@ func resourceAwsInspectorAssessmentTargetRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsInspectorAssessmentTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*conns.AWSClient).InspectorConn
 
 	input := inspector.UpdateAssessmentTargetInput{
 		AssessmentTargetArn:  aws.String(d.Id()),
@@ -103,7 +104,7 @@ func resourceAwsInspectorAssessmentTargetUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsInspectorAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*conns.AWSClient).InspectorConn
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}

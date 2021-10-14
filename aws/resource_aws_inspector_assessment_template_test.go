@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSInspectorTemplate_basic(t *testing.T) {
@@ -122,7 +123,7 @@ func TestAccAWSInspectorTemplate_tags(t *testing.T) {
 }
 
 func testAccCheckAWSInspectorTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_inspector_assessment_template" {
@@ -153,7 +154,7 @@ func testAccCheckAWSInspectorTemplateDestroy(s *terraform.State) error {
 
 func testAccCheckAWSInspectorTemplateDisappears(v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
 		_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
 			AssessmentTemplateArn: v.Arn,
@@ -177,7 +178,7 @@ func testAccCheckAWSInspectorTemplateExists(name string, v *inspector.Assessment
 			return fmt.Errorf("No Inspector assessment template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).inspectorconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
 		resp, err := conn.DescribeAssessmentTemplates(&inspector.DescribeAssessmentTemplatesInput{
 			AssessmentTemplateArns: aws.StringSlice([]string{rs.Primary.ID}),
