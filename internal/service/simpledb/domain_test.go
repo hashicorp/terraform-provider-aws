@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
+func TestAccSimpleDBDomain_basic(t *testing.T) {
 	resourceName := "aws_simpledb_domain.test_domain"
 
 	resource.ParallelTest(t, resource.TestCase{
