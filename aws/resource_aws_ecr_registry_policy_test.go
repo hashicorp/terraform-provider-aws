@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEcrRegistryPolicy_serial(t *testing.T) {
@@ -31,8 +32,8 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -41,7 +42,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
 			{
@@ -55,7 +56,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:CreateRepository".+`)),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
 		},
@@ -67,8 +68,8 @@ func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -76,7 +77,7 @@ func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
 				Config: testAccAWSEcrRegistryPolicy(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcrRegistryPolicy(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEcrRegistryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
