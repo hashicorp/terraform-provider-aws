@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {
@@ -752,7 +753,7 @@ func TestResourceAwsElbListenerHash(t *testing.T) {
 
 func TestResourceAWSELB_validateElbNameCannotBeginWithHyphen(t *testing.T) {
 	var elbName = "-Testing123"
-	_, errors := validateElbName(elbName, "SampleKey")
+	_, errors := validName(elbName, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -761,7 +762,7 @@ func TestResourceAWSELB_validateElbNameCannotBeginWithHyphen(t *testing.T) {
 
 func TestResourceAWSELB_validateElbNameCanBeAnEmptyString(t *testing.T) {
 	var elbName = ""
-	_, errors := validateElbName(elbName, "SampleKey")
+	_, errors := validName(elbName, "SampleKey")
 
 	if len(errors) != 0 {
 		t.Fatalf("Expected the ELB Name to pass validation")
@@ -770,7 +771,7 @@ func TestResourceAWSELB_validateElbNameCanBeAnEmptyString(t *testing.T) {
 
 func TestResourceAWSELB_validateElbNameCannotBeLongerThan32Characters(t *testing.T) {
 	var elbName = "Testing123dddddddddddddddddddvvvv"
-	_, errors := validateElbName(elbName, "SampleKey")
+	_, errors := validName(elbName, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -779,7 +780,7 @@ func TestResourceAWSELB_validateElbNameCannotBeLongerThan32Characters(t *testing
 
 func TestResourceAWSELB_validateElbNameCannotHaveSpecialCharacters(t *testing.T) {
 	var elbName = "Testing123%%"
-	_, errors := validateElbName(elbName, "SampleKey")
+	_, errors := validName(elbName, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
@@ -788,7 +789,7 @@ func TestResourceAWSELB_validateElbNameCannotHaveSpecialCharacters(t *testing.T)
 
 func TestResourceAWSELB_validateElbNameCannotEndWithHyphen(t *testing.T) {
 	var elbName = "Testing123-"
-	_, errors := validateElbName(elbName, "SampleKey")
+	_, errors := validName(elbName, "SampleKey")
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected the ELB Name to trigger a validation error")
