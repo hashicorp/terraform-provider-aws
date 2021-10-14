@@ -79,7 +79,7 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,13 +128,13 @@ func TestAccAWSFsxOntapFileSystem_basic(t *testing.T) {
 func TestAccAWSFsxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
-	pass := sdkacctest.RandomWithPrefix("tf-acc-test")
-	pass2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	pass := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	pass2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -169,7 +169,7 @@ func TestAccAWSFsxOntapFileSystem_endpointIpAddressRange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -196,7 +196,7 @@ func TestAccAWSFsxOntapFileSystem_diskIopsConfiguration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,14 +225,14 @@ func TestAccAWSFsxOntapFileSystem_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsFsxOntapFileSystemConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxOntapFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsFsxOntapFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxOntapFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -247,7 +247,7 @@ func TestAccAWSFsxOntapFileSystem_SecurityGroupIds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -282,7 +282,7 @@ func TestAccAWSFsxOntapFileSystem_routeTableIds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -310,7 +310,7 @@ func TestAccAWSFsxOntapFileSystem_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -357,7 +357,7 @@ func TestAccAWSFsxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -392,7 +392,7 @@ func TestAccAWSFsxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -434,7 +434,7 @@ func TestAccAWSFsxOntapFileSystem_kmsKeyId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxOntapFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -461,7 +461,7 @@ func TestAccAWSFsxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -496,7 +496,7 @@ func testAccCheckFsxOntapFileSystemExists(resourceName string, fs *fsx.FileSyste
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).fsxconn
+		conn := acctest.Provider.Meta().(*AWSClient).fsxconn
 
 		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -514,7 +514,7 @@ func testAccCheckFsxOntapFileSystemExists(resourceName string, fs *fsx.FileSyste
 }
 
 func testAccCheckFsxOntapFileSystemDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).fsxconn
+	conn := acctest.Provider.Meta().(*AWSClient).fsxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fsx_ontap_file_system" {

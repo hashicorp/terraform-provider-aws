@@ -85,7 +85,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -130,14 +130,14 @@ func TestAccAWSFsxLustreFileSystem_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsFsxLustreFileSystemConfigSubnetIds1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsFsxLustreFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsFsxLustreFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -152,7 +152,7 @@ func TestAccAWSFsxLustreFileSystem_dataCompression(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -189,12 +189,12 @@ func TestAccAWSFsxLustreFileSystem_dataCompression(t *testing.T) {
 func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -228,12 +228,12 @@ func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -265,12 +265,12 @@ func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
 func TestAccAWSFsxLustreFileSystem_ImportedFileChunkSize(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -305,7 +305,7 @@ func TestAccAWSFsxLustreFileSystem_SecurityGroupIds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -340,7 +340,7 @@ func TestAccAWSFsxLustreFileSystem_StorageCapacity(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -375,7 +375,7 @@ func TestAccAWSFsxLustreFileSystem_StorageCapacityUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -418,7 +418,7 @@ func TestAccAWSFsxLustreFileSystem_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -465,7 +465,7 @@ func TestAccAWSFsxLustreFileSystem_WeeklyMaintenanceStartTime(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -500,7 +500,7 @@ func TestAccAWSFsxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -542,7 +542,7 @@ func TestAccAWSFsxLustreFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -577,7 +577,7 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -610,7 +610,7 @@ func TestAccAWSFsxLustreFileSystem_fromBackup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -641,7 +641,7 @@ func TestAccAWSFsxLustreFileSystem_KmsKeyId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -678,7 +678,7 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypeScratch2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -707,7 +707,7 @@ func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheRead(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -735,7 +735,7 @@ func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheNone(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -763,7 +763,7 @@ func TestAccAWSFsxLustreFileSystem_copyTagsToBackups(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -786,12 +786,12 @@ func TestAccAWSFsxLustreFileSystem_copyTagsToBackups(t *testing.T) {
 func TestAccAWSFsxLustreFileSystem_autoImportPolicy(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, fsx.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -825,7 +825,7 @@ func testAccCheckFsxLustreFileSystemExists(resourceName string, fs *fsx.FileSyst
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).fsxconn
+		conn := acctest.Provider.Meta().(*AWSClient).fsxconn
 
 		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -843,7 +843,7 @@ func testAccCheckFsxLustreFileSystemExists(resourceName string, fs *fsx.FileSyst
 }
 
 func testAccCheckFsxLustreFileSystemDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).fsxconn
+	conn := acctest.Provider.Meta().(*AWSClient).fsxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fsx_lustre_file_system" {
