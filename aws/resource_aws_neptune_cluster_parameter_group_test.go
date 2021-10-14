@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSNeptuneClusterParameterGroup_basic(t *testing.T) {
@@ -278,7 +279,7 @@ func TestAccAWSNeptuneClusterParameterGroup_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSNeptuneClusterParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_cluster_parameter_group" {
@@ -333,7 +334,7 @@ func testAccCheckAWSNeptuneClusterParameterGroupExists(n string, v *neptune.DBCl
 			return errors.New("No Neptune Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 		opts := neptune.DescribeDBClusterParameterGroupsInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),

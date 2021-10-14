@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNeptuneClusterInstance() *schema.Resource {
@@ -191,8 +192,8 @@ func resourceAwsNeptuneClusterInstance() *schema.Resource {
 }
 
 func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &neptune.CreateDBInstanceInput{
@@ -281,7 +282,7 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	db, err := resourceAwsNeptuneInstanceRetrieve(d.Id(), meta.(*AWSClient).neptuneconn)
+	db, err := resourceAwsNeptuneInstanceRetrieve(d.Id(), meta.(*conns.AWSClient).NeptuneConn)
 	if err != nil {
 		return fmt.Errorf("Error on retrieving Neptune Cluster Instance (%s): %s", d.Id(), err)
 	}
@@ -296,9 +297,9 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Cluster identifier is missing from instance (%s)", d.Id())
 	}
 
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
 		DBClusterIdentifier: db.DBClusterIdentifier,
@@ -377,7 +378,7 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 	requestUpdate := false
 
 	req := &neptune.ModifyDBInstanceInput{
@@ -464,7 +465,7 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsNeptuneClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	log.Printf("[DEBUG] Neptune Cluster Instance destroy: %v", d.Id())
 

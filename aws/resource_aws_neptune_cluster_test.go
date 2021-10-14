@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSNeptuneCluster_basic(t *testing.T) {
@@ -534,7 +535,7 @@ func testAccCheckAWSNeptuneClusterDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSNeptuneClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).neptuneconn
+	conn := provider.Meta().(*conns.AWSClient).NeptuneConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_cluster" {
@@ -584,7 +585,7 @@ func testAccCheckAWSNeptuneClusterExistsWithProvider(n string, v *neptune.DBClus
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*AWSClient).neptuneconn
+		conn := provider.Meta().(*conns.AWSClient).NeptuneConn
 		resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
 			DBClusterIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -611,8 +612,8 @@ func testAccCheckAWSNeptuneClusterSnapshot(rName string) resource.TestCheckFunc 
 				continue
 			}
 
-			awsClient := acctest.Provider.Meta().(*AWSClient)
-			conn := awsClient.neptuneconn
+			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+			conn := awsClient.NeptuneConn
 
 			log.Printf("[INFO] Deleting the Snapshot %s", rName)
 			_, snapDeleteErr := conn.DeleteDBClusterSnapshot(

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSNeptuneParameterGroup_basic(t *testing.T) {
@@ -168,7 +169,7 @@ func TestAccAWSNeptuneParameterGroup_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSNeptuneParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_parameter_group" {
@@ -221,7 +222,7 @@ func testAccCheckAWSNeptuneParameterGroupExists(n string, v *neptune.DBParameter
 			return fmt.Errorf("No Neptune Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 		opts := neptune.DescribeDBParameterGroupsInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),

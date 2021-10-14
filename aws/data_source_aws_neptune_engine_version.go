@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsNeptuneEngineVersion() *schema.Resource {
@@ -83,7 +84,7 @@ func dataSourceAwsNeptuneEngineVersion() *schema.Resource {
 }
 
 func dataSourceAwsNeptuneEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeDBEngineVersionsInput{}
 

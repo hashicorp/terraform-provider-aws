@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNeptuneEventSubscription() *schema.Resource {
@@ -87,8 +88,8 @@ func resourceAwsNeptuneEventSubscription() *schema.Resource {
 }
 
 func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("name"); ok {
@@ -158,9 +159,9 @@ func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsNeptuneEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	sub, err := resourceAwsNeptuneEventSubscriptionRetrieve(d.Id(), conn)
 	if err != nil {
@@ -216,7 +217,7 @@ func resourceAwsNeptuneEventSubscriptionRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	requestUpdate := false
 
@@ -328,7 +329,7 @@ func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsNeptuneEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 	deleteOpts := neptune.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	}

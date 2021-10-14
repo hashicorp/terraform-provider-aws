@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsNeptuneClusterSnapshot() *schema.Resource {
@@ -94,7 +95,7 @@ func resourceAwsNeptuneClusterSnapshot() *schema.Resource {
 }
 
 func resourceAwsNeptuneClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
@@ -127,7 +128,7 @@ func resourceAwsNeptuneClusterSnapshotCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsNeptuneClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
@@ -174,7 +175,7 @@ func resourceAwsNeptuneClusterSnapshotRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsNeptuneClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).neptuneconn
+	conn := meta.(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),

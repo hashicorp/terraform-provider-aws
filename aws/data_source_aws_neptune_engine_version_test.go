@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSNeptuneEngineVersionDataSource_basic(t *testing.T) {
@@ -81,7 +82,7 @@ func TestAccAWSNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 }
 
 func testAccAWSNeptuneEngineVersionPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).neptuneconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
 
 	input := &neptune.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("neptune"),
