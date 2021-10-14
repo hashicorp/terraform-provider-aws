@@ -11,8 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourcePatchBaseline() *schema.Resource {
@@ -207,18 +208,18 @@ func ResourcePatchBaseline() *schema.Resource {
 				},
 			},
 
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &ssm.CreatePatchBaselineInput{
 		Name:                           aws.String(d.Get("name").(string)),
@@ -329,7 +330,7 @@ func resourcePatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline, o, n); err != nil {
+		if err := tftags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Patch Baseline (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -385,7 +386,7 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("arn", arn.String())
 
-	tags, err := keyvaluetags.SsmListTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
+	tags, err := tftags.SsmListTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSM Patch Baseline (%s): %s", d.Id(), err)
