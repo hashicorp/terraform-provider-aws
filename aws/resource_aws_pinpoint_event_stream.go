@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsPinpointEventStream() *schema.Resource {
@@ -44,7 +45,7 @@ func resourceAwsPinpointEventStream() *schema.Resource {
 }
 
 func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)
 
@@ -87,7 +88,7 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsPinpointEventStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint Event Stream for application %s", d.Id())
 
@@ -113,7 +114,7 @@ func resourceAwsPinpointEventStreamRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsPinpointEventStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Pinpoint Delete Event Stream: %s", d.Id())
 	_, err := conn.DeleteEventStream(&pinpoint.DeleteEventStreamInput{

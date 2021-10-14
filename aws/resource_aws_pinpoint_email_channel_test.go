@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
@@ -151,7 +152,7 @@ func testAccCheckAWSPinpointEmailChannelExists(n string, channel *pinpoint.Email
 			return fmt.Errorf("No Pinpoint Email Channel with that application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 		// Check if the app exists
 		params := &pinpoint.GetEmailChannelInput{
@@ -311,7 +312,7 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 func testAccCheckAWSPinpointEmailChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).pinpointconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_email_channel" {

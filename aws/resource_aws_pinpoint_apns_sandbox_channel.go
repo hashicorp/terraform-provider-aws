@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsPinpointAPNSSandboxChannel() *schema.Resource {
@@ -82,7 +83,7 @@ func resourceAwsPinpointAPNSSandboxChannelUpsert(d *schema.ResourceData, meta in
 		return errors.New("At least one set of credentials is required; either [certificate, private_key] or [bundle_id, team_id, token_key, token_key_id]")
 	}
 
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)
 
@@ -115,7 +116,7 @@ func resourceAwsPinpointAPNSSandboxChannelUpsert(d *schema.ResourceData, meta in
 }
 
 func resourceAwsPinpointAPNSSandboxChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint APNs Channel for Application %s", d.Id())
 
@@ -141,7 +142,7 @@ func resourceAwsPinpointAPNSSandboxChannelRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsPinpointAPNSSandboxChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint APNs Sandbox Channel: %s", d.Id())
 	_, err := conn.DeleteApnsSandboxChannel(&pinpoint.DeleteApnsSandboxChannelInput{

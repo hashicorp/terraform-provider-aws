@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsPinpointSMSChannel() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceAwsPinpointSMSChannel() *schema.Resource {
 }
 
 func resourceAwsPinpointSMSChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)
 
@@ -83,7 +84,7 @@ func resourceAwsPinpointSMSChannelUpsert(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsPinpointSMSChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint SMS Channel  for application %s", d.Id())
 
@@ -111,7 +112,7 @@ func resourceAwsPinpointSMSChannelRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsPinpointSMSChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint SMS Channel for application %s", d.Id())
 	_, err := conn.DeleteSmsChannel(&pinpoint.DeleteSmsChannelInput{

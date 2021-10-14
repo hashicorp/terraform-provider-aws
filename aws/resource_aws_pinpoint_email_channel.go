@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsPinpointEmailChannel() *schema.Resource {
@@ -57,7 +58,7 @@ func resourceAwsPinpointEmailChannel() *schema.Resource {
 }
 
 func resourceAwsPinpointEmailChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	applicationId := d.Get("application_id").(string)
 
@@ -91,7 +92,7 @@ func resourceAwsPinpointEmailChannelUpsert(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsPinpointEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint Email Channel for application %s", d.Id())
 
@@ -121,7 +122,7 @@ func resourceAwsPinpointEmailChannelRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsPinpointEmailChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).pinpointconn
+	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint Email Channel for application %s", d.Id())
 	_, err := conn.DeleteEmailChannel(&pinpoint.DeleteEmailChannelInput{
