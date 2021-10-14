@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIotPolicyAttachment() *schema.Resource {
+func ResourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotPolicyAttachmentCreate,
-		Read:   resourceAwsIotPolicyAttachmentRead,
-		Delete: resourceAwsIotPolicyAttachmentDelete,
+		Create: resourcePolicyAttachmentCreate,
+		Read:   resourcePolicyAttachmentRead,
+		Delete: resourcePolicyAttachmentDelete,
 		Schema: map[string]*schema.Schema{
 			"policy": {
 				Type:     schema.TypeString,
@@ -30,7 +30,7 @@ func resourceAwsIotPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsIotPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	policyName := d.Get("policy").(string)
@@ -46,7 +46,7 @@ func resourceAwsIotPolicyAttachmentCreate(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", policyName, target))
-	return resourceAwsIotPolicyAttachmentRead(d, meta)
+	return resourcePolicyAttachmentRead(d, meta)
 }
 
 func listIotPolicyAttachmentPages(conn *iot.IoT, input *iot.ListAttachedPoliciesInput,
@@ -89,7 +89,7 @@ func getIotPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Poli
 	return policy, err
 }
 
-func resourceAwsIotPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	policyName := d.Get("policy").(string)
@@ -112,7 +112,7 @@ func resourceAwsIotPolicyAttachmentRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsIotPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	policyName := d.Get("policy").(string)

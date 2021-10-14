@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIotTopicRule() *schema.Resource {
+func ResourceTopicRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotTopicRuleCreate,
-		Read:   resourceAwsIotTopicRuleRead,
-		Update: resourceAwsIotTopicRuleUpdate,
-		Delete: resourceAwsIotTopicRuleDelete,
+		Create: resourceTopicRuleCreate,
+		Read:   resourceTopicRuleRead,
+		Update: resourceTopicRuleUpdate,
+		Delete: resourceTopicRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -1086,7 +1086,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 	}
 }
 
-func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -1128,10 +1128,10 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(ruleName)
 
-	return resourceAwsIotTopicRuleRead(d, meta)
+	return resourceTopicRuleRead(d, meta)
 }
 
-func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1237,7 +1237,7 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	if d.HasChanges(
@@ -1282,10 +1282,10 @@ func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	return resourceAwsIotTopicRuleRead(d, meta)
+	return resourceTopicRuleRead(d, meta)
 }
 
-func resourceAwsIotTopicRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTopicRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	input := &iot.DeleteTopicRuleInput{

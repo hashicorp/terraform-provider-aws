@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
@@ -62,7 +63,7 @@ func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 				Config: testAccAWSIoTAuthorizerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIoTAuthorizer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -10,11 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIotThingPrincipalAttachment() *schema.Resource {
+func ResourceThingPrincipalAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotThingPrincipalAttachmentCreate,
-		Read:   resourceAwsIotThingPrincipalAttachmentRead,
-		Delete: resourceAwsIotThingPrincipalAttachmentDelete,
+		Create: resourceThingPrincipalAttachmentCreate,
+		Read:   resourceThingPrincipalAttachmentRead,
+		Delete: resourceThingPrincipalAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"principal": {
@@ -31,7 +31,7 @@ func resourceAwsIotThingPrincipalAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsIotThingPrincipalAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceThingPrincipalAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	principal := d.Get("principal").(string)
@@ -47,7 +47,7 @@ func resourceAwsIotThingPrincipalAttachmentCreate(d *schema.ResourceData, meta i
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", thing, principal))
-	return resourceAwsIotThingPrincipalAttachmentRead(d, meta)
+	return resourceThingPrincipalAttachmentRead(d, meta)
 }
 
 func getIoTThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, error) {
@@ -69,7 +69,7 @@ func getIoTThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool
 	return found, nil
 }
 
-func resourceAwsIotThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	principal := d.Get("principal").(string)
@@ -89,7 +89,7 @@ func resourceAwsIotThingPrincipalAttachmentRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsIotThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	principal := d.Get("principal").(string)

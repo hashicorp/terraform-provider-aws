@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIoTAuthorizer() *schema.Resource {
+func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsIotAuthorizerCreate,
 		Read:   resourceAwsIotAuthorizerRead,

@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIotThing() *schema.Resource {
+func ResourceThing() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIotThingCreate,
-		Read:   resourceAwsIotThingRead,
-		Update: resourceAwsIotThingUpdate,
-		Delete: resourceAwsIotThingDelete,
+		Create: resourceThingCreate,
+		Read:   resourceThingRead,
+		Update: resourceThingUpdate,
+		Delete: resourceThingDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -54,7 +54,7 @@ func resourceAwsIotThing() *schema.Resource {
 	}
 }
 
-func resourceAwsIotThingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceThingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.CreateThingInput{
@@ -78,10 +78,10 @@ func resourceAwsIotThingCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(out.ThingName))
 
-	return resourceAwsIotThingRead(d, meta)
+	return resourceThingRead(d, meta)
 }
 
-func resourceAwsIotThingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceThingRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.DescribeThingInput{
@@ -110,7 +110,7 @@ func resourceAwsIotThingRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIotThingUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceThingUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.UpdateThingInput{
@@ -141,10 +141,10 @@ func resourceAwsIotThingUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return resourceAwsIotThingRead(d, meta)
+	return resourceThingRead(d, meta)
 }
 
-func resourceAwsIotThingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceThingDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 
 	params := &iot.DeleteThingInput{

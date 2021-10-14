@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIotEndpoint() *schema.Resource {
+func DataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIotEndpointRead,
+		Read: dataSourceEndpointRead,
 		Schema: map[string]*schema.Schema{
 			"endpoint_address": {
 				Type:     schema.TypeString,
@@ -32,7 +32,7 @@ func dataSourceAwsIotEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIotEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn
 	input := &iot.DescribeEndpointInput{}
 
