@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/workspaces/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func testSweepWorkspacesIpGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).workspacesconn
+	conn := client.(*conns.AWSClient).WorkSpacesConn
 	input := &workspaces.DescribeIpGroupsInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -217,7 +218,7 @@ func testAccCheckAwsWorkspacesIpGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 		resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -250,7 +251,7 @@ func testAccCheckAwsWorkspacesIpGroupExists(n string, v *workspaces.IpGroup) res
 			return fmt.Errorf("No Workpsaces IP Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).workspacesconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
 		resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})

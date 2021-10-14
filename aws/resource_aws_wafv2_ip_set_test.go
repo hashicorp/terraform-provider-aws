@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/wafv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepWafv2IpSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafv2conn
+	conn := client.(*conns.AWSClient).WAFV2Conn
 
 	var sweeperErrs *multierror.Error
 
@@ -347,7 +348,7 @@ func testAccCheckAWSWafv2IPSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetIPSet(
 			&wafv2.GetIPSetInput{
 				Id:    aws.String(rs.Primary.ID),
@@ -387,7 +388,7 @@ func testAccCheckAWSWafv2IPSetExists(n string, v *wafv2.IPSet) resource.TestChec
 			return fmt.Errorf("No WAFv2 IPSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
 		resp, err := conn.GetIPSet(&wafv2.GetIPSetInput{
 			Id:    aws.String(rs.Primary.ID),
 			Name:  aws.String(rs.Primary.Attributes["name"]),

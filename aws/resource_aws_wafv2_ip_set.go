@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfnet "github.com/hashicorp/terraform-provider-aws/aws/internal/net"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsWafv2IPSet() *schema.Resource {
@@ -111,8 +112,8 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 }
 
 func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).WAFV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	params := &wafv2.CreateIPSetInput{
 		Addresses:        aws.StringSlice([]string{}),
@@ -149,9 +150,9 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).WAFV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &wafv2.GetIPSetInput{
 		Id:    aws.String(d.Id()),
@@ -204,7 +205,7 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Updating WAFv2 IPSet %s", d.Id())
 
@@ -241,7 +242,7 @@ func resourceAwsWafv2IPSetUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsWafv2IPSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafv2conn
+	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	log.Printf("[INFO] Deleting WAFv2 IPSet %s", d.Id())
 
