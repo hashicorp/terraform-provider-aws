@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSUserGroupMembership_basic(t *testing.T) {
@@ -112,7 +113,7 @@ func TestAccAWSUserGroupMembership_basic(t *testing.T) {
 }
 
 func testAccAWSUserGroupMembershipDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type == "aws_iam_user_group_membership" {
@@ -143,7 +144,7 @@ func testAccAWSUserGroupMembershipDestroy(s *terraform.State) error {
 
 func testAccAWSUserGroupMembershipCheckGroupListForUser(userName string, groups []string, groupsNeg []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		// get list of groups for user
 		userGroupList, err := conn.ListGroupsForUser(&iam.ListGroupsForUserInput{

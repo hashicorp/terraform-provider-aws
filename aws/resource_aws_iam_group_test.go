@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -34,7 +35,7 @@ func testSweepIamGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*conns.AWSClient).IAMConn
 	input := &iam.ListGroupsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -211,7 +212,7 @@ func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 }
 
 func testAccCheckAWSGroupDestroy(s *terraform.State) error {
-	iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_group" {
@@ -219,7 +220,7 @@ func testAccCheckAWSGroupDestroy(s *terraform.State) error {
 		}
 
 		// Try to get group
-		_, err := iamconn.GetGroup(&iam.GetGroupInput{
+		_, err := conn.GetGroup(&iam.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
@@ -250,9 +251,9 @@ func testAccCheckAWSGroupExists(n string, res *iam.GetGroupOutput) resource.Test
 			return errors.New("No Group name is set")
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		resp, err := iamconn.GetGroup(&iam.GetGroupInput{
+		resp, err := conn.GetGroup(&iam.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamRole() *schema.Resource {
@@ -163,8 +164,8 @@ func resourceAwsIamRoleImport(
 }
 
 func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -193,7 +194,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	outputRaw, err := tfresource.RetryWhen(
 		waiter.PropagationTimeout,
 		func() (interface{}, error) {
-			return iamconn.CreateRole(request)
+			return conn.CreateRole(request)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, iam.ErrCodeMalformedPolicyDocumentException, "Invalid principal in policy") {
@@ -229,12 +230,12 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).IAMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
-		return finder.RoleByName(iamconn, d.Id())
+		return finder.RoleByName(conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -290,7 +291,7 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting inline_policy: %w", err)
 	}
 
-	managedPolicies, err := readIamRolePolicyAttachments(iamconn, aws.StringValue(role.RoleName))
+	managedPolicies, err := readIamRolePolicyAttachments(conn, aws.StringValue(role.RoleName))
 	if err != nil {
 		return fmt.Errorf("reading managed policies for IAM role %s, error: %s", d.Id(), err)
 	}
@@ -300,7 +301,7 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("assume_role_policy") {
 		assumeRolePolicyInput := &iam.UpdateAssumeRolePolicyInput{
@@ -311,7 +312,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := tfresource.RetryWhen(
 			waiter.PropagationTimeout,
 			func() (interface{}, error) {
-				return iamconn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
+				return conn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
 			},
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, iam.ErrCodeMalformedPolicyDocumentException, "Invalid principal in policy") {
@@ -333,7 +334,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			Description: aws.String(d.Get("description").(string)),
 		}
 
-		_, err := iamconn.UpdateRoleDescription(roleDescriptionInput)
+		_, err := conn.UpdateRoleDescription(roleDescriptionInput)
 
 		if err != nil {
 			return fmt.Errorf("error updating IAM Role (%s) description: %w", d.Id(), err)
@@ -346,7 +347,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			MaxSessionDuration: aws.Int64(int64(d.Get("max_session_duration").(int))),
 		}
 
-		_, err := iamconn.UpdateRole(roleMaxDurationInput)
+		_, err := conn.UpdateRole(roleMaxDurationInput)
 
 		if err != nil {
 			return fmt.Errorf("error updating IAM Role (%s) MaxSessionDuration: %s", d.Id(), err)
@@ -361,7 +362,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 				RoleName:            aws.String(d.Id()),
 			}
 
-			_, err := iamconn.PutRolePermissionsBoundary(input)
+			_, err := conn.PutRolePermissionsBoundary(input)
 
 			if err != nil {
 				return fmt.Errorf("error updating IAM Role (%s) permissions boundary: %w", d.Id(), err)
@@ -371,7 +372,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 				RoleName: aws.String(d.Id()),
 			}
 
-			_, err := iamconn.DeleteRolePermissionsBoundary(input)
+			_, err := conn.DeleteRolePermissionsBoundary(input)
 
 			if err != nil {
 				return fmt.Errorf("error deleting IAM Role (%s) permissions boundary: %w", d.Id(), err)
@@ -382,7 +383,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.IamRoleUpdateTags(iamconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.IamRoleUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating IAM Role (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -414,7 +415,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 				policyNames = append(policyNames, aws.String(tfMap["name"].(string)))
 			}
 		}
-		if err := deleteIamRolePolicies(iamconn, roleName, policyNames); err != nil {
+		if err := deleteIamRolePolicies(conn, roleName, policyNames); err != nil {
 			return fmt.Errorf("unable to delete inline policies: %w", err)
 		}
 
@@ -440,7 +441,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		remove := expandStringSet(os.Difference(ns))
 		add := expandStringSet(ns.Difference(os))
 
-		if err := deleteIamRolePolicyAttachments(iamconn, roleName, remove); err != nil {
+		if err := deleteIamRolePolicyAttachments(conn, roleName, remove); err != nil {
 			return fmt.Errorf("unable to detach policies: %w", err)
 		}
 
@@ -453,7 +454,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	hasInline := false
 	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
@@ -713,7 +714,7 @@ func expandIamInlinePolicies(roleName string, tfList []interface{}) []*iam.PutRo
 }
 
 func addIamInlinePolicies(policies []*iam.PutRolePolicyInput, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	var errs *multierror.Error
 	for _, policy := range policies {
@@ -732,7 +733,7 @@ func addIamInlinePolicies(policies []*iam.PutRolePolicyInput, meta interface{}) 
 }
 
 func addIamManagedPolicies(roleName string, policies []*string, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	var errs *multierror.Error
 	for _, arn := range policies {
@@ -747,7 +748,7 @@ func addIamManagedPolicies(roleName string, policies []*string, meta interface{}
 }
 
 func readIamInlinePolicies(roleName string, meta interface{}) ([]*iam.PutRolePolicyInput, error) {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	policyNames, err := readIamRolePolicyNames(conn, roleName)
 	if err != nil {

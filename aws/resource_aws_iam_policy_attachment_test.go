@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
@@ -191,7 +192,7 @@ func testAccCheckAWSPolicyAttachmentExists(n string, c int64, out *iam.ListEntit
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		arn := rs.Primary.Attributes["policy_arn"]
 
 		resp, err := conn.GetPolicy(&iam.GetPolicyInput{

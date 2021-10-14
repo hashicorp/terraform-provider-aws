@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsIAMRoles() *schema.Resource {
@@ -39,7 +40,7 @@ func dataSourceAwsIAMRoles() *schema.Resource {
 }
 
 func dataSourceAwsIAMRolesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.ListRolesInput{}
 
@@ -73,7 +74,7 @@ func dataSourceAwsIAMRolesRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading IAM roles: %w", err)
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	var arns, names []string
 

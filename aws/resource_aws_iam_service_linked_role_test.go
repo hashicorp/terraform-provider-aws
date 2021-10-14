@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepIamServiceLinkedRoles(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*conns.AWSClient).IAMConn
 
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String("/aws-service-role/"),
@@ -152,7 +153,7 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Remove existing if possible
-					conn := acctest.Provider.Meta().(*AWSClient).iamconn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 					deletionID, err := deleteIamServiceLinkedRole(conn, name)
 					if err != nil {
 						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
@@ -282,7 +283,7 @@ func TestAccAWSIAMServiceLinkedRole_Description(t *testing.T) {
 }
 
 func testAccCheckAWSIAMServiceLinkedRoleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_service_linked_role" {
@@ -320,7 +321,7 @@ func testAccCheckAWSIAMServiceLinkedRoleExists(n string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		_, roleName, _, err := decodeIamServiceLinkedRoleID(rs.Primary.ID)
 		if err != nil {
 			return err

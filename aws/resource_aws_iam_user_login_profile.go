@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/encryption"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamUserLoginProfile() *schema.Resource {
@@ -125,7 +126,7 @@ func checkIAMPwdPolicy(pass []byte) bool {
 }
 
 func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 	username := d.Get("user").(string)
 
 	encryptionKey, err := encryption.RetrieveGPGKey(strings.TrimSpace(d.Get("pgp_key").(string)))
@@ -152,7 +153,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Println("[DEBUG] Create IAM User Login Profile request:", request)
-	createResp, err := iamconn.CreateLoginProfile(request)
+	createResp, err := conn.CreateLoginProfile(request)
 	if err != nil {
 		return fmt.Errorf("Error creating IAM User Login Profile for %q: %s", username, err)
 	}
@@ -164,7 +165,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsIamUserLoginProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.GetLoginProfileInput{
 		UserName: aws.String(d.Id()),
@@ -212,7 +213,7 @@ func resourceAwsIamUserLoginProfileRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsIamUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(d.Id()),

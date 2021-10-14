@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
@@ -163,7 +164,7 @@ func TestAccAWSIAMGroupPolicy_generatedName(t *testing.T) {
 }
 
 func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_group_policy" {
@@ -199,14 +200,14 @@ func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckIAMGroupPolicyDisappears(out *iam.GetGroupPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		params := &iam.DeleteGroupPolicyInput{
 			PolicyName: out.PolicyName,
 			GroupName:  out.GroupName,
 		}
 
-		_, err := iamconn.DeleteGroupPolicy(params)
+		_, err := conn.DeleteGroupPolicy(params)
 		return err
 	}
 }
@@ -230,13 +231,13 @@ func testAccCheckIAMGroupPolicyExists(
 			return fmt.Errorf("Not Found: %s", iamGroupPolicyResource)
 		}
 
-		iamconn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		group, name, err := resourceAwsIamGroupPolicyParseId(policy.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		output, err := iamconn.GetGroupPolicy(&iam.GetGroupPolicyInput{
+		output, err := conn.GetGroupPolicy(&iam.GetGroupPolicyInput{
 			GroupName:  aws.String(group),
 			PolicyName: aws.String(name),
 		})

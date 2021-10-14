@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamServiceLinkedRole() *schema.Resource {
@@ -79,7 +80,7 @@ func resourceAwsIamServiceLinkedRole() *schema.Resource {
 }
 
 func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	serviceName := d.Get("aws_service_name").(string)
 
@@ -106,7 +107,7 @@ func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	serviceName, roleName, customSuffix, err := decodeIamServiceLinkedRoleID(d.Id())
 	if err != nil {
@@ -143,7 +144,7 @@ func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsIamServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())
 	if err != nil {
@@ -165,7 +166,7 @@ func resourceAwsIamServiceLinkedRoleUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsIamServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())
 	if err != nil {

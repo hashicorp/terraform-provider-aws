@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamAccountAlias() *schema.Resource {
@@ -30,7 +31,7 @@ func resourceAwsIamAccountAlias() *schema.Resource {
 }
 
 func resourceAwsIamAccountAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	account_alias := d.Get("account_alias").(string)
 
@@ -50,7 +51,7 @@ func resourceAwsIamAccountAliasCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsIamAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	params := &iam.ListAccountAliasesInput{}
 
@@ -74,7 +75,7 @@ func resourceAwsIamAccountAliasRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsIamAccountAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	account_alias := d.Get("account_alias").(string)
 

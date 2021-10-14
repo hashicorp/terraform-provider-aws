@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/encryption"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsIamAccessKey() *schema.Resource {
@@ -27,7 +28,7 @@ func resourceAwsIamAccessKey() *schema.Resource {
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				conn := meta.(*AWSClient).iamconn
+				conn := meta.(*conns.AWSClient).IAMConn
 
 				input := &iam.GetAccessKeyLastUsedInput{
 					AccessKeyId: aws.String(d.Id()),
@@ -97,13 +98,13 @@ func resourceAwsIamAccessKey() *schema.Resource {
 }
 
 func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.CreateAccessKeyInput{
 		UserName: aws.String(d.Get("user").(string)),
 	}
 
-	createResp, err := iamconn.CreateAccessKey(request)
+	createResp, err := conn.CreateAccessKey(request)
 	if err != nil {
 		return fmt.Errorf(
 			"Error creating access key for user %s: %s",
@@ -118,7 +119,7 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("CreateAccessKey response did not contain a Secret Access Key as expected")
 	}
 
-	sesSMTPPasswordV4, err := sesSmtpPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*AWSClient).region)
+	sesSMTPPasswordV4, err := sesSmtpPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
 	if err != nil {
 		return fmt.Errorf("error getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
 	}
@@ -160,7 +161,7 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 			UserName:    aws.String(d.Get("user").(string)),
 		}
 
-		_, err := iamconn.UpdateAccessKey(input)
+		_, err := conn.UpdateAccessKey(input)
 
 		if err != nil {
 			return fmt.Errorf("error deactivating IAM Access Key (%s): %w", d.Id(), err)
@@ -178,13 +179,13 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIamAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.ListAccessKeysInput{
 		UserName: aws.String(d.Get("user").(string)),
 	}
 
-	getResp, err := iamconn.ListAccessKeys(request)
+	getResp, err := conn.ListAccessKeys(request)
 	if err != nil {
 		if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" { // XXX TEST ME
 			// the user does not exist, so the key can't exist.
@@ -221,10 +222,10 @@ func resourceAwsIamAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKe
 }
 
 func resourceAwsIamAccessKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("status") {
-		if err := resourceAwsIamAccessKeyStatusUpdate(iamconn, d); err != nil {
+		if err := resourceAwsIamAccessKeyStatusUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -233,27 +234,27 @@ func resourceAwsIamAccessKeyUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIamAccessKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		UserName:    aws.String(d.Get("user").(string)),
 	}
 
-	if _, err := iamconn.DeleteAccessKey(request); err != nil {
+	if _, err := conn.DeleteAccessKey(request); err != nil {
 		return fmt.Errorf("Error deleting access key %s: %s", d.Id(), err)
 	}
 	return nil
 }
 
-func resourceAwsIamAccessKeyStatusUpdate(iamconn *iam.IAM, d *schema.ResourceData) error {
+func resourceAwsIamAccessKeyStatusUpdate(conn *iam.IAM, d *schema.ResourceData) error {
 	request := &iam.UpdateAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		Status:      aws.String(d.Get("status").(string)),
 		UserName:    aws.String(d.Get("user").(string)),
 	}
 
-	if _, err := iamconn.UpdateAccessKey(request); err != nil {
+	if _, err := conn.UpdateAccessKey(request); err != nil {
 		return fmt.Errorf("Error updating access key %s: %s", d.Id(), err)
 	}
 	return nil

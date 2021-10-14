@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsIAMGroup() *schema.Resource {
@@ -59,7 +60,7 @@ func dataSourceAwsIAMGroup() *schema.Resource {
 }
 
 func dataSourceAwsIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	conn := meta.(*conns.AWSClient).IAMConn
 
 	groupName := d.Get("group_name").(string)
 
@@ -71,7 +72,7 @@ func dataSourceAwsIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
 	var group *iam.Group
 
 	log.Printf("[DEBUG] Reading IAM Group: %s", req)
-	err := iamconn.GetGroupPages(req, func(page *iam.GetGroupOutput, lastPage bool) bool {
+	err := conn.GetGroupPages(req, func(page *iam.GetGroupOutput, lastPage bool) bool {
 		if group == nil {
 			group = page.Group
 		}

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
@@ -119,7 +120,7 @@ func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
 }
 
 func testAccCheckAWSRolePolicyAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).iamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_role_policy_attachment" {
@@ -158,7 +159,7 @@ func testAccCheckAWSRolePolicyAttachmentExists(n string, c int, out *iam.ListAtt
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 		role := rs.Primary.Attributes["role"]
 
 		attachedPolicies, err := conn.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
@@ -198,7 +199,7 @@ func testAccCheckAWSRolePolicyAttachmentAttributes(policies []string, out *iam.L
 
 func testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).iamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		rs, ok := s.RootModule().Resources[resourceName]
 
