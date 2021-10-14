@@ -71,7 +71,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(arn)
 
 	if len(tags) > 0 {
-		if err := tftags.DevicefarmUpdateTags(conn, arn, nil, tags); err != nil {
+		if err := UpdateTags(conn, arn, nil, tags); err != nil {
 			return fmt.Errorf("error updating DeviceFarm Project (%s) tags: %w", arn, err)
 		}
 	}
@@ -105,7 +105,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("default_job_timeout_minutes", project.DefaultJobTimeoutMinutes)
 
-	tags, err := tftags.DevicefarmListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for DeviceFarm Project (%s): %w", arn, err)
@@ -151,7 +151,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.DevicefarmUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DeviceFarm Project (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
