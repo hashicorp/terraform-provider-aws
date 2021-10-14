@@ -54,7 +54,7 @@ func dataSourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.BackupPlan.BackupPlanName)
 	d.Set("version", resp.VersionId)
 
-	tags, err := tftags.BackupListTags(conn, aws.StringValue(resp.BackupPlanArn))
+	tags, err := ListTags(conn, aws.StringValue(resp.BackupPlanArn))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Plan (%s): %w", id, err)
 	}

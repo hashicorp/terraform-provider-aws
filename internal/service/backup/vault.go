@@ -62,7 +62,7 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &backup.CreateBackupVaultInput{
 		BackupVaultName: aws.String(d.Get("name").(string)),
-		BackupVaultTags: tags.IgnoreAws().BackupTags(),
+		BackupVaultTags: Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -108,7 +108,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resp.BackupVaultArn)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
-	tags, err := tftags.BackupListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Vault (%s): %s", d.Id(), err)
 	}
@@ -131,7 +131,7 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.BackupUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags for Backup Vault (%s): %s", d.Id(), err)
 		}
 	}

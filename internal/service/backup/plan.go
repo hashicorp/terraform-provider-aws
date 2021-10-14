@@ -176,7 +176,7 @@ func resourcePlanCreate(d *schema.ResourceData, meta interface{}) error {
 			Rules:                  expandBackupPlanRules(d.Get("rule").(*schema.Set)),
 			AdvancedBackupSettings: expandBackupPlanAdvancedBackupSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 		},
-		BackupPlanTags: tags.IgnoreAws().BackupTags(),
+		BackupPlanTags: Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Creating Backup Plan: %#v", input)
@@ -221,7 +221,7 @@ func resourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting advanced_backup_setting: %w", err)
 	}
 
-	tags, err := tftags.BackupListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Plan (%s): %w", d.Id(), err)
 	}
@@ -261,7 +261,7 @@ func resourcePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.BackupUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags for Backup Plan (%s): %w", d.Id(), err)
 		}
 	}
@@ -335,7 +335,7 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 		}
 
 		if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-			rule.RecoveryPointTags = tftags.New(vRecoveryPointTags).IgnoreAws().BackupTags()
+			rule.RecoveryPointTags = Tags(tftags.New(vRecoveryPointTags).IgnoreAws())
 		}
 
 		if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 {
@@ -425,7 +425,7 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 			"enable_continuous_backup": aws.BoolValue(rule.EnableContinuousBackup),
 			"start_window":             int(aws.Int64Value(rule.StartWindowMinutes)),
 			"completion_window":        int(aws.Int64Value(rule.CompletionWindowMinutes)),
-			"recovery_point_tags":      tftags.BackupKeyValueTags(rule.RecoveryPointTags).IgnoreAws().Map(),
+			"recovery_point_tags":      KeyValueTags(rule.RecoveryPointTags).IgnoreAws().Map(),
 		}
 
 		if lifecycle := rule.Lifecycle; lifecycle != nil {
