@@ -127,7 +127,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	input := kms.CreateGrantInput{
 		GranteePrincipal: aws.String(d.Get("grantee_principal").(string)),
 		KeyId:            aws.String(keyId),
-		Operations:       expandStringSet(d.Get("operations").(*schema.Set)),
+		Operations:       flex.ExpandStringSet(d.Get("operations").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -143,7 +143,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 		input.RetiringPrincipal = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("grant_creation_tokens"); ok {
-		input.GrantTokens = expandStringSet(v.(*schema.Set))
+		input.GrantTokens = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	var out *kms.CreateGrantOutput
@@ -438,10 +438,10 @@ func expandKmsGrantConstraints(configured *schema.Set) *kms.GrantConstraints {
 	for _, raw := range configured.List() {
 		data := raw.(map[string]interface{})
 		if contextEq, ok := data["encryption_context_equals"]; ok {
-			constraint.SetEncryptionContextEquals(expandStringMap(contextEq.(map[string]interface{})))
+			constraint.SetEncryptionContextEquals(flex.ExpandStringMap(contextEq.(map[string]interface{})))
 		}
 		if contextSub, ok := data["encryption_context_subset"]; ok {
-			constraint.SetEncryptionContextSubset(expandStringMap(contextSub.(map[string]interface{})))
+			constraint.SetEncryptionContextSubset(flex.ExpandStringMap(contextSub.(map[string]interface{})))
 		}
 	}
 
@@ -481,12 +481,12 @@ func resourceKmsGrantConstraintsHash(v interface{}) int {
 
 	if v, ok := m["encryption_context_equals"]; ok {
 		if len(v.(map[string]interface{})) > 0 {
-			buf.WriteString(fmt.Sprintf("encryption_context_equals-%s-", sortedConcatStringMap(expandStringMap(v.(map[string]interface{})))))
+			buf.WriteString(fmt.Sprintf("encryption_context_equals-%s-", sortedConcatStringMap(flex.ExpandStringMap(v.(map[string]interface{})))))
 		}
 	}
 	if v, ok := m["encryption_context_subset"]; ok {
 		if len(v.(map[string]interface{})) > 0 {
-			buf.WriteString(fmt.Sprintf("encryption_context_subset-%s-", sortedConcatStringMap(expandStringMap(v.(map[string]interface{})))))
+			buf.WriteString(fmt.Sprintf("encryption_context_subset-%s-", sortedConcatStringMap(flex.ExpandStringMap(v.(map[string]interface{})))))
 		}
 	}
 

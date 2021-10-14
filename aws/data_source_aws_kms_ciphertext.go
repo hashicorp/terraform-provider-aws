@@ -49,7 +49,7 @@ func dataSourceAwsKmsCiphertextRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if ec := d.Get("context"); ec != nil {
-		req.EncryptionContext = expandStringMap(ec.(map[string]interface{}))
+		req.EncryptionContext = flex.ExpandStringMap(ec.(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] KMS encrypt for key: %s", d.Get("key_id").(string))

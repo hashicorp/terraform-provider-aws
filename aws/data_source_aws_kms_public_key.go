@@ -79,11 +79,11 @@ func dataSourceAwsKmsPublicKeyRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("key_usage", output.KeyUsage)
 	d.Set("public_key", base64.StdEncoding.EncodeToString(output.PublicKey))
 
-	if err := d.Set("encryption_algorithms", flattenStringList(output.EncryptionAlgorithms)); err != nil {
+	if err := d.Set("encryption_algorithms", flex.FlattenStringList(output.EncryptionAlgorithms)); err != nil {
 		return fmt.Errorf("error setting encryption_algorithms: %w", err)
 	}
 
-	if err := d.Set("signing_algorithms", flattenStringList(output.SigningAlgorithms)); err != nil {
+	if err := d.Set("signing_algorithms", flex.FlattenStringList(output.SigningAlgorithms)); err != nil {
 		return fmt.Errorf("error setting signing_algorithms: %w", err)
 	}
 
