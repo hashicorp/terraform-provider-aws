@@ -157,7 +157,7 @@ func testAccCheckAwsAppsyncFunctionDestroy(s *terraform.State) error {
 
 		_, err = conn.GetFunction(input)
 		if err != nil {
-			if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err

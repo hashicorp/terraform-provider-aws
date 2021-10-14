@@ -198,7 +198,7 @@ func resourceAwsAppsyncDatasourceRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetDataSource(input)
 	if err != nil {
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] AppSync Datasource %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -296,7 +296,7 @@ func resourceAwsAppsyncDatasourceDelete(d *schema.ResourceData, meta interface{}
 
 	_, err = conn.DeleteDataSource(input)
 	if err != nil {
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return err
