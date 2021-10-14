@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -29,7 +29,7 @@ func testAccAwsMacie2FindingsFilter_basic(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -58,7 +58,7 @@ func testAccAwsMacie2FindingsFilter_Name_Generated(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -86,7 +86,7 @@ func testAccAwsMacie2FindingsFilter_NamePrefix(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigNamePrefix(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
 				),
 			},
@@ -113,7 +113,7 @@ func testAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMacie2Account(), resourceName),
 				),
@@ -140,7 +140,7 @@ func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigComplete(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
@@ -159,7 +159,7 @@ func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigComplete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -178,7 +178,7 @@ func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigComplete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -221,7 +221,7 @@ func testAccAwsMacie2FindingsFilter_WithDate(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigComplete(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
@@ -240,7 +240,7 @@ func testAccAwsMacie2FindingsFilter_WithDate(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigCompleteMultipleCriterion(descriptionUpdated, macie2.FindingsFilterActionNoop, startDate, endDate, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -296,7 +296,7 @@ func testAccAwsMacie2FindingsFilter_WithNumber(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigComplete(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
@@ -314,7 +314,7 @@ func testAccAwsMacie2FindingsFilter_WithNumber(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigCompleteMultipleCriterionNumber(descriptionUpdated, macie2.FindingsFilterActionNoop, firstNumber, secondNumber, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
@@ -364,7 +364,7 @@ func testAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 				Config: testAccAwsMacieFindingsFilterconfigWithTags(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -117,7 +117,7 @@ func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.Res
 	if v, ok := d.GetOk("ignore_words"); ok {
 		input.IgnoreWords = expandStringSet(v.(*schema.Set))
 	}
-	input.Name = aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string)))
+	input.Name = aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string)))
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -186,7 +186,7 @@ func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.Resou
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "ignore_words", d.Id(), err))
 	}
 	d.Set("name", resp.Name)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
 	d.Set("description", resp.Description)
 	d.Set("maximum_match_distance", resp.MaximumMatchDistance)
 	tags := keyvaluetags.Macie2KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)

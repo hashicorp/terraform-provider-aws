@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -373,7 +373,7 @@ func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.Resour
 
 	input := &macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(resource.UniqueId()),
-		Name:            aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Name:            aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
 		JobType:         aws.String(d.Get("job_type").(string)),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
 	}
@@ -458,7 +458,7 @@ func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.Resource
 	}
 	d.Set("sampling_percentage", resp.SamplingPercentage)
 	d.Set("name", resp.Name)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
 	d.Set("description", resp.Description)
 	d.Set("initial_run", resp.InitialRun)
 	d.Set("job_type", resp.JobType)

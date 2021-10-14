@@ -10,7 +10,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -30,7 +30,7 @@ func testAccAwsMacie2ClassificationJob_basic(t *testing.T) {
 				Config: testAccAwsMacieClassificationJobconfigNameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeOneTime),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_definitions.0.buckets.0", bucketName),
@@ -60,7 +60,7 @@ func testAccAwsMacie2ClassificationJob_Name_Generated(t *testing.T) {
 				Config: testAccAwsMacieClassificationJobconfigNameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -89,7 +89,7 @@ func testAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
 				Config: testAccAwsMacieClassificationJobconfigNamePrefix(bucketName, namePrefix, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
+					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
 				),
 			},
