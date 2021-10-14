@@ -20,49 +20,9 @@ import (
 
 const testAccGameliftBuildPrefix = "tf_acc_build_"
 
-func init() {
-	resource.AddTestSweepers("aws_gamelift_build", &resource.Sweeper{
-		Name: "aws_gamelift_build",
-		F:    sweepBuilds,
-	})
-}
 
-func sweepBuilds(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GameLiftConn
 
-	resp, err := conn.ListBuilds(&gamelift.ListBuildsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelife Build sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error listing Gamelift Builds: %s", err)
-	}
 
-	if len(resp.Builds) == 0 {
-		log.Print("[DEBUG] No Gamelift Builds to sweep")
-		return nil
-	}
-
-	log.Printf("[INFO] Found %d Gamelift Builds", len(resp.Builds))
-
-	for _, build := range resp.Builds {
-		log.Printf("[INFO] Deleting Gamelift Build %q", *build.BuildId)
-		_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
-			BuildId: build.BuildId,
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting Gamelift Build (%s): %s",
-				*build.BuildId, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccGameLiftBuild_basic(t *testing.T) {
 	var conf gamelift.Build

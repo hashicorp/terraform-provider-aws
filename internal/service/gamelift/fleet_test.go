@@ -20,89 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_gamelift_fleet", &resource.Sweeper{
-		Name: "aws_gamelift_fleet",
-		Dependencies: []string{
-			"aws_gamelift_build",
-		},
-		F: sweepFleets,
-	})
-}
 
-func sweepFleets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GameLiftConn
 
-	return testAccGameliftListFleets(conn, nil, region, func(fleetIds []*string) error {
-		if len(fleetIds) == 0 {
-			log.Print("[DEBUG] No Gamelift Fleets to sweep")
-			return nil
-		}
 
-		out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
-			FleetIds: fleetIds,
-		})
-		if err != nil {
-			return fmt.Errorf("Error describing Gamelift Fleet attributes: %s", err)
-		}
 
-		log.Printf("[INFO] Found %d Gamelift Fleets", len(out.FleetAttributes))
 
-		for _, attr := range out.FleetAttributes {
-			log.Printf("[INFO] Deleting Gamelift Fleet %q", *attr.FleetId)
-			err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
-					FleetId: attr.FleetId,
-				})
-				if err != nil {
-					msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *attr.FleetId)
-					if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
-						return resource.RetryableError(err)
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if err != nil {
-				return fmt.Errorf("Error deleting Gamelift Fleet (%s): %s",
-					*attr.FleetId, err)
-			}
-
-			err = tfgamelift.WaitForFleetToBeDeleted(conn, *attr.FleetId, 5*time.Minute)
-			if err != nil {
-				return fmt.Errorf("Error waiting for Gamelift Fleet (%s) to be deleted: %s",
-					*attr.FleetId, err)
-			}
-		}
-		return nil
-	})
-}
-
-func testAccGameliftListFleets(conn *gamelift.GameLift, nextToken *string, region string, f func([]*string) error) error {
-	resp, err := conn.ListFleets(&gamelift.ListFleetsInput{
-		NextToken: nextToken,
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelift Fleet sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error listing Gamelift Fleets: %s", err)
-	}
-
-	err = f(resp.FleetIds)
-	if err != nil {
-		return err
-	}
-	if nextToken != nil {
-		return testAccGameliftListFleets(conn, nextToken, region, f)
-	}
-	return nil
-}
 
 func TestDiffGameliftPortSettings(t *testing.T) {
 	testCases := []struct {

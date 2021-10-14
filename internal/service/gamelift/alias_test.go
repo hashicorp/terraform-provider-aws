@@ -18,69 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_gamelift_alias", &resource.Sweeper{
-		Name: "aws_gamelift_alias",
-		Dependencies: []string{
-			"aws_gamelift_fleet",
-		},
-		F: sweepAliases,
-	})
-}
 
-func sweepAliases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GameLiftConn
 
-	err = listGameliftAliases(&gamelift.ListAliasesInput{}, conn, func(resp *gamelift.ListAliasesOutput) error {
-		if len(resp.Aliases) == 0 {
-			log.Print("[DEBUG] No Gamelift Aliases to sweep")
-			return nil
-		}
 
-		log.Printf("[INFO] Found %d Gamelift Aliases", len(resp.Aliases))
 
-		for _, alias := range resp.Aliases {
-			log.Printf("[INFO] Deleting Gamelift Alias %q", *alias.AliasId)
-			_, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
-				AliasId: alias.AliasId,
-			})
-			if err != nil {
-				return fmt.Errorf("Error deleting Gamelift Alias (%s): %s",
-					*alias.AliasId, err)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelift Alias sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error listing Gamelift Aliases: %s", err)
-	}
 
-	return nil
-}
-
-func listGameliftAliases(input *gamelift.ListAliasesInput, conn *gamelift.GameLift, f func(*gamelift.ListAliasesOutput) error) error {
-	resp, err := conn.ListAliases(input)
-	if err != nil {
-		return err
-	}
-	err = f(resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.NextToken != nil {
-		return listGameliftAliases(input, conn, f)
-	}
-	return nil
-}
 
 func TestAccGameLiftAlias_basic(t *testing.T) {
 	var conf gamelift.Alias

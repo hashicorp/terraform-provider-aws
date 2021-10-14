@@ -20,51 +20,9 @@ import (
 
 const testAccGameliftGameSessionQueuePrefix = "tfAccQueue-"
 
-func init() {
-	resource.AddTestSweepers("aws_gamelift_game_session_queue", &resource.Sweeper{
-		Name: "aws_gamelift_game_session_queue",
-		F:    sweepGameSessionQueue,
-	})
-}
 
-func sweepGameSessionQueue(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).GameLiftConn
 
-	out, err := conn.DescribeGameSessionQueues(&gamelift.DescribeGameSessionQueuesInput{})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Gamelife Queue sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Gamelift Session Queue: %s", err)
-	}
-
-	if len(out.GameSessionQueues) == 0 {
-		log.Print("[DEBUG] No Gamelift Session Queue to sweep")
-		return nil
-	}
-
-	log.Printf("[INFO] Found %d Gamelift Session Queue", len(out.GameSessionQueues))
-
-	for _, queue := range out.GameSessionQueues {
-		log.Printf("[INFO] Deleting Gamelift Session Queue %q", *queue.Name)
-		_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
-			Name: aws.String(*queue.Name),
-		})
-		if err != nil {
-			return fmt.Errorf("error deleting Gamelift Session Queue (%s): %s",
-				*queue.Name, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 	var conf gamelift.GameSessionQueue
