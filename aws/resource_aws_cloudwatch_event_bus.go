@@ -10,6 +10,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceBus() *schema.Resource {
@@ -27,13 +28,13 @@ func ResourceBus() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventCustomEventBusName,
+				ValidateFunc: validCustomEventBusName,
 			},
 			"event_source_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventCustomEventBusEventSourceName,
+				ValidateFunc: validCustomEventBusEventSourceName,
 			},
 			"arn": {
 				Type:     schema.TypeString,

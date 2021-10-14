@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ListEventBusesPages(conn *cloudwatchevents.CloudWatchEvents, input *cloudwatchevents.ListEventBusesInput, fn func(*cloudwatchevents.ListEventBusesOutput, bool) bool) error {
