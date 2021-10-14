@@ -16,9 +16,9 @@ const (
 	FindResourceShareTimeout = 1 * time.Minute
 )
 
-// ResourceShareOwnerOtherAccountsByArn returns the resource share owned by other accounts corresponding to the specified ARN.
+// FindResourceShareOwnerOtherAccountsByARN returns the resource share owned by other accounts corresponding to the specified ARN.
 // Returns nil if no configuration is found.
-func ResourceShareOwnerOtherAccountsByArn(conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
+func FindResourceShareOwnerOtherAccountsByARN(conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
 	listResourceSharesInput := &ram.GetResourceSharesInput{
 		ResourceOwner:     aws.String(ram.ResourceOwnerOtherAccounts),
 		ResourceShareArns: aws.StringSlice([]string{arn}),
@@ -27,9 +27,9 @@ func ResourceShareOwnerOtherAccountsByArn(conn *ram.RAM, arn string) (*ram.Resou
 	return resourceShare(conn, listResourceSharesInput)
 }
 
-// ResourceShareOwnerSelfByArn returns the resource share owned by own account corresponding to the specified ARN.
+// FindResourceShareOwnerSelfByARN returns the resource share owned by own account corresponding to the specified ARN.
 // Returns nil if no configuration is found.
-func ResourceShareOwnerSelfByArn(conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
+func FindResourceShareOwnerSelfByARN(conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
 	listResourceSharesInput := &ram.GetResourceSharesInput{
 		ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
 		ResourceShareArns: aws.StringSlice([]string{arn}),
@@ -38,9 +38,9 @@ func ResourceShareOwnerSelfByArn(conn *ram.RAM, arn string) (*ram.ResourceShare,
 	return resourceShare(conn, listResourceSharesInput)
 }
 
-// ResourceShareInvitationByResourceShareArnAndStatus returns the resource share invitation corresponding to the specified resource share ARN.
+// FindResourceShareInvitationByResourceShareARNAndStatus returns the resource share invitation corresponding to the specified resource share ARN.
 // Returns nil if no configuration is found.
-func ResourceShareInvitationByResourceShareArnAndStatus(conn *ram.RAM, resourceShareArn, status string) (*ram.ResourceShareInvitation, error) {
+func FindResourceShareInvitationByResourceShareARNAndStatus(conn *ram.RAM, resourceShareArn, status string) (*ram.ResourceShareInvitation, error) {
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
@@ -74,9 +74,9 @@ func ResourceShareInvitationByResourceShareArnAndStatus(conn *ram.RAM, resourceS
 	return invitation, nil
 }
 
-// ResourceShareInvitationByArn returns the resource share invitation corresponding to the specified ARN.
+// FindResourceShareInvitationByARN returns the resource share invitation corresponding to the specified ARN.
 // Returns nil if no configuration is found.
-func ResourceShareInvitationByArn(conn *ram.RAM, arn string) (*ram.ResourceShareInvitation, error) {
+func FindResourceShareInvitationByARN(conn *ram.RAM, arn string) (*ram.ResourceShareInvitation, error) {
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
@@ -191,7 +191,7 @@ func resourceShareInvitationByArn(conn *ram.RAM, arn string) (*ram.ResourceShare
 	return output.ResourceShareInvitations[0], nil
 }
 
-func ResourceSharePrincipalAssociationByShareARNPrincipal(conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
+func FindResourceSharePrincipalAssociationByShareARNPrincipal(conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
 	input := &ram.GetResourceShareAssociationsInput{
 		AssociationType:   aws.String(ram.ResourceShareAssociationTypePrincipal),
 		Principal:         aws.String(principal),

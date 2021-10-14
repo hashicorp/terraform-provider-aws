@@ -13,12 +13,12 @@ const (
 	PrincipalDisassociationTimeout = 3 * time.Minute
 )
 
-// ResourceShareInvitationAccepted waits for a ResourceShareInvitation to return ACCEPTED
-func ResourceShareInvitationAccepted(conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShareInvitation, error) {
+// WaitResourceShareInvitationAccepted waits for a ResourceShareInvitation to return ACCEPTED
+func WaitResourceShareInvitationAccepted(conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShareInvitation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareInvitationStatusPending},
 		Target:  []string{ram.ResourceShareInvitationStatusAccepted},
-		Refresh: ResourceShareInvitationStatus(conn, arn),
+		Refresh: StatusResourceShareInvitation(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -31,12 +31,12 @@ func ResourceShareInvitationAccepted(conn *ram.RAM, arn string, timeout time.Dur
 	return nil, err
 }
 
-// ResourceShareOwnedBySelfDisassociated waits for a ResourceShare owned by own account to be disassociated
-func ResourceShareOwnedBySelfDisassociated(conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
+// WaitResourceShareOwnedBySelfDisassociated waits for a ResourceShare owned by own account to be disassociated
+func WaitResourceShareOwnedBySelfDisassociated(conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated},
 		Target:  []string{},
-		Refresh: ResourceShareOwnerSelfStatus(conn, arn),
+		Refresh: StatusResourceShareOwnerSelf(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -49,12 +49,12 @@ func ResourceShareOwnedBySelfDisassociated(conn *ram.RAM, arn string, timeout ti
 	return nil, err
 }
 
-// ResourceShareOwnedBySelfActive waits for a ResourceShare owned by own account to return ACTIVE
-func ResourceShareOwnedBySelfActive(conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
+// WaitResourceShareOwnedBySelfActive waits for a ResourceShare owned by own account to return ACTIVE
+func WaitResourceShareOwnedBySelfActive(conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareStatusPending},
 		Target:  []string{ram.ResourceShareStatusActive},
-		Refresh: ResourceShareOwnerSelfStatus(conn, arn),
+		Refresh: StatusResourceShareOwnerSelf(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -67,12 +67,12 @@ func ResourceShareOwnedBySelfActive(conn *ram.RAM, arn string, timeout time.Dura
 	return nil, err
 }
 
-// ResourceShareOwnedBySelfDeleted waits for a ResourceShare owned by own account to return DELETED
-func ResourceShareOwnedBySelfDeleted(conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
+// WaitResourceShareOwnedBySelfDeleted waits for a ResourceShare owned by own account to return DELETED
+func WaitResourceShareOwnedBySelfDeleted(conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareStatusDeleting},
 		Target:  []string{ram.ResourceShareStatusDeleted},
-		Refresh: ResourceShareOwnerSelfStatus(conn, arn),
+		Refresh: StatusResourceShareOwnerSelf(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -85,11 +85,11 @@ func ResourceShareOwnedBySelfDeleted(conn *ram.RAM, arn string, timeout time.Dur
 	return nil, err
 }
 
-func ResourceSharePrincipalAssociated(conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
+func WaitResourceSharePrincipalAssociated(conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociating, PrincipalAssociationStatusNotFound},
 		Target:  []string{ram.ResourceShareAssociationStatusAssociated},
-		Refresh: ResourceSharePrincipalAssociationStatus(conn, resourceShareARN, principal),
+		Refresh: StatusResourceSharePrincipalAssociation(conn, resourceShareARN, principal),
 		Timeout: PrincipalAssociationTimeout,
 	}
 
@@ -102,11 +102,11 @@ func ResourceSharePrincipalAssociated(conn *ram.RAM, resourceShareARN, principal
 	return nil, err
 }
 
-func ResourceSharePrincipalDisassociated(conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
+func WaitResourceSharePrincipalDisassociated(conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated, ram.ResourceShareAssociationStatusDisassociating},
 		Target:  []string{ram.ResourceShareAssociationStatusDisassociated, PrincipalAssociationStatusNotFound},
-		Refresh: ResourceSharePrincipalAssociationStatus(conn, resourceShareARN, principal),
+		Refresh: StatusResourceSharePrincipalAssociation(conn, resourceShareARN, principal),
 		Timeout: PrincipalDisassociationTimeout,
 	}
 
