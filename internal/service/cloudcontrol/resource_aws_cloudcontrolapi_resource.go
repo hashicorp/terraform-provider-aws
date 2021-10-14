@@ -1,4 +1,4 @@
-package aws
+package cloudcontrol
 
 import (
 	"context"
@@ -17,17 +17,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mattbaird/jsonpatch"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/waiter"
-	cffinder "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudformation/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
-	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
-	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
-	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -125,7 +119,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// Always try to capture the identifier before returning errors
 	d.SetId(aws.StringValue(output.ProgressEvent.Identifier))
 
-	output.ProgressEvent, err = tfcloudcontrol.waitProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutCreate))
+	output.ProgressEvent, err = waitProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Cloud Control API Resource (%s) create: %w", d.Id(), err))
@@ -142,7 +136,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
-	resourceDescription, err := tfcloudcontrol.FindResourceByID(ctx, conn,
+	resourceDescription, err := FindResourceByID(ctx, conn,
 		d.Id(),
 		d.Get("type_name").(string),
 		d.Get("type_version_id").(string),
@@ -207,7 +201,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return diag.FromErr(fmt.Errorf("error updating Cloud Control API Resource (%s): empty result", d.Id()))
 		}
 
-		if _, err := tfcloudcontrol.waitProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.FromErr(fmt.Errorf("error waiting for Cloud Control API Resource (%s) update: %w", d.Id(), err))
 		}
 	}
@@ -242,7 +236,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(fmt.Errorf("error deleting Cloud Control API Resource (%s): empty result", d.Id()))
 	}
 
-	progressEvent, err := tfcloudcontrol.waitProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutDelete))
+	progressEvent, err := waitProgressEventOperationStatusSuccess(ctx, conn, aws.StringValue(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutDelete))
 
 	if progressEvent != nil && aws.StringValue(progressEvent.ErrorCode) == cloudcontrolapi.HandlerErrorCodeNotFound {
 		return nil

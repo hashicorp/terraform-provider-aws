@@ -1,4 +1,4 @@
-package aws
+package cloudcontrol_test
 
 import (
 	"fmt"

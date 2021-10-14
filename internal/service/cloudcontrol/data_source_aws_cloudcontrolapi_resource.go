@@ -1,4 +1,4 @@
-package aws
+package cloudcontrol
 
 import (
 	"context"
@@ -9,12 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
-	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 )
 
 func DataSourceResource() *schema.Resource {
@@ -51,7 +48,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CloudControlConn
 
 	identifier := d.Get("identifier").(string)
-	resourceDescription, err := tfcloudcontrol.FindResourceByID(ctx, conn,
+	resourceDescription, err := FindResourceByID(ctx, conn,
 		identifier,
 		d.Get("type_name").(string),
 		d.Get("type_version_id").(string),
