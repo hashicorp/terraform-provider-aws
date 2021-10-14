@@ -4,17 +4,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 )
 
 func statusAdministrativeAction(conn *fsx.FSx, fsID, actionType string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := tffsx.FindAdministrativeActionByFileSystemIDAndActionType(conn, fsID, actionType)
+		output, err := FindAdministrativeActionByFileSystemIDAndActionType(conn, fsID, actionType)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -30,7 +26,7 @@ func statusAdministrativeAction(conn *fsx.FSx, fsID, actionType string) resource
 
 func statusBackup(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := tffsx.FindBackupByID(conn, id)
+		output, err := FindBackupByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -46,7 +42,7 @@ func statusBackup(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 
 func statusFileSystem(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := tffsx.FindFileSystemByID(conn, id)
+		output, err := FindFileSystemByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

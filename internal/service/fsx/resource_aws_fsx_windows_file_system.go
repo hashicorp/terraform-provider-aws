@@ -1,4 +1,4 @@
-package aws
+package fsx
 
 import (
 	"fmt"
@@ -14,27 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 )
 
 func ResourceWindowsFileSystem() *schema.Resource {
@@ -392,7 +376,7 @@ func resourceWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	}
 
-	if _, err := tffsx.waitFileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitFileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for FSx Windows File System (%s) create: %w", d.Id(), err)
 	}
 
@@ -459,7 +443,7 @@ func resourceWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error updating FSx Windows File System (%s): %w", d.Id(), err)
 		}
 
-		if _, err := tffsx.waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx Windows File System (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -472,7 +456,7 @@ func resourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	filesystem, err := tffsx.FindFileSystemByID(conn, d.Id())
+	filesystem, err := FindFileSystemByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Windows File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -568,7 +552,7 @@ func resourceWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error deleting FSx Windows File System (%s): %w", d.Id(), err)
 	}
 
-	if _, err := tffsx.waitFileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitFileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for FSx Windows File System (%s) to delete: %w", d.Id(), err)
 	}
 
@@ -601,7 +585,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 				return fmt.Errorf("error associating aliases to FSx file system (%s): %w", identifier, err)
 			}
 
-			if _, err := tffsx.waitAdministrativeActionCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
+			if _, err := waitAdministrativeActionCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
 				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be associated: %w", identifier, err)
 			}
 		}
@@ -620,7 +604,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 				return fmt.Errorf("error disassociating aliases from FSx file system (%s): %w", identifier, err)
 			}
 
-			if _, err := tffsx.waitAdministrativeActionCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
+			if _, err := waitAdministrativeActionCompleted(conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
 				return fmt.Errorf("error waiting for FSx Windows File System (%s) alias to be disassociated: %w", identifier, err)
 			}
 		}

@@ -1,4 +1,4 @@
-package aws
+package fsx_test
 
 import (
 	"fmt"
@@ -11,14 +11,14 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/fsx/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
