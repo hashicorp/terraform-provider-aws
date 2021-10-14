@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func ResourcePatchGroup() *schema.Resource {
@@ -74,7 +76,7 @@ func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", d.Id(), err)
 	}
 
-	group, err := finder.PatchGroup(conn, patchGroup, baselineId)
+	group, err := tfssm.FindPatchGroup(conn, patchGroup, baselineId)
 
 	if err != nil {
 		return fmt.Errorf("error reading SSM Patch Group (%s): %w", d.Id(), err)

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceActivation() *schema.Resource {
@@ -111,7 +112,7 @@ func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry to allow iam_role to be created and policy attachment to take place
 	var resp *ssm.CreateActivationOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.CreateActivation(activationInput)
