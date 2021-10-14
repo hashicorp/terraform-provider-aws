@@ -197,7 +197,7 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 
 		resp, err = conn.CreatePipeline(params)
 
-		if isAWSErr(err, codepipeline.ErrCodeInvalidStructureException, "not authorized") {
+		if tfawserr.ErrMessageContains(err, codepipeline.ErrCodeInvalidStructureException, "not authorized") {
 			return resource.RetryableError(err)
 		}
 
@@ -207,7 +207,7 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.CreatePipeline(params)
 	}
 	if err != nil {
@@ -505,7 +505,7 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 		Name: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, codepipeline.ErrCodePipelineNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
 		log.Printf("[WARN] CodePipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -592,7 +592,7 @@ func resourceAwsCodePipelineDelete(d *schema.ResourceData, meta interface{}) err
 		Name: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, codepipeline.ErrCodePipelineNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
 		return nil
 	}
 

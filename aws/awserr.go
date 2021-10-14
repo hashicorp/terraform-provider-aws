@@ -8,13 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 )
 
-// Returns true if the error matches all these conditions:
-//  * err is of type awserr.Error
-//  * Error.Code() matches code
-//  * Error.Message() contains message
-func isAWSErr(err error, code string, message string) bool {
-	return tfawserr.ErrMessageContains(err, code, message)
-}
+
 
 func retryOnAwsCode(code string, f func() (interface{}, error)) (interface{}, error) {
 	var resp interface{}

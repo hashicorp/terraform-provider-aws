@@ -40,7 +40,7 @@ func (t *WafRegionalRetryer) RetryWithToken(f withRegionalTokenFunc) (interface{
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
 
 		if err != nil {

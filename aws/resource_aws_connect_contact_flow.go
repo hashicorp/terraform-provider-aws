@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/mitchellh/go-homedir"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect/waiter"
+	"github.com/mitchellh/go-homedir"
 )
 
 const awsMutexConnectContactFlowKey = `aws_connect_contact_flow`
@@ -157,7 +157,7 @@ func resourceAwsConnectContactFlowRead(ctx context.Context, d *schema.ResourceDa
 		InstanceId:    aws.String(instanceID),
 	})
 
-	if !d.IsNewResource() && isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Connect Contact Flow (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

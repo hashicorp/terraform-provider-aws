@@ -687,7 +687,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = s3conn.CreateBucket(req)
 	}
 	if err != nil {
@@ -904,7 +904,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !isAWSErr(err, "NoSuchCORSConfiguration", "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchCORSConfiguration", "") {
 		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
 	}
 
@@ -936,7 +936,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !isAWSErr(err, "NotImplemented", "") && !isAWSErr(err, "NoSuchWebsiteConfiguration", "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, "NotImplemented", "") && !tfawserr.ErrMessageContains(err, "NoSuchWebsiteConfiguration", "") {
 		return fmt.Errorf("error getting S3 Bucket website configuration: %s", err)
 	}
 
@@ -1036,7 +1036,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
-	if err != nil && !isAWSErr(err, "MethodNotAllowed", "") && !isAWSErr(err, "UnsupportedArgument", "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, "MethodNotAllowed", "") && !tfawserr.ErrMessageContains(err, "UnsupportedArgument", "") {
 		return fmt.Errorf("error getting S3 Bucket acceleration configuration: %s", err)
 	}
 	if accelerate, ok := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput); ok {
@@ -1093,7 +1093,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !isAWSErr(err, "NoSuchLifecycleConfiguration", "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, "NoSuchLifecycleConfiguration", "") {
 		return err
 	}
 
@@ -1222,7 +1222,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !isAWSErr(err, "ReplicationConfigurationNotFoundError", "") {
+	if err != nil && !tfawserr.ErrMessageContains(err, "ReplicationConfigurationNotFoundError", "") {
 		return fmt.Errorf("error getting S3 Bucket replication: %s", err)
 	}
 
@@ -1241,7 +1241,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(d.Id()),
 		})
 	})
-	if err != nil && !isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
+	if err != nil && !tfawserr.ErrMessageContains(err, "ServerSideEncryptionConfigurationNotFoundError", "encryption configuration was not found") {
 		return fmt.Errorf("error getting S3 Bucket encryption: %s", err)
 	}
 
@@ -1360,11 +1360,11 @@ func resourceAwsS3BucketDelete(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+	if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 		return nil
 	}
 
-	if isAWSErr(err, "BucketNotEmpty", "") {
+	if tfawserr.ErrMessageContains(err, "BucketNotEmpty", "") {
 		if d.Get("force_destroy").(bool) {
 			// Use a S3 service client that can handle multiple slashes in URIs.
 			// While aws_s3_bucket_object resources cannot create these object
@@ -1413,7 +1413,7 @@ func resourceAwsS3BucketPolicyUpdate(s3conn *s3.S3, d *schema.ResourceData) erro
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := s3conn.PutBucketPolicy(params)
-			if isAWSErr(err, "MalformedPolicy", "") || isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			if tfawserr.ErrMessageContains(err, "MalformedPolicy", "") || tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
 				return resource.RetryableError(err)
 			}
 			if err != nil {
@@ -1421,7 +1421,7 @@ func resourceAwsS3BucketPolicyUpdate(s3conn *s3.S3, d *schema.ResourceData) erro
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			_, err = s3conn.PutBucketPolicy(params)
 		}
 		if err != nil {
@@ -2133,7 +2133,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := s3conn.PutBucketReplication(i)
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
+		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") || tfawserr.ErrMessageContains(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -2141,7 +2141,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = s3conn.PutBucketReplication(i)
 	}
 	if err != nil {
@@ -2693,11 +2693,11 @@ func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) ([]interface{}, e
 	})
 	if err != nil {
 		// Certain S3 implementations do not include this API
-		if isAWSErr(err, "MethodNotAllowed", "") {
+		if tfawserr.ErrMessageContains(err, "MethodNotAllowed", "") {
 			return nil, nil
 		}
 
-		if isAWSErr(err, "ObjectLockConfigurationNotFoundError", "") {
+		if tfawserr.ErrMessageContains(err, "ObjectLockConfigurationNotFoundError", "") {
 			return nil, nil
 		}
 		return nil, err

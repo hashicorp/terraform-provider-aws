@@ -441,8 +441,8 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 	dlt, err := conn.DescribeLaunchTemplates(params)
 
 	if err != nil {
-		if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") ||
-			isAWSErr(err, "InvalidLaunchTemplateName.NotFoundException", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") ||
+			tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateName.NotFoundException", "") {
 			return fmt.Errorf("Launch Template not found")
 		}
 		return fmt.Errorf("Error getting launch template: %w", err)

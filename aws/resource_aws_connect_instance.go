@@ -187,7 +187,7 @@ func resourceAwsConnectInstanceRead(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[DEBUG] Reading Connect Instance %s", d.Id())
 	output, err := conn.DescribeInstanceWithContext(ctx, &input)
 
-	if !d.IsNewResource() && isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Connect Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -231,7 +231,7 @@ func resourceAwsConnectInstanceDelete(ctx context.Context, d *schema.ResourceDat
 
 	_, err := conn.DeleteInstance(input)
 
-	if isAWSErr(err, connect.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
