@@ -18,67 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ssm_maintenance_window", &resource.Sweeper{
-		Name: "aws_ssm_maintenance_window",
-		F:    sweepMaintenanceWindows,
-	})
-}
 
-func sweepMaintenanceWindows(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).SSMConn
-	input := &ssm.DescribeMaintenanceWindowsInput{}
-	var sweeperErrs *multierror.Error
-
-	for {
-		output, err := conn.DescribeMaintenanceWindows(input)
-
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SSM Maintenance Window sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error retrieving SSM Maintenance Windows: %s", err)
-		}
-
-		for _, window := range output.WindowIdentities {
-			id := aws.StringValue(window.WindowId)
-			input := &ssm.DeleteMaintenanceWindowInput{
-				WindowId: window.WindowId,
-			}
-
-			log.Printf("[INFO] Deleting SSM Maintenance Window: %s", id)
-
-			_, err := conn.DeleteMaintenanceWindow(input)
-
-			if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
-				continue
-			}
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting SSM Maintenance Window (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
