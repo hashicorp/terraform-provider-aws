@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 

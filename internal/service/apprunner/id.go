@@ -3,7 +3,6 @@ package apprunner
 import (
 	"fmt"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func CustomDomainAssociationParseID(id string) (string, string, error) {
