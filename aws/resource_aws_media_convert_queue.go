@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMediaConvertQueue() *schema.Resource {
+func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMediaConvertQueueCreate,
-		Read:   resourceAwsMediaConvertQueueRead,
-		Update: resourceAwsMediaConvertQueueUpdate,
-		Delete: resourceAwsMediaConvertQueueDelete,
+		Create: resourceQueueCreate,
+		Read:   resourceQueueRead,
+		Update: resourceQueueUpdate,
+		Delete: resourceQueueDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -94,7 +94,7 @@ func resourceAwsMediaConvertQueue() *schema.Resource {
 	}
 }
 
-func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	conn, err := getAwsMediaConvertAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
@@ -125,10 +125,10 @@ func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(aws.StringValue(resp.Queue.Name))
 
-	return resourceAwsMediaConvertQueueRead(d, meta)
+	return resourceQueueRead(d, meta)
 }
 
-func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn, err := getAwsMediaConvertAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
@@ -181,7 +181,7 @@ func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn, err := getAwsMediaConvertAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
@@ -221,10 +221,10 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsMediaConvertQueueRead(d, meta)
+	return resourceQueueRead(d, meta)
 }
 
-func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	conn, err := getAwsMediaConvertAccountClient(meta.(*conns.AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
@@ -247,8 +247,8 @@ func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}
 
 func getAwsMediaConvertAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
 	const mutexKey = `mediaconvertaccountconn`
-	awsMutexKV.Lock(mutexKey)
-	defer awsMutexKV.Unlock(mutexKey)
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	if awsClient.MediaConvertAccountConn != nil {
 		return awsClient.MediaConvertAccountConn, nil
