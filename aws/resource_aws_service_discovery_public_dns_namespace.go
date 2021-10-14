@@ -107,7 +107,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d *schema.ResourceData, m
 
 	resp, err := conn.GetNamespace(input)
 	if err != nil {
-		if isAWSErr(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
 			d.SetId("")
 			return nil
 		}

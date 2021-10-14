@@ -103,7 +103,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceRead(d *schema.ResourceData, meta i
 
 	resp, err := conn.GetNamespace(input)
 	if err != nil {
-		if isAWSErr(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+		if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
 			d.SetId("")
 			return nil
 		}
@@ -157,7 +157,7 @@ func resourceAwsServiceDiscoveryHttpNamespaceDelete(d *schema.ResourceData, meta
 
 	output, err := conn.DeleteNamespace(input)
 
-	if isAWSErr(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+	if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
 		return nil
 	}
 

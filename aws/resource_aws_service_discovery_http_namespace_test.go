@@ -245,7 +245,7 @@ func testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy(s *terraform.State) err
 
 		_, err := conn.GetNamespace(input)
 		if err != nil {
-			if isAWSErr(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+			if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
 				continue
 			}
 			return err

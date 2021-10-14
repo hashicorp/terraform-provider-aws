@@ -239,7 +239,7 @@ func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceDestroy(s *terraform.State
 
 		_, err := conn.GetNamespace(input)
 		if err != nil {
-			if isAWSErr(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
+			if tfawserr.ErrMessageContains(err, servicediscovery.ErrCodeNamespaceNotFound, "") {
 				return nil
 			}
 			return err
