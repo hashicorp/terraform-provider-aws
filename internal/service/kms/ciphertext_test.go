@@ -16,7 +16,7 @@ func TestAccResourceAwsKmsCiphertext_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAwsKmsCiphertextConfig_basic,
+				Config: testAccResourceCiphertextConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"aws_kms_ciphertext.foo", "ciphertext_blob"),
@@ -37,7 +37,7 @@ func TestAccResourceAwsKmsCiphertext_validate(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAwsKmsCiphertextConfig_validate,
+				Config: testAccResourceCiphertextConfig_validate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "ciphertext_blob"),
 					resource.TestCheckResourceAttrPair(resourceName, "plaintext", kmsSecretsDataSource, "plaintext.plaintext"),
@@ -58,7 +58,7 @@ func TestAccResourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAwsKmsCiphertextConfig_validate_withContext,
+				Config: testAccResourceCiphertextConfig_validate_withContext,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "ciphertext_blob"),
 					resource.TestCheckResourceAttrPair(resourceName, "plaintext", kmsSecretsDataSource, "plaintext.plaintext"),
@@ -68,7 +68,7 @@ func TestAccResourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 	})
 }
 
-const testAccResourceAwsKmsCiphertextConfig_basic = `
+const testAccResourceCiphertextConfig_basic = `
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-basic"
   is_enabled  = true
@@ -81,7 +81,7 @@ resource "aws_kms_ciphertext" "foo" {
 }
 `
 
-const testAccResourceAwsKmsCiphertextConfig_validate = `
+const testAccResourceCiphertextConfig_validate = `
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-validate"
   is_enabled  = true
@@ -101,7 +101,7 @@ data "aws_kms_secrets" "foo" {
 }
 `
 
-const testAccResourceAwsKmsCiphertextConfig_validate_withContext = `
+const testAccResourceCiphertextConfig_validate_withContext = `
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-validate-with-context"
   is_enabled  = true

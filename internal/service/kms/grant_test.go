@@ -22,12 +22,12 @@ func TestAccAWSKmsGrant_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		CheckDestroy: testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsGrant_Basic(rName, "\"Encrypt\", \"Decrypt\""),
+				Config: testAccGrant_Basic(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists(resourceName),
+					testAccCheckGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
@@ -54,13 +54,13 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		CheckDestroy: testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsGrant_withConstraints(rName, "encryption_context_equals", `foo = "bar"
+				Config: testAccGrant_withConstraints(rName, "encryption_context_equals", `foo = "bar"
                         baz = "kaz"`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists(resourceName),
+					testAccCheckGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
@@ -77,10 +77,10 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"grant_token", "retire_on_delete"},
 			},
 			{
-				Config: testAccAWSKmsGrant_withConstraints(rName, "encryption_context_subset", `foo = "bar"
+				Config: testAccGrant_withConstraints(rName, "encryption_context_subset", `foo = "bar"
 			            baz = "kaz"`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists(resourceName),
+					testAccCheckGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
@@ -102,12 +102,12 @@ func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		CheckDestroy: testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsGrant_withRetiringPrincipal(rName),
+				Config: testAccGrant_withRetiringPrincipal(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists(resourceName),
+					testAccCheckGrantExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "retiring_principal"),
 				),
 			},
@@ -129,12 +129,12 @@ func TestAccAWSKmsGrant_bare(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		CheckDestroy: testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsGrant_bare(rName),
+				Config: testAccGrant_bare(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists(resourceName),
+					testAccCheckGrantExists(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "name"),
 					resource.TestCheckNoResourceAttr(resourceName, "constraints.#"),
 					resource.TestCheckNoResourceAttr(resourceName, "retiring_principal"),
@@ -158,12 +158,12 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		CheckDestroy: testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsGrant_ARN(rName, "\"Encrypt\", \"Decrypt\""),
+				Config: testAccGrant_ARN(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists(resourceName),
+					testAccCheckGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
@@ -190,12 +190,12 @@ func TestAccAWSKmsGrant_AsymmetricKey(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		CheckDestroy: testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsGrant_AsymmetricKey(rName),
+				Config: testAccGrant_AsymmetricKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists(resourceName),
+					testAccCheckGrantExists(resourceName),
 				),
 			},
 			{
@@ -216,13 +216,13 @@ func TestAccAWSKmsGrant_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		CheckDestroy: testAccCheckGrantDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKmsGrant_Basic(rName, "\"Encrypt\", \"Decrypt\""),
+				Config: testAccGrant_Basic(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSKmsGrantExists(resourceName),
-					testAccCheckAWSKmsGrantDisappears(resourceName),
+					testAccCheckGrantExists(resourceName),
+					testAccCheckGrantDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -230,7 +230,7 @@ func TestAccAWSKmsGrant_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSKmsGrantDestroy(s *terraform.State) error {
+func testAccCheckGrantDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -245,7 +245,7 @@ func testAccCheckAWSKmsGrantDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSKmsGrantExists(name string) resource.TestCheckFunc {
+func testAccCheckGrantExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -256,7 +256,7 @@ func testAccCheckAWSKmsGrantExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSKmsGrantDisappears(name string) resource.TestCheckFunc {
+func testAccCheckGrantDisappears(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -275,7 +275,7 @@ func testAccCheckAWSKmsGrantDisappears(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSKmsGrantConfigBase(rName string) string {
+func testAccGrantBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = "Terraform acc test key %[1]s"
@@ -302,8 +302,8 @@ resource "aws_iam_role" "test" {
 `, rName)
 }
 
-func testAccAWSKmsGrant_Basic(rName string, operations string) string {
-	return testAccAWSKmsGrantConfigBase(rName) + fmt.Sprintf(`
+func testAccGrant_Basic(rName string, operations string) string {
+	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
   key_id            = aws_kms_key.test.key_id
@@ -313,8 +313,8 @@ resource "aws_kms_grant" "test" {
 `, rName, operations)
 }
 
-func testAccAWSKmsGrant_withConstraints(rName string, constraintName string, encryptionContext string) string {
-	return testAccAWSKmsGrantConfigBase(rName) + fmt.Sprintf(`
+func testAccGrant_withConstraints(rName string, constraintName string, encryptionContext string) string {
+	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = "%[1]s"
   key_id            = aws_kms_key.test.key_id
@@ -330,8 +330,8 @@ resource "aws_kms_grant" "test" {
 `, rName, constraintName, encryptionContext)
 }
 
-func testAccAWSKmsGrant_withRetiringPrincipal(rName string) string {
-	return testAccAWSKmsGrantConfigBase(rName) + fmt.Sprintf(`
+func testAccGrant_withRetiringPrincipal(rName string) string {
+	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name               = "%[1]s"
   key_id             = aws_kms_key.test.key_id
@@ -342,8 +342,8 @@ resource "aws_kms_grant" "test" {
 `, rName)
 }
 
-func testAccAWSKmsGrant_bare(rName string) string {
-	return testAccAWSKmsGrantConfigBase(rName) + `
+func testAccGrant_bare(rName string) string {
+	return testAccGrantBaseConfig(rName) + `
 resource "aws_kms_grant" "test" {
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
@@ -352,8 +352,8 @@ resource "aws_kms_grant" "test" {
 `
 }
 
-func testAccAWSKmsGrant_ARN(rName string, operations string) string {
-	return testAccAWSKmsGrantConfigBase(rName) + fmt.Sprintf(`
+func testAccGrant_ARN(rName string, operations string) string {
+	return testAccGrantBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = "%[1]s"
   key_id            = aws_kms_key.test.arn
@@ -363,7 +363,7 @@ resource "aws_kms_grant" "test" {
 `, rName, operations)
 }
 
-func testAccAWSKmsGrant_AsymmetricKey(rName string) string {
+func testAccGrant_AsymmetricKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = "%[1]s"

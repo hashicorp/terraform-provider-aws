@@ -21,7 +21,7 @@ func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsKmsAliasConfig(rName),
+				Config: testAccAliasDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kms", rName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -44,7 +44,7 @@ func TestAccDataSourceAwsKmsAlias_CMK(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsKmsAliasConfigCMK(rName),
+				Config: testAccAliasCMKDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceAliasResourceName, "arn", aliasResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceAliasResourceName, "target_key_arn", aliasResourceName, "target_key_arn"),
@@ -55,7 +55,7 @@ func TestAccDataSourceAwsKmsAlias_CMK(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsKmsAliasConfig(rName string) string {
+func testAccAliasDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "test" {
   name = %[1]q
@@ -63,7 +63,7 @@ data "aws_kms_alias" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsKmsAliasConfigCMK(rName string) string {
+func testAccAliasCMKDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q

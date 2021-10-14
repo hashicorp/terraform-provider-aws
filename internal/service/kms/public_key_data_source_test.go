@@ -22,9 +22,9 @@ func TestAccDataSourceAwsKmsPublicKey_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsKmsPublicKeyConfig(rName),
+				Config: testAccPublicKeyDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsKmsPublicKeyCheck(datasourceName),
+					testAccPublicKeyCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_id", resourceName, "arn"),
@@ -47,9 +47,9 @@ func TestAccDataSourceAwsKmsPublicKey_encrypt(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsKmsPublicKeyEncryptConfig(rName),
+				Config: testAccPublicKeyEncryptDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsKmsPublicKeyCheck(datasourceName),
+					testAccPublicKeyCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_id", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
@@ -61,7 +61,7 @@ func TestAccDataSourceAwsKmsPublicKey_encrypt(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsKmsPublicKeyCheck(name string) resource.TestCheckFunc {
+func testAccPublicKeyCheckDataSource(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -72,7 +72,7 @@ func testAccDataSourceAwsKmsPublicKeyCheck(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDataSourceAwsKmsPublicKeyConfig(rName string) string {
+func testAccPublicKeyDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description              = %[1]q
@@ -87,7 +87,7 @@ data "aws_kms_public_key" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsKmsPublicKeyEncryptConfig(rName string) string {
+func testAccPublicKeyEncryptDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description              = %[1]q

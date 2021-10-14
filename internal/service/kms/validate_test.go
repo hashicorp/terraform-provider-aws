@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestValidateAwsKMSGrantName(t *testing.T) {
+func TestValidGrantName(t *testing.T) {
 	validValues := []string{
 		"123",
 		"Abc",
@@ -35,7 +35,7 @@ func TestValidateAwsKMSGrantName(t *testing.T) {
 	}
 }
 
-func TestValidateAwsKMSName(t *testing.T) {
+func TestValidName(t *testing.T) {
 	cases := []struct {
 		Value    string
 		ErrCount int
