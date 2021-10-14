@@ -39,7 +39,7 @@ func bucketListTags(conn *s3control.S3Control, identifier string) (tftags.KeyVal
 		return tftags.New(nil), err
 	}
 
-	return S3controlKeyValueTags(output.TagSet), nil
+	return KeyValueTags(output.TagSet), nil
 }
 
 // bucketUpdateTags updates S3control bucket tags.
@@ -68,7 +68,7 @@ func bucketUpdateTags(conn *s3control.S3Control, identifier string, oldTagsMap i
 			AccountId: aws.String(parsedArn.AccountID),
 			Bucket:    aws.String(identifier),
 			Tagging: &s3control.Tagging{
-				TagSet: newTags.Merge(ignoredTags).S3controlTags(),
+				TagSet: Tags(newTags.Merge(ignoredTags)),
 			},
 		}
 
