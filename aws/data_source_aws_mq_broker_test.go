@@ -5,20 +5,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_broker.test"
 
 	dataSourceByIdName := "data.aws_mq_broker.by_id"
 	dataSourceByNameName := "data.aws_mq_broker.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(mq.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, mq.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(mq.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +172,7 @@ resource "aws_mq_broker" "test" {
 }
 
 func testAccDataSourceAWSMqBrokerConfig_byId(rName string) string {
-	return composeConfig(testAccDataSourceAWSMqBrokerConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDataSourceAWSMqBrokerConfig_base(rName), `
 data "aws_mq_broker" "by_id" {
   broker_id = aws_mq_broker.test.id
 }
@@ -179,7 +180,7 @@ data "aws_mq_broker" "by_id" {
 }
 
 func testAccDataSourceAWSMqBrokerConfig_byName(rName string) string {
-	return composeConfig(testAccDataSourceAWSMqBrokerConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDataSourceAWSMqBrokerConfig_base(rName), `
 data "aws_mq_broker" "by_name" {
   broker_name = aws_mq_broker.test.broker_name
 }

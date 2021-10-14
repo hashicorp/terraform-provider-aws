@@ -7,22 +7,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSMqConfiguration_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 				Config: testAccMqConfigurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -48,7 +49,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 				Config: testAccMqConfigurationConfig_descriptionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration Updated"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
@@ -61,16 +62,16 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 }
 
 func TestAccAWSMqConfiguration_withData(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -78,7 +79,7 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 				Config: testAccMqConfigurationWithDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
@@ -96,16 +97,16 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 }
 
 func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -113,7 +114,7 @@ func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
 				Config: testAccMqConfigurationWithLdapDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -132,16 +133,16 @@ func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
 }
 
 func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
