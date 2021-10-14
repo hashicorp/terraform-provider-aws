@@ -17,13 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKmsGrant() *schema.Resource {
+func ResourceGrant() *schema.Resource {
 	return &schema.Resource{
 		// There is no API for updating/modifying grants, hence no Update
 		// Instead changes to most fields will force a new resource
-		Create: resourceAwsKmsGrantCreate,
-		Read:   resourceAwsKmsGrantRead,
-		Delete: resourceAwsKmsGrantDelete,
+		Create: resourceGrantCreate,
+		Read:   resourceGrantRead,
+		Delete: resourceGrantDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				keyId, grantId, err := decodeKmsGrantId(d.Id())
@@ -120,7 +120,7 @@ func resourceAwsKmsGrant() *schema.Resource {
 	}
 }
 
-func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 	keyId := d.Get("key_id").(string)
 
@@ -179,10 +179,10 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("grant_id", out.GrantId)
 	d.Set("grant_token", out.GrantToken)
 
-	return resourceAwsKmsGrantRead(d, meta)
+	return resourceGrantRead(d, meta)
 }
 
-func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGrantRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	keyId, grantId, err := decodeKmsGrantId(d.Id())
@@ -242,7 +242,7 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	keyId, grantId, decodeErr := decodeKmsGrantId(d.Id())

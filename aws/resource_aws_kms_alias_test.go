@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSKmsAlias_basic(t *testing.T) {
@@ -63,7 +64,7 @@ func TestAccAWSKmsAlias_disappears(t *testing.T) {
 				Config: testAccAWSKmsAliasConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKmsAliasExists(resourceName, &alias),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsKmsAlias(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

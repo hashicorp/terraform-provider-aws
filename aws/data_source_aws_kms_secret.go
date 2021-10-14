@@ -9,7 +9,7 @@ import (
 
 const dataSourceAwsKmsSecretRemovedMessage = "This data source has been replaced with the `aws_kms_secrets` data source. Upgrade information is available at: https://www.terraform.io/docs/providers/aws/guides/version-2-upgrade.html#data-source-aws_kms_secret"
 
-func dataSourceAwsKmsSecret() *schema.Resource {
+func DataSourceSecret() *schema.Resource {
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, meta interface{}) error {
 			return errors.New(dataSourceAwsKmsSecretRemovedMessage)

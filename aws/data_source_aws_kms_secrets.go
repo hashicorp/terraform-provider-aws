@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsKmsSecrets() *schema.Resource {
+func DataSourceSecrets() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsKmsSecretsRead,
+		Read: dataSourceSecretsRead,
 
 		Schema: map[string]*schema.Schema{
 			"secret": {
@@ -52,7 +52,7 @@ func dataSourceAwsKmsSecrets() *schema.Resource {
 	}
 }
 
-func dataSourceAwsKmsSecretsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	secrets := d.Get("secret").(*schema.Set)

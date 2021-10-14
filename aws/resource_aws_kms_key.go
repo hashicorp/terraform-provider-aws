@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKmsKey() *schema.Resource {
+func ResourceKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKmsKeyCreate,
-		Read:   resourceAwsKmsKeyRead,
-		Update: resourceAwsKmsKeyUpdate,
-		Delete: resourceAwsKmsKeyDelete,
+		Create: resourceKeyCreate,
+		Read:   resourceKeyRead,
+		Update: resourceKeyUpdate,
+		Delete: resourceKeyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -104,7 +104,7 @@ func resourceAwsKmsKey() *schema.Resource {
 	}
 }
 
-func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -169,10 +169,10 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsKmsKeyRead(d, meta)
+	return resourceKeyRead(d, meta)
 }
 
-func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -212,7 +212,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && enabled {
@@ -259,10 +259,10 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsKmsKeyRead(d, meta)
+	return resourceKeyRead(d, meta)
 }
 
-func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	input := &kms.ScheduleKeyDeletionInput{

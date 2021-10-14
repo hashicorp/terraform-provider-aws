@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsKmsAlias() *schema.Resource {
+func ResourceAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKmsAliasCreate,
-		Read:   resourceAwsKmsAliasRead,
-		Update: resourceAwsKmsAliasUpdate,
-		Delete: resourceAwsKmsAliasDelete,
+		Create: resourceAliasCreate,
+		Read:   resourceAliasRead,
+		Update: resourceAliasUpdate,
+		Delete: resourceAliasDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -65,7 +65,7 @@ func resourceAwsKmsAlias() *schema.Resource {
 	}
 }
 
-func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	namePrefix := d.Get("name_prefix").(string)
@@ -92,10 +92,10 @@ func resourceAwsKmsAliasCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(name)
 
-	return resourceAwsKmsAliasRead(d, meta)
+	return resourceAliasRead(d, meta)
 }
 
-func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(waiter.PropagationTimeout, func() (interface{}, error) {
@@ -130,7 +130,7 @@ func resourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsKmsAliasUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	if d.HasChange("target_key_id") {
@@ -147,10 +147,10 @@ func resourceAwsKmsAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsKmsAliasRead(d, meta)
+	return resourceAliasRead(d, meta)
 }
 
-func resourceAwsKmsAliasDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).KMSConn
 
 	log.Printf("[DEBUG] Deleting KMS Alias: (%s)", d.Id())
