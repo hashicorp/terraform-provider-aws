@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 )
 
 func testAccAWSRoute53RecoveryControlConfigControlPanel_basic(t *testing.T) {
@@ -56,7 +57,7 @@ func testAccAWSRoute53RecoveryControlConfigControlPanel_disappears(t *testing.T)
 				Config: testAccAwsRoute53RecoveryControlConfigControlPanelConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryControlConfigControlPanelExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceControlPanel(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoverycontrolconfig.ResourceControlPanel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
