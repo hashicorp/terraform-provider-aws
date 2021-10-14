@@ -24,11 +24,11 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
+		CheckDestroy: testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceFleetConfig(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+				Config: testAccInstanceFleetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
@@ -37,7 +37,7 @@ func TestAccAWSEMRInstanceFleet_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccInstanceFleetResourceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -52,19 +52,19 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
+		CheckDestroy: testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceFleetConfig(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+				Config: testAccInstanceFleetConfig(rName),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
 			{
-				Config: testAccAWSEmrInstanceFleetConfigZeroCount(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+				Config: testAccInstanceFleetZeroCountConfig(rName),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
@@ -73,7 +73,7 @@ func TestAccAWSEMRInstanceFleet_zero_count(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccInstanceFleetResourceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -88,11 +88,11 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
+		CheckDestroy: testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceFleetConfigEbsBasic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+				Config: testAccInstanceFleetEBSBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "1"),
@@ -101,7 +101,7 @@ func TestAccAWSEMRInstanceFleet_ebsBasic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccInstanceFleetResourceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -116,11 +116,11 @@ func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
+		CheckDestroy: testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceFleetConfigFull(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+				Config: testAccInstanceFleetFullConfig(rName),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "2"),
@@ -129,7 +129,7 @@ func TestAccAWSEMRInstanceFleet_full(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccInstanceFleetResourceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -146,12 +146,12 @@ func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceFleetDestroy,
+		CheckDestroy: testAccCheckInstanceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceFleetConfig(rName),
+				Config: testAccInstanceFleetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+					testAccCheckInstanceFleetExists(resourceName, &fleet),
 					// EMR Instance Fleet can only be scaled down and are not removed until the
 					// Cluster is removed. Verify EMR Cluster disappearance handling.
 					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
@@ -162,7 +162,7 @@ func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEmrInstanceFleetDestroy(s *terraform.State) error {
+func testAccCheckInstanceFleetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -194,7 +194,7 @@ func testAccCheckAWSEmrInstanceFleetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEmrInstanceFleetExists(n string, v *emr.InstanceFleet) resource.TestCheckFunc {
+func testAccCheckInstanceFleetExists(n string, v *emr.InstanceFleet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -219,7 +219,7 @@ func testAccCheckAWSEmrInstanceFleetExists(n string, v *emr.InstanceFleet) resou
 	}
 }
 
-func testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccInstanceFleetResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -230,7 +230,7 @@ func testAccAWSEMRInstanceFleetResourceImportStateIdFunc(resourceName string) re
 	}
 }
 
-const testAccAWSEmrInstanceFleetBase = `
+const testAccInstanceFleetBase = `
 data "aws_availability_zones" "available" {
   # Many instance types are not available in this availability zone
   exclude_zone_ids = ["usw2-az4"]
@@ -451,8 +451,8 @@ resource "aws_emr_cluster" "test" {
 }
 `
 
-func testAccAWSEmrInstanceFleetConfig(r string) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
+func testAccInstanceFleetConfig(r string) string {
+	return fmt.Sprintf(testAccInstanceFleetBase+`
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.test.id
 
@@ -474,8 +474,8 @@ resource "aws_emr_instance_fleet" "task" {
 `, r)
 }
 
-func testAccAWSEmrInstanceFleetConfigZeroCount(r string) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
+func testAccInstanceFleetZeroCountConfig(r string) string {
+	return fmt.Sprintf(testAccInstanceFleetBase+`
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.test.id
 
@@ -497,8 +497,8 @@ resource "aws_emr_instance_fleet" "task" {
 `, r)
 }
 
-func testAccAWSEmrInstanceFleetConfigEbsBasic(r string) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
+func testAccInstanceFleetEBSBasicConfig(r string) string {
+	return fmt.Sprintf(testAccInstanceFleetBase+`
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.test.id
 
@@ -529,8 +529,8 @@ resource "aws_emr_instance_fleet" "task" {
 `, r)
 }
 
-func testAccAWSEmrInstanceFleetConfigFull(r string) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
+func testAccInstanceFleetFullConfig(r string) string {
+	return fmt.Sprintf(testAccInstanceFleetBase+`
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.test.id
 

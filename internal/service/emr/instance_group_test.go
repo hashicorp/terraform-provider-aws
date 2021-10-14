@@ -25,12 +25,12 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		CheckDestroy: testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
+				Config: testAccInstanceGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &ig),
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
@@ -39,7 +39,7 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"status"},
 			},
@@ -56,43 +56,43 @@ func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		CheckDestroy: testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
+				Config: testAccInstanceGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig1),
+					testAccCheckInstanceGroupExists(resourceName, &ig1),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_BidPrice(rInt),
+				Config: testAccInstanceGroupConfig_BidPrice(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig2),
+					testAccCheckInstanceGroupExists(resourceName, &ig2),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", "0.30"),
-					testAccAWSEMRInstanceGroupRecreated(t, &ig1, &ig2),
+					testAccInstanceGroupRecreated(t, &ig1, &ig2),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
+				Config: testAccInstanceGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig1),
+					testAccCheckInstanceGroupExists(resourceName, &ig1),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
-					testAccAWSEMRInstanceGroupRecreated(t, &ig1, &ig2),
+					testAccInstanceGroupRecreated(t, &ig1, &ig2),
 				),
 			},
 		},
@@ -108,33 +108,33 @@ func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		CheckDestroy: testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_ConfigurationsJson(rInt, "partitionName1"),
+				Config: testAccInstanceGroupConfig_ConfigurationsJSON(rInt, "partitionName1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &ig),
 					resource.TestCheckResourceAttrSet(resourceName, "configurations_json"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_ConfigurationsJson(rInt, "partitionName2"),
+				Config: testAccInstanceGroupConfig_ConfigurationsJSON(rInt, "partitionName2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &ig),
 					resource.TestCheckResourceAttrSet(resourceName, "configurations_json"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"status"},
 			},
@@ -151,33 +151,33 @@ func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		CheckDestroy: testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(rInt, 1, 3),
+				Config: testAccInstanceGroupConfig_AutoScalingPolicy(rInt, 1, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &ig),
 					resource.TestCheckResourceAttrSet(resourceName, "autoscaling_policy"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(rInt, 2, 3),
+				Config: testAccInstanceGroupConfig_AutoScalingPolicy(rInt, 2, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &ig),
 					resource.TestCheckResourceAttrSet(resourceName, "autoscaling_policy"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"status"},
 			},
@@ -196,22 +196,22 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		CheckDestroy: testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
-				Check:  testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+				Config: testAccInstanceGroupConfig_basic(rInt),
+				Check:  testAccCheckInstanceGroupExists(resourceName, &ig),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_zeroCount(rInt),
-				Check:  testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+				Config: testAccInstanceGroupConfig_zeroCount(rInt),
+				Check:  testAccCheckInstanceGroupExists(resourceName, &ig),
 			},
 		},
 	})
@@ -229,14 +229,14 @@ func TestAccAWSEMRInstanceGroup_disappears_EmrCluster(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		CheckDestroy: testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
+				Config: testAccInstanceGroupConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(emrClusterResourceName, &cluster),
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
-					testAccCheckAWSEmrClusterDisappears(&cluster),
+					testAccCheckClusterExists(emrClusterResourceName, &cluster),
+					testAccCheckInstanceGroupExists(resourceName, &ig),
+					testAccCheckClusterDisappears(&cluster),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -253,12 +253,12 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, emr.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		CheckDestroy: testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_ebsConfig(rInt, true),
+				Config: testAccInstanceGroupConfig_ebsConfig(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &ig),
 					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
 				),
@@ -266,14 +266,14 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccAWSEmrInstanceGroupConfig_ebsConfig(rInt, false),
+				Config: testAccInstanceGroupConfig_ebsConfig(rInt, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &ig),
 					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 				),
@@ -282,7 +282,7 @@ func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEmrInstanceGroupDestroy(s *terraform.State) error {
+func testAccCheckInstanceGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -312,7 +312,7 @@ func testAccCheckAWSEmrInstanceGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEmrInstanceGroupExists(name string, ig *emr.InstanceGroup) resource.TestCheckFunc {
+func testAccCheckInstanceGroupExists(name string, ig *emr.InstanceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -339,7 +339,7 @@ func testAccCheckAWSEmrInstanceGroupExists(name string, ig *emr.InstanceGroup) r
 	}
 }
 
-func testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccInstanceGroupResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -350,7 +350,7 @@ func testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName string) re
 	}
 }
 
-func testAccAWSEMRInstanceGroupRecreated(t *testing.T, before, after *emr.InstanceGroup) resource.TestCheckFunc {
+func testAccInstanceGroupRecreated(t *testing.T, before, after *emr.InstanceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(before.Id) == aws.StringValue(after.Id) {
 			t.Fatalf("Expected change of Instance Group Ids, but both were %v", aws.StringValue(before.Id))
@@ -360,7 +360,7 @@ func testAccAWSEMRInstanceGroupRecreated(t *testing.T, before, after *emr.Instan
 	}
 }
 
-const testAccAWSEmrInstanceGroupBase = `
+const testAccInstanceGroupBase = `
 data "aws_availability_zones" "available" {
   # Many instance types are not available in this availability zone
   exclude_zone_ids = ["usw2-az4"]
@@ -648,8 +648,8 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 }
 `
 
-func testAccAWSEmrInstanceGroupConfig_basic(r int) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+func testAccInstanceGroupConfig_basic(r int) string {
+	return fmt.Sprintf(testAccInstanceGroupBase+`
 resource "aws_emr_instance_group" "task" {
   cluster_id     = aws_emr_cluster.tf-test-cluster.id
   instance_count = 1
@@ -658,8 +658,8 @@ resource "aws_emr_instance_group" "task" {
 `, r)
 }
 
-func testAccAWSEmrInstanceGroupConfig_BidPrice(r int) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+func testAccInstanceGroupConfig_BidPrice(r int) string {
+	return fmt.Sprintf(testAccInstanceGroupBase+`
 resource "aws_emr_instance_group" "task" {
   cluster_id     = aws_emr_cluster.tf-test-cluster.id
   bid_price      = "0.30"
@@ -669,8 +669,8 @@ resource "aws_emr_instance_group" "task" {
 `, r)
 }
 
-func testAccAWSEmrInstanceGroupConfig_ConfigurationsJson(r int, name string) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+func testAccInstanceGroupConfig_ConfigurationsJSON(r int, name string) string {
+	return fmt.Sprintf(testAccInstanceGroupBase+`
 resource "aws_emr_instance_group" "task" {
   cluster_id          = aws_emr_cluster.tf-test-cluster.id
   instance_count      = 1
@@ -690,8 +690,8 @@ EOF
 `, r, name)
 }
 
-func testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(r, min, max int) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+func testAccInstanceGroupConfig_AutoScalingPolicy(r, min, max int) string {
+	return fmt.Sprintf(testAccInstanceGroupBase+`
 resource "aws_emr_instance_group" "task" {
   cluster_id         = aws_emr_cluster.tf-test-cluster.id
   instance_count     = 1
@@ -733,8 +733,8 @@ EOT
 `, r, min, max)
 }
 
-func testAccAWSEmrInstanceGroupConfig_ebsConfig(r int, o bool) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+func testAccInstanceGroupConfig_ebsConfig(r int, o bool) string {
+	return fmt.Sprintf(testAccInstanceGroupBase+`
 resource "aws_emr_instance_group" "task" {
   cluster_id     = aws_emr_cluster.tf-test-cluster.id
   instance_count = 1
@@ -749,8 +749,8 @@ resource "aws_emr_instance_group" "task" {
 `, r, o)
 }
 
-func testAccAWSEmrInstanceGroupConfig_zeroCount(r int) string {
-	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+func testAccInstanceGroupConfig_zeroCount(r int) string {
+	return fmt.Sprintf(testAccInstanceGroupBase+`
 resource "aws_emr_instance_group" "task" {
   cluster_id     = aws_emr_cluster.tf-test-cluster.id
   instance_count = 0
