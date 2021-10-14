@@ -6,9 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
@@ -16,11 +17,11 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
 	var v apigatewayv2.GetIntegrationResponseOutput
 	resourceName := "aws_apigatewayv2_integration_response.test"
 	integrationResourceName := "aws_apigatewayv2_integration.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy,
 		Steps: []resource.TestStep{
@@ -49,11 +50,11 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_disappears(t *testing.T) {
 	var apiId, integrationId string
 	var v apigatewayv2.GetIntegrationResponseOutput
 	resourceName := "aws_apigatewayv2_integration_response.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy,
 		Steps: []resource.TestStep{
@@ -74,11 +75,11 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_AllAttributes(t *testing.T) {
 	var v apigatewayv2.GetIntegrationResponseOutput
 	resourceName := "aws_apigatewayv2_integration_response.test"
 	integrationResourceName := "aws_apigatewayv2_integration.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy,
 		Steps: []resource.TestStep{

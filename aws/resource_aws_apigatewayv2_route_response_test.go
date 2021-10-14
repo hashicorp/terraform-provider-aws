@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
@@ -17,11 +18,11 @@ func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"
 	routeResourceName := "aws_apigatewayv2_route.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
 		Steps: []resource.TestStep{
@@ -49,11 +50,11 @@ func TestAccAWSAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 	var apiId, routeId string
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
 		Steps: []resource.TestStep{
@@ -76,11 +77,11 @@ func TestAccAWSAPIGatewayV2RouteResponse_Model(t *testing.T) {
 	modelResourceName := "aws_apigatewayv2_model.test"
 	routeResourceName := "aws_apigatewayv2_route.test"
 	// Model name must be alphanumeric.
-	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
 		Steps: []resource.TestStep{
@@ -189,7 +190,7 @@ func testAccAWSAPIGatewayV2RouteResponseImportStateIdFunc(resourceName string) r
 }
 
 func testAccAWSAPIGatewayV2RouteResponseConfig_basicWebSocket(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAPIGatewayV2RouteConfig_basicWebSocket(rName),
 		`
 resource "aws_apigatewayv2_route_response" "test" {
@@ -201,7 +202,7 @@ resource "aws_apigatewayv2_route_response" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteResponseConfig_model(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAPIGatewayV2RouteConfig_model(rName),
 		`
 resource "aws_apigatewayv2_route_response" "test" {
