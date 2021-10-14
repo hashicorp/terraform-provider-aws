@@ -183,7 +183,7 @@ func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error reading RAM resource share resources %s: %s", d.Id(), err)
 	}
 
-	if err := d.Set("resources", flattenStringList(resourceARNs)); err != nil {
+	if err := d.Set("resources", flex.FlattenStringList(resourceARNs)); err != nil {
 		return fmt.Errorf("unable to set resources: %s", err)
 	}
 
