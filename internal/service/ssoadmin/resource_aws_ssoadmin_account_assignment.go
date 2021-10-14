@@ -1,4 +1,4 @@
-package aws
+package ssoadmin
 
 import (
 	"fmt"
@@ -11,29 +11,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssoadmin/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 )
 
 func ResourceAccountAssignment() *schema.Resource {
@@ -107,7 +87,7 @@ func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) e
 
 	// We need to check if the assignment exists before creating it
 	// since the AWS SSO API doesn't prevent us from creating duplicates
-	accountAssignment, err := tfssoadmin.FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+	accountAssignment, err := FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
 	if err != nil {
 		return fmt.Errorf("error listing SSO Account Assignments for AccountId (%s) PermissionSet (%s): %w", targetID, permissionSetArn, err)
 	}
@@ -137,7 +117,7 @@ func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) e
 
 	status := output.AccountAssignmentCreationStatus
 
-	_, err = tfssoadmin.waitAccountAssignmentCreated(conn, instanceArn, aws.StringValue(status.RequestId))
+	_, err = waitAccountAssignmentCreated(conn, instanceArn, aws.StringValue(status.RequestId))
 	if err != nil {
 		return fmt.Errorf("error waiting for SSO Account Assignment for %s (%s) to be created: %w", principalType, principalID, err)
 	}
@@ -162,7 +142,7 @@ func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) err
 	permissionSetArn := idParts[4]
 	instanceArn := idParts[5]
 
-	accountAssignment, err := tfssoadmin.FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+	accountAssignment, err := FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] SSO Account Assignment for Principal (%s) not found, removing from state", principalID)
@@ -232,7 +212,7 @@ func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) e
 
 	status := output.AccountAssignmentDeletionStatus
 
-	_, err = tfssoadmin.waitAccountAssignmentDeleted(conn, instanceArn, aws.StringValue(status.RequestId))
+	_, err = waitAccountAssignmentDeleted(conn, instanceArn, aws.StringValue(status.RequestId))
 	if err != nil {
 		return fmt.Errorf("error waiting for SSO Account Assignment for Principal (%s) to be deleted: %w", principalID, err)
 	}
