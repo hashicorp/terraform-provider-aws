@@ -11,7 +11,7 @@ import (
 
 func DataSourceBundle() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWorkspaceBundleRead,
+		Read: dataSourceWorkspaceBundleRead,
 
 		Schema: map[string]*schema.Schema{
 			"bundle_id": {
@@ -73,7 +73,7 @@ func DataSourceBundle() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
 	var bundle *workspaces.WorkspaceBundle
