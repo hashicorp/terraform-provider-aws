@@ -7,17 +7,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsAcmpcaCertificate_Basic(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 	dataSourceName := "data.aws_acmpca_certificate.test"
 
-	domain := testAccRandomDomainName()
+	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, acmpca.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, acmpca.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
