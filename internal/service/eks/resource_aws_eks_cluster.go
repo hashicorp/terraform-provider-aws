@@ -1,4 +1,4 @@
-package aws
+package eks
 
 import (
 	"context"
@@ -14,64 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
@@ -153,7 +101,7 @@ func ResourceCluster() *schema.Resource {
 							Required: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(tfeks.Resources_Values(), false),
+								ValidateFunc: validation.StringInSlice(Resources_Values(), false),
 							},
 						},
 					},
@@ -358,7 +306,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.Cluster.Name))
 
-	_, err = tfeks.waitClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waitClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EKS Cluster (%s) to create: %w", d.Id(), err)
@@ -372,7 +320,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	cluster, err := tfeks.FindClusterByName(conn, d.Id())
+	cluster, err := FindClusterByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Cluster (%s) not found, removing from state", d.Id())
@@ -453,7 +401,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = tfeks.waitClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for EKS Cluster (%s) version update (%s): %w", d.Id(), updateID, err)
@@ -478,7 +426,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			updateID := aws.StringValue(output.Update.Id)
 
-			_, err = tfeks.waitClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+			_, err = waitClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 			if err != nil {
 				return fmt.Errorf("error waiting for EKS Cluster (%s) encryption config association (%s): %w", d.Id(), updateID, err)
@@ -501,7 +449,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = tfeks.waitClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for EKS Cluster (%s) logging update (%s): %w", d.Id(), updateID, err)
@@ -523,7 +471,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = tfeks.waitClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterUpdateSuccessful(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for EKS Cluster (%s) VPC config update (%s): %w", d.Id(), updateID, err)
@@ -562,7 +510,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting EKS Cluster (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfeks.waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for EKS Cluster (%s) to delete: %w", d.Id(), err)

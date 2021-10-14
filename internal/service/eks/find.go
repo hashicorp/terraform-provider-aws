@@ -7,25 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 )
 
 func FindAddonByClusterNameAndAddonName(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
@@ -239,7 +221,7 @@ func FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx context.Contex
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &eks.IdentityProviderConfig{
 			Name: aws.String(configName),
-			Type: aws.String(tfeks.IdentityProviderConfigTypeOIDC),
+			Type: aws.String(IdentityProviderConfigTypeOIDC),
 		},
 	}
 

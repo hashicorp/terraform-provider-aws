@@ -6,7 +6,7 @@ With the following modifications:
  - Rename package eks
 */
 
-package eks
+package eks_test
 
 import (
 	"fmt"

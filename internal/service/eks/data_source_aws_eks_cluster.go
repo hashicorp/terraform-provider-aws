@@ -1,23 +1,14 @@
-package aws
+package eks
 
 import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 )
 
 func DataSourceCluster() *schema.Resource {
@@ -157,7 +148,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	cluster, err := tfeks.FindClusterByName(conn, name)
+	cluster, err := FindClusterByName(conn, name)
 
 	if err != nil {
 		return fmt.Errorf("error reading EKS Cluster (%s): %w", name, err)
