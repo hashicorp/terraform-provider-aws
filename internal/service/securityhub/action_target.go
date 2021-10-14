@@ -96,7 +96,7 @@ func resourceActionTargetRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	actionTarget, err := resourceAwsSecurityHubActionTargetCheckExists(conn, d.Id())
+	actionTarget, err := ActionTargetCheckExists(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("Error reading Security Hub custom action targets to find %s: %s", d.Id(), err)
@@ -130,7 +130,7 @@ func resourceActionTargetUpdate(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsSecurityHubActionTargetCheckExists(conn *securityhub.SecurityHub, actionTargetArn string) (*securityhub.ActionTarget, error) {
+func ActionTargetCheckExists(conn *securityhub.SecurityHub, actionTargetArn string) (*securityhub.ActionTarget, error) {
 	input := &securityhub.DescribeActionTargetsInput{
 		ActionTargetArns: aws.StringSlice([]string{actionTargetArn}),
 	}

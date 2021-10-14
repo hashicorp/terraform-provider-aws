@@ -53,7 +53,7 @@ func testAccAWSSecurityHubStandardsSubscription_disappears(t *testing.T) {
 				Config: testAccAWSSecurityHubStandardsSubscriptionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityHubStandardsSubscriptionExists(resourceName, &standardsSubscription),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceStandardsSubscription(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceStandardsSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

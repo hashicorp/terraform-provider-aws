@@ -65,7 +65,7 @@ func testAccAwsSecurityHubInsight_disappears(t *testing.T) {
 				Config: testAccAwsSecurityHubInsightConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubInsightExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceInsight(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceInsight(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

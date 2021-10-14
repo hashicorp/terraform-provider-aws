@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func testAccAWSSecurityHubProductSubscription_basic(t *testing.T) {
@@ -79,13 +80,13 @@ func testAccCheckAWSSecurityHubProductSubscriptionExists(n string) resource.Test
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
 
-		_, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(rs.Primary.ID)
+		_, productSubscriptionArn, err := tfsecurityhub.ProductSubscriptionParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, productSubscriptionArn)
+		exists, err := tfsecurityhub.ProductSubscriptionCheckExists(conn, productSubscriptionArn)
 
 		if err != nil {
 			return err
@@ -107,13 +108,13 @@ func testAccCheckAWSSecurityHubProductSubscriptionDestroy(s *terraform.State) er
 			continue
 		}
 
-		_, productSubscriptionArn, err := resourceAwsSecurityHubProductSubscriptionParseId(rs.Primary.ID)
+		_, productSubscriptionArn, err := tfsecurityhub.ProductSubscriptionParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		exists, err := resourceAwsSecurityHubProductSubscriptionCheckExists(conn, productSubscriptionArn)
+		exists, err := tfsecurityhub.ProductSubscriptionCheckExists(conn, productSubscriptionArn)
 
 		if err != nil {
 			return err

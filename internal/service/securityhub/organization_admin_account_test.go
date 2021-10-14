@@ -58,7 +58,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceOrganizationAdminAccount(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
