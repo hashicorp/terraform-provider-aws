@@ -148,7 +148,7 @@ func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	// Prevent the below error:
 	// InvalidRequestException: Tags provided upon WorkGroup creation must not be empty
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().AthenaTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	_, err := conn.CreateWorkGroup(input)
@@ -218,7 +218,7 @@ func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("force_destroy", false)
 	}
 
-	tags, err := tftags.AthenaListTags(conn, arn.String())
+	tags, err := ListTags(conn, arn.String())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
@@ -291,7 +291,7 @@ func resourceWorkGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.AthenaUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
