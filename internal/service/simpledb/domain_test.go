@@ -20,12 +20,12 @@ func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(simpledb.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, simpledb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSimpleDBDomainDestroy,
+		CheckDestroy: testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSimpleDBDomainConfig,
+				Config: testAccDomainConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSimpleDBDomainExists(resourceName),
+					testAccCheckDomainExists(resourceName),
 				),
 			},
 			{
@@ -37,7 +37,7 @@ func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSimpleDBDomainDestroy(s *terraform.State) error {
+func testAccCheckDomainDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -63,7 +63,7 @@ func testAccCheckAWSSimpleDBDomainDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSimpleDBDomainExists(n string) resource.TestCheckFunc {
+func testAccCheckDomainExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -83,7 +83,7 @@ func testAccCheckAWSSimpleDBDomainExists(n string) resource.TestCheckFunc {
 	}
 }
 
-var testAccAWSSimpleDBDomainConfig = `
+var testAccDomainConfig = `
 resource "aws_simpledb_domain" "test_domain" {
   name = "terraform-test-domain"
 }
