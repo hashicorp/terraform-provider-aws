@@ -690,7 +690,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 	// Availability Zones are optional if VPC Zone Identifier(s) are specified
 	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.AvailabilityZones = expandStringSet(v.(*schema.Set))
+		createOpts.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
@@ -722,7 +722,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.LoadBalancerNames = expandStringSet(v.(*schema.Set))
+		createOpts.LoadBalancerNames = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
@@ -730,11 +730,11 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
-		createOpts.TerminationPolicies = expandStringList(v.([]interface{}))
+		createOpts.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
-		createOpts.TargetGroupARNs = expandStringSet(v.(*schema.Set))
+		createOpts.TargetGroupARNs = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("service_linked_role_arn"); ok {
@@ -832,7 +832,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	if err := d.Set("availability_zones", flattenStringList(g.AvailabilityZones)); err != nil {
+	if err := d.Set("availability_zones", flex.FlattenStringList(g.AvailabilityZones)); err != nil {
 		return fmt.Errorf("error setting availability_zones: %s", err)
 	}
 
@@ -844,7 +844,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("enabled_metrics", nil)
 	d.Set("metrics_granularity", "1Minute")
 	if g.EnabledMetrics != nil {
-		if err := d.Set("enabled_metrics", flattenAsgEnabledMetrics(g.EnabledMetrics)); err != nil {
+		if err := d.Set("enabled_metrics", flattenASGEnabledMetrics(g.EnabledMetrics)); err != nil {
 			return fmt.Errorf("error setting enabled_metrics: %s", err)
 		}
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
@@ -853,7 +853,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
 
-	if err := d.Set("load_balancers", flattenStringList(g.LoadBalancerNames)); err != nil {
+	if err := d.Set("load_balancers", flex.FlattenStringList(g.LoadBalancerNames)); err != nil {
 		return fmt.Errorf("error setting load_balancers: %s", err)
 	}
 
@@ -877,7 +877,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
 	d.Set("max_instance_lifetime", g.MaxInstanceLifetime)
 
-	if err := d.Set("suspended_processes", flattenAsgSuspendedProcesses(g.SuspendedProcesses)); err != nil {
+	if err := d.Set("suspended_processes", flattenASGSuspendedProcesses(g.SuspendedProcesses)); err != nil {
 		return fmt.Errorf("error setting suspended_processes: %s", err)
 	}
 
@@ -908,7 +908,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if err := d.Set("target_group_arns", flattenStringList(g.TargetGroupARNs)); err != nil {
+	if err := d.Set("target_group_arns", flex.FlattenStringList(g.TargetGroupARNs)); err != nil {
 		return fmt.Errorf("error setting target_group_arns: %s", err)
 	}
 
@@ -919,7 +919,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	if !ok && len(g.TerminationPolicies) == 1 && aws.StringValue(g.TerminationPolicies[0]) == "Default" {
 		d.Set("termination_policies", []interface{}{})
 	} else {
-		if err := d.Set("termination_policies", flattenStringList(g.TerminationPolicies)); err != nil {
+		if err := d.Set("termination_policies", flex.FlattenStringList(g.TerminationPolicies)); err != nil {
 			return fmt.Errorf("error setting termination_policies: %s", err)
 		}
 	}
@@ -1087,7 +1087,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("availability_zones") {
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
-			opts.AvailabilityZones = expandStringSet(v.(*schema.Set))
+			opts.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 		}
 	}
 
@@ -1099,7 +1099,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		// If the termination policy is set to null, we need to explicitly set
 		// it back to "Default", or the API won't reset it for us.
 		if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
-			opts.TerminationPolicies = expandStringList(v.([]interface{}))
+			opts.TerminationPolicies = flex.ExpandStringList(v.([]interface{}))
 		} else {
 			log.Printf("[DEBUG] Explicitly setting null termination policy to 'Default'")
 			opts.TerminationPolicies = aws.StringSlice([]string{"Default"})
@@ -1145,8 +1145,8 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandStringSet(os.Difference(ns))
-		add := expandStringSet(ns.Difference(os))
+		remove := flex.ExpandStringSet(os.Difference(ns))
+		add := flex.ExpandStringSet(ns.Difference(os))
 
 		if len(remove) > 0 {
 			// API only supports removing 10 at a time
@@ -1215,8 +1215,8 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandStringSet(os.Difference(ns))
-		add := expandStringSet(ns.Difference(os))
+		remove := flex.ExpandStringSet(os.Difference(ns))
+		add := flex.ExpandStringSet(ns.Difference(os))
 
 		if len(remove) > 0 {
 			// AWS API only supports adding/removing 10 at a time
@@ -1680,7 +1680,7 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 func enableASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
 	props := &autoscaling.ScalingProcessQuery{
 		AutoScalingGroupName: aws.String(d.Id()),
-		ScalingProcesses:     expandStringSet(d.Get("suspended_processes").(*schema.Set)),
+		ScalingProcesses:     flex.ExpandStringSet(d.Get("suspended_processes").(*schema.Set)),
 	}
 
 	_, err := conn.SuspendProcesses(props)
@@ -1691,7 +1691,7 @@ func enableASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoSc
 	props := &autoscaling.EnableMetricsCollectionInput{
 		AutoScalingGroupName: aws.String(d.Id()),
 		Granularity:          aws.String(d.Get("metrics_granularity").(string)),
-		Metrics:              expandStringSet(d.Get("enabled_metrics").(*schema.Set)),
+		Metrics:              flex.ExpandStringSet(d.Get("enabled_metrics").(*schema.Set)),
 	}
 
 	log.Printf("[INFO] Enabling metrics collection for the Auto Scaling Group: %s", d.Id())
@@ -1716,7 +1716,7 @@ func updateASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoS
 	if resumeProcesses.Len() != 0 {
 		props := &autoscaling.ScalingProcessQuery{
 			AutoScalingGroupName: aws.String(d.Id()),
-			ScalingProcesses:     expandStringSet(resumeProcesses),
+			ScalingProcesses:     flex.ExpandStringSet(resumeProcesses),
 		}
 
 		_, err := conn.ResumeProcesses(props)
@@ -1729,7 +1729,7 @@ func updateASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoS
 	if suspendedProcesses.Len() != 0 {
 		props := &autoscaling.ScalingProcessQuery{
 			AutoScalingGroupName: aws.String(d.Id()),
-			ScalingProcesses:     expandStringSet(suspendedProcesses),
+			ScalingProcesses:     flex.ExpandStringSet(suspendedProcesses),
 		}
 
 		_, err := conn.SuspendProcesses(props)
@@ -1759,7 +1759,7 @@ func updateASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoSc
 	if disableMetrics.Len() != 0 {
 		props := &autoscaling.DisableMetricsCollectionInput{
 			AutoScalingGroupName: aws.String(d.Id()),
-			Metrics:              expandStringSet(disableMetrics),
+			Metrics:              flex.ExpandStringSet(disableMetrics),
 		}
 
 		_, err := conn.DisableMetricsCollection(props)
@@ -1772,7 +1772,7 @@ func updateASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoSc
 	if enabledMetrics.Len() != 0 {
 		props := &autoscaling.EnableMetricsCollectionInput{
 			AutoScalingGroupName: aws.String(d.Id()),
-			Metrics:              expandStringSet(enabledMetrics),
+			Metrics:              flex.ExpandStringSet(enabledMetrics),
 			Granularity:          aws.String(d.Get("metrics_granularity").(string)),
 		}
 
