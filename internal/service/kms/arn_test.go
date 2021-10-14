@@ -4,13 +4,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
