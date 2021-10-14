@@ -1,4 +1,4 @@
-package aws
+package sns_test
 
 import (
 	"fmt"
@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfsns "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 )
 

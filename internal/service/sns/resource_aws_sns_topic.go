@@ -1,4 +1,4 @@
-package aws
+package sns
 
 import (
 	"context"
@@ -14,13 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfsns "github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 )
 
 func ResourceTopic() *schema.Resource {
@@ -191,7 +189,7 @@ func resourceTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	fifoTopic := d.Get("fifo_topic").(bool)
 
 	if fifoTopic {
-		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsns.FIFOTopicNameSuffix)
+		name = create.NameWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), FIFOTopicNameSuffix)
 	} else {
 		name = create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	}
@@ -605,7 +603,7 @@ func resourceTopicRead(d *schema.ResourceData, meta interface{}) error {
 	name := arn.Resource
 	d.Set("name", name)
 	if fifoTopic {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, tfsns.FIFOTopicNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, FIFOTopicNameSuffix))
 	} else {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
@@ -658,7 +656,7 @@ func resourceAwsSnsTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		var name string
 
 		if fifoTopic {
-			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsns.FIFOTopicNameSuffix)
+			name = create.NameWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), FIFOTopicNameSuffix)
 		} else {
 			name = create.Name(diff.Get("name").(string), diff.Get("name_prefix").(string))
 		}
