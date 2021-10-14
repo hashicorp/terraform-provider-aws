@@ -15,12 +15,12 @@ import (
 
 func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.basic"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDlm(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,12 +52,12 @@ func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 
 func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 	resourceName := "aws_dlm_lifecycle_policy.full"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDlm(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -101,13 +101,13 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 }
 
 func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dlm_lifecycle_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSDlm(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, dlm.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,7 +145,7 @@ func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
 }
 
 func dlmLifecyclePolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dlmconn
+	conn := acctest.Provider.Meta().(*AWSClient).dlmconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dlm_lifecycle_policy" {
@@ -181,7 +181,7 @@ func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dlmconn
+		conn := acctest.Provider.Meta().(*AWSClient).dlmconn
 
 		input := dlm.GetLifecyclePolicyInput{
 			PolicyId: aws.String(rs.Primary.ID),
@@ -198,7 +198,7 @@ func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckAWSDlm(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).dlmconn
+	conn := acctest.Provider.Meta().(*AWSClient).dlmconn
 
 	input := &dlm.GetLifecyclePoliciesInput{}
 
