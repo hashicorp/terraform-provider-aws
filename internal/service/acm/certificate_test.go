@@ -83,7 +83,7 @@ func sweepCertificates(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {
+func TestAccACMCertificate_emailValidation(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -115,7 +115,7 @@ func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_dnsValidation(t *testing.T) {
+func TestAccACMCertificate_dnsValidation(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -151,7 +151,7 @@ func TestAccAWSAcmCertificate_dnsValidation(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_root(t *testing.T) {
+func TestAccACMCertificate_root(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 
@@ -186,7 +186,7 @@ func TestAccAWSAcmCertificate_root(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
+func TestAccACMCertificate_privateCert(t *testing.T) {
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 	resourceName := "aws_acm_certificate.cert"
 
@@ -221,9 +221,9 @@ func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 	})
 }
 
-// TestAccAWSAcmCertificate_root_TrailingPeriod updated in 3.0 to account for domain_name plan-time validation
+// TestAccACMCertificate_Root_trailingPeriod updated in 3.0 to account for domain_name plan-time validation
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
-func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
+func TestAccACMCertificate_Root_trailingPeriod(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := fmt.Sprintf("%s.", rootDomain)
 
@@ -241,7 +241,7 @@ func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_rootAndWildcardSan(t *testing.T) {
+func TestAccACMCertificate_rootAndWildcardSan(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
@@ -282,7 +282,7 @@ func TestAccAWSAcmCertificate_rootAndWildcardSan(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_SubjectAlternativeNames_EmptyString(t *testing.T) {
+func TestAccACMCertificate_SubjectAlternativeNames_emptyString(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
@@ -300,7 +300,7 @@ func TestAccAWSAcmCertificate_SubjectAlternativeNames_EmptyString(t *testing.T) 
 	})
 }
 
-func TestAccAWSAcmCertificate_san_single(t *testing.T) {
+func TestAccACMCertificate_San_single(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -342,7 +342,7 @@ func TestAccAWSAcmCertificate_san_single(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_san_multiple(t *testing.T) {
+func TestAccACMCertificate_San_multiple(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -390,7 +390,7 @@ func TestAccAWSAcmCertificate_san_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_san_TrailingPeriod(t *testing.T) {
+func TestAccACMCertificate_San_trailingPeriod(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	sanDomain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -432,7 +432,7 @@ func TestAccAWSAcmCertificate_san_TrailingPeriod(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_wildcard(t *testing.T) {
+func TestAccACMCertificate_wildcard(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
@@ -468,7 +468,7 @@ func TestAccAWSAcmCertificate_wildcard(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_wildcardAndRootSan(t *testing.T) {
+func TestAccACMCertificate_wildcardAndRootSan(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	wildcardDomain := fmt.Sprintf("*.%s", rootDomain)
@@ -509,7 +509,7 @@ func TestAccAWSAcmCertificate_wildcardAndRootSan(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_disableCTLogging(t *testing.T) {
+func TestAccACMCertificate_disableCTLogging(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 
@@ -546,7 +546,7 @@ func TestAccAWSAcmCertificate_disableCTLogging(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificate_tags(t *testing.T) {
+func TestAccACMCertificate_tags(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
@@ -596,7 +596,7 @@ func TestAccAWSAcmCertificate_tags(t *testing.T) {
 }
 
 //lintignore:AT002
-func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
+func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 
 	commonName := "example.com"
@@ -652,7 +652,7 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 }
 
 //lintignore:AT002
-func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7103
+func TestAccACMCertificate_Imported_ipAddress(t *testing.T) { // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7103
 	resourceName := "aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -681,7 +681,7 @@ func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: h
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
-func TestAccAWSAcmCertificate_PrivateKey_Tags(t *testing.T) {
+func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
