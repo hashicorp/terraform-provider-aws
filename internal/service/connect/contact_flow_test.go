@@ -92,7 +92,7 @@ func testAccAwsConnectContactFlow_filename(t *testing.T) {
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Created", "testdata/service/connect/connect_contact_flow.json"),
+				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Created", "testdata/connect_contact_flow.json"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -114,7 +114,7 @@ func testAccAwsConnectContactFlow_filename(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Updated", "testdata/service/connect/connect_contact_flow_updated.json"),
+				Config: testAccAwsConnectContactFlowConfig_filename(rName, rName2, "Updated", "testdata/connect_contact_flow_updated.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),

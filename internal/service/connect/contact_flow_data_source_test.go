@@ -81,7 +81,7 @@ resource "aws_connect_contact_flow" "test" {
   name        = %[2]q
   description = "Test Contact Flow Description"
   type        = "CONTACT_FLOW"
-  content     = file("./testdata/service/connect/connect_contact_flow.json")
+  content     = file("./testdata/connect_contact_flow.json")
   tags = {
     "Name"        = "Test Contact Flow",
     "Application" = "Terraform",
