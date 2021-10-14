@@ -1,4 +1,4 @@
-package aws
+package imagebuilder_test
 
 import (
 	"fmt"
