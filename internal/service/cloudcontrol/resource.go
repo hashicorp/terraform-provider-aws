@@ -67,8 +67,8 @@ func ResourceResource() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			resourceAwsCloudControlApiResourceCustomizeDiffGetSchema,
-			resourceAwsCloudControlApiResourceCustomizeDiffSchemaDiff,
+			resourceResourceCustomizeDiffGetSchema,
+			resourceResourceCustomizeDiffSchemaDiff,
 			customdiff.ComputedIf("properties", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("desired_state")
 			}),
@@ -237,7 +237,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsCloudControlApiResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudFormationConn
 
 	resourceSchema := diff.Get("schema").(string)
@@ -261,7 +261,7 @@ func resourceAwsCloudControlApiResourceCustomizeDiffGetSchema(ctx context.Contex
 	return nil
 }
 
-func resourceAwsCloudControlApiResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	oldDesiredStateRaw, newDesiredStateRaw := diff.GetChange("desired_state")
 	newSchema := diff.Get("schema").(string)
 
