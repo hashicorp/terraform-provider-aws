@@ -374,7 +374,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts, err := validateAppautoscalingPolicyImportInput(d.Id())
+	idParts, err := ValidPolicyImportInput(d.Id())
 	if err != nil {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
 	}
@@ -392,7 +392,7 @@ func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interfac
 	return []*schema.ResourceData{d}, nil
 }
 
-func validateAppautoscalingPolicyImportInput(id string) ([]string, error) {
+func ValidPolicyImportInput(id string) ([]string, error) {
 
 	idParts := strings.Split(id, "/")
 	if len(idParts) < 4 {
