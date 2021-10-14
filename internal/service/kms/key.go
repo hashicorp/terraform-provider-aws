@@ -122,7 +122,7 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().KmsTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	// AWS requires any principal in the policy to exist before the key is created.
@@ -248,7 +248,7 @@ func resourceKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating KMS Key (%s) tags: %w", d.Id(), err)
 		}
 
@@ -332,7 +332,7 @@ func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error
 			}
 		}
 
-		key.tags, err = tftags.KmsListTags(conn, keyID)
+		key.tags, err = ListTags(conn, keyID)
 
 		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return nil, &resource.NotFoundError{LastError: err}

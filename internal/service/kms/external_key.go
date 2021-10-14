@@ -130,7 +130,7 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().KmsTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	// AWS requires any principal in the policy to exist before the key is created.
@@ -269,7 +269,7 @@ func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating KMS External Key (%s) tags: %w", d.Id(), err)
 		}
 
