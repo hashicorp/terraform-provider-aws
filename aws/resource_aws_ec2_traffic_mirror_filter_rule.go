@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTrafficMirrorFilterRule() *schema.Resource {
@@ -40,7 +41,7 @@ func ResourceTrafficMirrorFilterRule() *schema.Resource {
 			"destination_cidr_block": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateCIDRNetworkAddress,
+				ValidateFunc: verify.ValidCIDRNetworkAddress,
 			},
 			"destination_port_range": {
 				Type:     schema.TypeList,
@@ -80,7 +81,7 @@ func ResourceTrafficMirrorFilterRule() *schema.Resource {
 			"source_cidr_block": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateCIDRNetworkAddress,
+				ValidateFunc: verify.ValidCIDRNetworkAddress,
 			},
 			"source_port_range": {
 				Type:     schema.TypeList,

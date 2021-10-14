@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -32,7 +33,7 @@ func ResourceLocalGatewayRoute() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCIDRNetworkAddress,
+				ValidateFunc: verify.ValidCIDRNetworkAddress,
 			},
 			"local_gateway_route_table_id": {
 				Type:     schema.TypeString,

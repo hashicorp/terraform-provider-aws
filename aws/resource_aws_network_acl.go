@@ -23,6 +23,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceNetworkACL() *schema.Resource {
@@ -543,12 +544,12 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 			// the local config file and the state returned by the API. Error
 			// if the user provides a CIDR block with an inappropriate mask
 			if cidrBlock := aws.StringValue(add.CidrBlock); cidrBlock != "" {
-				if err := validateIpv4CIDRBlock(cidrBlock); err != nil {
+				if err := verify.ValidateIPv4CIDRBlock(cidrBlock); err != nil {
 					return err
 				}
 			}
 			if ipv6CidrBlock := aws.StringValue(add.Ipv6CidrBlock); ipv6CidrBlock != "" {
-				if err := validateIpv6CIDRBlock(ipv6CidrBlock); err != nil {
+				if err := verify.ValidateIPv6CIDRBlock(ipv6CidrBlock); err != nil {
 					return err
 				}
 			}

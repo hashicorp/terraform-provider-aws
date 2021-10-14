@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSecurityGroupRule() *schema.Resource {
@@ -99,7 +100,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateCIDRNetworkAddress,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
 				},
 				ConflictsWith: []string{"source_security_group_id", "self"},
 			},
@@ -110,7 +111,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateCIDRNetworkAddress,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
 				},
 				ConflictsWith: []string{"source_security_group_id", "self"},
 			},
@@ -147,7 +148,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateSecurityGroupRuleDescription,
+				ValidateFunc: validSecurityGroupRuleDescription,
 			},
 		},
 	}

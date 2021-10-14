@@ -17,6 +17,7 @@ import (
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSpotFleetRequest() *schema.Resource {
@@ -45,7 +46,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"replace_unhealthy_instances": {
 				Type:     schema.TypeBool,
@@ -236,7 +237,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"ami": {
 							Type:     schema.TypeString,
@@ -335,13 +336,13 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validateLaunchTemplateId,
+										ValidateFunc: verify.ValidLaunchTemplateID,
 									},
 									"name": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validateLaunchTemplateName,
+										ValidateFunc: verify.ValidLaunchTemplateName,
 									},
 									"version": {
 										Type:         schema.TypeString,
@@ -525,7 +526,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 				Set: schema.HashString,
 			},
@@ -604,7 +605,7 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 	}
 
 	if v, ok := d["user_data"]; ok {
-		opts.UserData = aws.String(base64Encode([]byte(v.(string))))
+		opts.UserData = aws.String(verify.Base64Encode([]byte(v.(string))))
 	}
 
 	if v, ok := d["key_name"]; ok && v != "" {

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceFlowLog() *schema.Resource {
@@ -39,7 +40,7 @@ func ResourceFlowLog() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"file_format": {
@@ -71,14 +72,14 @@ func ResourceFlowLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"log_destination": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ValidateFunc:  validateArn,
+				ValidateFunc:  verify.ValidARN,
 				ConflictsWith: []string{"log_group_name"},
 			},
 			"log_destination_type": {

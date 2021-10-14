@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func TestUnsuccessfulItemError(t *testing.T) {

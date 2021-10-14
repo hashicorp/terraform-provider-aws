@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var routeTableValidDestinations = []string{
@@ -93,7 +94,7 @@ func ResourceRouteTable() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.Any(
 								validation.StringIsEmpty,
-								validateIpv4CIDRNetworkAddress,
+								verify.ValidIPv4CIDRNetworkAddress,
 							),
 						},
 						"destination_prefix_list_id": {
@@ -105,7 +106,7 @@ func ResourceRouteTable() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.Any(
 								validation.StringIsEmpty,
-								validateIpv6CIDRNetworkAddress,
+								verify.ValidIPv6CIDRNetworkAddress,
 							),
 						},
 
@@ -419,7 +420,7 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	}
 
 	if v, ok := m["ipv6_cidr_block"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", tfnet.CanonicalCIDRBlock(v.(string))))
+		buf.WriteString(fmt.Sprintf("%s-", verify.CanonicalCIDRBlock(v.(string))))
 	}
 
 	if v, ok := m["cidr_block"]; ok {
@@ -479,10 +480,10 @@ func resourceAwsRouteTableHash(v interface{}) int {
 
 // ec2RouteTableAddRoute adds a route to the specified route table.
 func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
-	if err := validateNestedExactlyOneOf(tfMap, routeTableValidDestinations); err != nil {
+	if err := validNestedExactlyOneOf(tfMap, routeTableValidDestinations); err != nil {
 		return fmt.Errorf("error creating route: %w", err)
 	}
-	if err := validateNestedExactlyOneOf(tfMap, routeTableValidTargets); err != nil {
+	if err := validNestedExactlyOneOf(tfMap, routeTableValidTargets); err != nil {
 		return fmt.Errorf("error creating route: %w", err)
 	}
 
@@ -578,10 +579,10 @@ func ec2RouteTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 
 // ec2RouteTableUpdateRoute updates a route in the specified route table.
 func ec2RouteTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
-	if err := validateNestedExactlyOneOf(tfMap, routeTableValidDestinations); err != nil {
+	if err := validNestedExactlyOneOf(tfMap, routeTableValidDestinations); err != nil {
 		return fmt.Errorf("error updating route: %w", err)
 	}
-	if err := validateNestedExactlyOneOf(tfMap, routeTableValidTargets); err != nil {
+	if err := validNestedExactlyOneOf(tfMap, routeTableValidTargets); err != nil {
 		return fmt.Errorf("error updating route: %w", err)
 	}
 

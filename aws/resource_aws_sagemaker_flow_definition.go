@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceFlowDefinition() *schema.Resource {
@@ -73,7 +74,7 @@ func ResourceFlowDefinition() *schema.Resource {
 											json, _ := structure.NormalizeJsonString(v)
 											return json
 										},
-										DiffSuppressFunc: suppressEquivalentJsonDiffs,
+										DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 									},
 								},
 							},
@@ -92,7 +93,7 @@ func ResourceFlowDefinition() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"public_workforce_task_price": {
 							Type:     schema.TypeList,
@@ -180,7 +181,7 @@ func ResourceFlowDefinition() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -213,7 +214,7 @@ func ResourceFlowDefinition() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: verify.ValidARN,
 						},
 						"s3_output_path": {
 							Type:     schema.TypeString,
@@ -231,7 +232,7 @@ func ResourceFlowDefinition() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),

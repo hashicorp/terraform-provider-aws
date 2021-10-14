@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVPCEndpointConnectionNotification() *schema.Resource {
@@ -37,7 +38,7 @@ func ResourceVPCEndpointConnectionNotification() *schema.Resource {
 			"connection_notification_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"connection_events": {
 				Type:     schema.TypeSet,

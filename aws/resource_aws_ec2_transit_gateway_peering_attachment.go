@@ -10,6 +10,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTransitGatewayPeeringAttachment() *schema.Resource {
@@ -30,7 +31,7 @@ func ResourceTransitGatewayPeeringAttachment() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Computed:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"peer_region": {
 				Type:     schema.TypeString,

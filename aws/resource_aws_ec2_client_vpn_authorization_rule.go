@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceClientVPNAuthorizationRule() *schema.Resource {
@@ -33,7 +34,7 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCIDRNetworkAddress,
+				ValidateFunc: verify.ValidCIDRNetworkAddress,
 			},
 			"access_group_id": {
 				Type:         schema.TypeString,
