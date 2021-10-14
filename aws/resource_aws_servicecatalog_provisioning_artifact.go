@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogProvisioningArtifact() *schema.Resource {
+func ResourceProvisioningArtifact() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogProvisioningArtifactCreate,
-		Read:   resourceAwsServiceCatalogProvisioningArtifactRead,
-		Update: resourceAwsServiceCatalogProvisioningArtifactUpdate,
-		Delete: resourceAwsServiceCatalogProvisioningArtifactDelete,
+		Create: resourceProvisioningArtifactCreate,
+		Read:   resourceProvisioningArtifactRead,
+		Update: resourceProvisioningArtifactUpdate,
+		Delete: resourceProvisioningArtifactDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -98,7 +98,7 @@ func resourceAwsServiceCatalogProvisioningArtifact() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogProvisioningArtifactCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisioningArtifactCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	parameters := make(map[string]interface{})
@@ -153,10 +153,10 @@ func resourceAwsServiceCatalogProvisioningArtifactCreate(d *schema.ResourceData,
 	// Active and Guidance are not fields of CreateProvisioningArtifact but are fields of UpdateProvisioningArtifact.
 	// In order to set these to non-default values, you must create and then update.
 
-	return resourceAwsServiceCatalogProvisioningArtifactUpdate(d, meta)
+	return resourceProvisioningArtifactUpdate(d, meta)
 }
 
-func resourceAwsServiceCatalogProvisioningArtifactRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisioningArtifactRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
@@ -204,7 +204,7 @@ func resourceAwsServiceCatalogProvisioningArtifactRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAwsServiceCatalogProvisioningArtifactUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisioningArtifactUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	if d.HasChanges("accept_language", "active", "description", "guidance", "name", "product_id") {
@@ -259,10 +259,10 @@ func resourceAwsServiceCatalogProvisioningArtifactUpdate(d *schema.ResourceData,
 		}
 	}
 
-	return resourceAwsServiceCatalogProvisioningArtifactRead(d, meta)
+	return resourceProvisioningArtifactRead(d, meta)
 }
 
-func resourceAwsServiceCatalogProvisioningArtifactDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProvisioningArtifactDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())

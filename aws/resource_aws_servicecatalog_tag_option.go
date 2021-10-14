@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogTagOption() *schema.Resource {
+func ResourceTagOption() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogTagOptionCreate,
-		Read:   resourceAwsServiceCatalogTagOptionRead,
-		Update: resourceAwsServiceCatalogTagOptionUpdate,
-		Delete: resourceAwsServiceCatalogTagOptionDelete,
+		Create: resourceTagOptionCreate,
+		Read:   resourceTagOptionRead,
+		Update: resourceTagOptionUpdate,
+		Delete: resourceTagOptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -48,7 +48,7 @@ func resourceAwsServiceCatalogTagOption() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.CreateTagOptionInput{
@@ -101,10 +101,10 @@ func resourceAwsServiceCatalogTagOptionCreate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	return resourceAwsServiceCatalogTagOptionRead(d, meta)
+	return resourceTagOptionRead(d, meta)
 }
 
-func resourceAwsServiceCatalogTagOptionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTagOptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.TagOptionReady(conn, d.Id())
@@ -131,7 +131,7 @@ func resourceAwsServiceCatalogTagOptionRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsServiceCatalogTagOptionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTagOptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.UpdateTagOptionInput{
@@ -171,10 +171,10 @@ func resourceAwsServiceCatalogTagOptionUpdate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error updating Service Catalog Tag Option (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsServiceCatalogTagOptionRead(d, meta)
+	return resourceTagOptionRead(d, meta)
 }
 
-func resourceAwsServiceCatalogTagOptionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTagOptionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeleteTagOptionInput{

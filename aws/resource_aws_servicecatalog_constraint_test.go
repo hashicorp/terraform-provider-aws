@@ -15,6 +15,7 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test servicecat constraints
@@ -65,7 +66,7 @@ func testSweepServiceCatalogConstraints(region string) error {
 						continue
 					}
 
-					r := resourceAwsServiceCatalogConstraint()
+					r := ResourceConstraint()
 					d := r.Data(nil)
 					d.SetId(aws.StringValue(detail.ConstraintId))
 
@@ -142,7 +143,7 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogConstraint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceConstraint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogPortfolioShare() *schema.Resource {
+func ResourcePortfolioShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogPortfolioShareCreate,
-		Read:   resourceAwsServiceCatalogPortfolioShareRead,
-		Update: resourceAwsServiceCatalogPortfolioShareUpdate,
-		Delete: resourceAwsServiceCatalogPortfolioShareDelete,
+		Create: resourcePortfolioShareCreate,
+		Read:   resourcePortfolioShareRead,
+		Update: resourcePortfolioShareUpdate,
+		Delete: resourcePortfolioShareDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -84,7 +84,7 @@ func resourceAwsServiceCatalogPortfolioShare() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.CreatePortfolioShareInput{
@@ -162,10 +162,10 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsServiceCatalogPortfolioShareRead(d, meta)
+	return resourcePortfolioShareRead(d, meta)
 }
 
-func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	portfolioID, shareType, principalID, err := tfservicecatalog.PortfolioShareParseResourceID(d.Id())
@@ -205,7 +205,7 @@ func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsServiceCatalogPortfolioShareUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioShareUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	if d.HasChanges("accept_language", "share_tag_options") {
@@ -244,10 +244,10 @@ func resourceAwsServiceCatalogPortfolioShareUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsServiceCatalogPortfolioShareRead(d, meta)
+	return resourcePortfolioShareRead(d, meta)
 }
 
-func resourceAwsServiceCatalogPortfolioShareDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePortfolioShareDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeletePortfolioShareInput{

@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsServiceCatalogConstraint() *schema.Resource {
+func DataSourceConstraint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceCatalogConstraintRead,
+		Read: dataSourceConstraintRead,
 
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
@@ -59,7 +59,7 @@ func dataSourceAwsServiceCatalogConstraint() *schema.Resource {
 	}
 }
 
-func dataSourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.ConstraintReady(conn, d.Get("accept_language").(string), d.Get("id").(string))

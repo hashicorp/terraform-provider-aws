@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsServiceCatalogPortfolioConstraints() *schema.Resource {
+func DataSourcePortfolioConstraints() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceCatalogPortfolioConstraintsRead,
+		Read: dataSourcePortfolioConstraintsRead,
 
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
@@ -67,7 +67,7 @@ func dataSourceAwsServiceCatalogPortfolioConstraints() *schema.Resource {
 	}
 }
 
-func dataSourceAwsServiceCatalogPortfolioConstraintsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.PortfolioConstraintsReady(conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string))

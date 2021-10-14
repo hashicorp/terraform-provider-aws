@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsServiceCatalogProduct() *schema.Resource {
+func ResourceProduct() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServiceCatalogProductCreate,
-		Read:   resourceAwsServiceCatalogProductRead,
-		Update: resourceAwsServiceCatalogProductUpdate,
-		Delete: resourceAwsServiceCatalogProductDelete,
+		Create: resourceProductCreate,
+		Read:   resourceProductRead,
+		Update: resourceProductUpdate,
+		Delete: resourceProductDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -142,7 +142,7 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 	}
 }
 
-func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProductCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -229,10 +229,10 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error waiting for Service Catalog Product (%s) to be ready: %w", d.Id(), err)
 	}
 
-	return resourceAwsServiceCatalogProductRead(d, meta)
+	return resourceProductRead(d, meta)
 }
 
-func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -284,7 +284,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProductUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -355,10 +355,10 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsServiceCatalogProductRead(d, meta)
+	return resourceProductRead(d, meta)
 }
 
-func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProductDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	input := &servicecatalog.DeleteProductInput{

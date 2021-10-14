@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsServiceCatalogProduct() *schema.Resource {
+func DataSourceProduct() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServiceCatalogProductRead,
+		Read: dataSourceProductRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -81,7 +81,7 @@ func dataSourceAwsServiceCatalogProduct() *schema.Resource {
 	}
 }
 
-func dataSourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
 	output, err := waiter.ProductReady(conn, d.Get("accept_language").(string), d.Get("id").(string))

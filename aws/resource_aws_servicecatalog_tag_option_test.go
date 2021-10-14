@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test servicecat tag options
@@ -50,7 +51,7 @@ func testSweepServiceCatalogTagOptions(region string) error {
 
 			id := aws.StringValue(tod.Id)
 
-			r := resourceAwsServiceCatalogTagOption()
+			r := ResourceTagOption()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -119,7 +120,7 @@ func TestAccAWSServiceCatalogTagOption_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogTagOptionConfig_basic(rName, "värde", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogTagOptionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogTagOption(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceTagOption(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

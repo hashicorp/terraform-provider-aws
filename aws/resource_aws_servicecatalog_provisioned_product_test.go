@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 // add sweeper to delete known test servicecat provisioned products
@@ -56,7 +57,7 @@ func testSweepServiceCatalogProvisionedProducts(region string) error {
 				continue
 			}
 
-			r := resourceAwsServiceCatalogProvisionedProduct()
+			r := ResourceProvisionedProduct()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(detail.Id))
 
@@ -143,7 +144,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 				Config: testAccAWSServiceCatalogProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogProvisionedProduct(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceProvisionedProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
