@@ -61,7 +61,9 @@ func resourceAwsConnectLambdaFunctionAssociationRead(ctx context.Context, d *sch
 	conn := meta.(*AWSClient).connectconn
 
 	instanceID, functionArn, err := tfconnect.LambdaFunctionAssociationParseID(d.Id())
-
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	lfaArn, err := finder.LambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID, functionArn)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by Function ARN (%s): %w", functionArn, err))
