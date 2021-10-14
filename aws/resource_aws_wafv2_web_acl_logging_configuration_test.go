@@ -14,14 +14,14 @@ import (
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -45,14 +45,14 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,14 +103,14 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateSingleHeaderRedactedField(t
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateMethodRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -146,14 +146,14 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateMethodRedactedField(t *test
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateQueryStringRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -189,14 +189,14 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateQueryStringRedactedField(t 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateUriPathRedactedField(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,14 +232,14 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateUriPathRedactedField(t *tes
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14248
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -298,15 +298,15 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *t
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing.T) {
 	var before, after wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rNameNew := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameNew := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -340,8 +340,8 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceARNForceNew(t *test
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceNew(t *testing.T) {
 	var before, after wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rNameNew := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameNew := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 	kinesisResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -349,7 +349,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceN
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -383,20 +383,20 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceN
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACLLoggingConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafv2WebACLLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -406,14 +406,14 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -436,14 +436,14 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_emptyRedactedFields(t *testing.T)
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -478,21 +478,21 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateEmptyRedactedFields(t *test
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_disappears_WebAcl(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACL(), webACLResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafv2WebACL(), webACLResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -502,13 +502,13 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears_WebAcl(t *testing.T) {
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_loggingFilter(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -605,7 +605,7 @@ func testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy(s *terraform.State) e
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
 		resp, err := conn.GetLoggingConfiguration(
 			&wafv2.GetLoggingConfigurationInput{
 				ResourceArn: aws.String(rs.Primary.ID),
@@ -641,7 +641,7 @@ func testAccCheckAwsWafv2WebACLLoggingConfigurationExists(n string, v *wafv2.Log
 			return fmt.Errorf("No WAFv2 WebACL Logging Configuration ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
 		resp, err := conn.GetLoggingConfiguration(&wafv2.GetLoggingConfigurationInput{
 			ResourceArn: aws.String(rs.Primary.ID),
 		})

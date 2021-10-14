@@ -12,14 +12,14 @@ import (
 )
 
 func TestAccDataSourceAwsWafv2RegexPatternSet_basic(t *testing.T) {
-	name := sdkacctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_regex_pattern_set.test"
 	datasourceName := "data.aws_wafv2_regex_pattern_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck: acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWafv2RegexPatternSet_NonExistent(name),

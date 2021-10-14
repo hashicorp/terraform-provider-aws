@@ -80,13 +80,13 @@ func testSweepWafv2RuleGroups(region string) error {
 
 func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,13 +118,13 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_updateRule(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,14 +184,14 @@ func TestAccAwsWafv2RuleGroup_updateRule(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_updateRuleProperties(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 	ruleName2 := fmt.Sprintf("%s-2", ruleGroupName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -357,13 +357,13 @@ func TestAccAwsWafv2RuleGroup_updateRuleProperties(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -420,13 +420,13 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -583,14 +583,14 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	ruleGroupNewName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ruleGroupNewName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -631,13 +631,13 @@ func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -678,13 +678,13 @@ func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -725,20 +725,20 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsWafv2RuleGroupConfig_Minimal(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafv2RuleGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafv2RuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -748,13 +748,13 @@ func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -802,13 +802,13 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_GeoMatchStatement_ForwardedIPConfig(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -859,13 +859,13 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement_ForwardedIPConfig(t *testing.T) 
 
 func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -896,13 +896,13 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement_IPSetForwardedIPConfig(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -996,13 +996,13 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement_IPSetForwardedIPConfig(t *
 
 func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1069,13 +1069,13 @@ func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1100,13 +1100,13 @@ func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1138,13 +1138,13 @@ func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1219,13 +1219,13 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_RuleAction_CustomRequestHandling(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1290,13 +1290,13 @@ func TestAccAwsWafv2RuleGroup_RuleAction_CustomRequestHandling(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_RuleAction_CustomResponse(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1337,13 +1337,13 @@ func TestAccAwsWafv2RuleGroup_RuleAction_CustomResponse(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1392,13 +1392,13 @@ func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1463,13 +1463,13 @@ func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1512,13 +1512,13 @@ func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1570,7 +1570,7 @@ func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 }
 
 func testAccPreCheckAWSWafv2ScopeRegional(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).wafv2conn
+	conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
 
 	input := &wafv2.ListRuleGroupsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
@@ -1593,7 +1593,7 @@ func testAccCheckAwsWafv2RuleGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
 		resp, err := conn.GetRuleGroup(
 			&wafv2.GetRuleGroupInput{
 				Id:    aws.String(rs.Primary.ID),
@@ -1635,7 +1635,7 @@ func testAccCheckAwsWafv2RuleGroupExists(n string, v *wafv2.RuleGroup) resource.
 			return fmt.Errorf("No WAFv2 RuleGroup ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
 		resp, err := conn.GetRuleGroup(&wafv2.GetRuleGroupInput{
 			Id:    aws.String(rs.Primary.ID),
 			Name:  aws.String(rs.Primary.Attributes["name"]),

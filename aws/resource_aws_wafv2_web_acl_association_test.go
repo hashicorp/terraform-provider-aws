@@ -24,7 +24,7 @@ func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
 			testAccPreCheckAWSWafv2ScopeRegional(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafv2WebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,14 +56,14 @@ func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
 			testAccPreCheckAWSWafv2ScopeRegional(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafv2WebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACLAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafv2WebACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,7 +71,7 @@ func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayStage(), "aws_api_gateway_stage.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsApiGatewayStage(), "aws_api_gateway_stage.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,7 +85,7 @@ func testAccCheckAWSWafv2WebACLAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
+		conn := acctest.Provider.Meta().(*AWSClient).wafv2conn
 		resp, err := conn.GetWebACLForResource(&wafv2.GetWebACLForResourceInput{
 			ResourceArn: aws.String(rs.Primary.Attributes["resource_arn"]),
 		})
