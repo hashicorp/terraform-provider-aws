@@ -8,22 +8,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSBeanstalkAppVersion_basic(t *testing.T) {
 	var appVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkApplicationVersionConfig(acctest.RandInt()),
+				Config: testAccBeanstalkApplicationVersionConfig(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.default", &appVersion),
 				),
@@ -37,13 +38,13 @@ func TestAccAWSBeanstalkAppVersion_duplicateLabels(t *testing.T) {
 	var secondAppVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkApplicationVersionConfig_duplicateLabel(acctest.RandInt()),
+				Config: testAccBeanstalkApplicationVersionConfig_duplicateLabel(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.first", &firstAppVersion),
 					testAccCheckApplicationVersionExists("aws_elastic_beanstalk_application_version.second", &secondAppVersion),
@@ -58,13 +59,13 @@ func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application_version.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBeanstalkApplicationVersionConfigWithTags(acctest.RandInt(), "test1", "test2"),
+				Config: testAccBeanstalkApplicationVersionConfigWithTags(sdkacctest.RandInt(), "test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -73,7 +74,7 @@ func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBeanstalkApplicationVersionConfigWithTags(acctest.RandInt(), "updateTest1", "updateTest2"),
+				Config: testAccBeanstalkApplicationVersionConfigWithTags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -82,7 +83,7 @@ func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBeanstalkApplicationVersionConfigWithAddTags(acctest.RandInt(), "updateTest1", "updateTest2", "addTest3"),
+				Config: testAccBeanstalkApplicationVersionConfigWithAddTags(sdkacctest.RandInt(), "updateTest1", "updateTest2", "addTest3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -92,7 +93,7 @@ func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBeanstalkApplicationVersionConfigWithTags(acctest.RandInt(), "updateTest1", "updateTest2"),
+				Config: testAccBeanstalkApplicationVersionConfigWithTags(sdkacctest.RandInt(), "updateTest1", "updateTest2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationVersionExists(resourceName, &appVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
