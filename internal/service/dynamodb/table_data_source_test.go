@@ -12,7 +12,7 @@ import (
 
 func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 	datasourceName := "data.aws_dynamodb_table.test"
-	tableName := fmt.Sprintf("testaccawsdynamodbtable-basic-%s", sdkacctest.RandString(10))
+	tableName := fmt.Sprintf("testAccAWSdynamodbtable-basic-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -20,7 +20,7 @@ func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsDynamoDbTableConfigBasic(tableName),
+				Config: testAccTableBasicDataSourceConfig(tableName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "name", tableName),
 					resource.TestCheckResourceAttr(datasourceName, "read_capacity", "20"),
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsDynamoDbTableConfigBasic(tableName string) string {
+func testAccTableBasicDataSourceConfig(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
