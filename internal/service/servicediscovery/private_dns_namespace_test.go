@@ -149,7 +149,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_disappears(t *testing.T) {
 				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePrivateDNSNamespace(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourcePrivateDNSNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

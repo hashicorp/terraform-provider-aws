@@ -148,7 +148,7 @@ func TestAccAWSServiceDiscoveryPublicDnsNamespace_disappears(t *testing.T) {
 				Config: testAccServiceDiscoveryPublicDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourcePublicDNSNamespace(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourcePublicDNSNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

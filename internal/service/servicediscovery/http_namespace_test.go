@@ -149,7 +149,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_disappears(t *testing.T) {
 				Config: testAccServiceDiscoveryHttpNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryHttpNamespaceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceHTTPNamespace(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourceHTTPNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
