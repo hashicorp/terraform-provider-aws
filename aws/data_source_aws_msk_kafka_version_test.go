@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSMskKafkaVersionDataSource_basic(t *testing.T) {
@@ -13,8 +14,8 @@ func TestAccAWSMskKafkaVersionDataSource_basic(t *testing.T) {
 	version := "2.4.1.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAWSMskKafkaVersionPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccAWSMskKafkaVersionPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -33,8 +34,8 @@ func TestAccAWSMskKafkaVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_msk_kafka_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAWSMskKafkaVersionPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccAWSMskKafkaVersionPreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kafka.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func testAccAWSMskKafkaVersionPreCheck(t *testing.T) {
 
 	_, err := conn.ListKafkaVersions(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
