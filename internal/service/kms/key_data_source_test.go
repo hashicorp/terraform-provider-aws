@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsKmsKey_basic(t *testing.T) {
+func TestAccKMSKeyDataSource_basic(t *testing.T) {
 	resourceName := "aws_kms_key.test"
 	datasourceName := "data.aws_kms_key.test"
 	rName := fmt.Sprintf("tf-testacc-kms-key-%s", sdkacctest.RandString(13))

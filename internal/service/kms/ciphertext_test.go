@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccResourceAwsKmsCiphertext_basic(t *testing.T) {
+func TestAccKMSCiphertext_Resource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, kms.EndpointsID),
@@ -26,7 +26,7 @@ func TestAccResourceAwsKmsCiphertext_basic(t *testing.T) {
 	})
 }
 
-func TestAccResourceAwsKmsCiphertext_validate(t *testing.T) {
+func TestAccKMSCiphertext_Resource_validate(t *testing.T) {
 	kmsSecretsDataSource := "data.aws_kms_secrets.foo"
 	resourceName := "aws_kms_ciphertext.foo"
 
@@ -47,7 +47,7 @@ func TestAccResourceAwsKmsCiphertext_validate(t *testing.T) {
 	})
 }
 
-func TestAccResourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
+func TestAccKMSCiphertext_ResourceValidate_withContext(t *testing.T) {
 	kmsSecretsDataSource := "data.aws_kms_secrets.foo"
 	resourceName := "aws_kms_ciphertext.foo"
 

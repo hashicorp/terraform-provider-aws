@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
+func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 	var encryptedPayload string
 	var key kms.KeyMetadata
 
