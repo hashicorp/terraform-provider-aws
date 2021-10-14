@@ -93,17 +93,17 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 	d.Set("iam_role_arn", stack.RoleARN)
 
 	if len(stack.NotificationARNs) > 0 {
-		d.Set("notification_arns", flattenStringSet(stack.NotificationARNs))
+		d.Set("notification_arns", flex.FlattenStringSet(stack.NotificationARNs))
 	}
 
 	d.Set("parameters", flattenAllCloudFormationParameters(stack.Parameters))
 	if err := d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stack.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
-	d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs))
+	d.Set("outputs", flattenOutputs(stack.Outputs))
 
 	if len(stack.Capabilities) > 0 {
-		d.Set("capabilities", flattenStringSet(stack.Capabilities))
+		d.Set("capabilities", flex.FlattenStringSet(stack.Capabilities))
 	}
 
 	tInput := cloudformation.GetTemplateInput{
