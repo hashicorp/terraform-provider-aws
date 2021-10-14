@@ -54,7 +54,7 @@ func sweepSchema(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueSchema_basic(t *testing.T) {
+func TestAccGlueSchema_basic(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -94,7 +94,7 @@ func TestAccAWSGlueSchema_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueSchema_description(t *testing.T) {
+func TestAccGlueSchema_description(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -129,7 +129,7 @@ func TestAccAWSGlueSchema_description(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueSchema_compatibility(t *testing.T) {
+func TestAccGlueSchema_compatibility(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -164,7 +164,7 @@ func TestAccAWSGlueSchema_compatibility(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueSchema_Tags(t *testing.T) {
+func TestAccGlueSchema_tags(t *testing.T) {
 	var schema glue.GetSchemaOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_schema.test"
@@ -209,7 +209,7 @@ func TestAccAWSGlueSchema_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueSchema_schemaDefUpdated(t *testing.T) {
+func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -248,7 +248,7 @@ func TestAccAWSGlueSchema_schemaDefUpdated(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueSchema_disappears(t *testing.T) {
+func TestAccGlueSchema_disappears(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -272,7 +272,7 @@ func TestAccAWSGlueSchema_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueSchema_disappears_registry(t *testing.T) {
+func TestAccGlueSchema_Disappears_registry(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -54,7 +54,7 @@ func sweepRegistry(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueRegistry_basic(t *testing.T) {
+func TestAccGlueRegistry_basic(t *testing.T) {
 	var registry glue.GetRegistryOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -85,7 +85,7 @@ func TestAccAWSGlueRegistry_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueRegistry_Description(t *testing.T) {
+func TestAccGlueRegistry_description(t *testing.T) {
 	var registry glue.GetRegistryOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -120,7 +120,7 @@ func TestAccAWSGlueRegistry_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueRegistry_Tags(t *testing.T) {
+func TestAccGlueRegistry_tags(t *testing.T) {
 	var registry glue.GetRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_registry.test"
@@ -165,7 +165,7 @@ func TestAccAWSGlueRegistry_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlueRegistry_disappears(t *testing.T) {
+func TestAccGlueRegistry_disappears(t *testing.T) {
 	var registry glue.GetRegistryOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

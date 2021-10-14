@@ -14,7 +14,7 @@ import (
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 )
 
-func TestAccAWSGluePartitionIndex_basic(t *testing.T) {
+func TestAccGluePartitionIndex_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_partition_index.test"
 
@@ -45,7 +45,7 @@ func TestAccAWSGluePartitionIndex_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGluePartitionIndex_disappears(t *testing.T) {
+func TestAccGluePartitionIndex_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_partition_index.test"
 
@@ -69,7 +69,7 @@ func TestAccAWSGluePartitionIndex_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSGluePartitionIndex_disappears_table(t *testing.T) {
+func TestAccGluePartitionIndex_Disappears_table(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_partition_index.test"
 
@@ -93,7 +93,7 @@ func TestAccAWSGluePartitionIndex_disappears_table(t *testing.T) {
 	})
 }
 
-func TestAccAWSGluePartitionIndex_disappears_database(t *testing.T) {
+func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_partition_index.test"
 

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAWSGlueScript_Language_Python(t *testing.T) {
+func TestAccGlueScriptDataSource_Language_python(t *testing.T) {
 	dataSourceName := "data.aws_glue_script.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,7 +27,7 @@ func TestAccDataSourceAWSGlueScript_Language_Python(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSGlueScript_Language_Scala(t *testing.T) {
+func TestAccGlueScriptDataSource_Language_scala(t *testing.T) {
 	dataSourceName := "data.aws_glue_script.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccDataSourceAwsGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
+func TestAccGlueDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
 	resourceName := "aws_glue_data_catalog_encryption_settings.test"
 	datasourceName := "data.aws_glue_data_catalog_encryption_settings.test"
 

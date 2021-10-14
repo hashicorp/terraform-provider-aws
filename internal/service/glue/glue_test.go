@@ -2,7 +2,7 @@ package glue_test
 
 import "testing"
 
-func TestAccAWSGlue_serial(t *testing.T) {
+func TestAccGlue_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"ResourcePolicy": {
 			"basic":      testAccResourcePolicy_basic,
