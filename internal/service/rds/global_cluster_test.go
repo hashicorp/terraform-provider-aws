@@ -74,7 +74,7 @@ func sweepGlobalClusters(region string) error {
 	return nil
 }
 
-func TestAccAWSRdsGlobalCluster_basic(t *testing.T) {
+func TestAccRDSGlobalCluster_basic(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -108,7 +108,7 @@ func TestAccAWSRdsGlobalCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_disappears(t *testing.T) {
+func TestAccRDSGlobalCluster_disappears(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -131,7 +131,7 @@ func TestAccAWSRdsGlobalCluster_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_DatabaseName(t *testing.T) {
+func TestAccRDSGlobalCluster_databaseName(t *testing.T) {
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -166,7 +166,7 @@ func TestAccAWSRdsGlobalCluster_DatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_DeletionProtection(t *testing.T) {
+func TestAccRDSGlobalCluster_deletionProtection(t *testing.T) {
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -201,7 +201,7 @@ func TestAccAWSRdsGlobalCluster_DeletionProtection(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_Engine_Aurora(t *testing.T) {
+func TestAccRDSGlobalCluster_Engine_aurora(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -228,7 +228,7 @@ func TestAccAWSRdsGlobalCluster_Engine_Aurora(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_EngineVersion_Aurora(t *testing.T) {
+func TestAccRDSGlobalCluster_EngineVersion_aurora(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -255,7 +255,7 @@ func TestAccAWSRdsGlobalCluster_EngineVersion_Aurora(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_EngineVersionUpdateMinor(t *testing.T) {
+func TestAccRDSGlobalCluster_engineVersionUpdateMinor(t *testing.T) {
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -289,7 +289,7 @@ func TestAccAWSRdsGlobalCluster_EngineVersionUpdateMinor(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_EngineVersionUpdateMajor(t *testing.T) {
+func TestAccRDSGlobalCluster_engineVersionUpdateMajor(t *testing.T) {
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -324,7 +324,7 @@ func TestAccAWSRdsGlobalCluster_EngineVersionUpdateMajor(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_EngineVersion_AuroraMySQL(t *testing.T) {
+func TestAccRDSGlobalCluster_EngineVersion_auroraMySQL(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -351,7 +351,7 @@ func TestAccAWSRdsGlobalCluster_EngineVersion_AuroraMySQL(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_EngineVersion_AuroraPostgresql(t *testing.T) {
+func TestAccRDSGlobalCluster_EngineVersion_auroraPostgresql(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"
@@ -378,7 +378,7 @@ func TestAccAWSRdsGlobalCluster_EngineVersion_AuroraPostgresql(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_SourceDbClusterIdentifier(t *testing.T) {
+func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	clusterResourceName := "aws_rds_cluster.test"
@@ -407,7 +407,7 @@ func TestAccAWSRdsGlobalCluster_SourceDbClusterIdentifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_SourceDbClusterIdentifier_StorageEncrypted(t *testing.T) {
+func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	clusterResourceName := "aws_rds_cluster.test"
@@ -436,7 +436,7 @@ func TestAccAWSRdsGlobalCluster_SourceDbClusterIdentifier_StorageEncrypted(t *te
 	})
 }
 
-func TestAccAWSRdsGlobalCluster_StorageEncrypted(t *testing.T) {
+func TestAccRDSGlobalCluster_storageEncrypted(t *testing.T) {
 	var globalCluster1, globalCluster2 rds.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_global_cluster.test"

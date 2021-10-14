@@ -68,7 +68,7 @@ func sweepEventSubscriptions(region string) error {
 	return nil
 }
 
-func TestAccAWSDBEventSubscription_basic(t *testing.T) {
+func TestAccRDSEventSubscription_basic(t *testing.T) {
 	var v rds.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
@@ -103,7 +103,7 @@ func TestAccAWSDBEventSubscription_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
+func TestAccRDSEventSubscription_disappears(t *testing.T) {
 	var eventSubscription rds.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
@@ -126,7 +126,7 @@ func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBEventSubscription_Name_Generated(t *testing.T) {
+func TestAccRDSEventSubscription_Name_generated(t *testing.T) {
 	var v rds.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
@@ -154,7 +154,7 @@ func TestAccAWSDBEventSubscription_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBEventSubscription_NamePrefix(t *testing.T) {
+func TestAccRDSEventSubscription_namePrefix(t *testing.T) {
 	var v rds.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
@@ -182,7 +182,7 @@ func TestAccAWSDBEventSubscription_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBEventSubscription_Tags(t *testing.T) {
+func TestAccRDSEventSubscription_tags(t *testing.T) {
 	var eventSubscription rds.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
@@ -227,7 +227,7 @@ func TestAccAWSDBEventSubscription_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBEventSubscription_Categories(t *testing.T) {
+func TestAccRDSEventSubscription_categories(t *testing.T) {
 	var v rds.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
@@ -286,7 +286,7 @@ func TestAccAWSDBEventSubscription_Categories(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBEventSubscription_SourceIDs(t *testing.T) {
+func TestAccRDSEventSubscription_sourceIDs(t *testing.T) {
 	var v rds.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"

@@ -78,7 +78,7 @@ func sweepParameterGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSDBParameterGroup_basic(t *testing.T) {
+func TestAccRDSParameterGroup_basic(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -172,7 +172,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_caseWithMixedParameters(t *testing.T) {
+func TestAccRDSParameterGroup_caseWithMixedParameters(t *testing.T) {
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -189,7 +189,7 @@ func TestAccAWSDBParameterGroup_caseWithMixedParameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_limit(t *testing.T) {
+func TestAccRDSParameterGroup_limit(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -201,7 +201,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 		CheckDestroy: testAccCheckParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: createParameterGroupsExceedDefaultAwsLimit(groupName),
+				Config: createParameterGroupsExceedDefaultAWSLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -380,7 +380,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: updateParameterGroupsExceedDefaultAwsLimit(groupName),
+				Config: updateParameterGroupsExceedDefaultAWSLimit(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, groupName),
@@ -557,7 +557,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
+func TestAccRDSParameterGroup_disappears(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -580,7 +580,7 @@ func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
+func TestAccRDSParameterGroup_namePrefix(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -600,7 +600,7 @@ func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_generatedName(t *testing.T) {
+func TestAccRDSParameterGroup_generatedName(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -619,7 +619,7 @@ func TestAccAWSDBParameterGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
+func TestAccRDSParameterGroup_withApplyMethod(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -659,7 +659,7 @@ func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_Only(t *testing.T) {
+func TestAccRDSParameterGroup_only(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -688,7 +688,7 @@ func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
+func TestAccRDSParameterGroup_matchDefault(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -717,7 +717,7 @@ func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_updateParameters(t *testing.T) {
+func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -777,7 +777,7 @@ func TestAccAWSDBParameterGroup_updateParameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBParameterGroup_caseParameters(t *testing.T) {
+func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1314,7 +1314,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func createParameterGroupsExceedDefaultAwsLimit(rName string) string {
+func createParameterGroupsExceedDefaultAWSLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name        = %[1]q
@@ -1534,7 +1534,7 @@ resource "aws_db_parameter_group" "test" {
 `, rName)
 }
 
-func updateParameterGroupsExceedDefaultAwsLimit(rName string) string {
+func updateParameterGroupsExceedDefaultAWSLimit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "test" {
   name        = %[1]q

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDBProxyDataSource_basic(t *testing.T) {
+func TestAccRDSProxyDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_db_proxy.test"
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

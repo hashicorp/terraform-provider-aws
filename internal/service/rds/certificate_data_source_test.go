@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSRDSCertificateDataSource_Id(t *testing.T) {
+func TestAccRDSCertificateDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_rds_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,7 +29,7 @@ func TestAccAWSRDSCertificateDataSource_Id(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSCertificateDataSource_LatestValidTill(t *testing.T) {
+func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 	dataSourceName := "data.aws_rds_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{

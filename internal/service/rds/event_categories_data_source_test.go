@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDbEventCategories_basic(t *testing.T) {
+func TestAccRDSEventCategoriesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_db_event_categories.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -40,7 +40,7 @@ func TestAccAWSDbEventCategories_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDbEventCategories_SourceType(t *testing.T) {
+func TestAccRDSEventCategoriesDataSource_sourceType(t *testing.T) {
 	dataSourceName := "data.aws_db_event_categories.test"
 
 	resource.ParallelTest(t, resource.TestCase{

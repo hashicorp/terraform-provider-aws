@@ -68,7 +68,7 @@ func sweepProxies(region string) error {
 	return nil
 }
 
-func TestAccAWSDBProxy_basic(t *testing.T) {
+func TestAccRDSProxy_basic(t *testing.T) {
 	var v rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -110,7 +110,7 @@ func TestAccAWSDBProxy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_Name(t *testing.T) {
+func TestAccRDSProxy_name(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -145,7 +145,7 @@ func TestAccAWSDBProxy_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_DebugLogging(t *testing.T) {
+func TestAccRDSProxy_debugLogging(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -179,7 +179,7 @@ func TestAccAWSDBProxy_DebugLogging(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_IdleClientTimeout(t *testing.T) {
+func TestAccRDSProxy_idleClientTimeout(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -213,7 +213,7 @@ func TestAccAWSDBProxy_IdleClientTimeout(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_RequireTls(t *testing.T) {
+func TestAccRDSProxy_requireTLS(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -247,7 +247,7 @@ func TestAccAWSDBProxy_RequireTls(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_RoleArn(t *testing.T) {
+func TestAccRDSProxy_roleARN(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -282,7 +282,7 @@ func TestAccAWSDBProxy_RoleArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_VpcSecurityGroupIds(t *testing.T) {
+func TestAccRDSProxy_vpcSecurityGroupIDs(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -319,7 +319,7 @@ func TestAccAWSDBProxy_VpcSecurityGroupIds(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_AuthDescription(t *testing.T) {
+func TestAccRDSProxy_authDescription(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -354,7 +354,7 @@ func TestAccAWSDBProxy_AuthDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_AuthIamAuth(t *testing.T) {
+func TestAccRDSProxy_authIAMAuth(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -389,7 +389,7 @@ func TestAccAWSDBProxy_AuthIamAuth(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_AuthSecretArn(t *testing.T) {
+func TestAccRDSProxy_authSecretARN(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -424,7 +424,7 @@ func TestAccAWSDBProxy_AuthSecretArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_Tags(t *testing.T) {
+func TestAccRDSProxy_tags(t *testing.T) {
 	var dbProxy rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -460,7 +460,7 @@ func TestAccAWSDBProxy_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBProxy_disappears(t *testing.T) {
+func TestAccRDSProxy_disappears(t *testing.T) {
 	var v rds.DBProxy
 	resourceName := "aws_db_proxy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

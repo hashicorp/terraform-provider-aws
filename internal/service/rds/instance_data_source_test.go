@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAWSDbInstanceDataSource_basic(t *testing.T) {
+func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -43,7 +43,7 @@ func TestAccAWSDbInstanceDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDbInstanceDataSource_ec2Classic(t *testing.T) {
+func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{

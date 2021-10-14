@@ -86,7 +86,7 @@ func sweepClusterParameterGroups(region string) error {
 	return nil
 }
 
-func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
+func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -183,7 +183,7 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterParameterGroup_withApplyMethod(t *testing.T) {
+func TestAccRDSClusterParameterGroup_withApplyMethod(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", sdkacctest.RandInt())
 	resourceName := "aws_rds_cluster_parameter_group.test"
@@ -224,7 +224,7 @@ func TestAccAWSDBClusterParameterGroup_withApplyMethod(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterParameterGroup_namePrefix(t *testing.T) {
+func TestAccRDSClusterParameterGroup_namePrefix(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
@@ -252,7 +252,7 @@ func TestAccAWSDBClusterParameterGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterParameterGroup_namePrefix_Parameter(t *testing.T) {
+func TestAccRDSClusterParameterGroup_NamePrefix_parameter(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
@@ -280,7 +280,7 @@ func TestAccAWSDBClusterParameterGroup_namePrefix_Parameter(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterParameterGroup_generatedName(t *testing.T) {
+func TestAccRDSClusterParameterGroup_generatedName(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
@@ -305,7 +305,7 @@ func TestAccAWSDBClusterParameterGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterParameterGroup_generatedName_Parameter(t *testing.T) {
+func TestAccRDSClusterParameterGroup_GeneratedName_parameter(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 
@@ -330,7 +330,7 @@ func TestAccAWSDBClusterParameterGroup_generatedName_Parameter(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterParameterGroup_disappears(t *testing.T) {
+func TestAccRDSClusterParameterGroup_disappears(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-terraform-%d", sdkacctest.RandInt())
@@ -353,7 +353,7 @@ func TestAccAWSDBClusterParameterGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterParameterGroup_only(t *testing.T) {
+func TestAccRDSClusterParameterGroup_only(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	parameterGroupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", sdkacctest.RandInt())
@@ -386,7 +386,7 @@ func TestAccAWSDBClusterParameterGroup_only(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterParameterGroup_updateParameters(t *testing.T) {
+func TestAccRDSClusterParameterGroup_updateParameters(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	groupName := fmt.Sprintf("cluster-parameter-group-test-tf-%d", sdkacctest.RandInt())
@@ -446,7 +446,7 @@ func TestAccAWSDBClusterParameterGroup_updateParameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBClusterParameterGroup_caseParameters(t *testing.T) {
+func TestAccRDSClusterParameterGroup_caseParameters(t *testing.T) {
 	var v rds.DBClusterParameterGroup
 	resourceName := "aws_rds_cluster_parameter_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
