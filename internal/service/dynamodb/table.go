@@ -70,7 +70,7 @@ func ResourceTable() *schema.Resource {
 		),
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsDynamoDbTableMigrateState,
+		MigrateState:  resourceTableMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
