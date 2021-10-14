@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsCloudformationTypeDataSource_Arn_Private(t *testing.T) {
+func TestAccCloudFormationTypeDataSource_ARN_private(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
@@ -46,7 +46,7 @@ func TestAccAwsCloudformationTypeDataSource_Arn_Private(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudformationTypeDataSource_Arn_Public(t *testing.T) {
+func TestAccCloudFormationTypeDataSource_ARN_public(t *testing.T) {
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -76,7 +76,7 @@ func TestAccAwsCloudformationTypeDataSource_Arn_Public(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudformationTypeDataSource_TypeName_Private(t *testing.T) {
+func TestAccCloudFormationTypeDataSource_TypeName_private(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
@@ -111,7 +111,7 @@ func TestAccAwsCloudformationTypeDataSource_TypeName_Private(t *testing.T) {
 	})
 }
 
-func TestAccAwsCloudformationTypeDataSource_TypeName_Public(t *testing.T) {
+func TestAccCloudFormationTypeDataSource_TypeName_public(t *testing.T) {
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
