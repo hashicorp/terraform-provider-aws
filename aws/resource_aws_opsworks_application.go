@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOpsworksApplication() *schema.Resource {
@@ -250,7 +251,7 @@ func resourceAwsOpsworksApplicationValidate(d *schema.ResourceData) error {
 }
 
 func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeAppsInput{
 		AppIds: []*string{
@@ -295,7 +296,7 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksApplicationValidate(d)
 	if err != nil {
@@ -329,7 +330,7 @@ func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksApplicationValidate(d)
 	if err != nil {
@@ -361,7 +362,7 @@ func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsOpsworksApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeleteAppInput{
 		AppId: aws.String(d.Id()),

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 ///////////////////////////////
@@ -263,7 +264,7 @@ func testAccCheckAWSOpsworksStackRecreated(t *testing.T, before, after *opsworks
 }
 
 func testAccPreCheckAWSOpsWorksStacks(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 	input := &opsworks.DescribeStacksInput{}
 
@@ -481,7 +482,7 @@ func testAccCheckAWSOpsworksStackExists(
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 		params := &opsworks.DescribeStacksInput{
 			StackIds: []*string{aws.String(rs.Primary.ID)},
@@ -512,7 +513,7 @@ func testAccCheckAWSOpsworksStackExists(
 }
 
 func testAccCheckAwsOpsworksStackDestroy(s *terraform.State) error {
-	opsworksconn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_stack" {
 			continue
@@ -524,7 +525,7 @@ func testAccCheckAwsOpsworksStackDestroy(s *terraform.State) error {
 			},
 		}
 
-		_, err := opsworksconn.DescribeStacks(req)
+		_, err := conn.DescribeStacks(req)
 		if err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
 				if awserr.Code() == "ResourceNotFoundException" {

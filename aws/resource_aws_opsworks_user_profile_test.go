@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
@@ -74,7 +75,7 @@ func testAccCheckAWSOpsworksUserProfileExists(
 			return fmt.Errorf("User Profile user arn is missing, should be set.")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).opsworksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 		params := &opsworks.DescribeUserProfilesInput{
 			IamUserArns: []*string{aws.String(rs.Primary.Attributes["user_arn"])},
@@ -105,7 +106,7 @@ func testAccCheckAWSOpsworksUserProfileExists(
 }
 
 func testAccCheckAwsOpsworksUserProfileDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*AWSClient).opsworksconn
+	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_user_profile" {

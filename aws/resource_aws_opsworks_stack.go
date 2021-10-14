@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOpsworksStack() *schema.Resource {
@@ -274,9 +275,9 @@ func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v 
 }
 
 func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	client := meta.(*conns.AWSClient).OpsWorksConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
@@ -407,7 +408,7 @@ func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) erro
 //  - https://github.com/hashicorp/terraform/pull/12688
 //  - https://github.com/hashicorp/terraform/issues/12842
 func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks, error) {
-	originalConn := meta.(*AWSClient).opsworksconn
+	originalConn := meta.(*conns.AWSClient).OpsWorksConn
 
 	// Regions are the same, no need to reconfigure
 	if originalConn.Config.Region != nil && *originalConn.Config.Region == region {
@@ -420,17 +421,17 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 		return nil, fmt.Errorf("Error creating AWS session: %s", err)
 	}
 
-	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", meta.(*AWSClient).terraformVersion))
+	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", meta.(*conns.AWSClient).TerraformVersion))
 
 	newSession := sess.Copy(&aws.Config{Region: aws.String(region)})
-	newOpsworksconn := opsworks.New(newSession)
+	conn := opsworks.New(newSession)
 
 	log.Printf("[DEBUG] Returning new OpsWorks client")
-	return newOpsworksconn, nil
+	return conn, nil
 }
 
 func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksStackValidate(d)
 	if err != nil {
@@ -512,7 +513,7 @@ func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
 		client, conErr = opsworksConnForRegion(v, meta)
@@ -576,10 +577,10 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*conns.AWSClient).Partition,
+		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "opsworks",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
 	}.String()
 	if d.HasChange("tags_all") {
@@ -594,7 +595,7 @@ func resourceAwsOpsworksStackUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsOpsworksStackDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
 		client, conErr = opsworksConnForRegion(v, meta)

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOpsworksUserProfile() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsOpsworksUserProfile() *schema.Resource {
 }
 
 func resourceAwsOpsworksUserProfileRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeUserProfilesInput{
 		IamUserArns: []*string{
@@ -77,7 +78,7 @@ func resourceAwsOpsworksUserProfileRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsOpsworksUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.CreateUserProfileInput{
 		AllowSelfManagement: aws.Bool(d.Get("allow_self_management").(bool)),
@@ -97,7 +98,7 @@ func resourceAwsOpsworksUserProfileCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsOpsworksUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.UpdateUserProfileInput{
 		AllowSelfManagement: aws.Bool(d.Get("allow_self_management").(bool)),
@@ -117,7 +118,7 @@ func resourceAwsOpsworksUserProfileUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsOpsworksUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeleteUserProfileInput{
 		IamUserArn: aws.String(d.Id()),

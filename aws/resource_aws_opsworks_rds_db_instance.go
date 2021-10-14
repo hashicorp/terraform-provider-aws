@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
 }
 
 func resourceAwsOpsworksRdsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.UpdateRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
@@ -70,7 +71,7 @@ func resourceAwsOpsworksRdsDbInstanceUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeregisterRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
@@ -92,7 +93,7 @@ func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta int
 }
 
 func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeRdsDbInstancesInput{
 		StackId: aws.String(d.Get("stack_id").(string)),
@@ -129,7 +130,7 @@ func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsOpsworksRdsDbInstanceRegister(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.RegisterRdsDbInstanceInput{
 		StackId:          aws.String(d.Get("stack_id").(string)),
