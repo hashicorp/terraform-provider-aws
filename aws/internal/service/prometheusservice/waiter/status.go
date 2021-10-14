@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	ResourceStatusFailed  = "Failed"
-	ResourceStatusUnknown = "Unknown"
-	ResourceStatusDeleted = "Deleted"
+	resourceStatusFailed  = "Failed"
+	resourceStatusUnknown = "Unknown"
+	resourceStatusDeleted = "Deleted"
 )
 
-// WorkspaceCreatedStatus fetches the Workspace and its Status.
-func WorkspaceCreatedStatus(ctx context.Context, conn *prometheusservice.PrometheusService, id string) resource.StateRefreshFunc {
+// statusWorkspaceCreated fetches the Workspace and its Status.
+func statusWorkspaceCreated(ctx context.Context, conn *prometheusservice.PrometheusService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(id),
@@ -26,19 +26,19 @@ func WorkspaceCreatedStatus(ctx context.Context, conn *prometheusservice.Prometh
 		output, err := conn.DescribeWorkspaceWithContext(ctx, input)
 
 		if err != nil {
-			return output, ResourceStatusFailed, err
+			return output, resourceStatusFailed, err
 		}
 
 		if output == nil || output.Workspace == nil {
-			return output, ResourceStatusUnknown, nil
+			return output, resourceStatusUnknown, nil
 		}
 
 		return output.Workspace, aws.StringValue(output.Workspace.Status.StatusCode), nil
 	}
 }
 
-// WorkspaceDeletedStatus fetches the Workspace and its Status
-func WorkspaceDeletedStatus(ctx context.Context, conn *prometheusservice.PrometheusService, id string) resource.StateRefreshFunc {
+// statusWorkspaceDeleted fetches the Workspace and its Status
+func statusWorkspaceDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(id),
@@ -47,15 +47,15 @@ func WorkspaceDeletedStatus(ctx context.Context, conn *prometheusservice.Prometh
 		output, err := conn.DescribeWorkspaceWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
-			return output, ResourceStatusDeleted, nil
+			return output, resourceStatusDeleted, nil
 		}
 
 		if err != nil {
-			return output, ResourceStatusUnknown, err
+			return output, resourceStatusUnknown, err
 		}
 
 		if output == nil || output.Workspace == nil {
-			return output, ResourceStatusUnknown, nil
+			return output, resourceStatusUnknown, nil
 		}
 
 		return output.Workspace, aws.StringValue(output.Workspace.Status.StatusCode), nil
