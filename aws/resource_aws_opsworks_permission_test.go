@@ -7,17 +7,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSOpsworksPermission_basic(t *testing.T) {
-	sName := fmt.Sprintf("tf-ops-perm-%d", acctest.RandInt())
+	sName := fmt.Sprintf("tf-ops-perm-%d", sdkacctest.RandInt())
 	var opsperm opsworks.Permission
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -96,12 +97,12 @@ func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4804
 func TestAccAWSOpsworksPermission_Self(t *testing.T) {
 	var opsperm opsworks.Permission
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil, // Cannot delete own OpsWorks Permission
 		Steps: []resource.TestStep{

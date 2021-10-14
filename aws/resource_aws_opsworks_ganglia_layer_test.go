@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSOpsworksGangliaLayer_basic(t *testing.T) {
 	var opslayer opsworks.Layer
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_ganglia_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksGangliaLayerDestroy,
 		Steps: []resource.TestStep{
@@ -33,11 +34,11 @@ func TestAccAWSOpsworksGangliaLayer_basic(t *testing.T) {
 
 func TestAccAWSOpsworksGangliaLayer_tags(t *testing.T) {
 	var opslayer opsworks.Layer
-	stackName := acctest.RandomWithPrefix("tf-acc-test")
+	stackName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_opsworks_ganglia_layer.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksGangliaLayerDestroy,
 		Steps: []resource.TestStep{
