@@ -75,7 +75,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
 		Type:        aws.String(d.Get("type").(string)),
-		Tags:        Tags(tags.IgnoreAws()),
+		Tags:        Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Creating Organizations Policy (%s): %v", name, input)
@@ -156,7 +156,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(fmt.Errorf("error listing tags for Organizations policy (%s): %w", d.Id(), err))
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -90,14 +90,14 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", group.Arn)
 	d.Set("path", group.Path)
 	d.Set("group_id", group.GroupId)
-	if err := d.Set("users", dataSourceUsersRead(users)); err != nil {
+	if err := d.Set("users", dataSourceGroupUsersRead(users)); err != nil {
 		return fmt.Errorf("error setting users: %w", err)
 	}
 
 	return nil
 }
 
-func dataSourceUsersRead(iamUsers []*iam.User) []map[string]interface{} {
+func dataSourceGroupUsersRead(iamUsers []*iam.User) []map[string]interface{} {
 	users := make([]map[string]interface{}, 0, len(iamUsers))
 	for _, i := range iamUsers {
 		u := make(map[string]interface{})

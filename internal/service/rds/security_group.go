@@ -98,7 +98,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	opts := rds.CreateDBSecurityGroupInput{
 		DBSecurityGroupName:        aws.String(d.Get("name").(string)),
 		DBSecurityGroupDescription: aws.String(d.Get("description").(string)),
-		Tags:                       Tags(tags.IgnoreAws()),
+		Tags:                       Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] DB Security Group create configuration: %#v", opts)
@@ -196,7 +196,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for RDS DB Security Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

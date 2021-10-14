@@ -420,7 +420,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			AllowVersionUpgrade:              aws.Bool(d.Get("allow_version_upgrade").(bool)),
 			PubliclyAccessible:               aws.Bool(d.Get("publicly_accessible").(bool)),
 			AutomatedSnapshotRetentionPeriod: aws.Int64(int64(d.Get("automated_snapshot_retention_period").(int))),
-			Tags:                             Tags(tags.IgnoreAws()),
+			Tags:                             Tags(tags.IgnoreAWS()),
 		}
 
 		if v := d.Get("number_of_nodes").(int); v > 1 {
@@ -616,7 +616,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(apiList))
 
-	tags := KeyValueTags(rsc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(rsc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -875,7 +875,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		clusterInvalidClusterStateFaultTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteCluster(input)

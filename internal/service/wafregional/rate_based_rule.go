@@ -98,7 +98,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if len(tags) > 0 {
-			params.Tags = Tags(tags.IgnoreAws())
+			params.Tags = Tags(tags.IgnoreAWS())
 		}
 
 		return conn.CreateRateBasedRule(params)
@@ -164,7 +164,7 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Failed to get WAF Regional Rated Based Rule parameter tags for %s: %s", d.Get("name"), err)
 	}
 
-	tags := tagList.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tagList.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

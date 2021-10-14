@@ -81,7 +81,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_basic(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_%d", rInt)
 	var stream firehose.DeliveryStreamDescription
 
-	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	config := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
 			rInt, rInt, rInt, rInt)
 
@@ -129,7 +129,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_disappears(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_%d", rInt)
 	var stream firehose.DeliveryStreamDescription
 
-	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	config := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
 			rInt, rInt, rInt, rInt)
 
@@ -458,7 +458,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
 
 	var stream firehose.DeliveryStreamDescription
 	ri := sdkacctest.RandInt()
-	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	config := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
 			ri, ri, ri, ri)
 
@@ -884,7 +884,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3KmsKeyArn(t *testing.T) {
 
 	var stream firehose.DeliveryStreamDescription
 	ri := sdkacctest.RandInt()
-	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	config := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3KmsKeyArn,
 			ri, ri, ri, ri, ri)
 
@@ -921,13 +921,13 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := sdkacctest.RandInt()
 
-	preConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	preConfig := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
 			ri, ri, ri, ri)
-	firstUpdateConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	firstUpdateConfig := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates_Initial,
 			ri, ri, ri, ri)
-	removeProcessorsConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	removeProcessorsConfig := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates_RemoveProcessors,
 			ri, ri, ri, ri)
 
@@ -1099,7 +1099,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 
 	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_SplunkBasic,
 		ri, ri, ri, ri)
-	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	postConfig := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates,
 			ri, ri, ri, ri)
 
@@ -1164,7 +1164,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_HttpEndpointConfiguration(t *testin
 
 	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointBasic,
 		ri, ri, ri, ri)
-	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	postConfig := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointUpdates,
 			ri, ri, ri, ri)
 
@@ -1262,7 +1262,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic,
 		ri, ri, ri, ri, ri, ri)
-	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	postConfig := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate,
 			ri, ri, ri, ri, ri, ri)
 
@@ -1326,7 +1326,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigEndpointUpdates(
 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
 	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchEndpoint,
 		ri, ri, ri, ri, ri, ri)
-	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+	postConfig := testAccLambdaBasicConfig(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchEndpointUpdate,
 			ri, ri, ri, ri, ri, ri)
 
@@ -1785,7 +1785,7 @@ EOF
 `, policyName, roleName)
 }
 
-func testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName string) string {
+func testAccLambdaBasicConfig(funcName, policyName, roleName string) string {
 	return fmt.Sprintf(baseAccFirehoseAWSLambdaConfig(policyName, roleName)+`
 resource "aws_lambda_function" "lambda_function_test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2775,7 +2775,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccKinesisFirehoseDeliveryStreamRedshiftConfigUpdates(rName string, rInt int) string {
 	return acctest.ConfigCompose(
-		testAccFirehoseAWSLambdaConfigBasic(rName, rName, rName),
+		testAccLambdaBasicConfig(rName, rName, rName),
 		testAccKinesisFirehoseDeliveryStreamRedshiftConfigBase(rName, rInt),
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
@@ -3214,7 +3214,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcUpdate(funcName, policyName, roleName string, ri int) string {
 	return acctest.ConfigCompose(
-		testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName),
+		testAccLambdaBasicConfig(funcName, policyName, roleName),
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseElasticsearchVpcConfig+`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose-elasticsearch]

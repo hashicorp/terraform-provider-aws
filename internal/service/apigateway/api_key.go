@@ -86,7 +86,7 @@ func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		Description: aws.String(d.Get("description").(string)),
 		Enabled:     aws.Bool(d.Get("enabled").(bool)),
 		Value:       aws.String(d.Get("value").(string)),
-		Tags:        Tags(tags.IgnoreAws()),
+		Tags:        Tags(tags.IgnoreAWS()),
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway API Key: %s", err)
@@ -118,7 +118,7 @@ func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags := KeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

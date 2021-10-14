@@ -126,7 +126,7 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	params := &rds.CreateDBSnapshotInput{
 		DBInstanceIdentifier: aws.String(dBInstanceIdentifier),
 		DBSnapshotIdentifier: aws.String(d.Get("db_snapshot_identifier").(string)),
-		Tags:                 Tags(tags.IgnoreAws()),
+		Tags:                 Tags(tags.IgnoreAWS()),
 	}
 
 	resp, err := conn.CreateDBSnapshot(params)
@@ -201,7 +201,7 @@ func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for RDS DB Snapshot (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

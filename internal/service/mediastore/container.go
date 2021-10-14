@@ -60,7 +60,7 @@ func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	resp, err := conn.CreateContainer(input)
@@ -116,7 +116,7 @@ func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for media store container (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

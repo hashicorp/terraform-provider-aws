@@ -122,7 +122,7 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// AWS requires any principal in the policy to exist before the key is created.
@@ -196,7 +196,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("policy", key.policy)
 
-	tags := key.tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -393,7 +393,7 @@ func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) key enabled (%t): %w", keyID, enabled, err)
@@ -432,7 +432,7 @@ func updateKmsKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicy
 		return nil, err
 	}
 
-	_, err = tfresource.RetryWhenAwsErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) policy: %w", keyID, err)
@@ -466,7 +466,7 @@ func updateKmsKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) erro
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) key rotation enabled (%t): %w", keyID, enabled, err)

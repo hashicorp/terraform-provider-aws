@@ -89,7 +89,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(d *schema.ResourceData, met
 		return fmt.Errorf("error setting local_gateway_virtual_interface_ids: %w", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(localGatewayVirtualInterfaceGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(localGatewayVirtualInterfaceGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

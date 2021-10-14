@@ -59,7 +59,7 @@ func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &glue.CreateRegistryInput{
 		RegistryName: aws.String(d.Get("registry_name").(string)),
-		Tags:         Tags(tags.IgnoreAws()),
+		Tags:         Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -108,7 +108,7 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Glue Registry (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

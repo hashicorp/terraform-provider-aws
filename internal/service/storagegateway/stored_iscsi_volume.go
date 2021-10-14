@@ -130,7 +130,7 @@ func resourceStorediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) e
 		NetworkInterfaceId:   aws.String(d.Get("network_interface_id").(string)),
 		TargetName:           aws.String(d.Get("target_name").(string)),
 		PreserveExistingData: aws.Bool(d.Get("preserve_existing_data").(bool)),
-		Tags:                 Tags(tags.IgnoreAws()),
+		Tags:                 Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("snapshot_id"); ok {
@@ -221,7 +221,7 @@ func resourceStorediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
 	}
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -75,7 +75,7 @@ func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	result, err := conn.CreateBackup(input)
@@ -133,7 +133,7 @@ func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("owner_id", backup.OwnerId)
 
-	tags := KeyValueTags(backup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(backup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

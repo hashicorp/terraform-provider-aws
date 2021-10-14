@@ -120,7 +120,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 		DomainName:               aws.String(domainName),
 		DomainNameConfigurations: expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
 		MutualTlsAuthentication:  expandApiGatewayV2MutualTlsAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
-		Tags:                     Tags(tags.IgnoreAws()),
+		Tags:                     Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 domain name: %s", input)
@@ -174,7 +174,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting mutual_tls_authentication: %w", err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

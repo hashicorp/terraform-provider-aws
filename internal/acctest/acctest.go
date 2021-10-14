@@ -43,13 +43,13 @@ const (
 	ProviderNameAlternate = "awsalternate"
 
 	// Provider name for alternate account and alternate region configuration testing
-	ProviderNameAwsAlternateAccountAlternateRegion = "awsalternateaccountalternateregion"
+	ProviderNameAlternateAccountAlternateRegion = "awsalternateaccountalternateregion"
 
 	// Provider name for alternate account and same region configuration testing
-	ProviderNameAwsAlternateAccountSameRegion = "awsalternateaccountsameregion"
+	ProviderNameAlternateAccountSameRegion = "awsalternateaccountsameregion"
 
 	// Provider name for same account and alternate region configuration testing
-	ProviderNameAwsSameAccountAlternateRegion = "awssameaccountalternateregion"
+	ProviderNameSameAccountAlternateRegion = "awssameaccountalternateregion"
 
 	// Provider name for third configuration testing
 	ProviderNameThird = "awsthird"
@@ -159,9 +159,9 @@ func FactoriesAlternate(providers *[]*schema.Provider) map[string]func() (*schem
 func FactoriesAlternateAccountAndAlternateRegion(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
 	return FactoriesInit(providers, []string{
 		ProviderName,
-		ProviderNameAwsAlternateAccountAlternateRegion,
-		ProviderNameAwsAlternateAccountSameRegion,
-		ProviderNameAwsSameAccountAlternateRegion,
+		ProviderNameAlternateAccountAlternateRegion,
+		ProviderNameAlternateAccountSameRegion,
+		ProviderNameSameAccountAlternateRegion,
 	})
 }
 
@@ -2406,7 +2406,7 @@ func CheckVPCExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 	}
 }
 
-func CheckAwsCallerIdentityAccountId(n string) resource.TestCheckFunc {
+func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

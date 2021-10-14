@@ -326,7 +326,7 @@ func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsC
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		Role:         aws.String(d.Get("role").(string)),
-		Tags:         Tags(tags.IgnoreAws()),
+		Tags:         Tags(tags.IgnoreAWS()),
 		Targets:      expandGlueCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk("description"); ok {
@@ -733,7 +733,7 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Glue Crawler (%s): %w", crawlerARN, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

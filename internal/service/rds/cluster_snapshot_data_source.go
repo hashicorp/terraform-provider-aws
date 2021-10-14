@@ -188,7 +188,7 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for RDS DB Cluster Snapshot (%s): %w", d.Get("db_cluster_snapshot_arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

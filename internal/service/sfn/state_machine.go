@@ -129,7 +129,7 @@ func resourceStateMachineCreate(d *schema.ResourceData, meta interface{}) error 
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
-		Tags:       Tags(tags.IgnoreAws()),
+		Tags:       Tags(tags.IgnoreAWS()),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 
@@ -236,7 +236,7 @@ func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Step Function State Machine (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

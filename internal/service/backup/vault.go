@@ -62,7 +62,7 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &backup.CreateBackupVaultInput{
 		BackupVaultName: aws.String(d.Get("name").(string)),
-		BackupVaultTags: Tags(tags.IgnoreAws()),
+		BackupVaultTags: Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -112,7 +112,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Vault (%s): %s", d.Id(), err)
 	}
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

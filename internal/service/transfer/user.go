@@ -159,7 +159,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Transfer User: %s", input)
@@ -211,7 +211,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("server_id", serverID)
 	d.Set("user_name", user.UserName)
 
-	tags := KeyValueTags(user.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -307,7 +307,7 @@ func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error 
 		GatewayRouteName:   aws.String(d.Get("name").(string)),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandAppmeshGatewayRouteSpec(d.Get("spec").([]interface{})),
-		Tags:               Tags(tags.IgnoreAws()),
+		Tags:               Tags(tags.IgnoreAWS()),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -403,7 +403,7 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for App Mesh gateway route (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

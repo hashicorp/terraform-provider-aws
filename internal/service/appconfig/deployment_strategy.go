@@ -88,7 +88,7 @@ func resourceDeploymentStrategyCreate(d *schema.ResourceData, meta interface{}) 
 		GrowthType:                  aws.String(d.Get("growth_type").(string)),
 		Name:                        aws.String(name),
 		ReplicateTo:                 aws.String(d.Get("replicate_to").(string)),
-		Tags:                        Tags(tags.IgnoreAws()),
+		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -158,7 +158,7 @@ func resourceDeploymentStrategyRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error listing tags for AppConfig Deployment Strategy (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

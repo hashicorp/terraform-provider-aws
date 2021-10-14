@@ -95,7 +95,7 @@ func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
 		Ec2Config:        expandDataSyncEc2Config(d.Get("ec2_config").([]interface{})),
 		EfsFilesystemArn: aws.String(d.Get("efs_file_system_arn").(string)),
 		Subdirectory:     aws.String(d.Get("subdirectory").(string)),
-		Tags:             Tags(tags.IgnoreAws()),
+		Tags:             Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Location EFS: %s", input)
@@ -152,7 +152,7 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for DataSync Location EFS (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

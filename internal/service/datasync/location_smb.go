@@ -116,7 +116,7 @@ func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 		Password:       aws.String(d.Get("password").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           Tags(tags.IgnoreAws()),
+		Tags:           Tags(tags.IgnoreAWS()),
 		User:           aws.String(d.Get("user").(string)),
 	}
 
@@ -186,7 +186,7 @@ func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("subdirectory", subdirectory)
 
-	tags := KeyValueTags(tagsOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(tagsOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -212,7 +212,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Tag-on-create is currently only supported in AWS Commercial
 	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
@@ -312,7 +312,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

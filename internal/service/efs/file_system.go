@@ -166,7 +166,7 @@ func resourceFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	createOpts := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
 		ThroughputMode: aws.String(throughputMode),
-		Tags:           Tags(tags.IgnoreAws()),
+		Tags:           Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("availability_zone_name"); ok {
@@ -310,7 +310,7 @@ func resourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_id", fs.OwnerId)
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
 
-	tags := KeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

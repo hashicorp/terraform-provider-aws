@@ -107,7 +107,7 @@ func resourceLicenseConfigurationCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if len(tags) > 0 {
-		opts.Tags = Tags(tags.IgnoreAws())
+		opts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] License Manager license configuration: %s", opts)
@@ -149,7 +149,7 @@ func resourceLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("name", resp.Name)
 	d.Set("owner_account_id", resp.OwnerAccountId)
 
-	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

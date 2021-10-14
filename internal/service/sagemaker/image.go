@@ -85,7 +85,7 @@ func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// for some reason even if the operation is retried the same error response is given even though the role is valid. a short sleep before creation solves it.
@@ -133,7 +133,7 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for SageMaker Image (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

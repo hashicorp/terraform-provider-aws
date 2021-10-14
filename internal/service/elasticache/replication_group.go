@@ -322,7 +322,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		ReplicationGroupId:          aws.String(d.Get("replication_group_id").(string)),
 		ReplicationGroupDescription: aws.String(d.Get("replication_group_description").(string)),
 		AutoMinorVersionUpgrade:     aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                        Tags(tags.IgnoreAws()),
+		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("global_replication_group_id"); ok {
@@ -522,7 +522,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error listing tags for resource (%s): %w", aws.StringValue(rgp.ARN), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

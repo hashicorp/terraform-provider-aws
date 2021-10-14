@@ -30,7 +30,7 @@ func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: awsElasticTranscoderPipelineConfigBasic(rName),
+				Config: testAccPipelineBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexp.MustCompile(`pipeline/.+`)),
@@ -58,7 +58,7 @@ func TestAccAWSElasticTranscoderPipeline_kmsKey(t *testing.T) {
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: awsElasticTranscoderPipelineConfigKmsKey(rName),
+				Config: testAccPipelineKMSKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_kms_key_arn", keyResourceName, "arn"),
@@ -86,7 +86,7 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: awsElasticTranscoderNotifications(rName),
+				Config: testAccNotificationsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, &pipeline),
 					testAccCheckAWSElasticTranscoderPipeline_notifications(&pipeline, []string{"warning", "completed"}),
@@ -99,7 +99,7 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 			},
 			// update and check that we have 1 less notification
 			{
-				Config: awsElasticTranscoderNotifications_update(rName),
+				Config: testAccNotificationsUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, &pipeline),
 					testAccCheckAWSElasticTranscoderPipeline_notifications(&pipeline, []string{"completed"}),
@@ -156,7 +156,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: awsElasticTranscoderPipelineWithContentConfig(rName),
+				Config: testAccPipelineWithContentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
 				),
@@ -167,7 +167,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: awsElasticTranscoderPipelineWithContentConfigUpdate(rName),
+				Config: testAccPipelineWithContentUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
 				),
@@ -189,7 +189,7 @@ func TestAccAWSElasticTranscoderPipeline_withPermissions(t *testing.T) {
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: awsElasticTranscoderPipelineWithPerms(rName),
+				Config: testAccPipelineWithPermsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
 				),
@@ -215,7 +215,7 @@ func TestAccAWSElasticTranscoderPipeline_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: awsElasticTranscoderPipelineConfigBasic(rName),
+				Config: testAccPipelineBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelastictranscoder.ResourcePipeline(), resourceName),
@@ -294,7 +294,7 @@ func testAccPreCheckAWSElasticTranscoder(t *testing.T) {
 	}
 }
 
-func awsElasticTranscoderPipelineConfigBasic(rName string) string {
+func testAccPipelineBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket  = aws_s3_bucket.test.bucket
@@ -330,7 +330,7 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func awsElasticTranscoderPipelineConfigKmsKey(rName string) string {
+func testAccPipelineKMSKeyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -388,7 +388,7 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func awsElasticTranscoderPipelineWithContentConfig(rName string) string {
+func testAccPipelineWithContentConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket = aws_s3_bucket.content_bucket.bucket
@@ -443,7 +443,7 @@ resource "aws_s3_bucket" "thumb_bucket" {
 `, rName)
 }
 
-func awsElasticTranscoderPipelineWithContentConfigUpdate(rName string) string {
+func testAccPipelineWithContentUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket = aws_s3_bucket.input_bucket.bucket
@@ -498,7 +498,7 @@ resource "aws_s3_bucket" "thumb_bucket" {
 `, rName)
 }
 
-func awsElasticTranscoderPipelineWithPerms(rName string) string {
+func testAccPipelineWithPermsConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket = aws_s3_bucket.test.bucket
@@ -555,7 +555,7 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func awsElasticTranscoderNotifications(rName string) string {
+func testAccNotificationsConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket  = aws_s3_bucket.test.bucket
@@ -616,7 +616,7 @@ EOF
 `, rName)
 }
 
-func awsElasticTranscoderNotifications_update(rName string) string {
+func testAccNotificationsUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_pipeline" "test" {
   input_bucket  = aws_s3_bucket.test.bucket

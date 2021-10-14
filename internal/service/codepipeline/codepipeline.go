@@ -193,7 +193,7 @@ func resourceCodePipelineCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	params := &codepipeline.CreatePipelineInput{
 		Pipeline: pipeline,
-		Tags:     Tags(tags.IgnoreAws()),
+		Tags:     Tags(tags.IgnoreAWS()),
 	}
 
 	var resp *codepipeline.CreatePipelineOutput
@@ -548,7 +548,7 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for CodePipeline (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

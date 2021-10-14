@@ -114,7 +114,7 @@ func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone", vgw.AvailabilityZone)
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vgw.AmazonSideAsn), 10))
 
-	if err := d.Set("tags", KeyValueTags(vgw.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

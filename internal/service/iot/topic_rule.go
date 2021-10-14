@@ -1096,7 +1096,7 @@ func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(tags.IgnoreAws().UrlQueryString()),
+		Tags:             aws.String(tags.IgnoreAWS().UrlQueryString()),
 		TopicRulePayload: expandIotTopicRulePayload(d),
 	}
 
@@ -1160,7 +1160,7 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for IoT Topic Rule (%s): %w", aws.StringValue(out.RuleArn), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

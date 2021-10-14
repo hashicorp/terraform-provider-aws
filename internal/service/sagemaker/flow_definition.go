@@ -266,11 +266,11 @@ func resourceFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Flow Definition: %s", input)
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(tfiam.PropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(tfiam.PropagationTimeout, func() (interface{}, error) {
 		return conn.CreateFlowDefinition(input)
 	}, "ValidationException")
 
@@ -331,7 +331,7 @@ func resourceFlowDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error listing tags for SageMaker Flow Definition (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

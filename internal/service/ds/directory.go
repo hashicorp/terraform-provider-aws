@@ -244,7 +244,7 @@ func createDirectoryConnector(conn *directoryservice.DirectoryService, d *schema
 	input := directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     Tags(tags.IgnoreAws()),
+		Tags:     Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -282,7 +282,7 @@ func createSimpleDirectoryService(conn *directoryservice.DirectoryService, d *sc
 	input := directoryservice.CreateDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     Tags(tags.IgnoreAws()),
+		Tags:     Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -320,7 +320,7 @@ func createActiveDirectoryService(conn *directoryservice.DirectoryService, d *sc
 	input := directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
-		Tags:     Tags(tags.IgnoreAws()),
+		Tags:     Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -496,7 +496,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

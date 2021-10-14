@@ -1119,7 +1119,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 					}
 					// Tag
 					if len(filter.And.Tags) > 0 {
-						rule["tags"] = KeyValueTags(filter.And.Tags).IgnoreAws().Map()
+						rule["tags"] = KeyValueTags(filter.And.Tags).IgnoreAWS().Map()
 					}
 				} else {
 					// Prefix
@@ -1128,7 +1128,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 					}
 					// Tag
 					if filter.Tag != nil {
-						rule["tags"] = KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAws().Map()
+						rule["tags"] = KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAWS().Map()
 					}
 				}
 			} else {
@@ -1332,7 +1332,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1958,7 +1958,7 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *
 	}
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.PutBucketEncryption(i)
@@ -2098,7 +2098,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Re
 			rcRule.Priority = aws.Int64(int64(rr["priority"].(int)))
 			rcRule.Filter = &s3.ReplicationRuleFilter{}
 			filter := f[0].(map[string]interface{})
-			tags := Tags(tftags.New(filter["tags"]).IgnoreAws())
+			tags := Tags(tftags.New(filter["tags"]).IgnoreAWS())
 			if len(tags) > 0 {
 				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{
 					Prefix: aws.String(filter["prefix"].(string)),
@@ -2177,7 +2177,7 @@ func resourceAwsS3BucketLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) err
 		rule := &s3.LifecycleRule{}
 
 		// Filter
-		tags := Tags(tftags.New(r["tags"]).IgnoreAws())
+		tags := Tags(tftags.New(r["tags"]).IgnoreAWS())
 		filter := &s3.LifecycleRuleFilter{}
 		if len(tags) > 0 {
 			lifecycleRuleAndOp := &s3.LifecycleRuleAndOperator{}
@@ -2405,11 +2405,11 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				m["prefix"] = aws.StringValue(f.Prefix)
 			}
 			if t := f.Tag; t != nil {
-				m["tags"] = KeyValueTags([]*s3.Tag{t}).IgnoreAws().Map()
+				m["tags"] = KeyValueTags([]*s3.Tag{t}).IgnoreAWS().Map()
 			}
 			if a := f.And; a != nil {
 				m["prefix"] = aws.StringValue(a.Prefix)
-				m["tags"] = KeyValueTags(a.Tags).IgnoreAws().Map()
+				m["tags"] = KeyValueTags(a.Tags).IgnoreAWS().Map()
 			}
 			t["filter"] = []interface{}{m}
 

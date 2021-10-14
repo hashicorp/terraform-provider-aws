@@ -217,7 +217,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateImageBuilderWithContext(ctx, input)
@@ -288,7 +288,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(fmt.Errorf("error listing tags for AppStream ImageBuilder (%s): %w", arn, err))
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

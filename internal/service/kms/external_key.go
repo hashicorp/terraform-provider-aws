@@ -130,7 +130,7 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// AWS requires any principal in the policy to exist before the key is created.
@@ -207,7 +207,7 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("valid_to", nil)
 	}
 
-	tags := key.tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -316,7 +316,7 @@ func resourceExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo string) error {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenAwsErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
 		return conn.GetParametersForImport(&kms.GetParametersForImportInput{
 			KeyId:             aws.String(keyID),
 			WrappingAlgorithm: aws.String(kms.AlgorithmSpecRsaesOaepSha256),
@@ -367,7 +367,7 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenAwsErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, func() (interface{}, error) {
 		return conn.ImportKeyMaterial(input)
 	}, kms.ErrCodeNotFoundException)
 

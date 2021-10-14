@@ -123,7 +123,7 @@ func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("vpc_id", ig.Attachments[0].VpcId)
 	}
 
-	tags := KeyValueTags(ig.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ig.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

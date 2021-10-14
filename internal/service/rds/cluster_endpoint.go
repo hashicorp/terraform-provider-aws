@@ -20,7 +20,7 @@ import (
 const (
 	AWSRDSClusterEndpointCreateTimeout   = 30 * time.Minute
 	AWSRDSClusterEndpointRetryDelay      = 5 * time.Second
-	AWSRDSClusterEndpointRetryMinTimeout = 3 * time.Second
+	ClusterEndpointRetryMinTimeout = 3 * time.Second
 )
 
 func ResourceClusterEndpoint() *schema.Resource {
@@ -97,7 +97,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 		DBClusterIdentifier:         aws.String(clusterId),
 		DBClusterEndpointIdentifier: aws.String(endpointId),
 		EndpointType:                aws.String(endpointType),
-		Tags:                        Tags(tags.IgnoreAws()),
+		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
 	if v := d.Get("static_members"); v != nil {
@@ -176,7 +176,7 @@ func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for RDS Cluster Endpoint (%s): %s", *arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -253,7 +253,7 @@ func resourceAwsRDSClusterEndpointWaitForDestroy(timeout time.Duration, id strin
 		Refresh:    DBClusterEndpointStateRefreshFunc(conn, id),
 		Timeout:    timeout,
 		Delay:      AWSRDSClusterEndpointRetryDelay,
-		MinTimeout: AWSRDSClusterEndpointRetryMinTimeout,
+		MinTimeout: ClusterEndpointRetryMinTimeout,
 	}
 	_, err := stateConf.WaitForState()
 	if err != nil {
@@ -271,7 +271,7 @@ func resourceAwsRDSClusterEndpointWaitForAvailable(timeout time.Duration, id str
 		Refresh:    DBClusterEndpointStateRefreshFunc(conn, id),
 		Timeout:    timeout,
 		Delay:      AWSRDSClusterEndpointRetryDelay,
-		MinTimeout: AWSRDSClusterEndpointRetryMinTimeout,
+		MinTimeout: ClusterEndpointRetryMinTimeout,
 	}
 
 	_, err := stateConf.WaitForState()

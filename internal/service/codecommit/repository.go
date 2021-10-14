@@ -78,7 +78,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName:        aws.String(d.Get("repository_name").(string)),
 		RepositoryDescription: aws.String(d.Get("description").(string)),
-		Tags:                  Tags(tags.IgnoreAws()),
+		Tags:                  Tags(tags.IgnoreAWS()),
 	}
 
 	out, err := conn.CreateRepository(input)
@@ -166,7 +166,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for CodeCommit Repository (%s): %s", d.Get("arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

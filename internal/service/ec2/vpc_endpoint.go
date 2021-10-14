@@ -297,7 +297,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("vpc_endpoint_type", vpceType)
 	}
 
-	tags := KeyValueTags(vpce.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(vpce.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

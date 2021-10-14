@@ -90,7 +90,7 @@ func resourceChannelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	resp, err := conn.CreateChannel(input)
@@ -123,7 +123,7 @@ func resourceChannelRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting hls_ingest: %s", err)
 	}
 
-	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

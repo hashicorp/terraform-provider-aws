@@ -59,7 +59,7 @@ func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta int
 	req := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountId),
 		AuthorizedAwsRegion: aws.String(region),
-		Tags:                Tags(tags.IgnoreAws()),
+		Tags:                Tags(tags.IgnoreAWS()),
 	}
 
 	_, err := conn.PutAggregationAuthorization(req)
@@ -112,7 +112,7 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error listing tags for Config Aggregate Authorization (%s): %s", d.Get("arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

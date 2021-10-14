@@ -526,7 +526,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
 			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			SnapshotIdentifier:   aws.String(d.Get("snapshot_identifier").(string)),
-			Tags:                 Tags(tags.IgnoreAws()),
+			Tags:                 Tags(tags.IgnoreAWS()),
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -630,7 +630,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			S3Prefix:            aws.String(s3_bucket["bucket_prefix"].(string)),
 			SourceEngine:        aws.String(s3_bucket["source_engine"].(string)),
 			SourceEngineVersion: aws.String(s3_bucket["source_engine_version"].(string)),
-			Tags:                Tags(tags.IgnoreAws()),
+			Tags:                Tags(tags.IgnoreAWS()),
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
@@ -731,7 +731,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
 			SourceDBClusterIdentifier: aws.String(pointInTime["source_cluster_identifier"].(string)),
-			Tags:                      Tags(tags.IgnoreAws()),
+			Tags:                      Tags(tags.IgnoreAWS()),
 		}
 
 		if v, ok := pointInTime["restore_to_time"].(string); ok && v != "" {
@@ -831,7 +831,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
 			ScalingConfiguration: ExpandClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
-			Tags:                 Tags(tags.IgnoreAws()),
+			Tags:                 Tags(tags.IgnoreAWS()),
 		}
 
 		// Note: Username and password credentials are required and valid
@@ -1118,7 +1118,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterArn), err)
 	}
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

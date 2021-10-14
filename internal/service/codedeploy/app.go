@@ -105,7 +105,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateApplication(&codedeploy.CreateApplicationInput{
 		ApplicationName: aws.String(application),
 		ComputePlatform: aws.String(computePlatform),
-		Tags:            Tags(tags.IgnoreAws()),
+		Tags:            Tags(tags.IgnoreAWS()),
 	})
 	if err != nil {
 		return err
@@ -175,7 +175,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for CodeDeploy application (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

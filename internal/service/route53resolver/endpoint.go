@@ -125,7 +125,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Name = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		req.Tags = Tags(tags.IgnoreAws())
+		req.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Route53 Resolver endpoint: %#v", req)
@@ -197,7 +197,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Route53 Resolver endpoint (%s): %s", d.Get("arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

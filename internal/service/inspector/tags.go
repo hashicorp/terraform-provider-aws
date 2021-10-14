@@ -22,7 +22,7 @@ func updateTags(conn *inspector.Inspector, identifier string, oldTagsMap interfa
 	if len(newTags) > 0 {
 		input := &inspector.SetTagsForResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(newTags.IgnoreAws()),
+			Tags:        Tags(newTags.IgnoreAWS()),
 		}
 
 		_, err := conn.SetTagsForResource(input)

@@ -121,7 +121,7 @@ func resourceCachediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) e
 		NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
 		TargetName:         aws.String(d.Get("target_name").(string)),
 		VolumeSizeInBytes:  aws.Int64(int64(d.Get("volume_size_in_bytes").(int))),
-		Tags:               Tags(tags.IgnoreAws()),
+		Tags:               Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("snapshot_id"); ok {
@@ -210,7 +210,7 @@ func resourceCachediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
 	}
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

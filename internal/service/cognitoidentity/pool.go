@@ -149,7 +149,7 @@ func resourcePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.IdentityPoolTags = Tags(tags.IgnoreAws())
+		params.IdentityPoolTags = Tags(tags.IgnoreAWS())
 	}
 
 	entity, err := conn.CreateIdentityPool(params)
@@ -192,7 +192,7 @@ func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("allow_classic_flow", ip.AllowClassicFlow)
 	d.Set("developer_provider_name", ip.DeveloperProviderName)
-	tags := KeyValueTags(ip.IdentityPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ip.IdentityPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

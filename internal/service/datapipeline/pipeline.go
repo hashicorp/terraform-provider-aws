@@ -56,7 +56,7 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	input := datapipeline.CreatePipelineInput{
 		Name:     aws.String(d.Get("name").(string)),
 		UniqueId: aws.String(uniqueID),
-		Tags:     Tags(tags.IgnoreAws()),
+		Tags:     Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -91,7 +91,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", v.Name)
 	d.Set("description", v.Description)
-	tags := KeyValueTags(v.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(v.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -284,7 +284,7 @@ func resourceProvisionedProductCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	var output *servicecatalog.ProvisionProductOutput
@@ -405,7 +405,7 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
 
-	tags := recordKeyValueTags(recordOutput.RecordDetail.RecordTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := recordKeyValueTags(recordOutput.RecordDetail.RecordTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -462,7 +462,7 @@ func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) 
 		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 		if len(tags) > 0 {
-			input.Tags = Tags(tags.IgnoreAws())
+			input.Tags = Tags(tags.IgnoreAWS())
 		} else {
 			input.Tags = nil
 		}

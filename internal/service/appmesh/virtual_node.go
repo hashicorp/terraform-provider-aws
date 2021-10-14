@@ -1067,7 +1067,7 @@ func resourceVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 		Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
-		Tags:            Tags(tags.IgnoreAws()),
+		Tags:            Tags(tags.IgnoreAWS()),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		req.MeshOwner = aws.String(v.(string))
@@ -1163,7 +1163,7 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for App Mesh virtual node (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -142,7 +142,7 @@ func resourceNotificationRuleCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAws())
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	res, err := conn.CreateNotificationRule(params)
@@ -185,7 +185,7 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", rule.Name)
 	d.Set("status", rule.Status)
 	d.Set("resource", rule.Resource)
-	tags := tftags.New(rule.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := tftags.New(rule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

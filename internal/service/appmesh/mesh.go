@@ -109,7 +109,7 @@ func resourceMeshCreate(d *schema.ResourceData, meta interface{}) error {
 	req := &appmesh.CreateMeshInput{
 		MeshName: aws.String(meshName),
 		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
-		Tags:     Tags(tags.IgnoreAws()),
+		Tags:     Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh service mesh: %#v", req)
@@ -199,7 +199,7 @@ func resourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for App Mesh service mesh (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

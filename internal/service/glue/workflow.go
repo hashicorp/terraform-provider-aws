@@ -66,7 +66,7 @@ func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &glue.CreateWorkflowInput{
 		Name: aws.String(name),
-		Tags: Tags(tags.IgnoreAws()),
+		Tags: Tags(tags.IgnoreAWS()),
 	}
 
 	if kv, ok := d.GetOk("default_run_properties"); ok {
@@ -140,7 +140,7 @@ func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Glue Workflow (%s): %w", workFlowArn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

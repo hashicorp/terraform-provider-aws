@@ -149,7 +149,7 @@ func resourceOptionGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		MajorEngineVersion:     aws.String(d.Get("major_engine_version").(string)),
 		OptionGroupDescription: aws.String(d.Get("option_group_description").(string)),
 		OptionGroupName:        aws.String(groupName),
-		Tags:                   Tags(tags.IgnoreAws()),
+		Tags:                   Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Create DB Option Group: %#v", createOpts)
@@ -219,7 +219,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for RDS Option Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

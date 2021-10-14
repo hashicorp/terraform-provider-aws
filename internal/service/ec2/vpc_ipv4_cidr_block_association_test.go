@@ -26,9 +26,9 @@ func TestAccAwsVpcIpv4CidrBlockAssociation_basic(t *testing.T) {
 				Config: testAccAwsVpcIpv4CidrBlockAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsVpcIpv4CidrBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
-					testAccCheckAdditionalAwsVpcIpv4CidrBlock(&associationSecondary, "172.2.0.0/16"),
+					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, "172.2.0.0/16"),
 					testAccCheckAwsVpcIpv4CidrBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.tertiary_cidr", &associationTertiary),
-					testAccCheckAdditionalAwsVpcIpv4CidrBlock(&associationTertiary, "170.2.0.0/16"),
+					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationTertiary, "170.2.0.0/16"),
 				),
 			},
 			{
@@ -45,7 +45,7 @@ func TestAccAwsVpcIpv4CidrBlockAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAdditionalAwsVpcIpv4CidrBlock(association *ec2.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
+func testAccCheckAdditionalVPCIPv4CIDRBlock(association *ec2.VpcCidrBlockAssociation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		CIDRBlock := association.CidrBlock
 		if *CIDRBlock != expected {

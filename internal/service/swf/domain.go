@@ -87,7 +87,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &swf.RegisterDomainInput{
 		Name:                                   aws.String(name),
 		WorkflowExecutionRetentionPeriodInDays: aws.String(d.Get("workflow_execution_retention_period_in_days").(string)),
-		Tags:                                   Tags(tags.IgnoreAws()),
+		Tags:                                   Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -136,7 +136,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for SWF Domain (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

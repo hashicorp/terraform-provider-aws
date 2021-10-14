@@ -82,7 +82,7 @@ func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) err
 		Aggregation:       aws.String(d.Get("aggregation").(string)),
 		Pattern:           aws.String(d.Get("pattern").(string)),
 		ProtectionGroupId: aws.String(protectionGroupID),
-		Tags:              Tags(tags.IgnoreAws()),
+		Tags:              Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("members"); ok {
@@ -146,7 +146,7 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for Shield Protection Group (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

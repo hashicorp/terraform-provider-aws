@@ -398,7 +398,7 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAws())
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("protocol"); ok {
@@ -540,7 +540,7 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

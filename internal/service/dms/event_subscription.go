@@ -96,7 +96,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		SubscriptionName: aws.String(d.Get("name").(string)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
-		Tags:             Tags(tags.IgnoreAws()),
+		Tags:             Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok {
@@ -230,7 +230,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for DMS Event Subscription (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

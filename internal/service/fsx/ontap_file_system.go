@@ -280,7 +280,7 @@ func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating FSx ONTAP File System: %s", input)
@@ -360,7 +360,7 @@ func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting disk_iops_configuration: %w", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

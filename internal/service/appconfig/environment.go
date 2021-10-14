@@ -95,7 +95,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &appconfig.CreateEnvironmentInput{
 		Name:          aws.String(d.Get("name").(string)),
 		ApplicationId: aws.String(appId),
-		Tags:          Tags(tags.IgnoreAws()),
+		Tags:          Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -180,7 +180,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for AppConfig Environment (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

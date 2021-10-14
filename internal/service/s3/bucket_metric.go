@@ -197,7 +197,7 @@ func ExpandMetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 
 	var tags []*s3.Tag
 	if v, ok := m["tags"]; ok {
-		tags = Tags(tftags.New(v).IgnoreAws())
+		tags = Tags(tftags.New(v).IgnoreAWS())
 	}
 
 	metricsFilter := &s3.MetricsFilter{}
@@ -227,7 +227,7 @@ func FlattenMetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{
 			m["prefix"] = *and.Prefix
 		}
 		if and.Tags != nil {
-			m["tags"] = KeyValueTags(and.Tags).IgnoreAws().Map()
+			m["tags"] = KeyValueTags(and.Tags).IgnoreAWS().Map()
 		}
 	} else if metricsFilter.Prefix != nil {
 		m["prefix"] = *metricsFilter.Prefix
@@ -235,7 +235,7 @@ func FlattenMetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{
 		tags := []*s3.Tag{
 			metricsFilter.Tag,
 		}
-		m["tags"] = KeyValueTags(tags).IgnoreAws().Map()
+		m["tags"] = KeyValueTags(tags).IgnoreAWS().Map()
 	}
 	return m
 }

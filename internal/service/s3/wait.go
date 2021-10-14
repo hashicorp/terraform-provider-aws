@@ -15,5 +15,5 @@ const (
 // waitRetryWhenBucketNotFound retries the specified function if the returned error indicates that a bucket is not found.
 // If the retries time out the specified function is called one last time.
 func waitRetryWhenBucketNotFound(f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAwsErrCodeEquals(propagationTimeout, f, s3.ErrCodeNoSuchBucket)
+	return tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, f, s3.ErrCodeNoSuchBucket)
 }

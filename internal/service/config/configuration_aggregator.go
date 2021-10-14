@@ -123,7 +123,7 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 
 	req := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
-		Tags:                        Tags(tags.IgnoreAws()),
+		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
@@ -198,7 +198,7 @@ func resourceConfigurationAggregatorRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error listing tags for Config Configuration Aggregator (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

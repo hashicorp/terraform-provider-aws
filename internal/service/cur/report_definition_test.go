@@ -547,7 +547,7 @@ resource "aws_cur_report_definition" "test" {
 `, reportName, bucketName, bucketPrefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning))
 }
 
-func TestCheckAwsCurReportDefinitionPropertyCombination(t *testing.T) {
+func TestCheckDefinitionPropertyCombination(t *testing.T) {
 	type propertyCombinationTestCase struct {
 		additionalArtifacts []string
 		compression         string

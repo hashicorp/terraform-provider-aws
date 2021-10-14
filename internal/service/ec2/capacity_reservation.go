@@ -229,7 +229,7 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("outpost_arn", reservation.OutpostArn)
 	d.Set("owner_id", reservation.OwnerId)
 
-	tags := KeyValueTags(reservation.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(reservation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

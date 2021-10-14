@@ -67,7 +67,7 @@ func resourceDiscovererCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge Schemas Discoverer: %s", input)
@@ -109,7 +109,7 @@ func resourceDiscovererRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for EventBridge Schemas Discoverer (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)

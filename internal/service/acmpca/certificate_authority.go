@@ -294,7 +294,7 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating ACM PCA Certificate Authority: %s", input)
@@ -432,7 +432,7 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error listing tags for ACM PCA Certificate Authority (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

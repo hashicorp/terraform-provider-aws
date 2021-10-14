@@ -79,7 +79,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		ClusterSubnetGroupName: aws.String(d.Get("name").(string)),
 		Description:            aws.String(d.Get("description").(string)),
 		SubnetIds:              subnetIds,
-		Tags:                   Tags(tags.IgnoreAws()),
+		Tags:                   Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Create Redshift Subnet Group: %#v", createOpts)
@@ -119,7 +119,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", d.Id())
 	d.Set("description", describeResp.ClusterSubnetGroups[0].Description)
 	d.Set("subnet_ids", subnetIdsToSlice(describeResp.ClusterSubnetGroups[0].Subnets))
-	tags := KeyValueTags(describeResp.ClusterSubnetGroups[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(describeResp.ClusterSubnetGroups[0].Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

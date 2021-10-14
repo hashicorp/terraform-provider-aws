@@ -115,7 +115,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
-		Tags:                        Tags(tags.IgnoreAws()),
+		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Create DocDB Cluster Parameter Group: %#v", createOpts)
@@ -181,7 +181,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error listing tags for DocumentDB Cluster Parameter Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

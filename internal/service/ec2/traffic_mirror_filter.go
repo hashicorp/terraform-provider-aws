@@ -157,7 +157,7 @@ func resourceTrafficMirrorFilterRead(d *schema.ResourceData, meta interface{}) e
 	trafficMirrorFilter := out.TrafficMirrorFilters[0]
 	d.Set("description", trafficMirrorFilter.Description)
 
-	tags := KeyValueTags(trafficMirrorFilter.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(trafficMirrorFilter.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

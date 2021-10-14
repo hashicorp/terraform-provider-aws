@@ -104,7 +104,7 @@ func resourceMaintenanceWindowCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAws())
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("end_date"); ok {
@@ -243,7 +243,7 @@ func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for SSM Maintenance Window (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

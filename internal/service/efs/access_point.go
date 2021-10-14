@@ -131,7 +131,7 @@ func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := efs.CreateAccessPointInput{
 		FileSystemId: aws.String(fsId),
-		Tags:         Tags(tags.IgnoreAws()),
+		Tags:         Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("posix_user"); ok {
@@ -218,7 +218,7 @@ func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting root directory: %w", err)
 	}
 
-	tags := KeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ap.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestRetryWhenAwsErrCodeEquals(t *testing.T) {
+func TestRetryWhenAWSErrCodeEquals(t *testing.T) {
 	var retryCount int32
 
 	testCases := []struct {
@@ -64,7 +64,7 @@ func TestRetryWhenAwsErrCodeEquals(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenAwsErrCodeEquals(5*time.Second, testCase.F, "TestCode1", "TestCode2")
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(5*time.Second, testCase.F, "TestCode1", "TestCode2")
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")

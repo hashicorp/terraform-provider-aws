@@ -389,7 +389,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

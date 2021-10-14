@@ -88,7 +88,7 @@ func resourceSnapshotScheduleCreate(d *schema.ResourceData, meta interface{}) er
 	createOpts := &redshift.CreateSnapshotScheduleInput{
 		ScheduleIdentifier:  aws.String(identifier),
 		ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
-		Tags:                Tags(tags.IgnoreAws()),
+		Tags:                Tags(tags.IgnoreAWS()),
 	}
 	if attr, ok := d.GetOk("description"); ok {
 		createOpts.ScheduleDescription = aws.String(attr.(string))
@@ -131,7 +131,7 @@ func resourceSnapshotScheduleRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error setting definitions: %s", err)
 	}
 
-	tags := KeyValueTags(snapshotSchedule.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(snapshotSchedule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

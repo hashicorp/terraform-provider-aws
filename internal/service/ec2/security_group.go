@@ -388,7 +388,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting egress: %w", err)
 	}
 
-	tags := KeyValueTags(sg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -106,7 +106,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	params := &codeartifact.CreateRepositoryInput{
 		Repository: aws.String(d.Get("repository").(string)),
 		Domain:     aws.String(d.Get("domain").(string)),
-		Tags:       Tags(tags.IgnoreAws()),
+		Tags:       Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -271,7 +271,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for CodeArtifact Repository (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

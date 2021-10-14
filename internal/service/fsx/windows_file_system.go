@@ -340,8 +340,8 @@ func resourceWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
-		backupInput.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
+		backupInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -512,7 +512,7 @@ func resourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

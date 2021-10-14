@@ -212,7 +212,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		BuildId:         aws.String(d.Get("build_id").(string)),
 		EC2InstanceType: aws.String(d.Get("ec2_instance_type").(string)),
 		Name:            aws.String(d.Get("name").(string)),
-		Tags:            Tags(tags.IgnoreAws()),
+		Tags:            Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -362,7 +362,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Game Lift Fleet (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

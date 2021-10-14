@@ -146,7 +146,7 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	// iff Overwrite is not provided or is false; in this resource's case,
 	// the Overwrite value is always set in the paramInput so we check for the value
 	if len(tags) > 0 && !aws.BoolValue(paramInput.Overwrite) {
-		paramInput.Tags = Tags(tags.IgnoreAws())
+		paramInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	_, err := conn.PutParameter(paramInput)
@@ -259,7 +259,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for SSM Parameter (%s): %w", name, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

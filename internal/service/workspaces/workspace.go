@@ -156,7 +156,7 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		UserName:                    aws.String(d.Get("user_name").(string)),
 		RootVolumeEncryptionEnabled: aws.Bool(d.Get("root_volume_encryption_enabled").(bool)),
 		UserVolumeEncryptionEnabled: aws.Bool(d.Get("user_volume_encryption_enabled").(bool)),
-		Tags:                        Tags(tags.IgnoreAws()),
+		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("volume_encryption_key"); ok {
@@ -226,7 +226,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags: %s", err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -91,7 +91,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		Description:   aws.String(d.Get("description").(string)),
 		Name:          aws.String(d.Get("name").(string)),
 		ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
-		Tags:          Tags(tags.IgnoreAws()),
+		Tags:          Tags(tags.IgnoreAWS()),
 	}
 
 	res, err := conn.CreateGroup(&input)
@@ -147,7 +147,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
 	}
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

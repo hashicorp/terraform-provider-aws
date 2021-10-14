@@ -118,7 +118,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating RDS Event Subscription: %s", input)
@@ -171,7 +171,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for RDS Event Subscription (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

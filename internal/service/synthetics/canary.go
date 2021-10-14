@@ -267,7 +267,7 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Synthetics Canary: %s", input)
@@ -366,7 +366,7 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting schedule: %w", err)
 	}
 
-	tags := KeyValueTags(canary.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(canary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

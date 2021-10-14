@@ -308,7 +308,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
 		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                Tags(tags.IgnoreAws()),
+		Tags:                Tags(tags.IgnoreAWS()),
 	}
 	restoreDBClusterFromSnapshotInput := &neptune.RestoreDBClusterFromSnapshotInput{
 		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
@@ -317,7 +317,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                Tags(tags.IgnoreAws()),
+		Tags:                Tags(tags.IgnoreAWS()),
 	}
 
 	if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -543,7 +543,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 		return fmt.Errorf("error listing tags for Neptune Cluster (%s): %w", d.Get("arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

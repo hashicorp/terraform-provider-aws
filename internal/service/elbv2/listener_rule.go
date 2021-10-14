@@ -486,7 +486,7 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 		ListenerArn: aws.String(listenerArn),
 	}
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAws())
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	var err error
@@ -597,7 +597,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

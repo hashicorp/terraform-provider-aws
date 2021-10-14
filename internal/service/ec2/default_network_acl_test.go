@@ -41,7 +41,7 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
+					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-acl/acl-.+`)),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 2),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -69,7 +69,7 @@ func TestAccAWSDefaultNetworkAcl_basicIpv6Vpc(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_basicIpv6Vpc,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
+					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 4),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_deny_ingress,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
+					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{defaultEgressAcl}, 0, 2),
 				),
 			},
@@ -124,7 +124,7 @@ func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_includingIpv6Rule,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
+					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{ipv6IngressAcl}, 0, 2),
 				),
 			},
@@ -150,7 +150,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
+					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 2, 2),
 				),
 			},
@@ -166,7 +166,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets_remove,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
+					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 2, 2),
 				),
 				ExpectNonEmptyPlan: true,
@@ -193,7 +193,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
+					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 2, 2),
 				),
 			},
@@ -218,7 +218,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets_move,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
+					testAccGetDefaultNetworkACL(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 2),
 				),
 			},
@@ -257,7 +257,7 @@ func testAccCheckAWSDefaultACLAttributes(acl *ec2.NetworkAcl, rules []*ec2.Netwo
 	}
 }
 
-func testAccGetAWSDefaultNetworkAcl(n string, networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
+func testAccGetDefaultNetworkACL(n string, networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

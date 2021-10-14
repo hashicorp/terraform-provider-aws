@@ -143,7 +143,7 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("instance_type", host.HostProperties.InstanceType)
 	d.Set("owner_id", host.OwnerId)
 
-	tags := KeyValueTags(host.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

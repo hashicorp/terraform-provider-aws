@@ -188,7 +188,7 @@ func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
 }
 
 func testAccAWSSignerSigningProfileConfig(namePrefix string) string {
-	return baseAccAWSSignerSigningProfileConfig(namePrefix)
+	return testAccSigningProfileBaseConfig(namePrefix)
 }
 
 func testAccAWSSignerSigningProfileConfigGenerateName() string {
@@ -256,7 +256,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 `
 }
 
-func baseAccAWSSignerSigningProfileConfig(namePrefix string) string {
+func testAccSigningProfileBaseConfig(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"

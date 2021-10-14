@@ -360,7 +360,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &apprunner.CreateServiceInput{
 		ServiceName:         aws.String(serviceName),
 		SourceConfiguration: expandAppRunnerServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
-		Tags:                Tags(tags.IgnoreAws()),
+		Tags:                Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("auto_scaling_configuration_arn"); ok {
@@ -487,7 +487,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Service (%s): %s", arn, err))
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

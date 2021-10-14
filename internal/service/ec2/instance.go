@@ -1080,7 +1080,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	tags := KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1097,7 +1097,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		if err := d.Set("volume_tags", KeyValueTags(volumeTags).IgnoreAws().Map()); err != nil {
+		if err := d.Set("volume_tags", KeyValueTags(volumeTags).IgnoreAWS().Map()); err != nil {
 			return fmt.Errorf("error setting volume_tags: %s", err)
 		}
 	}
@@ -1732,7 +1732,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] attempting to terminate EC2 instance (%s) despite error modifying attribute (%s): %s", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
 	}
 
-	err = awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = terminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error terminating EC2 Instance (%s): %s", d.Id(), err)
@@ -2027,7 +2027,7 @@ func readBlockDevicesFromInstance(d *schema.ResourceData, instance *ec2.Instance
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && vol.Tags != nil {
-			bd["tags"] = KeyValueTags(vol.Tags).IgnoreAws().Map()
+			bd["tags"] = KeyValueTags(vol.Tags).IgnoreAWS().Map()
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {
@@ -2758,7 +2758,7 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 	return opts, nil
 }
 
-func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
+func terminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 	log.Printf("[INFO] Terminating instance: %s", id)
 	req := &ec2.TerminateInstancesInput{
 		InstanceIds: []*string{aws.String(id)},

@@ -84,7 +84,7 @@ func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) erro
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(d.Get("name").(string)),
 		ClientRequestToken: aws.String(resource.UniqueId()),
-		Tags:               Tags(tags.IgnoreAws()),
+		Tags:               Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("automatic_stop_time_minutes"); ok {
@@ -194,7 +194,7 @@ func resourceEnvironmentEC2Read(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error listing tags for Cloud9 EC2 Environment (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

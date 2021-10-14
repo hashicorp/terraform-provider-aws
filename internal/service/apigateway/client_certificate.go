@@ -63,7 +63,7 @@ func resourceClientCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		input.Description = aws.String(v.(string))
 	}
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 	log.Printf("[DEBUG] Generating API Gateway Client Certificate: %s", input)
 	out, err := conn.GenerateClientCertificate(&input)
@@ -95,7 +95,7 @@ func resourceClientCertificateRead(d *schema.ResourceData, meta interface{}) err
 	}
 	log.Printf("[DEBUG] Received API Gateway Client Certificate: %s", out)
 
-	tags := KeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -83,7 +83,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	input := gamelift.CreateAliasInput{
 		Name:            aws.String(d.Get("name").(string)),
 		RoutingStrategy: rs,
-		Tags:            Tags(tags.IgnoreAws()),
+		Tags:            Tags(tags.IgnoreAWS()),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -129,7 +129,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Game Lift Alias (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

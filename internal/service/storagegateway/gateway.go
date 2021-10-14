@@ -329,7 +329,7 @@ func resourceGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 		GatewayName:     aws.String(d.Get("gateway_name").(string)),
 		GatewayTimezone: aws.String(d.Get("gateway_timezone").(string)),
 		GatewayType:     aws.String(d.Get("gateway_type").(string)),
-		Tags:            Tags(tags.IgnoreAws()),
+		Tags:            Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("medium_changer_type"); ok {
@@ -465,7 +465,7 @@ func resourceGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Storage Gateway Gateway: %w", err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

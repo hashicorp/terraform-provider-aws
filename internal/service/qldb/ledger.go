@@ -87,7 +87,7 @@ func resourceLedgerCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:               aws.String(d.Get("name").(string)),
 		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:               Tags(tags.IgnoreAws()),
+		Tags:               Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
@@ -165,7 +165,7 @@ func resourceLedgerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

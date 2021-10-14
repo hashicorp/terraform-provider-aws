@@ -183,7 +183,7 @@ func resourceMLTransformCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &glue.CreateMLTransformInput{
 		Name:              aws.String(d.Get("name").(string)),
 		Role:              aws.String(d.Get("role_arn").(string)),
-		Tags:              Tags(tags.IgnoreAws()),
+		Tags:              Tags(tags.IgnoreAWS()),
 		Timeout:           aws.Int64(int64(d.Get("timeout").(int))),
 		InputRecordTables: expandGlueMLTransformInputRecordTables(d.Get("input_record_tables").([]interface{})),
 		Parameters:        expandGlueMLTransformParameters(d.Get("parameters").([]interface{})),
@@ -290,7 +290,7 @@ func resourceMLTransformRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Glue ML Transform (%s): %w", mlTransformArn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -290,7 +290,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if len(tags) > 0 {
-		elbOpts.Tags = Tags(tags.IgnoreAws())
+		elbOpts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if _, ok := d.GetOk("internal"); ok {
@@ -458,7 +458,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

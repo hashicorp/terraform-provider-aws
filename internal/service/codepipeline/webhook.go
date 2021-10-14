@@ -156,7 +156,7 @@ func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 			TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
 			AuthenticationConfiguration: extractCodePipelineWebhookAuthConfig(authType, authConfig),
 		},
-		Tags: Tags(tags.IgnoreAws()),
+		Tags: Tags(tags.IgnoreAWS()),
 	}
 
 	webhook, err := conn.PutWebhook(request)
@@ -280,7 +280,7 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting filter: %s", err)
 	}
 
-	tags := KeyValueTags(webhook.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(webhook.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

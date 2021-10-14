@@ -250,7 +250,7 @@ func resourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("type", customerGateway.Type)
 	d.Set("device_name", customerGateway.DeviceName)
 
-	tags := KeyValueTags(customerGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(customerGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

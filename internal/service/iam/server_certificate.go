@@ -121,7 +121,7 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get("private_key").(string)),
 		ServerCertificateName: aws.String(sslCertName),
-		Tags:                  Tags(tags.IgnoreAws()),
+		Tags:                  Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("certificate_chain"); ok {
@@ -183,7 +183,7 @@ func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("upload_date", nil)
 	}
 
-	tags := KeyValueTags(cert.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(cert.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

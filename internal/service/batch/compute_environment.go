@@ -237,7 +237,7 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Batch Compute Environment: %s", input)
@@ -296,7 +296,7 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	tags := KeyValueTags(computeEnvironment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -504,7 +504,7 @@ func expandBatchComputeResource(tfMap map[string]interface{}) *batch.ComputeReso
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.Tags = Tags(tftags.New(v).IgnoreAws())
+		apiObject.Tags = Tags(tftags.New(v).IgnoreAWS())
 	}
 
 	if computeResourceType != "" {
@@ -596,7 +596,7 @@ func flattenBatchComputeResource(apiObject *batch.ComputeResource) map[string]in
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap["tags"] = KeyValueTags(v).IgnoreAws().Map()
+		tfMap["tags"] = KeyValueTags(v).IgnoreAWS().Map()
 	}
 
 	if v := apiObject.Type; v != nil {

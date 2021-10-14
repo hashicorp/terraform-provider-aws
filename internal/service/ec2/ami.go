@@ -26,7 +26,7 @@ const (
 	AWSAMIRetryTimeout    = 40 * time.Minute
 	AMIDeleteRetryTimeout = 90 * time.Minute
 	AWSAMIRetryDelay      = 5 * time.Second
-	AWSAMIRetryMinTimeout = 3 * time.Second
+	AMIRetryMinTimeout = 3 * time.Second
 )
 
 func ResourceAMI() *schema.Resource {
@@ -443,7 +443,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting ephemeral_block_device: %w", err)
 	}
 
-	tags := KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -563,7 +563,7 @@ func AMIWaitForDestroy(timeout time.Duration, id string, client *ec2.EC2) error 
 		Refresh:    AMIStateRefreshFunc(client, id),
 		Timeout:    timeout,
 		Delay:      AWSAMIRetryDelay,
-		MinTimeout: AWSAMIRetryMinTimeout,
+		MinTimeout: AMIRetryMinTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
@@ -583,7 +583,7 @@ func resourceAwsAmiWaitForAvailable(timeout time.Duration, id string, client *ec
 		Refresh:    AMIStateRefreshFunc(client, id),
 		Timeout:    timeout,
 		Delay:      AWSAMIRetryDelay,
-		MinTimeout: AWSAMIRetryMinTimeout,
+		MinTimeout: AMIRetryMinTimeout,
 	}
 
 	info, err := stateConf.WaitForState()

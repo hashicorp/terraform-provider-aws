@@ -225,7 +225,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                 aws.String(d.Get("role_arn").(string)),
 		Squash:               aws.String(d.Get("squash").(string)),
-		Tags:                 Tags(tags.IgnoreAws()),
+		Tags:                 Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -319,7 +319,7 @@ func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("squash", fileshare.Squash)
 	d.Set("notification_policy", fileshare.NotificationPolicy)
 
-	tags := KeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(fileshare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -138,7 +138,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAws())
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -215,7 +215,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error listing tags for WAFv2 RuleGroup (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

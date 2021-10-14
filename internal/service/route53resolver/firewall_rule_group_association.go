@@ -80,7 +80,7 @@ func resourceFirewallRuleGroupAssociationCreate(d *schema.ResourceData, meta int
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Priority:            aws.Int64(int64(d.Get("priority").(int))),
 		VpcId:               aws.String(d.Get("vpc_id").(string)),
-		Tags:                Tags(tags.IgnoreAws()),
+		Tags:                Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("mutation_protection"); ok {
@@ -144,7 +144,7 @@ func resourceFirewallRuleGroupAssociationRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error listing tags for Route53 Resolver DNS Firewall rule group association (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

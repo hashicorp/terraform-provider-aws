@@ -155,7 +155,7 @@ func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.Set("status", imagePipeline.Status)
-	d.Set("tags", KeyValueTags(imagePipeline.Tags).IgnoreAws().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(imagePipeline.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 
 	return nil
 }

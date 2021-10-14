@@ -101,7 +101,7 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
 		SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		DataFormat:       aws.String(d.Get("data_format").(string)),
-		Tags:             Tags(tags.IgnoreAws()),
+		Tags:             Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("registry_arn"); ok {
@@ -170,7 +170,7 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Glue Schema (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

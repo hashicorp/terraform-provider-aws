@@ -163,7 +163,7 @@ func resourceDistributionConfigurationCreate(d *schema.ResourceData, meta interf
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateDistributionConfiguration(input)
@@ -214,7 +214,7 @@ func resourceDistributionConfigurationRead(d *schema.ResourceData, meta interfac
 	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenImageBuilderDistributions(distributionConfiguration.Distributions))
 	d.Set("name", distributionConfiguration.Name)
-	tags := KeyValueTags(distributionConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

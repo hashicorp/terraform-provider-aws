@@ -63,7 +63,7 @@ func TestExpandRecordName(t *testing.T) {
 	}
 }
 
-func TestNormalizeAwsAliasName(t *testing.T) {
+func TestNormalizeAliasName(t *testing.T) {
 	cases := []struct {
 		Input, Output string
 	}{

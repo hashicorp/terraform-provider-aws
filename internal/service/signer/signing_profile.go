@@ -147,7 +147,7 @@ func resourceSigningProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		signingProfileInput.Tags = Tags(tags.IgnoreAws())
+		signingProfileInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	_, err := conn.PutSigningProfile(signingProfileInput)
@@ -216,7 +216,7 @@ func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting signer signing profile status: %s", err)
 	}
 
-	tags := KeyValueTags(signingProfileOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

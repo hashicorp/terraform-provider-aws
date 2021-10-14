@@ -56,7 +56,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &appconfig.CreateApplicationInput{
 		Name: aws.String(applicationName),
-		Tags: Tags(tags.IgnoreAws()),
+		Tags: Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -121,7 +121,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for AppConfig Application (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -301,7 +301,7 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
-		putInput.Tagging = aws.String(tags.IgnoreAws().UrlEncode())
+		putInput.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
 	}
 
 	if v, ok := d.GetOk("website_redirect"); ok {
@@ -432,7 +432,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

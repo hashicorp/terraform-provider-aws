@@ -67,7 +67,7 @@ func resourceVPCLinkCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:             aws.String(d.Get("name").(string)),
 		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
 		SubnetIds:        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:             Tags(tags.IgnoreAws()),
+		Tags:             Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 VPC Link: %s", req)
@@ -116,7 +116,7 @@ func resourceVPCLinkRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

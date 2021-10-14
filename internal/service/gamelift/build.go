@@ -90,7 +90,7 @@ func resourceBuildCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:            aws.String(d.Get("name").(string)),
 		OperatingSystem: aws.String(d.Get("operating_system").(string)),
 		StorageLocation: sl,
-		Tags:            Tags(tags.IgnoreAws()),
+		Tags:            Tags(tags.IgnoreAWS()),
 	}
 	if v, ok := d.GetOk("version"); ok {
 		input.Version = aws.String(v.(string))
@@ -171,7 +171,7 @@ func resourceBuildRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Game Lift Build (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

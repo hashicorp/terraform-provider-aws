@@ -285,7 +285,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		req.CacheSecurityGroupNames = flex.ExpandStringSet(d.Get("security_group_names").(*schema.Set))
 		req.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
-		req.Tags = Tags(tags.IgnoreAws())
+		req.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("cluster_id"); ok {
@@ -436,7 +436,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for ElastiCache Cluster (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

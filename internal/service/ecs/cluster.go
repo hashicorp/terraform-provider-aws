@@ -182,7 +182,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &ecs.CreateClusterInput{
 		ClusterName:                     aws.String(clusterName),
 		DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
-		Tags:                            Tags(tags.IgnoreAws()),
+		Tags:                            Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("capacity_providers"); ok {
@@ -312,7 +312,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tags := KeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

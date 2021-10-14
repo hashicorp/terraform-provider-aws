@@ -180,7 +180,7 @@ func resourceImagePipelineCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateImagePipeline(input)
@@ -253,7 +253,7 @@ func resourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("status", imagePipeline.Status)
 
-	tags := KeyValueTags(imagePipeline.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(imagePipeline.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

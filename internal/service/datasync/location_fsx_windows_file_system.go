@@ -115,7 +115,7 @@ func resourceLocationFSxWindowsFileSystemCreate(d *schema.ResourceData, meta int
 		User:              aws.String(d.Get("user").(string)),
 		Password:          aws.String(d.Get("password").(string)),
 		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
-		Tags:              Tags(tags.IgnoreAws()),
+		Tags:              Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("subdirectory"); ok {
@@ -185,7 +185,7 @@ func resourceLocationFSxWindowsFileSystemRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error listing tags for DataSync Location Fsx Windows (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

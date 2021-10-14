@@ -67,7 +67,7 @@ func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface
 		ReplicationSubnetGroupIdentifier:  aws.String(d.Get("replication_subnet_group_id").(string)),
 		ReplicationSubnetGroupDescription: aws.String(d.Get("replication_subnet_group_description").(string)),
 		SubnetIds:                         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                              Tags(tags.IgnoreAws()),
+		Tags:                              Tags(tags.IgnoreAWS()),
 	}
 
 	log.Println("[DEBUG] DMS create replication subnet group:", request)
@@ -124,7 +124,7 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error listing tags for DMS Replication Subnet Group (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

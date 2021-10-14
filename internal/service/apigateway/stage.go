@@ -167,7 +167,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Variables = aws.StringMap(variables)
 	}
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateStage(&input)
@@ -251,7 +251,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("xray_tracing_enabled", stage.TracingEnabled)
 
-	tags := KeyValueTags(stage.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(stage.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

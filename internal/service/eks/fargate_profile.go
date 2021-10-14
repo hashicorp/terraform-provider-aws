@@ -117,7 +117,7 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// mutex lock for creation/deletion serialization
@@ -198,7 +198,7 @@ func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 
-	tags := KeyValueTags(fargateProfile.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(fargateProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

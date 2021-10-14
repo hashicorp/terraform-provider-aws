@@ -626,7 +626,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	// whilst the operation is being performed), we still get the required tags on
 	// the resources.
 	if len(tags) > 0 {
-		if err := UpdateTags(conn, d.Id(), nil, Tags(tags.IgnoreAws())); err != nil {
+		if err := UpdateTags(conn, d.Id(), nil, Tags(tags.IgnoreAWS())); err != nil {
 			return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -804,7 +804,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

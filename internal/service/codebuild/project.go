@@ -716,7 +716,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 		LogsConfig:          projectLogsConfig,
 		BuildBatchConfig:    projectBatchConfig,
 		FileSystemLocations: projectFileSystemLocations,
-		Tags:                Tags(tags.IgnoreAws()),
+		Tags:                Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("cache"); ok {
@@ -1318,7 +1318,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("badge_url", "")
 	}
 
-	tags := KeyValueTags(project.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(project.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1440,7 +1440,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	// The documentation clearly says "The replacement set of tags for this build project."
 	// But its a slice of pointers so if not set for every update, they get removed.
-	params.Tags = Tags(tags.IgnoreAws())
+	params.Tags = Tags(tags.IgnoreAWS())
 
 	// Handle IAM eventual consistency
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {

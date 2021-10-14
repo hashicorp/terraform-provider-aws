@@ -72,7 +72,7 @@ func resourceTapePoolCreate(d *schema.ResourceData, meta interface{}) error {
 		StorageClass:            aws.String(d.Get("storage_class").(string)),
 		RetentionLockType:       aws.String(d.Get("retention_lock_type").(string)),
 		RetentionLockTimeInDays: aws.Int64(int64(d.Get("retention_lock_time_in_days").(int))),
-		Tags:                    Tags(tags.IgnoreAws()),
+		Tags:                    Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway Tape Pool: %s", input)
@@ -134,7 +134,7 @@ func resourceTapePoolRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error listing tags for resource (%s): %w", poolArn, err)
 	}
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -100,7 +100,7 @@ func resourceProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
 		TargetRole:          aws.String(d.Get("target_role").(string)),
 		VpcSubnetIds:        flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
-		Tags:                Tags(tags.IgnoreAws()),
+		Tags:                Tags(tags.IgnoreAWS()),
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
@@ -173,7 +173,7 @@ func resourceProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error listing tags for RDS DB Proxy Endpoint (%s): %w", endpointArn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

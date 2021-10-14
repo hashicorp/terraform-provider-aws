@@ -258,7 +258,7 @@ func ResourceMetricAlarm() *schema.Resource {
 	}
 }
 
-func validateResourceAwsCloudWatchMetricAlarm(d *schema.ResourceData) error {
+func validMetricAlarm(d *schema.ResourceData) error {
 	_, metricNameOk := d.GetOk("metric_name")
 	_, statisticOk := d.GetOk("statistic")
 	_, extendedStatisticOk := d.GetOk("extended_statistic")
@@ -286,7 +286,7 @@ func validateResourceAwsCloudWatchMetricAlarm(d *schema.ResourceData) error {
 func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchConn
 
-	err := validateResourceAwsCloudWatchMetricAlarm(d)
+	err := validMetricAlarm(d)
 	if err != nil {
 		return err
 	}
@@ -366,7 +366,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for CloudWatch Metric Alarm (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -431,7 +431,7 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData, meta interface{
 		ComparisonOperator: aws.String(d.Get("comparison_operator").(string)),
 		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
 		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
-		Tags:               Tags(tags.IgnoreAws()),
+		Tags:               Tags(tags.IgnoreAWS()),
 	}
 
 	if v := d.Get("actions_enabled"); v != nil {

@@ -291,7 +291,7 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 	}
 }
 
-func TestKeyValueTagsIgnoreAws(t *testing.T) {
+func TestKeyValueTagsIgnoreAWS(t *testing.T) {
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -340,7 +340,7 @@ func TestKeyValueTagsIgnoreAws(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := testCase.tags.IgnoreAws()
+			got := testCase.tags.IgnoreAWS()
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
 		})

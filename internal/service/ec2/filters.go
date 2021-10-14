@@ -75,7 +75,7 @@ func ec2TagFiltersFromMap(m map[string]interface{}) []*ec2.Filter {
 	}
 
 	filters := []*ec2.Filter{}
-	for _, tag := range Tags(tftags.New(m).IgnoreAws()) {
+	for _, tag := range Tags(tftags.New(m).IgnoreAWS()) {
 		filters = append(filters, &ec2.Filter{
 			Name:   aws.String(fmt.Sprintf("tag:%s", aws.StringValue(tag.Key))),
 			Values: []*string{tag.Value},

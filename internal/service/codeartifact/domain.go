@@ -75,7 +75,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 	params := &codeartifact.CreateDomainInput{
 		Domain: aws.String(d.Get("domain").(string)),
-		Tags:   Tags(tags.IgnoreAws()),
+		Tags:   Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("encryption_key"); ok {
@@ -132,7 +132,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for CodeArtifact Domain (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

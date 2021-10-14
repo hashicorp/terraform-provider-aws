@@ -250,7 +250,7 @@ func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Amplify Branch: %s", input)
@@ -310,7 +310,7 @@ func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("stage", branch.Stage)
 	d.Set("ttl", branch.Ttl)
 
-	tags := KeyValueTags(branch.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(branch.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)

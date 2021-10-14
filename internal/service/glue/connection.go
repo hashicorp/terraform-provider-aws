@@ -118,7 +118,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
 		ConnectionInput: expandGlueConnectionInput(d),
-		Tags:            Tags(tags.IgnoreAws()),
+		Tags:            Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Creating Glue Connection: %s", input)
@@ -182,7 +182,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Glue Connection (%s): %w", connectionArn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

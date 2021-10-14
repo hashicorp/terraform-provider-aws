@@ -311,7 +311,7 @@ func resourceDefaultSecurityGroupRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting Egress rule set for (%s): %w", d.Id(), err)
 	}
 
-	tags := KeyValueTags(group.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(group.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

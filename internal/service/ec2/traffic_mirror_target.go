@@ -144,7 +144,7 @@ func resourceTrafficMirrorTargetRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("network_interface_id", target.NetworkInterfaceId)
 	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
 
-	tags := KeyValueTags(target.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(target.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

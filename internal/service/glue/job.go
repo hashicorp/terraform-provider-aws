@@ -171,7 +171,7 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 		Command: expandGlueJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
-		Tags:    Tags(tags.IgnoreAws()),
+		Tags:    Tags(tags.IgnoreAWS()),
 		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
 	}
 
@@ -303,7 +303,7 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Glue Job (%s): %s", jobARN, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

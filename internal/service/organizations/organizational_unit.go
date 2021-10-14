@@ -85,7 +85,7 @@ func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) 
 	createOpts := &organizations.CreateOrganizationalUnitInput{
 		Name:     aws.String(d.Get("name").(string)),
 		ParentId: aws.String(d.Get("parent_id").(string)),
-		Tags:     Tags(tags.IgnoreAws()),
+		Tags:     Tags(tags.IgnoreAWS()),
 	}
 
 	var err error
@@ -187,7 +187,7 @@ func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error listing tags for Organizations Organizational Unit (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

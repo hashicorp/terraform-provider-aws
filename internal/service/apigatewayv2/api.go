@@ -227,7 +227,7 @@ func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 	req := &apigatewayv2.CreateApiInput{
 		Name:         aws.String(d.Get("name").(string)),
 		ProtocolType: aws.String(protocolType),
-		Tags:         Tags(tags.IgnoreAws()),
+		Tags:         Tags(tags.IgnoreAWS()),
 	}
 	if v, ok := d.GetOk("api_key_selection_expression"); ok {
 		req.ApiKeySelectionExpression = aws.String(v.(string))
@@ -316,7 +316,7 @@ func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("protocol_type", resp.ProtocolType)
 	d.Set("route_selection_expression", resp.RouteSelectionExpression)
 
-	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

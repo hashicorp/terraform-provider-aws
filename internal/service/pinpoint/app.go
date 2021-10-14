@@ -172,7 +172,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		req.CreateApplicationRequest.Tags = Tags(tags.IgnoreAws())
+		req.CreateApplicationRequest.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateApp(req)
@@ -285,7 +285,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for PinPoint Application (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

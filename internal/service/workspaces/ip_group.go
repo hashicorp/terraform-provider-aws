@@ -71,7 +71,7 @@ func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		GroupName: aws.String(d.Get("name").(string)),
 		GroupDesc: aws.String(d.Get("description").(string)),
 		UserRules: expandIpGroupRules(rules),
-		Tags:      Tags(tags.IgnoreAws()),
+		Tags:      Tags(tags.IgnoreAWS()),
 	})
 	if err != nil {
 		return err
@@ -119,7 +119,7 @@ func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for WorkSpaces IP Group (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

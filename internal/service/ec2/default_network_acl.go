@@ -18,8 +18,8 @@ import (
 // catch-all.
 // See http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html#default-network-acl
 const (
-	awsDefaultAclRuleNumberIpv4 = 32767
-	awsDefaultAclRuleNumberIpv6 = 32768
+	defaultACLRuleNumberIPv4 = 32767
+	defaultACLRuleNumberIPv6 = 32768
 )
 
 func ResourceDefaultNetworkACL() *schema.Resource {
@@ -316,8 +316,8 @@ func revokeAllNetworkACLEntries(netaclId string, meta interface{}) error {
 	for _, e := range networkAcl.Entries {
 		// Skip the default rules added by AWS. They can be neither
 		// configured or deleted by users. See http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html#default-network-acl
-		if aws.Int64Value(e.RuleNumber) == awsDefaultAclRuleNumberIpv4 ||
-			aws.Int64Value(e.RuleNumber) == awsDefaultAclRuleNumberIpv6 {
+		if aws.Int64Value(e.RuleNumber) == defaultACLRuleNumberIPv4 ||
+			aws.Int64Value(e.RuleNumber) == defaultACLRuleNumberIPv6 {
 			continue
 		}
 

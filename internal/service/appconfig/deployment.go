@@ -96,7 +96,7 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   Tags(tags.IgnoreAws()),
+		Tags:                   Tags(tags.IgnoreAWS()),
 	}
 
 	output, err := conn.StartDeployment(input)
@@ -175,7 +175,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for AppConfig Deployment (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

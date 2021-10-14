@@ -104,7 +104,7 @@ func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("pool_id", coip.PoolId)
 
-	if err := d.Set("tags", KeyValueTags(coip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(coip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

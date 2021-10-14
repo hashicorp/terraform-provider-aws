@@ -184,7 +184,7 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &glue.CreateTriggerInput{
 		Actions: expandGlueActions(d.Get("actions").([]interface{})),
 		Name:    aws.String(name),
-		Tags:    Tags(tags.IgnoreAws()),
+		Tags:    Tags(tags.IgnoreAWS()),
 		Type:    aws.String(triggerType),
 	}
 
@@ -317,7 +317,7 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Glue Trigger (%s): %w", triggerARN, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

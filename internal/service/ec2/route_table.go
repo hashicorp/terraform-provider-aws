@@ -244,7 +244,7 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting route: %w", err)
 	}
 
-	tags := KeyValueTags(routeTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -506,7 +506,7 @@ func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 	input.RouteTableId = aws.String(routeTableID)
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		timeout,
 		func() (interface{}, error) {
 			return conn.CreateRoute(input)
@@ -648,7 +648,7 @@ func ec2RouteTableEnableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gateway
 	}
 
 	log.Printf("[DEBUG] Enabling Route Table (%s) VPN Gateway (%s) route propagation", routeTableID, gatewayID)
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		timeout,
 		func() (interface{}, error) {
 			return conn.EnableVgwRoutePropagation(input)

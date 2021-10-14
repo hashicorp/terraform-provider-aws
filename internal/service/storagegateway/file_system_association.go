@@ -102,7 +102,7 @@ func resourceFileSystemAssociationCreate(d *schema.ResourceData, meta interface{
 		GatewayARN:  aws.String(d.Get("gateway_arn").(string)),
 		LocationARN: aws.String(d.Get("location_arn").(string)),
 		Password:    aws.String(d.Get("password").(string)),
-		Tags:        Tags(tags.IgnoreAws()),
+		Tags:        Tags(tags.IgnoreAWS()),
 		UserName:    aws.String(d.Get("username").(string)),
 	}
 
@@ -157,7 +157,7 @@ func resourceFileSystemAssociationRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting cache_attributes: %w", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

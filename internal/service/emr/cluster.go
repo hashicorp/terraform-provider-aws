@@ -855,7 +855,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
 		ServiceRole:       aws.String(d.Get("service_role").(string)),
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
-		Tags:              Tags(tags.IgnoreAws()),
+		Tags:              Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("additional_info"); ok {
@@ -1090,7 +1090,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tags := KeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

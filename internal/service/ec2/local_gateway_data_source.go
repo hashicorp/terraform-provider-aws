@@ -94,7 +94,7 @@ func dataSourceLocalGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("owner_id", localGateway.OwnerId)
 	d.Set("state", localGateway.State)
 
-	if err := d.Set("tags", KeyValueTags(localGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(localGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

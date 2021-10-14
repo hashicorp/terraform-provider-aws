@@ -129,7 +129,7 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:             aws.String(name),
 		IdempotencyToken: aws.String(resource.UniqueId()),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             Tags(tags.IgnoreAws()),
+		Tags:             Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -208,7 +208,7 @@ func resourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Global Accelerator Accelerator (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

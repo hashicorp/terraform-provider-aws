@@ -404,7 +404,7 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
@@ -439,7 +439,7 @@ func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
+					testAccCheckInitialTableExists(resourceName, &table1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -462,7 +462,7 @@ func TestAccAWSDynamoDbTable_disappears_payPerRequestWithGSI(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
+					testAccCheckInitialTableExists(resourceName, &table1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -470,7 +470,7 @@ func TestAccAWSDynamoDbTable_disappears_payPerRequestWithGSI(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table2),
+					testAccCheckInitialTableExists(resourceName, &table2),
 				),
 			},
 			{
@@ -496,8 +496,8 @@ func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					testAccCheckInitialAWSDynamoDbTableConf(resourceName),
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableConf(resourceName),
 				),
 			},
 			{
@@ -508,7 +508,7 @@ func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigAddSecondaryGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
 					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
@@ -570,8 +570,8 @@ func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigInitialState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					testAccCheckInitialAWSDynamoDbTableConf(resourceName),
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableConf(resourceName),
 				),
 			},
 			{
@@ -582,7 +582,7 @@ func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfig_backup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "true"),
 				),
@@ -605,7 +605,7 @@ func TestAccAWSDynamoDbTable_BillingMode_payPerRequestToProvisioned(t *testing.T
 			{
 				Config: testAccAWSDynamoDbBilling_payPerRequest(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 				),
 			},
@@ -617,7 +617,7 @@ func TestAccAWSDynamoDbTable_BillingMode_payPerRequestToProvisioned(t *testing.T
 			{
 				Config: testAccAWSDynamoDbBilling_provisioned(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 				),
 			},
@@ -639,7 +639,7 @@ func TestAccAWSDynamoDbTable_BillingMode_provisionedToPayPerRequest(t *testing.T
 			{
 				Config: testAccAWSDynamoDbBilling_provisioned(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 				),
 			},
@@ -651,7 +651,7 @@ func TestAccAWSDynamoDbTable_BillingMode_provisionedToPayPerRequest(t *testing.T
 			{
 				Config: testAccAWSDynamoDbBilling_payPerRequest(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 				),
 			},
@@ -673,7 +673,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_payPerRequestToProvisioned(t *testi
 			{
 				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 				),
 			},
@@ -685,7 +685,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_payPerRequestToProvisioned(t *testi
 			{
 				Config: testAccAWSDynamoDbBilling_provisionedWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 				),
 			},
@@ -707,7 +707,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_provisionedToPayPerRequest(t *testi
 			{
 				Config: testAccAWSDynamoDbBilling_provisionedWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
 				),
 			},
@@ -719,7 +719,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_provisionedToPayPerRequest(t *testi
 			{
 				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
 				),
 			},
@@ -741,7 +741,7 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigStreamSpecification(rName, true, "KEYS_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
@@ -756,7 +756,7 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigStreamSpecification(rName, false, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
@@ -796,8 +796,8 @@ func TestAccAWSDynamoDbTable_tags(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					testAccCheckInitialAWSDynamoDbTableConf(resourceName),
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckInitialTableConf(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 				),
 			},
@@ -825,7 +825,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigGsiUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "1",
@@ -852,7 +852,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigGsiUpdatedCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "2",
@@ -889,7 +889,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigGsiUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
@@ -928,7 +928,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
@@ -979,7 +979,7 @@ func TestAccAWSDynamoDbTable_lsiNonKeyAttributes(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigLsiNonKeyAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
 						"name":                 "TestTableLSI",
@@ -1014,7 +1014,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
@@ -1054,7 +1054,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigGsiUpdatedNonKeyAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						"name":                 "att2-index",
@@ -1107,7 +1107,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigGsiMultipleNonKeyAttributes(rName, attributes),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						"name":                 "att1-index",
@@ -1151,7 +1151,7 @@ func TestAccAWSDynamoDbTable_Ttl_enabled(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigTimeToLive(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					testAccCheckInitialTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
@@ -1181,7 +1181,7 @@ func TestAccAWSDynamoDbTable_Ttl_disabled(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigTimeToLive(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					testAccCheckInitialTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "false"),
 				),
@@ -1194,7 +1194,7 @@ func TestAccAWSDynamoDbTable_Ttl_disabled(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigTimeToLive(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					testAccCheckInitialTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
@@ -1217,7 +1217,7 @@ func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "firstKey", "S"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 				),
 			},
 			{
@@ -1228,19 +1228,19 @@ func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
 			{ // Attribute type change
 				Config: testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "firstKey", "N"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 				),
 			},
 			{ // New attribute addition (index update)
 				Config: testAccAWSDynamoDbConfigTwoAttributes(rName, "firstKey", "secondKey", "firstKey", "N", "secondKey", "S"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 				),
 			},
 			{ // Attribute removal (index update)
 				Config: testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "firstKey", "S"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 				),
 			},
 		},
@@ -1261,7 +1261,7 @@ func TestAccAWSDynamoDbTable_lsiUpdate(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigLSI(rName, "lsi-original"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 				),
 			},
 			{
@@ -1272,7 +1272,7 @@ func TestAccAWSDynamoDbTable_lsiUpdate(t *testing.T) {
 			{ // Change name of local secondary index
 				Config: testAccAWSDynamoDbConfigLSI(rName, "lsi-changed"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 				),
 			},
 		},
@@ -1320,7 +1320,7 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigInitialStateWithEncryptionBYOK(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &confBYOK),
+					testAccCheckInitialTableExists(resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
@@ -1334,7 +1334,7 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigInitialStateWithEncryptionAmazonCMK(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &confEncDisabled),
+					testAccCheckInitialTableExists(resourceName, &confEncDisabled),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
 					func(s *terraform.State) error {
 						if !confEncDisabled.Table.CreationDateTime.Equal(*confBYOK.Table.CreationDateTime) {
@@ -1347,7 +1347,7 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbConfigInitialStateWithEncryptionAmazonCMK(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &confEncEnabled),
+					testAccCheckInitialTableExists(resourceName, &confEncEnabled),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsAliasDatasourceName, "target_key_arn"),
@@ -1381,7 +1381,7 @@ func TestAccAWSDynamoDbTable_Replica_multiple(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbTableConfigReplica2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					testAccCheckInitialTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 				),
 			},
@@ -1394,14 +1394,14 @@ func TestAccAWSDynamoDbTable_Replica_multiple(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbTableConfigReplica0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					testAccCheckInitialTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSDynamoDbTableConfigReplica2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					testAccCheckInitialTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 				),
 			},
@@ -1427,7 +1427,7 @@ func TestAccAWSDynamoDbTable_Replica_single(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbTableConfigReplica1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
@@ -1440,14 +1440,14 @@ func TestAccAWSDynamoDbTable_Replica_single(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbTableConfigReplica0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSDynamoDbTableConfigReplica1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
@@ -1477,7 +1477,7 @@ func TestAccAWSDynamoDbTable_Replica_singleWithCMK(t *testing.T) {
 			{
 				Config: testAccAWSDynamoDbTableConfigReplicaWithCMK(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					testAccCheckInitialTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
@@ -1518,7 +1518,7 @@ func testAccCheckAWSDynamoDbTableDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckInitialAWSDynamoDbTableExists(n string, table *dynamodb.DescribeTableOutput) resource.TestCheckFunc {
+func testAccCheckInitialTableExists(n string, table *dynamodb.DescribeTableOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		log.Printf("[DEBUG] Trying to create initial table state!")
 		rs, ok := s.RootModule().Resources[n]
@@ -1548,7 +1548,7 @@ func testAccCheckInitialAWSDynamoDbTableExists(n string, table *dynamodb.Describ
 	}
 }
 
-func testAccCheckInitialAWSDynamoDbTableConf(resourceName string) resource.TestCheckFunc {
+func testAccCheckInitialTableConf(resourceName string) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
 		resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),

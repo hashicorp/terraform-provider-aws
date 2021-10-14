@@ -213,7 +213,7 @@ func resourceDocumentCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		docInput.Tags = Tags(tags.IgnoreAws())
+		docInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("attachments_source"); ok {
@@ -357,7 +357,7 @@ func resourceDocumentRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags := KeyValueTags(doc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(doc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

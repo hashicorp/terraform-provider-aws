@@ -289,7 +289,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting ipv6 addresses: %s", err)
 	}
 
-	tags := KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

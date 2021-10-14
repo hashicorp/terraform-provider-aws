@@ -138,7 +138,7 @@ func resourcePublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface
 		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set))
 	}
 	if len(tags) > 0 {
-		req.NewPublicVirtualInterface.Tags = Tags(tags.IgnoreAws())
+		req.NewPublicVirtualInterface.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect public virtual interface: %s", req)
@@ -199,7 +199,7 @@ func resourcePublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error listing tags for Direct Connect public virtual interface (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

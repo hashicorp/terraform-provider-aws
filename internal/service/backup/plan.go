@@ -176,7 +176,7 @@ func resourcePlanCreate(d *schema.ResourceData, meta interface{}) error {
 			Rules:                  expandBackupPlanRules(d.Get("rule").(*schema.Set)),
 			AdvancedBackupSettings: expandBackupPlanAdvancedBackupSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 		},
-		BackupPlanTags: Tags(tags.IgnoreAws()),
+		BackupPlanTags: Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Creating Backup Plan: %#v", input)
@@ -225,7 +225,7 @@ func resourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Plan (%s): %w", d.Id(), err)
 	}
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -335,7 +335,7 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 		}
 
 		if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-			rule.RecoveryPointTags = Tags(tftags.New(vRecoveryPointTags).IgnoreAws())
+			rule.RecoveryPointTags = Tags(tftags.New(vRecoveryPointTags).IgnoreAWS())
 		}
 
 		if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 {
@@ -425,7 +425,7 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 			"enable_continuous_backup": aws.BoolValue(rule.EnableContinuousBackup),
 			"start_window":             int(aws.Int64Value(rule.StartWindowMinutes)),
 			"completion_window":        int(aws.Int64Value(rule.CompletionWindowMinutes)),
-			"recovery_point_tags":      KeyValueTags(rule.RecoveryPointTags).IgnoreAws().Map(),
+			"recovery_point_tags":      KeyValueTags(rule.RecoveryPointTags).IgnoreAWS().Map(),
 		}
 
 		if lifecycle := rule.Lifecycle; lifecycle != nil {

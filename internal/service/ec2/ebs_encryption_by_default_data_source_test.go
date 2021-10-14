@@ -22,14 +22,14 @@ func TestAccDataSourceAwsEBSEncryptionByDefault_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsEBSEncryptionByDefaultConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceAwsEBSEncryptionByDefault("data.aws_ebs_encryption_by_default.current"),
+					testAccCheckEBSEncryptionByDefault("data.aws_ebs_encryption_by_default.current"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDataSourceAwsEBSEncryptionByDefault(n string) resource.TestCheckFunc {
+func testAccCheckEBSEncryptionByDefault(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 

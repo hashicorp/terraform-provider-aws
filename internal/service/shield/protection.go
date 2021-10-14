@@ -68,7 +68,7 @@ func resourceProtectionCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &shield.CreateProtectionInput{
 		Name:        aws.String(d.Get("name").(string)),
 		ResourceArn: aws.String(d.Get("resource_arn").(string)),
-		Tags:        Tags(tags.IgnoreAws()),
+		Tags:        Tags(tags.IgnoreAWS()),
 	}
 
 	resp, err := conn.CreateProtection(input)
@@ -111,7 +111,7 @@ func resourceProtectionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Shield Protection (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

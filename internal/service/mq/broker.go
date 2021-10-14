@@ -395,7 +395,7 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[INFO] Creating MQ Broker: %s", input)
@@ -486,7 +486,7 @@ func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting user: %w", err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

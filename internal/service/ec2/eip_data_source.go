@@ -153,7 +153,7 @@ func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 
-	if err := d.Set("tags", KeyValueTags(eip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(eip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

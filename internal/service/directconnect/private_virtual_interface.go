@@ -161,7 +161,7 @@ func resourcePrivateVirtualInterfaceCreate(d *schema.ResourceData, meta interfac
 		req.NewPrivateVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
 	if len(tags) > 0 {
-		req.NewPrivateVirtualInterface.Tags = Tags(tags.IgnoreAws())
+		req.NewPrivateVirtualInterface.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect private virtual interface: %s", req)
@@ -223,7 +223,7 @@ func resourcePrivateVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error listing tags for Direct Connect private virtual interface (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

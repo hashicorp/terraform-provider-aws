@@ -130,7 +130,7 @@ func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAws
 	return platforms
 }
 
-func TestDecodeResourceAwsSnsPlatformApplicationID(t *testing.T) {
+func TestDecodePlatformApplicationID(t *testing.T) {
 	var testCases = []struct {
 		Input            string
 		ExpectedArn      string

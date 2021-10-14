@@ -69,7 +69,7 @@ func resourceModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	_, err := conn.CreateModelPackageGroup(input)
@@ -113,7 +113,7 @@ func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for SageMaker Model Package Group (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

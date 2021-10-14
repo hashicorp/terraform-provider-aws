@@ -17,7 +17,7 @@ func TestAccAWSCallerIdentity_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsCallerIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckAwsCallerIdentityAccountId("data.aws_caller_identity.current"),
+					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
 				),
 			},
 		},

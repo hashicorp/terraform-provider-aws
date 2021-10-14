@@ -327,8 +327,8 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 	for _, e := range networkAcl.Entries {
 		// Skip the default rules added by AWS. They can be neither
 		// configured or deleted by users.
-		if aws.Int64Value(e.RuleNumber) == awsDefaultAclRuleNumberIpv4 ||
-			aws.Int64Value(e.RuleNumber) == awsDefaultAclRuleNumberIpv6 {
+		if aws.Int64Value(e.RuleNumber) == defaultACLRuleNumberIPv4 ||
+			aws.Int64Value(e.RuleNumber) == defaultACLRuleNumberIPv6 {
 			continue
 		}
 
@@ -341,7 +341,7 @@ func resourceNetworkACLRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("vpc_id", networkAcl.VpcId)
 
-	tags := KeyValueTags(networkAcl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(networkAcl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -496,8 +496,8 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 			// neither modified nor destroyed. They have a custom rule
 			// number that is out of bounds for any other rule. If we
 			// encounter it, just continue. There's no work to be done.
-			if aws.Int64Value(remove.RuleNumber) == awsDefaultAclRuleNumberIpv4 ||
-				aws.Int64Value(remove.RuleNumber) == awsDefaultAclRuleNumberIpv6 {
+			if aws.Int64Value(remove.RuleNumber) == defaultACLRuleNumberIPv4 ||
+				aws.Int64Value(remove.RuleNumber) == defaultACLRuleNumberIPv6 {
 				continue
 			}
 

@@ -533,7 +533,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			DBInstanceIdentifier:       aws.String(identifier),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			SourceDBInstanceIdentifier: aws.String(v.(string)),
-			Tags:                       Tags(tags.IgnoreAws()),
+			Tags:                       Tags(tags.IgnoreAWS()),
 		}
 
 		if _, ok := d.GetOk("allocated_storage"); ok {
@@ -702,7 +702,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			SourceEngine:            aws.String(s3_bucket["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(s3_bucket["source_engine_version"].(string)),
-			Tags:                    Tags(tags.IgnoreAws()),
+			Tags:                    Tags(tags.IgnoreAWS()),
 		}
 
 		if attr, ok := d.GetOk("multi_az"); ok {
@@ -855,7 +855,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			DBSnapshotIdentifier:    aws.String(d.Get("snapshot_identifier").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    Tags(tags.IgnoreAws()),
+			Tags:                    Tags(tags.IgnoreAWS()),
 		}
 
 		if attr, ok := d.GetOk("name"); ok {
@@ -1047,7 +1047,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
 			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
-			input.Tags = Tags(tags.IgnoreAws())
+			input.Tags = Tags(tags.IgnoreAWS())
 			input.TargetDBInstanceIdentifier = aws.String(d.Get("identifier").(string))
 
 			if v, ok := d.GetOk("availability_zone"); ok {
@@ -1160,7 +1160,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    Tags(tags.IgnoreAws()),
+			Tags:                    Tags(tags.IgnoreAWS()),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		}
 
@@ -1335,7 +1335,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
-		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
 		}
@@ -1353,7 +1353,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
-		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
 		}
@@ -1458,7 +1458,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -1544,7 +1544,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func waitUntilAwsDbInstanceIsAvailableAfterUpdate(id string, conn *rds.RDS, timeout time.Duration) error {
+func waitUntilDBInstanceAvailableAfterUpdate(id string, conn *rds.RDS, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceAwsDbInstanceUpdatePendingStates,
 		Target:     []string{"available", "storage-optimization"},
@@ -1775,7 +1775,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Waiting for DB Instance (%s) to be available", d.Id())
-		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		err = waitUntilDBInstanceAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
 		}

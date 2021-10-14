@@ -111,7 +111,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
-		Tags:                        Tags(tags.IgnoreAws()),
+		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
 	log.Printf("[DEBUG] Create DB Cluster Parameter Group: %#v", createOpts)
@@ -187,7 +187,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
 	}
 
-	tags := KeyValueTags(resp.TagList).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

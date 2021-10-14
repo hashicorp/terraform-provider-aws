@@ -694,11 +694,11 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createOpts.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAws())
+		createOpts.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAws())
+		createOpts.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
@@ -889,7 +889,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	if v, tagOk = d.GetOk("tag"); tagOk {
 		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}
@@ -897,13 +897,13 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
 		proposedStateTags := KeyValueTags(v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tags", ListOfStringMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
+		if err := d.Set("tags", ListOfStringMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return fmt.Errorf("error setting tags: %w", err)
 		}
 	}
 
 	if !tagOk && !tagsOk {
-		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig))); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 			return fmt.Errorf("error setting tag: %w", err)
 		}
 	}

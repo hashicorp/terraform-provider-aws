@@ -145,7 +145,7 @@ func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_name", kp.KeyName)
 	d.Set("fingerprint", kp.KeyFingerprint)
 	d.Set("key_pair_id", kp.KeyPairId)
-	tags := KeyValueTags(kp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(kp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

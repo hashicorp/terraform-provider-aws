@@ -94,7 +94,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Tags are currently only supported in AWS Commercial.
 	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateUser(input)
@@ -138,7 +138,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error listing tags for ElastiCache User (%s): %w", aws.StringValue(resp.ARN), err)
 		}
 
-		tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

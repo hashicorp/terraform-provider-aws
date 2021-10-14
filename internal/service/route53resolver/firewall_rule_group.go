@@ -70,7 +70,7 @@ func resourceFirewallRuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		Name:             aws.String(d.Get("name").(string)),
 	}
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Route 53 Resolver DNS Firewall rule group: %#v", input)
@@ -119,7 +119,7 @@ func resourceFirewallRuleGroupRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for Route53 Resolver DNS Firewall rule group (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

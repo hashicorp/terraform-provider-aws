@@ -190,7 +190,7 @@ func resourceNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAws())
+		createOpts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("additional_code_repositories"); ok && v.(*schema.Set).Len() > 0 {
@@ -299,7 +299,7 @@ func resourceNotebookInstanceRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error listing tags for Sagemaker Notebook Instance (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

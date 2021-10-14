@@ -222,7 +222,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAws())
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	domainName, err := conn.CreateDomainName(params)
@@ -255,7 +255,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags := KeyValueTags(domainName.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(domainName.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

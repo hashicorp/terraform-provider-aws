@@ -36,8 +36,8 @@ type IgnoreConfig struct {
 // across all these Go types, we convert them into this Go type.
 type KeyValueTags map[string]*TagData
 
-// IgnoreAws returns non-AWS tag keys.
-func (tags KeyValueTags) IgnoreAws() KeyValueTags {
+// IgnoreAWS returns non-AWS tag keys.
+func (tags KeyValueTags) IgnoreAWS() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {

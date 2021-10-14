@@ -105,7 +105,7 @@ func resourceLocationS3Create(d *schema.ResourceData, meta interface{}) error {
 		S3BucketArn:  aws.String(d.Get("s3_bucket_arn").(string)),
 		S3Config:     expandDataSyncS3Config(d.Get("s3_config").([]interface{})),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
-		Tags:         Tags(tags.IgnoreAws()),
+		Tags:         Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("agent_arns"); ok {
@@ -198,7 +198,7 @@ func resourceLocationS3Read(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for DataSync Location S3 (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -80,7 +80,7 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	name = name.(string)
 	id, idExists := d.GetOk("zone_id")
 	vpcId, vpcIdExists := d.GetOk("vpc_id")
-	tags := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAws()
+	tags := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS()
 
 	if nameExists && idExists {
 		return fmt.Errorf("zone_id and name arguments can't be used together")
@@ -192,7 +192,7 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing Route 53 Hosted Zone (%s) tags: %w", idHostedZone, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

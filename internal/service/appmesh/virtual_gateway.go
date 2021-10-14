@@ -694,7 +694,7 @@ func resourceVirtualGatewayCreate(d *schema.ResourceData, meta interface{}) erro
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandAppmeshVirtualGatewaySpec(d.Get("spec").([]interface{})),
-		Tags:               Tags(tags.IgnoreAws()),
+		Tags:               Tags(tags.IgnoreAWS()),
 		VirtualGatewayName: aws.String(d.Get("name").(string)),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -789,7 +789,7 @@ func resourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error listing tags for App Mesh virtual gateway (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

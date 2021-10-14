@@ -66,7 +66,7 @@ func resourceResourceShareCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		request.Tags = Tags(tags.IgnoreAws())
+		request.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Println("[DEBUG] Create RAM resource share request:", request)
@@ -123,7 +123,7 @@ func resourceResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resourceShare.Name)
 	d.Set("allow_external_principals", resourceShare.AllowExternalPrincipals)
 
-	tags := KeyValueTags(resourceShare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resourceShare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

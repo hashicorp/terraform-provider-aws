@@ -135,7 +135,7 @@ func resourceVirtualRouterCreate(d *schema.ResourceData, meta interface{}) error
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		VirtualRouterName: aws.String(d.Get("name").(string)),
 		Spec:              expandVirtualRouterSpec(d.Get("spec").([]interface{})),
-		Tags:              Tags(tags.IgnoreAws()),
+		Tags:              Tags(tags.IgnoreAWS()),
 	}
 	if v, ok := d.GetOk("mesh_owner"); ok {
 		req.MeshOwner = aws.String(v.(string))
@@ -230,7 +230,7 @@ func resourceVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for App Mesh virtual router (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

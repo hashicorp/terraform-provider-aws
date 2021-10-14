@@ -102,7 +102,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 		Path:           aws.String(d.Get("path").(string)),
 		PolicyDocument: aws.String(d.Get("policy").(string)),
 		PolicyName:     aws.String(name),
-		Tags:           Tags(tags.IgnoreAws()),
+		Tags:           Tags(tags.IgnoreAWS()),
 	}
 
 	response, err := conn.CreatePolicy(request)
@@ -169,7 +169,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
-	tags := KeyValueTags(policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

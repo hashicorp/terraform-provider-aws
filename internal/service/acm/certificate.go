@@ -245,7 +245,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.ImportCertificate(input)
@@ -271,7 +271,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAws())
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if caARN, ok := d.GetOk("certificate_authority_arn"); ok {
@@ -369,7 +369,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 			return resource.NonRetryableError(fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err))
 		}
 
-		tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

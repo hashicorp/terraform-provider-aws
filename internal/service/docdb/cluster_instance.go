@@ -194,7 +194,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    Tags(tags.IgnoreAws()),
+		Tags:                    Tags(tags.IgnoreAWS()),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -332,7 +332,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for DocumentDB Cluster Instance (%s): %s", d.Get("arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

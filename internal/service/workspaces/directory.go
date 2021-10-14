@@ -214,7 +214,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(false),
 		Tenancy:           aws.String(workspaces.TenancyShared),
-		Tags:              Tags(tags.IgnoreAws()),
+		Tags:              Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok {
@@ -222,7 +222,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		DirectoryRegisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.RegisterWorkspaceDirectory(input)
@@ -348,7 +348,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags: %w", err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -449,7 +449,7 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkSpacesConn
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAwsErrCodeEquals(
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		DirectoryDeregisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.DeregisterWorkspaceDirectory(&workspaces.DeregisterWorkspaceDirectoryInput{

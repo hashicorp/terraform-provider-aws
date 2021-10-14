@@ -71,7 +71,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 
 	request := &dms.ImportCertificateInput{
 		CertificateIdentifier: aws.String(certificateID),
-		Tags:                  Tags(tags.IgnoreAws()),
+		Tags:                  Tags(tags.IgnoreAWS()),
 	}
 
 	pem, pemSet := d.GetOk("certificate_pem")
@@ -148,7 +148,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for DMS Certificate (%s): %w", d.Get("certificate_arn").(string), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

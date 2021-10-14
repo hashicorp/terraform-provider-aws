@@ -99,7 +99,7 @@ func resourceEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta interfac
 		d.Set("vpc_id", igw.Attachments[0].VpcId)
 	}
 
-	tags := KeyValueTags(igw.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

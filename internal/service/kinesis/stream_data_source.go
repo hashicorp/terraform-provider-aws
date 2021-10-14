@@ -90,7 +90,7 @@ func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %w", sn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 

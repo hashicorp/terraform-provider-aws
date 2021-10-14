@@ -106,7 +106,7 @@ func resourceConfigurationProfileCreate(d *schema.ResourceData, meta interface{}
 		ApplicationId: aws.String(appId),
 		LocationUri:   aws.String(d.Get("location_uri").(string)),
 		Name:          aws.String(name),
-		Tags:          Tags(tags.IgnoreAws()),
+		Tags:          Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -196,7 +196,7 @@ func resourceConfigurationProfileRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error listing tags for AppConfig Configuration Profile (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -238,7 +238,7 @@ func resourceGraphQLAPICreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("xray_enabled"); ok {
@@ -304,7 +304,7 @@ func resourceGraphQLAPIRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting uris: %s", err)
 	}
 
-	tags := KeyValueTags(resp.GraphqlApi.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.GraphqlApi.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

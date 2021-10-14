@@ -12,7 +12,7 @@ const (
 	awsSSOAdminAccountAssignmentDeleteTimeout      = 5 * time.Minute
 	awsSSOAdminAccountAssignmentDelay              = 5 * time.Second
 	awsSSOAdminAccountAssignmentMinTimeout         = 3 * time.Second
-	awsSSOAdminPermissionSetProvisioningRetryDelay = 5 * time.Second
+	permissionSetProvisioningRetryDelay = 5 * time.Second
 	awsSSOAdminPermissionSetProvisionTimeout       = 10 * time.Minute
 )
 
@@ -54,7 +54,7 @@ func waitAccountAssignmentDeleted(conn *ssoadmin.SSOAdmin, instanceArn, requestI
 
 func waitPermissionSetProvisioned(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.PermissionSetProvisioningStatus, error) {
 	stateConf := resource.StateChangeConf{
-		Delay:   awsSSOAdminPermissionSetProvisioningRetryDelay,
+		Delay:   permissionSetProvisioningRetryDelay,
 		Pending: []string{ssoadmin.StatusValuesInProgress},
 		Target:  []string{ssoadmin.StatusValuesSucceeded},
 		Refresh: statusPermissionSetProvisioning(conn, instanceArn, requestID),

@@ -124,7 +124,7 @@ func resourceAwsInspectorAssessmentTemplateRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error listing tags for Inspector assessment template (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -21,14 +21,14 @@ func TestAccDataSourceAwsEBSDefaultKmsKey_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsEBSDefaultKmsKeyConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceAwsEBSDefaultKmsKey("data.aws_ebs_default_kms_key.current"),
+					testAccCheckEBSDefaultKMSKey("data.aws_ebs_default_kms_key.current"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDataSourceAwsEBSDefaultKmsKey(n string) resource.TestCheckFunc {
+func testAccCheckEBSDefaultKMSKey(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 

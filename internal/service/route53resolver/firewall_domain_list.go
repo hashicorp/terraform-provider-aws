@@ -66,7 +66,7 @@ func resourceFirewallDomainListCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Route 53 Resolver DNS Firewall domain list: %#v", input)
@@ -130,7 +130,7 @@ func resourceFirewallDomainListRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error listing tags for Route53 Resolver DNS Firewall domain list (%s): %w", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

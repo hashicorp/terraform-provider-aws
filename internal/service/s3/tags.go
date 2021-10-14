@@ -147,7 +147,7 @@ func ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, n
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			Tagging: &s3.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags).IgnoreAws()),
+				TagSet: Tags(newTags.Merge(ignoredTags).IgnoreAWS()),
 			},
 		}
 

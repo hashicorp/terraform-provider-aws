@@ -63,7 +63,7 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[DEBUG] Creating Route Table Association: %s", input)
-	output, err := tfresource.RetryWhenAwsErrCodeEquals(
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(
 		RouteTableAssociationPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateRouteTable(input)

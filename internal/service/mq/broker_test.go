@@ -133,7 +133,7 @@ func testSweepMqBrokers(region string) error {
 	return nil
 }
 
-func TestDiffAwsMqBrokerUsers(t *testing.T) {
+func TestDiffUsers(t *testing.T) {
 	testCases := []struct {
 		OldUsers []interface{}
 		NewUsers []interface{}
@@ -693,7 +693,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Disabled(t *testing.T) 
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMqBrokerConfigEncryptionOptionsUseAwsOwnedKey(rName, false),
+				Config: testAccBrokerEncryptionOptionsUseAWSOwnedKeyConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
@@ -726,7 +726,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Enabled(t *testing.T) {
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMqBrokerConfigEncryptionOptionsUseAwsOwnedKey(rName, true),
+				Config: testAccBrokerEncryptionOptionsUseAWSOwnedKeyConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
@@ -1578,7 +1578,7 @@ resource "aws_mq_broker" "test" {
 `, rName)
 }
 
-func testAccMqBrokerConfigEncryptionOptionsUseAwsOwnedKey(rName string, useAwsOwnedKey bool) string {
+func testAccBrokerEncryptionOptionsUseAWSOwnedKeyConfig(rName string, useAwsOwnedKey bool) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q

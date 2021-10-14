@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	testAccAWSSchemasSchemaContent = `
+	testAccSchemaContent = `
 {
   "openapi": "3.0.0",
   "info": {
@@ -38,7 +38,7 @@ const (
 }
 `
 
-	testAccAWSSchemasSchemaContentUpdated = `
+	testAccSchemaContentUpdated = `
 {
   "openapi": "3.0.0",
   "info": {
@@ -137,10 +137,10 @@ func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSchemasSchemaConfigContentDescription(rName, testAccAWSSchemasSchemaContent, "description1"),
+				Config: testAccAWSSchemasSchemaConfigContentDescription(rName, testAccSchemaContent, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "content", testAccAWSSchemasSchemaContent),
+					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContent),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 				),
@@ -151,10 +151,10 @@ func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSchemasSchemaConfigContentDescription(rName, testAccAWSSchemasSchemaContentUpdated, "description2"),
+				Config: testAccAWSSchemasSchemaConfigContentDescription(rName, testAccSchemaContentUpdated, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "content", testAccAWSSchemasSchemaContentUpdated),
+					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContentUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 				),
@@ -289,7 +289,7 @@ resource "aws_schemas_schema" "test" {
   type          = "OpenApi3"
   content       = %[2]q
 }
-`, rName, testAccAWSSchemasSchemaContent)
+`, rName, testAccSchemaContent)
 }
 
 func testAccAWSSchemasSchemaConfigContentDescription(rName, content, description string) string {
@@ -324,7 +324,7 @@ resource "aws_schemas_schema" "test" {
     %[3]q = %[4]q
   }
 }
-`, rName, testAccAWSSchemasSchemaContent, tagKey1, tagValue1)
+`, rName, testAccSchemaContent, tagKey1, tagValue1)
 }
 
 func testAccAWSSchemasSchemaConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -344,5 +344,5 @@ resource "aws_schemas_schema" "test" {
     %[5]q = %[6]q
   }
 }
-`, rName, testAccAWSSchemasSchemaContent, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, testAccSchemaContent, tagKey1, tagValue1, tagKey2, tagValue2)
 }

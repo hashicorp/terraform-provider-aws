@@ -160,7 +160,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("error listing tags of alarm: %s", err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -249,7 +249,7 @@ func expandAwsCloudWatchPutCompositeAlarmInput(d *schema.ResourceData, meta inte
 	}
 
 	if len(tags) > 0 {
-		out.Tags = Tags(tags.IgnoreAws())
+		out.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	return out

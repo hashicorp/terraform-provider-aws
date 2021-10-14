@@ -107,7 +107,7 @@ func resourceLocationNFSCreate(d *schema.ResourceData, meta interface{}) error {
 		OnPremConfig:   expandDataSyncOnPremConfig(d.Get("on_prem_config").([]interface{})),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           Tags(tags.IgnoreAws()),
+		Tags:           Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("mount_options"); ok {
@@ -172,7 +172,7 @@ func resourceLocationNFSRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for DataSync Location NFS (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -168,7 +168,7 @@ func resourceManagedPrefixListRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", pl.PrefixListName)
 	d.Set("owner_id", pl.OwnerId)
 
-	tags := KeyValueTags(pl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

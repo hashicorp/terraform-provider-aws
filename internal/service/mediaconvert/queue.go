@@ -109,7 +109,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:        aws.String(d.Get("name").(string)),
 		Status:      aws.String(d.Get("status").(string)),
 		PricingPlan: aws.String(d.Get("pricing_plan").(string)),
-		Tags:        Tags(tags.IgnoreAws()),
+		Tags:        Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -169,7 +169,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Media Convert Queue (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

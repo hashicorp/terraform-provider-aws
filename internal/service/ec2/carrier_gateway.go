@@ -111,7 +111,7 @@ func resourceCarrierGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("owner_id", carrierGateway.OwnerId)
 	d.Set("vpc_id", carrierGateway.VpcId)
 
-	tags := KeyValueTags(carrierGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(carrierGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

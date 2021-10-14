@@ -70,7 +70,7 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAws())
+		createOpts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] SageMaker Endpoint create config: %#v", *createOpts)
@@ -132,7 +132,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Sagemaker Endpoint (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

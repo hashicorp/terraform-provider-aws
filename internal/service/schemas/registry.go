@@ -71,7 +71,7 @@ func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAws())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge Schemas Registry: %s", input)
@@ -109,7 +109,7 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for EventBridge Schemas Registry (%s): %w", d.Id(), err)

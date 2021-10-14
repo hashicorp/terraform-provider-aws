@@ -313,7 +313,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
-	tags := KeyValueTags(address.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(address.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

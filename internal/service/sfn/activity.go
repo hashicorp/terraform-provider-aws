@@ -53,7 +53,7 @@ func resourceActivityCreate(d *schema.ResourceData, meta interface{}) error {
 
 	params := &sfn.CreateActivityInput{
 		Name: aws.String(d.Get("name").(string)),
-		Tags: Tags(tags.IgnoreAws()),
+		Tags: Tags(tags.IgnoreAWS()),
 	}
 
 	activity, err := conn.CreateActivity(params)
@@ -109,7 +109,7 @@ func resourceActivityRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for SFN Activity (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

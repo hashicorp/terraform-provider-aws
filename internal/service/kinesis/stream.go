@@ -220,7 +220,7 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %s", sn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

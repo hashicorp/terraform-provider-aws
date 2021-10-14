@@ -134,7 +134,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAws())
+		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	resp, err := conn.CreateIPSet(params)
@@ -193,7 +193,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error listing tags for WAFv2 IpSet (%s): %s", arn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

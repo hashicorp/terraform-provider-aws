@@ -361,7 +361,7 @@ func resourceSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
-	tags := KeyValueTags(request.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(request.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -496,7 +496,7 @@ func resourceSpotInstanceRequestDelete(d *schema.ResourceData, meta interface{})
 
 	if instanceId := d.Get("spot_instance_id").(string); instanceId != "" {
 		log.Printf("[INFO] Terminating instance: %s", instanceId)
-		if err := awsTerminateInstance(conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
+		if err := terminateInstance(conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return fmt.Errorf("Error terminating spot instance: %s", err)
 		}
 	}

@@ -2519,7 +2519,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if len(tags) > 0 {
-		createInput.Tags = Tags(tags.IgnoreAws())
+		createInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
@@ -2785,7 +2785,7 @@ func resourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %w", sn, err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
