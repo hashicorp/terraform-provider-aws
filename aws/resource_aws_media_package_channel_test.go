@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
@@ -122,7 +123,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 }
 
 func testAccCheckAwsMediaPackageChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).mediapackageconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_media_package_channel" {
@@ -153,7 +154,7 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).mediapackageconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn
 
 		input := &mediapackage.DescribeChannelInput{
 			Id: aws.String(rs.Primary.ID),
@@ -166,7 +167,7 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 }
 
 func testAccPreCheckAWSMediaPackage(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).mediapackageconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageConn
 
 	input := &mediapackage.ListChannelsInput{}
 

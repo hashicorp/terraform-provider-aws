@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMediaPackageChannel() *schema.Resource {
@@ -76,8 +77,8 @@ func resourceAwsMediaPackageChannel() *schema.Resource {
 }
 
 func resourceAwsMediaPackageChannelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediapackageconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).MediaPackageConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &mediapackage.CreateChannelInput{
@@ -100,9 +101,9 @@ func resourceAwsMediaPackageChannelCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsMediaPackageChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediapackageconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MediaPackageConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &mediapackage.DescribeChannelInput{
 		Id: aws.String(d.Id()),
@@ -134,7 +135,7 @@ func resourceAwsMediaPackageChannelRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsMediaPackageChannelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediapackageconn
+	conn := meta.(*conns.AWSClient).MediaPackageConn
 
 	input := &mediapackage.UpdateChannelInput{
 		Id:          aws.String(d.Id()),
@@ -159,7 +160,7 @@ func resourceAwsMediaPackageChannelUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediapackageconn
+	conn := meta.(*conns.AWSClient).MediaPackageConn
 
 	input := &mediapackage.DeleteChannelInput{
 		Id: aws.String(d.Id()),
