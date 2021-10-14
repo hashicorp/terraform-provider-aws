@@ -1,4 +1,4 @@
-package aws
+package elasticsearch_test
 
 import (
 	"fmt"
