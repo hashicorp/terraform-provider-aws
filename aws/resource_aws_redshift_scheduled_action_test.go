@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepRedshiftScheduledActions(region string) error {
 		}
 
 		for _, scheduledAction := range page.ScheduledActions {
-			r := resourceAwsRedshiftScheduledAction()
+			r := ResourceScheduledAction()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(scheduledAction.ScheduledActionName))
 
@@ -324,7 +325,7 @@ func TestAccAWSRedshiftScheduledAction_disappears(t *testing.T) {
 				Config: testAccAWSRedshiftScheduledActionConfigPauseCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRedshiftScheduledAction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceScheduledAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -40,9 +40,9 @@ var redshiftServiceAccountPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:      "902366379725",
 }
 
-func dataSourceAwsRedshiftServiceAccount() *schema.Resource {
+func DataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRedshiftServiceAccountRead,
+		Read: dataSourceServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -57,7 +57,7 @@ func dataSourceAwsRedshiftServiceAccount() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRedshiftServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)

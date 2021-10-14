@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRedshiftCluster() *schema.Resource {
+func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRedshiftClusterRead,
+		Read: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 
@@ -170,7 +170,7 @@ func dataSourceAwsRedshiftCluster() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

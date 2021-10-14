@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRedshiftScheduledAction() *schema.Resource {
+func ResourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftScheduledActionCreate,
-		Read:   resourceAwsRedshiftScheduledActionRead,
-		Update: resourceAwsRedshiftScheduledActionUpdate,
-		Delete: resourceAwsRedshiftScheduledActionDelete,
+		Create: resourceScheduledActionCreate,
+		Read:   resourceScheduledActionRead,
+		Update: resourceScheduledActionUpdate,
+		Delete: resourceScheduledActionDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -145,7 +145,7 @@ func resourceAwsRedshiftScheduledAction() *schema.Resource {
 	}
 }
 
-func resourceAwsRedshiftScheduledActionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	name := d.Get("name").(string)
@@ -194,10 +194,10 @@ func resourceAwsRedshiftScheduledActionCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(outputRaw.(*redshift.CreateScheduledActionOutput).ScheduledActionName))
 
-	return resourceAwsRedshiftScheduledActionRead(d, meta)
+	return resourceScheduledActionRead(d, meta)
 }
 
-func resourceAwsRedshiftScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	scheduledAction, err := finder.ScheduledActionByName(conn, d.Id())
@@ -243,7 +243,7 @@ func resourceAwsRedshiftScheduledActionRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsRedshiftScheduledActionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	input := &redshift.ModifyScheduledActionInput{
@@ -292,7 +292,7 @@ func resourceAwsRedshiftScheduledActionUpdate(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsRedshiftScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	log.Printf("[DEBUG] Deleting Redshift Scheduled Action: %s", d.Id())

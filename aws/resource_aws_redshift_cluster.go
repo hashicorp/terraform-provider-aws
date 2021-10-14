@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRedshiftCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRedshiftClusterCreate,
-		Read:   resourceAwsRedshiftClusterRead,
-		Update: resourceAwsRedshiftClusterUpdate,
-		Delete: resourceAwsRedshiftClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsRedshiftClusterImport,
 		},
@@ -327,7 +327,7 @@ func resourceAwsRedshiftClusterImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -512,10 +512,10 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsRedshiftClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -631,7 +631,7 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	if d.HasChange("tags_all") {
@@ -812,7 +812,7 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsRedshiftClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
 func enableRedshiftClusterLogging(d *schema.ResourceData, conn *redshift.Redshift) error {
@@ -858,7 +858,7 @@ func enableRedshiftSnapshotCopy(id string, scList []interface{}, conn *redshift.
 	return nil
 }
 
-func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)

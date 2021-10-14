@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRedshiftOrderableCluster() *schema.Resource {
+func DataSourceOrderableCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRedshiftOrderableClusterRead,
+		Read: dataSourceOrderableClusterRead,
 		Schema: map[string]*schema.Schema{
 			"availability_zones": {
 				Type:     schema.TypeList,
@@ -42,7 +42,7 @@ func dataSourceAwsRedshiftOrderableCluster() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRedshiftOrderableClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOrderableClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{}

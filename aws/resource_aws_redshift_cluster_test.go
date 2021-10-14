@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -45,7 +46,7 @@ func testSweepRedshiftClusters(region string) error {
 		}
 
 		for _, c := range resp.Clusters {
-			r := resourceAwsRedshiftCluster()
+			r := ResourceCluster()
 			d := r.Data(nil)
 			d.Set("skip_final_snapshot", true)
 			d.SetId(aws.StringValue(c.ClusterIdentifier))
