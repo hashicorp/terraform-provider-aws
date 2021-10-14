@@ -11,10 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -289,13 +290,13 @@ func TestQuickSightDataSourcePermissionsDiff(t *testing.T) {
 func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rId := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rId := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
-		ErrorCheck:        testAccErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy:      testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -303,7 +304,7 @@ func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("datasource/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("datasource/%s", rId)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", "1"),
@@ -326,20 +327,20 @@ func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
 func TestAccAWSQuickSightDataSource_disappears(t *testing.T) {
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rId := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rId := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
-		ErrorCheck:        testAccErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy:      testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQuickSightDataSourceConfig(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsQuickSightDataSource(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsQuickSightDataSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -350,12 +351,12 @@ func TestAccAWSQuickSightDataSource_disappears(t *testing.T) {
 func TestAccAWSQuickSightDataSource_Tags(t *testing.T) {
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rId := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rId := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, quicksight.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
@@ -396,13 +397,13 @@ func TestAccAWSQuickSightDataSource_Tags(t *testing.T) {
 func TestAccAWSQuickSightDataSource_Permissions(t *testing.T) {
 	var dataSource quicksight.DataSource
 	resourceName := "aws_quicksight_data_source.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rId := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rId := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
-		ErrorCheck:        testAccErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, quicksight.EndpointsID),
 		CheckDestroy:      testAccCheckQuickSightDataSourceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -556,7 +557,7 @@ EOF
 }
 
 func testAccAWSQuickSightDataSourceConfig(rId, rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSQuickSightDataSourceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
@@ -578,7 +579,7 @@ resource "aws_quicksight_data_source" "test" {
 }
 
 func testAccAWSQuickSightDataSourceConfigTags1(rId, rName, key, value string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSQuickSightDataSourceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
@@ -604,7 +605,7 @@ resource "aws_quicksight_data_source" "test" {
 }
 
 func testAccAWSQuickSightDataSourceConfigTags2(rId, rName, key1, value1, key2, value2 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSQuickSightDataSourceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_quicksight_data_source" "test" {
@@ -648,7 +649,7 @@ resource "aws_quicksight_user" "test" {
 }
 
 func testAccAWSQuickSightDataSourceConfig_Permissions(rId, rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSQuickSightDataSourceConfigBase(rName),
 		testAccAWSQuickSightDataSource_UserConfig(rName),
 		fmt.Sprintf(`
@@ -681,7 +682,7 @@ resource "aws_quicksight_data_source" "test" {
 }
 
 func testAccAWSQuickSightDataSourceConfig_UpdatePermissions(rId, rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSQuickSightDataSourceConfigBase(rName),
 		testAccAWSQuickSightDataSource_UserConfig(rName),
 		fmt.Sprintf(`
