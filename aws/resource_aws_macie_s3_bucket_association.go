@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsMacieS3BucketAssociation() *schema.Resource {
@@ -62,7 +63,7 @@ func resourceAwsMacieS3BucketAssociation() *schema.Resource {
 }
 
 func resourceAwsMacieS3BucketAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*conns.AWSClient).MacieConn
 
 	req := &macie.AssociateS3ResourcesInput{
 		S3Resources: []*macie.S3ResourceClassification{
@@ -93,7 +94,7 @@ func resourceAwsMacieS3BucketAssociationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsMacieS3BucketAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*conns.AWSClient).MacieConn
 
 	req := &macie.ListS3ResourcesInput{}
 	if v, ok := d.GetOk("member_account_id"); ok {
@@ -132,7 +133,7 @@ func resourceAwsMacieS3BucketAssociationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsMacieS3BucketAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*conns.AWSClient).MacieConn
 
 	if d.HasChange("classification_type") {
 		req := &macie.UpdateS3ResourcesInput{
@@ -164,7 +165,7 @@ func resourceAwsMacieS3BucketAssociationUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsMacieS3BucketAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*conns.AWSClient).MacieConn
 
 	log.Printf("[DEBUG] Deleting Macie S3 bucket association: %s", d.Id())
 

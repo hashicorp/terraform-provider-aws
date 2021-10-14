@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
@@ -54,7 +55,7 @@ func TestAccAWSMacieMemberAccountAssociation_self(t *testing.T) {
 }
 
 func testAccCheckAWSMacieMemberAccountAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).macieconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie_member_account_association" {
@@ -87,7 +88,7 @@ func testAccCheckAWSMacieMemberAccountAssociationDestroy(s *terraform.State) err
 
 func testAccCheckAWSMacieMemberAccountAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).macieconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
