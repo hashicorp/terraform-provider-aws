@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
@@ -77,7 +78,7 @@ func testAccAWSLakeFormationDataLakeSettings_withoutCatalogId(t *testing.T) {
 }
 
 func testAccCheckAWSLakeFormationDataLakeSettingsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_data_lake_settings" {
@@ -115,7 +116,7 @@ func testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName string) res
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 
 		input := &lakeformation.GetDataLakeSettingsInput{}
 

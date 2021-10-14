@@ -16,6 +16,7 @@ import (
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccAWSLakeFormationPermissions_basic(t *testing.T) {
@@ -634,7 +635,7 @@ func testAccAWSLakeFormationPermissions_twcWildcardSelectPlus(t *testing.T) {
 }
 
 func testAccCheckAWSLakeFormationPermissionsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_permissions" {
@@ -665,7 +666,7 @@ func testAccCheckAWSLakeFormationPermissionsExists(resourceName string) resource
 			return fmt.Errorf("acceptance test: resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 
 		permCount, err := permissionCountForLakeFormationResource(conn, rs)
 

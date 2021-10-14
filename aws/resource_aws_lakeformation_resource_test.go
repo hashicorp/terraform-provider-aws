@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSLakeFormationResource_basic(t *testing.T) {
@@ -163,7 +164,7 @@ func TestAccAWSLakeFormationResource_updateSLRToRole(t *testing.T) {
 // func TestAccAWSLakeFormationResource_updateRoleToSLR(t *testing.T) {
 
 func testAccCheckAWSLakeFormationResourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_resource" {
@@ -195,7 +196,7 @@ func testAccCheckAWSLakeFormationResourceExists(resourceName string) resource.Te
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 
 		input := &lakeformation.DescribeResourceInput{
 			ResourceArn: aws.String(rs.Primary.ID),

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
@@ -103,7 +104,7 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 }
 
 func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
@@ -166,7 +167,7 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -201,7 +202,7 @@ func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsLakeFormationDataLakeSettingsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
+	conn := meta.(*conns.AWSClient).LakeFormationConn
 
 	input := &lakeformation.PutDataLakeSettingsInput{
 		DataLakeSettings: &lakeformation.DataLakeSettings{
