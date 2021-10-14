@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceReplicationGroup() *schema.Resource {
@@ -58,7 +59,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsElastiCacheReplicationGroupAuthToken,
+				ValidateFunc: validReplicationGroupAuthToken,
 			},
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
@@ -148,7 +149,7 @@ func ResourceReplicationGroup() *schema.Resource {
 					// Elasticache always changes the maintenance to lowercase
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"member_clusters": {
 				Type:     schema.TypeSet,
@@ -169,7 +170,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			"notification_topic_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"number_cache_clusters": {
 				Type:          schema.TypeInt,
@@ -241,7 +242,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
-						validateArn,
+						verify.ValidARN,
 						validation.StringDoesNotContainAny(","),
 					),
 				},
@@ -256,7 +257,7 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateOnceADayWindowFormat,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 			"snapshot_name": {
 				Type:     schema.TypeString,

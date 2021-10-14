@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -141,7 +142,7 @@ func ResourceCluster() *schema.Resource {
 					// to lowercase
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validateOnceAWeekWindowFormat,
+				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -228,7 +229,7 @@ func ResourceCluster() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
-						validateArn,
+						verify.ValidARN,
 						validation.StringDoesNotContainAny(","),
 					),
 				},
@@ -242,7 +243,7 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateOnceADayWindowFormat,
+				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
 			"snapshot_name": {
 				Type:     schema.TypeString,
