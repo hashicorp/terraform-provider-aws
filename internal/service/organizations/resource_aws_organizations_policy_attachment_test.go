@@ -1,4 +1,4 @@
-package aws
+package organizations_test
 
 import (
 	"fmt"
