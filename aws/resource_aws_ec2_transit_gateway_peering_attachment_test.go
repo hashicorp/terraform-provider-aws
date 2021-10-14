@@ -63,7 +63,7 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 					continue
 				}
 
-				if err := waitForEc2TransitGatewayPeeringAttachmentDeletion(conn, id); err != nil {
+				if err := waitForTransitGatewayPeeringAttachmentDeletion(conn, id); err != nil {
 					sweeperErr := fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) deletion: %w", id, err)
 					log.Printf("[ERROR] %s", sweeperErr)
 					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -325,7 +325,7 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDisappears(transitGatewayP
 			return err
 		}
 
-		return waitForEc2TransitGatewayPeeringAttachmentDeletion(conn, aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
+		return waitForTransitGatewayPeeringAttachmentDeletion(conn, aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
 	}
 }
 

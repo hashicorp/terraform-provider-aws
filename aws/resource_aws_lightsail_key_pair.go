@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceKeyPair() *schema.Resource {
@@ -119,12 +120,12 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 		d.Set("public_key", resp.PublicKeyBase64)
 
 		// encrypt private key if pgp_key is given
-		pgpKey, err := encryption.RetrieveGPGKey(d.Get("pgp_key").(string))
+		pgpKey, err := tfiam.RetrieveGPGKey(d.Get("pgp_key").(string))
 		if err != nil {
 			return err
 		}
 		if pgpKey != "" {
-			fingerprint, encrypted, err := encryption.EncryptValue(pgpKey, *resp.PrivateKeyBase64, "Lightsail Private Key")
+			fingerprint, encrypted, err := tfiam.EncryptValue(pgpKey, *resp.PrivateKeyBase64, "Lightsail Private Key")
 			if err != nil {
 				return err
 			}

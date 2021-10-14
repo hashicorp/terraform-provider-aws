@@ -70,7 +70,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterCreate(d *schema.ResourceDat
 
 	d.SetId(aws.StringValue(output.TransitGatewayPeeringAttachment.TransitGatewayAttachmentId))
 
-	if err := waitForEc2TransitGatewayPeeringAttachmentAcceptance(conn, d.Id()); err != nil {
+	if err := waitForTransitGatewayPeeringAttachmentAcceptance(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) availability: %s", d.Id(), err)
 	}
 
@@ -184,7 +184,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterDelete(d *schema.ResourceDat
 		return fmt.Errorf("error deleting EC2 Transit Gateway Peering Attachment: %s", err)
 	}
 
-	if err := waitForEc2TransitGatewayPeeringAttachmentDeletion(conn, d.Id()); err != nil {
+	if err := waitForTransitGatewayPeeringAttachmentDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) deletion: %s", d.Id(), err)
 	}
 

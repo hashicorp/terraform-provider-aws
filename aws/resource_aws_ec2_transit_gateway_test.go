@@ -100,7 +100,7 @@ func testSweepEc2TransitGateways(region string) error {
 				return fmt.Errorf("error deleting EC2 Transit Gateway (%s): %s", id, err)
 			}
 
-			if err := waitForEc2TransitGatewayDeletion(conn, id); err != nil {
+			if err := waitForTransitGatewayDeletion(conn, id); err != nil {
 				return fmt.Errorf("error waiting for EC2 Transit Gateway (%s) deletion: %s", id, err)
 			}
 		}

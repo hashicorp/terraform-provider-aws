@@ -70,7 +70,7 @@ func resourceTransitGatewayRouteTableCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.TransitGatewayRouteTable.TransitGatewayRouteTableId))
 
-	if err := waitForEc2TransitGatewayRouteTableCreation(conn, d.Id()); err != nil {
+	if err := waitForTransitGatewayRouteTableCreation(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) availability: %s", d.Id(), err)
 	}
 
@@ -167,7 +167,7 @@ func resourceTransitGatewayRouteTableDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error deleting EC2 Transit Gateway Route Table: %s", err)
 	}
 
-	if err := waitForEc2TransitGatewayRouteTableDeletion(conn, d.Id()); err != nil {
+	if err := waitForTransitGatewayRouteTableDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Route Table (%s) deletion: %s", d.Id(), err)
 	}
 

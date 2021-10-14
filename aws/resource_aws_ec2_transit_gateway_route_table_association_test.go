@@ -56,7 +56,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableAssociationExists(resourceName st
 			return fmt.Errorf("No EC2 Transit Gateway Route ID is set")
 		}
 
-		transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTableAssociationID(rs.Primary.ID)
+		transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeTransitGatewayRouteTableAssociationID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -88,7 +88,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableAssociationDestroy(s *terraform.S
 			continue
 		}
 
-		transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeEc2TransitGatewayRouteTableAssociationID(rs.Primary.ID)
+		transitGatewayRouteTableID, transitGatewayAttachmentID, err := decodeTransitGatewayRouteTableAssociationID(rs.Primary.ID)
 
 		if err != nil {
 			return err

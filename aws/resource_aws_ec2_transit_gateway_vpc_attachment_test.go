@@ -74,7 +74,7 @@ func testSweepEc2TransitGatewayVpcAttachments(region string) error {
 				return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment (%s): %s", id, err)
 			}
 
-			if err := waitForEc2TransitGatewayVpcAttachmentDeletion(conn, id); err != nil {
+			if err := waitForTransitGatewayVPCAttachmentDeletion(conn, id); err != nil {
 				return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", id, err)
 			}
 		}
@@ -523,7 +523,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(resourceName string, tr
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		attachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, rs.Primary.ID)
+		attachment, err := ec2DescribeTransitGatewayVPCAttachment(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -551,7 +551,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy(s *terraform.State) er
 			continue
 		}
 
-		vpcAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, rs.Primary.ID)
+		vpcAttachment, err := ec2DescribeTransitGatewayVPCAttachment(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
 			continue
@@ -585,7 +585,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentDisappears(transitGatewayVpcAt
 			return err
 		}
 
-		return waitForEc2TransitGatewayVpcAttachmentDeletion(conn, aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
+		return waitForTransitGatewayVPCAttachmentDeletion(conn, aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
 	}
 }
 

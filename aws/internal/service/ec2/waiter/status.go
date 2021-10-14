@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	tfiam "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
@@ -563,5 +562,36 @@ func VpcEndpointRouteTableAssociationStatus(conn *ec2.EC2, vpcEndpointID, routeT
 		}
 
 		return "", VpcEndpointRouteTableAssociationStatusReady, nil
+	}
+}
+
+const (
+	snapshotImportNotFound = "NotFound"
+)
+
+func EbsSnapshotImportStatus(conn *ec2.EC2, importTaskId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		params := &ec2.DescribeImportSnapshotTasksInput{
+			ImportTaskIds: []*string{aws.String(importTaskId)},
+		}
+
+		resp, err := conn.DescribeImportSnapshotTasks(params)
+		if err != nil {
+			return nil, "", err
+		}
+
+		if resp == nil || len(resp.ImportSnapshotTasks) < 1 {
+			return nil, snapshotImportNotFound, nil
+		}
+
+		if task := resp.ImportSnapshotTasks[0]; task != nil {
+			detail := task.SnapshotTaskDetail
+			if detail.Status != nil && aws.StringValue(detail.Status) == tfec2.EBSSnapshotImportStateDeleting {
+				err = fmt.Errorf("Snapshot import task is deleting")
+			}
+			return detail, aws.StringValue(detail.Status), err
+		} else {
+			return nil, snapshotImportNotFound, nil
+		}
 	}
 }
