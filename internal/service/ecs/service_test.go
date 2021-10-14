@@ -2,7 +2,6 @@ package ecs_test
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"regexp"
 	"testing"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccECSService_withARN(t *testing.T) {
