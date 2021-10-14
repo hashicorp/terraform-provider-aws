@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
@@ -64,7 +65,7 @@ func TestAccAWSEFSFileSystemPolicy_disappears(t *testing.T) {
 				Config: testAccAWSEFSFileSystemPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEfsFileSystemPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFileSystemPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

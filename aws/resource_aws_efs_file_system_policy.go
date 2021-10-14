@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEfsFileSystemPolicy() *schema.Resource {
+func ResourceFileSystemPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEfsFileSystemPolicyPut,
-		Read:   resourceAwsEfsFileSystemPolicyRead,
+		Read:   resourceFileSystemPolicyRead,
 		Update: resourceAwsEfsFileSystemPolicyPut,
-		Delete: resourceAwsEfsFileSystemPolicyDelete,
+		Delete: resourceFileSystemPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -64,10 +64,10 @@ func resourceAwsEfsFileSystemPolicyPut(d *schema.ResourceData, meta interface{})
 
 	d.SetId(fsID)
 
-	return resourceAwsEfsFileSystemPolicyRead(d, meta)
+	return resourceFileSystemPolicyRead(d, meta)
 }
 
-func resourceAwsEfsFileSystemPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	output, err := finder.FileSystemPolicyByID(conn, d.Id())
@@ -88,7 +88,7 @@ func resourceAwsEfsFileSystemPolicyRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsEfsFileSystemPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	log.Printf("[DEBUG] Deleting EFS File System Policy: %s", d.Id())

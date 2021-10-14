@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEfsMountTarget() *schema.Resource {
+func ResourceMountTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsMountTargetCreate,
-		Read:   resourceAwsEfsMountTargetRead,
-		Update: resourceAwsEfsMountTargetUpdate,
-		Delete: resourceAwsEfsMountTargetDelete,
+		Create: resourceMountTargetCreate,
+		Read:   resourceMountTargetRead,
+		Update: resourceMountTargetUpdate,
+		Delete: resourceMountTargetDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -89,7 +89,7 @@ func resourceAwsEfsMountTarget() *schema.Resource {
 	}
 }
 
-func resourceAwsEfsMountTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceMountTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	fsId := d.Get("file_system_id").(string)
@@ -104,8 +104,8 @@ func resourceAwsEfsMountTargetCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Failed getting Availability Zone from subnet ID (%s): %s", subnetId, err)
 	}
 	mtKey := "efs-mt-" + fsId + "-" + az
-	awsMutexKV.Lock(mtKey)
-	defer awsMutexKV.Unlock(mtKey)
+	conns.GlobalMutexKV.Lock(mtKey)
+	defer conns.GlobalMutexKV.Unlock(mtKey)
 
 	input := efs.CreateMountTargetInput{
 		FileSystemId: aws.String(fsId),
@@ -161,10 +161,10 @@ func resourceAwsEfsMountTargetCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] EFS mount target created: %s", aws.StringValue(mt.MountTargetId))
 
-	return resourceAwsEfsMountTargetRead(d, meta)
+	return resourceMountTargetRead(d, meta)
 }
 
-func resourceAwsEfsMountTargetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceMountTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	if d.HasChange("security_groups") {
@@ -178,10 +178,10 @@ func resourceAwsEfsMountTargetUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsEfsMountTargetRead(d, meta)
+	return resourceMountTargetRead(d, meta)
 }
 
-func resourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	resp, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
 		MountTargetId: aws.String(d.Id()),
@@ -257,7 +257,7 @@ func getAzFromSubnetId(subnetId string, conn *ec2.EC2) (string, error) {
 	return aws.StringValue(out.Subnets[0].AvailabilityZone), nil
 }
 
-func resourceAwsEfsMountTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceMountTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	log.Printf("[DEBUG] Deleting EFS mount target %q", d.Id())

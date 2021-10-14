@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEfsAccessPoint() *schema.Resource {
+func ResourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsAccessPointCreate,
-		Read:   resourceAwsEfsAccessPointRead,
-		Update: resourceAwsEfsAccessPointUpdate,
-		Delete: resourceAwsEfsAccessPointDelete,
+		Create: resourceAccessPointCreate,
+		Read:   resourceAccessPointRead,
+		Update: resourceAccessPointUpdate,
+		Delete: resourceAccessPointDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -120,7 +120,7 @@ func resourceAwsEfsAccessPoint() *schema.Resource {
 	}
 }
 
-func resourceAwsEfsAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -153,10 +153,10 @@ func resourceAwsEfsAccessPointCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error waiting for EFS access point (%s) to be available: %w", d.Id(), err)
 	}
 
-	return resourceAwsEfsAccessPointRead(d, meta)
+	return resourceAccessPointRead(d, meta)
 }
 
-func resourceAwsEfsAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	if d.HasChange("tags_all") {
@@ -167,10 +167,10 @@ func resourceAwsEfsAccessPointUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsEfsAccessPointRead(d, meta)
+	return resourceAccessPointRead(d, meta)
 }
 
-func resourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -230,7 +230,7 @@ func resourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsEfsAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	log.Printf("[DEBUG] Deleting EFS access point %q", d.Id())

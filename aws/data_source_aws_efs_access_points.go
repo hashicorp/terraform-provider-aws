@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEfsAccessPoints() *schema.Resource {
+func DataSourceAccessPoints() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEfsAccessPointsRead,
+		Read: dataSourceAccessPointsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -34,7 +34,7 @@ func dataSourceAwsEfsAccessPoints() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEfsAccessPointsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAccessPointsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	fileSystemId := d.Get("file_system_id").(string)

@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEfsFileSystem() *schema.Resource {
+func ResourceFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEfsFileSystemCreate,
-		Read:   resourceAwsEfsFileSystemRead,
-		Update: resourceAwsEfsFileSystemUpdate,
-		Delete: resourceAwsEfsFileSystemDelete,
+		Create: resourceFileSystemCreate,
+		Read:   resourceFileSystemRead,
+		Update: resourceFileSystemUpdate,
+		Delete: resourceFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -151,7 +151,7 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 	}
 }
 
-func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -222,10 +222,10 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsEfsFileSystemRead(d, meta)
+	return resourceFileSystemRead(d, meta)
 }
 
-func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
@@ -279,10 +279,10 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsEfsFileSystemRead(d, meta)
+	return resourceFileSystemRead(d, meta)
 }
 
-func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -343,7 +343,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())

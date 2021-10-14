@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -44,7 +45,7 @@ func testSweepEfsFileSystems(region string) error {
 
 			log.Printf("[INFO] Deleting EFS File System: %s", id)
 
-			r := resourceAwsEfsFileSystem()
+			r := ResourceFileSystem()
 			d := r.Data(nil)
 			d.SetId(id)
 			err := r.Delete(d, client)
@@ -422,8 +423,8 @@ func TestAccAWSEFSFileSystem_disappears(t *testing.T) {
 				Config: testAccAWSEFSFileSystemConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEfsFileSystem(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEfsFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
