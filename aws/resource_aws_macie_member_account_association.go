@@ -82,10 +82,10 @@ func resourceAwsMacieMemberAccountAssociationDelete(d *schema.ResourceData, meta
 		MemberAccountId: aws.String(d.Get("member_account_id").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, macie.ErrCodeInvalidInputException, "is a master Macie account and cannot be disassociated") {
+		if tfawserr.ErrMessageContains(err, macie.ErrCodeInvalidInputException, "is a master Macie account and cannot be disassociated") {
 			log.Printf("[INFO] Macie master account (%s) cannot be disassociated, removing from state", d.Id())
 			return nil
-		} else if isAWSErr(err, macie.ErrCodeInvalidInputException, "is not yet associated with Macie") {
+		} else if tfawserr.ErrMessageContains(err, macie.ErrCodeInvalidInputException, "is not yet associated with Macie") {
 			return nil
 		} else {
 			return fmt.Errorf("Error deleting Macie member account association: %s", err)
