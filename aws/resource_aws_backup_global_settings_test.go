@@ -20,7 +20,7 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 			testAccPreCheckAWSBackup(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccAwsBackupGlobalSettings_basic(t *testing.T) {
 func testAccCheckAwsBackupGlobalSettingsExists(settings *backup.DescribeGlobalSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := acctest.Provider.Meta().(*AWSClient).backupconn
 		resp, err := conn.DescribeGlobalSettings(&backup.DescribeGlobalSettingsInput{})
 		if err != nil {
 			return err

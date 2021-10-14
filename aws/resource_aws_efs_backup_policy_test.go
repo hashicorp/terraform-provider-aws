@@ -17,12 +17,12 @@ import (
 func TestAccAWSEFSBackupPolicy_basic(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEfsBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -46,19 +46,19 @@ func TestAccAWSEFSBackupPolicy_disappears_fs(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
 	fsResourceName := "aws_efs_file_system.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEfsBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSBackupPolicyConfig(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEFSBackupPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystem(), fsResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEfsFileSystem(), fsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,12 +69,12 @@ func TestAccAWSEFSBackupPolicy_disappears_fs(t *testing.T) {
 func TestAccAWSEFSBackupPolicy_update(t *testing.T) {
 	var v efs.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEfsBackupPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -121,7 +121,7 @@ func testAccCheckEFSBackupPolicyExists(name string, v *efs.BackupPolicy) resourc
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		conn := acctest.Provider.Meta().(*AWSClient).efsconn
 
 		output, err := finder.BackupPolicyByID(conn, rs.Primary.ID)
 
@@ -136,7 +136,7 @@ func testAccCheckEFSBackupPolicyExists(name string, v *efs.BackupPolicy) resourc
 }
 
 func testAccCheckEfsBackupPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).efsconn
+	conn := acctest.Provider.Meta().(*AWSClient).efsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_efs_backup_policy" {
