@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceVault() *schema.Resource {
@@ -82,19 +83,19 @@ func ResourceVault() *schema.Resource {
 				},
 			},
 
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 
-			"tags_all": tagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlacierConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &glacier.CreateVaultInput{
 		VaultName: aws.String(d.Get("name").(string)),
@@ -108,7 +109,7 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("name").(string))
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.GlacierUpdateTags(conn, d.Id(), nil, tags.Map()); err != nil {
+		if err := tftags.GlacierUpdateTags(conn, d.Id(), nil, tags.Map()); err != nil {
 			return fmt.Errorf("error updating Glacier Vault (%s) tags: %w", d.Id(), err)
 		}
 	}
@@ -133,7 +134,7 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := keyvaluetags.GlacierUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := tftags.GlacierUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Glacier Vault (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -182,7 +183,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("location", location)
 
-	tags, err := keyvaluetags.GlacierListTags(conn, d.Id())
+	tags, err := tftags.GlacierListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Glacier Vault (%s): %w", d.Id(), err)
