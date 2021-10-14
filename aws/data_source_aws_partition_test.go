@@ -6,12 +6,13 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSPartition_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -19,7 +20,7 @@ func TestAccAWSPartition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsPartition("data.aws_partition.current"),
 					testAccCheckAwsDnsSuffix("data.aws_partition.current"),
-					resource.TestCheckResourceAttr("data.aws_partition.current", "reverse_dns_prefix", testAccGetPartitionReverseDNSPrefix()),
+					resource.TestCheckResourceAttr("data.aws_partition.current", "reverse_dns_prefix", acctest.PartitionReverseDNSPrefix()),
 				),
 			},
 		},
