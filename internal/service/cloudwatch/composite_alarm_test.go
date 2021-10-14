@@ -57,7 +57,7 @@ func testSweepCloudWatchCompositeAlarms(region string) error {
 
 			log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", name)
 
-			r := ResourceCompositeAlarm()
+			r := tfcloudwatch.ResourceCompositeAlarm()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -134,7 +134,7 @@ func TestAccAwsCloudWatchCompositeAlarm_disappears(t *testing.T) {
 				Config: testAccAwsCloudWatchCompositeAlarmConfig_basic(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCloudWatchCompositeAlarmExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceCompositeAlarm(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatch.ResourceCompositeAlarm(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

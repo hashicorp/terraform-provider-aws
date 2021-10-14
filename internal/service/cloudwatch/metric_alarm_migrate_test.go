@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 )
 
 func TestAWSCloudWatchMetricAlarmMigrateState(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAWSCloudWatchMetricAlarmMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsCloudWatchMetricAlarmMigrateState(
+		is, err := tfcloudwatch.MetricAlarmMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {
