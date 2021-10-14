@@ -80,7 +80,7 @@ func resourceFirewallRuleGroupAssociationCreate(d *schema.ResourceData, meta int
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Priority:            aws.Int64(int64(d.Get("priority").(int))),
 		VpcId:               aws.String(d.Get("vpc_id").(string)),
-		Tags:                tags.IgnoreAws().Route53resolverTags(),
+		Tags:                Tags(tags.IgnoreAws()),
 	}
 
 	if v, ok := d.GetOk("mutation_protection"); ok {
@@ -139,7 +139,7 @@ func resourceFirewallRuleGroupAssociationRead(d *schema.ResourceData, meta inter
 	d.Set("priority", ruleGroupAssociation.Priority)
 	d.Set("vpc_id", ruleGroupAssociation.VpcId)
 
-	tags, err := tftags.Route53resolverListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Resolver DNS Firewall rule group association (%s): %w", arn, err)
 	}
@@ -187,7 +187,7 @@ func resourceFirewallRuleGroupAssociationUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Resolver DNS Firewall rule group association (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

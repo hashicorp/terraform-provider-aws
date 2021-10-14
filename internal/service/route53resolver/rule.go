@@ -138,7 +138,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		req.TargetIps = expandRuleTargetIPs(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		req.Tags = tags.IgnoreAws().Route53resolverTags()
+		req.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Route 53 Resolver rule: %s", req)
@@ -188,7 +188,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := tftags.Route53resolverListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Resolver rule (%s): %s", d.Get("arn").(string), err)
@@ -242,7 +242,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Resolver rule (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

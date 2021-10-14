@@ -70,7 +70,7 @@ func resourceFirewallRuleGroupCreate(d *schema.ResourceData, meta interface{}) e
 		Name:             aws.String(d.Get("name").(string)),
 	}
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Tags = tags.IgnoreAws().Route53resolverTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating Route 53 Resolver DNS Firewall rule group: %#v", input)
@@ -114,7 +114,7 @@ func resourceFirewallRuleGroupRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("owner_id", ruleGroup.OwnerId)
 	d.Set("share_status", ruleGroup.ShareStatus)
 
-	tags, err := tftags.Route53resolverListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Resolver DNS Firewall rule group (%s): %w", arn, err)
 	}
@@ -138,7 +138,7 @@ func resourceFirewallRuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Resolver DNS Firewall rule group (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
