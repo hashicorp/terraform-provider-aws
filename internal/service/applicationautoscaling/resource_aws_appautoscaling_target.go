@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceTarget() *schema.Resource {
@@ -76,7 +77,7 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Application autoscaling target create configuration %s", targetOpts)
 	var err error
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err = conn.RegisterScalableTarget(&targetOpts)
 
 		if err != nil {

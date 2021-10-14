@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfapplicationautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/applicationautoscaling"
 )
 
 func TestAccAWSAppautoscalingScheduledAction_DynamoDB(t *testing.T) {
@@ -590,7 +591,7 @@ func testAccCheckAwsAppautoscalingScheduledActionExists(name string, obj *applic
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationAutoScalingConn
 
-		sa, err := finder.ScheduledAction(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
+		sa, err := tfapplicationautoscaling.FindScheduledAction(conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
 		if err != nil {
 			return err
 		}
