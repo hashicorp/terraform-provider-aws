@@ -1,4 +1,4 @@
-package aws
+package networkfirewall
 
 import (
 	"regexp"

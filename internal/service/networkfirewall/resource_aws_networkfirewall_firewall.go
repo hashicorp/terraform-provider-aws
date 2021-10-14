@@ -1,4 +1,4 @@
-package aws
+package networkfirewall
 
 import (
 	"bytes"
@@ -13,27 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/networkfirewall/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 )
 
 func ResourceFirewall() *schema.Resource {
@@ -189,7 +172,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.Firewall.FirewallArn))
 
-	if _, err := tfnetworkfirewall.waitFirewallCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitFirewallCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be created: %w", d.Id(), err))
 	}
 
@@ -356,7 +339,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return diag.FromErr(fmt.Errorf("error associating NetworkFirewall Firewall (%s) subnet: %w", arn, err))
 			}
 
-			respToken, err := tfnetworkfirewall.waitFirewallUpdated(ctx, conn, arn)
+			respToken, err := waitFirewallUpdated(ctx, conn, arn)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be updated: %w", d.Id(), err))
 
@@ -379,7 +362,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return diag.FromErr(fmt.Errorf("error disassociating NetworkFirewall Firewall (%s) subnet: %w", arn, err))
 			}
 
-			_, err = tfnetworkfirewall.waitFirewallUpdated(ctx, conn, arn)
+			_, err = waitFirewallUpdated(ctx, conn, arn)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be updated: %w", d.Id(), err))
 
@@ -414,7 +397,7 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Firewall (%s): %w", d.Id(), err))
 	}
 
-	if _, err := tfnetworkfirewall.waitFirewallDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitFirewallDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			return nil
 		}
