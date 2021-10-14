@@ -205,7 +205,7 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("excludes"); ok {
-		input.Excludes = expandAwsDataSyncFilterRules(v.([]interface{}))
+		input.Excludes = expandFilterRules(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -213,7 +213,7 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("schedule"); ok {
-		input.Schedule = expandAwsDataSyncTaskSchedule(v.([]interface{}))
+		input.Schedule = expandTaskSchedule(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Task: %s", input)
@@ -252,14 +252,14 @@ func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", output.TaskArn)
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupArn)
 	d.Set("destination_location_arn", output.DestinationLocationArn)
-	if err := d.Set("excludes", flattenAwsDataSyncFilterRules(output.Excludes)); err != nil {
+	if err := d.Set("excludes", flattenFilterRules(output.Excludes)); err != nil {
 		return fmt.Errorf("error setting excludes: %w", err)
 	}
 	d.Set("name", output.Name)
 	if err := d.Set("options", flattenDataSyncOptions(output.Options)); err != nil {
 		return fmt.Errorf("error setting options: %w", err)
 	}
-	if err := d.Set("schedule", flattenAwsDataSyncTaskSchedule(output.Schedule)); err != nil {
+	if err := d.Set("schedule", flattenTaskSchedule(output.Schedule)); err != nil {
 		return fmt.Errorf("error setting schedule: %w", err)
 	}
 	d.Set("source_location_arn", output.SourceLocationArn)
@@ -297,7 +297,7 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChanges("excludes") {
-			input.Excludes = expandAwsDataSyncFilterRules(d.Get("excludes").([]interface{}))
+			input.Excludes = expandFilterRules(d.Get("excludes").([]interface{}))
 		}
 
 		if d.HasChanges("name") {
@@ -309,7 +309,7 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChanges("schedule") {
-			input.Schedule = expandAwsDataSyncTaskSchedule(d.Get("schedule").([]interface{}))
+			input.Schedule = expandTaskSchedule(d.Get("schedule").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating DataSync Task: %s", input)
@@ -350,7 +350,7 @@ func resourceTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAwsDataSyncTaskSchedule(l []interface{}) *datasync.TaskSchedule {
+func expandTaskSchedule(l []interface{}) *datasync.TaskSchedule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -364,7 +364,7 @@ func expandAwsDataSyncTaskSchedule(l []interface{}) *datasync.TaskSchedule {
 	return schedule
 }
 
-func flattenAwsDataSyncTaskSchedule(schedule *datasync.TaskSchedule) []interface{} {
+func flattenTaskSchedule(schedule *datasync.TaskSchedule) []interface{} {
 	if schedule == nil {
 		return []interface{}{}
 	}
@@ -376,7 +376,7 @@ func flattenAwsDataSyncTaskSchedule(schedule *datasync.TaskSchedule) []interface
 	return []interface{}{m}
 }
 
-func expandAwsDataSyncFilterRules(l []interface{}) []*datasync.FilterRule {
+func expandFilterRules(l []interface{}) []*datasync.FilterRule {
 	filterRules := []*datasync.FilterRule{}
 
 	for _, mRaw := range l {
@@ -394,7 +394,7 @@ func expandAwsDataSyncFilterRules(l []interface{}) []*datasync.FilterRule {
 	return filterRules
 }
 
-func flattenAwsDataSyncFilterRules(filterRules []*datasync.FilterRule) []interface{} {
+func flattenFilterRules(filterRules []*datasync.FilterRule) []interface{} {
 	l := []interface{}{}
 
 	for _, filterRule := range filterRules {
