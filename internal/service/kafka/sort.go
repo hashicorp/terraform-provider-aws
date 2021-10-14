@@ -3,7 +3,6 @@ package kafka
 import (
 	"sort"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
