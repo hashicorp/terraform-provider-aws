@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -77,7 +77,7 @@ func dataSourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta
 	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
-	d.SetId(fmt.Sprintf("%d", hashcode.String(input.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
 	output, err := conn.GetDataLakeSettings(input)
 

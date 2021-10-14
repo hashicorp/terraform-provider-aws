@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation/waiter"
@@ -343,7 +343,7 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error creating Lake Formation Permissions: empty response")
 	}
 
-	d.SetId(fmt.Sprintf("%d", hashcode.String(input.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
 	return resourceAwsLakeFormationPermissionsRead(d, meta)
 }
