@@ -18,59 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_iot_thing", &resource.Sweeper{
-		Name:         "aws_iot_thing",
-		F:            sweepThings,
-		Dependencies: []string{"aws_iot_thing_principal_attachment"},
-	})
-}
 
-func sweepThings(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &iot.ListThingsInput{}
-
-	err = conn.ListThingsPages(input, func(page *iot.ListThingsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, thing := range page.Things {
-			r := tfiot.ResourceThing()
-			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(thing.ThingName))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping IoT Thing sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccIoTThing_basic(t *testing.T) {
 	var thing iot.DescribeThingOutput
