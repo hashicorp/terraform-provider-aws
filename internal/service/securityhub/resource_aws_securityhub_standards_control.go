@@ -16,6 +16,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func ResourceStandardsControl() *schema.Resource {
@@ -93,7 +101,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	control, err := finder.StandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx, conn, standardsSubscriptionARN, d.Id())
+	control, err := tfsecurityhub.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx, conn, standardsSubscriptionARN, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Control (%s) not found, removing from state", d.Id())

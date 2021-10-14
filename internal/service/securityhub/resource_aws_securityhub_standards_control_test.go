@@ -16,6 +16,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func testAccAWSSecurityHubStandardsControl_basic(t *testing.T) {
@@ -103,7 +111,7 @@ func testAccCheckAWSSecurityHubStandardsControlExists(n string, control *securit
 			return err
 		}
 
-		output, err := finder.StandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.TODO(), conn, standardsSubscriptionARN, rs.Primary.ID)
+		output, err := tfsecurityhub.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.TODO(), conn, standardsSubscriptionARN, rs.Primary.ID)
 
 		if err != nil {
 			return err

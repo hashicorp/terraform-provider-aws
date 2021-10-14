@@ -7,43 +7,47 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 const (
 	// AdminStatus NotFound
-	AdminStatusNotFound = "NotFound"
+	adminStatusNotFound = "NotFound"
 
 	// AdminStatus Unknown
-	AdminStatusUnknown = "Unknown"
+	adminStatusUnknown = "Unknown"
 
-	StandardsStatusNotFound = "NotFound"
+	standardsStatusNotFound = "NotFound"
 )
 
-// AdminAccountAdminStatus fetches the AdminAccount and its AdminStatus
-func AdminAccountAdminStatus(conn *securityhub.SecurityHub, adminAccountID string) resource.StateRefreshFunc {
+// statusAdminAccountAdmin fetches the AdminAccount and its AdminStatus
+func statusAdminAccountAdmin(conn *securityhub.SecurityHub, adminAccountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		adminAccount, err := finder.AdminAccount(conn, adminAccountID)
+		adminAccount, err := tfsecurityhub.FindAdminAccount(conn, adminAccountID)
 
 		if err != nil {
-			return nil, AdminStatusUnknown, err
+			return nil, adminStatusUnknown, err
 		}
 
 		if adminAccount == nil {
-			return adminAccount, AdminStatusNotFound, nil
+			return adminAccount, adminStatusNotFound, nil
 		}
 
 		return adminAccount, aws.StringValue(adminAccount.Status), nil
 	}
 }
 
-func StandardsSubscriptionStatus(conn *securityhub.SecurityHub, arn string) resource.StateRefreshFunc {
+func statusStandardsSubscription(conn *securityhub.SecurityHub, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.StandardsSubscriptionByARN(conn, arn)
+		output, err := tfsecurityhub.FindStandardsSubscriptionByARN(conn, arn)
 
 		if tfresource.NotFound(err) {
 			// Return a fake result and status to deal with the INCOMPLETE subscription status
 			// being a target for both Create and Delete.
-			return "", StandardsStatusNotFound, nil
+			return "", standardsStatusNotFound, nil
 		}
 
 		if err != nil {

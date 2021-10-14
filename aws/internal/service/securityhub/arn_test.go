@@ -6,6 +6,10 @@ import (
 
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func TestStandardsControlARNToStandardsSubscriptionARN(t *testing.T) {

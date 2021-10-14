@@ -13,6 +13,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 )
 
 func ResourceStandardsSubscription() *schema.Resource {
@@ -57,7 +74,7 @@ func resourceStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(output.StandardsSubscriptions[0].StandardsSubscriptionArn))
 
-	_, err = waiter.StandardsSubscriptionCreated(conn, d.Id())
+	_, err = tfsecurityhub.waitStandardsSubscriptionCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Security Hub Standards Subscription (%s) to create: %w", d.Id(), err)
@@ -69,7 +86,7 @@ func resourceStandardsSubscriptionCreate(d *schema.ResourceData, meta interface{
 func resourceStandardsSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn
 
-	output, err := finder.StandardsSubscriptionByARN(conn, d.Id())
+	output, err := tfsecurityhub.FindStandardsSubscriptionByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Subscription (%s) not found, removing from state", d.Id())
@@ -94,7 +111,7 @@ func resourceStandardsSubscriptionDelete(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error disabling Security Hub Standard (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.StandardsSubscriptionDeleted(conn, d.Id())
+	_, err = tfsecurityhub.waitStandardsSubscriptionDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Security Hub Standards Subscription (%s) to delete: %w", d.Id(), err)
