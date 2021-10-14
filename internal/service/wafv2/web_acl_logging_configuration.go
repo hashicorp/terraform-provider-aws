@@ -19,9 +19,9 @@ import (
 
 func ResourceWebACLLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsWafv2WebACLLoggingConfigurationPut,
+		Create: resourceWebACLLoggingConfigurationPut,
 		Read:   resourceWebACLLoggingConfigurationRead,
-		Update: resourceAwsWafv2WebACLLoggingConfigurationPut,
+		Update: resourceWebACLLoggingConfigurationPut,
 		Delete: resourceWebACLLoggingConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -187,7 +187,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsWafv2WebACLLoggingConfigurationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceWebACLLoggingConfigurationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 
 	resourceArn := d.Get("resource_arn").(string)

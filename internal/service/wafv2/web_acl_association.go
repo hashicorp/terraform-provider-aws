@@ -27,7 +27,7 @@ func ResourceWebACLAssociation() *schema.Resource {
 		Delete: resourceWebACLAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				webAclArn, resourceArn, err := resourceAwsWafv2ACLAssociationDecodeId(d.Id())
+				webAclArn, resourceArn, err := resourceACLAssociationDecodeID(d.Id())
 				if err != nil {
 					return nil, fmt.Errorf("Error reading resource ID: %s", err)
 				}
@@ -129,7 +129,7 @@ func resourceWebACLAssociationDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsWafv2ACLAssociationDecodeId(id string) (string, string, error) {
+func resourceACLAssociationDecodeID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
