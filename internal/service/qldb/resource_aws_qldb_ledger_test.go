@@ -1,4 +1,4 @@
-package aws
+package qldb_test
 
 import (
 	"fmt"
