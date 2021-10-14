@@ -85,7 +85,7 @@ func sweepRules(region string) error {
 	return errors
 }
 
-func TestAccAWSRoute53ResolverRule_basic(t *testing.T) {
+func TestAccRoute53ResolverRule_basic(t *testing.T) {
 	var rule route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
 
@@ -115,7 +115,7 @@ func TestAccAWSRoute53ResolverRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverRule_justDotDomainName(t *testing.T) {
+func TestAccRoute53ResolverRule_justDotDomainName(t *testing.T) {
 	var rule route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
 
@@ -145,7 +145,7 @@ func TestAccAWSRoute53ResolverRule_justDotDomainName(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
+func TestAccRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 	var rule route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
 
@@ -175,7 +175,7 @@ func TestAccAWSRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverRule_tags(t *testing.T) {
+func TestAccRoute53ResolverRule_tags(t *testing.T) {
 	var rule route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
 
@@ -226,7 +226,7 @@ func TestAccAWSRoute53ResolverRule_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverRule_updateName(t *testing.T) {
+func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 	var rule1, rule2 route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
 	name1 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
@@ -266,7 +266,7 @@ func TestAccAWSRoute53ResolverRule_updateName(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverRule_forward(t *testing.T) {
+func TestAccRoute53ResolverRule_forward(t *testing.T) {
 	var rule1, rule2, rule3 route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
 	resourceNameEp1 := "aws_route53_resolver_endpoint.foo"
@@ -343,7 +343,7 @@ func TestAccAWSRoute53ResolverRule_forward(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
+func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	var rule1, rule2 route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
 	resourceNameEp := "aws_route53_resolver_endpoint.foo"

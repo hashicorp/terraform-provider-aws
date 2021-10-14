@@ -104,7 +104,7 @@ func sweepFirewallRules(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53ResolverFirewallRule_basic(t *testing.T) {
+func TestAccRoute53ResolverFirewallRule_basic(t *testing.T) {
 	var v route53resolver.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"
@@ -135,7 +135,7 @@ func TestAccAWSRoute53ResolverFirewallRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRule_block(t *testing.T) {
+func TestAccRoute53ResolverFirewallRule_block(t *testing.T) {
 	var v route53resolver.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"
@@ -164,7 +164,7 @@ func TestAccAWSRoute53ResolverFirewallRule_block(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
+func TestAccRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 	var v route53resolver.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"
@@ -196,7 +196,7 @@ func TestAccAWSRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRule_disappears(t *testing.T) {
+func TestAccRoute53ResolverFirewallRule_disappears(t *testing.T) {
 	var v route53resolver.FirewallRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule.test"

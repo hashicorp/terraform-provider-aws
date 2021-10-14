@@ -79,7 +79,7 @@ func sweepDNSSECConfig(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53ResolverDnssecConfig_basic(t *testing.T) {
+func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_dnssec_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -109,7 +109,7 @@ func TestAccAWSRoute53ResolverDnssecConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverDnssecConfig_disappear(t *testing.T) {
+func TestAccRoute53ResolverDNSSECConfig_disappear(t *testing.T) {
 	resourceName := "aws_route53_resolver_dnssec_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

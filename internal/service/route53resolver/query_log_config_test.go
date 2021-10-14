@@ -70,7 +70,7 @@ func sweepQueryLogsConfig(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53ResolverQueryLogConfig_basic(t *testing.T) {
+func TestAccRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_query_log_config.test"
@@ -102,7 +102,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
+func TestAccRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_query_log_config.test"
@@ -125,7 +125,7 @@ func TestAccAWSRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverQueryLogConfig_tags(t *testing.T) {
+func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 	var v route53resolver.ResolverQueryLogConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_query_log_config.test"

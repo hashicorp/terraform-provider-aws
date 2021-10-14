@@ -71,7 +71,7 @@ func sweepFirewallRuleGroups(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
+func TestAccRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 	var v route53resolver.FirewallRuleGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
@@ -101,7 +101,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
+func TestAccRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
 	var v route53resolver.FirewallRuleGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
@@ -124,7 +124,7 @@ func TestAccAWSRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
+func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 	var v route53resolver.FirewallRuleGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
