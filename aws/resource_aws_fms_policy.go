@@ -188,7 +188,7 @@ func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := keyvaluetags.FmsListTags(fmsconn, d.Id())
+	tags, err := keyvaluetags.FmsListTags(conn, d.Id())
 
 	if err != nil {
 		return err
