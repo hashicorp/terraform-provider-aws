@@ -13,9 +13,9 @@ import (
 
 func ResourceContainerPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMediaStoreContainerPolicyPut,
+		Create: resourceContainerPolicyPut,
 		Read:   resourceContainerPolicyRead,
-		Update: resourceAwsMediaStoreContainerPolicyPut,
+		Update: resourceContainerPolicyPut,
 		Delete: resourceContainerPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -37,7 +37,7 @@ func ResourceContainerPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsMediaStoreContainerPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceContainerPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MediaStoreConn
 
 	input := &mediastore.PutContainerPolicyInput{
