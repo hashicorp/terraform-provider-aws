@@ -42,7 +42,7 @@ func BucketListTags(conn *s3.S3, identifier string) (tftags.KeyValueTags, error)
 		return tftags.New(nil), err
 	}
 
-	return S3KeyValueTags(output.TagSet), nil
+	return KeyValueTags(output.TagSet), nil
 }
 
 // BucketUpdateTags updates S3 bucket tags.
@@ -64,7 +64,7 @@ func BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, ne
 		input := &s3.PutBucketTaggingInput{
 			Bucket: aws.String(identifier),
 			Tagging: &s3.Tagging{
-				TagSet: newTags.Merge(ignoredTags).S3Tags(),
+				TagSet: Tags(newTags.Merge(ignoredTags)),
 			},
 		}
 
@@ -125,7 +125,7 @@ func ObjectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error
 		return tftags.New(nil), err
 	}
 
-	return S3KeyValueTags(output.TagSet), nil
+	return KeyValueTags(output.TagSet), nil
 }
 
 // ObjectUpdateTags updates S3 object tags.
@@ -147,7 +147,7 @@ func ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, n
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			Tagging: &s3.Tagging{
-				TagSet: newTags.Merge(ignoredTags).IgnoreAws().S3Tags(),
+				TagSet: Tags(newTags.Merge(ignoredTags).IgnoreAws()),
 			},
 		}
 
