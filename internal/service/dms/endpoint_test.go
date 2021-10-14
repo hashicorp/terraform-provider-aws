@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccAwsDmsEndpoint_basic(t *testing.T) {
+func TestAccDMSEndpoint_basic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-basic"
 
@@ -55,7 +55,7 @@ func TestAccAwsDmsEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_S3(t *testing.T) {
+func TestAccDMSEndpoint_s3(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-s3"
 
@@ -108,7 +108,7 @@ func TestAccAwsDmsEndpoint_S3(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
-func TestAccAwsDmsEndpoint_S3_ExtraConnectionAttributes(t *testing.T) {
+func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-s3"
 
@@ -135,7 +135,7 @@ func TestAccAwsDmsEndpoint_S3_ExtraConnectionAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
+func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-dynamodb"
 
@@ -168,7 +168,7 @@ func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
+func TestAccDMSEndpoint_elasticSearch(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -198,11 +198,11 @@ func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
 	})
 }
 
-// TestAccAwsDmsEndpoint_Elasticsearch_ExtraConnectionAttributes validates
+// TestAccDMSEndpoint_ElasticSearch_extraConnectionAttributes validates
 // extra_connection_attributes handling for "elasticsearch" engine not affected
 // by changes made specific to suppressing diffs in the case of "s3"/"mongodb" engine
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
-func TestAccAwsDmsEndpoint_Elasticsearch_ExtraConnectionAttributes(t *testing.T) {
+func TestAccDMSEndpoint_ElasticSearch_extraConnectionAttributes(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -229,7 +229,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch_ExtraConnectionAttributes(t *testing.T)
 	})
 }
 
-func TestAccAwsDmsEndpoint_Elasticsearch_ErrorRetryDuration(t *testing.T) {
+func TestAccDMSEndpoint_ElasticSearch_errorRetryDuration(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -267,7 +267,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch_ErrorRetryDuration(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
+func TestAccDMSEndpoint_ElasticSearch_fullLoadErrorPercentage(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -305,7 +305,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_Kafka(t *testing.T) {
+func TestAccDMSEndpoint_kafka(t *testing.T) {
 	domainName := acctest.RandomSubdomain()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_endpoint.test"
@@ -374,7 +374,7 @@ func TestAccAwsDmsEndpoint_Kafka(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
+func TestAccDMSEndpoint_kinesis(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-kinesis"
 
@@ -412,7 +412,7 @@ func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_MongoDb(t *testing.T) {
+func TestAccDMSEndpoint_mongoDB(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-mongodb"
 
@@ -439,10 +439,10 @@ func TestAccAwsDmsEndpoint_MongoDb(t *testing.T) {
 	})
 }
 
-// TestAccAwsDmsEndpoint_MongoDb_Update validates engine-specific
+// TestAccDMSEndpoint_MongoDB_update validates engine-specific
 // configured fields and extra_connection_attributes now set in the resource
 // per https://github.com/hashicorp/terraform-provider-aws/issues/8009
-func TestAccAwsDmsEndpoint_MongoDb_Update(t *testing.T) {
+func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-mongodb"
 
@@ -487,7 +487,7 @@ func TestAccAwsDmsEndpoint_MongoDb_Update(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_DocDB(t *testing.T) {
+func TestAccDMSEndpoint_docDB(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-docdb"
 
@@ -527,7 +527,7 @@ func TestAccAwsDmsEndpoint_DocDB(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
+func TestAccDMSEndpoint_db2(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := sdkacctest.RandString(8) + "-db2"
 

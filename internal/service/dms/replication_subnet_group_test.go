@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSDmsReplicationSubnetGroup_basic(t *testing.T) {
+func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_dms_replication_subnet_group.dms_replication_subnet_group"
 	randId := sdkacctest.RandString(8)
 

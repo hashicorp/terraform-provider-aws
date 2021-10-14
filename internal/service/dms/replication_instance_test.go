@@ -67,7 +67,7 @@ func sweepReplicationInstances(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSDmsReplicationInstance_basic(t *testing.T) {
+func TestAccDMSReplicationInstance_basic(t *testing.T) {
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
 	replicationInstanceClass := "dms.c4.large"
 	resourceName := "aws_dms_replication_instance.test"
@@ -108,7 +108,7 @@ func TestAccAWSDmsReplicationInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_AllocatedStorage(t *testing.T) {
+func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -142,7 +142,7 @@ func TestAccAWSDmsReplicationInstance_AllocatedStorage(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_AutoMinorVersionUpgrade(t *testing.T) {
+func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -183,7 +183,7 @@ func TestAccAWSDmsReplicationInstance_AutoMinorVersionUpgrade(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_AvailabilityZone(t *testing.T) {
+func TestAccDMSReplicationInstance_availabilityZone(t *testing.T) {
 	dataSourceName := "data.aws_availability_zones.available"
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -211,7 +211,7 @@ func TestAccAWSDmsReplicationInstance_AvailabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_EngineVersion(t *testing.T) {
+func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -262,7 +262,7 @@ func TestAccAWSDmsReplicationInstance_EngineVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_KmsKeyArn(t *testing.T) {
+func TestAccDMSReplicationInstance_kmsKeyARN(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -290,7 +290,7 @@ func TestAccAWSDmsReplicationInstance_KmsKeyArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_MultiAz(t *testing.T) {
+func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -331,7 +331,7 @@ func TestAccAWSDmsReplicationInstance_MultiAz(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_PreferredMaintenanceWindow(t *testing.T) {
+func TestAccDMSReplicationInstance_preferredMaintenanceWindow(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -365,7 +365,7 @@ func TestAccAWSDmsReplicationInstance_PreferredMaintenanceWindow(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_PubliclyAccessible(t *testing.T) {
+func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -393,7 +393,7 @@ func TestAccAWSDmsReplicationInstance_PubliclyAccessible(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_ReplicationInstanceClass(t *testing.T) {
+func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 	// NOTE: Using larger dms.c4.(x)?large here for AWS GovCloud (US) support
 	replicationInstanceClass1 := "dms.c4.large"
 	replicationInstanceClass2 := "dms.c4.xlarge"
@@ -430,7 +430,7 @@ func TestAccAWSDmsReplicationInstance_ReplicationInstanceClass(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_ReplicationSubnetGroupId(t *testing.T) {
+func TestAccDMSReplicationInstance_replicationSubnetGroupID(t *testing.T) {
 	dmsReplicationSubnetGroupResourceName := "aws_dms_replication_subnet_group.test"
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -458,7 +458,7 @@ func TestAccAWSDmsReplicationInstance_ReplicationSubnetGroupId(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_Tags(t *testing.T) {
+func TestAccDMSReplicationInstance_tags(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -503,7 +503,7 @@ func TestAccAWSDmsReplicationInstance_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDmsReplicationInstance_VpcSecurityGroupIds(t *testing.T) {
+func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
