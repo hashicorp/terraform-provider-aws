@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsFmsAdminAccount() *schema.Resource {
+func ResourceAdminAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsFmsAdminAccountCreate,
-		Read:   resourceAwsFmsAdminAccountRead,
-		Delete: resourceAwsFmsAdminAccountDelete,
+		Create: resourceAdminAccountCreate,
+		Read:   resourceAdminAccountRead,
+		Delete: resourceAdminAccountDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -35,7 +35,7 @@ func resourceAwsFmsAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceAwsFmsAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 
 	// Ensure there is not an existing FMS Admin Account
@@ -72,7 +72,7 @@ func resourceAwsFmsAdminAccountCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(accountID)
 
-	return resourceAwsFmsAdminAccountRead(d, meta)
+	return resourceAdminAccountRead(d, meta)
 }
 
 func associateFmsAdminAccountRefreshFunc(conn *fms.FMS, accountId string) resource.StateRefreshFunc {
@@ -109,7 +109,7 @@ func associateFmsAdminAccountRefreshFunc(conn *fms.FMS, accountId string) resour
 	}
 }
 
-func resourceAwsFmsAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 
 	output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
@@ -139,7 +139,7 @@ func resourceAwsFmsAdminAccountRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsFmsAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).FMSConn
 
 	_, err := conn.DisassociateAdminAccount(&fms.DisassociateAdminAccountInput{})
