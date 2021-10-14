@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -68,12 +69,12 @@ func testSweepCodeArtifactDomains(region string) error {
 }
 
 func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
@@ -81,13 +82,13 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 				Config: testAccAWSCodeArtifactDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", "arn"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -101,12 +102,12 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
-		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
@@ -114,13 +115,13 @@ func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
 				Config: testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
-					testAccMatchResourceAttrRegionalARN(resourceName, "encryption_key", "kms", regexp.MustCompile(`key/.+`)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_key", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 				),
 			},
 			{
@@ -133,12 +134,12 @@ func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
-		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
@@ -176,12 +177,12 @@ func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
@@ -189,7 +190,7 @@ func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
 				Config: testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactDomain(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

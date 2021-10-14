@@ -5,45 +5,46 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCodeArtifactRepositoryEndpointDataSource_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, "npm"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					testAccCheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, "pypi"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					testAccCheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, "maven"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					testAccCheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, "nuget"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					testAccCheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -51,19 +52,19 @@ func TestAccAWSCodeArtifactRepositoryEndpointDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSCodeArtifactRepositoryEndpointDataSource_owner(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
+		ErrorCheck: acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSCodeArtifactRepositoryEndpointOwnerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					testAccCheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -90,7 +91,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 
 func testAccCheckAWSCodeArtifactRepositoryEndpointBasicConfig(rName, format string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCheckAWSCodeArtifactRepositoryEndpointBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_codeartifact_repository_endpoint" "test" {
@@ -102,7 +103,7 @@ data "aws_codeartifact_repository_endpoint" "test" {
 }
 
 func testAccCheckAWSCodeArtifactRepositoryEndpointOwnerConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccCheckAWSCodeArtifactRepositoryEndpointBaseConfig(rName),
 		`
 data "aws_codeartifact_repository_endpoint" "test" {
