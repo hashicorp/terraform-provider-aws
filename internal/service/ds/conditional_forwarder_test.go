@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
 func TestAccAWSDirectoryServiceConditionForwarder_basic(t *testing.T) {
@@ -62,7 +63,7 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderDestroy(s *terraform.Sta
 			continue
 		}
 
-		directoryId, domainName, err := parseDSConditionalForwarderId(rs.Primary.ID)
+		directoryId, domainName, err := tfds.ParseDSConditionalForwarderID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -99,7 +100,7 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderExists(name string, dnsI
 			return fmt.Errorf("No ID is set")
 		}
 
-		directoryId, domainName, err := parseDSConditionalForwarderId(rs.Primary.ID)
+		directoryId, domainName, err := tfds.ParseDSConditionalForwarderID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

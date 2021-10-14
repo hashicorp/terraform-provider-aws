@@ -54,7 +54,7 @@ func testSweepDirectoryServiceDirectories(region string) error {
 		for _, directory := range page.DirectoryDescriptions {
 			id := aws.StringValue(directory.DirectoryId)
 
-			r := ResourceDirectory()
+			r := tfds.ResourceDirectory()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -361,7 +361,7 @@ func TestAccAWSDirectoryServiceDirectory_disappears(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDirectory(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
