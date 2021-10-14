@@ -141,7 +141,7 @@ func dataSourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting rotation_rules: %w", err)
 	}
 
-	if err := d.Set("tags", tftags.SecretsmanagerKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
