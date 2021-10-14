@@ -5,9 +5,10 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/codestarconnections/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceConnection() *schema.Resource {
@@ -40,7 +41,7 @@ func DataSourceConnection() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -64,7 +65,7 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", connection.ConnectionName)
 	d.Set("provider_type", connection.ProviderType)
 
-	tags, err := keyvaluetags.CodestarconnectionsListTags(conn, arn)
+	tags, err := tftags.CodestarconnectionsListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for CodeStar Connection (%s): %w", arn, err)
 	}
