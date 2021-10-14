@@ -16,7 +16,7 @@ func init() {
 }
 
 func TestAccAWSRoute53ResolverRuleDataSource_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_rule_id"
 	ds2ResourceName := "data.aws_route53_resolver_rule.by_domain_name"
@@ -25,7 +25,7 @@ func TestAccAWSRoute53ResolverRuleDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRoute53ResolverRule_basic(rName),
@@ -69,14 +69,14 @@ func TestAccAWSRoute53ResolverRuleDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSRoute53ResolverRuleDataSource_ResolverEndpointIdWithTags(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRoute53ResolverRule_resolverEndpointIdWithTags(rName),
@@ -102,7 +102,7 @@ func TestAccAWSRoute53ResolverRuleDataSource_ResolverEndpointIdWithTags(t *testi
 
 func TestAccAWSRoute53ResolverRuleDataSource_SharedByMe(t *testing.T) {
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
@@ -140,7 +140,7 @@ func TestAccAWSRoute53ResolverRuleDataSource_SharedByMe(t *testing.T) {
 
 func TestAccAWSRoute53ResolverRuleDataSource_SharedWithMe(t *testing.T) {
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
@@ -311,6 +311,7 @@ data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
 }
 `, rName)
 }
+
 // testAccErrorCheckSkipRoute53 skips Route53 tests that have error messages indicating unsupported features
 func testAccErrorCheckSkipRoute53(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
@@ -319,4 +320,3 @@ func testAccErrorCheckSkipRoute53(t *testing.T) resource.ErrorCheckFunc {
 		"NoSuchHostedZone: The specified hosted zone",
 	)
 }
-

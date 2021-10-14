@@ -16,7 +16,7 @@ func TestAccAWSRoute53ResolverRulesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRoute53ResolverRules_basic,
@@ -39,7 +39,7 @@ func TestAccAWSRoute53ResolverRulesDataSource_ResolverEndpointId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck: acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRoute53ResolverRules_resolverEndpointId(rName1, rName2),

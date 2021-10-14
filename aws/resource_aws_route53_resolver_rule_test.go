@@ -88,7 +88,7 @@ func TestAccAWSRoute53ResolverRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,7 +118,7 @@ func TestAccAWSRoute53ResolverRule_justDotDomainName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -148,7 +148,7 @@ func TestAccAWSRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,7 +178,7 @@ func TestAccAWSRoute53ResolverRule_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -231,7 +231,7 @@ func TestAccAWSRoute53ResolverRule_updateName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -272,7 +272,7 @@ func TestAccAWSRoute53ResolverRule_forward(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -348,7 +348,7 @@ func TestAccAWSRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -405,7 +405,7 @@ func testAccCheckRoute53ResolverRulesDifferent(before, after *route53resolver.Re
 }
 
 func testAccCheckRoute53ResolverRuleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_rule" {
@@ -439,7 +439,7 @@ func testAccCheckRoute53ResolverRuleExists(n string, rule *route53resolver.Resol
 			return fmt.Errorf("No Route 53 Resolver rule ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 		res, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
 			ResolverRuleId: aws.String(rs.Primary.ID),
 		})

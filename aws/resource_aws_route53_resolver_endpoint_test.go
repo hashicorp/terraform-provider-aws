@@ -84,7 +84,7 @@ func TestAccAWSRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,7 +117,7 @@ func TestAccAWSRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -147,7 +147,7 @@ func TestAccAWSRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 }
 
 func testAccCheckRoute53ResolverEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_endpoint" {
@@ -182,7 +182,7 @@ func testAccCheckRoute53ResolverEndpointExists(n string, ep *route53resolver.Res
 			return fmt.Errorf("No Route 53 Resolver endpoint ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 		resp, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
 			ResolverEndpointId: aws.String(rs.Primary.ID),
 		})
@@ -197,7 +197,7 @@ func testAccCheckRoute53ResolverEndpointExists(n string, ep *route53resolver.Res
 }
 
 func testAccPreCheckAWSRoute53Resolver(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53resolverconn
 
 	input := &route53resolver.ListResolverEndpointsInput{}
 
