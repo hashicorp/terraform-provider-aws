@@ -11,7 +11,7 @@ import (
 
 func DataSourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsServerlessRepositoryApplicationRead,
+		Read: dataSourceServerlessRepositoryApplicationRead,
 
 		Schema: map[string]*schema.Schema{
 			"application_id": {
@@ -46,7 +46,7 @@ func DataSourceApplication() *schema.Resource {
 	}
 }
 
-func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceServerlessRepositoryApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServerlessAppRepoConn
 
 	applicationID := d.Get("application_id").(string)

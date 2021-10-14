@@ -36,7 +36,7 @@ func ResourceCloudFormationStack() *schema.Resource {
 		Delete: resourceCloudFormationStackDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsServerlessApplicationRepositoryCloudFormationStackImport,
+			State: resourceCloudFormationStackImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -276,7 +276,7 @@ func resourceCloudFormationStackDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudFormationStackImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	stackID := d.Id()
 
 	// If this isn't an ARN, it's the stack name
