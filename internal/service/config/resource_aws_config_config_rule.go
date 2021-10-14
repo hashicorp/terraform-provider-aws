@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func ResourceConfigRule() *schema.Resource {
@@ -175,7 +176,7 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 		Tags:       tags.IgnoreAws().ConfigserviceTags(),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutConfigRule(&input)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
