@@ -11,6 +11,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
+	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
+	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
+	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
 func ResourceEncryptionConfig() *schema.Resource {
@@ -60,7 +64,7 @@ func resourceAwsXrayEncryptionConfigPut(d *schema.ResourceData, meta interface{}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if _, err := waiter.EncryptionConfigAvailable(conn); err != nil {
+	if _, err := tfxray.waitEncryptionConfigAvailable(conn); err != nil {
 		return fmt.Errorf("error waiting for Xray Encryption Config (%s) to Available: %w", d.Id(), err)
 	}
 

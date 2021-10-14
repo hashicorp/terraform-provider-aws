@@ -9,16 +9,16 @@ import (
 )
 
 const (
-	EncryptionConfigAvailableTimeout = 15 * time.Minute
+	encryptionConfigAvailableTimeout = 15 * time.Minute
 )
 
-// EncryptionConfigAvailable waits for a EncryptionConfig to return Available
-func EncryptionConfigAvailable(conn *xray.XRay) (*xray.EncryptionConfig, error) {
+// waitEncryptionConfigAvailable waits for a EncryptionConfig to return Available
+func waitEncryptionConfigAvailable(conn *xray.XRay) (*xray.EncryptionConfig, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{xray.EncryptionStatusUpdating},
 		Target:  []string{xray.EncryptionStatusActive},
-		Refresh: EncryptionConfigStatus(conn),
-		Timeout: EncryptionConfigAvailableTimeout,
+		Refresh: statusEncryptionConfig(conn),
+		Timeout: encryptionConfigAvailableTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
