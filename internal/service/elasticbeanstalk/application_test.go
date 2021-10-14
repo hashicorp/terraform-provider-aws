@@ -17,54 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_elastic_beanstalk_application", &resource.Sweeper{
-		Name:         "aws_elastic_beanstalk_application",
-		Dependencies: []string{"aws_elastic_beanstalk_environment"},
-		F:            sweepApplications,
-	})
-}
 
-func sweepApplications(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).ElasticBeanstalkConn
 
-	resp, err := conn.DescribeApplications(&elasticbeanstalk.DescribeApplicationsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Elastic Beanstalk Application sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving beanstalk application: %w", err)
-	}
 
-	if len(resp.Applications) == 0 {
-		log.Print("[DEBUG] No aws beanstalk applications to sweep")
-		return nil
-	}
-
-	var errors error
-	for _, bsa := range resp.Applications {
-		applicationName := aws.StringValue(bsa.ApplicationName)
-		_, err := conn.DeleteApplication(
-			&elasticbeanstalk.DeleteApplicationInput{
-				ApplicationName: bsa.ApplicationName,
-			})
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidConfiguration.NotFound", "") || tfawserr.ErrMessageContains(err, "ValidationError", "") {
-				log.Printf("[DEBUG] beanstalk application %q not found", applicationName)
-				continue
-			}
-
-			errors = multierror.Append(fmt.Errorf("error deleting Elastic Beanstalk Application %q: %w", applicationName, err))
-		}
-	}
-
-	return errors
-}
 
 func TestAccElasticBeanstalkApplication_BeanstalkApp_basic(t *testing.T) {
 	var app elasticbeanstalk.ApplicationDescription

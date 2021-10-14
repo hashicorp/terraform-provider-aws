@@ -23,53 +23,9 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_elastic_beanstalk_environment", &resource.Sweeper{
-		Name: "aws_elastic_beanstalk_environment",
-		F:    sweepEnvironments,
-	})
-}
 
-func sweepEnvironments(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).ElasticBeanstalkConn
 
-	resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
-		IncludeDeleted: aws.Bool(false),
-	})
 
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Elastic Beanstalk Environment sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving beanstalk environment: %w", err)
-	}
-
-	if len(resp.Environments) == 0 {
-		log.Print("[DEBUG] No aws beanstalk environments to sweep")
-		return nil
-	}
-
-	var errors error
-	for _, bse := range resp.Environments {
-		environmentName := aws.StringValue(bse.EnvironmentName)
-		environmentID := aws.StringValue(bse.EnvironmentId)
-		log.Printf("Trying to terminate (%s) (%s)", environmentName, environmentID)
-
-		err := tfelasticbeanstalk.DeleteEnvironment(conn, environmentID, 5*time.Minute, 10*time.Second)
-		if err != nil {
-			errors = multierror.Append(fmt.Errorf("error deleting Elastic Beanstalk Environment %q: %w", environmentID, err))
-		}
-
-		log.Printf("> Terminated (%s) (%s)", environmentName, environmentID)
-	}
-
-	return errors
-}
 
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_basic(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
