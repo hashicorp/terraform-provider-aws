@@ -11,7 +11,7 @@ import (
 )
 
 func testAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGatewayId(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -23,7 +23,7 @@ func testAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAn
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +39,7 @@ func testAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAn
 }
 
 func testAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_dx_gateway_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -51,7 +51,7 @@ func testAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{

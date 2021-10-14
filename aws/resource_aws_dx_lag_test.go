@@ -85,13 +85,13 @@ func testSweepDxLags(region string) error {
 func TestAccAwsDxLag_basic(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
-	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,19 +141,19 @@ func TestAccAwsDxLag_basic(t *testing.T) {
 func TestAccAwsDxLag_disappears(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxLagConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxLagExists(resourceName, &lag),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxLag(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxLag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,12 +165,12 @@ func TestAccAwsDxLag_ConnectionID(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	connectionResourceName := "aws_dx_connection.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -203,12 +203,12 @@ func TestAccAwsDxLag_ConnectionID(t *testing.T) {
 func TestAccAwsDxLag_ProviderName(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -241,12 +241,12 @@ func TestAccAwsDxLag_ProviderName(t *testing.T) {
 func TestAccAwsDxLag_Tags(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,7 +288,7 @@ func TestAccAwsDxLag_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsDxLagDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_lag" {
@@ -313,7 +313,7 @@ func testAccCheckAwsDxLagDestroy(s *terraform.State) error {
 
 func testAccCheckAwsDxLagExists(name string, v *directconnect.Lag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

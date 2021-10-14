@@ -37,7 +37,7 @@ func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -89,7 +89,7 @@ func TestAccAwsDxPublicVirtualInterface_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{

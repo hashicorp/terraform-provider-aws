@@ -113,14 +113,14 @@ func testSweepDirectConnectGateways(region string) error {
 
 func TestAccAwsDxGateway_basic(t *testing.T) {
 	var v directconnect.Gateway
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,21 +141,21 @@ func TestAccAwsDxGateway_basic(t *testing.T) {
 
 func TestAccAwsDxGateway_disappears(t *testing.T) {
 	var v directconnect.Gateway
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsDxGateway(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,14 +165,14 @@ func TestAccAwsDxGateway_disappears(t *testing.T) {
 
 func TestAccAwsDxGateway_complex(t *testing.T) {
 	var v directconnect.Gateway
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,7 +192,7 @@ func TestAccAwsDxGateway_complex(t *testing.T) {
 }
 
 func testAccCheckAwsDxGatewayDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
+	conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dx_gateway" {
@@ -225,7 +225,7 @@ func testAccCheckAwsDxGatewayExists(name string, v *directconnect.Gateway) resou
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 		output, err := finder.GatewayByID(conn, rs.Primary.ID)
 

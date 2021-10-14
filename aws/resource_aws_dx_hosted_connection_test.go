@@ -33,7 +33,7 @@ func TestAccAWSDxHostedConnection_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsDxHostedConnectionDestroy(testAccDxHostedConnectionProvider),
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +93,7 @@ func testAccCheckAwsDxHostedConnectionDestroy(providerFunc func() *schema.Provid
 
 func testAccCheckAwsDxHostedConnectionExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
+		conn := acctest.Provider.Meta().(*AWSClient).dxconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -127,5 +127,5 @@ resource "aws_dx_hosted_connection" "test" {
 }
 
 func testAccDxHostedConnectionProvider() *schema.Provider {
-	return testAccProvider
+	return acctest.Provider
 }
