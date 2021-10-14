@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSElasticacheUser_basic(t *testing.T) {
@@ -164,7 +165,7 @@ func testAccCheckAWSElasticacheUserDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSElasticacheUserDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).elasticacheconn
+	conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_user" {
@@ -205,7 +206,7 @@ func testAccCheckAWSElasticacheUserExistsWithProvider(n string, v *elasticache.U
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*AWSClient).elasticacheconn
+		conn := provider.Meta().(*conns.AWSClient).ElastiCacheConn
 		resp, err := finder.ElastiCacheUserById(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("ElastiCache User (%s) not found: %w", rs.Primary.ID, err)

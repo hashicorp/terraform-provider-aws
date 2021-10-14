@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -274,8 +275,8 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 }
 
 func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &elasticache.CreateCacheClusterInput{}
@@ -375,9 +376,9 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	c, err := finder.CacheClusterWithNodeInfoByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -491,7 +492,7 @@ func elasticacheSetResourceDataEngineVersionFromCacheCluster(d *schema.ResourceD
 }
 
 func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -648,7 +649,7 @@ func (b byCacheNodeId) Less(i, j int) bool {
 }
 
 func resourceAwsElasticacheClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
 	err := deleteElasticacheCacheCluster(conn, d.Id(), finalSnapshotID)

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsElasticacheUser() *schema.Resource {
@@ -75,8 +76,8 @@ func resourceAwsElasticacheUser() *schema.Resource {
 }
 
 func resourceAwsElasticacheUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &elasticache.CreateUserInput{
@@ -92,7 +93,7 @@ func resourceAwsElasticacheUserCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	// Tags are currently only supported in AWS Commercial.
-	if len(tags) > 0 && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		input.Tags = tags.IgnoreAws().ElasticacheTags()
 	}
 
@@ -108,9 +109,9 @@ func resourceAwsElasticacheUserCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsElasticacheUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := finder.ElastiCacheUserById(conn, d.Id())
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, elasticache.ErrCodeUserNotFoundFault, "")) {
@@ -130,7 +131,7 @@ func resourceAwsElasticacheUserRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", resp.ARN)
 
 	// Tags are currently only supported in AWS Commercial.
-	if meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+	if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		tags, err := keyvaluetags.ElasticacheListTags(conn, aws.StringValue(resp.ARN))
 
 		if err != nil {
@@ -156,7 +157,7 @@ func resourceAwsElasticacheUserRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	hasChange := false
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -192,7 +193,7 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 
 	}
 	// Tags are currently only supported in AWS Commercial.
-	if d.HasChange("tags_all") && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+	if d.HasChange("tags_all") && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
@@ -204,7 +205,7 @@ func resourceAwsElasticacheUserUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsElasticacheUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	input := &elasticache.DeleteUserInput{
 		UserId: aws.String(d.Id()),

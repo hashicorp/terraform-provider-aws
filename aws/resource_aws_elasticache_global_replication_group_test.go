@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepElasticacheGlobalReplicationGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).elasticacheconn
+	conn := client.(*conns.AWSClient).ElastiCacheConn
 
 	var grgGroup multierror.Group
 
@@ -325,7 +326,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string,
 			return fmt.Errorf("No ElastiCache Global Replication Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 		grg, err := finder.GlobalReplicationGroupByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error retrieving ElastiCache Global Replication Group (%s): %w", rs.Primary.ID, err)
@@ -342,7 +343,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string,
 }
 
 func testAccCheckAWSElasticacheGlobalReplicationGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_global_replication_group" {
@@ -363,7 +364,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupDestroy(s *terraform.State)
 }
 
 func testAccPreCheckAWSElasticacheGlobalReplicationGroup(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).elasticacheconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
 	input := &elasticache.DescribeGlobalReplicationGroupsInput{}
 	_, err := conn.DescribeGlobalReplicationGroups(input)

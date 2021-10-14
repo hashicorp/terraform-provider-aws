@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -150,7 +151,7 @@ func elasticacheDescriptionStateFunc(v interface{}) string {
 }
 
 func resourceAwsElasticacheGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	input := &elasticache.CreateGlobalReplicationGroupInput{
 		GlobalReplicationGroupIdSuffix: aws.String(d.Get("global_replication_group_id_suffix").(string)),
@@ -176,7 +177,7 @@ func resourceAwsElasticacheGlobalReplicationGroupCreate(d *schema.ResourceData, 
 }
 
 func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	globalReplicationGroup, err := finder.GlobalReplicationGroupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -212,7 +213,7 @@ func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, me
 }
 
 func resourceAwsElasticacheGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	// Only one field can be changed per request
 	updaters := map[string]elasticacheGlobalReplicationGroupUpdater{}
@@ -254,7 +255,7 @@ func updateElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 }
 
 func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
 	err := deleteElasticacheGlobalReplicationGroup(conn, d.Id(), waiter.GlobalReplicationGroupDefaultUpdatedTimeout)
