@@ -14,13 +14,13 @@ import (
 
 func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 	var workgroup1 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,13 +50,13 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
 	var workgroup1 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -73,13 +73,13 @@ func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -110,13 +110,13 @@ func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testi
 
 func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -147,13 +147,13 @@ func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *te
 
 func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -184,13 +184,13 @@ func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *
 
 func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfiguration_SseS3(t *testing.T) {
 	var workgroup1 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -215,7 +215,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 
 func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfiguration_Kms(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 	rEncryption := athena.EncryptionOptionSseKms
 	rEncryption2 := athena.EncryptionOptionCseKms
@@ -223,7 +223,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -258,7 +258,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 
 func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 	rOutputLocation1 := fmt.Sprintf("%s-1", rName)
 	rOutputLocation2 := fmt.Sprintf("%s-2", rName)
@@ -266,7 +266,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -299,13 +299,13 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(
 
 func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) {
 	var workgroup1 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -338,7 +338,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_RequesterPaysEnabled(t *testing.T) 
 
 func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_ForceDestroy(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 	rOutputLocation1 := fmt.Sprintf("%s-1", rName)
 	rOutputLocation2 := fmt.Sprintf("%s-2", rName)
@@ -346,7 +346,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -379,7 +379,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_
 
 func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 	rDescription := sdkacctest.RandString(20)
 	rDescriptionUpdate := sdkacctest.RandString(20)
@@ -387,7 +387,7 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -416,13 +416,13 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
 	var workgroup1, workgroup2, workgroup3 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -458,7 +458,7 @@ func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
 	var workgroup athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := sdkacctest.RandString(5)
 	queryName1 := sdkacctest.RandomWithPrefix("tf-athena-named-query-")
 	queryName2 := sdkacctest.RandomWithPrefix("tf-athena-named-query-")
@@ -467,7 +467,7 @@ func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -490,13 +490,13 @@ func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
 
 func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 	var workgroup1, workgroup2, workgroup3 athena.WorkGroup
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -536,7 +536,7 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 
 func testAccCheckAWSAthenaCreateNamedQuery(workGroup *athena.WorkGroup, databaseName, queryName, query string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
 
 		input := &athena.CreateNamedQueryInput{
 			Name:        aws.String(queryName),
@@ -555,7 +555,7 @@ func testAccCheckAWSAthenaCreateNamedQuery(workGroup *athena.WorkGroup, database
 }
 
 func testAccCheckAWSAthenaWorkGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).athenaconn
+	conn := acctest.Provider.Meta().(*AWSClient).athenaconn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_workgroup" {
 			continue
@@ -589,7 +589,7 @@ func testAccCheckAWSAthenaWorkGroupExists(name string, workgroup *athena.WorkGro
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
 
 		input := &athena.GetWorkGroupInput{
 			WorkGroup: aws.String(rs.Primary.ID),
@@ -609,7 +609,7 @@ func testAccCheckAWSAthenaWorkGroupExists(name string, workgroup *athena.WorkGro
 
 func testAccCheckAWSAthenaWorkGroupDisappears(workgroup *athena.WorkGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).athenaconn
+		conn := acctest.Provider.Meta().(*AWSClient).athenaconn
 
 		input := &athena.DeleteWorkGroupInput{
 			WorkGroup: workgroup.Name,
