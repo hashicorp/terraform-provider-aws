@@ -14,6 +14,7 @@ import (
 	tfs3control "github.com/hashicorp/terraform-provider-aws/aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceAccessPoint() *schema.Resource {
@@ -33,7 +34,7 @@ func ResourceAccessPoint() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -66,7 +67,7 @@ func ResourceAccessPoint() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 			},
 			"public_access_block_configuration": {
 				Type:             schema.TypeList,
@@ -74,7 +75,7 @@ func ResourceAccessPoint() *schema.Resource {
 				ForceNew:         true,
 				MinItems:         0,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"block_public_acls": {
