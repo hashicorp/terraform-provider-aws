@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSDefaultSecurityGroup_Vpc_basic(t *testing.T) {
@@ -17,8 +18,8 @@ func TestAccAWSDefaultSecurityGroup_Vpc_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
@@ -46,7 +47,7 @@ func TestAccAWSDefaultSecurityGroup_Vpc_basic(t *testing.T) {
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
 					testAccCheckAWSDefaultSecurityGroupARN(resourceName, &group),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-acc-test"),
 				),
@@ -70,8 +71,8 @@ func TestAccAWSDefaultSecurityGroup_Vpc_empty(t *testing.T) {
 	resourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
@@ -98,8 +99,8 @@ func TestAccAWSDefaultSecurityGroup_Classic_basic(t *testing.T) {
 	resourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
@@ -120,7 +121,7 @@ func TestAccAWSDefaultSecurityGroup_Classic_basic(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					testAccCheckAWSDefaultSecurityGroupARNEc2Classic(resourceName, &group),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-acc-test"),
 				),
@@ -142,7 +143,7 @@ func TestAccAWSDefaultSecurityGroup_Classic_basic(t *testing.T) {
 
 func TestAccAWSDefaultSecurityGroup_Classic_empty(t *testing.T) {
 
-	TestAccSkip(t, "This resource does not currently clear tags when adopting the resource")
+	acctest.Skip(t, "This resource does not currently clear tags when adopting the resource")
 	// Additional references:
 	//  * https://github.com/hashicorp/terraform-provider-aws/issues/14631
 
@@ -150,8 +151,8 @@ func TestAccAWSDefaultSecurityGroup_Classic_empty(t *testing.T) {
 	resourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
@@ -222,13 +223,13 @@ func testAccCheckAWSDefaultSecurityGroupEc2ClassicExists(n string, group *ec2.Se
 
 func testAccCheckAWSDefaultSecurityGroupARN(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
+		return acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
 	}
 }
 
 func testAccCheckAWSDefaultSecurityGroupARNEc2Classic(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckResourceAttrRegionalARNEc2Classic(resourceName, "arn", "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
+		return acctest.CheckResourceAttrRegionalARNEC2Classic(resourceName, "arn", "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
 	}
 }
 
@@ -279,8 +280,8 @@ resource "aws_default_security_group" "test" {
 `
 
 func testAccAWSDefaultSecurityGroupConfig_Classic() string {
-	return composeConfig(
-		testAccEc2ClassicRegionProviderConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigEC2ClassicRegionProvider(),
 		`
 resource "aws_default_security_group" "test" {
   ingress {
@@ -298,8 +299,8 @@ resource "aws_default_security_group" "test" {
 }
 
 func testAccAWSDefaultSecurityGroupConfig_Classic_empty() string {
-	return composeConfig(
-		testAccEc2ClassicRegionProviderConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigEC2ClassicRegionProvider(),
 		`
 resource "aws_default_security_group" "test" {
   # No attributes set.

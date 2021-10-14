@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -68,11 +69,11 @@ func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
 	var v rds.DBSubnetGroup
 
 	resourceName := "aws_db_subnet_group.test"
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +83,7 @@ func TestAccAWSDBSubnetGroup_basic(t *testing.T) {
 					testAccCheckDBSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("subgrp:%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("subgrp:%s$", rName))),
 				),
 			},
 			{
@@ -100,8 +101,8 @@ func TestAccAWSDBSubnetGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -121,8 +122,8 @@ func TestAccAWSDBSubnetGroup_generatedName(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -147,8 +148,8 @@ func TestAccAWSDBSubnetGroup_withUndocumentedCharacters(t *testing.T) {
 	resourceName := "aws_db_subnet_group.underscores"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -174,11 +175,11 @@ func TestAccAWSDBSubnetGroup_withUndocumentedCharacters(t *testing.T) {
 func TestAccAWSDBSubnetGroup_updateDescription(t *testing.T) {
 	var v rds.DBSubnetGroup
 	resourceName := "aws_db_subnet_group.test"
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{

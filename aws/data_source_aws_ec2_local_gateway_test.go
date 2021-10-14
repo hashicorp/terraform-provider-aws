@@ -6,22 +6,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsEc2LocalGateway_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEc2LocalGatewayConfigId(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^lgw-`)),
-					testAccMatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexp.MustCompile(`outpost/op-.+`)),
-					testAccCheckResourceAttrAccountID(dataSourceName, "owner_id"),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexp.MustCompile(`outpost/op-.+`)),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "state", "available"),
 				),
 			},

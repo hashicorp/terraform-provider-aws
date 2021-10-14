@@ -6,22 +6,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSNetworkInterfaceSGAttachment_basic(t *testing.T) {
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -39,11 +40,11 @@ func TestAccAWSNetworkInterfaceSGAttachment_basic(t *testing.T) {
 
 func TestAccAWSNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 	resourceName := "aws_network_interface_sg_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -51,7 +52,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 				Config: testAccAwsNetworkInterfaceSGAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkInterfaceSGAttachment(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNetworkInterfaceSGAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -63,11 +64,11 @@ func TestAccAWSNetworkInterfaceSGAttachment_Instance(t *testing.T) {
 	instanceResourceName := "aws_instance.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -87,11 +88,11 @@ func TestAccAWSNetworkInterfaceSGAttachment_DataSource(t *testing.T) {
 	instanceDataSourceName := "data.aws_instance.test"
 	securityGroupResourceName := "aws_security_group.test"
 	resourceName := "aws_network_interface_sg_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -117,11 +118,11 @@ func TestAccAWSNetworkInterfaceSGAttachment_Multiple(t *testing.T) {
 	resourceName2 := "aws_network_interface_sg_attachment.test.1"
 	resourceName3 := "aws_network_interface_sg_attachment.test.2"
 	resourceName4 := "aws_network_interface_sg_attachment.test.3"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{

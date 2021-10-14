@@ -8,19 +8,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -48,8 +49,8 @@ func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -76,8 +77,8 @@ func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -100,10 +101,10 @@ func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 	var v neptune.DBSubnetGroup
 
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +196,7 @@ func testAccCheckNeptuneSubnetGroupExists(n string, v *neptune.DBSubnetGroup) re
 }
 
 func testAccNeptuneSubnetGroupConfig(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -236,7 +237,7 @@ resource "aws_neptune_subnet_group" "foo" {
 }
 
 func testAccNeptuneSubnetGroupConfig_updatedDescription(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -278,7 +279,7 @@ resource "aws_neptune_subnet_group" "foo" {
 }
 
 func testAccNeptuneSubnetGroupConfig_namePrefix() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -315,7 +316,7 @@ resource "aws_neptune_subnet_group" "test" {
 }
 
 func testAccNeptuneSubnetGroupConfig_generatedName() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 

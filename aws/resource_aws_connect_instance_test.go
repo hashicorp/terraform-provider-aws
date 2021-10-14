@@ -11,10 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -95,12 +96,12 @@ func TestAccAwsConnectInstance_serial(t *testing.T) {
 
 func testAccAwsConnectInstance_basic(t *testing.T) {
 	var v connect.DescribeInstanceOutput
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsConnectInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func testAccAwsConnectInstance_basic(t *testing.T) {
 				Config: testAccAwsConnectInstanceConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectInstanceExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "true"), //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "false"),       //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "true"),             //verified default result from ListInstanceAttributes()
@@ -118,7 +119,7 @@ func testAccAwsConnectInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "true"),
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexp.MustCompile(rName)),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "true"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
 				),
 			},
@@ -131,7 +132,7 @@ func testAccAwsConnectInstance_basic(t *testing.T) {
 				Config: testAccAwsConnectInstanceConfigBasicFlipped(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectInstanceExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "connect", regexp.MustCompile(`instance/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "false"),
@@ -149,12 +150,12 @@ func testAccAwsConnectInstance_basic(t *testing.T) {
 
 func testAccAwsConnectInstance_directory(t *testing.T) {
 	var v connect.DescribeInstanceOutput
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsConnectInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -178,12 +179,12 @@ func testAccAwsConnectInstance_directory(t *testing.T) {
 
 func testAccAwsConnectInstance_saml(t *testing.T) {
 	var v connect.DescribeInstanceOutput
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsConnectInstanceDestroy,
 		Steps: []resource.TestStep{

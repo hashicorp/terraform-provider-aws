@@ -5,21 +5,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
-	rInt := acctest.RandIntRange(0, 255)
+	rInt := sdkacctest.RandIntRange(0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	localGatewayRouteTableDataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 	localGatewayVirtualInterfaceGroupDataSourceName := "data.aws_ec2_local_gateway_virtual_interface_group.test"
 	resourceName := "aws_ec2_local_gateway_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2LocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -42,13 +43,13 @@ func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
 }
 
 func TestAccAWSEc2LocalGatewayRoute_disappears(t *testing.T) {
-	rInt := acctest.RandIntRange(0, 255)
+	rInt := sdkacctest.RandIntRange(0, 255)
 	destinationCidrBlock := fmt.Sprintf("172.16.%d.0/24", rInt)
 	resourceName := "aws_ec2_local_gateway_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2LocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func TestAccAWSEc2LocalGatewayRoute_disappears(t *testing.T) {
 				Config: testAccAWSEc2LocalGatewayRouteConfigDestinationCidrBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2LocalGatewayRouteExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2LocalGatewayRoute(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2LocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -87,11 +88,11 @@ func testSweepDbSnapshots(region string) error {
 func TestAccAWSDBSnapshot_basic(t *testing.T) {
 	var v rds.DBSnapshot
 	resourceName := "aws_db_snapshot.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDbSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -100,7 +101,7 @@ func TestAccAWSDBSnapshot_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "db_snapshot_arn", "rds", regexp.MustCompile(`snapshot:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "db_snapshot_arn", "rds", regexp.MustCompile(`snapshot:.+`)),
 				),
 			},
 			{
@@ -115,11 +116,11 @@ func TestAccAWSDBSnapshot_basic(t *testing.T) {
 func TestAccAWSDBSnapshot_tags(t *testing.T) {
 	var v rds.DBSnapshot
 	resourceName := "aws_db_snapshot.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDbSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -159,12 +160,12 @@ func TestAccAWSDBSnapshot_tags(t *testing.T) {
 
 func TestAccAWSDBSnapshot_disappears(t *testing.T) {
 	var v rds.DBSnapshot
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDbSnapshotDestroy,
 		Steps: []resource.TestStep{

@@ -7,18 +7,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandString(10))
+	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", sdkacctest.RandString(10))
 	resourceName := "aws_vpc_endpoint_connection_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointConnectionNotificationDestroy,
 		Steps: []resource.TestStep{
@@ -105,7 +106,7 @@ func testAccCheckVpcEndpointConnectionNotificationExists(n string) resource.Test
 }
 
 func testAccVpcEndpointConnectionNotificationBasicConfig(lbName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "nlb_test" {
@@ -198,7 +199,7 @@ resource "aws_vpc_endpoint_connection_notification" "test" {
 }
 
 func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "nlb_test" {

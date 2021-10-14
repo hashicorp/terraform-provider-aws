@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 const SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix = "tf-acc-test"
@@ -68,12 +69,12 @@ func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) err
 
 func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := acctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -85,7 +86,7 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_create"),
 					resource.TestCheckNoResourceAttr(resourceName, "on_start"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("notebook-instance-lifecycle-config/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("notebook-instance-lifecycle-config/%s", rName)),
 				),
 			},
 			{
@@ -99,12 +100,12 @@ func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.
 
 func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Update(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
-	rName := acctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceLifecycleConfigurationDestroy,
 		Steps: []resource.TestStep{

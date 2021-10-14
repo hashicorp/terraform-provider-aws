@@ -7,14 +7,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsEc2SpotPriceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -33,8 +34,8 @@ func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -58,7 +59,7 @@ func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
 
 	_, err := conn.DescribeSpotPriceHistory(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -68,7 +69,7 @@ func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
 }
 
 func testAccAwsEc2SpotPriceDataSourceConfig() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_region" "current" {}
 
 data "aws_ec2_instance_type_offering" "test" {
@@ -92,7 +93,7 @@ data "aws_ec2_spot_price" "test" {
 }
 
 func testAccAwsEc2SpotPriceDataSourceFilterConfig() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_region" "current" {}
 
 data "aws_ec2_instance_type_offering" "test" {

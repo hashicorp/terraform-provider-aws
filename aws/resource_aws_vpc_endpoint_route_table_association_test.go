@@ -5,20 +5,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 	resourceName := "aws_vpc_endpoint_route_table_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -40,11 +41,11 @@ func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 
 func TestAccAWSVpcEndpointRouteTableAssociation_disappears(t *testing.T) {
 	resourceName := "aws_vpc_endpoint_route_table_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -52,7 +53,7 @@ func TestAccAWSVpcEndpointRouteTableAssociation_disappears(t *testing.T) {
 				Config: testAccVpcEndpointRouteTableAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointRouteTableAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpcEndpointRouteTableAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpcEndpointRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

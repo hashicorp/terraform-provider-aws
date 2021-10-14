@@ -9,15 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
@@ -53,8 +54,8 @@ func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 
 func TestAccAWSNetworkAclRule_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
@@ -72,8 +73,8 @@ func TestAccAWSNetworkAclRule_disappears(t *testing.T) {
 
 func TestAccAWSNetworkAclRule_disappears_IngressEgressSameNumber(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
@@ -94,8 +95,8 @@ func TestAccAWSNetworkAclRule_disappears_NetworkAcl(t *testing.T) {
 	resourceName := "aws_network_acl.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
@@ -103,7 +104,7 @@ func TestAccAWSNetworkAclRule_disappears_NetworkAcl(t *testing.T) {
 				Config: testAccAWSNetworkAclRuleBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkAcl(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNetworkAcl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -113,8 +114,8 @@ func TestAccAWSNetworkAclRule_disappears_NetworkAcl(t *testing.T) {
 
 func TestAccAWSNetworkAclRule_missingParam(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
@@ -128,8 +129,8 @@ func TestAccAWSNetworkAclRule_missingParam(t *testing.T) {
 
 func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
@@ -150,12 +151,12 @@ func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 }
 
 func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_network_acl_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
@@ -182,15 +183,15 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 	resourceName := "aws_network_acl_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclRuleConfigIpv6VpcNotAssignGeneratedIpv6CidrBlockUpdate(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcExists(vpcResourceName, &vpc),
+					acctest.CheckVPCExists(vpcResourceName, &vpc),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestCheckResourceAttr(vpcResourceName, "ipv6_cidr_block", ""),
 				),
@@ -198,7 +199,7 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 			{
 				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcExists(vpcResourceName, &vpc),
+					acctest.CheckVPCExists(vpcResourceName, &vpc),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "true"),
 					resource.TestMatchResourceAttr(vpcResourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
 					testAccCheckAWSNetworkAclRuleExists(resourceName),
@@ -216,8 +217,8 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 
 func TestAccAWSNetworkAclRule_allProtocol(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{
@@ -235,8 +236,8 @@ func TestAccAWSNetworkAclRule_allProtocol(t *testing.T) {
 
 func TestAccAWSNetworkAclRule_tcpProtocol(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
 		Steps: []resource.TestStep{

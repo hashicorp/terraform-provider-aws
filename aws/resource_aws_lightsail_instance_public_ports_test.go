@@ -7,22 +7,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSLightsailInstancePublicPorts_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
@@ -43,16 +44,16 @@ func TestAccAWSLightsailInstancePublicPorts_basic(t *testing.T) {
 }
 
 func TestAccAWSLightsailInstancePublicPorts_multiple(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
@@ -78,16 +79,16 @@ func TestAccAWSLightsailInstancePublicPorts_multiple(t *testing.T) {
 }
 
 func TestAccAWSLightsailInstancePublicPorts_cidrs(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_instance_public_ports.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{

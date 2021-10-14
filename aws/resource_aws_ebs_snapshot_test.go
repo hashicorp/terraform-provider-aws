@@ -7,19 +7,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", sdkacctest.RandString(7))
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -27,9 +28,9 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 				Config: testAccAwsEbsSnapshotConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -43,12 +44,12 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 
 func TestAccAWSEBSSnapshot_tags(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", sdkacctest.RandString(7))
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -88,12 +89,12 @@ func TestAccAWSEBSSnapshot_tags(t *testing.T) {
 
 func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", sdkacctest.RandString(7))
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -115,13 +116,13 @@ func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 
 func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-kms-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-ebs-snapshot-kms-%s", sdkacctest.RandString(7))
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -143,12 +144,12 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 
 func TestAccAWSEBSSnapshot_disappears(t *testing.T) {
 	var v ec2.Snapshot
-	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", acctest.RandString(7))
+	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", sdkacctest.RandString(7))
 	resourceName := "aws_ebs_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -156,7 +157,7 @@ func TestAccAWSEBSSnapshot_disappears(t *testing.T) {
 				Config: testAccAwsEbsSnapshotConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEbsSnapshot(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEbsSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

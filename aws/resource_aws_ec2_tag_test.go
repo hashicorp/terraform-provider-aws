@@ -5,17 +5,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEc2Tag_basic(t *testing.T) {
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
@@ -37,12 +38,12 @@ func TestAccAWSEc2Tag_basic(t *testing.T) {
 }
 
 func TestAccAWSEc2Tag_disappears(t *testing.T) {
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{
@@ -50,7 +51,7 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 				Config: testAccEc2TagConfig(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2TagExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2Tag(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2Tag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -59,12 +60,12 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 }
 
 func TestAccAWSEc2Tag_Value(t *testing.T) {
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2TagDestroy,
 		Steps: []resource.TestStep{

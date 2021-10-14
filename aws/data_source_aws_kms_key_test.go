@@ -5,19 +5,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsKmsKey_basic(t *testing.T) {
 	resourceName := "aws_kms_key.test"
 	datasourceName := "data.aws_kms_key.test"
-	rName := fmt.Sprintf("tf-testacc-kms-key-%s", acctest.RandString(13))
+	rName := fmt.Sprintf("tf-testacc-kms-key-%s", sdkacctest.RandString(13))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, kms.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

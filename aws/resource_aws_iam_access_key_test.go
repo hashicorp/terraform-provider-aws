@@ -10,20 +10,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/vault/helper/pgpkeys"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAccessKey_basic(t *testing.T) {
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
@@ -32,7 +33,7 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAccessKeyExists(resourceName, &conf),
 					testAccCheckAWSAccessKeyAttributes(&conf, "Active"),
-					testAccCheckResourceAttrRfc3339(resourceName, "create_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "secret"),
 					resource.TestCheckNoResourceAttr(resourceName, "encrypted_secret"),
 					resource.TestCheckNoResourceAttr(resourceName, "key_fingerprint"),
@@ -53,11 +54,11 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 func TestAccAWSAccessKey_encrypted(t *testing.T) {
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{
@@ -87,11 +88,11 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 func TestAccAWSAccessKey_status(t *testing.T) {
 	var conf iam.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAccessKeyDestroy,
 		Steps: []resource.TestStep{

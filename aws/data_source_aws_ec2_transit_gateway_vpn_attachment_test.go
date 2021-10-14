@@ -5,22 +5,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_TransitGatewayIdAndVpnConnectionId(t *testing.T) {
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_vpn_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	vpnConnectionResourceName := "aws_vpn_connection.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -37,17 +38,17 @@ func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_TransitGatewayIdAndVpnCo
 }
 
 func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_filter(t *testing.T) {
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_vpn_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	vpnConnectionResourceName := "aws_vpn_connection.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{

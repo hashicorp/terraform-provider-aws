@@ -7,19 +7,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 	var image ec2.Image
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_from_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -27,13 +28,13 @@ func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 				Config: testAccAWSAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing Terraform aws_ami_from_instance resource"),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
 					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -43,12 +44,12 @@ func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 
 func TestAccAWSAMIFromInstance_tags(t *testing.T) {
 	var image ec2.Image
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_from_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -83,12 +84,12 @@ func TestAccAWSAMIFromInstance_tags(t *testing.T) {
 
 func TestAccAWSAMIFromInstance_disappears(t *testing.T) {
 	var image ec2.Image
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_from_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -96,7 +97,7 @@ func TestAccAWSAMIFromInstance_disappears(t *testing.T) {
 				Config: testAccAWSAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmiFromInstance(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsAmiFromInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -161,9 +162,9 @@ func testAccCheckAWSAMIFromInstanceDestroy(s *terraform.State) error {
 }
 
 func testAccAWSAMIFromInstanceConfigBase(rName string) string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -177,7 +178,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccAWSAMIFromInstanceConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAMIFromInstanceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ami_from_instance" "test" {
@@ -189,7 +190,7 @@ resource "aws_ami_from_instance" "test" {
 }
 
 func testAccAWSAMIFromInstanceConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAMIFromInstanceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ami_from_instance" "test" {
@@ -205,7 +206,7 @@ resource "aws_ami_from_instance" "test" {
 }
 
 func testAccAWSAMIFromInstanceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAWSAMIFromInstanceConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ami_from_instance" "test" {

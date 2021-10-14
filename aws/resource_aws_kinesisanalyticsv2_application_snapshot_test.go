@@ -5,22 +5,23 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 	var v kinesisanalyticsv2.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	applicationResourceName := "aws_kinesisanalyticsv2_application.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -46,11 +47,11 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 	var v kinesisanalyticsv2.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -58,7 +59,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2ApplicationSnapshot(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2ApplicationSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,11 +71,11 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears_Application(t *t
 	var v kinesisanalyticsv2.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	applicationResourceName := "aws_kinesisanalyticsv2_application.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
-		ErrorCheck:   testAccErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +83,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears_Application(t *t
 				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2Application(), applicationResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2Application(), applicationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

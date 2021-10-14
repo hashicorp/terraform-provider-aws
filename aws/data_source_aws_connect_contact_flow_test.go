@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsConnectContactFlowDataSource_ContactFlowId(t *testing.T) {
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 	datasourceName := "data.aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -38,14 +39,14 @@ func TestAccAwsConnectContactFlowDataSource_ContactFlowId(t *testing.T) {
 }
 
 func TestAccAwsConnectContactFlowDataSource_Name(t *testing.T) {
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 	datasourceName := "data.aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, connect.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

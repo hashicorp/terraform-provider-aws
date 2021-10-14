@@ -6,14 +6,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsEc2CoipPool_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_coip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -32,8 +33,8 @@ func TestAccDataSourceAwsEc2CoipPool_Id(t *testing.T) {
 	dataSourceName := "data.aws_ec2_coip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -41,7 +42,7 @@ func TestAccDataSourceAwsEc2CoipPool_Id(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexp.MustCompile(`^lgw-rtb-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "pool_id", regexp.MustCompile(`^ipv4pool-coip-`)),
-					testAccMatchResourceAttrRegionalARN(dataSourceName, "arn", "ec2", regexp.MustCompile(`coip-pool/ipv4pool-coip-.+$`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ec2", regexp.MustCompile(`coip-pool/ipv4pool-coip-.+$`)),
 					testCheckResourceAttrGreaterThanValue(dataSourceName, "pool_cidrs.#", "0"),
 				),
 			},

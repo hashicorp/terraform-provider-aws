@@ -5,20 +5,21 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 
-	asn := acctest.RandIntRange(64512, 65534)
-	hostOctet := acctest.RandIntRange(1, 254)
+	asn := sdkacctest.RandIntRange(64512, 65534)
+	hostOctet := sdkacctest.RandIntRange(1, 254)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -40,12 +41,12 @@ func TestAccAWSCustomerGatewayDataSource_ID(t *testing.T) {
 	dataSourceName := "data.aws_customer_gateway.test"
 	resourceName := "aws_customer_gateway.test"
 
-	asn := acctest.RandIntRange(64512, 65534)
-	hostOctet := acctest.RandIntRange(1, 254)
+	asn := sdkacctest.RandIntRange(64512, 65534)
+	hostOctet := sdkacctest.RandIntRange(1, 254)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -64,7 +65,7 @@ func TestAccAWSCustomerGatewayDataSource_ID(t *testing.T) {
 }
 
 func testAccAWSCustomerGatewayDataSourceConfigFilter(asn, hostOctet int) string {
-	name := acctest.RandomWithPrefix("test-filter")
+	name := sdkacctest.RandomWithPrefix("test-filter")
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %d

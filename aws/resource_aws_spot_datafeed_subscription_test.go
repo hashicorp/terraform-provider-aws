@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSpotDatafeedSubscription_serial(t *testing.T) {
@@ -29,11 +30,11 @@ func TestAccAWSSpotDatafeedSubscription_serial(t *testing.T) {
 func testAccAWSSpotDatafeedSubscription_basic(t *testing.T) {
 	var subscription ec2.SpotDatafeedSubscription
 	resourceName := "aws_spot_datafeed_subscription.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSpotDatafeedSubscription(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSpotDatafeedSubscription(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -79,11 +80,11 @@ func testAccCheckAWSSpotDatafeedSubscriptionDisappears(subscription *ec2.SpotDat
 func testAccAWSSpotDatafeedSubscription_disappears(t *testing.T) {
 	var subscription ec2.SpotDatafeedSubscription
 	resourceName := "aws_spot_datafeed_subscription.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSpotDatafeedSubscription(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSpotDatafeedSubscription(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -152,7 +153,7 @@ func testAccPreCheckAWSSpotDatafeedSubscription(t *testing.T) {
 
 	_, err := conn.DescribeSpotDatafeedSubscription(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

@@ -8,11 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -73,8 +74,8 @@ func TestAccAWSEc2Host_basic(t *testing.T) {
 	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
@@ -82,12 +83,12 @@ func TestAccAWSEc2Host_basic(t *testing.T) {
 				Config: testAccAWSEc2HostConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2HostExists(resourceName, &host),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dedicated-host/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dedicated-host/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_placement", "on"),
 					resource.TestCheckResourceAttr(resourceName, "host_recovery", "off"),
 					resource.TestCheckResourceAttr(resourceName, "instance_family", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "a1.large"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -105,8 +106,8 @@ func TestAccAWSEc2Host_disappears(t *testing.T) {
 	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
@@ -114,7 +115,7 @@ func TestAccAWSEc2Host_disappears(t *testing.T) {
 				Config: testAccAWSEc2HostConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2HostExists(resourceName, &host),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2Host(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2Host(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,11 +126,11 @@ func TestAccAWSEc2Host_disappears(t *testing.T) {
 func TestAccAWSEc2Host_InstanceFamily(t *testing.T) {
 	var host ec2.Host
 	resourceName := "aws_ec2_host.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
@@ -137,12 +138,12 @@ func TestAccAWSEc2Host_InstanceFamily(t *testing.T) {
 				Config: testAccAWSEc2HostConfigInstanceFamily(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2HostExists(resourceName, &host),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dedicated-host/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dedicated-host/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_placement", "off"),
 					resource.TestCheckResourceAttr(resourceName, "host_recovery", "on"),
 					resource.TestCheckResourceAttr(resourceName, "instance_family", "c5"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", ""),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -156,12 +157,12 @@ func TestAccAWSEc2Host_InstanceFamily(t *testing.T) {
 				Config: testAccAWSEc2HostConfigInstanceType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2HostExists(resourceName, &host),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dedicated-host/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dedicated-host/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_placement", "on"),
 					resource.TestCheckResourceAttr(resourceName, "host_recovery", "off"),
 					resource.TestCheckResourceAttr(resourceName, "instance_family", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "c5.xlarge"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -175,8 +176,8 @@ func TestAccAWSEc2Host_Tags(t *testing.T) {
 	resourceName := "aws_ec2_host.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2HostDestroy,
 		Steps: []resource.TestStep{
@@ -264,7 +265,7 @@ func testAccCheckEc2HostDestroy(s *terraform.State) error {
 }
 
 func testAccAWSEc2HostConfig() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_type     = "a1.large"
@@ -273,7 +274,7 @@ resource "aws_ec2_host" "test" {
 }
 
 func testAccAWSEc2HostConfigInstanceFamily(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   auto_placement    = "off"
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -288,7 +289,7 @@ resource "aws_ec2_host" "test" {
 }
 
 func testAccAWSEc2HostConfigInstanceType(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   auto_placement    = "on"
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -303,7 +304,7 @@ resource "aws_ec2_host" "test" {
 }
 
 func testAccAWSEc2HostConfigTags1(tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_type     = "a1.large"
@@ -316,7 +317,7 @@ resource "aws_ec2_host" "test" {
 }
 
 func testAccAWSEc2HostConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_type     = "a1.large"

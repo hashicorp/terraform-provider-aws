@@ -5,30 +5,31 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSServiceDiscoveryInstance_private(t *testing.T) {
 	resourceName := "aws_service_discovery_instance.instance"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domainName := testAccRandomDomainName()
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsServiceDiscoveryInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAWSServiceDiscoveryInstanceBaseConfig(rName),
 					testAccAWSServiceDiscoveryInstancePrivateNamespaceConfig(rName, domainName),
 					testAccAWSServiceDiscoveryInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"10.0.0.1\" \n    AWS_INSTANCE_IPV6 = \"2001:0db8:85a3:0000:0000:abcd:0001:2345\""),
@@ -42,7 +43,7 @@ func TestAccAWSServiceDiscoveryInstance_private(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAWSServiceDiscoveryInstanceBaseConfig(rName),
 					testAccAWSServiceDiscoveryInstancePrivateNamespaceConfig(rName, domainName),
 					testAccAWSServiceDiscoveryInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"10.0.0.2\" \n    AWS_INSTANCE_IPV6 = \"2001:0db8:85a3:0000:0000:abcd:0001:2345\""),
@@ -67,21 +68,21 @@ func TestAccAWSServiceDiscoveryInstance_private(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryInstance_public(t *testing.T) {
 	resourceName := "aws_service_discovery_instance.instance"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domainName := testAccRandomDomainName()
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsServiceDiscoveryInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAWSServiceDiscoveryInstanceBaseConfig(rName),
 					testAccAWSServiceDiscoveryInstancePublicNamespaceConfig(rName, domainName),
 					testAccAWSServiceDiscoveryInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"52.18.0.2\" \n    CUSTOM_KEY = \"this is a custom value\""),
@@ -95,7 +96,7 @@ func TestAccAWSServiceDiscoveryInstance_public(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAWSServiceDiscoveryInstanceBaseConfig(rName),
 					testAccAWSServiceDiscoveryInstancePublicNamespaceConfig(rName, domainName),
 					testAccAWSServiceDiscoveryInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"52.18.0.2\" \n    CUSTOM_KEY = \"this is a custom value updated\""),
@@ -120,21 +121,21 @@ func TestAccAWSServiceDiscoveryInstance_public(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryInstance_http(t *testing.T) {
 	resourceName := "aws_service_discovery_instance.instance"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domainName := testAccRandomDomainName()
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsServiceDiscoveryInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAWSServiceDiscoveryInstanceBaseConfig(rName),
 					testAccAWSServiceDiscoveryInstanceHttpNamespaceConfig(rName, domainName),
 					testAccAWSServiceDiscoveryInstanceConfig(rName, "AWS_EC2_INSTANCE_ID = aws_instance.test_instance.id"),
@@ -147,7 +148,7 @@ func TestAccAWSServiceDiscoveryInstance_http(t *testing.T) {
 				),
 			},
 			{
-				Config: composeConfig(
+				Config: acctest.ConfigCompose(
 					testAccAWSServiceDiscoveryInstanceBaseConfig(rName),
 					testAccAWSServiceDiscoveryInstanceHttpNamespaceConfig(rName, domainName),
 					testAccAWSServiceDiscoveryInstanceConfig(rName, "AWS_INSTANCE_IPV4 = \"172.18.0.12\""),
@@ -237,7 +238,7 @@ resource "aws_service_discovery_service" "sd_register_instance" {
 }
 
 func testAccAWSServiceDiscoveryInstanceHttpNamespaceConfig(rName, domainName string) string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
 resource "aws_instance" "test_instance" {
   instance_type = "t2.micro"
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id

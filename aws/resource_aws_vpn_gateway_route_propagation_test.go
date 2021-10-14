@@ -5,21 +5,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 	resourceName := "aws_vpn_gateway_route_propagation.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
@@ -35,11 +36,11 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 
 func TestAccAWSVPNGatewayRoutePropagation_disappears(t *testing.T) {
 	resourceName := "aws_vpn_gateway_route_propagation.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +48,7 @@ func TestAccAWSVPNGatewayRoutePropagation_disappears(t *testing.T) {
 				Config: testAccAWSVPNGatewayRoutePropagationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVPNGatewayRoutePropagationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpnGatewayRoutePropagation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpnGatewayRoutePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

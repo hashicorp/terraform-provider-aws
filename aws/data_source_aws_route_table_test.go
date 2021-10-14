@@ -6,8 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
@@ -20,18 +21,18 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 	datasource3Name := "data.aws_route_table.by_subnet"
 	datasource4Name := "data.aws_route_table.by_id"
 	datasource5Name := "data.aws_route_table.by_gateway"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRouteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// By tags.
-					testAccMatchResourceAttrRegionalARN(datasource1Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(datasource1Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource1Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "owner_id", rtResourceName, "owner_id"),
@@ -39,11 +40,11 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(datasource1Name, "subnet_id"),
 					resource.TestCheckNoResourceAttr(datasource1Name, "gateway_id"),
 					resource.TestCheckResourceAttr(datasource1Name, "associations.#", "2"),
-					testAccCheckListHasSomeElementAttrPair(datasource1Name, "associations", "subnet_id", snResourceName, "id"),
-					testAccCheckListHasSomeElementAttrPair(datasource1Name, "associations", "gateway_id", igwResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource1Name, "associations", "subnet_id", snResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource1Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource1Name, "tags.Name", rName),
 					// By filter.
-					testAccMatchResourceAttrRegionalARN(datasource2Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(datasource2Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource2Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "owner_id", rtResourceName, "owner_id"),
@@ -51,11 +52,11 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(datasource2Name, "subnet_id"),
 					resource.TestCheckNoResourceAttr(datasource2Name, "gateway_id"),
 					resource.TestCheckResourceAttr(datasource2Name, "associations.#", "2"),
-					testAccCheckListHasSomeElementAttrPair(datasource2Name, "associations", "subnet_id", snResourceName, "id"),
-					testAccCheckListHasSomeElementAttrPair(datasource2Name, "associations", "gateway_id", igwResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource2Name, "associations", "subnet_id", snResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource2Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource2Name, "tags.Name", rName),
 					// By subnet ID.
-					testAccMatchResourceAttrRegionalARN(datasource3Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(datasource3Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource3Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "owner_id", rtResourceName, "owner_id"),
@@ -63,11 +64,11 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasource3Name, "subnet_id", snResourceName, "id"),
 					resource.TestCheckNoResourceAttr(datasource3Name, "gateway_id"),
 					resource.TestCheckResourceAttr(datasource3Name, "associations.#", "2"),
-					testAccCheckListHasSomeElementAttrPair(datasource3Name, "associations", "subnet_id", snResourceName, "id"),
-					testAccCheckListHasSomeElementAttrPair(datasource3Name, "associations", "gateway_id", igwResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource3Name, "associations", "subnet_id", snResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource3Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource3Name, "tags.Name", rName),
 					// By route table ID.
-					testAccMatchResourceAttrRegionalARN(datasource4Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(datasource4Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource4Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource4Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource4Name, "owner_id", rtResourceName, "owner_id"),
@@ -75,11 +76,11 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(datasource4Name, "subnet_id"),
 					resource.TestCheckNoResourceAttr(datasource4Name, "gateway_id"),
 					resource.TestCheckResourceAttr(datasource4Name, "associations.#", "2"),
-					testAccCheckListHasSomeElementAttrPair(datasource4Name, "associations", "subnet_id", snResourceName, "id"),
-					testAccCheckListHasSomeElementAttrPair(datasource4Name, "associations", "gateway_id", igwResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource4Name, "associations", "subnet_id", snResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource4Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource4Name, "tags.Name", rName),
 					// By gateway ID.
-					testAccMatchResourceAttrRegionalARN(datasource5Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(datasource5Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource5Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource5Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource5Name, "owner_id", rtResourceName, "owner_id"),
@@ -87,8 +88,8 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(datasource5Name, "subnet_id"),
 					resource.TestCheckResourceAttrPair(datasource5Name, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource5Name, "associations.#", "2"),
-					testAccCheckListHasSomeElementAttrPair(datasource5Name, "associations", "subnet_id", snResourceName, "id"),
-					testAccCheckListHasSomeElementAttrPair(datasource5Name, "associations", "gateway_id", igwResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource5Name, "associations", "subnet_id", snResourceName, "id"),
+					acctest.CheckListHasSomeElementAttrPair(datasource5Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource5Name, "tags.Name", rName),
 				),
 			},
@@ -98,11 +99,11 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 
 func TestAccDataSourceAwsRouteTable_main(t *testing.T) {
 	datasourceName := "data.aws_route_table.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

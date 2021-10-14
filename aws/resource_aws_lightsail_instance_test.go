@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -74,15 +75,15 @@ func testSweepLightsailInstances(region string) error {
 
 func TestAccAWSLightsailInstance_basic(t *testing.T) {
 	var conf lightsail.Instance
-	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
+	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -106,18 +107,18 @@ func TestAccAWSLightsailInstance_basic(t *testing.T) {
 
 func TestAccAWSLightsailInstance_Name(t *testing.T) {
 	var conf lightsail.Instance
-	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
+	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 	lightsailNameWithSpaces := fmt.Sprint(lightsailName, "string with spaces")
 	lightsailNameWithStartingDigit := fmt.Sprintf("01-%s", lightsailName)
 	lightsailNameWithUnderscore := fmt.Sprintf("%s_123456", lightsailName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -155,15 +156,15 @@ func TestAccAWSLightsailInstance_Name(t *testing.T) {
 
 func TestAccAWSLightsailInstance_Tags(t *testing.T) {
 	var conf lightsail.Instance
-	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
+	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +196,7 @@ func TestAccAWSLightsailInstance_Tags(t *testing.T) {
 
 func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 	var conf lightsail.Instance
-	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
+	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", sdkacctest.RandInt())
 
 	testDestroy := func(*terraform.State) error {
 		// reach out and DELETE the Instance
@@ -216,11 +217,11 @@ func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -302,7 +303,7 @@ func testAccPreCheckAWSLightsail(t *testing.T) {
 
 	_, err := conn.GetInstances(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

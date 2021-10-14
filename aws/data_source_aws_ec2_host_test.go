@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEc2HostDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_host.test"
 	resourceName := "aws_ec2_host.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -43,11 +44,11 @@ func TestAccAWSEc2HostDataSource_basic(t *testing.T) {
 func TestAccAWSEc2HostDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_host.test"
 	resourceName := "aws_ec2_host.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +73,7 @@ func TestAccAWSEc2HostDataSource_Filter(t *testing.T) {
 }
 
 func testAccDataSourceAWSEc2HostConfig(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_type     = "a1.large"
@@ -89,7 +90,7 @@ data "aws_ec2_host" "test" {
 }
 
 func testAccDataSourceAWSEc2HostConfigFilter(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_type     = "a1.large"

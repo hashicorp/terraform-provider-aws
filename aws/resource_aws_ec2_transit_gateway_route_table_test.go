@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
@@ -18,8 +19,8 @@ func testAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
@@ -27,7 +28,7 @@ func testAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayRouteTableConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`transit-gateway-route-table/tgw-rtb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`transit-gateway-route-table/tgw-rtb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "default_association_route_table", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_propagation_route_table", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -48,8 +49,8 @@ func testAccAWSEc2TransitGatewayRouteTable_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
@@ -57,7 +58,7 @@ func testAccAWSEc2TransitGatewayRouteTable_disappears(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayRouteTableConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2TransitGatewayRouteTable(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2TransitGatewayRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,8 +73,8 @@ func testAccAWSEc2TransitGatewayRouteTable_disappears_TransitGateway(t *testing.
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +83,7 @@ func testAccAWSEc2TransitGatewayRouteTable_disappears_TransitGateway(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2TransitGateway(), transitGatewayResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2TransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,8 +96,8 @@ func testAccAWSEc2TransitGatewayRouteTable_Tags(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableDestroy,
 		Steps: []resource.TestStep{

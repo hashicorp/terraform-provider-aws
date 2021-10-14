@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 //Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
@@ -30,13 +31,13 @@ func TestAccAwsConnectContactFlow_serial(t *testing.T) {
 
 func testAccAwsConnectContactFlow_basic(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
@@ -79,13 +80,13 @@ func testAccAwsConnectContactFlow_basic(t *testing.T) {
 
 func testAccAwsConnectContactFlow_filename(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
@@ -132,14 +133,14 @@ func testAccAwsConnectContactFlow_filename(t *testing.T) {
 func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	// var v2 connect.DescribeInstanceOutput
-	rName := acctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := acctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 	instanceResourceName := "aws_connect_instance.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, connect.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsConnectContactFlowDestroy,
 		Steps: []resource.TestStep{
@@ -147,7 +148,7 @@ func testAccAwsConnectContactFlow_disappears_ConnectInstance(t *testing.T) {
 				Config: testAccAwsConnectContactFlowConfigBasic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsConnectContactFlowExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsConnectInstance(), instanceResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsConnectInstance(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -232,7 +233,7 @@ resource "aws_connect_instance" "test" {
 }
 
 func testAccAwsConnectContactFlowConfigBasic(rName, rName2, label string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsConnectContactFlowConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_connect_contact_flow" "test" {
@@ -275,7 +276,7 @@ resource "aws_connect_contact_flow" "test" {
 }
 
 func testAccAwsConnectContactFlowConfig_filename(rName, rName2 string, label string, filepath string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAwsConnectContactFlowConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_connect_contact_flow" "test" {

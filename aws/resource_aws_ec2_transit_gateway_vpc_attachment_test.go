@@ -9,10 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -90,8 +91,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -124,8 +125,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_disappears(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -146,8 +147,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_ApplianceModeSupport(t *testing.T)
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -188,8 +189,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_DnsSupport(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -222,8 +223,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_Ipv6Support(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -256,16 +257,16 @@ func testAccAWSEc2TransitGatewayVpcAttachment_SharedTransitGateway(t *testing.T)
 	var providers []*schema.Provider
 	var transitGatewayVpcAttachment1 ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -289,8 +290,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_SubnetIds(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -331,8 +332,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_Tags(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -379,8 +380,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAss
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -411,8 +412,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTableAss
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -461,8 +462,8 @@ func testAccAWSEc2TransitGatewayVpcAttachment_TransitGatewayDefaultRouteTablePro
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -594,7 +595,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentNotRecreated(i, j *ec2.Transit
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfig() string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -624,7 +625,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigApplianceModeSupport(appModeSupport string) string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -656,7 +657,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigDnsSupport(dnsSupport string) string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -688,7 +689,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigIpv6Support(ipv6Support string) string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   assign_generated_ipv6_cidr_block = true
   cidr_block                       = "10.0.0.0/16"
@@ -722,9 +723,9 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigSharedTransitGateway(rName string) string {
-	return composeConfig(
-		testAccAlternateAccountProviderConfig(),
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 data "aws_organizations_organization" "test" {}
 
@@ -781,7 +782,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigSubnetIds1() string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -813,7 +814,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigSubnetIds2() string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -845,7 +846,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTags1(tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -879,7 +880,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -914,7 +915,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTransitGatewayDefaultRouteTableAssociationAndPropagationDisabled() string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -949,7 +950,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTransitGatewayDefaultRouteTableAssociation(transitGatewayDefaultRouteTableAssociation bool) string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -981,7 +982,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigTransitGatewayDefaultRouteTablePropagation(transitGatewayDefaultRouteTablePropagation bool) string {
-	return composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 

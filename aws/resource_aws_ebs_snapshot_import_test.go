@@ -11,19 +11,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEBSSnapshotImport_basic(t *testing.T) {
 	var v ec2.Snapshot
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
 		Steps: []resource.TestStep{
@@ -31,10 +32,10 @@ func TestAccAWSEBSSnapshotImport_basic(t *testing.T) {
 				Config: testAccAwsEbsSnapshotImportConfigBasic(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
@@ -43,12 +44,12 @@ func TestAccAWSEBSSnapshotImport_basic(t *testing.T) {
 
 func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
 	var v ec2.Snapshot
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
 		Steps: []resource.TestStep{
@@ -56,31 +57,31 @@ func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
 				Config: testAccAwsEbsSnapshotImportConfigTags1(rName, t, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
 				Config: testAccAwsEbsSnapshotImportConfigTags2(rName, t, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
 				Config: testAccAwsEbsSnapshotImportConfigTags1(rName, t, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
@@ -89,12 +90,12 @@ func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
 
 func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
 	var v ec2.Snapshot
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
 		Steps: []resource.TestStep{
@@ -102,10 +103,10 @@ func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
 				Config: testAccAwsEbsSnapshotImportConfigBasic(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEbsSnapshotImport(), resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEbsSnapshotImport(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,13 +116,13 @@ func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
 
 func TestAccAWSEBSSnapshotImport_disappears_S3BucketObject(t *testing.T) {
 	var v ec2.Snapshot
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	parentResourceName := "aws_s3_bucket_object.image"
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
 		Steps: []resource.TestStep{
@@ -129,10 +130,10 @@ func TestAccAWSEBSSnapshotImport_disappears_S3BucketObject(t *testing.T) {
 				Config: testAccAwsEbsSnapshotImportConfigBasic(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsS3BucketObject(), parentResourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsS3BucketObject(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -269,7 +270,7 @@ data "aws_iam_policy_document" "vmimport-trust" {
 }
 
 func testAccAwsEbsSnapshotImportConfigBasic(rName string, t *testing.T) string {
-	return composeConfig(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
     description = %[1]q
@@ -291,7 +292,7 @@ resource "aws_ebs_snapshot_import" "test" {
 }
 
 func testAccAwsEbsSnapshotImportConfigTags1(rName string, t *testing.T, tagKey1 string, tagValue1 string) string {
-	return composeConfig(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
     description = %[1]q
@@ -317,7 +318,7 @@ resource "aws_ebs_snapshot_import" "test" {
 }
 
 func testAccAwsEbsSnapshotImportConfigTags2(rName string, t *testing.T, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return composeConfig(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
     description = %[1]q

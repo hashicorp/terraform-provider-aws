@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAWSEIP_Filter(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -36,8 +37,8 @@ func TestAccDataSourceAWSEIP_Id(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -57,8 +58,8 @@ func TestAccDataSourceAWSEIP_PublicIP_EC2Classic(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -78,8 +79,8 @@ func TestAccDataSourceAWSEIP_PublicIP_VPC(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -98,11 +99,11 @@ func TestAccDataSourceAWSEIP_PublicIP_VPC(t *testing.T) {
 func TestAccDataSourceAWSEIP_Tags(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -122,8 +123,8 @@ func TestAccDataSourceAWSEIP_NetworkInterface(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -145,8 +146,8 @@ func TestAccDataSourceAWSEIP_Instance(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -164,11 +165,11 @@ func TestAccDataSourceAWSEIP_Instance(t *testing.T) {
 func TestAccDataSourceAWSEIP_CarrierIP(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -187,8 +188,8 @@ func TestAccDataSourceAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -247,8 +248,8 @@ data "aws_eip" "test" {
 `
 
 func testAccDataSourceAWSEIPConfigPublicIpEc2Classic() string {
-	return composeConfig(
-		testAccEc2ClassicRegionProviderConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigEC2ClassicRegionProvider(),
 		`
 resource "aws_eip" "test" {}
 
@@ -317,8 +318,8 @@ data "aws_eip" "test" {
 }
 `
 
-var testAccDataSourceAWSEIPConfigInstance = composeConfig(
-	testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
+var testAccDataSourceAWSEIPConfigInstance = acctest.ConfigCompose(
+	acctest.ConfigAvailableAZsNoOptInDefaultExclude(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.2.0.0/16"
 }
@@ -362,7 +363,7 @@ data "aws_eip" "test" {
 `)
 
 func testAccDataSourceAWSEIPConfigCarrierIP(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAvailableAZsWavelengthZonesDefaultExcludeConfig(),
 		fmt.Sprintf(`
 data "aws_availability_zone" "available" {

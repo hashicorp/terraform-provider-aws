@@ -7,24 +7,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSUserSSHKey_basic(t *testing.T) {
 	var conf iam.GetSSHPublicKeyOutput
 	resourceName := "aws_iam_user_ssh_key.user"
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	publicKey, _, err := RandSSHKeyPairSize(2048, testAccDefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{
@@ -47,13 +48,13 @@ func TestAccAWSUserSSHKey_basic(t *testing.T) {
 func TestAccAWSUserSSHKey_pemEncoding(t *testing.T) {
 	var conf iam.GetSSHPublicKeyOutput
 
-	ri := acctest.RandInt()
+	ri := sdkacctest.RandInt()
 	config := fmt.Sprintf(testAccAWSSSHKeyConfig_pemEncoding, ri)
 	resourceName := "aws_iam_user_ssh_key.user"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserSSHKeyDestroy,
 		Steps: []resource.TestStep{

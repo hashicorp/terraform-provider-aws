@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
-	rInt := acctest.RandIntRange(0, 256)
+	rInt := sdkacctest.RandIntRange(0, 256)
 	cidr := fmt.Sprintf("172.%d.123.0/24", rInt)
 	tag := "tf-acc-subnet-data-source"
 
@@ -24,8 +25,8 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 	ds6ResourceName := "data.aws_subnet.by_az_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
@@ -113,10 +114,10 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSubnet_ipv6ByIpv6Filter(t *testing.T) {
-	rInt := acctest.RandIntRange(0, 256)
+	rInt := sdkacctest.RandIntRange(0, 256)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -134,10 +135,10 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6Filter(t *testing.T) {
 }
 
 func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
-	rInt := acctest.RandIntRange(0, 256)
+	rInt := sdkacctest.RandIntRange(0, 256)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

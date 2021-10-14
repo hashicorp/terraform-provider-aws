@@ -14,10 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // This will currently skip EIPs with associations,
@@ -100,8 +101,8 @@ func TestAccAWSEIP_basic(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -128,8 +129,8 @@ func TestAccAWSEIP_disappears(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -137,7 +138,7 @@ func TestAccAWSEIP_disappears(t *testing.T) {
 				Config: testAccEIPConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, false, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEip(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEip(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -150,8 +151,8 @@ func TestAccAWSEIP_Instance(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -176,11 +177,11 @@ func TestAccAWSEIP_Instance(t *testing.T) {
 func TestAccAWSEIP_Instance_reassociate(t *testing.T) {
 	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -206,11 +207,11 @@ func TestAccAWSEIP_Instance_reassociate(t *testing.T) {
 func TestAccAWSEIP_Instance_associatedUserPrivateIP(t *testing.T) {
 	var one ec2.Address
 	resourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -247,8 +248,8 @@ func TestAccAWSEIP_Instance_notAssociated(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -281,8 +282,8 @@ func TestAccAWSEIP_Instance_ec2Classic(t *testing.T) {
 	var conf ec2.Address
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -307,11 +308,11 @@ func TestAccAWSEIP_Instance_ec2Classic(t *testing.T) {
 func TestAccAWSEIP_NetworkInterface(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -338,11 +339,11 @@ func TestAccAWSEIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 	var one, two ec2.Address
 	resourceName := "aws_eip.test"
 	resourceName2 := "aws_eip.test2"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -373,12 +374,12 @@ func TestAccAWSEIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 func TestAccAWSEIP_Tags_EC2VPC_withVPCTrue(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2VPCOnlyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckEC2VPCOnly(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -416,12 +417,12 @@ func TestAccAWSEIP_Tags_EC2VPC_withVPCTrue(t *testing.T) {
 func TestAccAWSEIP_Tags_EC2VPC_withoutVPCTrue(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2VPCOnlyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckEC2VPCOnly(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -458,12 +459,12 @@ func TestAccAWSEIP_Tags_EC2VPC_withoutVPCTrue(t *testing.T) {
 func TestAccAWSEIP_Tags_EC2Classic_withVPCTrue(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -498,11 +499,11 @@ func TestAccAWSEIP_Tags_EC2Classic_withVPCTrue(t *testing.T) {
 }
 
 func TestAccAWSEIP_Tags_EC2Classic_withoutVPCTrue(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -519,8 +520,8 @@ func TestAccAWSEIP_PublicIPv4Pool_default(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -553,8 +554,8 @@ func TestAccAWSEIP_PublicIPv4Pool_custom(t *testing.T) {
 	poolName := os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -581,8 +582,8 @@ func TestAccAWSEIP_CustomerOwnedIPv4Pool(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -608,8 +609,8 @@ func TestAccAWSEIP_networkBorderGroup(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -619,7 +620,7 @@ func TestAccAWSEIP_networkBorderGroup(t *testing.T) {
 					testAccCheckAWSEIPExists(resourceName, false, &conf),
 					testAccCheckAWSEIPAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
-					resource.TestCheckResourceAttr(resourceName, "network_border_group", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "network_border_group", acctest.Region()),
 				),
 			},
 			{
@@ -633,12 +634,12 @@ func TestAccAWSEIP_networkBorderGroup(t *testing.T) {
 
 func TestAccAWSEIP_carrierIP(t *testing.T) {
 	var conf ec2.Address
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -666,8 +667,8 @@ func TestAccAWSEIP_BYOIPAddress_default(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -695,8 +696,8 @@ func TestAccAWSEIP_BYOIPAddress_custom(t *testing.T) {
 	address := os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -729,8 +730,8 @@ func TestAccAWSEIP_BYOIPAddress_custom_with_PublicIpv4Pool(t *testing.T) {
 	poolName := os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
@@ -893,7 +894,7 @@ func testAccCheckAWSEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
 		expectedPrivateDNS := fmt.Sprintf(
 			"ip-%s.%s",
 			resourceAwsEc2DashIP(rs.Primary.Attributes["private_ip"]),
-			resourceAwsEc2RegionalPrivateDnsSuffix(testAccGetRegion()),
+			resourceAwsEc2RegionalPrivateDnsSuffix(acctest.Region()),
 		)
 
 		if privateDNS != expectedPrivateDNS {
@@ -915,8 +916,8 @@ func testAccCheckAWSEIPPublicDNS(resourceName string) resource.TestCheckFunc {
 		expectedPublicDNS := fmt.Sprintf(
 			"ec2-%s.%s.%s",
 			resourceAwsEc2DashIP(rs.Primary.Attributes["public_ip"]),
-			resourceAwsEc2RegionalPublicDnsSuffix(testAccGetRegion()),
-			testAccGetPartitionDNSSuffix(),
+			resourceAwsEc2RegionalPublicDnsSuffix(acctest.Region()),
+			acctest.PartitionDNSSuffix(),
 		)
 
 		if publicDNS != expectedPublicDNS {
@@ -938,8 +939,8 @@ func testAccCheckAWSEIPPublicDNSEC2Classic(resourceName string) resource.TestChe
 		expectedPublicDNS := fmt.Sprintf(
 			"ec2-%s.%s.%s",
 			resourceAwsEc2DashIP(rs.Primary.Attributes["public_ip"]),
-			resourceAwsEc2RegionalPublicDnsSuffix(testAccGetEc2ClassicRegion()),
-			testAccGetPartitionDNSSuffix(),
+			resourceAwsEc2RegionalPublicDnsSuffix(acctest.EC2ClassicRegion()),
+			acctest.PartitionDNSSuffix(),
 		)
 
 		if publicDNS != expectedPublicDNS {
@@ -970,8 +971,8 @@ resource "aws_eip" "test" {
 }
 
 func testAccEIPTagsEC2ClassicConfig(rName, vpcConfig string) string {
-	return composeConfig(
-		testAccEc2ClassicRegionProviderConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigEC2ClassicRegionProvider(),
 		fmt.Sprintf(`
 resource "aws_eip" "test" {
   %[1]s
@@ -1000,10 +1001,10 @@ resource "aws_eip" "test" {
 }
 
 func testAccEIPInstanceEC2ClassicConfig() string {
-	return composeConfig(
-		testAccEc2ClassicRegionProviderConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigEC2ClassicRegionProvider(),
 		testAccLatestAmazonLinuxPvEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
+		acctest.AvailableEC2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
 		`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-pv-ebs.id
@@ -1042,10 +1043,10 @@ resource "aws_eip" "test" {
 }
 
 func testAccAWSEIPInstanceConfig() string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
-		testAccAvailableAZsNoOptInConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+		acctest.ConfigAvailableAZsNoOptIn(),
 		`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1075,10 +1076,10 @@ resource "aws_eip" "test" {
 }
 
 func testAccEIPInstanceAssociatedConfig(rName string) string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableAZsNoOptInConfig(),
-		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "default" {
   cidr_block           = "10.0.0.0/16"
@@ -1144,8 +1145,8 @@ resource "aws_eip" "test" {
 }
 
 func testAccEIPInstanceAssociatedSwitchConfig(rName string) string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_vpc" "default" {
   cidr_block           = "10.0.0.0/16"
@@ -1211,8 +1212,8 @@ resource "aws_eip" "test" {
 }
 
 func testAccEIPNetworkInterfaceConfig(rName string) string {
-	return composeConfig(
-		testAccAvailableAZsNoOptInConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
@@ -1249,8 +1250,8 @@ resource "aws_eip" "test" {
 }
 
 func testAccEIPMultiNetworkInterfaceConfig(rName string) string {
-	return composeConfig(
-		testAccAvailableAZsNoOptInConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
@@ -1295,9 +1296,9 @@ resource "aws_eip" "test2" {
 }
 
 func testAccEIPInstanceReassociateConfig(rName string) string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_eip" "test" {
   instance = aws_instance.test.id
@@ -1369,10 +1370,10 @@ resource "aws_route_table_association" "test" {
 }
 
 func testAccEIPInstanceAssociateNotAssociatedConfig() string {
-	return composeConfig(
-		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
-		testAccAvailableAZsNoOptInConfig(),
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+	return acctest.ConfigCompose(
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -1399,10 +1400,10 @@ resource "aws_eip" "test" {
 }
 
 func testAccEIPInstanceAssociateAssociatedConfig() string {
-	return composeConfig(
-		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
-		testAccAvailableAZsNoOptInConfig(),
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+	return acctest.ConfigCompose(
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -1451,7 +1452,7 @@ resource "aws_eip" "test" {
 `
 
 func testAccEIPCarrierIPConfig(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccAvailableAZsWavelengthZonesDefaultExcludeConfig(),
 		fmt.Sprintf(`
 data "aws_availability_zone" "available" {

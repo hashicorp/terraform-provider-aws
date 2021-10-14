@@ -7,23 +7,24 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
@@ -31,8 +32,8 @@ func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.lb", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -50,15 +51,15 @@ func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 func TestAccAWSEc2TrafficMirrorTarget_eni(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
 	description := "test eni target"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
@@ -84,14 +85,14 @@ func TestAccAWSEc2TrafficMirrorTarget_tags(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
@@ -133,14 +134,14 @@ func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 	var v ec2.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
@@ -148,7 +149,7 @@ func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2TrafficMirrorTarget(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2TrafficMirrorTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -229,7 +230,7 @@ resource "aws_subnet" "sub2" {
 }
 
 func testAccTrafficMirrorTargetConfigNlb(rName, description string) string {
-	return composeConfig(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
 resource "aws_lb" "lb" {
   name               = %[1]q
   internal           = true
@@ -252,9 +253,9 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 }
 
 func testAccTrafficMirrorTargetConfigEni(rName, description string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccTrafficMirrorTargetConfigBase(rName),
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_instance" "src" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -274,7 +275,7 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 }
 
 func testAccTrafficMirrorTargetConfigTags1(rName, description, tagKey1, tagValue1 string) string {
-	return composeConfig(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
 resource "aws_lb" "lb" {
   name               = %[1]q
   internal           = true
@@ -301,7 +302,7 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 }
 
 func testAccTrafficMirrorTargetConfigTags2(rName, description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
 resource "aws_lb" "lb" {
   name               = %[1]q
   internal           = true
@@ -333,7 +334,7 @@ func testAccPreCheckAWSEc2TrafficMirrorTarget(t *testing.T) {
 
 	_, err := conn.DescribeTrafficMirrorTargets(&ec2.DescribeTrafficMirrorTargetsInput{})
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror target acceptance test: ", err)
 	}
 

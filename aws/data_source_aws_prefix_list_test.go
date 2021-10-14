@@ -10,12 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsPrefixList_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -31,8 +32,8 @@ func TestAccDataSourceAwsPrefixList_basic(t *testing.T) {
 
 func TestAccDataSourceAwsPrefixList_filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -48,8 +49,8 @@ func TestAccDataSourceAwsPrefixList_filter(t *testing.T) {
 
 func TestAccDataSourceAwsPrefixList_nameDoesNotOverrideFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -90,7 +91,7 @@ func testAccDataSourceAwsPrefixListCheck(name string) resource.TestCheckFunc {
 
 		attr := rs.Primary.Attributes
 
-		region := testAccGetRegion()
+		region := acctest.Region()
 		prefixListName := fmt.Sprintf("com.amazonaws.%s.s3", region)
 		prefixListId, err := getPrefixListId(prefixListName)
 		if err != nil {

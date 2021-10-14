@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
@@ -17,8 +18,8 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_basic(t *testing.T) {
 	class := "db.t3.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -43,8 +44,8 @@ func TestAccAWSNeptuneOrderableDbInstanceDataSource_preferred(t *testing.T) {
 	preferredOption := "db.r4.2xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSNeptuneOrderableDbInstance(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -70,7 +71,7 @@ func testAccPreCheckAWSNeptuneOrderableDbInstance(t *testing.T) {
 
 	_, err := conn.DescribeOrderableDBInstanceOptions(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

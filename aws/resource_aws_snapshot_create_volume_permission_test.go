@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSnapshotCreateVolumePermission_basic(t *testing.T) {
@@ -15,8 +16,8 @@ func TestAccAWSSnapshotCreateVolumePermission_basic(t *testing.T) {
 	accountId := "111122223333"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
@@ -44,8 +45,8 @@ func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 	accountId := "111122223333"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
@@ -54,7 +55,7 @@ func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
 					testAccAWSSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

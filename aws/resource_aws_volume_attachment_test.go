@@ -7,20 +7,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSVolumeAttachment_basic(t *testing.T) {
 	var i ec2.Instance
 	var v ec2.Volume
 	resourceName := "aws_volume_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -47,11 +48,11 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 	var i ec2.Instance
 	var v ec2.Volume
 	resourceName := "aws_volume_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 	var i ec2.Instance
 	var v ec2.Volume
 	resourceName := "aws_volume_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	stopInstance := func() {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -109,8 +110,8 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -142,11 +143,11 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 
 func TestAccAWSVolumeAttachment_update(t *testing.T) {
 	resourceName := "aws_volume_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -192,11 +193,11 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 	var i ec2.Instance
 	var v ec2.Volume
 	resourceName := "aws_volume_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -206,7 +207,7 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 					testAccCheckInstanceExists("aws_instance.test", &i),
 					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
 					testAccCheckVolumeAttachmentExists(resourceName, &i, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVolumeAttachment(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVolumeAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -218,11 +219,11 @@ func TestAccAWSVolumeAttachment_stopInstance(t *testing.T) {
 	var i ec2.Instance
 	var v ec2.Volume
 	resourceName := "aws_volume_attachment.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -308,9 +309,9 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 }
 
 func testAccVolumeAttachmentInstanceOnlyConfigBase(rName string) string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -357,7 +358,7 @@ resource "aws_volume_attachment" "test" {
 }
 
 func testAccVolumeAttachmentStopInstanceConfig(rName string) string {
-	return composeConfig(testAccVolumeAttachmentInstanceOnlyConfigBase(rName),
+	return acctest.ConfigCompose(testAccVolumeAttachmentInstanceOnlyConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]

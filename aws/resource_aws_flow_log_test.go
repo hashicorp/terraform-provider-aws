@@ -8,11 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -71,11 +72,11 @@ func TestAccAWSFlowLog_VPCID(t *testing.T) {
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_flow_log.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -83,7 +84,7 @@ func TestAccAWSFlowLog_VPCID(t *testing.T) {
 				Config: testAccFlowLogConfig_VPCID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-flow-log/fl-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-flow-log/fl-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
@@ -109,12 +110,12 @@ func TestAccAWSFlowLog_VPCID(t *testing.T) {
 func TestAccAWSFlowLog_LogFormat(t *testing.T) {
 	var flowLog ec2.FlowLog
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	logFormat := "${version} ${vpc-id} ${subnet-id}"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -144,11 +145,11 @@ func TestAccAWSFlowLog_SubnetID(t *testing.T) {
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_flow_log.test"
 	subnetResourceName := "aws_subnet.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -178,11 +179,11 @@ func TestAccAWSFlowLog_LogDestinationType_CloudWatchLogs(t *testing.T) {
 	var flowLog ec2.FlowLog
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -191,7 +192,7 @@ func TestAccAWSFlowLog_LogDestinationType_CloudWatchLogs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					// We automatically trim :* from ARNs if present
-					testAccCheckResourceAttrRegionalARN(resourceName, "log_destination", "logs", fmt.Sprintf("log-group:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "log_destination", "logs", fmt.Sprintf("log-group:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
 				),
@@ -209,11 +210,11 @@ func TestAccAWSFlowLog_LogDestinationType_S3(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -236,11 +237,11 @@ func TestAccAWSFlowLog_LogDestinationType_S3(t *testing.T) {
 }
 
 func TestAccAWSFlowLog_LogDestinationType_S3_Invalid(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test-flow-log-s3-invalid")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test-flow-log-s3-invalid")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -256,11 +257,11 @@ func TestAccAWSFlowLog_LogDestinationType_S3_DO_PlainText(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -287,11 +288,11 @@ func TestAccAWSFlowLog_LogDestinationType_S3_DO_PlainText_HiveCompatible(t *test
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -320,11 +321,11 @@ func TestAccAWSFlowLog_LogDestinationType_S3_DO_Parquet(t *testing.T) {
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -351,11 +352,11 @@ func TestAccAWSFlowLog_LogDestinationType_S3_DO_Parquet_HiveCompatible(t *testin
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -383,11 +384,11 @@ func TestAccAWSFlowLog_LogDestinationType_S3_DO_Parquet_HiveCompatible_PerHour(t
 	var flowLog ec2.FlowLog
 	s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -415,11 +416,11 @@ func TestAccAWSFlowLog_LogDestinationType_S3_DO_Parquet_HiveCompatible_PerHour(t
 func TestAccAWSFlowLog_LogDestinationType_MaxAggregationInterval(t *testing.T) {
 	var flowLog ec2.FlowLog
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -442,11 +443,11 @@ func TestAccAWSFlowLog_LogDestinationType_MaxAggregationInterval(t *testing.T) {
 func TestAccAWSFlowLog_tags(t *testing.T) {
 	var flowLog ec2.FlowLog
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -487,11 +488,11 @@ func TestAccAWSFlowLog_tags(t *testing.T) {
 func TestAccAWSFlowLog_disappears(t *testing.T) {
 	var flowLog ec2.FlowLog
 	resourceName := "aws_flow_log.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFlowLogDestroy,
 		Steps: []resource.TestStep{
@@ -499,7 +500,7 @@ func TestAccAWSFlowLog_disappears(t *testing.T) {
 				Config: testAccFlowLogConfig_VPCID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsFlowLog(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsFlowLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

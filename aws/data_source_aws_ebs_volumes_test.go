@@ -5,15 +5,16 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsEbsVolumes_basic(t *testing.T) {
-	rInt := acctest.RandIntRange(0, 256)
+	rInt := sdkacctest.RandIntRange(0, 256)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +48,7 @@ data "aws_ebs_volumes" "subject_under_test" {
 }
 
 func testAccDataSourceAwsEbsVolumeIDsConfig(rInt int) string {
-	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_ebs_volume" "volume" {

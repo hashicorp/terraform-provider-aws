@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -82,11 +83,11 @@ func testSweepIamInstanceProfile(region string) error {
 func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +95,7 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 				Config: testAccAwsIamInstanceProfileConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/test-%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/test-%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -112,10 +113,10 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 func TestAccAWSIAMInstanceProfile_withoutRole(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
@@ -138,11 +139,11 @@ func TestAccAWSIAMInstanceProfile_withoutRole(t *testing.T) {
 func TestAccAWSIAMInstanceProfile_tags(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
@@ -183,12 +184,12 @@ func TestAccAWSIAMInstanceProfile_tags(t *testing.T) {
 
 func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iam_instance_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
@@ -213,11 +214,11 @@ func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
 func TestAccAWSIAMInstanceProfile_disappears(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
@@ -225,7 +226,7 @@ func TestAccAWSIAMInstanceProfile_disappears(t *testing.T) {
 				Config: testAccAwsIamInstanceProfileConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamInstanceProfile(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIamInstanceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -236,11 +237,11 @@ func TestAccAWSIAMInstanceProfile_disappears(t *testing.T) {
 func TestAccAWSIAMInstanceProfile_disappears_role(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
-	rName := acctest.RandString(5)
+	rName := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
@@ -248,7 +249,7 @@ func TestAccAWSIAMInstanceProfile_disappears_role(t *testing.T) {
 				Config: testAccAwsIamInstanceProfileConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamRole(), "aws_iam_role.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsIamRole(), "aws_iam_role.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

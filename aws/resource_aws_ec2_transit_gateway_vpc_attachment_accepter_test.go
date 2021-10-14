@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
@@ -18,16 +19,16 @@ func testAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	vpcResourceName := "aws_vpc.test"
 	callerIdentityDatasourceName := "data.aws_caller_identity.creator"
-	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", acctest.RandString(8))
+	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", sdkacctest.RandString(8))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -65,16 +66,16 @@ func testAccAWSEc2TransitGatewayVpcAttachmentAccepter_Tags(t *testing.T) {
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	vpcResourceName := "aws_vpc.test"
 	callerIdentityDatasourceName := "data.aws_caller_identity.creator"
-	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", acctest.RandString(8))
+	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", sdkacctest.RandString(8))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,16 +136,16 @@ func testAccAWSEc2TransitGatewayVpcAttachmentAccepter_TransitGatewayDefaultRoute
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", acctest.RandString(8))
+	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", sdkacctest.RandString(8))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -196,7 +197,7 @@ func testAccAWSEc2TransitGatewayVpcAttachmentAccepter_TransitGatewayDefaultRoute
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName string) string {
-	return composeConfig(testAccAlternateAccountProviderConfig(), testAccAvailableAZsNoOptInDefaultExcludeConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q

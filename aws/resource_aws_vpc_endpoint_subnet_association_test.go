@@ -5,21 +5,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_subnet_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -36,11 +37,11 @@ func TestAccAWSVpcEndpointSubnetAssociation_basic(t *testing.T) {
 func TestAccAWSVpcEndpointSubnetAssociation_disappears(t *testing.T) {
 	var vpce ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_subnet_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -48,7 +49,7 @@ func TestAccAWSVpcEndpointSubnetAssociation_disappears(t *testing.T) {
 				Config: testAccVpcEndpointSubnetAssociationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointSubnetAssociationExists(resourceName, &vpce),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpcEndpointSubnetAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpcEndpointSubnetAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -61,11 +62,11 @@ func TestAccAWSVpcEndpointSubnetAssociation_multiple(t *testing.T) {
 	resourceName0 := "aws_vpc_endpoint_subnet_association.test.0"
 	resourceName1 := "aws_vpc_endpoint_subnet_association.test.1"
 	resourceName2 := "aws_vpc_endpoint_subnet_association.test.2"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointSubnetAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -137,8 +138,8 @@ func testAccCheckVpcEndpointSubnetAssociationExists(n string, vpce *ec2.VpcEndpo
 }
 
 func testAccVpcEndpointSubnetAssociationConfigBase(rName string) string {
-	return composeConfig(
-		testAccAvailableAZsNoOptInConfig(),
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -182,7 +183,7 @@ resource "aws_subnet" "test" {
 }
 
 func testAccVpcEndpointSubnetAssociationConfigBasic(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccVpcEndpointSubnetAssociationConfigBase(rName),
 		`
 resource "aws_vpc_endpoint_subnet_association" "test" {
@@ -193,7 +194,7 @@ resource "aws_vpc_endpoint_subnet_association" "test" {
 }
 
 func testAccVpcEndpointSubnetAssociationConfigMultiple(rName string) string {
-	return composeConfig(
+	return acctest.ConfigCompose(
 		testAccVpcEndpointSubnetAssociationConfigBase(rName),
 		`
 resource "aws_vpc_endpoint_subnet_association" "test" {

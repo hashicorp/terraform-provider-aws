@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -81,12 +82,12 @@ func testSweepRedshiftSubnetGroups(region string) error {
 
 func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -113,12 +114,12 @@ func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {
 
 func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
 	var clusterSubnetGroup redshift.ClusterSubnetGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -126,7 +127,7 @@ func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
 				Config: testAccRedshiftSubnetGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRedshiftSubnetGroupExists(resourceName, &clusterSubnetGroup),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRedshiftSubnetGroup(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRedshiftSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,12 +137,12 @@ func TestAccAWSRedshiftSubnetGroup_disappears(t *testing.T) {
 
 func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -174,12 +175,12 @@ func TestAccAWSRedshiftSubnetGroup_updateDescription(t *testing.T) {
 
 func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -212,12 +213,12 @@ func TestAccAWSRedshiftSubnetGroup_updateSubnetIds(t *testing.T) {
 
 func TestAccAWSRedshiftSubnetGroup_tags(t *testing.T) {
 	var v redshift.ClusterSubnetGroup
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_redshift_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRedshiftSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -311,7 +312,7 @@ func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGr
 }
 
 func testAccRedshiftSubnetGroupConfig(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -349,7 +350,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 func testAccRedshiftSubnetGroup_updateDescription(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -387,7 +388,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 func testAccRedshiftSubnetGroupConfigWithTags(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -428,7 +429,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 func testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -471,7 +472,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 func testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt int) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 

@@ -6,21 +6,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
-	rInt := acctest.RandInt()
-	rName := acctest.RandString(8)
+	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandString(8)
 	resourceName := "aws_redshift_snapshot_schedule_association.default"
 	snapshotScheduleResourceName := "aws_redshift_snapshot_schedule.default"
 	clusterResourceName := "aws_redshift_cluster.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{

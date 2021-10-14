@@ -7,20 +7,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSOpsworksInstance_basic(t *testing.T) {
-	stackName := fmt.Sprintf("tf-%d", acctest.RandInt())
+	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
 	var opsinst opsworks.Instance
 	resourceName := "aws_opsworks_instance.tf-acc"
 	dataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -64,13 +65,13 @@ func TestAccAWSOpsworksInstance_basic(t *testing.T) {
 }
 
 func TestAccAWSOpsworksInstance_UpdateHostNameForceNew(t *testing.T) {
-	stackName := fmt.Sprintf("tf-%d", acctest.RandInt())
+	stackName := fmt.Sprintf("tf-%d", sdkacctest.RandInt())
 	resourceName := "aws_opsworks_instance.tf-acc"
 	var before, after opsworks.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
 		Steps: []resource.TestStep{

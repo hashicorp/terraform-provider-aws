@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -82,27 +83,27 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 func testAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayResourceNamePeer := "aws_ec2_transit_gateway.peer"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_sameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
-					testAccCheckResourceAttrAccountID(resourceName, "peer_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "peer_region", testAccGetAlternateRegion()),
+					acctest.CheckResourceAttrAccountID(resourceName, "peer_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -121,17 +122,17 @@ func testAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 func testAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -149,17 +150,17 @@ func testAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
 func testAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -201,20 +202,20 @@ func testAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T)
 func testAccAWSEc2TransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	var providers []*schema.Provider
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayResourceNamePeer := "aws_ec2_transit_gateway.peer"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
-			testAccMultipleRegionPreCheck(t, 2)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -223,12 +224,12 @@ func testAccAWSEc2TransitGatewayPeeringAttachment_differentAccount(t *testing.T)
 					testAccCheckAWSEc2TransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
 					// Test that the peer account ID != the primary (request) account ID
 					func(s *terraform.State) error {
-						if testAccCheckResourceAttrAccountID(resourceName, "peer_account_id") == nil {
+						if acctest.CheckResourceAttrAccountID(resourceName, "peer_account_id") == nil {
 							return fmt.Errorf("peer_account_id attribute incorrectly to the requester's account ID")
 						}
 						return nil
 					},
-					resource.TestCheckResourceAttr(resourceName, "peer_region", testAccGetAlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -342,11 +343,11 @@ resource "aws_ec2_transit_gateway" "peer" {
 }
 
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName string) string {
-	return testAccAlternateRegionProviderConfig() + testAccAWSEc2TransitGatewayPeeringAttachmentConfig_base(rName)
+	return acctest.ConfigAlternateRegionProvider() + testAccAWSEc2TransitGatewayPeeringAttachmentConfig_base(rName)
 }
 
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfig_differentAccount_base(rName string) string {
-	return testAccAlternateAccountAlternateRegionProviderConfig() + testAccAWSEc2TransitGatewayPeeringAttachmentConfig_base(rName)
+	return acctest.ConfigAlternateAccountAlternateRegionProvider() + testAccAWSEc2TransitGatewayPeeringAttachmentConfig_base(rName)
 }
 
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_sameAccount(rName string) string {
@@ -356,7 +357,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
 }
-`, testAccGetAlternateRegion())
+`, acctest.AlternateRegion())
 }
 
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName string) string {
@@ -367,7 +368,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
 }
-`, testAccGetAlternateRegion())
+`, acctest.AlternateRegion())
 }
 
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfigTags1_sameAccount(rName, tagKey1, tagValue1 string) string {
@@ -383,7 +384,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
     %[3]s = %[4]q
   }
 }
-`, testAccGetAlternateRegion(), rName, tagKey1, tagValue1)
+`, acctest.AlternateRegion(), rName, tagKey1, tagValue1)
 }
 
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfigTags2_sameAccount(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -400,5 +401,5 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
     %[5]s = %[6]q
   }
 }
-`, testAccGetAlternateRegion(), rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, acctest.AlternateRegion(), rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

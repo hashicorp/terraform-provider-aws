@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 // add sweeper to delete known test VPN Gateways
@@ -108,8 +109,8 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -117,7 +118,7 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-gateway/vgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-gateway/vgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -143,8 +144,8 @@ func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	azDataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -170,8 +171,8 @@ func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
 	resourceName := "aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -197,8 +198,8 @@ func TestAccAWSVpnGateway_disappears(t *testing.T) {
 	resourceName := "aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -206,7 +207,7 @@ func TestAccAWSVpnGateway_disappears(t *testing.T) {
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpnGateway(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsVpnGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -255,16 +256,16 @@ func TestAccAWSVpnGateway_reattach(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckVpnGatewayConfigReattach,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcExists("aws_vpc.test", &vpc1),
-					testAccCheckVpcExists("aws_vpc.test2", &vpc2),
+					acctest.CheckVPCExists("aws_vpc.test", &vpc1),
+					acctest.CheckVPCExists("aws_vpc.test2", &vpc2),
 					testAccCheckVpnGatewayExists(
 						resourceName, &vgw1),
 					testAccCheckVpnGatewayExists(
@@ -319,8 +320,8 @@ func TestAccAWSVpnGateway_delete(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -347,8 +348,8 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 	resourceName := "aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -618,7 +619,7 @@ resource "aws_vpn_gateway" "test2" {
 `
 
 func testAccVpnGatewayConfigWithAZ() string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 

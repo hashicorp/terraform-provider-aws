@@ -10,11 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -70,11 +71,11 @@ func TestAccAWSEc2CarrierGateway_basic(t *testing.T) {
 	var v ec2.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	vpcResourceName := "aws_vpc.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CarrierGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -82,8 +83,8 @@ func TestAccAWSEc2CarrierGateway_basic(t *testing.T) {
 				Config: testAccEc2CarrierGatewayConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`carrier-gateway/cagw-.+`)),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`carrier-gateway/cagw-.+`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
@@ -100,11 +101,11 @@ func TestAccAWSEc2CarrierGateway_basic(t *testing.T) {
 func TestAccAWSEc2CarrierGateway_disappears(t *testing.T) {
 	var v ec2.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CarrierGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -112,7 +113,7 @@ func TestAccAWSEc2CarrierGateway_disappears(t *testing.T) {
 				Config: testAccEc2CarrierGatewayConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2CarrierGateway(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsEc2CarrierGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,11 +124,11 @@ func TestAccAWSEc2CarrierGateway_disappears(t *testing.T) {
 func TestAccAWSEc2CarrierGateway_Tags(t *testing.T) {
 	var v ec2.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEc2CarrierGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -234,7 +235,7 @@ func testAccPreCheckAWSWavelengthZoneAvailable(t *testing.T) {
 
 	output, err := conn.DescribeAvailabilityZones(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
