@@ -19,6 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 const awsMutexConnectContactFlowKey = `aws_connect_contact_flow`
@@ -33,8 +40,8 @@ func ResourceContactFlow() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.ConnectContactFlowCreateTimeout),
-			Update: schema.DefaultTimeout(waiter.ConnectContactFlowUpdateTimeout),
+			Create: schema.DefaultTimeout(tfconnect.connectContactFlowCreateTimeout),
+			Update: schema.DefaultTimeout(tfconnect.connectContactFlowUpdateTimeout),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{

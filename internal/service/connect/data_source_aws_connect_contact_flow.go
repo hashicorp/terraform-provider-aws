@@ -13,6 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 func DataSourceContactFlow() *schema.Resource {

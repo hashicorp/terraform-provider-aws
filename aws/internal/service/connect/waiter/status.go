@@ -9,9 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-func InstanceStatus(ctx context.Context, conn *connect.Connect, instanceId string) resource.StateRefreshFunc {
+func statusInstance(ctx context.Context, conn *connect.Connect, instanceId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &connect.DescribeInstanceInput{
 			InstanceId: aws.String(instanceId),

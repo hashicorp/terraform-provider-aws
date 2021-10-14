@@ -20,6 +20,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -32,8 +44,8 @@ func ResourceInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.ConnectInstanceCreatedTimeout),
-			Delete: schema.DefaultTimeout(waiter.ConnectInstanceDeletedTimeout),
+			Create: schema.DefaultTimeout(tfconnect.connectInstanceCreatedTimeout),
+			Delete: schema.DefaultTimeout(tfconnect.connectInstanceDeletedTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -140,7 +152,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.Id))
 
-	if _, err := waiter.InstanceCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := tfconnect.waitInstanceCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Connect instance creation (%s): %w", d.Id(), err))
 	}
 
@@ -242,7 +254,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(fmt.Errorf("error deleting Connect Instance (%s): %s", d.Id(), err))
 	}
 
-	if _, err := waiter.InstanceDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := tfconnect.waitInstanceDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Connect Instance deletion (%s): %s", d.Id(), err))
 	}
 	return nil

@@ -8,23 +8,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 const (
 	// ConnectInstanceCreateTimeout Timeout for connect instance creation
-	ConnectInstanceCreatedTimeout = 5 * time.Minute
-	ConnectInstanceDeletedTimeout = 5 * time.Minute
+	connectInstanceCreatedTimeout = 5 * time.Minute
+	connectInstanceDeletedTimeout = 5 * time.Minute
 
-	ConnectContactFlowCreateTimeout = 5 * time.Minute
-	ConnectContactFlowUpdateTimeout = 5 * time.Minute
+	connectContactFlowCreateTimeout = 5 * time.Minute
+	connectContactFlowUpdateTimeout = 5 * time.Minute
 )
 
-func InstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
+func waitInstanceCreated(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{connect.InstanceStatusCreationInProgress},
 		Target:  []string{connect.InstanceStatusActive},
-		Refresh: InstanceStatus(ctx, conn, instanceId),
-		Timeout: ConnectInstanceCreatedTimeout,
+		Refresh: statusInstance(ctx, conn, instanceId),
+		Timeout: connectInstanceCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -39,12 +44,12 @@ func InstanceCreated(ctx context.Context, conn *connect.Connect, instanceId stri
 // We don't have a PENDING_DELETION or DELETED for the Connect instance.
 // If the Connect Instance has an associated EXISTING DIRECTORY, removing the connect instance
 // will cause an error because it is still has authorized applications.
-func InstanceDeleted(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
+func waitInstanceDeleted(ctx context.Context, conn *connect.Connect, instanceId string) (*connect.DescribeInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{connect.InstanceStatusActive},
 		Target:  []string{tfconnect.InstanceStatusStatusNotFound},
-		Refresh: InstanceStatus(ctx, conn, instanceId),
-		Timeout: ConnectInstanceDeletedTimeout,
+		Refresh: statusInstance(ctx, conn, instanceId),
+		Timeout: connectInstanceDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
