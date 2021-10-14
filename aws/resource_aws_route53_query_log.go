@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53QueryLog() *schema.Resource {
+func ResourceQueryLog() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53QueryLogCreate,
-		Read:   resourceAwsRoute53QueryLogRead,
-		Delete: resourceAwsRoute53QueryLogDelete,
+		Create: resourceQueryLogCreate,
+		Read:   resourceQueryLogRead,
+		Delete: resourceQueryLogDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,7 +41,7 @@ func resourceAwsRoute53QueryLog() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53QueryLogCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogCreate(d *schema.ResourceData, meta interface{}) error {
 	r53 := meta.(*conns.AWSClient).Route53Conn
 
 	input := &route53.CreateQueryLoggingConfigInput{
@@ -58,10 +58,10 @@ func resourceAwsRoute53QueryLogCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(out.QueryLoggingConfig.Id))
 
-	return resourceAwsRoute53QueryLogRead(d, meta)
+	return resourceQueryLogRead(d, meta)
 }
 
-func resourceAwsRoute53QueryLogRead(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogRead(d *schema.ResourceData, meta interface{}) error {
 	r53 := meta.(*conns.AWSClient).Route53Conn
 
 	input := &route53.GetQueryLoggingConfigInput{
@@ -92,7 +92,7 @@ func resourceAwsRoute53QueryLogRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsRoute53QueryLogDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceQueryLogDelete(d *schema.ResourceData, meta interface{}) error {
 	r53 := meta.(*conns.AWSClient).Route53Conn
 
 	input := &route53.DeleteQueryLoggingConfigInput{

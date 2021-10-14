@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDelegationSet() *schema.Resource {
+func DataSourceDelegationSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDelegationSetRead,
+		Read: dataSourceDelegationSetRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -37,7 +37,7 @@ func dataSourceAwsDelegationSet() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	dSetID := d.Get("id").(string)

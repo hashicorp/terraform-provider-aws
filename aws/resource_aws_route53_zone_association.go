@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53ZoneAssociation() *schema.Resource {
+func ResourceZoneAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53ZoneAssociationCreate,
-		Read:   resourceAwsRoute53ZoneAssociationRead,
-		Delete: resourceAwsRoute53ZoneAssociationDelete,
+		Create: resourceZoneAssociationCreate,
+		Read:   resourceZoneAssociationRead,
+		Delete: resourceZoneAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -51,7 +51,7 @@ func resourceAwsRoute53ZoneAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	vpcRegion := meta.(*conns.AWSClient).Region
@@ -94,10 +94,10 @@ func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsRoute53ZoneAssociationRead(d, meta)
+	return resourceZoneAssociationRead(d, meta)
 }
 
-func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(d.Id())
@@ -145,7 +145,7 @@ func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsRoute53ZoneAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceZoneAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53Conn
 
 	zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(d.Id())

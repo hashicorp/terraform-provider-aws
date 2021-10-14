@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAWSRoute53RecordMigrateState(t *testing.T) {
@@ -94,7 +95,7 @@ func TestAWSRoute53RecordMigrateStateV1toV2(t *testing.T) {
 			ID:         "route53_record",
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsRoute53Record().MigrateState(
+		is, err := ResourceRecord().MigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

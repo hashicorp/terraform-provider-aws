@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
@@ -94,7 +95,7 @@ func TestAccAWSRoute53DelegationSet_disappears(t *testing.T) {
 				Config: testAccRoute53DelegationSetConfig(refName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53DelegationSetExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53DelegationSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDelegationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

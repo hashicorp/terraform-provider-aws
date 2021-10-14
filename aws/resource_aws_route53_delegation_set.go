@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsRoute53DelegationSet() *schema.Resource {
+func ResourceDelegationSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53DelegationSetCreate,
-		Read:   resourceAwsRoute53DelegationSetRead,
-		Delete: resourceAwsRoute53DelegationSetDelete,
+		Create: resourceDelegationSetCreate,
+		Read:   resourceDelegationSetRead,
+		Delete: resourceDelegationSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -44,7 +44,7 @@ func resourceAwsRoute53DelegationSet() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53DelegationSetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDelegationSetCreate(d *schema.ResourceData, meta interface{}) error {
 	r53 := meta.(*conns.AWSClient).Route53Conn
 
 	callerRef := resource.UniqueId()
@@ -67,10 +67,10 @@ func resourceAwsRoute53DelegationSetCreate(d *schema.ResourceData, meta interfac
 	set := out.DelegationSet
 	d.SetId(cleanDelegationSetId(*set.Id))
 
-	return resourceAwsRoute53DelegationSetRead(d, meta)
+	return resourceDelegationSetRead(d, meta)
 }
 
-func resourceAwsRoute53DelegationSetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
 	r53 := meta.(*conns.AWSClient).Route53Conn
 
 	input := &route53.GetReusableDelegationSetInput{
@@ -101,7 +101,7 @@ func resourceAwsRoute53DelegationSetRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsRoute53DelegationSetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDelegationSetDelete(d *schema.ResourceData, meta interface{}) error {
 	r53 := meta.(*conns.AWSClient).Route53Conn
 
 	input := &route53.DeleteReusableDelegationSetInput{
