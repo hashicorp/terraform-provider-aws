@@ -92,7 +92,7 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,7 +157,7 @@ func TestAccAWSGameliftBuild_tags(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -220,7 +220,7 @@ func TestAccAWSGameliftBuild_disappears(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -246,7 +246,7 @@ func testAccCheckAWSGameliftBuildExists(n string, res *gamelift.Build) resource.
 			return fmt.Errorf("No Gamelift Build ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 		req := &gamelift.DescribeBuildInput{
 			BuildId: aws.String(rs.Primary.ID),
@@ -270,7 +270,7 @@ func testAccCheckAWSGameliftBuildExists(n string, res *gamelift.Build) resource.
 
 func testAccCheckAWSGameliftBuildDisappears(res *gamelift.Build) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 		input := &gamelift.DeleteBuildInput{BuildId: res.BuildId}
 
@@ -280,7 +280,7 @@ func testAccCheckAWSGameliftBuildDisappears(res *gamelift.Build) resource.TestCh
 }
 
 func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_build" {
@@ -307,7 +307,7 @@ func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSGamelift(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 	input := &gamelift.ListBuildsInput{}
 

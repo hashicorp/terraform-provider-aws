@@ -100,7 +100,7 @@ func TestAccAWSGameliftGameSessionQueue_basic(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -164,7 +164,7 @@ func TestAccAWSGameliftGameSessionQueue_tags(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,7 +225,7 @@ func TestAccAWSGameliftGameSessionQueue_disappears(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -252,7 +252,7 @@ func testAccCheckAWSGameliftGameSessionQueueExists(n string, res *gamelift.GameS
 			return fmt.Errorf("no Gamelift Session Queue Name is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 		name := rs.Primary.Attributes["name"]
 		limit := int64(1)
@@ -285,7 +285,7 @@ func testAccCheckAWSGameliftGameSessionQueueExists(n string, res *gamelift.GameS
 
 func testAccCheckAWSGameliftGameSessionQueueDisappears(res *gamelift.GameSessionQueue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 		input := &gamelift.DeleteGameSessionQueueInput{Name: res.Name}
 
@@ -296,7 +296,7 @@ func testAccCheckAWSGameliftGameSessionQueueDisappears(res *gamelift.GameSession
 }
 
 func testAccCheckAWSGameliftGameSessionQueueDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_game_session_queue" {

@@ -268,7 +268,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -350,7 +350,7 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -420,7 +420,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -538,7 +538,7 @@ func TestAccAWSGameliftFleet_disappears(t *testing.T) {
 			testAccPreCheckAWSGamelift(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -564,7 +564,7 @@ func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes)
 			return fmt.Errorf("No Gamelift Fleet ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 		out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
 			FleetIds: aws.StringSlice([]string{rs.Primary.ID}),
@@ -594,7 +594,7 @@ func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes)
 
 func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+		conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 		input := &gamelift.DeleteFleetInput{FleetId: res.FleetId}
 		err := resource.Retry(60*time.Minute, func() *resource.RetryError {
@@ -620,7 +620,7 @@ func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resou
 }
 
 func testAccCheckAWSGameliftFleetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+	conn := acctest.Provider.Meta().(*AWSClient).gameliftconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_gamelift_fleet" {
