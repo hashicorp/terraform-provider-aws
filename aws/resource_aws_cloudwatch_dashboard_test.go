@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
@@ -117,7 +118,7 @@ func testAccCheckCloudWatchDashboardExists(n string, dashboard *cloudwatch.GetDa
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}
@@ -134,7 +135,7 @@ func testAccCheckCloudWatchDashboardExists(n string, dashboard *cloudwatch.GetDa
 }
 
 func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_dashboard" {
@@ -159,7 +160,7 @@ func testAccCheckAWSCloudWatchDashboardDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudWatchDashboardDestroyPrevious(dashboardName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(dashboardName),
@@ -246,7 +247,7 @@ func testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, expected string
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 		params := cloudwatch.GetDashboardInput{
 			DashboardName: aws.String(rs.Primary.ID),
 		}

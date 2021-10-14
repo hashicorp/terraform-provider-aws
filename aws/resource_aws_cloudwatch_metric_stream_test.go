@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -277,7 +278,7 @@ func testAccCheckCloudWatchMetricStreamExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 		params := cloudwatch.GetMetricStreamInput{
 			Name: aws.String(rs.Primary.ID),
 		}
@@ -293,7 +294,7 @@ func testAccCheckCloudWatchMetricStreamExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSCloudWatchMetricStreamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_metric_stream" {
@@ -318,7 +319,7 @@ func testAccCheckAWSCloudWatchMetricStreamDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
 		params := cloudwatch.GetMetricStreamInput{
 			Name: aws.String(name),

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,7 +33,7 @@ func testSweepCloudWatchCompositeAlarms(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).cloudwatchconn
+	conn := client.(*conns.AWSClient).CloudWatchConn
 	ctx := context.Background()
 
 	input := &cloudwatch.DescribeAlarmsInput{
@@ -446,7 +447,7 @@ func TestAccAwsCloudWatchCompositeAlarm_updateAlarmRule(t *testing.T) {
 }
 
 func testAccCheckAwsCloudWatchCompositeAlarmDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_composite_alarm" {
@@ -481,7 +482,7 @@ func testAccCheckAwsCloudWatchCompositeAlarmExists(resourceName string) resource
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
 
 		alarm, err := finder.CompositeAlarmByName(context.Background(), conn, rs.Primary.ID)
 
