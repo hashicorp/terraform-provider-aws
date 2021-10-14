@@ -22,11 +22,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_budgets_budget_action", &resource.Sweeper{
 		Name: "aws_budgets_budget_action",
-		F:    testSweepBudgetsBudgetActionss,
+		F:    sweepBudgetActionss,
 	})
 }
 
-func testSweepBudgetsBudgetActionss(region string) error {
+func sweepBudgetActionss(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -85,12 +85,12 @@ func TestAccAWSBudgetsBudgetAction_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAWSBudgetsBudgetActionDestroy,
+		CheckDestroy: testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSBudgetsBudgetActionConfigBasic(rName),
+				Config: testAccBudgetActionBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetActionExists(resourceName, &conf),
+					testAccBudgetActionExists(resourceName, &conf),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexp.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
@@ -125,12 +125,12 @@ func TestAccAWSBudgetsBudgetAction_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, budgets.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAWSBudgetsBudgetActionDestroy,
+		CheckDestroy: testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSBudgetsBudgetActionConfigBasic(rName),
+				Config: testAccBudgetActionBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSBudgetsBudgetActionExists(resourceName, &conf),
+					testAccBudgetActionExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -139,7 +139,7 @@ func TestAccAWSBudgetsBudgetAction_disappears(t *testing.T) {
 	})
 }
 
-func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Action) resource.TestCheckFunc {
+func testAccBudgetActionExists(resourceName string, config *budgets.Action) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -170,7 +170,7 @@ func testAccAWSBudgetsBudgetActionExists(resourceName string, config *budgets.Ac
 	}
 }
 
-func testAccAWSBudgetsBudgetActionDestroy(s *terraform.State) error {
+func testAccBudgetActionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -200,7 +200,7 @@ func testAccAWSBudgetsBudgetActionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSBudgetsBudgetActionConfigBasic(rName string) string {
+func testAccBudgetActionBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name        = %[1]q
