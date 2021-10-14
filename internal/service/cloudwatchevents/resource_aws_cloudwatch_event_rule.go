@@ -1,4 +1,4 @@
-package aws
+package cloudwatchevents
 
 import (
 	"fmt"
@@ -12,29 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
@@ -81,7 +65,7 @@ func ResourceRule() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validBusNameOrARN,
-				Default:      tfcloudwatchevents.DefaultEventBusName,
+				Default:      DefaultEventBusName,
 			},
 			"event_pattern": {
 				Type:         schema.TypeString,
@@ -161,7 +145,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating CloudWatch Events Rule (%s): %w", name, err)
 	}
 
-	d.SetId(tfcloudwatchevents.RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name)))
+	d.SetId(RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name)))
 
 	return resourceRuleRead(d, meta)
 }
@@ -171,13 +155,13 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	eventBusName, ruleName, err := tfcloudwatchevents.RuleParseResourceID(d.Id())
+	eventBusName, ruleName, err := RuleParseResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	output, err := tfcloudwatchevents.FindRuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
+	output, err := FindRuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Events Rule (%s) not found, removing from state", d.Id())
@@ -205,7 +189,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("schedule_expression", output.ScheduleExpression)
 	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
 
-	enabled, err := tfcloudwatchevents.RuleEnabledFromState(aws.StringValue(output.State))
+	enabled, err := RuleEnabledFromState(aws.StringValue(output.State))
 
 	if err != nil {
 		return err
@@ -236,7 +220,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	_, ruleName, err := tfcloudwatchevents.RuleParseResourceID(d.Id())
+	_, ruleName, err := RuleParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -286,7 +270,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	eventBusName, ruleName, err := tfcloudwatchevents.RuleParseResourceID(d.Id())
+	eventBusName, ruleName, err := RuleParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -355,7 +339,7 @@ func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRu
 		input.ScheduleExpression = aws.String(v.(string))
 	}
 
-	input.State = aws.String(tfcloudwatchevents.RuleStateFromEnabled(d.Get("is_enabled").(bool)))
+	input.State = aws.String(RuleStateFromEnabled(d.Get("is_enabled").(bool)))
 
 	return &input, nil
 }

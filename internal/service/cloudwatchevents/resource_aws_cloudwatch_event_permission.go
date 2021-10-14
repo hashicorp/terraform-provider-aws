@@ -1,4 +1,4 @@
-package aws
+package cloudwatchevents
 
 import (
 	"encoding/json"
@@ -13,21 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfevents "github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudwatchevents"
-	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
-	tfcloudwatchevents "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchevents"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
@@ -77,7 +66,7 @@ func ResourcePermission() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validBusNameOrARN,
-				Default:      tfcloudwatchevents.DefaultEventBusName,
+				Default:      DefaultEventBusName,
 			},
 			"principal": {
 				Type:         schema.TypeString,
@@ -114,7 +103,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Creating CloudWatch Events permission failed: %w", err)
 	}
 
-	id := tfcloudwatchevents.PermissionCreateResourceID(eventBusName, statementID)
+	id := PermissionCreateResourceID(eventBusName, statementID)
 	d.SetId(id)
 
 	return resourcePermissionRead(d, meta)
@@ -124,7 +113,7 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(d.Id())
+	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading CloudWatch Events permission (%s): %w", d.Id(), err)
 	}
@@ -168,7 +157,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("action", policyStatement.Action)
 	busName := aws.StringValue(output.Name)
 	if busName == "" {
-		busName = tfcloudwatchevents.DefaultEventBusName
+		busName = DefaultEventBusName
 	}
 	d.Set("event_bus_name", busName)
 
@@ -221,7 +210,7 @@ func getPolicyStatement(output *events.DescribeEventBusOutput, statementID strin
 func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(d.Id())
+	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error updating CloudWatch Events permission (%s): %w", d.Id(), err)
 	}
@@ -250,7 +239,7 @@ func resourcePermissionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudWatchEventsConn
 
-	eventBusName, statementID, err := tfcloudwatchevents.PermissionParseResourceID(d.Id())
+	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting CloudWatch Events permission (%s): %w", d.Id(), err)
 	}
