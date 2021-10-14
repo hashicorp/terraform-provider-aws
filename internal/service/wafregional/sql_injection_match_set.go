@@ -34,7 +34,7 @@ func ResourceSQLInjectionMatchSet() *schema.Resource {
 			"sql_injection_match_tuple": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      resourceAwsWafRegionalSqlInjectionMatchSetTupleHash,
+				Set:      resourceSQLInjectionMatchSetTupleHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_to_match": {
@@ -227,7 +227,7 @@ func diffWafSqlInjectionMatchTuplesWR(oldT, newT []interface{}) []*waf.SqlInject
 	return updates
 }
 
-func resourceAwsWafRegionalSqlInjectionMatchSetTupleHash(v interface{}) int {
+func resourceSQLInjectionMatchSetTupleHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	if v, ok := m["field_to_match"]; ok {

@@ -11,7 +11,7 @@ import (
 
 func DataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAWSWafRegionalIpSetRead,
+		Read: dataSourceIPSetRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -22,7 +22,7 @@ func DataSourceIPSet() *schema.Resource {
 	}
 }
 
-func dataSourceAWSWafRegionalIpSetRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	name := d.Get("name").(string)
 
