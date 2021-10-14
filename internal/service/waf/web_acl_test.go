@@ -52,7 +52,7 @@ func testSweepWafWebAcls(region string) error {
 				continue
 			}
 
-			r := ResourceWebACL()
+			r := tfwaf.ResourceWebACL()
 			d := r.Data(nil)
 
 			id := aws.StringValue(webACL.WebACLId)
@@ -331,7 +331,7 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 				Config: testAccAWSWafWebAclConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceWebACL(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwaf.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

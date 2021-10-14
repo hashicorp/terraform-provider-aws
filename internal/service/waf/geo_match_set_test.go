@@ -53,7 +53,7 @@ func testSweepWafGeoMatchSet(region string) error {
 		}
 
 		for _, geoMatchSet := range page.GeoMatchSets {
-			r := ResourceGeoMatchSet()
+			r := tfwaf.ResourceGeoMatchSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(geoMatchSet.GeoMatchSetId)
@@ -287,7 +287,7 @@ func testAccCheckAWSWafGeoMatchSetDisappears(v *waf.GeoMatchSet) resource.TestCh
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 
-		wr := newWafRetryer(conn)
+		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateGeoMatchSetInput{
 				ChangeToken:   token,

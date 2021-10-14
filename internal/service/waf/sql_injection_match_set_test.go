@@ -52,7 +52,7 @@ func testSweepWafSqlInjectionMatchSet(region string) error {
 		}
 
 		for _, sqlInjectionMatchSet := range page.SqlInjectionMatchSets {
-			r := ResourceSQLInjectionMatchSet()
+			r := tfwaf.ResourceSQLInjectionMatchSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(sqlInjectionMatchSet.SqlInjectionMatchSetId)
@@ -273,7 +273,7 @@ func testAccCheckAWSWafSqlInjectionMatchSetDisappears(v *waf.SqlInjectionMatchSe
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 
-		wr := newWafRetryer(conn)
+		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateSqlInjectionMatchSetInput{
 				ChangeToken:            token,

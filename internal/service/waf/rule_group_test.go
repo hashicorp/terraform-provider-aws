@@ -52,7 +52,7 @@ func testSweepWafRuleGroups(region string) error {
 		}
 
 		for _, ruleGroup := range page.RuleGroups {
-			r := ResourceRuleGroup()
+			r := tfwaf.ResourceRuleGroup()
 			d := r.Data(nil)
 
 			id := aws.StringValue(ruleGroup.RuleGroupId)
@@ -288,7 +288,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 // which isn't static because ruleId is generated as part of the test
 func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		ruleResource := ResourceRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
+		ruleResource := tfwaf.ResourceRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
 
 		m := map[string]interface{}{
 			"action": []interface{}{
@@ -393,7 +393,7 @@ func testAccCheckAWSWafRuleGroupDisappears(group *waf.RuleGroup) resource.TestCh
 			return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
 		}
 
-		wr := newWafRetryer(conn)
+		wr := tfwaf.NewRetryer(conn)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRuleGroupInput{
 				ChangeToken: token,

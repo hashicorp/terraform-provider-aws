@@ -53,7 +53,7 @@ func testSweepWafRegexMatchSet(region string) error {
 		}
 
 		for _, regexMatchSet := range page.RegexMatchSets {
-			r := ResourceRegexMatchSet()
+			r := tfwaf.ResourceRegexMatchSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(regexMatchSet.RegexMatchSetId)
@@ -281,12 +281,12 @@ func testAccAWSWafRegexMatchSet_disappears(t *testing.T) {
 func computeWafRegexMatchSetTuple(patternSet *waf.RegexPatternSet, fieldToMatch *waf.FieldToMatch, textTransformation string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		m := map[string]interface{}{
-			"field_to_match":       flattenFieldToMatch(fieldToMatch),
+			"field_to_match":       tfwaf.FlattenFieldToMatch(fieldToMatch),
 			"regex_pattern_set_id": *patternSet.RegexPatternSetId,
 			"text_transformation":  textTransformation,
 		}
 
-		*idx = resourceAwsWafRegexMatchSetTupleHash(m)
+		*idx = tfwaf.RegexMatchSetTupleHash(m)
 
 		return nil
 	}
@@ -296,7 +296,7 @@ func testAccCheckAWSWafRegexMatchSetDisappears(set *waf.RegexMatchSet) resource.
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 
-		wr := newWafRetryer(conn)
+		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRegexMatchSetInput{
 				ChangeToken:     token,

@@ -53,7 +53,7 @@ func testSweepWafXssMatchSet(region string) error {
 		}
 
 		for _, xssMatchSet := range page.XssMatchSets {
-			r := ResourceXSSMatchSet()
+			r := tfwaf.ResourceXSSMatchSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(xssMatchSet.XssMatchSetId)
@@ -199,7 +199,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 				Config: testAccAWSWafXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceXSSMatchSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwaf.ResourceXSSMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

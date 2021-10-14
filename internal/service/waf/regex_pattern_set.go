@@ -46,7 +46,7 @@ func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating WAF Regex Pattern Set: %s", d.Get("name").(string))
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateRegexPatternSetInput{
 			ChangeToken: token,
@@ -125,7 +125,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteRegexPatternSetInput{
 			ChangeToken:       token,
@@ -142,7 +142,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func updateWafRegexPatternSetPatternStrings(id string, oldPatterns, newPatterns []interface{}, conn *waf.WAF) error {
-	wr := newWafRetryer(conn)
+	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRegexPatternSetInput{
 			ChangeToken:       token,

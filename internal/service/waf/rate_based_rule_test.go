@@ -52,7 +52,7 @@ func testSweepWafRateBasedRules(region string) error {
 		}
 
 		for _, rule := range page.Rules {
-			r := ResourceRateBasedRule()
+			r := tfwaf.ResourceRateBasedRule()
 			d := r.Data(nil)
 
 			id := aws.StringValue(rule.RuleId)
@@ -189,7 +189,7 @@ func TestAccAWSWafRateBasedRule_disappears(t *testing.T) {
 				Config: testAccAWSWafRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceRateBasedRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfwaf.ResourceRateBasedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -53,7 +53,7 @@ func testSweepWafSizeConstraintSet(region string) error {
 		}
 
 		for _, sizeConstraintSet := range page.SizeConstraintSets {
-			r := ResourceSizeConstraintSet()
+			r := tfwaf.ResourceSizeConstraintSet()
 			d := r.Data(nil)
 
 			id := aws.StringValue(sizeConstraintSet.SizeConstraintSetId)
@@ -293,7 +293,7 @@ func testAccCheckAWSWafSizeConstraintSetDisappears(v *waf.SizeConstraintSet) res
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
 
-		wr := newWafRetryer(conn)
+		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateSizeConstraintSetInput{
 				ChangeToken:         token,

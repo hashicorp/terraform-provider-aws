@@ -54,6 +54,6 @@ func (t *WafRetryer) RetryWithToken(f withTokenFunc) (interface{}, error) {
 	return out, nil
 }
 
-func newWafRetryer(conn *waf.WAF) *WafRetryer {
+func NewRetryer(conn *waf.WAF) *WafRetryer {
 	return &WafRetryer{Connection: conn}
 }
