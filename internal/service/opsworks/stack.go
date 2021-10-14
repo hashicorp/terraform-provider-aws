@@ -383,7 +383,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := tftags.OpsworksListTags(client, arn)
+	tags, err := ListTags(client, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
@@ -589,7 +589,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.OpsworksUpdateTags(client, arn, o, n); err != nil {
+		if err := UpdateTags(client, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Opsworks stack (%s) tags: %s", arn, err)
 		}
 	}
