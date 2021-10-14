@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_iot_thing_principal_attachment", &resource.Sweeper{
 		Name: "aws_iot_thing_principal_attachment",
-		F:    testSweepIotThingPrincipalAttachments,
+		F:    sweepThingPrincipalAttachments,
 	})
 }
 
-func testSweepIotThingPrincipalAttachments(region string) error {
+func sweepThingPrincipalAttachments(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -99,53 +99,53 @@ func TestAccAWSIotThingPrincipalAttachment_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIotThingPrincipalAttachmentDestroy,
+		CheckDestroy: testAccCheckThingPrincipalAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIotThingPrincipalAttachmentConfig(thingName),
+				Config: testAccThingPrincipalAttachmentConfig(thingName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
-					testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert"}),
+					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
+					testAccCheckThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert"}),
 				),
 			},
 			{
-				Config: testAccAWSIotThingPrincipalAttachmentConfigUpdate1(thingName, thingName2),
+				Config: testAccThingPrincipalAttachmentUpdate1Config(thingName, thingName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
-					testAccCheckAWSIotThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att2"),
-					testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert"}),
-					testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName2, true, []string{"aws_iot_certificate.cert"}),
+					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
+					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att2"),
+					testAccCheckThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert"}),
+					testAccCheckThingPrincipalAttachmentStatus(thingName2, true, []string{"aws_iot_certificate.cert"}),
 				),
 			},
 			{
-				Config: testAccAWSIotThingPrincipalAttachmentConfigUpdate2(thingName, thingName2),
+				Config: testAccThingPrincipalAttachmentUpdate2Config(thingName, thingName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
-					testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert"}),
-					testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName2, true, []string{}),
+					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
+					testAccCheckThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert"}),
+					testAccCheckThingPrincipalAttachmentStatus(thingName2, true, []string{}),
 				),
 			},
 			{
-				Config: testAccAWSIotThingPrincipalAttachmentConfigUpdate3(thingName),
+				Config: testAccThingPrincipalAttachmentUpdate3Config(thingName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
-					testAccCheckAWSIotThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att2"),
-					testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert", "aws_iot_certificate.cert2"}),
-					testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName2, false, []string{}),
+					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att"),
+					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att2"),
+					testAccCheckThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert", "aws_iot_certificate.cert2"}),
+					testAccCheckThingPrincipalAttachmentStatus(thingName2, false, []string{}),
 				),
 			},
 			{
-				Config: testAccAWSIotThingPrincipalAttachmentConfigUpdate4(thingName),
+				Config: testAccThingPrincipalAttachmentUpdate4Config(thingName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att2"),
-					testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert2"}),
+					testAccCheckThingPrincipalAttachmentExists("aws_iot_thing_principal_attachment.att2"),
+					testAccCheckThingPrincipalAttachmentStatus(thingName, true, []string{"aws_iot_certificate.cert2"}),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSIotThingPrincipalAttachmentDestroy(s *terraform.State) error {
+func testAccCheckThingPrincipalAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -172,7 +172,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccCheckAWSIotThingPrincipalAttachmentExists(n string) resource.TestCheckFunc {
+func testAccCheckThingPrincipalAttachmentExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -201,7 +201,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentExists(n string) resource.TestChe
 	}
 }
 
-func testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName string, exists bool, principals []string) resource.TestCheckFunc {
+func testAccCheckThingPrincipalAttachmentStatus(thingName string, exists bool, principals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
@@ -253,7 +253,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName string, exists b
 	}
 }
 
-func testAccAWSIotThingPrincipalAttachmentConfig(thingName string) string {
+func testAccThingPrincipalAttachmentConfig(thingName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -271,7 +271,7 @@ resource "aws_iot_thing_principal_attachment" "att" {
 `, thingName)
 }
 
-func testAccAWSIotThingPrincipalAttachmentConfigUpdate1(thingName, thingName2 string) string {
+func testAccThingPrincipalAttachmentUpdate1Config(thingName, thingName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -298,7 +298,7 @@ resource "aws_iot_thing_principal_attachment" "att2" {
 `, thingName, thingName2)
 }
 
-func testAccAWSIotThingPrincipalAttachmentConfigUpdate2(thingName, thingName2 string) string {
+func testAccThingPrincipalAttachmentUpdate2Config(thingName, thingName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -320,7 +320,7 @@ resource "aws_iot_thing_principal_attachment" "att" {
 `, thingName, thingName2)
 }
 
-func testAccAWSIotThingPrincipalAttachmentConfigUpdate3(thingName string) string {
+func testAccThingPrincipalAttachmentUpdate3Config(thingName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
   csr    = file("test-fixtures/iot-csr.pem")
@@ -348,7 +348,7 @@ resource "aws_iot_thing_principal_attachment" "att2" {
 `, thingName)
 }
 
-func testAccAWSIotThingPrincipalAttachmentConfigUpdate4(thingName string) string {
+func testAccThingPrincipalAttachmentUpdate4Config(thingName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert2" {
   csr    = file("test-fixtures/iot-csr.pem")

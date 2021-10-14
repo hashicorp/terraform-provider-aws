@@ -20,7 +20,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_iot_certificate", &resource.Sweeper{
 		Name: "aws_iot_certificate",
-		F:    testSweepIotCertifcates,
+		F:    sweepCertifcates,
 		Dependencies: []string{
 			"aws_iot_policy_attachment",
 			"aws_iot_thing_principal_attachment",
@@ -28,7 +28,7 @@ func init() {
 	})
 }
 
-func testSweepIotCertifcates(region string) error {
+func sweepCertifcates(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -79,10 +79,10 @@ func TestAccAWSIoTCertificate_csr(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIoTCertificateDestroy_basic,
+		CheckDestroy: testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIoTCertificate_csr,
+				Config: testAccCertificate_csr,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "csr"),
@@ -101,10 +101,10 @@ func TestAccAWSIoTCertificate_keys_certificate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIoTCertificateDestroy_basic,
+		CheckDestroy: testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIoTCertificate_keys_certificate,
+				Config: testAccCertificate_keys_certificate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
 					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "csr"),
@@ -118,7 +118,7 @@ func TestAccAWSIoTCertificate_keys_certificate(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSIoTCertificateDestroy_basic(s *terraform.State) error {
+func testAccCheckCertificateDestroy_basic(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -152,14 +152,14 @@ func testAccCheckAWSIoTCertificateDestroy_basic(s *terraform.State) error {
 	return nil
 }
 
-var testAccAWSIoTCertificate_csr = `
+var testAccCertificate_csr = `
 resource "aws_iot_certificate" "foo_cert" {
   csr    = file("test-fixtures/iot-csr.pem")
   active = true
 }
 `
 
-var testAccAWSIoTCertificate_keys_certificate = `
+var testAccCertificate_keys_certificate = `
 resource "aws_iot_certificate" "foo_cert" {
   active = true
 }

@@ -20,12 +20,12 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_iot_thing_type", &resource.Sweeper{
 		Name:         "aws_iot_thing_type",
-		F:            testSweepIotThingTypes,
+		F:            sweepThingTypes,
 		Dependencies: []string{"aws_iot_thing"},
 	})
 }
 
-func testSweepIotThingTypes(region string) error {
+func sweepThingTypes(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -78,10 +78,10 @@ func TestAccAWSIotThingType_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
+		CheckDestroy: testAccCheckThingTypeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIotThingTypeConfig_basic(rInt),
+				Config: testAccThingTypeConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_thing_type.foo", "arn"),
 					resource.TestCheckResourceAttr("aws_iot_thing_type.foo", "name", fmt.Sprintf("tf_acc_iot_thing_type_%d", rInt)),
@@ -103,10 +103,10 @@ func TestAccAWSIotThingType_full(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
+		CheckDestroy: testAccCheckThingTypeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIotThingTypeConfig_full(rInt),
+				Config: testAccThingTypeConfig_full(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_thing_type.foo", "arn"),
 					resource.TestCheckResourceAttr("aws_iot_thing_type.foo", "properties.0.description", "MyDescription"),
@@ -120,7 +120,7 @@ func TestAccAWSIotThingType_full(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSIotThingTypeConfig_fullUpdated(rInt),
+				Config: testAccThingTypeConfig_fullUpdated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iot_thing_type.foo", "deprecated", "false"),
 				),
@@ -129,7 +129,7 @@ func TestAccAWSIotThingType_full(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSIotThingTypeDestroy(s *terraform.State) error {
+func testAccCheckThingTypeDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -151,7 +151,7 @@ func testAccCheckAWSIotThingTypeDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSIotThingTypeConfig_basic(rName int) string {
+func testAccThingTypeConfig_basic(rName int) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_type" "foo" {
   name = "tf_acc_iot_thing_type_%d"
@@ -159,7 +159,7 @@ resource "aws_iot_thing_type" "foo" {
 `, rName)
 }
 
-func testAccAWSIotThingTypeConfig_full(rName int) string {
+func testAccThingTypeConfig_full(rName int) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_type" "foo" {
   name       = "tf_acc_iot_thing_type_%d"
@@ -173,7 +173,7 @@ resource "aws_iot_thing_type" "foo" {
 `, rName)
 }
 
-func testAccAWSIotThingTypeConfig_fullUpdated(rName int) string {
+func testAccThingTypeConfig_fullUpdated(rName int) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_type" "foo" {
   name       = "tf_acc_iot_thing_type_%d"
