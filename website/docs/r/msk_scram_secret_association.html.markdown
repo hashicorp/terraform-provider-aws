@@ -88,7 +88,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MSK SCRAM Secret Associations can be imported using the `id` e.g.
+MSK SCRAM Secret Associations can be imported using the `id` e.g.,
 
 ```
 $ terraform import aws_msk_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3

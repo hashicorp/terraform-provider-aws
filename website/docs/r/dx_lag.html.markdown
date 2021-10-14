@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect LAGs can be imported using the `lag id`, e.g.
+Direct Connect LAGs can be imported using the `lag id`, e.g.,
 
 ```
 $ terraform import aws_dx_lag.test_lag dxlag-fgnsp5rq

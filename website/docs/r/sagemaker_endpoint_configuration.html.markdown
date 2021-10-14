@@ -100,7 +100,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Endpoint configurations can be imported using the `name`, e.g.
+Endpoint configurations can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo

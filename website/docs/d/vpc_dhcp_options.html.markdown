@@ -52,7 +52,7 @@ For more information about filtering, see the [EC2 API documentation](https://do
 
 * `arn` - The ARN of the DHCP Options Set.
 * `dhcp_options_id` - EC2 DHCP Options ID
-* `domain_name` - The suffix domain name to used when resolving non Fully Qualified Domain Names. e.g. the `search` value in the `/etc/resolv.conf` file.
+* `domain_name` - The suffix domain name to used when resolving non Fully Qualified Domain NamesE.g., the `search` value in the `/etc/resolv.conf` file.
 * `domain_name_servers` - List of name servers.
 * `id` - EC2 DHCP Options ID
 * `netbios_name_servers` - List of NETBIOS name servers.

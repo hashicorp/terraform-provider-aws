@@ -130,7 +130,7 @@ The implementation of the `aws_kms_secret` data source, prior to Terraform AWS p
 Terraform configuration migration steps:
 
 * Change the data source type from `aws_kms_secret` to `aws_kms_secrets`
-* Change any attribute reference (e.g. `"${data.aws_kms_secret.example.ATTRIBUTE}"`) from `.ATTRIBUTE` to `.plaintext["ATTRIBUTE"]`
+* Change any attribute reference (e.g., `"${data.aws_kms_secret.example.ATTRIBUTE}"`) from `.ATTRIBUTE` to `.plaintext["ATTRIBUTE"]`
 
 As an example, lets take the below sample configuration and migrate it.
 

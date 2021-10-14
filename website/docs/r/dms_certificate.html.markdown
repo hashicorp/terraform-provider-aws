@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Certificates can be imported using the `certificate_id`, e.g.
+Certificates can be imported using the `certificate_id`, e.g.,
 
 ```
 $ terraform import aws_dms_certificate.test test-dms-certificate-tf

@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Amplify backend environment can be imported using `app_id` and `environment_name`, e.g.
+Amplify backend environment can be imported using `app_id` and `environment_name`, e.g.,
 
 ```
 $ terraform import aws_amplify_backend_environment.example d2ypk4k47z8u6/example

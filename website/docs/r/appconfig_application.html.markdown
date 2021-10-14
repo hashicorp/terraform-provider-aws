@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Applications can be imported using their application ID, e.g.
+AppConfig Applications can be imported using their application ID, e.g.,
 
 ```
 $ terraform import aws_appconfig_application.example 71rxuzt

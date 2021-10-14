@@ -60,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Network Interfaces can be imported using the `id`, e.g.
+Network Interfaces can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_network_interface.test eni-e5aa89a3

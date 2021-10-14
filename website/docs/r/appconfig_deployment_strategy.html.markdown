@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Deployment Strategies can be imported by using their deployment strategy ID, e.g.
+AppConfig Deployment Strategies can be imported by using their deployment strategy ID, e.g.,
 
 ```
 $ terraform import aws_appconfig_deployment_strategy.example 11xxxxx
