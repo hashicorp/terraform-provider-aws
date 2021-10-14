@@ -96,12 +96,12 @@ func testSweepServiceCatalogConstraints(region string) error {
 
 func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,19 +129,19 @@ func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 
 func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogConstraint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceCatalogConstraint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,13 +151,13 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 
 func TestAccAWSServiceCatalogConstraint_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -177,7 +177,7 @@ func TestAccAWSServiceCatalogConstraint_update(t *testing.T) {
 }
 
 func testAccCheckAwsServiceCatalogConstraintDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_constraint" {
@@ -214,7 +214,7 @@ func testAccCheckAwsServiceCatalogConstraintExists(resourceName string) resource
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := acctest.Provider.Meta().(*AWSClient).scconn
 
 		input := &servicecatalog.DescribeConstraintInput{
 			Id: aws.String(rs.Primary.ID),
