@@ -14,19 +14,19 @@ import (
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
-func testAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
+func testAccDataLakeSettings_basic(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLakeFormationDataLakeSettingsDestroy,
+		CheckDestroy: testAccCheckDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationDataLakeSettingsConfig_basic,
+				Config: testAccDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName),
+					testAccCheckDataLakeSettingsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
@@ -36,19 +36,19 @@ func testAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSLakeFormationDataLakeSettings_disappears(t *testing.T) {
+func testAccDataLakeSettings_disappears(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLakeFormationDataLakeSettingsDestroy,
+		CheckDestroy: testAccCheckDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationDataLakeSettingsConfig_basic,
+				Config: testAccDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName),
+					testAccCheckDataLakeSettingsExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tflakeformation.ResourceDataLakeSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -57,19 +57,19 @@ func testAccAWSLakeFormationDataLakeSettings_disappears(t *testing.T) {
 	})
 }
 
-func testAccAWSLakeFormationDataLakeSettings_withoutCatalogId(t *testing.T) {
+func testAccDataLakeSettings_withoutCatalogID(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLakeFormationDataLakeSettingsDestroy,
+		CheckDestroy: testAccCheckDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationDataLakeSettingsConfig_withoutCatalogId,
+				Config: testAccDataLakeSettingsConfig_withoutCatalogID,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName),
+					testAccCheckDataLakeSettingsExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
@@ -78,7 +78,7 @@ func testAccAWSLakeFormationDataLakeSettings_withoutCatalogId(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSLakeFormationDataLakeSettingsDestroy(s *terraform.State) error {
+func testAccCheckDataLakeSettingsDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -110,7 +110,7 @@ func testAccCheckAWSLakeFormationDataLakeSettingsDestroy(s *terraform.State) err
 	return nil
 }
 
-func testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckDataLakeSettingsExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -135,7 +135,7 @@ func testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName string) res
 	}
 }
 
-const testAccAWSLakeFormationDataLakeSettingsConfig_basic = `
+const testAccDataLakeSettingsConfig_basic = `
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
@@ -160,7 +160,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 }
 `
 
-const testAccAWSLakeFormationDataLakeSettingsConfig_withoutCatalogId = `
+const testAccDataLakeSettingsConfig_withoutCatalogID = `
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {

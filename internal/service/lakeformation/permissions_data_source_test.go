@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccAWSLakeFormationPermissionsDataSource_basic(t *testing.T) {
+func testAccPermissionsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -19,10 +19,10 @@ func testAccAWSLakeFormationPermissionsDataSource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		CheckDestroy: testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsDataSourceConfig_basic(rName),
+				Config: testAccPermissionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
 					resource.TestCheckResourceAttrPair(resourceName, "permissions.#", dataSourceName, "permissions.#"),
@@ -34,7 +34,7 @@ func testAccAWSLakeFormationPermissionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSLakeFormationPermissionsDataSource_dataLocation(t *testing.T) {
+func testAccPermissionsDataSource_dataLocation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -43,10 +43,10 @@ func testAccAWSLakeFormationPermissionsDataSource_dataLocation(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		CheckDestroy: testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsDataSourceConfig_dataLocation(rName),
+				Config: testAccPermissionsDataSourceConfig_dataLocation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
 					resource.TestCheckResourceAttrPair(resourceName, "permissions.#", dataSourceName, "permissions.#"),
@@ -59,7 +59,7 @@ func testAccAWSLakeFormationPermissionsDataSource_dataLocation(t *testing.T) {
 	})
 }
 
-func testAccAWSLakeFormationPermissionsDataSource_database(t *testing.T) {
+func testAccPermissionsDataSource_database(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -68,10 +68,10 @@ func testAccAWSLakeFormationPermissionsDataSource_database(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		CheckDestroy: testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsDataSourceConfig_database(rName),
+				Config: testAccPermissionsDataSourceConfig_database(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
 					resource.TestCheckResourceAttrPair(resourceName, "database.#", dataSourceName, "database.#"),
@@ -88,7 +88,7 @@ func testAccAWSLakeFormationPermissionsDataSource_database(t *testing.T) {
 	})
 }
 
-func testAccAWSLakeFormationPermissionsDataSource_table(t *testing.T) {
+func testAccPermissionsDataSource_table(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -97,10 +97,10 @@ func testAccAWSLakeFormationPermissionsDataSource_table(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		CheckDestroy: testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsDataSourceConfig_table(rName),
+				Config: testAccPermissionsDataSourceConfig_table(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.#", dataSourceName, "table.#"),
@@ -114,7 +114,7 @@ func testAccAWSLakeFormationPermissionsDataSource_table(t *testing.T) {
 	})
 }
 
-func testAccAWSLakeFormationPermissionsDataSource_tableWithColumns(t *testing.T) {
+func testAccPermissionsDataSource_tableWithColumns(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -123,10 +123,10 @@ func testAccAWSLakeFormationPermissionsDataSource_tableWithColumns(t *testing.T)
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		CheckDestroy: testAccCheckPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsDataSourceConfig_tableWithColumns(rName),
+				Config: testAccPermissionsDataSourceConfig_tableWithColumns(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "principal", dataSourceName, "principal"),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.#", dataSourceName, "table_with_columns.#"),
@@ -143,7 +143,7 @@ func testAccAWSLakeFormationPermissionsDataSource_tableWithColumns(t *testing.T)
 	})
 }
 
-func testAccAWSLakeFormationPermissionsDataSourceConfig_basic(rName string) string {
+func testAccPermissionsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -189,7 +189,7 @@ data "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsDataSourceConfig_dataLocation(rName string) string {
+func testAccPermissionsDataSourceConfig_dataLocation(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -251,7 +251,7 @@ data "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsDataSourceConfig_database(rName string) string {
+func testAccPermissionsDataSourceConfig_database(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -312,7 +312,7 @@ data "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsDataSourceConfig_table(rName string) string {
+func testAccPermissionsDataSourceConfig_table(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -379,7 +379,7 @@ data "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsDataSourceConfig_tableWithColumns(rName string) string {
+func testAccPermissionsDataSourceConfig_tableWithColumns(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

@@ -8,17 +8,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccAWSLakeFormationDataLakeSettingsDataSource_basic(t *testing.T) {
+func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLakeFormationDataLakeSettingsDestroy,
+		CheckDestroy: testAccCheckDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationDataLakeSettingsDataSourceConfig_basic,
+				Config: testAccDataLakeSettingsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
@@ -29,7 +29,7 @@ func testAccAWSLakeFormationDataLakeSettingsDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccAWSLakeFormationDataLakeSettingsDataSourceConfig_basic = `
+const testAccDataLakeSettingsDataSourceConfig_basic = `
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_session_context" "current" {
