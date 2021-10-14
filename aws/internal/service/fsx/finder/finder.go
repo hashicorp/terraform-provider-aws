@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func AdministrativeActionByFileSystemIDAndActionType(conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
-	fileSystem, err := FileSystemByID(conn, fsID)
+func FindAdministrativeActionByFileSystemIDAndActionType(conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
+	fileSystem, err := FindFileSystemByID(conn, fsID)
 
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func AdministrativeActionByFileSystemIDAndActionType(conn *fsx.FSx, fsID, action
 	return &fsx.AdministrativeAction{Status: aws.String(fsx.StatusCompleted)}, nil
 }
 
-func BackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
+func FindBackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	input := &fsx.DescribeBackupsInput{
 		BackupIds: aws.StringSlice([]string{id}),
 	}
@@ -55,7 +55,7 @@ func BackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return output.Backups[0], nil
 }
 
-func FileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func FindFileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	input := &fsx.DescribeFileSystemsInput{
 		FileSystemIds: []*string{aws.String(id)},
 	}

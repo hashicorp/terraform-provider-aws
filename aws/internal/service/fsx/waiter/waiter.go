@@ -12,15 +12,15 @@ import (
 )
 
 const (
-	BackupAvailableTimeout = 10 * time.Minute
-	BackupDeletedTimeout   = 10 * time.Minute
+	backupAvailableTimeout = 10 * time.Minute
+	backupDeletedTimeout   = 10 * time.Minute
 )
 
-func AdministrativeActionCompleted(conn *fsx.FSx, fsID, actionType string, timeout time.Duration) (*fsx.AdministrativeAction, error) {
+func waitAdministrativeActionCompleted(conn *fsx.FSx, fsID, actionType string, timeout time.Duration) (*fsx.AdministrativeAction, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.StatusInProgress, fsx.StatusPending},
 		Target:  []string{fsx.StatusCompleted, fsx.StatusUpdatedOptimizing},
-		Refresh: AdministrativeActionStatus(conn, fsID, actionType),
+		Refresh: statusAdministrativeAction(conn, fsID, actionType),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -38,12 +38,12 @@ func AdministrativeActionCompleted(conn *fsx.FSx, fsID, actionType string, timeo
 	return nil, err
 }
 
-func BackupAvailable(conn *fsx.FSx, id string) (*fsx.Backup, error) {
+func waitBackupAvailable(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.BackupLifecycleCreating, fsx.BackupLifecyclePending, fsx.BackupLifecycleTransferring},
 		Target:  []string{fsx.BackupLifecycleAvailable},
-		Refresh: BackupStatus(conn, id),
-		Timeout: BackupAvailableTimeout,
+		Refresh: statusBackup(conn, id),
+		Timeout: backupAvailableTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -55,12 +55,12 @@ func BackupAvailable(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return nil, err
 }
 
-func BackupDeleted(conn *fsx.FSx, id string) (*fsx.Backup, error) {
+func waitBackupDeleted(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.FileSystemLifecycleDeleting},
 		Target:  []string{},
-		Refresh: BackupStatus(conn, id),
-		Timeout: BackupDeletedTimeout,
+		Refresh: statusBackup(conn, id),
+		Timeout: backupDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -72,11 +72,11 @@ func BackupDeleted(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return nil, err
 }
 
-func FileSystemCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) {
+func waitFileSystemCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.FileSystemLifecycleCreating},
 		Target:  []string{fsx.FileSystemLifecycleAvailable},
-		Refresh: FileSystemStatus(conn, id),
+		Refresh: statusFileSystem(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -94,11 +94,11 @@ func FileSystemCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Fi
 	return nil, err
 }
 
-func FileSystemUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) {
+func waitFileSystemUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.FileSystemLifecycleUpdating},
 		Target:  []string{fsx.FileSystemLifecycleAvailable},
-		Refresh: FileSystemStatus(conn, id),
+		Refresh: statusFileSystem(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -116,11 +116,11 @@ func FileSystemUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Fi
 	return nil, err
 }
 
-func FileSystemDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) {
+func waitFileSystemDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileSystem, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.FileSystemLifecycleAvailable, fsx.FileSystemLifecycleDeleting},
 		Target:  []string{},
-		Refresh: FileSystemStatus(conn, id),
+		Refresh: statusFileSystem(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}

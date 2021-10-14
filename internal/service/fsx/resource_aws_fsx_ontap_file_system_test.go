@@ -20,6 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 )
 
 func init() {
@@ -503,7 +506,7 @@ func testAccCheckFsxOntapFileSystemExists(resourceName string, fs *fsx.FileSyste
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 
-		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -526,7 +529,7 @@ func testAccCheckFsxOntapFileSystemDestroy(s *terraform.State) error {
 			continue
 		}
 
-		filesystem, err := finder.FileSystemByID(conn, rs.Primary.ID)
+		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

@@ -19,6 +19,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 )
 
 func ResourceOntapFileSystem() *schema.Resource {
@@ -294,7 +308,7 @@ func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 
-	if _, err := waiter.FileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := tffsx.waitFileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for FSx ONTAP File System (%s) create: %w", d.Id(), err)
 	}
 
@@ -306,7 +320,7 @@ func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	filesystem, err := finder.FileSystemByID(conn, d.Id())
+	filesystem, err := tffsx.FindFileSystemByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx ONTAP File System (%s) not found, removing from state", d.Id())
@@ -416,7 +430,7 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("error updating FSx ONTAP File System (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.FileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := tffsx.waitFileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx ONTAP File System (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -440,7 +454,7 @@ func resourceOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error deleting FSx ONTAP File System (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.FileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := tffsx.waitFileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for FSx ONTAP File System (%s) delete: %w", d.Id(), err)
 	}
 

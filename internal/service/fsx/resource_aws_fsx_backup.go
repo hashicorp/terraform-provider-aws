@@ -18,6 +18,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
+	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 )
 
 func ResourceBackup() *schema.Resource {
@@ -89,7 +103,7 @@ func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(result.Backup.BackupId))
 
 	log.Println("[DEBUG] Waiting for FSx backup to become available")
-	if _, err := waiter.BackupAvailable(conn, d.Id()); err != nil {
+	if _, err := tffsx.waitBackupAvailable(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for FSx Backup (%s) to be available: %w", d.Id(), err)
 	}
 
@@ -115,7 +129,7 @@ func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	backup, err := finder.BackupByID(conn, d.Id())
+	backup, err := tffsx.FindBackupByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Backup (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -168,7 +182,7 @@ func resourceBackupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Println("[DEBUG] Waiting for backup to delete")
-	if _, err := waiter.BackupDeleted(conn, d.Id()); err != nil {
+	if _, err := tffsx.waitBackupDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for FSx Backup (%s) to deleted: %w", d.Id(), err)
 	}
 
