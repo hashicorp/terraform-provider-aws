@@ -17,7 +17,7 @@ func TestAccDataSourceAwsEc2LocalGateways_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEc2LocalGatewaysConfig(),
+				Config: testAccLocalGatewaysDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
 				),
@@ -26,7 +26,7 @@ func TestAccDataSourceAwsEc2LocalGateways_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsEc2LocalGatewaysConfig() string {
+func testAccLocalGatewaysDataSourceConfig() string {
 	return `
 data "aws_ec2_local_gateways" "test" {}
 `

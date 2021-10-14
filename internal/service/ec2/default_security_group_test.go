@@ -22,12 +22,12 @@ func TestAccAWSDefaultSecurityGroup_Vpc_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDefaultSecurityGroupDestroy,
+		CheckDestroy: testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultSecurityGroupConfig_Vpc,
+				Config: testAccDefaultSecurityGroupConfig_VPC,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDefaultSecurityGroupExists(resourceName, &group),
+					testAccCheckDefaultSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "description", "default VPC security group"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
@@ -47,14 +47,14 @@ func TestAccAWSDefaultSecurityGroup_Vpc_basic(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					testAccCheckAWSDefaultSecurityGroupARN(resourceName, &group),
+					testAccCheckDefaultSecurityGroupARN(resourceName, &group),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.ResourcePrefix),
 				),
 			},
 			{
-				Config:   testAccAWSDefaultSecurityGroupConfig_Vpc,
+				Config:   testAccDefaultSecurityGroupConfig_VPC,
 				PlanOnly: true,
 			},
 			{
@@ -75,12 +75,12 @@ func TestAccAWSDefaultSecurityGroup_Vpc_empty(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDefaultSecurityGroupDestroy,
+		CheckDestroy: testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultSecurityGroupConfig_Vpc_empty,
+				Config: testAccDefaultSecurityGroupConfig_VPC_empty,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDefaultSecurityGroupExists(resourceName, &group),
+					testAccCheckDefaultSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 				),
@@ -103,12 +103,12 @@ func TestAccAWSDefaultSecurityGroup_Classic_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSDefaultSecurityGroupDestroy,
+		CheckDestroy:      testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultSecurityGroupConfig_Classic(),
+				Config: testAccDefaultSecurityGroupConfig_Classic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDefaultSecurityGroupEc2ClassicExists(resourceName, &group),
+					testAccCheckDefaultSecurityGroupClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "description", "default group"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""),
@@ -121,18 +121,18 @@ func TestAccAWSDefaultSecurityGroup_Classic_basic(t *testing.T) {
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					testAccCheckAWSDefaultSecurityGroupARNEc2Classic(resourceName, &group),
+					testAccCheckDefaultSecurityGroupARNClassic(resourceName, &group),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.ResourcePrefix),
 				),
 			},
 			{
-				Config:   testAccAWSDefaultSecurityGroupConfig_Classic(),
+				Config:   testAccDefaultSecurityGroupConfig_Classic(),
 				PlanOnly: true,
 			},
 			{
-				Config:                  testAccAWSDefaultSecurityGroupConfig_Classic(),
+				Config:                  testAccDefaultSecurityGroupConfig_Classic(),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -155,12 +155,12 @@ func TestAccAWSDefaultSecurityGroup_Classic_empty(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSDefaultSecurityGroupDestroy,
+		CheckDestroy:      testAccCheckDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultSecurityGroupConfig_Classic_empty(),
+				Config: testAccDefaultSecurityGroupConfig_Classic_empty(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDefaultSecurityGroupEc2ClassicExists(resourceName, &group),
+					testAccCheckDefaultSecurityGroupClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 				),
@@ -169,12 +169,12 @@ func TestAccAWSDefaultSecurityGroup_Classic_empty(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDefaultSecurityGroupDestroy(s *terraform.State) error {
+func testAccCheckDefaultSecurityGroupDestroy(s *terraform.State) error {
 	// We expect Security Group to still exist
 	return nil
 }
 
-func testAccCheckAWSDefaultSecurityGroupExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckDefaultSecurityGroupExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -198,7 +198,7 @@ func testAccCheckAWSDefaultSecurityGroupExists(n string, group *ec2.SecurityGrou
 	}
 }
 
-func testAccCheckAWSDefaultSecurityGroupEc2ClassicExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckDefaultSecurityGroupClassicExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -222,19 +222,19 @@ func testAccCheckAWSDefaultSecurityGroupEc2ClassicExists(n string, group *ec2.Se
 	}
 }
 
-func testAccCheckAWSDefaultSecurityGroupARN(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckDefaultSecurityGroupARN(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
 	}
 }
 
-func testAccCheckAWSDefaultSecurityGroupARNEc2Classic(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+func testAccCheckDefaultSecurityGroupARNClassic(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return acctest.CheckResourceAttrRegionalARNEC2Classic(resourceName, "arn", "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
 	}
 }
 
-const testAccAWSDefaultSecurityGroupConfig_Vpc = `
+const testAccDefaultSecurityGroupConfig_VPC = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -266,7 +266,7 @@ resource "aws_default_security_group" "test" {
 }
 `
 
-const testAccAWSDefaultSecurityGroupConfig_Vpc_empty = `
+const testAccDefaultSecurityGroupConfig_VPC_empty = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -280,7 +280,7 @@ resource "aws_default_security_group" "test" {
 }
 `
 
-func testAccAWSDefaultSecurityGroupConfig_Classic() string {
+func testAccDefaultSecurityGroupConfig_Classic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		`
@@ -299,7 +299,7 @@ resource "aws_default_security_group" "test" {
 `)
 }
 
-func testAccAWSDefaultSecurityGroupConfig_Classic_empty() string {
+func testAccDefaultSecurityGroupConfig_Classic_empty() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		`
@@ -309,7 +309,7 @@ resource "aws_default_security_group" "test" {
 `)
 }
 
-func TestAWSDefaultSecurityGroupMigrateState(t *testing.T) {
+func TestDefaultSecurityGroupMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -350,7 +350,7 @@ func TestAWSDefaultSecurityGroupMigrateState(t *testing.T) {
 	}
 }
 
-func TestAWSDefaultSecurityGroupMigrateState_empty(t *testing.T) {
+func TestDefaultSecurityGroupMigrateState_empty(t *testing.T) {
 	var is *terraform.InstanceState
 	var meta interface{}
 

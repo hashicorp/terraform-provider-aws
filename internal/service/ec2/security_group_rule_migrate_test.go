@@ -7,7 +7,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAWSSecurityGroupRuleMigrateState(t *testing.T) {
+func TestSecurityGroupRuleMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		ID           string

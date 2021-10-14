@@ -22,18 +22,18 @@ func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
+		CheckDestroy: testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMILaunchPermissionConfig(rName),
+				Config: testAccAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMILaunchPermissionExists(resourceName),
+					testAccCheckAMILaunchPermissionExists(resourceName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAMILaunchPermissionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAMILaunchPermissionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -48,13 +48,13 @@ func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
+		CheckDestroy: testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMILaunchPermissionConfig(rName),
+				Config: testAccAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMILaunchPermissionExists(resourceName),
-					testAccCheckAWSAMILaunchPermissionDisappears(resourceName),
+					testAccCheckAMILaunchPermissionExists(resourceName),
+					testAccCheckAMILaunchPermissionDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,14 +72,14 @@ func TestAccAWSAMILaunchPermission_Disappears_LaunchPermission_Public(t *testing
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
+		CheckDestroy: testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMILaunchPermissionConfig(rName),
+				Config: testAccAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMILaunchPermissionExists(resourceName),
-					testAccCheckAWSAMILaunchPermissionAddPublic(resourceName),
-					testAccCheckAWSAMILaunchPermissionDisappears(resourceName),
+					testAccCheckAMILaunchPermissionExists(resourceName),
+					testAccCheckAMILaunchPermissionAddPublic(resourceName),
+					testAccCheckAMILaunchPermissionDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,21 +96,21 @@ func TestAccAWSAMILaunchPermission_Disappears_AMI(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMILaunchPermissionDestroy,
+		CheckDestroy: testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMILaunchPermissionConfig(rName),
+				Config: testAccAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMILaunchPermissionExists(resourceName),
+					testAccCheckAMILaunchPermissionExists(resourceName),
 				),
 			},
 			// Here we delete the AMI to verify the follow-on refresh after this step
 			// should not error.
 			{
-				Config: testAccAWSAMILaunchPermissionConfig(rName),
+				Config: testAccAMILaunchPermissionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ami_copy.test", "id", &imageID),
-					testAccAWSAMIDisappears(&imageID),
+					testAccAMIDisappears(&imageID),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,7 +136,7 @@ func testCheckResourceGetAttr(name, key string, value *string) resource.TestChec
 	}
 }
 
-func testAccCheckAWSAMILaunchPermissionExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckAMILaunchPermissionExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -160,7 +160,7 @@ func testAccCheckAWSAMILaunchPermissionExists(resourceName string) resource.Test
 	}
 }
 
-func testAccCheckAWSAMILaunchPermissionDestroy(s *terraform.State) error {
+func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami_launch_permission" {
 			continue
@@ -180,7 +180,7 @@ func testAccCheckAWSAMILaunchPermissionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAMILaunchPermissionAddPublic(resourceName string) resource.TestCheckFunc {
+func testAccCheckAMILaunchPermissionAddPublic(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -210,7 +210,7 @@ func testAccCheckAWSAMILaunchPermissionAddPublic(resourceName string) resource.T
 	}
 }
 
-func testAccCheckAWSAMILaunchPermissionDisappears(resourceName string) resource.TestCheckFunc {
+func testAccCheckAMILaunchPermissionDisappears(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -241,10 +241,10 @@ func testAccCheckAWSAMILaunchPermissionDisappears(resourceName string) resource.
 	}
 }
 
-// testAccAWSAMIDisappears is technically a "test check function" but really it
+// testAccAMIDisappears is technically a "test check function" but really it
 // exists to perform a side effect of deleting an AMI out from under a resource
 // so we can test that Terraform will react properly
-func testAccAWSAMIDisappears(imageID *string) resource.TestCheckFunc {
+func testAccAMIDisappears(imageID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		req := &ec2.DeregisterImageInput{
@@ -263,7 +263,7 @@ func testAccAWSAMIDisappears(imageID *string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSAMILaunchPermissionConfig(rName string) string {
+func testAccAMILaunchPermissionConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn-ami-minimal-hvm" {
   most_recent = true
@@ -298,7 +298,7 @@ resource "aws_ami_launch_permission" "test" {
 `, rName, rName)
 }
 
-func testAccAWSAMILaunchPermissionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAMILaunchPermissionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

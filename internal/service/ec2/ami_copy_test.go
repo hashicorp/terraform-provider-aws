@@ -23,13 +23,13 @@ func TestAccAWSAMICopy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMICopyDestroy,
+		CheckDestroy: testAccCheckAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMICopyConfig(rName),
+				Config: testAccAMICopyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMICopyExists(resourceName, &image),
-					testAccCheckAWSAMICopyAttributes(&image, rName),
+					testAccCheckAMICopyExists(resourceName, &image),
+					testAccCheckAMICopyAttributes(&image, rName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
 					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
@@ -51,19 +51,19 @@ func TestAccAWSAMICopy_Description(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMICopyDestroy,
+		CheckDestroy: testAccCheckAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMICopyConfigDescription(rName, "description1"),
+				Config: testAccAMICopyDescriptionConfig(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMICopyExists(resourceName, &image),
+					testAccCheckAMICopyExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
-				Config: testAccAWSAMICopyConfigDescription(rName, "description2"),
+				Config: testAccAMICopyDescriptionConfig(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMICopyExists(resourceName, &image),
+					testAccCheckAMICopyExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -80,12 +80,12 @@ func TestAccAWSAMICopy_EnaSupport(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMICopyDestroy,
+		CheckDestroy: testAccCheckAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMICopyConfigENASupport(rName),
+				Config: testAccAMICopyENASupportConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMICopyExists(resourceName, &image),
+					testAccCheckAMICopyExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
 				),
 			},
@@ -103,12 +103,12 @@ func TestAccAWSAMICopy_DestinationOutpost(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMICopyDestroy,
+		CheckDestroy: testAccCheckAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMICopyConfigDestOutpost(rName),
+				Config: testAccAMICopyDestOutpostConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMICopyExists(resourceName, &image),
+					testAccCheckAMICopyExists(resourceName, &image),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_outpost_arn", outpostDataSourceName, "arn"),
 				),
 			},
@@ -125,32 +125,32 @@ func TestAccAWSAMICopy_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMICopyDestroy,
+		CheckDestroy: testAccCheckAMICopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMICopyConfigTags1(rName, "key1", "value1"),
+				Config: testAccAMICopyTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMICopyExists(resourceName, &ami),
-					testAccCheckAWSAMICopyAttributes(&ami, rName),
+					testAccCheckAMICopyExists(resourceName, &ami),
+					testAccCheckAMICopyAttributes(&ami, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccAWSAMICopyConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAMICopyTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMICopyExists(resourceName, &ami),
-					testAccCheckAWSAMICopyAttributes(&ami, rName),
+					testAccCheckAMICopyExists(resourceName, &ami),
+					testAccCheckAMICopyAttributes(&ami, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSAMICopyConfigTags1(rName, "key2", "value2"),
+				Config: testAccAMICopyTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMICopyExists(resourceName, &ami),
-					testAccCheckAWSAMICopyAttributes(&ami, rName),
+					testAccCheckAMICopyExists(resourceName, &ami),
+					testAccCheckAMICopyAttributes(&ami, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -159,7 +159,7 @@ func TestAccAWSAMICopy_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAMICopyExists(resourceName string, image *ec2.Image) resource.TestCheckFunc {
+func testAccCheckAMICopyExists(resourceName string, image *ec2.Image) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -190,7 +190,7 @@ func testAccCheckAWSAMICopyExists(resourceName string, image *ec2.Image) resourc
 	}
 }
 
-func testAccCheckAWSAMICopyDestroy(s *terraform.State) error {
+func testAccCheckAMICopyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -212,10 +212,10 @@ func testAccCheckAWSAMICopyDestroy(s *terraform.State) error {
 	}
 
 	// Check for managed EBS snapshots
-	return testAccCheckAWSEbsSnapshotDestroy(s)
+	return testAccCheckEBSSnapshotDestroy(s)
 }
 
-func testAccCheckAWSAMICopyAttributes(image *ec2.Image, expectedName string) resource.TestCheckFunc {
+func testAccCheckAMICopyAttributes(image *ec2.Image, expectedName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if expected := ec2.ImageStateAvailable; aws.StringValue(image.State) != expected {
 			return fmt.Errorf("invalid image state; expected %s, got %s", expected, aws.StringValue(image.State))
@@ -245,7 +245,7 @@ func testAccCheckAWSAMICopyAttributes(image *ec2.Image, expectedName string) res
 	}
 }
 
-func testAccAWSAMICopyConfigBase(rName string) string {
+func testAccAMICopyBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -277,8 +277,8 @@ resource "aws_ebs_snapshot" "test" {
 `, rName)
 }
 
-func testAccAWSAMICopyConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
+func testAccAMICopyTags1Config(rName, tagKey1, tagValue1 string) string {
+	return testAccAMICopyBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = %[1]q
   virtualization_type = "hvm"
@@ -302,8 +302,8 @@ resource "aws_ami_copy" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSAMICopyConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
+func testAccAMICopyTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAMICopyBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = %[1]q
   virtualization_type = "hvm"
@@ -328,8 +328,8 @@ resource "aws_ami_copy" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSAMICopyConfig(rName string) string {
-	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
+func testAccAMICopyConfig(rName string) string {
+	return testAccAMICopyBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = "%s-source"
   virtualization_type = "hvm"
@@ -349,8 +349,8 @@ resource "aws_ami_copy" "test" {
 `, rName, rName)
 }
 
-func testAccAWSAMICopyConfigDescription(rName, description string) string {
-	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
+func testAccAMICopyDescriptionConfig(rName, description string) string {
+	return testAccAMICopyBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   name                = "%s-source"
   virtualization_type = "hvm"
@@ -371,8 +371,8 @@ resource "aws_ami_copy" "test" {
 `, rName, description, rName)
 }
 
-func testAccAWSAMICopyConfigENASupport(rName string) string {
-	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
+func testAccAMICopyENASupportConfig(rName string) string {
+	return testAccAMICopyBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
   name                = "%s-source"
@@ -393,8 +393,8 @@ resource "aws_ami_copy" "test" {
 `, rName, rName)
 }
 
-func testAccAWSAMICopyConfigDestOutpost(rName string) string {
-	return testAccAWSAMICopyConfigBase(rName) + fmt.Sprintf(`
+func testAccAMICopyDestOutpostConfig(rName string) string {
+	return testAccAMICopyBaseConfig(rName) + fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_outpost" "test" {

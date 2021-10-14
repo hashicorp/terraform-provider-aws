@@ -22,12 +22,12 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSVPNGatewayRoutePropagationDestroy,
+		CheckDestroy: testAccCheckVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSVPNGatewayRoutePropagationConfigBasic(rName),
+				Config: testAccVPNGatewayRoutePropagationBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSVPNGatewayRoutePropagationExists(resourceName),
+					testAccCheckVPNGatewayRoutePropagationExists(resourceName),
 				),
 			},
 		},
@@ -42,12 +42,12 @@ func TestAccAWSVPNGatewayRoutePropagation_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSVPNGatewayRoutePropagationDestroy,
+		CheckDestroy: testAccCheckVPNGatewayRoutePropagationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSVPNGatewayRoutePropagationConfigBasic(rName),
+				Config: testAccVPNGatewayRoutePropagationBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSVPNGatewayRoutePropagationExists(resourceName),
+					testAccCheckVPNGatewayRoutePropagationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNGatewayRoutePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -56,7 +56,7 @@ func TestAccAWSVPNGatewayRoutePropagation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSVPNGatewayRoutePropagationExists(n string) resource.TestCheckFunc {
+func testAccCheckVPNGatewayRoutePropagationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -85,7 +85,7 @@ func testAccCheckAWSVPNGatewayRoutePropagationExists(n string) resource.TestChec
 	}
 }
 
-func testAccCheckAWSVPNGatewayRoutePropagationDestroy(s *terraform.State) error {
+func testAccCheckVPNGatewayRoutePropagationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_gateway_route_propagation" {
 			continue
@@ -115,7 +115,7 @@ func testAccCheckAWSVPNGatewayRoutePropagationDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccAWSVPNGatewayRoutePropagationConfigBasic(rName string) string {
+func testAccVPNGatewayRoutePropagationBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

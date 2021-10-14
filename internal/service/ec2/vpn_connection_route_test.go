@@ -21,25 +21,25 @@ func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionRouteDestroy,
+		CheckDestroy: testAccVPNConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionRouteConfig(rBgpAsn),
+				Config: testAccVPNConnectionRouteConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionRoute("aws_vpn_connection_route.foo"),
+					testAccVPNConnectionRoute("aws_vpn_connection_route.foo"),
 				),
 			},
 			{
-				Config: testAccAwsVpnConnectionRouteConfigUpdate(rBgpAsn),
+				Config: testAccVPNConnectionRouteUpdateConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionRoute("aws_vpn_connection_route.foo"),
+					testAccVPNConnectionRoute("aws_vpn_connection_route.foo"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAwsVpnConnectionRouteDestroy(s *terraform.State) error {
+func testAccVPNConnectionRouteDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_connection_route" {
@@ -93,7 +93,7 @@ func testAccAwsVpnConnectionRouteDestroy(s *terraform.State) error {
 	return fmt.Errorf("Fall through error, Check Destroy criteria not met")
 }
 
-func testAccAwsVpnConnectionRoute(vpnConnectionRouteResource string) resource.TestCheckFunc {
+func testAccVPNConnectionRoute(vpnConnectionRouteResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[vpnConnectionRouteResource]
 		if !ok {
@@ -130,7 +130,7 @@ func testAccAwsVpnConnectionRoute(vpnConnectionRouteResource string) resource.Te
 	}
 }
 
-func testAccAwsVpnConnectionRouteConfig(rBgpAsn int) string {
+func testAccVPNConnectionRouteConfig(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "vpn_gateway" {
   tags = {
@@ -159,7 +159,7 @@ resource "aws_vpn_connection_route" "foo" {
 }
 
 // Change destination_cidr_block
-func testAccAwsVpnConnectionRouteConfigUpdate(rBgpAsn int) string {
+func testAccVPNConnectionRouteUpdateConfig(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "vpn_gateway" {
   tags = {

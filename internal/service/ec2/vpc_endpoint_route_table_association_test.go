@@ -33,7 +33,7 @@ func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVpcEndpointRouteTableAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccVPCEndpointRouteTableAssociationImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -103,7 +103,7 @@ func testAccCheckVpcEndpointRouteTableAssociationExists(n string) resource.TestC
 	}
 }
 
-func testAccAWSVpcEndpointRouteTableAssociationImportStateIdFunc(n string) resource.ImportStateIdFunc {
+func testAccVPCEndpointRouteTableAssociationImportStateIdFunc(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

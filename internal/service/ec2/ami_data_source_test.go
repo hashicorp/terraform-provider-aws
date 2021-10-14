@@ -20,9 +20,9 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAmiDataSourceConfig,
+				Config: testAccCheckAWSAmiDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID(resourceName),
+					testAccCheckAMIIDDataSource(resourceName),
 					// Check attributes. Some attributes are tough to test - any not contained here should not be considered
 					// stable and should not be used in interpolation. Exception to block_device_mappings which should both
 					// show up consistently and break if certain references are not available. However modification of the
@@ -71,9 +71,9 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAmiDataSourceWindowsConfig,
+				Config: testAccCheckAWSAmiDataSourceWindowsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID(resourceName),
+					testAccCheckAMIIDDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "27"),
 					resource.TestMatchResourceAttr(resourceName, "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
@@ -117,7 +117,7 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 			{
 				Config: testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID(resourceName),
+					testAccCheckAMIIDDataSource(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
@@ -154,9 +154,9 @@ func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAmiDataSourceNameRegexConfig,
+				Config: testAccCheckAWSAmiDataSourceNameRegexConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID("data.aws_ami.name_regex_filtered_ami"),
+					testAccCheckAMIIDDataSource("data.aws_ami.name_regex_filtered_ami"),
 					resource.TestMatchResourceAttr("data.aws_ami.name_regex_filtered_ami", "image_id", regexp.MustCompile("^ami-")),
 				),
 			},
@@ -177,7 +177,7 @@ func TestAccAWSAmiDataSource_Gp3BlockDevice(t *testing.T) {
 			{
 				Config: testAccAmiDataSourceConfigGp3BlockDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID(datasourceName),
+					testAccCheckAMIIDDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "architecture", resourceName, "architecture"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "block_device_mappings.#", resourceName, "ebs_block_device.#"),
@@ -196,7 +196,7 @@ func TestAccAWSAmiDataSource_Gp3BlockDevice(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAmiDataSourceID(n string) resource.TestCheckFunc {
+func testAccCheckAMIIDDataSource(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -214,7 +214,7 @@ func testAccCheckAwsAmiDataSourceID(n string) resource.TestCheckFunc {
 // that this will possibly be deprecated at some point in time. Other candidates
 // for testing this after that may be Ubuntu's AMI's, or Amazon's regular
 // Amazon Linux AMIs.
-const testAccCheckAwsAmiDataSourceConfig = `
+const testAccCheckAWSAmiDataSourceConfig = `
 data "aws_ami" "nat_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -242,7 +242,7 @@ data "aws_ami" "nat_ami" {
 `
 
 // Windows image test.
-const testAccCheckAwsAmiDataSourceWindowsConfig = `
+const testAccCheckAWSAmiDataSourceWindowsConfig = `
 data "aws_ami" "windows_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -270,7 +270,7 @@ data "aws_ami" "windows_ami" {
 `
 
 // Testing name_regex parameter
-const testAccCheckAwsAmiDataSourceNameRegexConfig = `
+const testAccCheckAWSAmiDataSourceNameRegexConfig = `
 data "aws_ami" "name_regex_filtered_ami" {
   most_recent = true
   owners      = ["amazon"]

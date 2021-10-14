@@ -24,12 +24,12 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVPCPeeringConnectionAccepterDestroy,
+		CheckDestroy: testAccVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVPCPeeringConnectionAccepterConfigSameRegionSameAccount(rName),
+				Config: testAccVPCPeeringConnectionAccepterSameRegionSameAccountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSVpcPeeringConnectionExists(resourceNameAccepter, &connection),
+					testAccCheckVPCPeeringConnectionExists(resourceNameAccepter, &connection),
 					// The aws_vpc_peering_connection documentation says:
 					//	vpc_id - The ID of the requester VPC
 					//	peer_vpc_id - The ID of the VPC with which you are creating the VPC Peering Connection (accepter)
@@ -55,7 +55,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) 
 				),
 			},
 			{
-				Config:                  testAccAwsVPCPeeringConnectionAccepterConfigSameRegionSameAccount(rName),
+				Config:                  testAccVPCPeeringConnectionAccepterSameRegionSameAccountConfig(rName),
 				ResourceName:            resourceNameAccepter,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -81,13 +81,13 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
+		CheckDestroy:      testAccVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVPCPeeringConnectionAccepterConfigDifferentRegionSameAccount(rName),
+				Config: testAccVPCPeeringConnectionAccepterDifferentRegionSameAccountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSVpcPeeringConnectionExists(resourceNameConnection, &connectionMain),
-					testAccCheckAWSVpcPeeringConnectionExistsWithProvider(resourceNameAccepter, &connectionPeer, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &connectionMain),
+					testAccCheckVPCPeeringConnectionExistsWithProvider(resourceNameAccepter, &connectionPeer, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),
@@ -101,7 +101,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 				),
 			},
 			{
-				Config:                  testAccAwsVPCPeeringConnectionAccepterConfigDifferentRegionSameAccount(rName),
+				Config:                  testAccVPCPeeringConnectionAccepterDifferentRegionSameAccountConfig(rName),
 				ResourceName:            resourceNameAccepter,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -127,12 +127,12 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testin
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
+		CheckDestroy:      testAccVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVPCPeeringConnectionAccepterConfigSameRegionDifferentAccount(rName),
+				Config: testAccVPCPeeringConnectionAccepterSameRegionDifferentAccountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSVpcPeeringConnectionExists(resourceNameConnection, &connection),
+					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &connection),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),
@@ -165,12 +165,12 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *t
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
+		CheckDestroy:      testAccVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVPCPeeringConnectionAccepterConfigDifferentRegionDifferentAccount(rName),
+				Config: testAccVPCPeeringConnectionAccepterDifferentRegionDifferentAccountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSVpcPeeringConnectionExists(resourceNameConnection, &connection),
+					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &connection),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),
@@ -186,12 +186,12 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *t
 	})
 }
 
-func testAccAwsVPCPeeringConnectionAccepterDestroy(s *terraform.State) error {
+func testAccVPCPeeringConnectionAccepterDestroy(s *terraform.State) error {
 	// We don't destroy the underlying VPC Peering Connection.
 	return nil
 }
 
-func testAccAwsVPCPeeringConnectionAccepterConfigSameRegionSameAccount(rName string) string {
+func testAccVPCPeeringConnectionAccepterSameRegionSameAccountConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
@@ -232,7 +232,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 `, rName)
 }
 
-func testAccAwsVPCPeeringConnectionAccepterConfigDifferentRegionSameAccount(rName string) string {
+func testAccVPCPeeringConnectionAccepterDifferentRegionSameAccountConfig(rName string) string {
 	return acctest.ConfigAlternateRegionProvider() + fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
@@ -278,7 +278,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 `, rName, acctest.AlternateRegion())
 }
 
-func testAccAwsVPCPeeringConnectionAccepterConfigSameRegionDifferentAccount(rName string) string {
+func testAccVPCPeeringConnectionAccepterSameRegionDifferentAccountConfig(rName string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
@@ -329,7 +329,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 `, rName, acctest.Region())
 }
 
-func testAccAwsVPCPeeringConnectionAccepterConfigDifferentRegionDifferentAccount(rName string) string {
+func testAccVPCPeeringConnectionAccepterDifferentRegionDifferentAccountConfig(rName string) string {
 	return acctest.ConfigAlternateAccountAlternateRegionProvider() + fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"

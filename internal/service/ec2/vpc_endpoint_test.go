@@ -24,14 +24,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_vpc_endpoint", &resource.Sweeper{
 		Name: "aws_vpc_endpoint",
-		F:    testSweepEc2VpcEndpoints,
+		F:    sweepVPCEndpoints,
 		Dependencies: []string{
 			"aws_route_table",
 		},
 	})
 }
 
-func testSweepEc2VpcEndpoints(region string) error {
+func sweepVPCEndpoints(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {

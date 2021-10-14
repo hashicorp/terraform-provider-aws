@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccDataSourceAwsEc2ManagedPrefixListGetIdByName(name string, id *string, arn *string) resource.TestCheckFunc {
+func testAccManagedPrefixListGetIdByNameDataSource(name string, id *string, arn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -51,9 +51,9 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEc2ManagedPrefixListConfig_basic,
+				Config: testAccManagedPrefixListDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsEc2ManagedPrefixListGetIdByName(prefixListName, &prefixListId, &prefixListArn),
+					testAccManagedPrefixListGetIdByNameDataSource(prefixListName, &prefixListId, &prefixListArn),
 
 					resource.TestCheckResourceAttrPtr(resourceByName, "id", &prefixListId),
 					resource.TestCheckResourceAttr(resourceByName, "name", prefixListName),
@@ -76,7 +76,7 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_basic(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsEc2ManagedPrefixListConfig_basic = `
+const testAccManagedPrefixListDataSourceConfig_basic = `
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "s3_by_name" {
@@ -106,9 +106,9 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEc2ManagedPrefixListConfig_filter,
+				Config: testAccManagedPrefixListDataSourceConfig_filter,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsEc2ManagedPrefixListGetIdByName(prefixListName, &prefixListId, &prefixListArn),
+					testAccManagedPrefixListGetIdByNameDataSource(prefixListName, &prefixListId, &prefixListArn),
 					resource.TestCheckResourceAttrPtr(resourceByName, "id", &prefixListId),
 					resource.TestCheckResourceAttr(resourceByName, "name", prefixListName),
 					resource.TestCheckResourceAttr(resourceByName, "owner_id", "AWS"),
@@ -133,7 +133,7 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_filter(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsEc2ManagedPrefixListConfig_filter = `
+const testAccManagedPrefixListDataSourceConfig_filter = `
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "s3_by_name" {
@@ -158,13 +158,13 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_matchesTooMany(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsPrefixListConfig_matchesTooMany,
+				Config:      testAccPrefixListDataSourceConfig_matchesTooMany,
 				ExpectError: regexp.MustCompile(`more than 1 prefix list matched the given criteria`),
 			},
 		},
 	})
 }
 
-const testAccDataSourceAwsPrefixListConfig_matchesTooMany = `
+const testAccPrefixListDataSourceConfig_matchesTooMany = `
 data "aws_ec2_managed_prefix_list" "test" {}
 `

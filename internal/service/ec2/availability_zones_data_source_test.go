@@ -81,9 +81,9 @@ func TestAccAWSAvailabilityZones_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAvailabilityZonesConfig,
+				Config: testAccCheckAWSAvailabilityZonesConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesMeta("data.aws_availability_zones.availability_zones"),
+					testAccCheckAvailabilityZonesMeta("data.aws_availability_zones.availability_zones"),
 				),
 			},
 		},
@@ -99,9 +99,9 @@ func TestAccAWSAvailabilityZones_AllAvailabilityZones(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAvailabilityZonesConfigAllAvailabilityZones(),
+				Config: testAccCheckAvailabilityZonesAllAvailabilityZonesConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesMeta(dataSourceName),
+					testAccCheckAvailabilityZonesMeta(dataSourceName),
 				),
 			},
 		},
@@ -117,9 +117,9 @@ func TestAccAWSAvailabilityZones_Filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAvailabilityZonesConfigFilter(),
+				Config: testAccCheckAvailabilityZonesFilterConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesMeta(dataSourceName),
+					testAccCheckAvailabilityZonesMeta(dataSourceName),
 				),
 			},
 		},
@@ -136,9 +136,9 @@ func TestAccAWSAvailabilityZones_ExcludeNames(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAvailabilityZonesConfigExcludeNames(),
+				Config: testAccCheckAvailabilityZonesExcludeNamesConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
+					testAccCheckAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
 			},
 		},
@@ -155,9 +155,9 @@ func TestAccAWSAvailabilityZones_ExcludeZoneIds(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAvailabilityZonesConfigExcludeZoneIds(),
+				Config: testAccCheckAvailabilityZonesExcludeZoneIDsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
+					testAccCheckAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
 			},
 		},
@@ -171,16 +171,16 @@ func TestAccAWSAvailabilityZones_stateFilter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAvailabilityZonesStateConfig,
+				Config: testAccCheckAWSAvailabilityZonesStateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZoneState("data.aws_availability_zones.state_filter"),
+					testAccCheckAvailabilityZoneState("data.aws_availability_zones.state_filter"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsAvailabilityZonesMeta(n string) resource.TestCheckFunc {
+func testAccCheckAvailabilityZonesMeta(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -191,7 +191,7 @@ func testAccCheckAwsAvailabilityZonesMeta(n string) resource.TestCheckFunc {
 			return fmt.Errorf("AZ resource ID not set.")
 		}
 
-		actual, err := testAccCheckAwsAvailabilityZonesBuildAvailable(rs.Primary.Attributes)
+		actual, err := testAccCheckAvailabilityZonesBuildAvailable(rs.Primary.Attributes)
 		if err != nil {
 			return err
 		}
@@ -205,7 +205,7 @@ func testAccCheckAwsAvailabilityZonesMeta(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName string) resource.TestCheckFunc {
+func testAccCheckAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		allResourceState, ok := s.RootModule().Resources[allDataSourceName]
 		if !ok {
@@ -239,7 +239,7 @@ func testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSour
 	}
 }
 
-func testAccCheckAwsAvailabilityZoneState(n string) resource.TestCheckFunc {
+func testAccCheckAvailabilityZoneState(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -254,12 +254,12 @@ func testAccCheckAwsAvailabilityZoneState(n string) resource.TestCheckFunc {
 			return fmt.Errorf("AZs state filter is missing, should be set.")
 		}
 
-		_, err := testAccCheckAwsAvailabilityZonesBuildAvailable(rs.Primary.Attributes)
+		_, err := testAccCheckAvailabilityZonesBuildAvailable(rs.Primary.Attributes)
 		return err
 	}
 }
 
-func testAccCheckAwsAvailabilityZonesBuildAvailable(attrs map[string]string) ([]string, error) {
+func testAccCheckAvailabilityZonesBuildAvailable(attrs map[string]string) ([]string, error) {
 	groupNames, groupNamesOk := attrs["group_names.#"]
 
 	if !groupNamesOk {
@@ -302,11 +302,11 @@ func testAccCheckAwsAvailabilityZonesBuildAvailable(attrs map[string]string) ([]
 	return zones, nil
 }
 
-const testAccCheckAwsAvailabilityZonesConfig = `
+const testAccCheckAWSAvailabilityZonesConfig = `
 data "aws_availability_zones" "availability_zones" {}
 `
 
-func testAccCheckAwsAvailabilityZonesConfigAllAvailabilityZones() string {
+func testAccCheckAvailabilityZonesAllAvailabilityZonesConfig() string {
 	return `
 data "aws_availability_zones" "test" {
   all_availability_zones = true
@@ -314,7 +314,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-func testAccCheckAwsAvailabilityZonesConfigFilter() string {
+func testAccCheckAvailabilityZonesFilterConfig() string {
 	return `
 data "aws_availability_zones" "test" {
   filter {
@@ -325,7 +325,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-func testAccCheckAwsAvailabilityZonesConfigExcludeNames() string {
+func testAccCheckAvailabilityZonesExcludeNamesConfig() string {
 	return `
 data "aws_availability_zones" "all" {}
 
@@ -335,7 +335,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-func testAccCheckAwsAvailabilityZonesConfigExcludeZoneIds() string {
+func testAccCheckAvailabilityZonesExcludeZoneIDsConfig() string {
 	return `
 data "aws_availability_zones" "all" {}
 
@@ -345,7 +345,7 @@ data "aws_availability_zones" "test" {
 `
 }
 
-const testAccCheckAwsAvailabilityZonesStateConfig = `
+const testAccCheckAWSAvailabilityZonesStateConfig = `
 data "aws_availability_zones" "state_filter" {
   state = "available"
 }

@@ -19,7 +19,7 @@ func TestAccDataSourceAwsNetworkInterfaces_Filter(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkInterfacesConfig_Filter(rName),
+				Config: testAccNetworkInterfacesDataSourceConfig_Filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", "2"),
 				),
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsNetworkInterfaces_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkInterfacesConfig_Tags(rName),
+				Config: testAccNetworkInterfacesDataSourceConfig_Tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", "1"),
 				),
@@ -46,7 +46,7 @@ func TestAccDataSourceAwsNetworkInterfaces_Tags(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsNetworkInterfacesConfig_Base(rName string) string {
+func testAccNetworkInterfacesDataSourceConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -79,8 +79,8 @@ resource "aws_network_interface" "test1" {
 `, rName, rName)
 }
 
-func testAccDataSourceAwsNetworkInterfacesConfig_Filter(rName string) string {
-	return testAccDataSourceAwsNetworkInterfacesConfig_Base(rName) + `
+func testAccNetworkInterfacesDataSourceConfig_Filter(rName string) string {
+	return testAccNetworkInterfacesDataSourceConfig_Base(rName) + `
 data "aws_network_interfaces" "test" {
   filter {
     name   = "subnet-id"
@@ -90,8 +90,8 @@ data "aws_network_interfaces" "test" {
 `
 }
 
-func testAccDataSourceAwsNetworkInterfacesConfig_Tags(rName string) string {
-	return testAccDataSourceAwsNetworkInterfacesConfig_Base(rName) + `
+func testAccNetworkInterfacesDataSourceConfig_Tags(rName string) string {
+	return testAccNetworkInterfacesDataSourceConfig_Base(rName) + `
 data "aws_network_interfaces" "test" {
   tags = {
     Name = aws_network_interface.test1.tags.Name

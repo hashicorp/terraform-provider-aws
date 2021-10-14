@@ -22,7 +22,7 @@ func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsAvailabilityZoneConfigAllAvailabilityZones(),
+				Config: testAccAvailabilityZoneAllAvailabilityZonesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_name", acctest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
@@ -50,7 +50,7 @@ func TestAccDataSourceAwsAvailabilityZone_Filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsAvailabilityZoneConfigFilter(),
+				Config: testAccAvailabilityZoneFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_name", acctest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
@@ -73,12 +73,12 @@ func TestAccDataSourceAwsAvailabilityZone_LocalZone(t *testing.T) {
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSLocalZoneAvailable(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckLocalZoneAvailable(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneType("local-zone"),
+				Config: testAccAvailabilityZoneZoneTypeDataSourceConfig("local-zone"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
@@ -106,7 +106,7 @@ func TestAccDataSourceAwsAvailabilityZone_Name(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsAvailabilityZoneConfigName(),
+				Config: testAccAvailabilityZoneNameDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_name", acctest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
@@ -129,12 +129,12 @@ func TestAccDataSourceAwsAvailabilityZone_WavelengthZone(t *testing.T) {
 	dataSourceName := "data.aws_availability_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneType("wavelength-zone"),
+				Config: testAccAvailabilityZoneZoneTypeDataSourceConfig("wavelength-zone"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
@@ -162,7 +162,7 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneId(),
+				Config: testAccAvailabilityZoneZoneIDDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "group_name", acctest.Region()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
@@ -180,7 +180,7 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 	})
 }
 
-func testAccPreCheckAWSLocalZoneAvailable(t *testing.T) {
+func testAccPreCheckLocalZoneAvailable(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeAvailabilityZonesInput{
@@ -205,7 +205,7 @@ func testAccPreCheckAWSLocalZoneAvailable(t *testing.T) {
 	}
 }
 
-func testAccDataSourceAwsAvailabilityZoneConfigAllAvailabilityZones() string {
+func testAccAvailabilityZoneAllAvailabilityZonesDataSourceConfig() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		`
@@ -216,7 +216,7 @@ data "aws_availability_zone" "test" {
 `)
 }
 
-func testAccDataSourceAwsAvailabilityZoneConfigFilter() string {
+func testAccAvailabilityZoneFilterDataSourceConfig() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		`
@@ -229,7 +229,7 @@ data "aws_availability_zone" "test" {
 `)
 }
 
-func testAccDataSourceAwsAvailabilityZoneConfigName() string {
+func testAccAvailabilityZoneNameDataSourceConfig() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		`
@@ -239,7 +239,7 @@ data "aws_availability_zone" "test" {
 `)
 }
 
-func testAccDataSourceAwsAvailabilityZoneConfigZoneId() string {
+func testAccAvailabilityZoneZoneIDDataSourceConfig() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		`
@@ -249,7 +249,7 @@ data "aws_availability_zone" "test" {
 `)
 }
 
-func testAccDataSourceAwsAvailabilityZoneConfigZoneType(zoneType string) string {
+func testAccAvailabilityZoneZoneTypeDataSourceConfig(zoneType string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

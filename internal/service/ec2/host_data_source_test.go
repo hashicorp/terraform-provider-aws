@@ -21,7 +21,7 @@ func TestAccAWSEc2HostDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEc2HostConfig(rName),
+				Config: testAccHostDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_placement", resourceName, "auto_placement"),
@@ -52,7 +52,7 @@ func TestAccAWSEc2HostDataSource_Filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEc2HostConfigFilter(rName),
+				Config: testAccHostFilterDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_placement", resourceName, "auto_placement"),
@@ -72,7 +72,7 @@ func TestAccAWSEc2HostDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSEc2HostConfig(rName string) string {
+func testAccHostDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -89,7 +89,7 @@ data "aws_ec2_host" "test" {
 `, rName))
 }
 
-func testAccDataSourceAWSEc2HostConfigFilter(rName string) string {
+func testAccHostFilterDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]

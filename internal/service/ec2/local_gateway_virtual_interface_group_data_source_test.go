@@ -20,7 +20,7 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroup_Filter(t *testing.
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupConfigFilter(),
+				Config: testAccLocalGatewayVirtualInterfaceGroupFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^lgw-vif-grp-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexp.MustCompile(`^lgw-`)),
@@ -40,7 +40,7 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroup_LocalGatewayId(t *
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupConfigLocalGatewayId(),
+				Config: testAccLocalGatewayVirtualInterfaceGroupLocalGatewayIDDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^lgw-vif-grp-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexp.MustCompile(`^lgw-`)),
@@ -62,7 +62,7 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroup_Tags(t *testing.T)
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupConfigTags(rName),
+				Config: testAccLocalGatewayVirtualInterfaceGroupTagsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", sourceDataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "local_gateway_id", sourceDataSourceName, "local_gateway_id"),
@@ -72,7 +72,7 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroup_Tags(t *testing.T)
 	})
 }
 
-func testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupConfigFilter() string {
+func testAccLocalGatewayVirtualInterfaceGroupFilterDataSourceConfig() string {
 	return `
 data "aws_ec2_local_gateways" "test" {}
 
@@ -85,7 +85,7 @@ data "aws_ec2_local_gateway_virtual_interface_group" "test" {
 `
 }
 
-func testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupConfigLocalGatewayId() string {
+func testAccLocalGatewayVirtualInterfaceGroupLocalGatewayIDDataSourceConfig() string {
 	return `
 data "aws_ec2_local_gateways" "test" {}
 
@@ -95,7 +95,7 @@ data "aws_ec2_local_gateway_virtual_interface_group" "test" {
 `
 }
 
-func testAccDataSourceAwsEc2LocalGatewayVirtualInterfaceGroupConfigTags(rName string) string {
+func testAccLocalGatewayVirtualInterfaceGroupTagsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "test" {}
 

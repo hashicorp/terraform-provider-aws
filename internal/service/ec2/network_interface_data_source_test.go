@@ -21,7 +21,7 @@ func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkInterfaceConfigBasic(rName),
+				Config: testAccNetworkInterfaceBasicDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "private_ips.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", "1"),
@@ -49,7 +49,7 @@ func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkInterfaceConfigFilters(rName),
+				Config: testAccNetworkInterfaceFiltersDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "private_ips.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", "1"),
@@ -69,12 +69,12 @@ func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkInterfaceConfigCarrierIPAssociation(rName),
+				Config: testAccNetworkInterfaceCarrierIPAssociationDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "association.#", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.allocation_id", eipResourceName, "id"),
@@ -122,7 +122,7 @@ func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkInterfaceConfigPublicIPAssociation(rName),
+				Config: testAccNetworkInterfacePublicIPAssociationDataSourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "association.#", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.allocation_id", eipResourceName, "id"),
@@ -156,7 +156,7 @@ func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsNetworkInterfaceConfigBase(rName string) string {
+func testAccNetworkInterfaceBaseDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -195,9 +195,9 @@ resource "aws_network_interface" "test" {
 `, rName))
 }
 
-func testAccDataSourceAwsNetworkInterfaceConfigBasic(rName string) string {
+func testAccNetworkInterfaceBasicDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSourceAwsNetworkInterfaceConfigBase(rName),
+		testAccNetworkInterfaceBaseDataSourceConfig(rName),
 		`
 data "aws_network_interface" "test" {
   id = aws_network_interface.test.id
@@ -205,7 +205,7 @@ data "aws_network_interface" "test" {
 `)
 }
 
-func testAccDataSourceAwsNetworkInterfaceConfigCarrierIPAssociation(rName string) string {
+func testAccNetworkInterfaceCarrierIPAssociationDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAvailableAZsWavelengthZonesDefaultExcludeConfig(),
 		fmt.Sprintf(`
@@ -274,9 +274,9 @@ data "aws_network_interface" "test" {
 `, rName))
 }
 
-func testAccDataSourceAwsNetworkInterfaceConfigPublicIPAssociation(rName string) string {
+func testAccNetworkInterfacePublicIPAssociationDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSourceAwsNetworkInterfaceConfigBase(rName),
+		testAccNetworkInterfaceBaseDataSourceConfig(rName),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -305,9 +305,9 @@ data "aws_network_interface" "test" {
 `, rName))
 }
 
-func testAccDataSourceAwsNetworkInterfaceConfigFilters(rName string) string {
+func testAccNetworkInterfaceFiltersDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccDataSourceAwsNetworkInterfaceConfigBase(rName),
+		testAccNetworkInterfaceBaseDataSourceConfig(rName),
 		`
 data "aws_network_interface" "test" {
   filter {

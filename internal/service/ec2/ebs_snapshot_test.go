@@ -25,10 +25,10 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
+		CheckDestroy: testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotConfigBasic(rName),
+				Config: testAccEBSSnapshotBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -54,10 +54,10 @@ func TestAccAWSEBSSnapshot_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
+		CheckDestroy: testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotConfigBasicTags1(rName, "key1", "value1"),
+				Config: testAccEBSSnapshotBasicTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -70,7 +70,7 @@ func TestAccAWSEBSSnapshot_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsSnapshotConfigBasicTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEBSSnapshotBasicTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -79,7 +79,7 @@ func TestAccAWSEBSSnapshot_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsEbsSnapshotConfigBasicTags1(rName, "key2", "value2"),
+				Config: testAccEBSSnapshotBasicTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -99,10 +99,10 @@ func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
+		CheckDestroy: testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotConfigWithDescription(rName),
+				Config: testAccEBSSnapshotWithDescriptionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -127,10 +127,10 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
+		CheckDestroy: testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotConfigWithKms(rName),
+				Config: testAccEBSSnapshotWithKMSConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
@@ -154,10 +154,10 @@ func TestAccAWSEBSSnapshot_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
+		CheckDestroy: testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotConfigBasic(rName),
+				Config: testAccEBSSnapshotBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSSnapshot(), resourceName),
@@ -196,7 +196,7 @@ func testAccCheckSnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFun
 	}
 }
 
-func testAccCheckAWSEbsSnapshotDestroy(s *terraform.State) error {
+func testAccCheckEBSSnapshotDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -222,7 +222,7 @@ func testAccCheckAWSEbsSnapshotDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsEbsSnapshotConfigBasic(rName string) string {
+func testAccEBSSnapshotBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -253,7 +253,7 @@ resource "aws_ebs_snapshot" "test" {
 `, rName)
 }
 
-func testAccAwsEbsSnapshotConfigBasicTags1(rName, tagKey1, tagValue1 string) string {
+func testAccEBSSnapshotBasicTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -285,7 +285,7 @@ resource "aws_ebs_snapshot" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAwsEbsSnapshotConfigBasicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEBSSnapshotBasicTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -318,7 +318,7 @@ resource "aws_ebs_snapshot" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAwsEbsSnapshotConfigWithDescription(rName string) string {
+func testAccEBSSnapshotWithDescriptionConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -341,7 +341,7 @@ resource "aws_ebs_snapshot" "test" {
 `, rName)
 }
 
-func testAccAwsEbsSnapshotConfigWithKms(rName string) string {
+func testAccEBSSnapshotWithKMSConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

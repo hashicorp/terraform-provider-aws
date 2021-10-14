@@ -15,13 +15,13 @@ func TestAccAwsEc2SpotPriceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotPrice(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEc2SpotPriceDataSourceConfig(),
+				Config: testAccSpotPriceDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(acctest.RFC3339RegexPattern)),
@@ -35,13 +35,13 @@ func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_spot_price.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAwsEc2SpotPrice(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotPrice(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEc2SpotPriceDataSourceFilterConfig(),
+				Config: testAccSpotPriceFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(acctest.RFC3339RegexPattern)),
@@ -51,7 +51,7 @@ func TestAccAwsEc2SpotPriceDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
+func testAccPreCheckSpotPrice(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSpotPriceHistoryInput{
@@ -69,7 +69,7 @@ func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
 	}
 }
 
-func testAccAwsEc2SpotPriceDataSourceConfig() string {
+func testAccSpotPriceDataSourceConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_region" "current" {}
 
@@ -93,7 +93,7 @@ data "aws_ec2_spot_price" "test" {
 `)
 }
 
-func testAccAwsEc2SpotPriceDataSourceFilterConfig() string {
+func testAccSpotPriceFilterDataSourceConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_region" "current" {}
 

@@ -24,7 +24,7 @@ func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpnGatewayUnattachedConfig(rInt),
+				Config: testAccVPNGatewayUnattachedDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "arn", resourceName, "arn"),
@@ -50,7 +50,7 @@ func TestAccDataSourceAwsVpnGateway_attached(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpnGatewayAttachedConfig(rInt),
+				Config: testAccVPNGatewayAttachedDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", "aws_vpn_gateway.test", "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "attached_vpc_id", "aws_vpc.test", "id"),
@@ -61,7 +61,7 @@ func TestAccDataSourceAwsVpnGateway_attached(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsVpnGatewayUnattachedConfig(rInt int) string {
+func testAccVPNGatewayUnattachedDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -88,7 +88,7 @@ data "aws_vpn_gateway" "test_by_amazon_side_asn" {
 `, rInt, rInt+1, rInt-1)
 }
 
-func testAccDataSourceAwsVpnGatewayAttachedConfig(rInt int) string {
+func testAccVPNGatewayAttachedDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

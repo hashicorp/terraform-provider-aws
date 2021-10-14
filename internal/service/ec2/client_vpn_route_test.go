@@ -14,7 +14,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
+func testAccClientVPNRoute_basic(t *testing.T) {
 	var v ec2.ClientVpnRoute
 	rStr := sdkacctest.RandString(5)
 
@@ -26,12 +26,12 @@ func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
+		CheckDestroy: testAccCheckClientVPNRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnRouteConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnRouteExists(resourceName, &v),
+					testAccCheckClientVPNRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_vpc_subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
@@ -49,7 +49,7 @@ func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsEc2ClientVpnRoute_description(t *testing.T) {
+func testAccClientVPNRoute_description(t *testing.T) {
 	var v ec2.ClientVpnRoute
 	rStr := sdkacctest.RandString(5)
 
@@ -61,12 +61,12 @@ func testAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
+		CheckDestroy: testAccCheckClientVPNRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnRouteConfigDescription(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnRouteExists(resourceName, &v),
+					testAccCheckClientVPNRouteExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_vpc_subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test client VPN route"),
@@ -81,7 +81,7 @@ func testAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 	})
 }
 
-func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
+func testAccClientVPNRoute_disappears(t *testing.T) {
 	var v ec2.ClientVpnRoute
 	rStr := sdkacctest.RandString(5)
 
@@ -91,12 +91,12 @@ func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
+		CheckDestroy: testAccCheckClientVPNRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnRouteConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnRouteExists(resourceName, &v),
+					testAccCheckClientVPNRouteExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,7 +105,7 @@ func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsEc2ClientVpnRouteDestroy(s *terraform.State) error {
+func testAccCheckClientVPNRouteDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -125,7 +125,7 @@ func testAccCheckAwsEc2ClientVpnRouteDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsEc2ClientVpnRouteExists(name string, route *ec2.ClientVpnRoute) resource.TestCheckFunc {
+func testAccCheckClientVPNRouteExists(name string, route *ec2.ClientVpnRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

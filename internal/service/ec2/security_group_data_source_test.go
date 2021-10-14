@@ -20,21 +20,21 @@ func TestAccDataSourceAwsSecurityGroup_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSecurityGroupConfig(rInt),
+				Config: testAccSecurityGroupDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_id"),
+					testAccSecurityGroupCheckDataSource("data.aws_security_group.by_id"),
 					resource.TestCheckResourceAttr("data.aws_security_group.by_id", "description", "sg description"),
-					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_tag"),
-					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_filter"),
-					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_name"),
-					testAccDataSourceAwsSecurityGroupCheckDefault("data.aws_security_group.default_by_name"),
+					testAccSecurityGroupCheckDataSource("data.aws_security_group.by_tag"),
+					testAccSecurityGroupCheckDataSource("data.aws_security_group.by_filter"),
+					testAccSecurityGroupCheckDataSource("data.aws_security_group.by_name"),
+					testAccSecurityGroupCheckDefaultDataSource("data.aws_security_group.default_by_name"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsSecurityGroupCheck(name string) resource.TestCheckFunc {
+func testAccSecurityGroupCheckDataSource(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -79,7 +79,7 @@ func testAccDataSourceAwsSecurityGroupCheck(name string) resource.TestCheckFunc 
 	}
 }
 
-func testAccDataSourceAwsSecurityGroupCheckDefault(name string) resource.TestCheckFunc {
+func testAccSecurityGroupCheckDefaultDataSource(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -104,7 +104,7 @@ func testAccDataSourceAwsSecurityGroupCheckDefault(name string) resource.TestChe
 	}
 }
 
-func testAccDataSourceAwsSecurityGroupConfig(rInt int) string {
+func testAccSecurityGroupDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"

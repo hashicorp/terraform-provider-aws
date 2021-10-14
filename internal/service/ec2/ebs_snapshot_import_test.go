@@ -30,10 +30,10 @@ func TestAccAWSEBSSnapshotImport_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
+		CheckDestroy: testAccCheckEBSSnapshotImportDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotImportConfigBasic(rName, t),
+				Config: testAccEBSSnapshotImportBasicConfig(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -55,10 +55,10 @@ func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
+		CheckDestroy: testAccCheckEBSSnapshotImportDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotImportConfigTags1(rName, t, "key1", "value1"),
+				Config: testAccEBSSnapshotImportTags1Config(rName, t, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -68,7 +68,7 @@ func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsEbsSnapshotImportConfigTags2(rName, t, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEBSSnapshotImportTags2Config(rName, t, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -79,7 +79,7 @@ func TestAccAWSEBSSnapshotImport_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsEbsSnapshotImportConfigTags1(rName, t, "key2", "value2"),
+				Config: testAccEBSSnapshotImportTags1Config(rName, t, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -101,10 +101,10 @@ func TestAccAWSEBSSnapshotImport_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
+		CheckDestroy: testAccCheckEBSSnapshotImportDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotImportConfigBasic(rName, t),
+				Config: testAccEBSSnapshotImportBasicConfig(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -128,10 +128,10 @@ func TestAccAWSEBSSnapshotImport_disappears_S3BucketObject(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEbsSnapshotImportDestroy,
+		CheckDestroy: testAccCheckEBSSnapshotImportDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotImportConfigBasic(rName, t),
+				Config: testAccEBSSnapshotImportBasicConfig(rName, t),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotImportExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
@@ -173,7 +173,7 @@ func testAccCheckSnapshotImportExists(n string, v *ec2.Snapshot) resource.TestCh
 	}
 }
 
-func testAccCheckAwsEbsSnapshotImportDestroy(s *terraform.State) error {
+func testAccCheckEBSSnapshotImportDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -199,7 +199,7 @@ func testAccCheckAwsEbsSnapshotImportDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsEbsSnapshotImportConfig_Base(t *testing.T) string {
+func testAccEBSSnapshotImportConfig_Base(t *testing.T) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "images" {
   bucket_prefix = "images-"
@@ -270,11 +270,11 @@ data "aws_iam_policy_document" "vmimport-trust" {
     }
   }
 }
-`, testAccAwsEbsSnapshotDisk(t))
+`, testAccEBSSnapshotDisk(t))
 }
 
-func testAccAwsEbsSnapshotImportConfigBasic(rName string, t *testing.T) string {
-	return acctest.ConfigCompose(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
+func testAccEBSSnapshotImportBasicConfig(rName string, t *testing.T) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
     description = %[1]q
@@ -295,8 +295,8 @@ resource "aws_ebs_snapshot_import" "test" {
 `, rName))
 }
 
-func testAccAwsEbsSnapshotImportConfigTags1(rName string, t *testing.T, tagKey1 string, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
+func testAccEBSSnapshotImportTags1Config(rName string, t *testing.T, tagKey1 string, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
     description = %[1]q
@@ -321,8 +321,8 @@ resource "aws_ebs_snapshot_import" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccAwsEbsSnapshotImportConfigTags2(rName string, t *testing.T, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAwsEbsSnapshotImportConfig_Base(t), fmt.Sprintf(`
+func testAccEBSSnapshotImportTags2Config(rName string, t *testing.T, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
     description = %[1]q
@@ -348,7 +348,7 @@ resource "aws_ebs_snapshot_import" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccAwsEbsSnapshotDisk(t *testing.T) string {
+func testAccEBSSnapshotDisk(t *testing.T) string {
 	// Take a compressed then base64'd disk image,
 	// base64 decode, then decompress, then re-base64
 	// the image, so it can be uploaded to s3.

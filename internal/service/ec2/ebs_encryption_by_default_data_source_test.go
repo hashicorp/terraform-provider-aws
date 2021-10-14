@@ -20,7 +20,7 @@ func TestAccDataSourceAwsEBSEncryptionByDefault_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEBSEncryptionByDefaultConfig,
+				Config: testAccEBSEncryptionByDefaultDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSEncryptionByDefault("data.aws_ebs_encryption_by_default.current"),
 				),
@@ -57,6 +57,6 @@ func testAccCheckEBSEncryptionByDefault(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccDataSourceAwsEBSEncryptionByDefaultConfig = `
+const testAccEBSEncryptionByDefaultDataSourceConfig = `
 data "aws_ebs_encryption_by_default" "current" {}
 `

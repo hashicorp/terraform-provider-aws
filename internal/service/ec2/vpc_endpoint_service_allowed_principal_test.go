@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", sdkacctest.RandString(10))
+	lbName := fmt.Sprintf("testAccAWSnlb-basic-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },

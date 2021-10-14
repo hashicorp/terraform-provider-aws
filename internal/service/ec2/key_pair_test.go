@@ -27,11 +27,11 @@ func init() {
 			"aws_instance",
 			"aws_spot_fleet_request",
 		},
-		F: testSweepKeyPairs,
+		F: sweepKeyPairs,
 	})
 }
 
-func testSweepKeyPairs(region string) error {
+func sweepKeyPairs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -76,12 +76,12 @@ func TestAccAWSKeyPair_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKeyPairDestroy,
+		CheckDestroy: testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKeyPairConfig(rName, publicKey),
+				Config: testAccKeyPairConfig(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					testAccCheckKeyPairExists(resourceName, &keyPair),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("key-pair/%s", rName)),
 					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexp.MustCompile(`[a-f0-9]{2}(:[a-f0-9]{2}){15}`)),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
@@ -112,12 +112,12 @@ func TestAccAWSKeyPair_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKeyPairDestroy,
+		CheckDestroy: testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKeyPairConfigTags1(rName, publicKey, "key1", "value1"),
+				Config: testAccKeyPairTags1Config(rName, publicKey, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					testAccCheckKeyPairExists(resourceName, &keyPair),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -129,18 +129,18 @@ func TestAccAWSKeyPair_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"public_key"},
 			},
 			{
-				Config: testAccAWSKeyPairConfigTags2(rName, publicKey, "key1", "value1updated", "key2", "value2"),
+				Config: testAccKeyPairTags2Config(rName, publicKey, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					testAccCheckKeyPairExists(resourceName, &keyPair),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSKeyPairConfigTags1(rName, publicKey, "key2", "value2"),
+				Config: testAccKeyPairTags1Config(rName, publicKey, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					testAccCheckKeyPairExists(resourceName, &keyPair),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -162,13 +162,13 @@ func TestAccAWSKeyPair_generatedName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKeyPairDestroy,
+		CheckDestroy: testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKeyPairConfig_generatedName(publicKey),
+				Config: testAccKeyPairConfig_generatedName(publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
-					testAccCheckAWSKeyPairKeyNamePrefix(&keyPair, "terraform-"),
+					testAccCheckKeyPairExists(resourceName, &keyPair),
+					testAccCheckKeyPairKeyNamePrefix(&keyPair, "terraform-"),
 					resource.TestMatchResourceAttr(resourceName, "key_name", regexp.MustCompile(`^terraform-`)),
 				),
 			},
@@ -195,13 +195,13 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKeyPairDestroy,
+		CheckDestroy: testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSKeyPairPrefixNameConfig(publicKey),
+				Config: testAccCheckKeyPairPrefixNameConfig(publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
-					testAccCheckAWSKeyPairKeyNamePrefix(&keyPair, "baz-"),
+					testAccCheckKeyPairExists(resourceName, &keyPair),
+					testAccCheckKeyPairKeyNamePrefix(&keyPair, "baz-"),
 					resource.TestMatchResourceAttr(resourceName, "key_name", regexp.MustCompile(`^baz-`)),
 				),
 			},
@@ -229,12 +229,12 @@ func TestAccAWSKeyPair_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSKeyPairDestroy,
+		CheckDestroy: testAccCheckKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSKeyPairConfig(rName, publicKey),
+				Config: testAccKeyPairConfig(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					testAccCheckKeyPairExists(resourceName, &keyPair),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -243,7 +243,7 @@ func TestAccAWSKeyPair_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
+func testAccCheckKeyPairDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -270,7 +270,7 @@ func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSKeyPairKeyNamePrefix(conf *ec2.KeyPairInfo, namePrefix string) resource.TestCheckFunc {
+func testAccCheckKeyPairKeyNamePrefix(conf *ec2.KeyPairInfo, namePrefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(aws.StringValue(conf.KeyName), namePrefix) {
 			return fmt.Errorf("incorrect key name. expected %s prefix, got %s", namePrefix, aws.StringValue(conf.KeyName))
@@ -279,7 +279,7 @@ func testAccCheckAWSKeyPairKeyNamePrefix(conf *ec2.KeyPairInfo, namePrefix strin
 	}
 }
 
-func testAccCheckAWSKeyPairExists(n string, res *ec2.KeyPairInfo) resource.TestCheckFunc {
+func testAccCheckKeyPairExists(n string, res *ec2.KeyPairInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -309,7 +309,7 @@ func testAccCheckAWSKeyPairExists(n string, res *ec2.KeyPairInfo) resource.TestC
 	}
 }
 
-func testAccAWSKeyPairConfig(rName, publicKey string) string {
+func testAccKeyPairConfig(rName, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -318,7 +318,7 @@ resource "aws_key_pair" "test" {
 `, rName, publicKey)
 }
 
-func testAccAWSKeyPairConfigTags1(rName, publicKey, tagKey1, tagValue1 string) string {
+func testAccKeyPairTags1Config(rName, publicKey, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -331,7 +331,7 @@ resource "aws_key_pair" "test" {
 `, rName, publicKey, tagKey1, tagValue1)
 }
 
-func testAccAWSKeyPairConfigTags2(rName, publicKey, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccKeyPairTags2Config(rName, publicKey, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -345,7 +345,7 @@ resource "aws_key_pair" "test" {
 `, rName, publicKey, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSKeyPairConfig_generatedName(publicKey string) string {
+func testAccKeyPairConfig_generatedName(publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   public_key = %[1]q
@@ -353,7 +353,7 @@ resource "aws_key_pair" "test" {
 `, publicKey)
 }
 
-func testAccCheckAWSKeyPairPrefixNameConfig(publicKey string) string {
+func testAccCheckKeyPairPrefixNameConfig(publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name_prefix = "baz-"

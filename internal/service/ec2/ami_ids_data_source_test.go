@@ -16,9 +16,9 @@ func TestAccDataSourceAwsAmiIds_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsAmiIdsConfig_basic,
+				Config: testAccAMIIdsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID("data.aws_ami_ids.ubuntu"),
+					testAccCheckAMIIDDataSource("data.aws_ami_ids.ubuntu"),
 				),
 			},
 		},
@@ -32,9 +32,9 @@ func TestAccDataSourceAwsAmiIds_sorted(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsAmiIdsConfig_sorted(false),
+				Config: testAccAMIIdsDataSourceConfig_sorted(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsSnapshotDataSourceID("data.aws_ami_ids.test"),
+					testAccCheckEBSSnapshotIDDataSource("data.aws_ami_ids.test"),
 					resource.TestCheckResourceAttr("data.aws_ami_ids.test", "ids.#", "2"),
 					resource.TestCheckResourceAttrPair(
 						"data.aws_ami_ids.test", "ids.0",
@@ -48,7 +48,7 @@ func TestAccDataSourceAwsAmiIds_sorted(t *testing.T) {
 			// it uses the same config / dataset as above so no need to verify the other
 			// bits
 			{
-				Config: testAccDataSourceAwsAmiIdsConfig_sorted(true),
+				Config: testAccAMIIdsDataSourceConfig_sorted(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(
 						"data.aws_ami_ids.test", "ids.0",
@@ -62,7 +62,7 @@ func TestAccDataSourceAwsAmiIds_sorted(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsAmiIdsConfig_basic = `
+const testAccAMIIdsDataSourceConfig_basic = `
 data "aws_ami_ids" "ubuntu" {
   owners = ["099720109477"]
 
@@ -73,7 +73,7 @@ data "aws_ami_ids" "ubuntu" {
 }
 `
 
-func testAccDataSourceAwsAmiIdsConfig_sorted(sort_ascending bool) string {
+func testAccAMIIdsDataSourceConfig_sorted(sort_ascending bool) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn_linux_2016_09_0" {
   owners = ["amazon"]

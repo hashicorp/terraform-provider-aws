@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_TransitGatewayIdAndVpnConnectionId(t *testing.T) {
+func testAccTransitGatewayVPNAttachmentDataSource_TransitGatewayIdAndVpnConnectionID(t *testing.T) {
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_vpn_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -19,14 +19,14 @@ func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_TransitGatewayIdAndVpnCo
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccPreCheckTransitGateway(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigTransitGatewayIdAndVpnConnectionId(rBgpAsn),
+				Config: testAccTransitGatewayVPNAttachmentTransitGatewayIdAndVpnConnectionIDDataSourceConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -37,7 +37,7 @@ func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_TransitGatewayIdAndVpnCo
 	})
 }
 
-func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_filter(t *testing.T) {
+func testAccTransitGatewayVPNAttachmentDataSource_filter(t *testing.T) {
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	dataSourceName := "data.aws_ec2_transit_gateway_vpn_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -46,14 +46,14 @@ func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_filter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccPreCheckTransitGateway(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigFilter(rBgpAsn),
+				Config: testAccTransitGatewayVPNAttachmentFilterDataSourceConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
@@ -64,7 +64,7 @@ func testAccAWSEc2TransitGatewayVpnAttachmentDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigBase(rBgpAsn int) string {
+func testAccTransitGatewayVPNAttachmentBaseDataSourceConfig(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
@@ -94,8 +94,8 @@ resource "aws_vpn_connection" "test" {
 `, rBgpAsn)
 }
 
-func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigTransitGatewayIdAndVpnConnectionId(rBgpAsn int) string {
-	return testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigBase(rBgpAsn) + `
+func testAccTransitGatewayVPNAttachmentTransitGatewayIdAndVpnConnectionIDDataSourceConfig(rBgpAsn int) string {
+	return testAccTransitGatewayVPNAttachmentBaseDataSourceConfig(rBgpAsn) + `
 data "aws_ec2_transit_gateway_vpn_attachment" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpn_connection_id  = aws_vpn_connection.test.id
@@ -103,8 +103,8 @@ data "aws_ec2_transit_gateway_vpn_attachment" "test" {
 `
 }
 
-func testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigFilter(rBgpAsn int) string {
-	return testAccAWSEc2TransitGatewayVpnAttachmentDataSourceConfigBase(rBgpAsn) + `
+func testAccTransitGatewayVPNAttachmentFilterDataSourceConfig(rBgpAsn int) string {
+	return testAccTransitGatewayVPNAttachmentBaseDataSourceConfig(rBgpAsn) + `
 data "aws_ec2_transit_gateway_vpn_attachment" "test" {
   filter {
     name   = "resource-id"

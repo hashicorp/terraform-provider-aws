@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_vpc_dhcp_options", &resource.Sweeper{
 		Name: "aws_vpc_dhcp_options",
-		F:    testSweepVpcDhcpOptions,
+		F:    sweepVPCDHCPOptions,
 	})
 }
 
-func testSweepVpcDhcpOptions(region string) error {
+func sweepVPCDHCPOptions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

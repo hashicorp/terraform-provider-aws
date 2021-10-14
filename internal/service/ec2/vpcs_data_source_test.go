@@ -18,9 +18,9 @@ func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcsConfig(),
+				Config: testAccVPCsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsVpcsDataSourceExists("data.aws_vpcs.all"),
+					testAccCheckVPCsExistsDataSource("data.aws_vpcs.all"),
 				),
 			},
 		},
@@ -35,9 +35,9 @@ func TestAccDataSourceAwsVpcs_tags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcsConfig_tags(rName),
+				Config: testAccVPCsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsVpcsDataSourceExists("data.aws_vpcs.selected"),
+					testAccCheckVPCsExistsDataSource("data.aws_vpcs.selected"),
 					resource.TestCheckResourceAttr("data.aws_vpcs.selected", "ids.#", "1"),
 				),
 			},
@@ -53,9 +53,9 @@ func TestAccDataSourceAwsVpcs_filters(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcsConfig_filters(rName),
+				Config: testAccVPCsDataSourceConfig_filters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsVpcsDataSourceExists("data.aws_vpcs.selected"),
+					testAccCheckVPCsExistsDataSource("data.aws_vpcs.selected"),
 					testCheckResourceAttrGreaterThanValue("data.aws_vpcs.selected", "ids.#", "0"),
 				),
 			},
@@ -93,7 +93,7 @@ func testCheckResourceAttrGreaterThanValue(name, key, value string) resource.Tes
 	}
 }
 
-func testAccCheckAwsVpcsDataSourceExists(n string) resource.TestCheckFunc {
+func testAccCheckVPCsExistsDataSource(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -107,7 +107,7 @@ func testAccCheckAwsVpcsDataSourceExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDataSourceAwsVpcsConfig() string {
+func testAccVPCsDataSourceConfig() string {
 	return `
 resource "aws_vpc" "test-vpc" {
   cidr_block = "10.0.0.0/24"
@@ -117,7 +117,7 @@ data "aws_vpcs" "all" {}
 `
 }
 
-func testAccDataSourceAwsVpcsConfig_tags(rName string) string {
+func testAccVPCsDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test-vpc" {
   cidr_block = "10.0.0.0/24"
@@ -137,7 +137,7 @@ data "aws_vpcs" "selected" {
 `, rName, rName)
 }
 
-func testAccDataSourceAwsVpcsConfig_filters(rName string) string {
+func testAccVPCsDataSourceConfig_filters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test-vpc" {
   cidr_block = "192.168.0.0/25"

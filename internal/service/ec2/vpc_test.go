@@ -36,11 +36,11 @@ func init() {
 			"aws_vpc_peering_connection",
 			"aws_vpn_gateway",
 		},
-		F: testSweepVPCs,
+		F: sweepVPCs,
 	})
 }
 
-func testSweepVPCs(region string) error {
+func sweepVPCs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -224,7 +224,7 @@ func TestAccAWSVpc_defaultTags_updateToProviderOnly(t *testing.T) {
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSVPCConfigTags1("key1", "value1"),
+				Config: testAccVPCTags1Config("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -278,7 +278,7 @@ func TestAccAWSVpc_defaultTags_updateToResourceOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSVPCConfigTags1("key1", "value1"),
+				Config: testAccVPCTags1Config("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -310,7 +310,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccAWSVPCConfigTags1("resourcekey1", "resourcevalue1"),
+					testAccVPCTags1Config("resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -329,7 +329,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccAWSVPCConfigTags2("resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
+					testAccVPCTags2Config("resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -345,7 +345,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
-					testAccAWSVPCConfigTags1("resourcekey3", "resourcevalue3"),
+					testAccVPCTags1Config("resourcekey3", "resourcevalue3"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -374,7 +374,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccAWSVPCConfigTags1("overlapkey1", "resourcevalue1"),
+					testAccVPCTags1Config("overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -391,7 +391,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccAWSVPCConfigTags2("overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
+					testAccVPCTags2Config("overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -406,7 +406,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccAWSVPCConfigTags1("overlapkey1", "resourcevalue2"),
+					testAccVPCTags1Config("overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
@@ -432,7 +432,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_duplicateTag(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
-					testAccAWSVPCConfigTags1("overlapkey", "overlapvalue"),
+					testAccVPCTags1Config("overlapkey", "overlapvalue"),
 				),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
@@ -459,7 +459,7 @@ func TestAccAWSVpc_DynamicResourceTagsMergedWithLocals_IgnoreChanges(t *testing.
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSVPCConfigWithIgnoreChanges_DynamicTagsMergedWithLocals("localkey", "localvalue"),
+				Config: testAccVPCWithIgnoreChangesConfig_DynamicTagsMergedWithLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -477,7 +477,7 @@ func TestAccAWSVpc_DynamicResourceTagsMergedWithLocals_IgnoreChanges(t *testing.
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAWSVPCConfigWithIgnoreChanges_DynamicTagsMergedWithLocals("localkey", "localvalue"),
+				Config: testAccVPCWithIgnoreChangesConfig_DynamicTagsMergedWithLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -515,7 +515,7 @@ func TestAccAWSVpc_DynamicResourceTags_IgnoreChanges(t *testing.T) {
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSVPCConfigWithIgnoreChanges_DynamicTags,
+				Config: testAccVPCWithIgnoreChangesConfig_DynamicTags,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -531,7 +531,7 @@ func TestAccAWSVpc_DynamicResourceTags_IgnoreChanges(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAWSVPCConfigWithIgnoreChanges_DynamicTags,
+				Config: testAccVPCWithIgnoreChangesConfig_DynamicTags,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -561,7 +561,7 @@ func TestAccAWSVpc_defaultAndIgnoreTags(t *testing.T) {
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSVPCConfigTags1("key1", "value1"),
+				Config: testAccVPCTags1Config("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcUpdateTags(&vpc, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
@@ -571,14 +571,14 @@ func TestAccAWSVpc_defaultAndIgnoreTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
-					testAccAWSVPCConfigTags1("key1", "value1"),
+					testAccVPCTags1Config("key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
-					testAccAWSVPCConfigTags1("key1", "value1"),
+					testAccVPCTags1Config("key1", "value1"),
 				),
 				PlanOnly: true,
 			},
@@ -598,7 +598,7 @@ func TestAccAWSVpc_ignoreTags(t *testing.T) {
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSVPCConfigTags1("key1", "value1"),
+				Config: testAccVPCTags1Config("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					testAccCheckVpcUpdateTags(&vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
@@ -606,11 +606,11 @@ func TestAccAWSVpc_ignoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:   acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccAWSVPCConfigTags1("key1", "value1"),
+				Config:   acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccVPCTags1Config("key1", "value1"),
 				PlanOnly: true,
 			},
 			{
-				Config:   acctest.ConfigIgnoreTagsKeys("ignorekey1") + testAccAWSVPCConfigTags1("key1", "value1"),
+				Config:   acctest.ConfigIgnoreTagsKeys("ignorekey1") + testAccVPCTags1Config("key1", "value1"),
 				PlanOnly: true,
 			},
 		},
@@ -723,7 +723,7 @@ func TestAccAWSVpc_tags(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSVPCConfigTags1("key1", "value1"),
+				Config: testAccVPCTags1Config("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -736,7 +736,7 @@ func TestAccAWSVpc_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSVPCConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCTags2Config("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -745,7 +745,7 @@ func TestAccAWSVpc_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSVPCConfigTags1("key2", "value2"),
+				Config: testAccVPCTags1Config("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1008,7 +1008,7 @@ resource "aws_vpc" "test" {
 }
 `
 
-func testAccAWSVPCConfigTags1(tagKey1, tagValue1 string) string {
+func testAccVPCTags1Config(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1020,7 +1020,7 @@ resource "aws_vpc" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccAWSVPCConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1033,7 +1033,7 @@ resource "aws_vpc" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSVPCConfigWithIgnoreChanges_DynamicTagsMergedWithLocals(localTagKey1, localTagValue1 string) string {
+func testAccVPCWithIgnoreChangesConfig_DynamicTagsMergedWithLocals(localTagKey1, localTagValue1 string) string {
 	return fmt.Sprintf(`
 locals {
   tags = {
@@ -1058,7 +1058,7 @@ resource "aws_vpc" "test" {
 `, localTagKey1, localTagValue1)
 }
 
-const testAccAWSVPCConfigWithIgnoreChanges_DynamicTags = `
+const testAccVPCWithIgnoreChangesConfig_DynamicTags = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 

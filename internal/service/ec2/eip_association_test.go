@@ -22,13 +22,13 @@ func TestAccAWSEIPAssociation_instance(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
+		CheckDestroy:      testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfig_instance(),
+				Config: testAccEIPAssociationConfig_instance(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
-					testAccCheckAWSEIPAssociationExists(resourceName, &a),
+					testAccCheckEIPExists("aws_eip.test", false, &a),
+					testAccCheckEIPAssociationExists(resourceName, &a),
 				),
 			},
 			{
@@ -48,13 +48,13 @@ func TestAccAWSEIPAssociation_networkInterface(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
+		CheckDestroy:      testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfig_networkInterface,
+				Config: testAccEIPAssociationConfig_networkInterface,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
-					testAccCheckAWSEIPAssociationExists(resourceName, &a),
+					testAccCheckEIPExists("aws_eip.test", false, &a),
+					testAccCheckEIPAssociationExists(resourceName, &a),
 				),
 			},
 			{
@@ -75,17 +75,17 @@ func TestAccAWSEIPAssociation_basic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2VPCOnly(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
+		CheckDestroy:      testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfig(rName),
+				Config: testAccEIPAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test.0", false, &a),
-					testAccCheckAWSEIPAssociationExists("aws_eip_association.by_allocation_id", &a),
-					testAccCheckAWSEIPExists("aws_eip.test.1", false, &a),
-					testAccCheckAWSEIPAssociationExists("aws_eip_association.by_public_ip", &a),
-					testAccCheckAWSEIPExists("aws_eip.test.2", false, &a),
-					testAccCheckAWSEIPAssociationExists("aws_eip_association.to_eni", &a),
+					testAccCheckEIPExists("aws_eip.test.0", false, &a),
+					testAccCheckEIPAssociationExists("aws_eip_association.by_allocation_id", &a),
+					testAccCheckEIPExists("aws_eip.test.1", false, &a),
+					testAccCheckEIPAssociationExists("aws_eip_association.by_public_ip", &a),
+					testAccCheckEIPExists("aws_eip.test.2", false, &a),
+					testAccCheckEIPAssociationExists("aws_eip_association.to_eni", &a),
 				),
 			},
 			{
@@ -105,16 +105,16 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
+		CheckDestroy:      testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfig_ec2Classic(),
+				Config: testAccEIPAssociationConfig_ec2Classic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", true, &a),
-					testAccCheckAWSEIPAssociationEc2ClassicExists(resourceName, &a),
+					testAccCheckEIPExists("aws_eip.test", true, &a),
+					testAccCheckEIPAssociationClassicExists(resourceName, &a),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
-					testAccCheckAWSEIPAssociationHasIpBasedId(resourceName),
+					testAccCheckEIPAssociationHasIPBasedID(resourceName),
 				),
 			},
 			{
@@ -140,13 +140,13 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
+		CheckDestroy:      testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfig_spotInstance(rName, publicKey),
+				Config: testAccEIPAssociationConfig_spotInstance(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
-					testAccCheckAWSEIPAssociationExists(resourceName, &a),
+					testAccCheckEIPExists("aws_eip.test", false, &a),
+					testAccCheckEIPAssociationExists(resourceName, &a),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 				),
@@ -169,13 +169,13 @@ func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
+		CheckDestroy:      testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfigDisappears(rName),
+				Config: testAccEIPAssociationDisappearsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
-					testAccCheckAWSEIPAssociationExists(resourceName, &a),
+					testAccCheckEIPExists("aws_eip.test", false, &a),
+					testAccCheckEIPAssociationExists(resourceName, &a),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEIPAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -184,7 +184,7 @@ func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEIPAssociationExists(name string, res *ec2.Address) resource.TestCheckFunc {
+func testAccCheckEIPAssociationExists(name string, res *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -217,7 +217,7 @@ func testAccCheckAWSEIPAssociationExists(name string, res *ec2.Address) resource
 	}
 }
 
-func testAccCheckAWSEIPAssociationEc2ClassicExists(name string, res *ec2.Address) resource.TestCheckFunc {
+func testAccCheckEIPAssociationClassicExists(name string, res *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -253,7 +253,7 @@ func testAccCheckAWSEIPAssociationEc2ClassicExists(name string, res *ec2.Address
 	}
 }
 
-func testAccCheckAWSEIPAssociationHasIpBasedId(name string) resource.TestCheckFunc {
+func testAccCheckEIPAssociationHasIPBasedID(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -272,7 +272,7 @@ func testAccCheckAWSEIPAssociationHasIpBasedId(name string) resource.TestCheckFu
 	}
 }
 
-func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
+func testAccCheckEIPAssociationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eip_association" {
 			continue
@@ -304,7 +304,7 @@ func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSEIPAssociationConfig(rName string) string {
+func testAccEIPAssociationConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -373,7 +373,7 @@ resource "aws_network_interface" "test" {
 `, rName))
 }
 
-func testAccAWSEIPAssociationConfigDisappears(rName string) string {
+func testAccEIPAssociationDisappearsConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -416,7 +416,7 @@ resource "aws_eip_association" "test" {
 `, rName))
 }
 
-func testAccAWSEIPAssociationConfig_ec2Classic() string {
+func testAccEIPAssociationConfig_ec2Classic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		testAccLatestAmazonLinuxPvEbsAmiConfig(),
@@ -436,7 +436,7 @@ resource "aws_eip_association" "test" {
 `)
 }
 
-func testAccAWSEIPAssociationConfig_spotInstance(rName, publicKey string) string {
+func testAccEIPAssociationConfig_spotInstance(rName, publicKey string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
@@ -481,7 +481,7 @@ resource "aws_eip_association" "test" {
 `, rName, publicKey))
 }
 
-func testAccAWSEIPAssociationConfig_instance() string {
+func testAccEIPAssociationConfig_instance() string {
 	return acctest.ConfigCompose(
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -518,7 +518,7 @@ resource "aws_eip_association" "test" {
 `)
 }
 
-const testAccAWSEIPAssociationConfig_networkInterface = `
+const testAccEIPAssociationConfig_networkInterface = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }

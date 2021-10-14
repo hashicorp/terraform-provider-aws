@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_flow_log", &resource.Sweeper{
 		Name: "aws_flow_log",
-		F:    testSweepFlowLogs,
+		F:    sweepFlowLogs,
 	})
 }
 
-func testSweepFlowLogs(region string) error {
+func sweepFlowLogs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

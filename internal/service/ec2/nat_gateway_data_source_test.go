@@ -20,7 +20,7 @@ func TestAccDataSourceAwsNatGateway_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNatGatewayConfig(rInt),
+				Config: testAccNatGatewayDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair("data.aws_nat_gateway.test_by_id", "connectivity_type", "aws_nat_gateway.test", "connectivity_type"),
 					resource.TestCheckResourceAttrPair(
@@ -45,7 +45,7 @@ func TestAccDataSourceAwsNatGateway_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsNatGatewayConfig(rInt int) string {
+func testAccNatGatewayDataSourceConfig(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[1]d.0.0/16"

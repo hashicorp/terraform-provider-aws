@@ -21,21 +21,21 @@ func TestAccAWSSnapshotCreateVolumePermission_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAWSSnapshotCreateVolumePermissionDestroy,
+		CheckDestroy: testAccSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			// Scaffold everything
 			{
-				Config: testAccAWSSnapshotCreateVolumePermissionConfig(true, accountId),
+				Config: testAccSnapshotCreateVolumePermissionConfig(true, accountId),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
-					testAccAWSSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
+					testAccSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
 				),
 			},
 			// Drop just create volume permission to test destruction
 			{
-				Config: testAccAWSSnapshotCreateVolumePermissionConfig(false, accountId),
+				Config: testAccSnapshotCreateVolumePermissionConfig(false, accountId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSSnapshotCreateVolumePermissionDestroyed(&accountId, &snapshotId),
+					testAccSnapshotCreateVolumePermissionDestroyed(&accountId, &snapshotId),
 				),
 			},
 		},
@@ -50,13 +50,13 @@ func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAWSSnapshotCreateVolumePermissionDestroy,
+		CheckDestroy: testAccSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSnapshotCreateVolumePermissionConfig(true, accountId),
+				Config: testAccSnapshotCreateVolumePermissionConfig(true, accountId),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
-					testAccAWSSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
+					testAccSnapshotCreateVolumePermissionExists(&accountId, &snapshotId),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -65,7 +65,7 @@ func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 	})
 }
 
-func testAccAWSSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
+func testAccSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -87,7 +87,7 @@ func testAccAWSSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSnapshotCreateVolumePermissionExists(accountId, snapshotId *string) resource.TestCheckFunc {
+func testAccSnapshotCreateVolumePermissionExists(accountId, snapshotId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		if has, err := tfec2.HasCreateVolumePermission(conn, aws.StringValue(snapshotId), aws.StringValue(accountId)); err != nil {
@@ -99,7 +99,7 @@ func testAccAWSSnapshotCreateVolumePermissionExists(accountId, snapshotId *strin
 	}
 }
 
-func testAccAWSSnapshotCreateVolumePermissionDestroyed(accountId, snapshotId *string) resource.TestCheckFunc {
+func testAccSnapshotCreateVolumePermissionDestroyed(accountId, snapshotId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 		if has, err := tfec2.HasCreateVolumePermission(conn, aws.StringValue(snapshotId), aws.StringValue(accountId)); err != nil {
@@ -111,7 +111,7 @@ func testAccAWSSnapshotCreateVolumePermissionDestroyed(accountId, snapshotId *st
 	}
 }
 
-func testAccAWSSnapshotCreateVolumePermissionConfig(includeCreateVolumePermission bool, accountID string) string {
+func testAccSnapshotCreateVolumePermissionConfig(includeCreateVolumePermission bool, accountID string) string {
 	base := `
 data "aws_availability_zones" "available" {
   state = "available"

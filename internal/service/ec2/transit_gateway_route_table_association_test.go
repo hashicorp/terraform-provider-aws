@@ -13,22 +13,22 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func testAccAWSEc2TransitGatewayRouteTableAssociation_basic(t *testing.T) {
+func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T) {
 	var transitGatewayRouteTablePropagtion1 ec2.TransitGatewayRouteTableAssociation
 	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
 	transitGatewayRouteTableResourceName := "aws_ec2_transit_gateway_route_table.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteTableAssociationDestroy,
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayRouteTableAssociationConfig(),
+				Config: testAccTransitGatewayRouteTableAssociationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TransitGatewayRouteTableAssociationExists(resourceName, &transitGatewayRouteTablePropagtion1),
+					testAccCheckTransitGatewayRouteTableAssociationExists(resourceName, &transitGatewayRouteTablePropagtion1),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayVpcAttachmentResourceName, "id"),
@@ -44,7 +44,7 @@ func testAccAWSEc2TransitGatewayRouteTableAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEc2TransitGatewayRouteTableAssociationExists(resourceName string, transitGatewayRouteTableAssociation *ec2.TransitGatewayRouteTableAssociation) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteTableAssociationExists(resourceName string, transitGatewayRouteTableAssociation *ec2.TransitGatewayRouteTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -79,7 +79,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableAssociationExists(resourceName st
 	}
 }
 
-func testAccCheckAWSEc2TransitGatewayRouteTableAssociationDestroy(s *terraform.State) error {
+func testAccCheckTransitGatewayRouteTableAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -113,7 +113,7 @@ func testAccCheckAWSEc2TransitGatewayRouteTableAssociationDestroy(s *terraform.S
 	return nil
 }
 
-func testAccAWSEc2TransitGatewayRouteTableAssociationConfig() string {
+func testAccTransitGatewayRouteTableAssociationConfig() string {
 	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

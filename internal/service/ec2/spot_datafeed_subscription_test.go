@@ -17,8 +17,8 @@ import (
 
 func TestAccAWSSpotDatafeedSubscription_serial(t *testing.T) {
 	cases := map[string]func(t *testing.T){
-		"basic":      testAccAWSSpotDatafeedSubscription_basic,
-		"disappears": testAccAWSSpotDatafeedSubscription_disappears,
+		"basic":      testAccSpotDatafeedSubscription_basic,
+		"disappears": testAccSpotDatafeedSubscription_disappears,
 	}
 
 	for name, tc := range cases {
@@ -28,21 +28,21 @@ func TestAccAWSSpotDatafeedSubscription_serial(t *testing.T) {
 	}
 }
 
-func testAccAWSSpotDatafeedSubscription_basic(t *testing.T) {
+func testAccSpotDatafeedSubscription_basic(t *testing.T) {
 	var subscription ec2.SpotDatafeedSubscription
 	resourceName := "aws_spot_datafeed_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSpotDatafeedSubscription(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSpotDatafeedSubscriptionDestroy,
+		CheckDestroy: testAccCheckSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSpotDatafeedSubscription(rName),
+				Config: testAccSpotDatafeedSubscription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSpotDatafeedSubscriptionExists(resourceName, &subscription),
+					testAccCheckSpotDatafeedSubscriptionExists(resourceName, &subscription),
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func testAccAWSSpotDatafeedSubscription_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSpotDatafeedSubscriptionDisappears(subscription *ec2.SpotDatafeedSubscription) resource.TestCheckFunc {
+func testAccCheckSpotDatafeedSubscriptionDisappears(subscription *ec2.SpotDatafeedSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -78,22 +78,22 @@ func testAccCheckAWSSpotDatafeedSubscriptionDisappears(subscription *ec2.SpotDat
 	}
 }
 
-func testAccAWSSpotDatafeedSubscription_disappears(t *testing.T) {
+func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 	var subscription ec2.SpotDatafeedSubscription
 	resourceName := "aws_spot_datafeed_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSpotDatafeedSubscription(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSpotDatafeedSubscriptionDestroy,
+		CheckDestroy: testAccCheckSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSpotDatafeedSubscription(rName),
+				Config: testAccSpotDatafeedSubscription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSpotDatafeedSubscriptionExists(resourceName, &subscription),
-					testAccCheckAWSSpotDatafeedSubscriptionDisappears(&subscription),
+					testAccCheckSpotDatafeedSubscriptionExists(resourceName, &subscription),
+					testAccCheckSpotDatafeedSubscriptionDisappears(&subscription),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func testAccAWSSpotDatafeedSubscription_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSpotDatafeedSubscriptionExists(n string, subscription *ec2.SpotDatafeedSubscription) resource.TestCheckFunc {
+func testAccCheckSpotDatafeedSubscriptionExists(n string, subscription *ec2.SpotDatafeedSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -125,7 +125,7 @@ func testAccCheckAWSSpotDatafeedSubscriptionExists(n string, subscription *ec2.S
 	}
 }
 
-func testAccCheckAWSSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
+func testAccCheckSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -147,7 +147,7 @@ func testAccCheckAWSSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPreCheckAWSSpotDatafeedSubscription(t *testing.T) {
+func testAccPreCheckSpotDatafeedSubscription(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeSpotDatafeedSubscriptionInput{}
@@ -167,7 +167,7 @@ func testAccPreCheckAWSSpotDatafeedSubscription(t *testing.T) {
 	}
 }
 
-func testAccAWSSpotDatafeedSubscription(rName string) string {
+func testAccSpotDatafeedSubscription(rName string) string {
 	return fmt.Sprintf(`
 data "aws_canonical_user_id" "current" {}
 

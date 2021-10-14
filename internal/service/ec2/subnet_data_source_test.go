@@ -31,7 +31,7 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSubnetConfig(rInt),
+				Config: testAccSubnetDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", snResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", snResourceName, "owner_id"),
@@ -121,10 +121,10 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6Filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSubnetConfigIpv6(rInt),
+				Config: testAccSubnetIPv6DataSourceConfig(rInt),
 			},
 			{
-				Config: testAccDataSourceAwsSubnetConfigIpv6WithDataSourceFilter(rInt),
+				Config: testAccSubnetIPv6WithDataSourceFilterDataSourceConfig(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block"),
@@ -142,10 +142,10 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSubnetConfigIpv6(rInt),
+				Config: testAccSubnetIPv6DataSourceConfig(rInt),
 			},
 			{
-				Config: testAccDataSourceAwsSubnetConfigIpv6WithDataSourceIpv6CidrBlock(rInt),
+				Config: testAccSubnetIPv6WithDataSourceIpv6CIDRBlockDataSourceConfig(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
 				),
@@ -154,7 +154,7 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsSubnetConfig(rInt int) string {
+func testAccSubnetDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -218,7 +218,7 @@ data "aws_subnet" "by_az_id" {
 `, rInt, rInt)
 }
 
-func testAccDataSourceAwsSubnetConfigIpv6(rInt int) string {
+func testAccSubnetIPv6DataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -251,7 +251,7 @@ resource "aws_subnet" "test" {
 `, rInt, rInt)
 }
 
-func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceFilter(rInt int) string {
+func testAccSubnetIPv6WithDataSourceFilterDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -291,7 +291,7 @@ data "aws_subnet" "by_ipv6_cidr" {
 `, rInt, rInt)
 }
 
-func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceIpv6CidrBlock(rInt int) string {
+func testAccSubnetIPv6WithDataSourceIpv6CIDRBlockDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

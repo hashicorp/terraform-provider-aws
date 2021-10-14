@@ -28,7 +28,7 @@ func TestAccAWSRouteDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRouteConfigBasic(rName),
+				Config: testAccRouteBasicDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// By destination CIDR.
 					resource.TestCheckResourceAttrPair(datasource1Name, "destination_cidr_block", instanceRouteResourceName, "destination_cidr_block"),
@@ -58,10 +58,10 @@ func TestAccAWSRouteDataSource_TransitGatewayID(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRouteDestroy,
+		CheckDestroy: testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteDataSourceConfigIpv4TransitGateway(rName),
+				Config: testAccRouteIPv4TransitGatewayDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
@@ -81,10 +81,10 @@ func TestAccAWSRouteDataSource_IPv6DestinationCidr(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRouteDestroy,
+		CheckDestroy: testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteDataSourceConfigIpv6EgressOnlyInternetGateway(rName),
+				Config: testAccRouteIPv6EgressOnlyInternetGatewayDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_ipv6_cidr_block", dataSourceName, "destination_ipv6_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
@@ -103,10 +103,10 @@ func TestAccAWSRouteDataSource_LocalGatewayID(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRouteDestroy,
+		CheckDestroy: testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteDataSourceConfigIpv4LocalGateway(rName),
+				Config: testAccRouteIPv4LocalGatewayDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
@@ -123,13 +123,13 @@ func TestAccAWSRouteDataSource_CarrierGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRouteDestroy,
+		CheckDestroy: testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteDataSourceConfigIpv4CarrierGateway(rName),
+				Config: testAccRouteIPv4CarrierGatewayDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
@@ -149,10 +149,10 @@ func TestAccAWSRouteDataSource_DestinationPrefixListId(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRouteDestroy,
+		CheckDestroy: testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteDataSourceConfigPrefixListNatGateway(rName),
+				Config: testAccRoutePrefixListNatGatewayDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", dataSourceName, "destination_prefix_list_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", dataSourceName, "nat_gateway_id"),
@@ -174,25 +174,25 @@ func TestAccAWSRouteDataSource_GatewayVpcEndpoint(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSRouteDestroy,
+		CheckDestroy: testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteDataSourceConfigGatewayVpcEndpointNoDataSource(rName),
+				Config: testAccRouteGatewayVPCEndpointNoDataSourceDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
 					testAccCheckVpcEndpointExists(vpceResourceName, &vpce),
-					testAccCheckAWSRouteTableWaitForVpcEndpointRoute(&routeTable, &vpce),
+					testAccCheckRouteTableWaitForVPCEndpointRoute(&routeTable, &vpce),
 				),
 			},
 			{
-				Config:      testAccAWSRouteDataSourceConfigGatewayVpcEndpointWithDataSource(rName),
+				Config:      testAccRouteGatewayVPCEndpointWithDataSourceDataSourceConfig(rName),
 				ExpectError: regexp.MustCompile(`No routes matching supplied arguments found in Route Table`),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsRouteConfigBasic(rName string) string {
+func testAccRouteBasicDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -286,7 +286,7 @@ data "aws_route" "by_instance_id" {
 `, rName))
 }
 
-func testAccAWSRouteDataSourceConfigIpv4TransitGateway(rName string) string {
+func testAccRouteIPv4TransitGatewayDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
@@ -337,7 +337,7 @@ data "aws_route" "test" {
 `, rName))
 }
 
-func testAccAWSRouteDataSourceConfigIpv6EgressOnlyInternetGateway(rName string) string {
+func testAccRouteIPv6EgressOnlyInternetGatewayDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -376,7 +376,7 @@ data "aws_route" "test" {
 `, rName)
 }
 
-func testAccAWSRouteDataSourceConfigIpv4LocalGateway(rName string) string {
+func testAccRouteIPv4LocalGatewayDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "all" {}
 
@@ -430,7 +430,7 @@ data "aws_route" "by_local_gateway_id" {
 `, rName)
 }
 
-func testAccAWSRouteDataSourceConfigIpv4CarrierGateway(rName string) string {
+func testAccRouteIPv4CarrierGatewayDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -469,7 +469,7 @@ data "aws_route" "test" {
 `, rName)
 }
 
-func testAccAWSRouteDataSourceConfigPrefixListNatGateway(rName string) string {
+func testAccRoutePrefixListNatGatewayDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -545,7 +545,7 @@ data "aws_route" "test" {
 `, rName)
 }
 
-func testAccAWSRouteDataSourceConfigGatewayVpcEndpointNoDataSource(rName string) string {
+func testAccRouteGatewayVPCEndpointNoDataSourceDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -573,8 +573,8 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-func testAccAWSRouteDataSourceConfigGatewayVpcEndpointWithDataSource(rName string) string {
-	return acctest.ConfigCompose(testAccAWSRouteDataSourceConfigGatewayVpcEndpointNoDataSource(rName), `
+func testAccRouteGatewayVPCEndpointWithDataSourceDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(testAccRouteGatewayVPCEndpointNoDataSourceDataSourceConfig(rName), `
 data "aws_prefix_list" "test" {
   name = aws_vpc_endpoint.test.service_name
 }

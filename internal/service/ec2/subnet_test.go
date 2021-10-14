@@ -25,7 +25,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
 		Name: "aws_subnet",
-		F:    testSweepSubnets,
+		F:    sweepSubnets,
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
@@ -60,7 +60,7 @@ func init() {
 	})
 }
 
-func testSweepSubnets(region string) error {
+func sweepSubnets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -611,7 +611,7 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 				Config: testAccSubnetConfigIpv6,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &before),
-					testAccCheckAwsSubnetIpv6BeforeUpdate(&before),
+					testAccCheckSubnetIPv6BeforeUpdate(&before),
 				),
 			},
 			{
@@ -623,14 +623,14 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 				Config: testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &after),
-					testAccCheckAwsSubnetIpv6AfterUpdate(&after),
+					testAccCheckSubnetIPv6AfterUpdate(&after),
 				),
 			},
 			{
 				Config: testAccSubnetConfigIpv6UpdateIpv6Cidr,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &after),
-					testAccCheckAwsSubnetNotRecreated(t, &before, &after),
+					testAccCheckSubnetNotRecreated(t, &before, &after),
 				),
 			},
 		},
@@ -849,7 +849,7 @@ func TestAccAWSSubnet_outpost(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSubnetIpv6BeforeUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckSubnetIPv6BeforeUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
 			return fmt.Errorf("Expected IPV6 CIDR Block Association")
@@ -863,7 +863,7 @@ func testAccCheckAwsSubnetIpv6BeforeUpdate(subnet *ec2.Subnet) resource.TestChec
 	}
 }
 
-func testAccCheckAwsSubnetIpv6AfterUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckSubnetIPv6AfterUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.BoolValue(subnet.AssignIpv6AddressOnCreation) {
 			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.BoolValue(subnet.AssignIpv6AddressOnCreation))
@@ -873,7 +873,7 @@ func testAccCheckAwsSubnetIpv6AfterUpdate(subnet *ec2.Subnet) resource.TestCheck
 	}
 }
 
-func testAccCheckAwsSubnetNotRecreated(t *testing.T, before, after *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckSubnetNotRecreated(t *testing.T, before, after *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(before.SubnetId) != aws.StringValue(after.SubnetId) {
 			t.Fatalf("Expected SubnetIDs not to change, but both got before: %s and after: %s",

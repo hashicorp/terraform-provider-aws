@@ -15,7 +15,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
+func testAccClientVPNAuthorizationRule_basic(t *testing.T) {
 	var v ec2.AuthorizationRule
 	rStr := sdkacctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
@@ -25,12 +25,12 @@ func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
+		CheckDestroy: testAccCheckClientVPNAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resourceName, &v),
+					testAccCheckClientVPNAuthorizationRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "target_network_cidr", subnetResourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "authorize_all_groups", "true"),
 					resource.TestCheckResourceAttr(resourceName, "access_group_id", ""),
@@ -45,7 +45,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
+func testAccClientVPNAuthorizationRule_groups(t *testing.T) {
 	var v1, v2, v3, v4 ec2.AuthorizationRule
 	rStr := sdkacctest.RandString(5)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
@@ -70,12 +70,12 @@ func testAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
+		CheckDestroy: testAccCheckClientVPNAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rStr, groups1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource1Name, &v1),
+					testAccCheckClientVPNAuthorizationRuleExists(resource1Name, &v1),
 					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", subnetResourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", "false"),
 					resource.TestCheckResourceAttr(resource1Name, "access_group_id", group1Name),
@@ -89,12 +89,12 @@ func testAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rStr, groups2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource1Name, &v2),
+					testAccCheckClientVPNAuthorizationRuleExists(resource1Name, &v2),
 					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", subnetResourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", "false"),
 					resource.TestCheckResourceAttr(resource1Name, "access_group_id", group1Name),
 
-					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource2Name, &v3),
+					testAccCheckClientVPNAuthorizationRuleExists(resource2Name, &v3),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", subnetResourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "false"),
 					resource.TestCheckResourceAttr(resource2Name, "access_group_id", group2Name),
@@ -108,7 +108,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rStr, groups3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource2Name, &v4),
+					testAccCheckClientVPNAuthorizationRuleExists(resource2Name, &v4),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", subnetResourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "false"),
 					resource.TestCheckResourceAttr(resource2Name, "access_group_id", group2Name),
@@ -118,7 +118,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 	})
 }
 
-func testAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
+func testAccClientVPNAuthorizationRule_Subnets(t *testing.T) {
 	var v1, v2, v3 ec2.AuthorizationRule
 	rStr := sdkacctest.RandString(5)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
@@ -141,17 +141,17 @@ func testAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
+		CheckDestroy: testAccCheckClientVPNAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rStr, subnetCount, case1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource1Name, &v1),
+					testAccCheckClientVPNAuthorizationRuleExists(resource1Name, &v1),
 					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex1), "cidr_block"),
 					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", "true"),
 					resource.TestCheckResourceAttr(resource1Name, "access_group_id", ""),
 
-					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource2Name, &v2),
+					testAccCheckClientVPNAuthorizationRuleExists(resource2Name, &v2),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex2), "cidr_block"),
 					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "true"),
 					resource.TestCheckResourceAttr(resource2Name, "access_group_id", ""),
@@ -165,7 +165,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rStr, subnetCount, case2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource2Name, &v3),
+					testAccCheckClientVPNAuthorizationRuleExists(resource2Name, &v3),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex2), "cidr_block"),
 					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "true"),
 					resource.TestCheckResourceAttr(resource2Name, "access_group_id", ""),
@@ -175,7 +175,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
 	})
 }
 
-func testAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
+func testAccClientVPNAuthorizationRule_disappears(t *testing.T) {
 	var v ec2.AuthorizationRule
 	rStr := sdkacctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
@@ -184,12 +184,12 @@ func testAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
+		CheckDestroy: testAccCheckClientVPNAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resourceName, &v),
+					testAccCheckClientVPNAuthorizationRuleExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNAuthorizationRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -198,7 +198,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) error {
+func testAccCheckClientVPNAuthorizationRuleDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -219,7 +219,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) err
 	return nil
 }
 
-func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.AuthorizationRule) resource.TestCheckFunc {
+func testAccCheckClientVPNAuthorizationRuleExists(name string, assoc *ec2.AuthorizationRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

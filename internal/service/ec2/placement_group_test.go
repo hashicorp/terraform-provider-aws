@@ -20,7 +20,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_placement_group", &resource.Sweeper{
 		Name: "aws_placement_group",
-		F:    testSweepEc2PlacementGroups,
+		F:    sweepPlacementGroups,
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_instance",
@@ -30,7 +30,7 @@ func init() {
 	})
 }
 
-func testSweepEc2PlacementGroups(region string) error {
+func sweepPlacementGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -76,12 +76,12 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		CheckDestroy: testAccCheckPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPlacementGroupConfig(rName),
+				Config: testAccPlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
+					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("placement-group/%s", rName)),
@@ -105,12 +105,12 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		CheckDestroy: testAccCheckPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPlacementGroupConfig(rName),
+				Config: testAccPlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
+					testAccCheckPlacementGroupExists(resourceName, &pg),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourcePlacementGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -128,12 +128,12 @@ func TestAccAWSPlacementGroup_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		CheckDestroy: testAccCheckPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPlacementGroupConfigTags1(rName, "key1", "value1"),
+				Config: testAccPlacementGroupTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
+					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -144,18 +144,18 @@ func TestAccAWSPlacementGroup_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSPlacementGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPlacementGroupTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
+					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSPlacementGroupConfigTags1(rName, "key2", "value2"),
+				Config: testAccPlacementGroupTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
+					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
 			},
@@ -172,12 +172,12 @@ func TestAccAWSPlacementGroup_PartitionCount(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		CheckDestroy: testAccCheckPlacementGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSPlacementGroupConfigPartitionCount(rName),
+				Config: testAccPlacementGroupPartitionCountConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
+					testAccCheckPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "partition"),
 					resource.TestCheckResourceAttr(resourceName, "partition_count", "7"),
@@ -192,7 +192,7 @@ func TestAccAWSPlacementGroup_PartitionCount(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
+func testAccCheckPlacementGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -216,7 +216,7 @@ func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSPlacementGroupExists(n string, v *ec2.PlacementGroup) resource.TestCheckFunc {
+func testAccCheckPlacementGroupExists(n string, v *ec2.PlacementGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -241,7 +241,7 @@ func testAccCheckAWSPlacementGroupExists(n string, v *ec2.PlacementGroup) resour
 	}
 }
 
-func testAccAWSPlacementGroupConfig(rName string) string {
+func testAccPlacementGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -250,7 +250,7 @@ resource "aws_placement_group" "test" {
 `, rName)
 }
 
-func testAccAWSPlacementGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccPlacementGroupTags1Config(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -263,7 +263,7 @@ resource "aws_placement_group" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSPlacementGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccPlacementGroupTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -277,7 +277,7 @@ resource "aws_placement_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSPlacementGroupConfigPartitionCount(rName string) string {
+func testAccPlacementGroupPartitionCountConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name            = %[1]q

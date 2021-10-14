@@ -21,7 +21,7 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		CheckDestroy: testAccCheckVPCPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName, true, true),
@@ -31,7 +31,7 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_classic_link_to_remote_vpc", "true"),
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_vpc_to_remote_classic_link", "true"),
-					testAccCheckAWSVpcPeeringConnectionOptions(
+					testAccCheckVPCPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -45,7 +45,7 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
 					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_classic_link_to_remote_vpc", "false"),
 					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_vpc_to_remote_classic_link", "false"),
-					testAccCheckAWSVpcPeeringConnectionOptions(
+					testAccCheckVPCPeeringConnectionOptions(
 						pcxResourceName,
 						"accepter",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -70,7 +70,7 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						"requester.#",
 						"1",
 					),
-					testAccCheckAWSVpcPeeringConnectionOptions(
+					testAccCheckVPCPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -85,7 +85,7 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						"accepter.#",
 						"1",
 					),
-					testAccCheckAWSVpcPeeringConnectionOptions(
+					testAccCheckVPCPeeringConnectionOptions(
 						pcxResourceName,
 						"accepter",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -115,7 +115,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
+		CheckDestroy:      testAccCheckVPCPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName, true, true),
@@ -125,7 +125,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "true"),
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_classic_link_to_remote_vpc", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_vpc_to_remote_classic_link", "false"),
-					testAccCheckAWSVpcPeeringConnectionOptions(
+					testAccCheckVPCPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -139,7 +139,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
 					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_classic_link_to_remote_vpc", "false"),
 					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_vpc_to_remote_classic_link", "false"),
-					testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(
+					testAccCheckVPCPeeringConnectionOptionsWithProvider(
 						pcxResourceNamePeer,
 						"accepter",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -166,7 +166,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 						"requester.#",
 						"1",
 					),
-					testAccCheckAWSVpcPeeringConnectionOptions(
+					testAccCheckVPCPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -181,7 +181,7 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 						"accepter.#",
 						"1",
 					),
-					testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(
+					testAccCheckVPCPeeringConnectionOptionsWithProvider(
 						pcxResourceNamePeer,
 						"accepter",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -211,7 +211,7 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
+		CheckDestroy:      testAccCheckVPCPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName),
@@ -221,7 +221,7 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "true"),
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_classic_link_to_remote_vpc", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_vpc_to_remote_classic_link", "false"),
-					testAccCheckAWSVpcPeeringConnectionOptions(
+					testAccCheckVPCPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
 						&ec2.VpcPeeringConnectionOptionsDescription{

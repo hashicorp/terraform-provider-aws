@@ -7,7 +7,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAWSSubnetMigrateState(t *testing.T) {
+func TestSubnetMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		ID           string

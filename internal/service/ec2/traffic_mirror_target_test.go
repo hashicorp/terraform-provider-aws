@@ -25,16 +25,16 @@ func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
+			testAccPreCheckTrafficMirrorTarget(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -60,16 +60,16 @@ func TestAccAWSEc2TrafficMirrorTarget_eni(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
+			testAccPreCheckTrafficMirrorTarget(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigEni(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexp.MustCompile("eni-.*")),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -93,16 +93,16 @@ func TestAccAWSEc2TrafficMirrorTarget_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
+			testAccPreCheckTrafficMirrorTarget(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigTags1(rName, description, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -115,7 +115,7 @@ func TestAccAWSEc2TrafficMirrorTarget_tags(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorTargetConfigTags2(rName, description, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -124,7 +124,7 @@ func TestAccAWSEc2TrafficMirrorTarget_tags(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorTargetConfigTags1(rName, description, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -142,16 +142,16 @@ func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
+			testAccPreCheckTrafficMirrorTarget(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -160,7 +160,7 @@ func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEc2TrafficMirrorTargetExists(name string, target *ec2.TrafficMirrorTarget) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorTargetExists(name string, target *ec2.TrafficMirrorTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -332,7 +332,7 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 `, rName, description, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccPreCheckAWSEc2TrafficMirrorTarget(t *testing.T) {
+func testAccPreCheckTrafficMirrorTarget(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	_, err := conn.DescribeTrafficMirrorTargets(&ec2.DescribeTrafficMirrorTargetsInput{})
@@ -346,7 +346,7 @@ func testAccPreCheckAWSEc2TrafficMirrorTarget(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSEc2TrafficMirrorTargetDestroy(s *terraform.State) error {
+func testAccCheckTrafficMirrorTargetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {

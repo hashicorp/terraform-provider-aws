@@ -16,13 +16,13 @@ func TestAccAWSEc2InstanceTypeOfferingsDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2InstanceTypeOfferings(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2InstanceTypeOfferingsDataSourceConfigFilter(),
+				Config: testAccInstanceTypeOfferingsFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName),
 				),
@@ -35,13 +35,13 @@ func TestAccAWSEc2InstanceTypeOfferingsDataSource_LocationType(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2InstanceTypeOfferings(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2InstanceTypeOfferingsDataSourceConfigLocationType(),
+				Config: testAccInstanceTypeOfferingsLocationTypeDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName),
 					testAccCheckEc2InstanceTypeOfferingsLocations(dataSourceName),
@@ -89,7 +89,7 @@ func testAccCheckEc2InstanceTypeOfferingsLocations(dataSourceName string) resour
 	}
 }
 
-func testAccPreCheckAWSEc2InstanceTypeOfferings(t *testing.T) {
+func testAccPreCheckInstanceTypeOfferings(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{
@@ -107,7 +107,7 @@ func testAccPreCheckAWSEc2InstanceTypeOfferings(t *testing.T) {
 	}
 }
 
-func testAccAWSEc2InstanceTypeOfferingsDataSourceConfigFilter() string {
+func testAccInstanceTypeOfferingsFilterDataSourceConfig() string {
 	return `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {
@@ -118,7 +118,7 @@ data "aws_ec2_instance_type_offerings" "test" {
 `
 }
 
-func testAccAWSEc2InstanceTypeOfferingsDataSourceConfigLocationType() string {
+func testAccInstanceTypeOfferingsLocationTypeDataSourceConfig() string {
 	return acctest.ConfigAvailableAZsNoOptIn() + `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {

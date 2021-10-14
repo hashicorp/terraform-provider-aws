@@ -20,11 +20,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_ec2_capacity_reservation", &resource.Sweeper{
 		Name: "aws_ec2_capacity_reservation",
-		F:    testSweepEc2CapacityReservations,
+		F:    sweepCapacityReservations,
 	})
 }
 
-func testSweepEc2CapacityReservations(region string) error {
+func sweepCapacityReservations(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -74,7 +74,7 @@ func TestAccAWSEc2CapacityReservation_basic(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -113,7 +113,7 @@ func TestAccAWSEc2CapacityReservation_ebsOptimized(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -141,7 +141,7 @@ func TestAccAWSEc2CapacityReservation_endDate(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -177,7 +177,7 @@ func TestAccAWSEc2CapacityReservation_endDateType(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -218,7 +218,7 @@ func TestAccAWSEc2CapacityReservation_ephemeralStorage(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -244,7 +244,7 @@ func TestAccAWSEc2CapacityReservation_instanceCount(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -277,7 +277,7 @@ func TestAccAWSEc2CapacityReservation_instanceMatchCriteria(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -303,7 +303,7 @@ func TestAccAWSEc2CapacityReservation_instanceType(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -336,7 +336,7 @@ func TestAccAWSEc2CapacityReservation_tags(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -380,7 +380,7 @@ func TestAccAWSEc2CapacityReservation_disappears(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -404,7 +404,7 @@ func TestAccAWSEc2CapacityReservation_tenancy(t *testing.T) {
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2CapacityReservation(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckCapacityReservation(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckEc2CapacityReservationDestroy,
@@ -487,7 +487,7 @@ func testAccCheckEc2CapacityReservationDestroy(s *terraform.State) error {
 
 }
 
-func testAccPreCheckAWSEc2CapacityReservation(t *testing.T) {
+func testAccPreCheckCapacityReservation(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeCapacityReservationsInput{

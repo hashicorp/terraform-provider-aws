@@ -19,10 +19,10 @@ func TestAccDataSourceAwsSubnetIDs_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSubnetIDsConfig(rInt),
+				Config: testAccSubnetIDsDataSourceConfig(rInt),
 			},
 			{
-				Config: testAccDataSourceAwsSubnetIDsConfigWithDataSource(rInt),
+				Config: testAccSubnetIDsWithDataSourceDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnet_ids.selected", "ids.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_subnet_ids.private", "ids.#", "2"),
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsSubnetIDs_filter(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSubnetIDs_filter(rInt),
+				Config: testAccSubnetIDsDataSource_filter(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(rName, "ids.#", "2"),
 				),
@@ -52,7 +52,7 @@ func TestAccDataSourceAwsSubnetIDs_filter(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsSubnetIDsConfigWithDataSource(rInt int) string {
+func testAccSubnetIDsWithDataSourceDataSourceConfig(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[1]d.0.0/16"
@@ -109,7 +109,7 @@ data "aws_subnet_ids" "private" {
 `, rInt))
 }
 
-func testAccDataSourceAwsSubnetIDsConfig(rInt int) string {
+func testAccSubnetIDsDataSourceConfig(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[1]d.0.0/16"
@@ -154,7 +154,7 @@ resource "aws_subnet" "test_private_b" {
 `, rInt))
 }
 
-func testAccDataSourceAwsSubnetIDs_filter(rInt int) string {
+func testAccSubnetIDsDataSource_filter(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%[1]d.0.0/16"

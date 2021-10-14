@@ -17,9 +17,9 @@ func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEbsSnapshotIdsConfig_basic(),
+				Config: testAccEBSSnapshotIdsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsSnapshotDataSourceID("data.aws_ebs_snapshot_ids.test"),
+					testAccCheckEBSSnapshotIDDataSource("data.aws_ebs_snapshot_ids.test"),
 				),
 			},
 		},
@@ -35,16 +35,16 @@ func TestAccDataSourceAwsEbsSnapshotIds_sorted(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEbsSnapshotIdsConfig_sorted1(rName),
+				Config: testAccEBSSnapshotIdsDataSourceConfig_sorted1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_ebs_snapshot.a", "id"),
 					resource.TestCheckResourceAttrSet("aws_ebs_snapshot.b", "id"),
 				),
 			},
 			{
-				Config: testAccDataSourceAwsEbsSnapshotIdsConfig_sorted2(rName),
+				Config: testAccEBSSnapshotIdsDataSourceConfig_sorted2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsSnapshotDataSourceID("data.aws_ebs_snapshot_ids.test"),
+					testAccCheckEBSSnapshotIDDataSource("data.aws_ebs_snapshot_ids.test"),
 					resource.TestCheckResourceAttr("data.aws_ebs_snapshot_ids.test", "ids.#", "2"),
 					resource.TestCheckResourceAttrPair(
 						"data.aws_ebs_snapshot_ids.test", "ids.0",
@@ -65,9 +65,9 @@ func TestAccDataSourceAwsEbsSnapshotIds_empty(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEbsSnapshotIdsConfig_empty,
+				Config: testAccEBSSnapshotIdsDataSourceConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsSnapshotDataSourceID("data.aws_ebs_snapshot_ids.empty"),
+					testAccCheckEBSSnapshotIDDataSource("data.aws_ebs_snapshot_ids.empty"),
 					resource.TestCheckResourceAttr("data.aws_ebs_snapshot_ids.empty", "ids.#", "0"),
 				),
 			},
@@ -75,7 +75,7 @@ func TestAccDataSourceAwsEbsSnapshotIds_empty(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsEbsSnapshotIdsConfig_basic() string {
+func testAccEBSSnapshotIdsDataSourceConfig_basic() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -92,7 +92,7 @@ data "aws_ebs_snapshot_ids" "test" {
 `)
 }
 
-func testAccDataSourceAwsEbsSnapshotIdsConfig_sorted1(rName string) string {
+func testAccEBSSnapshotIdsDataSourceConfig_sorted1(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -118,8 +118,8 @@ resource "aws_ebs_snapshot" "b" {
 `, rName))
 }
 
-func testAccDataSourceAwsEbsSnapshotIdsConfig_sorted2(rName string) string {
-	return acctest.ConfigCompose(testAccDataSourceAwsEbsSnapshotIdsConfig_sorted1(rName), fmt.Sprintf(`
+func testAccEBSSnapshotIdsDataSourceConfig_sorted2(rName string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotIdsDataSourceConfig_sorted1(rName), fmt.Sprintf(`
 data "aws_ebs_snapshot_ids" "test" {
   owners = ["self"]
 
@@ -131,7 +131,7 @@ data "aws_ebs_snapshot_ids" "test" {
 `, rName))
 }
 
-const testAccDataSourceAwsEbsSnapshotIdsConfig_empty = `
+const testAccEBSSnapshotIdsDataSourceConfig_empty = `
 data "aws_ebs_snapshot_ids" "empty" {
   owners = ["000000000000"]
 }

@@ -19,10 +19,10 @@ func TestAccDataSourceAwsSubnets_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSubnetsConfig(rName),
+				Config: testAccSubnetsDataSourceConfig(rName),
 			},
 			{
-				Config: testAccDataSourceAwsSubnetsConfigWithDataSource(rName),
+				Config: testAccSubnetsWithDataSourceDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnets.selected", "ids.#", "4"),
 					resource.TestCheckResourceAttr("data.aws_subnets.private", "ids.#", "2"),
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsSubnets_filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSubnets_filter(rName),
+				Config: testAccSubnetsDataSource_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnets.test", "ids.#", "2"),
 				),
@@ -52,7 +52,7 @@ func TestAccDataSourceAwsSubnets_filter(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsSubnetsConfig(rName string) string {
+func testAccSubnetsDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
@@ -108,8 +108,8 @@ resource "aws_subnet" "test_private_b" {
 `, rName))
 }
 
-func testAccDataSourceAwsSubnetsConfigWithDataSource(rName string) string {
-	return acctest.ConfigCompose(testAccDataSourceAwsSubnetsConfig(rName), `
+func testAccSubnetsWithDataSourceDataSourceConfig(rName string) string {
+	return acctest.ConfigCompose(testAccSubnetsDataSourceConfig(rName), `
 data "aws_subnets" "selected" {
   filter {
     name   = "vpc-id"
@@ -144,7 +144,7 @@ data "aws_subnets" "none" {
 `)
 }
 
-func testAccDataSourceAwsSubnets_filter(rName string) string {
+func testAccSubnetsDataSource_filter(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"

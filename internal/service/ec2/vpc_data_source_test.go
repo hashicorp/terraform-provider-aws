@@ -29,7 +29,7 @@ func TestAccDataSourceAwsVpc_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcConfig(cidr, tag),
+				Config: testAccVPCDataSourceConfig(cidr, tag),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(
 						ds1ResourceName, "id", vpcResourceName, "id"),
@@ -95,7 +95,7 @@ func TestAccDataSourceAwsVpc_ipv6Associated(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcConfigIpv6(cidr, tag),
+				Config: testAccVPCIPv6DataSourceConfig(cidr, tag),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(
 						ds1ResourceName, "id", vpcResourceName, "id"),
@@ -125,7 +125,7 @@ func TestAccDataSourceAwsVpc_CidrBlockAssociations_Multiple(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcConfigCidrBlockAssociationsMultiple(),
+				Config: testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", "2"),
 				),
@@ -134,7 +134,7 @@ func TestAccDataSourceAwsVpc_CidrBlockAssociations_Multiple(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsVpcConfigIpv6(cidr, tag string) string {
+func testAccVPCIPv6DataSourceConfig(cidr, tag string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "%s"
@@ -151,7 +151,7 @@ data "aws_vpc" "by_id" {
 `, cidr, tag)
 }
 
-func testAccDataSourceAwsVpcConfig(cidr, tag string) string {
+func testAccVPCDataSourceConfig(cidr, tag string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "%s"
@@ -184,7 +184,7 @@ data "aws_vpc" "by_filter" {
 `, cidr, tag)
 }
 
-func testAccDataSourceAwsVpcConfigCidrBlockAssociationsMultiple() string {
+func testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig() string {
 	return `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

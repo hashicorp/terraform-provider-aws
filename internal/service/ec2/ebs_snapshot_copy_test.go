@@ -27,7 +27,7 @@ func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotCopyConfig,
+				Config: testAccEBSSnapshotCopyConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -49,7 +49,7 @@ func TestAccAWSEbsSnapshotCopy_tags(t *testing.T) {
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotCopyConfigTags1("key1", "value1"),
+				Config: testAccEBSSnapshotCopyTags1Config("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -57,7 +57,7 @@ func TestAccAWSEbsSnapshotCopy_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsEbsSnapshotCopyConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccEBSSnapshotCopyTags2Config("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -66,7 +66,7 @@ func TestAccAWSEbsSnapshotCopy_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsEbsSnapshotCopyConfigTags1("key2", "value2"),
+				Config: testAccEBSSnapshotCopyTags1Config("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -88,7 +88,7 @@ func TestAccAWSEbsSnapshotCopy_withDescription(t *testing.T) {
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotCopyConfigWithDescription,
+				Config: testAccEBSSnapshotCopyWithDescriptionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttr(resourceName, "description", "Copy Snapshot Acceptance Test"),
@@ -113,7 +113,7 @@ func TestAccAWSEbsSnapshotCopy_withRegions(t *testing.T) {
 		CheckDestroy:      testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotCopyConfigWithRegions,
+				Config: testAccEBSSnapshotCopyWithRegionsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
 				),
@@ -135,7 +135,7 @@ func TestAccAWSEbsSnapshotCopy_withKms(t *testing.T) {
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotCopyConfigWithKms,
+				Config: testAccEBSSnapshotCopyWithKMSConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
@@ -156,7 +156,7 @@ func TestAccAWSEbsSnapshotCopy_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsSnapshotCopyConfig,
+				Config: testAccEBSSnapshotCopyConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsSnapshotCopyExists(resourceName, &snapshot),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSSnapshotCopy(), resourceName),
@@ -230,7 +230,7 @@ func testAccCheckEbsSnapshotCopyExists(n string, v *ec2.Snapshot) resource.TestC
 	}
 }
 
-const testAccAwsEbsSnapshotCopyConfig = `
+const testAccEBSSnapshotCopyConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -251,7 +251,7 @@ resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfig"
+    Name = "testAccEBSSnapshotCopyConfig"
   }
 }
 
@@ -261,7 +261,7 @@ resource "aws_ebs_snapshot_copy" "test" {
 }
 `
 
-func testAccAwsEbsSnapshotCopyConfigTags1(tagKey1, tagValue1 string) string {
+func testAccEBSSnapshotCopyTags1Config(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -284,7 +284,7 @@ resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfig"
+    Name = "testAccEBSSnapshotCopyConfig"
   }
 }
 
@@ -293,14 +293,14 @@ resource "aws_ebs_snapshot_copy" "test" {
   source_region      = data.aws_region.current.name
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfig"
+    Name = "testAccEBSSnapshotCopyConfig"
     "%s" = "%s"
   }
 }
 `, tagKey1, tagValue1)
 }
 
-func testAccAwsEbsSnapshotCopyConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEBSSnapshotCopyTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -323,7 +323,7 @@ resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfig"
+    Name = "testAccEBSSnapshotCopyConfig"
   }
 }
 
@@ -332,7 +332,7 @@ resource "aws_ebs_snapshot_copy" "test" {
   source_region      = data.aws_region.current.name
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfig"
+    Name = "testAccEBSSnapshotCopyConfig"
     "%s" = "%s"
     "%s" = "%s"
   }
@@ -340,7 +340,7 @@ resource "aws_ebs_snapshot_copy" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-const testAccAwsEbsSnapshotCopyConfigWithDescription = `
+const testAccEBSSnapshotCopyWithDescriptionConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -357,7 +357,7 @@ resource "aws_ebs_volume" "test" {
   size              = 1
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfigWithDescription"
+    Name = "testAccEBSSnapshotCopyWithDescriptionConfig"
   }
 }
 
@@ -366,7 +366,7 @@ resource "aws_ebs_snapshot" "test" {
   description = "EBS Snapshot Acceptance Test"
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfigWithDescription"
+    Name = "testAccEBSSnapshotCopyWithDescriptionConfig"
   }
 }
 
@@ -376,12 +376,12 @@ resource "aws_ebs_snapshot_copy" "test" {
   source_region      = data.aws_region.current.name
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfigWithDescription"
+    Name = "testAccEBSSnapshotCopyWithDescriptionConfig"
   }
 }
 `
 
-var testAccAwsEbsSnapshotCopyConfigWithRegions = acctest.ConfigAlternateRegionProvider() + `
+var testAccEBSSnapshotCopyWithRegionsConfig = acctest.ConfigAlternateRegionProvider() + `
 data "aws_availability_zones" "alternate_available" {
   provider = "awsalternate"
   state    = "available"
@@ -402,7 +402,7 @@ resource "aws_ebs_volume" "test" {
   size              = 1
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfigWithRegions"
+    Name = "testAccEBSSnapshotCopyWithRegionsConfig"
   }
 }
 
@@ -411,7 +411,7 @@ resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfigWithRegions"
+    Name = "testAccEBSSnapshotCopyWithRegionsConfig"
   }
 }
 
@@ -420,12 +420,12 @@ resource "aws_ebs_snapshot_copy" "test" {
   source_region      = data.aws_region.alternate.name
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfigWithRegions"
+    Name = "testAccEBSSnapshotCopyWithRegionsConfig"
   }
 }
 `
 
-const testAccAwsEbsSnapshotCopyConfigWithKms = `
+const testAccEBSSnapshotCopyWithKMSConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -438,7 +438,7 @@ data "aws_availability_zones" "available" {
 data "aws_region" "current" {}
 
 resource "aws_kms_key" "test" {
-  description             = "testAccAwsEbsSnapshotCopyConfigWithKms"
+  description             = "testAccEBSSnapshotCopyWithKMSConfig"
   deletion_window_in_days = 7
 }
 
@@ -447,7 +447,7 @@ resource "aws_ebs_volume" "test" {
   size              = 1
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfigWithKms"
+    Name = "testAccEBSSnapshotCopyWithKMSConfig"
   }
 }
 
@@ -455,7 +455,7 @@ resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfigWithKms"
+    Name = "testAccEBSSnapshotCopyWithKMSConfig"
   }
 }
 
@@ -466,7 +466,7 @@ resource "aws_ebs_snapshot_copy" "test" {
   kms_key_id         = aws_kms_key.test.arn
 
   tags = {
-    Name = "testAccAwsEbsSnapshotCopyConfigWithKms"
+    Name = "testAccEBSSnapshotCopyWithKMSConfig"
   }
 }
 `

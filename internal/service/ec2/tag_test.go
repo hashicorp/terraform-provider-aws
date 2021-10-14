@@ -16,7 +16,7 @@ func TestAccAWSEc2Tag_basic(t *testing.T) {
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTagDestroy,
@@ -43,7 +43,7 @@ func TestAccAWSEc2Tag_disappears(t *testing.T) {
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTagDestroy,
@@ -65,7 +65,7 @@ func TestAccAWSEc2Tag_Value(t *testing.T) {
 	resourceName := "aws_ec2_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckTagDestroy,

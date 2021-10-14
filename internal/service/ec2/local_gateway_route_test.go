@@ -25,12 +25,12 @@ func TestAccAWSEc2LocalGatewayRoute_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2LocalGatewayRouteDestroy,
+		CheckDestroy: testAccCheckLocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2LocalGatewayRouteConfigDestinationCidrBlock(destinationCidrBlock),
+				Config: testAccLocalGatewayRouteDestinationCIDRBlockConfig(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2LocalGatewayRouteExists(resourceName),
+					testAccCheckLocalGatewayRouteExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidrBlock),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_route_table_id", localGatewayRouteTableDataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_virtual_interface_group_id", localGatewayVirtualInterfaceGroupDataSourceName, "id"),
@@ -54,12 +54,12 @@ func TestAccAWSEc2LocalGatewayRoute_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2LocalGatewayRouteDestroy,
+		CheckDestroy: testAccCheckLocalGatewayRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2LocalGatewayRouteConfigDestinationCidrBlock(destinationCidrBlock),
+				Config: testAccLocalGatewayRouteDestinationCIDRBlockConfig(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2LocalGatewayRouteExists(resourceName),
+					testAccCheckLocalGatewayRouteExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceLocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -68,7 +68,7 @@ func TestAccAWSEc2LocalGatewayRoute_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckLocalGatewayRouteExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -101,7 +101,7 @@ func testAccCheckAWSEc2LocalGatewayRouteExists(resourceName string) resource.Tes
 	}
 }
 
-func testAccCheckAWSEc2LocalGatewayRouteDestroy(s *terraform.State) error {
+func testAccCheckLocalGatewayRouteDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -135,7 +135,7 @@ func testAccCheckAWSEc2LocalGatewayRouteDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSEc2LocalGatewayRouteConfigDestinationCidrBlock(destinationCidrBlock string) string {
+func testAccLocalGatewayRouteDestinationCIDRBlockConfig(destinationCidrBlock string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "test" {}
 

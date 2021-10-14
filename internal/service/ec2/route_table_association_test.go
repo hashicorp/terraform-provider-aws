@@ -38,7 +38,7 @@ func TestAccAWSRouteTableAssociation_Subnet_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteTabAssocImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteTabAssocImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -103,7 +103,7 @@ func TestAccAWSRouteTableAssociation_Gateway_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteTabAssocImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRouteTabAssocImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -216,7 +216,7 @@ func testAccCheckRouteTableAssociationExists(n string, v *ec2.RouteTableAssociat
 	}
 }
 
-func testAccAWSRouteTabAssocImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccRouteTabAssocImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

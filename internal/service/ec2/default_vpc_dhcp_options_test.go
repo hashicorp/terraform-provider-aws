@@ -19,10 +19,10 @@ func TestAccAWSDefaultVpcDhcpOptions_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDefaultVpcDhcpOptionsDestroy,
+		CheckDestroy: testAccCheckDefaultVPCDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultVpcDhcpOptionsConfigBasic,
+				Config: testAccDefaultVPCDHCPOptionsBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
@@ -45,10 +45,10 @@ func TestAccAWSDefaultVpcDhcpOptions_owner(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSDefaultVpcDhcpOptionsDestroy,
+		CheckDestroy: testAccCheckDefaultVPCDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultVpcDhcpOptionsConfigOwner,
+				Config: testAccDefaultVPCDHCPOptionsOwnerConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(resourceName, &d),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`dhcp-options/dopt-.+`)),
@@ -63,12 +63,12 @@ func TestAccAWSDefaultVpcDhcpOptions_owner(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSDefaultVpcDhcpOptionsDestroy(s *terraform.State) error {
+func testAccCheckDefaultVPCDHCPOptionsDestroy(s *terraform.State) error {
 	// We expect DHCP Options Set to still exist
 	return nil
 }
 
-const testAccAWSDefaultVpcDhcpOptionsConfigBasic = `
+const testAccDefaultVPCDHCPOptionsBasicConfig = `
 resource "aws_default_vpc_dhcp_options" "test" {
   tags = {
     Name = "Default DHCP Option Set"
@@ -76,7 +76,7 @@ resource "aws_default_vpc_dhcp_options" "test" {
 }
 `
 
-const testAccAWSDefaultVpcDhcpOptionsConfigOwner = `
+const testAccDefaultVPCDHCPOptionsOwnerConfig = `
 data "aws_caller_identity" "current" {}
 
 resource "aws_default_vpc_dhcp_options" "test" {

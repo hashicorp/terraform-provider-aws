@@ -7,7 +7,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAWSSecurityGroupMigrateState(t *testing.T) {
+func TestSecurityGroupMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -48,7 +48,7 @@ func TestAWSSecurityGroupMigrateState(t *testing.T) {
 	}
 }
 
-func TestAWSSecurityGroupMigrateState_empty(t *testing.T) {
+func TestSecurityGroupMigrateState_empty(t *testing.T) {
 	var is *terraform.InstanceState
 	var meta interface{}
 

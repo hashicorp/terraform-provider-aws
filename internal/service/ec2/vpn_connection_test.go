@@ -43,11 +43,11 @@ type TunnelOptions struct {
 func init() {
 	resource.AddTestSweepers("aws_vpn_connection", &resource.Sweeper{
 		Name: "aws_vpn_connection",
-		F:    testSweepEc2VpnConnections,
+		F:    sweepVPNConnections,
 	})
 }
 
-func testSweepEc2VpnConnections(region string) error {
+func sweepVPNConnections(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -107,12 +107,12 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfig(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
@@ -125,9 +125,9 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsVpnConnectionConfigUpdate(rName, rBgpAsn),
+				Config: testAccVPNConnectionUpdateConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 				),
 			},
 		},
@@ -144,16 +144,16 @@ func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccPreCheckTransitGateway(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigTransitGatewayID(rName, rBgpAsn),
+				Config: testAccVPNConnectionTransitGatewayIDConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexp.MustCompile(`tgw-attach-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 				),
@@ -177,12 +177,12 @@ func TestAccAWSVpnConnection_Tunnel1InsideCidr(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigTunnel1InsideCidr(rName, rBgpAsn, "169.254.8.0/30", "169.254.9.0/30"),
+				Config: testAccVPNConnectionTunnel1InsideCIDRConfig(rName, rBgpAsn, "169.254.8.0/30", "169.254.9.0/30"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
 				),
@@ -206,12 +206,12 @@ func TestAccAWSVpnConnection_Tunnel1InsideIpv6Cidr(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigTunnel1InsideIpv6Cidr(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				Config: testAccVPNConnectionTunnel1InsideIPv6CIDRConfig(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				),
@@ -235,12 +235,12 @@ func TestAccAWSVpnConnection_Tunnel1PresharedKey(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigTunnel1PresharedKey(rName, rBgpAsn, "tunnel1presharedkey", "tunnel2presharedkey"),
+				Config: testAccVPNConnectionTunnel1PresharedKeyConfig(rName, rBgpAsn, "tunnel1presharedkey", "tunnel2presharedkey"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "tunnel1presharedkey"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "tunnel2presharedkey"),
 				),
@@ -305,65 +305,65 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			// Checking CIDR blocks
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "not-a-cidr"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "not-a-cidr"),
 				ExpectError: regexp.MustCompile(`invalid CIDR address: not-a-cidr`),
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.254.0/31"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "169.254.254.0/31"),
 				ExpectError: regexp.MustCompile(`expected "\w+" to contain a network Value with between 30 and 30 significant bits`),
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "172.16.0.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "172.16.0.0/30"),
 				ExpectError: regexp.MustCompile(`must be within 169.254.0.0/16`),
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.0.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "169.254.0.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.1.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "169.254.1.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.2.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "169.254.2.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.3.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "169.254.3.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.4.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "169.254.4.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.5.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "169.254.5.0/30"),
 				ExpectError: badCidrRangeErr,
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.169.252/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "12345678", "169.254.169.252/30"),
 				ExpectError: badCidrRangeErr,
 			},
 
 			// Checking PreShared Key
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "1234567", "169.254.254.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "1234567", "169.254.254.0/30"),
 				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, sdkacctest.RandStringFromCharSet(65, sdkacctest.CharSetAlpha), "169.254.254.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, sdkacctest.RandStringFromCharSet(65, sdkacctest.CharSetAlpha), "169.254.254.0/30"),
 				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "01234567", "169.254.254.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "01234567", "169.254.254.0/30"),
 				ExpectError: regexp.MustCompile(`cannot start with zero character`),
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rName, rBgpAsn, "1234567!", "169.254.254.0/30"),
+				Config:      testAccVPNConnectionSingleTunnelOptionsConfig(rName, rBgpAsn, "1234567!", "169.254.254.0/30"),
 				ExpectError: regexp.MustCompile(`can only contain alphanumeric, period and underscore characters`),
 			},
 
@@ -386,9 +386,9 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 
 			//Try actual building
 			{
-				Config: testAccAwsVpnConnectionConfigTunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
+				Config: testAccVPNConnectionTunnelOptionsConfig(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
 
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
@@ -458,12 +458,12 @@ func TestAccAWSVpnConnection_tunnelOptionsLesser(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigTunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
+				Config: testAccVPNConnectionTunnelOptionsConfig(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
 
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
@@ -487,12 +487,12 @@ func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigUpdate(rName, rBgpAsn),
+				Config: testAccVPNConnectionUpdateConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "false"),
 				),
@@ -516,12 +516,12 @@ func TestAccAWSVpnConnection_withEnableAcceleration(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigEnableAcceleration(rName, rBgpAsn),
+				Config: testAccVPNConnectionEnableAccelerationConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "enable_acceleration", "true"),
 				),
 			},
@@ -544,12 +544,12 @@ func TestAccAWSVpnConnection_withIpv6(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigIpv6(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d201/128", "fd00:2001:db8:2:2d1:81ff:fe41:d202/128", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				Config: testAccVPNConnectionIPv6Config(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d201/128", "fd00:2001:db8:2:2d1:81ff:fe41:d202/128", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 				),
 			},
 			{
@@ -571,12 +571,12 @@ func TestAccAWSVpnConnection_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigTags1(rName, rBgpAsn, "key1", "value1"),
+				Config: testAccVPNConnectionTags1Config(rName, rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -587,18 +587,18 @@ func TestAccAWSVpnConnection_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsVpnConnectionConfigTags2(rName, rBgpAsn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPNConnectionTags2Config(rName, rBgpAsn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAwsVpnConnectionConfigTags1(rName, rBgpAsn, "key2", "value2"),
+				Config: testAccVPNConnectionTags1Config(rName, rBgpAsn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -617,12 +617,12 @@ func TestAccAWSVpnConnection_specifyIpv4(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigLocalRemoteIpv4Cidrs(rName, rBgpAsn, "10.111.0.0/16", "10.222.33.0/24"),
+				Config: testAccVPNConnectionLocalRemoteIPv4CIDRsConfig(rName, rBgpAsn, "10.111.0.0/16", "10.222.33.0/24"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "10.111.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv4_network_cidr", "10.222.33.0/24"),
 				),
@@ -641,12 +641,12 @@ func TestAccAWSVpnConnection_specifyIpv6(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfigIpv6(rName, rBgpAsn, "1111:2222:3333:4444::/64", "5555:6666:7777::/48", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				Config: testAccVPNConnectionIPv6Config(rName, rBgpAsn, "1111:2222:3333:4444::/64", "5555:6666:7777::/48", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv6_network_cidr", "1111:2222:3333:4444::/64"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv6_network_cidr", "5555:6666:7777::/48"),
 				),
@@ -665,12 +665,12 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		CheckDestroy: testAccVPNConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpnConnectionConfig(rName, rBgpAsn),
+				Config: testAccVPNConnectionConfig(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					testAccVPNConnectionExists(resourceName, &vpn),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -679,7 +679,7 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsVpnConnectionDestroy(s *terraform.State) error {
+func testAccVPNConnectionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpn_connection" {
@@ -719,7 +719,7 @@ func testAccAwsVpnConnectionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAwsVpnConnectionExists(vpnConnectionResource string, vpnConnection *ec2.VpnConnection) resource.TestCheckFunc {
+func testAccVPNConnectionExists(vpnConnectionResource string, vpnConnection *ec2.VpnConnection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[vpnConnectionResource]
 		if !ok {
@@ -762,7 +762,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 	}{
 		{
 			Name: "outside address sort",
-			XML:  testAccAwsVpnTunnelInfoXML,
+			XML:  testAccVPNTunnelInfoXML,
 			ExpectTunnelInfo: tfec2.TunnelInfo{
 				Tunnel1Address:          "1.1.1.1",
 				Tunnel1BGPASN:           "1111",
@@ -780,7 +780,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 		},
 		{
 			Name:                "Tunnel1PreSharedKey",
-			XML:                 testAccAwsVpnTunnelInfoXML,
+			XML:                 testAccVPNTunnelInfoXML,
 			Tunnel1PreSharedKey: "SECOND_KEY",
 			ExpectTunnelInfo: tfec2.TunnelInfo{
 				Tunnel1Address:          "2.2.2.2",
@@ -799,7 +799,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 		},
 		{
 			Name:              "Tunnel1InsideCidr",
-			XML:               testAccAwsVpnTunnelInfoXML,
+			XML:               testAccVPNTunnelInfoXML,
 			Tunnel1InsideCidr: "169.254.12.0/30",
 			ExpectTunnelInfo: tfec2.TunnelInfo{
 				Tunnel1Address:          "2.2.2.2",
@@ -819,7 +819,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 		// IPv6 logic is equivalent to IPv4, so we can reuse configuration, expected, etc.
 		{
 			Name:                  "Tunnel1InsideIpv6Cidr",
-			XML:                   testAccAwsVpnTunnelInfoXML,
+			XML:                   testAccVPNTunnelInfoXML,
 			Tunnel1InsideIpv6Cidr: "169.254.12.1",
 			ExpectTunnelInfo: tfec2.TunnelInfo{
 				Tunnel1Address:          "2.2.2.2",
@@ -859,7 +859,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 	}
 }
 
-func testAccAwsVpnConnectionConfig(rName string, rBgpAsn int) string {
+func testAccVPNConnectionConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -887,7 +887,7 @@ resource "aws_vpn_connection" "test" {
 }
 
 // Change static_routes_only to be false, forcing a refresh.
-func testAccAwsVpnConnectionConfigUpdate(rName string, rBgpAsn int) string {
+func testAccVPNConnectionUpdateConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -914,7 +914,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccAwsVpnConnectionConfigEnableAcceleration(rName string, rBgpAsn int) string {
+func testAccVPNConnectionEnableAccelerationConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %[1]q
@@ -940,7 +940,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccAwsVpnConnectionConfigIpv6(rName string, rBgpAsn int, localIpv6NetworkCidr string, remoteIpv6NetworkCidr string, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
+func testAccVPNConnectionIPv6Config(rName string, rBgpAsn int, localIpv6NetworkCidr string, remoteIpv6NetworkCidr string, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %[1]q
@@ -973,7 +973,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, localIpv6NetworkCidr, remoteIpv6NetworkCidr, tunnel1InsideIpv6Cidr, tunnel2InsideIpv6Cidr)
 }
 
-func testAccAwsVpnConnectionConfigSingleTunnelOptions(rName string, rBgpAsn int, psk string, tunnelCidr string) string {
+func testAccVPNConnectionSingleTunnelOptionsConfig(rName string, rBgpAsn int, psk string, tunnelCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -1003,7 +1003,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tunnelCidr, psk)
 }
 
-func testAccAwsVpnConnectionConfigTransitGatewayID(rName string, rBgpAsn int) string {
+func testAccVPNConnectionTransitGatewayIDConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %[1]q
@@ -1027,7 +1027,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccAwsVpnConnectionConfigTunnel1InsideCidr(rName string, rBgpAsn int, tunnel1InsideCidr string, tunnel2InsideCidr string) string {
+func testAccVPNConnectionTunnel1InsideCIDRConfig(rName string, rBgpAsn int, tunnel1InsideCidr string, tunnel2InsideCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -1055,7 +1055,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tunnel1InsideCidr, tunnel2InsideCidr)
 }
 
-func testAccAwsVpnConnectionConfigTunnel1InsideIpv6Cidr(rName string, rBgpAsn int, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
+func testAccVPNConnectionTunnel1InsideIPv6CIDRConfig(rName string, rBgpAsn int, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   description = %[1]q
@@ -1082,7 +1082,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tunnel1InsideIpv6Cidr, tunnel2InsideIpv6Cidr)
 }
 
-func testAccAwsVpnConnectionConfigTunnel1PresharedKey(rName string, rBgpAsn int, tunnel1PresharedKey string, tunnel2PresharedKey string) string {
+func testAccVPNConnectionTunnel1PresharedKeyConfig(rName string, rBgpAsn int, tunnel1PresharedKey string, tunnel2PresharedKey string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -1110,7 +1110,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tunnel1PresharedKey, tunnel2PresharedKey)
 }
 
-func testAccAwsVpnConnectionConfigTunnelOptions(
+func testAccVPNConnectionTunnelOptionsConfig(
 	rName string,
 	rBgpAsn int,
 	localIpv4NetworkCidr string,
@@ -1221,7 +1221,7 @@ resource "aws_vpn_connection" "test" {
 		tunnel2.startupAction)
 }
 
-func testAccAwsVpnConnectionConfigTags1(rName string, rBgpAsn int, tagKey1, tagValue1 string) string {
+func testAccVPNConnectionTags1Config(rName string, rBgpAsn int, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -1252,7 +1252,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tagKey1, tagValue1)
 }
 
-func testAccAwsVpnConnectionConfigTags2(rName string, rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPNConnectionTags2Config(rName string, rBgpAsn int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -1284,7 +1284,7 @@ resource "aws_vpn_connection" "test" {
 `, rName, rBgpAsn, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAwsVpnConnectionConfigLocalRemoteIpv4Cidrs(rName string, rBgpAsn int, localIpv4Cidr string, remoteIpv4Cidr string) string {
+func testAccVPNConnectionLocalRemoteIPv4CIDRsConfig(rName string, rBgpAsn int, localIpv4Cidr string, remoteIpv4Cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -1315,7 +1315,7 @@ resource "aws_vpn_connection" "test" {
 }
 
 // Test our VPN tunnel config XML parsing
-const testAccAwsVpnTunnelInfoXML = `
+const testAccVPNTunnelInfoXML = `
 <vpn_connection id="vpn-abc123">
   <ipsec_tunnel>
     <customer_gateway>

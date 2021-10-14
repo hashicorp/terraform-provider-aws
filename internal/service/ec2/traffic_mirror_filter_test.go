@@ -23,17 +23,17 @@ func TestAccAWSEc2TrafficMirrorFilter_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
+			testAccPreCheckTrafficMirrorFilter(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
 				Config: testAccTrafficMirrorFilterConfig(description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName, &v),
+					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-filter/tmf-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "network_services.#", "1"),
@@ -44,7 +44,7 @@ func TestAccAWSEc2TrafficMirrorFilter_basic(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorFilterConfigWithoutDNS(description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName, &v),
+					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, "network_services"),
 				),
 			},
@@ -52,7 +52,7 @@ func TestAccAWSEc2TrafficMirrorFilter_basic(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorFilterConfig(description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName, &v),
+					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "network_services.#", "1"),
 				),
@@ -73,16 +73,16 @@ func TestAccAWSEc2TrafficMirrorFilter_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
+			testAccPreCheckTrafficMirrorFilter(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorFilterConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName, &v),
+					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -95,7 +95,7 @@ func TestAccAWSEc2TrafficMirrorFilter_tags(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorFilterConfigTags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName, &v),
+					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -104,7 +104,7 @@ func TestAccAWSEc2TrafficMirrorFilter_tags(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorFilterConfigTags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName, &v),
+					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -121,16 +121,16 @@ func TestAccAWSEc2TrafficMirrorFilter_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorFilter(t)
+			testAccPreCheckTrafficMirrorFilter(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorFilterDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorFilterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorFilterConfig(description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorFilterExists(resourceName, &v),
+					testAccCheckTrafficMirrorFilterExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -139,7 +139,7 @@ func TestAccAWSEc2TrafficMirrorFilter_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEc2TrafficMirrorFilterExists(name string, traffic *ec2.TrafficMirrorFilter) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorFilterExists(name string, traffic *ec2.TrafficMirrorFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -209,7 +209,7 @@ resource "aws_ec2_traffic_mirror_filter" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccPreCheckAWSEc2TrafficMirrorFilter(t *testing.T) {
+func testAccPreCheckTrafficMirrorFilter(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	_, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{})
@@ -223,7 +223,7 @@ func testAccPreCheckAWSEc2TrafficMirrorFilter(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSEc2TrafficMirrorFilterDestroy(s *terraform.State) error {
+func testAccCheckTrafficMirrorFilterDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {

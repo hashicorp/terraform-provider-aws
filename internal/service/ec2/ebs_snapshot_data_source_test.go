@@ -20,9 +20,9 @@ func TestAccAWSEbsSnapshotDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEbsSnapshotDataSourceConfig,
+				Config: testAccCheckEBSSnapshotDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsSnapshotDataSourceID(dataSourceName),
+					testAccCheckEBSSnapshotIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
@@ -49,9 +49,9 @@ func TestAccAWSEbsSnapshotDataSource_Filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEbsSnapshotDataSourceConfigFilter,
+				Config: testAccCheckEBSSnapshotFilterDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsSnapshotDataSourceID(dataSourceName),
+					testAccCheckEBSSnapshotIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 				),
 			},
@@ -69,9 +69,9 @@ func TestAccAWSEbsSnapshotDataSource_MostRecent(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEbsSnapshotDataSourceConfigMostRecent,
+				Config: testAccCheckEBSSnapshotMostRecentDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsSnapshotDataSourceID(dataSourceName),
+					testAccCheckEBSSnapshotIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 				),
 			},
@@ -79,7 +79,7 @@ func TestAccAWSEbsSnapshotDataSource_MostRecent(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsEbsSnapshotDataSourceID(n string) resource.TestCheckFunc {
+func testAccCheckEBSSnapshotIDDataSource(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -93,7 +93,7 @@ func testAccCheckAwsEbsSnapshotDataSourceID(n string) resource.TestCheckFunc {
 	}
 }
 
-var testAccCheckAwsEbsSnapshotDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
+var testAccCheckEBSSnapshotDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -109,7 +109,7 @@ data "aws_ebs_snapshot" "test" {
 }
 `
 
-var testAccCheckAwsEbsSnapshotDataSourceConfigFilter = acctest.ConfigAvailableAZsNoOptIn() + `
+var testAccCheckEBSSnapshotFilterDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -128,7 +128,7 @@ data "aws_ebs_snapshot" "test" {
 }
 `
 
-var testAccCheckAwsEbsSnapshotDataSourceConfigMostRecent = acctest.ConfigAvailableAZsNoOptIn() + `
+var testAccCheckEBSSnapshotMostRecentDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"

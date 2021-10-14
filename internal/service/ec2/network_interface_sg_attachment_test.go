@@ -24,12 +24,12 @@ func TestAccAWSNetworkInterfaceSGAttachment_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
+		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsNetworkInterfaceSGAttachmentConfig(rName),
+				Config: testAccNetworkInterfaceSGAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName),
+					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", networkInterfaceResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, "id"),
 				),
@@ -46,12 +46,12 @@ func TestAccAWSNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
+		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsNetworkInterfaceSGAttachmentConfig(rName),
+				Config: testAccNetworkInterfaceSGAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName),
+					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkInterfaceSGAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -70,12 +70,12 @@ func TestAccAWSNetworkInterfaceSGAttachment_Instance(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
+		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsNetworkInterfaceSGAttachmentConfigViaInstance(rName),
+				Config: testAccNetworkInterfaceSGAttachmentViaInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName),
+					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, "id"),
 				),
@@ -94,12 +94,12 @@ func TestAccAWSNetworkInterfaceSGAttachment_DataSource(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
+		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsNetworkInterfaceSGAttachmentConfigViaDataSource(rName),
+				Config: testAccNetworkInterfaceSGAttachmentViaDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName),
+					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceDataSourceName, "network_interface_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, "id"),
 				),
@@ -124,21 +124,21 @@ func TestAccAWSNetworkInterfaceSGAttachment_Multiple(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSNetworkInterfaceSGAttachmentDestroy,
+		CheckDestroy: testAccCheckNetworkInterfaceSGAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsNetworkInterfaceSGAttachmentConfigMultiple(rName),
+				Config: testAccNetworkInterfaceSGAttachmentMultipleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName1),
+					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName1),
 					resource.TestCheckResourceAttrPair(resourceName1, "network_interface_id", networkInterfaceResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName1, "security_group_id", securityGroupResourceName1, "id"),
-					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName2),
+					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName2),
 					resource.TestCheckResourceAttrPair(resourceName2, "network_interface_id", networkInterfaceResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName2, "security_group_id", securityGroupResourceName2, "id"),
-					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName3),
+					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName3),
 					resource.TestCheckResourceAttrPair(resourceName3, "network_interface_id", networkInterfaceResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName3, "security_group_id", securityGroupResourceName3, "id"),
-					testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName4),
+					testAccCheckNetworkInterfaceSGAttachmentExists(resourceName4),
 					resource.TestCheckResourceAttrPair(resourceName4, "network_interface_id", networkInterfaceResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName4, "security_group_id", securityGroupResourceName4, "id"),
 				),
@@ -147,7 +147,7 @@ func TestAccAWSNetworkInterfaceSGAttachment_Multiple(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckNetworkInterfaceSGAttachmentExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -176,7 +176,7 @@ func testAccCheckAWSNetworkInterfaceSGAttachmentExists(resourceName string) reso
 	}
 }
 
-func testAccCheckAWSNetworkInterfaceSGAttachmentDestroy(s *terraform.State) error {
+func testAccCheckNetworkInterfaceSGAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -205,7 +205,7 @@ func testAccCheckAWSNetworkInterfaceSGAttachmentDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccAwsNetworkInterfaceSGAttachmentConfig(rName string) string {
+func testAccNetworkInterfaceSGAttachmentConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
@@ -244,7 +244,7 @@ resource "aws_network_interface_sg_attachment" "test" {
 `, rName, rName, rName, rName)
 }
 
-func testAccAwsNetworkInterfaceSGAttachmentConfigViaInstance(rName string) string {
+func testAccNetworkInterfaceSGAttachmentViaInstanceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "ami" {
   most_recent = true
@@ -277,7 +277,7 @@ resource "aws_network_interface_sg_attachment" "test" {
 `, rName, rName)
 }
 
-func testAccAwsNetworkInterfaceSGAttachmentConfigViaDataSource(rName string) string {
+func testAccNetworkInterfaceSGAttachmentViaDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "ami" {
   most_recent = true
@@ -314,7 +314,7 @@ resource "aws_network_interface_sg_attachment" "test" {
 `, rName, rName)
 }
 
-func testAccAwsNetworkInterfaceSGAttachmentConfigMultiple(rName string) string {
+func testAccNetworkInterfaceSGAttachmentMultipleConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

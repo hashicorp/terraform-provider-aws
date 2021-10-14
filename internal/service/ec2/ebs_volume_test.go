@@ -24,11 +24,11 @@ func init() {
 		Dependencies: []string{
 			"aws_instance",
 		},
-		F: testSweepEbsVolumes,
+		F: sweepEBSVolumes,
 	})
 }
 
-func testSweepEbsVolumes(region string) error {
+func sweepEBSVolumes(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -90,7 +90,7 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfig,
+				Config: testAccEBSVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -125,7 +125,7 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsAttachedVolumeConfig,
+				Config: testAccEBSAttachedVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "10"),
@@ -138,7 +138,7 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsAttachedVolumeConfigUpdateSize,
+				Config: testAccEBSAttachedVolumeUpdateSizeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "20"),
@@ -160,7 +160,7 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfig,
+				Config: testAccEBSVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "1"),
@@ -173,7 +173,7 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigUpdateSize,
+				Config: testAccEBSVolumeUpdateSizeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "10"),
@@ -195,7 +195,7 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfig,
+				Config: testAccEBSVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
@@ -208,7 +208,7 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigUpdateType,
+				Config: testAccEBSVolumeUpdateTypeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "sc1"),
@@ -230,7 +230,7 @@ func TestAccAWSEBSVolume_updateIops_Io1(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigWithIopsIo1,
+				Config: testAccEBSVolumeWithIopsIo1Config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
@@ -243,7 +243,7 @@ func TestAccAWSEBSVolume_updateIops_Io1(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigWithIopsIo1Updated,
+				Config: testAccEBSVolumeWithIopsIo1UpdatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
@@ -265,7 +265,7 @@ func TestAccAWSEBSVolume_updateIops_Io2(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigWithIopsIo2,
+				Config: testAccEBSVolumeWithIopsIo2Config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
@@ -278,7 +278,7 @@ func TestAccAWSEBSVolume_updateIops_Io2(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigWithIopsIo2Updated,
+				Config: testAccEBSVolumeWithIopsIo2UpdatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
@@ -292,7 +292,7 @@ func TestAccAWSEBSVolume_updateIops_Io2(t *testing.T) {
 func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 	var v ec2.Volume
 	ri := sdkacctest.RandInt()
-	config := fmt.Sprintf(testAccAwsEbsVolumeConfigWithKmsKey, ri)
+	config := fmt.Sprintf(testAccEBSVolumeWithKMSKeyConfig, ri)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_ebs_volume.test"
 
@@ -331,7 +331,7 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigWithNoIops,
+				Config: testAccEBSVolumeWithNoIopsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
@@ -356,7 +356,7 @@ func TestAccAWSEBSVolume_InvalidIopsForType(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsEbsVolumeConfigWithInvalidIopsForType,
+				Config:      testAccEBSVolumeWithInvalidIopsForTypeConfig,
 				ExpectError: regexp.MustCompile(`'iops' must not be set when 'type' is`),
 			},
 		},
@@ -372,7 +372,7 @@ func TestAccAWSEBSVolume_InvalidThroughputForType(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAwsEbsVolumeConfigWithInvalidThroughputForType,
+				Config:      testAccEBSVolumeWithInvalidThroughputForTypeConfig,
 				ExpectError: regexp.MustCompile(`'throughput' must not be set when 'type' is`),
 			},
 		},
@@ -390,7 +390,7 @@ func TestAccAWSEBSVolume_withTags(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigWithTags,
+				Config: testAccEBSVolumeWithTagsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -418,7 +418,7 @@ func TestAccAWSEBSVolume_multiAttach(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigMultiAttach(rName),
+				Config: testAccEBSVolumeMultiAttachConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
@@ -446,7 +446,7 @@ func TestAccAWSEBSVolume_outpost(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigOutpost(),
+				Config: testAccEBSVolumeOutpostConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
@@ -473,7 +473,7 @@ func TestAccAWSEBSVolume_gp3_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "", ""),
+				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -511,7 +511,7 @@ func TestAccAWSEBSVolume_gp3_iops(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "4000", "200"),
+				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "4000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -534,7 +534,7 @@ func TestAccAWSEBSVolume_gp3_iops(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "5000", "200"),
+				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "5000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -567,7 +567,7 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "", "400"),
+				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -590,7 +590,7 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "", "600"),
+				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "", "600"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -623,7 +623,7 @@ func TestAccAWSEBSVolume_gp3_to_gp2(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "3000", "400"),
+				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp3", "3000", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -646,7 +646,7 @@ func TestAccAWSEBSVolume_gp3_to_gp2(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp2", "", ""),
+				Config: testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, "10", "gp2", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -680,7 +680,7 @@ func TestAccAWSEBSVolume_snapshotID(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigSnapshotId(rName),
+				Config: testAccEBSVolumeSnapshotIDConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -719,7 +719,7 @@ func TestAccAWSEBSVolume_snapshotIDAndSize(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigSnapshotIdAndSize(rName, 20),
+				Config: testAccEBSVolumeSnapshotIdAndSizeConfig(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -756,7 +756,7 @@ func TestAccAWSEBSVolume_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfig,
+				Config: testAccEBSVolumeConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSVolume(), resourceName),
@@ -827,7 +827,7 @@ func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {
 	}
 }
 
-const testAccAwsEbsVolumeConfig = `
+const testAccEBSVolumeConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -844,7 +844,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsAttachedVolumeConfig = `
+const testAccEBSAttachedVolumeConfig = `
 data "aws_ami" "debian_jessie_latest" {
   most_recent = true
 
@@ -910,7 +910,7 @@ resource "aws_volume_attachment" "test" {
 }
 `
 
-const testAccAwsEbsAttachedVolumeConfigUpdateSize = `
+const testAccEBSAttachedVolumeUpdateSizeConfig = `
 data "aws_ami" "debian_jessie_latest" {
   most_recent = true
 
@@ -967,7 +967,7 @@ resource "aws_volume_attachment" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigUpdateSize = `
+const testAccEBSVolumeUpdateSizeConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -988,7 +988,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigUpdateType = `
+const testAccEBSVolumeUpdateTypeConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1009,7 +1009,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithIopsIo1 = `
+const testAccEBSVolumeWithIopsIo1Config = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1031,7 +1031,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithIopsIo1Updated = `
+const testAccEBSVolumeWithIopsIo1UpdatedConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1053,7 +1053,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithIopsIo2 = `
+const testAccEBSVolumeWithIopsIo2Config = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1075,7 +1075,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithIopsIo2Updated = `
+const testAccEBSVolumeWithIopsIo2UpdatedConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1097,7 +1097,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithKmsKey = `
+const testAccEBSVolumeWithKMSKeyConfig = `
 resource "aws_kms_key" "test" {
   description = "Terraform acc test %d"
   policy      = <<POLICY
@@ -1136,7 +1136,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithTags = `
+const testAccEBSVolumeWithTagsConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1156,7 +1156,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithNoIops = `
+const testAccEBSVolumeWithNoIopsConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1178,7 +1178,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithInvalidIopsForType = `
+const testAccEBSVolumeWithInvalidIopsForTypeConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1199,7 +1199,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-const testAccAwsEbsVolumeConfigWithInvalidThroughputForType = `
+const testAccEBSVolumeWithInvalidThroughputForTypeConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1222,7 +1222,7 @@ resource "aws_ebs_volume" "test" {
 }
 `
 
-func testAccAwsEbsVolumeConfigOutpost() string {
+func testAccEBSVolumeOutpostConfig() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 
@@ -1242,7 +1242,7 @@ resource "aws_ebs_volume" "test" {
 `
 }
 
-func testAccAwsEbsVolumeConfigMultiAttach(rName string) string {
+func testAccEBSVolumeMultiAttachConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1267,7 +1267,7 @@ resource "aws_ebs_volume" "test" {
 `, rName)
 }
 
-func testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, size, volumeType, iops, throughput string) string {
+func testAccEBSVolumeSizeTypeIopsThroughputConfig(rName, size, volumeType, iops, throughput string) string {
 	if volumeType == "" {
 		volumeType = "null"
 	}
@@ -1295,7 +1295,7 @@ resource "aws_ebs_volume" "test" {
 `, rName, size, volumeType, iops, throughput))
 }
 
-func testAccAwsEbsVolumeConfigSnapshotId(rName string) string {
+func testAccEBSVolumeSnapshotIDConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -1327,7 +1327,7 @@ resource "aws_ebs_volume" "test" {
 `, rName))
 }
 
-func testAccAwsEbsVolumeConfigSnapshotIdAndSize(rName string, size int) string {
+func testAccEBSVolumeSnapshotIdAndSizeConfig(rName string, size int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`

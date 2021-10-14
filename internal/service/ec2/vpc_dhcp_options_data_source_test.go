@@ -21,11 +21,11 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDataSourceAwsVpcDhcpOptionsConfig_Missing,
+				Config:      testAccVPCDHCPOptionsDataSourceConfig_Missing,
 				ExpectError: regexp.MustCompile(`No matching EC2 DHCP Options found`),
 			},
 			{
-				Config: testAccDataSourceAwsVpcDhcpOptionsConfig_DhcpOptionsID,
+				Config: testAccVPCDHCPOptionsDataSourceConfig_DhcpOptionsID,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
@@ -58,7 +58,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, 1),
+				Config: testAccVPCDHCPOptionsDataSourceConfig_Filter(rInt, 1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
@@ -76,7 +76,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, 2),
+				Config:      testAccVPCDHCPOptionsDataSourceConfig_Filter(rInt, 2),
 				ExpectError: regexp.MustCompile(`Multiple matching EC2 DHCP Options found`),
 			},
 			{
@@ -90,13 +90,13 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsVpcDhcpOptionsConfig_Missing = `
+const testAccVPCDHCPOptionsDataSourceConfig_Missing = `
 data "aws_vpc_dhcp_options" "test" {
   dhcp_options_id = "does-not-exist"
 }
 `
 
-const testAccDataSourceAwsVpcDhcpOptionsConfig_DhcpOptionsID = `
+const testAccVPCDHCPOptionsDataSourceConfig_DhcpOptionsID = `
 resource "aws_vpc_dhcp_options" "incorrect" {
   domain_name = "tf-acc-test-incorrect.example.com"
 }
@@ -118,7 +118,7 @@ data "aws_vpc_dhcp_options" "test" {
 }
 `
 
-func testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, count int) string {
+func testAccVPCDHCPOptionsDataSourceConfig_Filter(rInt, count int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "incorrect" {
   domain_name = "tf-acc-test-incorrect.example.com"

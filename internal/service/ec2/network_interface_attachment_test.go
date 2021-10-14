@@ -18,12 +18,12 @@ func TestAccAWSNetworkInterfaceAttachment_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSENIDestroy,
+		CheckDestroy: testAccCheckENIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSNetworkInterfaceAttachmentConfig_basic(rInt),
+				Config: testAccNetworkInterfaceAttachmentConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSENIExists("aws_network_interface.bar", &conf),
+					testAccCheckENIExists("aws_network_interface.bar", &conf),
 					resource.TestCheckResourceAttr(
 						"aws_network_interface_attachment.test", "device_index", "1"),
 					resource.TestCheckResourceAttrSet(
@@ -40,7 +40,7 @@ func TestAccAWSNetworkInterfaceAttachment_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSNetworkInterfaceAttachmentConfig_basic(rInt int) string {
+func testAccNetworkInterfaceAttachmentConfig_basic(rInt int) string {
 	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "172.16.0.0/16"

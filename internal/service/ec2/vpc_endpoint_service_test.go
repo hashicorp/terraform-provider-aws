@@ -22,14 +22,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_vpc_endpoint_service", &resource.Sweeper{
 		Name: "aws_vpc_endpoint_service",
-		F:    testSweepEc2VpcEndpointServices,
+		F:    sweepVPCEndpointServices,
 		Dependencies: []string{
 			"aws_vpc_endpoint",
 		},
 	})
 }
 
-func testSweepEc2VpcEndpointServices(region string) error {
+func sweepVPCEndpointServices(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {

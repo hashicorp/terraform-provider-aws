@@ -20,7 +20,7 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointServiceGatewayConfig,
+				Config: testAccVPCEndpointServiceGatewayDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "dynamodb"),
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
@@ -48,7 +48,7 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointServiceInterfaceConfig,
+				Config: testAccVPCEndpointServiceInterfaceDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "false"),
@@ -76,7 +76,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName),
+				Config: testAccVPCEndpointServiceCustomDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
@@ -103,7 +103,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom_filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName),
+				Config: testAccVPCEndpointServiceCustomFilterDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
@@ -130,7 +130,7 @@ func TestAccDataSourceAwsVpcEndpointService_custom_filter_tags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName),
+				Config: testAccVPCEndpointServiceCustomFilterTagsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
@@ -156,7 +156,7 @@ func TestAccDataSourceAwsVpcEndpointService_ServiceType_Gateway(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointServiceConfig_ServiceType("s3", "Gateway"),
+				Config: testAccVPCEndpointServiceDataSourceConfig_ServiceType("s3", "Gateway"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "s3"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
@@ -175,7 +175,7 @@ func TestAccDataSourceAwsVpcEndpointService_ServiceType_Interface(t *testing.T) 
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointServiceConfig_ServiceType("ec2", "Interface"),
+				Config: testAccVPCEndpointServiceDataSourceConfig_ServiceType("ec2", "Interface"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
@@ -185,7 +185,7 @@ func TestAccDataSourceAwsVpcEndpointService_ServiceType_Interface(t *testing.T) 
 	})
 }
 
-const testAccDataSourceAwsVpcEndpointServiceGatewayConfig = `
+const testAccVPCEndpointServiceGatewayDataSourceConfig = `
 data "aws_availability_zones" "available" {}
 
 data "aws_vpc_endpoint_service" "test" {
@@ -193,13 +193,13 @@ data "aws_vpc_endpoint_service" "test" {
 }
 `
 
-const testAccDataSourceAwsVpcEndpointServiceInterfaceConfig = `
+const testAccVPCEndpointServiceInterfaceDataSourceConfig = `
 data "aws_vpc_endpoint_service" "test" {
   service = "ec2"
 }
 `
 
-func testAccDataSourceAwsVpcEndpointServiceConfig_ServiceType(service string, serviceType string) string {
+func testAccVPCEndpointServiceDataSourceConfig_ServiceType(service string, serviceType string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
   service      = %[1]q
@@ -208,7 +208,7 @@ data "aws_vpc_endpoint_service" "test" {
 `, service, serviceType)
 }
 
-func testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName string) string {
+func testAccVPCEndpointServiceCustomBaseDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -279,16 +279,16 @@ resource "aws_vpc_endpoint_service" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName string) string {
-	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
+func testAccVPCEndpointServiceCustomDataSourceConfig(rName string) string {
+	return testAccVPCEndpointServiceCustomBaseDataSourceConfig(rName) + `
 data "aws_vpc_endpoint_service" "test" {
   service_name = aws_vpc_endpoint_service.test.service_name
 }
 `
 }
 
-func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName string) string {
-	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
+func testAccVPCEndpointServiceCustomFilterDataSourceConfig(rName string) string {
+	return testAccVPCEndpointServiceCustomBaseDataSourceConfig(rName) + `
 data "aws_vpc_endpoint_service" "test" {
   filter {
     name   = "service-name"
@@ -298,8 +298,8 @@ data "aws_vpc_endpoint_service" "test" {
 `
 }
 
-func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName string) string {
-	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
+func testAccVPCEndpointServiceCustomFilterTagsDataSourceConfig(rName string) string {
+	return testAccVPCEndpointServiceCustomBaseDataSourceConfig(rName) + `
 data "aws_vpc_endpoint_service" "test" {
   tags = {
     Name = aws_vpc_endpoint_service.test.tags["Name"]

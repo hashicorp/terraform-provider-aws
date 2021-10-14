@@ -11,35 +11,35 @@ import (
 func TestAccAWSEc2TransitGatewayDataSource_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DxGatewayAttachment": {
-			"Filter":                         testAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_filter,
-			"TransitGatewayIdAndDxGatewayId": testAccAWSEc2TransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGatewayId,
+			"Filter":                         testAccTransitGatewayDxGatewayAttachmentDataSource_filter,
+			"TransitGatewayIdAndDxGatewayId": testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGatewayID,
 		},
 		"Gateway": {
-			"Filter": testAccAWSEc2TransitGatewayDataSource_Filter,
-			"ID":     testAccAWSEc2TransitGatewayDataSource_ID,
+			"Filter": testAccTransitGatewayDataSource_Filter,
+			"ID":     testAccTransitGatewayDataSource_ID,
 		},
 		"PeeringAttachment": {
-			"FilterSameAccount":      testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_sameAccount,
-			"FilterDifferentAccount": testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_differentAccount,
-			"IDSameAccount":          testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_sameAccount,
-			"IDDifferentAccount":     testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_differentAccount,
-			"Tags":                   testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Tags,
+			"FilterSameAccount":      testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount,
+			"FilterDifferentAccount": testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount,
+			"IDSameAccount":          testAccTransitGatewayPeeringAttachmentDataSource_ID_sameAccount,
+			"IDDifferentAccount":     testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount,
+			"Tags":                   testAccTransitGatewayPeeringAttachmentDataSource_Tags,
 		},
 		"RouteTable": {
-			"Filter": testAccAWSEc2TransitGatewayRouteTableDataSource_Filter,
-			"ID":     testAccAWSEc2TransitGatewayRouteTableDataSource_ID,
+			"Filter": testAccTransitGatewayRouteTableDataSource_Filter,
+			"ID":     testAccTransitGatewayRouteTableDataSource_ID,
 		},
 		"RouteTables": {
-			"basic":  testAccDataSourceAwsEc2TransitGatewayRouteTables_basic,
-			"Filter": testAccDataSourceAwsEc2TransitGatewayRouteTables_Filter,
+			"basic":  testAccTransitGatewayRouteTablesDataSource_basic,
+			"Filter": testAccTransitGatewayRouteTablesDataSource_Filter,
 		},
 		"VpcAttachment": {
-			"Filter": testAccAWSEc2TransitGatewayVpcAttachmentDataSource_Filter,
-			"ID":     testAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID,
+			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,
+			"ID":     testAccTransitGatewayVPCAttachmentDataSource_ID,
 		},
 		"VpnAttachment": {
-			"Filter":                             testAccAWSEc2TransitGatewayVpnAttachmentDataSource_filter,
-			"TransitGatewayIdAndVpnConnectionId": testAccAWSEc2TransitGatewayVpnAttachmentDataSource_TransitGatewayIdAndVpnConnectionId,
+			"Filter":                             testAccTransitGatewayVPNAttachmentDataSource_filter,
+			"TransitGatewayIdAndVpnConnectionId": testAccTransitGatewayVPNAttachmentDataSource_TransitGatewayIdAndVpnConnectionID,
 		},
 	}
 
@@ -56,18 +56,18 @@ func TestAccAWSEc2TransitGatewayDataSource_serial(t *testing.T) {
 	}
 }
 
-func testAccAWSEc2TransitGatewayDataSource_Filter(t *testing.T) {
+func testAccTransitGatewayDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayDataSourceConfigFilter(),
+				Config: testAccTransitGatewayFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "amazon_side_asn", dataSourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -87,18 +87,18 @@ func testAccAWSEc2TransitGatewayDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccAWSEc2TransitGatewayDataSource_ID(t *testing.T) {
+func testAccTransitGatewayDataSource_ID(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway.test"
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayDataSourceConfigID(),
+				Config: testAccTransitGatewayIDDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "amazon_side_asn", dataSourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -118,7 +118,7 @@ func testAccAWSEc2TransitGatewayDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccAWSEc2TransitGatewayDataSourceConfigFilter() string {
+func testAccTransitGatewayFilterDataSourceConfig() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {}
 
@@ -131,7 +131,7 @@ data "aws_ec2_transit_gateway" "test" {
 `
 }
 
-func testAccAWSEc2TransitGatewayDataSourceConfigID() string {
+func testAccTransitGatewayIDDataSourceConfig() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {}
 

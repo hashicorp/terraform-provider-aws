@@ -7,7 +7,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAWSKeyPairMigrateState(t *testing.T) {
+func TestKeyPairMigrateState(t *testing.T) {
 	cases := map[string]struct {
 		StateVersion int
 		ID           string

@@ -19,23 +19,23 @@ func TestAccDataSourceAwsEbsVolumes_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsEbsVolumeIDsConfig(rInt),
+				Config: testAccEBSVolumeIDsDataSourceConfig(rInt),
 			},
 			{
-				Config: testAccDataSourceAwsEbsVolumeIDsConfigWithDataSource(rInt),
+				Config: testAccEBSVolumeIDsWithDataSourceDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ebs_volumes.subject_under_test", "ids.#", "2"),
 				),
 			},
 			{
 				// Force the destroy to not refresh the data source (leading to an error)
-				Config: testAccDataSourceAwsEbsVolumeIDsConfig(rInt),
+				Config: testAccEBSVolumeIDsDataSourceConfig(rInt),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsEbsVolumeIDsConfigWithDataSource(rInt int) string {
+func testAccEBSVolumeIDsWithDataSourceDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -44,10 +44,10 @@ data "aws_ebs_volumes" "subject_under_test" {
     TestIdentifierSet = "testAccDataSourceAwsEbsVolumes-%d"
   }
 }
-`, testAccDataSourceAwsEbsVolumeIDsConfig(rInt), rInt)
+`, testAccEBSVolumeIDsDataSourceConfig(rInt), rInt)
 }
 
-func testAccDataSourceAwsEbsVolumeIDsConfig(rInt int) string {
+func testAccEBSVolumeIDsDataSourceConfig(rInt int) string {
 	return acctest.ConfigAvailableAZsNoOptIn() + fmt.Sprintf(`
 data "aws_region" "current" {}
 

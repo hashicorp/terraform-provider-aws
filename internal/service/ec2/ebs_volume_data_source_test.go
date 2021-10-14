@@ -20,9 +20,9 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEbsVolumeDataSourceConfig,
+				Config: testAccCheckEBSVolumeDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsVolumeDataSourceID(dataSourceName),
+					testAccCheckEBSVolumeIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "size", resourceName, "size"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
@@ -45,9 +45,9 @@ func TestAccAWSEbsVolumeDataSource_multipleFilters(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters,
+				Config: testAccCheckEBSVolumeWithMultipleFiltersDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsVolumeDataSourceID(dataSourceName),
+					testAccCheckEBSVolumeIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "size", resourceName, "size"),
 					resource.TestCheckResourceAttr(dataSourceName, "volume_type", "gp2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
@@ -57,7 +57,7 @@ func TestAccAWSEbsVolumeDataSource_multipleFilters(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsEbsVolumeDataSourceID(n string) resource.TestCheckFunc {
+func testAccCheckEBSVolumeIDDataSource(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -71,7 +71,7 @@ func testAccCheckAwsEbsVolumeDataSourceID(n string) resource.TestCheckFunc {
 	}
 }
 
-var testAccCheckAwsEbsVolumeDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
+var testAccCheckEBSVolumeDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -97,7 +97,7 @@ data "aws_ebs_volume" "test" {
 }
 `
 
-var testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = acctest.ConfigAvailableAZsNoOptIn() + `
+var testAccCheckEBSVolumeWithMultipleFiltersDataSourceConfig = acctest.ConfigAvailableAZsNoOptIn() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"

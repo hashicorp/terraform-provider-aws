@@ -19,10 +19,10 @@ func TestAccDataSourceAwsRouteTables_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRouteTablesConfig(rInt),
+				Config: testAccRouteTablesDataSourceConfig(rInt),
 			},
 			{
-				Config: testAccDataSourceAwsRouteTablesConfigWithDataSource(rInt),
+				Config: testAccRouteTablesWithDataSourceDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_route_tables.test", "ids.#", "5"),
 					resource.TestCheckResourceAttr("data.aws_route_tables.private", "ids.#", "3"),
@@ -34,7 +34,7 @@ func TestAccDataSourceAwsRouteTables_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsRouteTablesConfigWithDataSource(rInt int) string {
+func testAccRouteTablesWithDataSourceDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
@@ -119,7 +119,7 @@ data "aws_route_tables" "filter_test" {
 `, rInt, rInt)
 }
 
-func testAccDataSourceAwsRouteTablesConfig(rInt int) string {
+func testAccRouteTablesDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"

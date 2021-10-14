@@ -19,11 +19,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_nat_gateway", &resource.Sweeper{
 		Name: "aws_nat_gateway",
-		F:    testSweepNatGateways,
+		F:    sweepNatGateways,
 	})
 }
 
-func testSweepNatGateways(region string) error {
+func sweepNatGateways(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

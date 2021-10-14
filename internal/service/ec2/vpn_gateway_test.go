@@ -22,14 +22,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_vpn_gateway", &resource.Sweeper{
 		Name: "aws_vpn_gateway",
-		F:    testSweepVPNGateways,
+		F:    sweepVPNGateways,
 		Dependencies: []string{
 			"aws_dx_gateway_association",
 		},
 	})
 }
 
-func testSweepVPNGateways(region string) error {
+func sweepVPNGateways(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

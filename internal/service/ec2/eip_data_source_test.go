@@ -21,7 +21,7 @@ func TestAccDataSourceAWSEIP_Filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigFilter(rName),
+				Config: testAccEIPFilterDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
@@ -42,7 +42,7 @@ func TestAccDataSourceAWSEIP_Id(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigId,
+				Config: testAccEIPIDDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
@@ -63,7 +63,7 @@ func TestAccDataSourceAWSEIP_PublicIP_EC2Classic(t *testing.T) {
 		ProviderFactories: acctest.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigPublicIpEc2Classic(),
+				Config: testAccEIPPublicIPClassicDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
@@ -84,7 +84,7 @@ func TestAccDataSourceAWSEIP_PublicIP_VPC(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigPublicIpVpc,
+				Config: testAccEIPPublicIPVPCDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
@@ -107,7 +107,7 @@ func TestAccDataSourceAWSEIP_Tags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigTags(rName),
+				Config: testAccEIPTagsDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
@@ -128,7 +128,7 @@ func TestAccDataSourceAWSEIP_NetworkInterface(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigNetworkInterface,
+				Config: testAccEIPNetworkInterfaceDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_interface_id", resourceName, "network_interface"),
@@ -151,7 +151,7 @@ func TestAccDataSourceAWSEIP_Instance(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigInstance,
+				Config: testAccEIPInstanceDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_id", resourceName, "instance"),
@@ -168,12 +168,12 @@ func TestAccDataSourceAWSEIP_CarrierIP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
 		ErrorCheck: acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigCarrierIP(rName),
+				Config: testAccEIPCarrierIPDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "carrier_ip", resourceName, "carrier_ip"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
@@ -193,7 +193,7 @@ func TestAccDataSourceAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigCustomerOwnedIpv4Pool(),
+				Config: testAccEIPCustomerOwnedIPv4PoolDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "customer_owned_ipv4_pool", dataSourceName, "customer_owned_ipv4_pool"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_owned_ip", dataSourceName, "customer_owned_ip"),
@@ -203,7 +203,7 @@ func TestAccDataSourceAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSEIPConfigCustomerOwnedIpv4Pool() string {
+func testAccEIPCustomerOwnedIPv4PoolDataSourceConfig() string {
 	return `
 data "aws_ec2_coip_pools" "test" {}
 
@@ -218,7 +218,7 @@ data "aws_eip" "test" {
 `
 }
 
-func testAccDataSourceAWSEIPConfigFilter(rName string) string {
+func testAccEIPFilterDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc = true
@@ -237,7 +237,7 @@ data "aws_eip" "test" {
 `, rName)
 }
 
-const testAccDataSourceAWSEIPConfigId = `
+const testAccEIPIDDataSourceConfig = `
 resource "aws_eip" "test" {
   vpc = true
 }
@@ -247,7 +247,7 @@ data "aws_eip" "test" {
 }
 `
 
-func testAccDataSourceAWSEIPConfigPublicIpEc2Classic() string {
+func testAccEIPPublicIPClassicDataSourceConfig() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigEC2ClassicRegionProvider(),
 		`
@@ -259,7 +259,7 @@ data "aws_eip" "test" {
 `)
 }
 
-const testAccDataSourceAWSEIPConfigPublicIpVpc = `
+const testAccEIPPublicIPVPCDataSourceConfig = `
 resource "aws_eip" "test" {
   vpc = true
 }
@@ -269,7 +269,7 @@ data "aws_eip" "test" {
 }
 `
 
-func testAccDataSourceAWSEIPConfigTags(rName string) string {
+func testAccEIPTagsDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc = true
@@ -287,7 +287,7 @@ data "aws_eip" "test" {
 `, rName)
 }
 
-const testAccDataSourceAWSEIPConfigNetworkInterface = `
+const testAccEIPNetworkInterfaceDataSourceConfig = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
@@ -318,7 +318,7 @@ data "aws_eip" "test" {
 }
 `
 
-var testAccDataSourceAWSEIPConfigInstance = acctest.ConfigCompose(
+var testAccEIPInstanceDataSourceConfig = acctest.ConfigCompose(
 	acctest.ConfigAvailableAZsNoOptInDefaultExclude(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.2.0.0/16"
@@ -362,7 +362,7 @@ data "aws_eip" "test" {
 }
 `)
 
-func testAccDataSourceAWSEIPConfigCarrierIP(rName string) string {
+func testAccEIPCarrierIPDataSourceConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAvailableAZsWavelengthZonesDefaultExcludeConfig(),
 		fmt.Sprintf(`

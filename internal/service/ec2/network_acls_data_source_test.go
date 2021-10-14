@@ -23,10 +23,10 @@ func TestAccDataSourceAwsNetworkAcls_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Ensure at least 1 network ACL exists. We cannot use depends_on.
-				Config: testAccDataSourceAwsNetworkAclsConfig_Base(rName),
+				Config: testAccNetworkACLsDataSourceConfig_Base(rName),
 			},
 			{
-				Config: testAccDataSourceAwsNetworkAclsConfig_basic(rName),
+				Config: testAccNetworkACLsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// At least 1
 					resource.TestMatchResourceAttr(dataSourceName, "ids.#", regexp.MustCompile(`^[1-9][0-9]*`)),
@@ -47,7 +47,7 @@ func TestAccDataSourceAwsNetworkAcls_Filter(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkAclsConfig_Filter(rName),
+				Config: testAccNetworkACLsDataSourceConfig_Filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 				),
@@ -67,7 +67,7 @@ func TestAccDataSourceAwsNetworkAcls_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkAclsConfig_Tags(rName),
+				Config: testAccNetworkACLsDataSourceConfig_Tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
@@ -87,7 +87,7 @@ func TestAccDataSourceAwsNetworkAcls_VpcID(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkAclsConfig_VpcID(rName),
+				Config: testAccNetworkACLsDataSourceConfig_VPCID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// The VPC will have a default network ACL
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "3"),
@@ -97,7 +97,7 @@ func TestAccDataSourceAwsNetworkAcls_VpcID(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsNetworkAclsConfig_Base(rName string) string {
+func testAccNetworkACLsDataSourceConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -119,14 +119,14 @@ resource "aws_network_acl" "acl" {
 `, rName)
 }
 
-func testAccDataSourceAwsNetworkAclsConfig_basic(rName string) string {
-	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
+func testAccNetworkACLsDataSourceConfig_basic(rName string) string {
+	return testAccNetworkACLsDataSourceConfig_Base(rName) + `
 data "aws_network_acls" "test" {}
 `
 }
 
-func testAccDataSourceAwsNetworkAclsConfig_Filter(rName string) string {
-	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
+func testAccNetworkACLsDataSourceConfig_Filter(rName string) string {
+	return testAccNetworkACLsDataSourceConfig_Base(rName) + `
 data "aws_network_acls" "test" {
   filter {
     name   = "network-acl-id"
@@ -136,8 +136,8 @@ data "aws_network_acls" "test" {
 `
 }
 
-func testAccDataSourceAwsNetworkAclsConfig_Tags(rName string) string {
-	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
+func testAccNetworkACLsDataSourceConfig_Tags(rName string) string {
+	return testAccNetworkACLsDataSourceConfig_Base(rName) + `
 data "aws_network_acls" "test" {
   tags = {
     Name = aws_network_acl.acl[0].tags.Name
@@ -146,8 +146,8 @@ data "aws_network_acls" "test" {
 `
 }
 
-func testAccDataSourceAwsNetworkAclsConfig_VpcID(rName string) string {
-	return testAccDataSourceAwsNetworkAclsConfig_Base(rName) + `
+func testAccNetworkACLsDataSourceConfig_VPCID(rName string) string {
+	return testAccNetworkACLsDataSourceConfig_Base(rName) + `
 data "aws_network_acls" "test" {
   vpc_id = aws_network_acl.acl[0].vpc_id
 }

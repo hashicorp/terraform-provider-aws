@@ -24,7 +24,7 @@ func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCustomerGatewayDataSourceConfigFilter(asn, hostOctet),
+				Config: testAccCustomerGatewayFilterDataSourceConfig(asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
 					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
@@ -51,7 +51,7 @@ func TestAccAWSCustomerGatewayDataSource_ID(t *testing.T) {
 		CheckDestroy: testAccCheckCustomerGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCustomerGatewayDataSourceConfigID(asn, hostOctet),
+				Config: testAccCustomerGatewayIDDataSourceConfig(asn, hostOctet),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
 					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
@@ -64,7 +64,7 @@ func TestAccAWSCustomerGatewayDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccAWSCustomerGatewayDataSourceConfigFilter(asn, hostOctet int) string {
+func testAccCustomerGatewayFilterDataSourceConfig(asn, hostOctet int) string {
 	name := sdkacctest.RandomWithPrefix("test-filter")
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
@@ -86,7 +86,7 @@ data "aws_customer_gateway" "test" {
 `, asn, hostOctet, name)
 }
 
-func testAccAWSCustomerGatewayDataSourceConfigID(asn, hostOctet int) string {
+func testAccCustomerGatewayIDDataSourceConfig(asn, hostOctet int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn     = %d

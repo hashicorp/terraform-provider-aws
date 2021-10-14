@@ -22,10 +22,10 @@ func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsEbsDefaultKmsKeyDestroy,
+		CheckDestroy: testAccCheckEBSDefaultKMSKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsDefaultKmsKeyConfig_basic,
+				Config: testAccEBSDefaultKMSKeyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsDefaultKmsKey(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, "arn"),
@@ -40,8 +40,8 @@ func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsEbsDefaultKmsKeyDestroy(s *terraform.State) error {
-	arn, err := testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey()
+func testAccCheckEBSDefaultKMSKeyDestroy(s *terraform.State) error {
+	arn, err := testAccEBSDefaultKMSKeyAwsManagedDefaultKey()
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		arn, err := testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey()
+		arn, err := testAccEBSDefaultKMSKeyAwsManagedDefaultKey()
 		if err != nil {
 			return err
 		}
@@ -93,8 +93,8 @@ func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
 	}
 }
 
-// testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey returns' the account's AWS-managed default CMK.
-func testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey() (*arn.ARN, error) {
+// testAccEBSDefaultKMSKeyAwsManagedDefaultKey returns' the account's AWS-managed default CMK.
+func testAccEBSDefaultKMSKeyAwsManagedDefaultKey() (*arn.ARN, error) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 
 	alias, err := tfkms.FindAliasByName(conn, "alias/aws/ebs")
@@ -118,7 +118,7 @@ func testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey() (*arn.ARN, error) {
 	return &arn, nil
 }
 
-const testAccAwsEbsDefaultKmsKeyConfig_basic = `
+const testAccEBSDefaultKMSKeyConfig_basic = `
 resource "aws_kms_key" "test" {}
 
 resource "aws_ebs_default_kms_key" "test" {

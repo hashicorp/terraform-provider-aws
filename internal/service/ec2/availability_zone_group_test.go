@@ -20,7 +20,7 @@ func TestAccAWSEc2AvailabilityZoneGroup_OptInStatus(t *testing.T) {
 	localZone := "us-west-2-lax-1" // lintignore:AWSAT003 // currently the only generally available local zone
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2AvailabilityZoneGroup(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAvailabilityZoneGroup(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: nil,
@@ -55,7 +55,7 @@ func TestAccAWSEc2AvailabilityZoneGroup_OptInStatus(t *testing.T) {
 	})
 }
 
-func testAccPreCheckAWSEc2AvailabilityZoneGroup(t *testing.T) {
+func testAccPreCheckAvailabilityZoneGroup(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	input := &ec2.DescribeAvailabilityZonesInput{

@@ -21,7 +21,7 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointConfig_gatewayBasic(rName),
+				Config: testAccVPCEndpointDataSourceConfig_gatewayBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
 					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
@@ -51,7 +51,7 @@ func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointConfig_byId(rName),
+				Config: testAccVPCEndpointDataSourceConfig_byID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
 					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
@@ -81,7 +81,7 @@ func TestAccDataSourceAwsVpcEndpoint_byFilter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointConfig_byFilter(rName),
+				Config: testAccVPCEndpointDataSourceConfig_byFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
 					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
@@ -111,7 +111,7 @@ func TestAccDataSourceAwsVpcEndpoint_byTags(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointConfig_byTags(rName),
+				Config: testAccVPCEndpointDataSourceConfig_byTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
 					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
@@ -141,7 +141,7 @@ func TestAccDataSourceAwsVpcEndpoint_gatewayWithRouteTableAndTags(t *testing.T) 
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointConfig_gatewayWithRouteTableAndTags(rName),
+				Config: testAccVPCEndpointDataSourceConfig_gatewayWithRouteTableAndTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
 					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
@@ -172,7 +172,7 @@ func TestAccDataSourceAwsVpcEndpoint_interface(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcEndpointConfig_interface(rName),
+				Config: testAccVPCEndpointDataSourceConfig_interface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Interface"),
 					resource.TestCheckNoResourceAttr(datasourceName, "prefix_list_id"),
@@ -193,7 +193,7 @@ func TestAccDataSourceAwsVpcEndpoint_interface(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsVpcEndpointConfig_gatewayBasic(rName string) string {
+func testAccVPCEndpointDataSourceConfig_gatewayBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -218,7 +218,7 @@ data "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsVpcEndpointConfig_byId(rName string) string {
+func testAccVPCEndpointDataSourceConfig_byID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -241,7 +241,7 @@ data "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsVpcEndpointConfig_byFilter(rName string) string {
+func testAccVPCEndpointDataSourceConfig_byFilter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -267,7 +267,7 @@ data "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsVpcEndpointConfig_byTags(rName string) string {
+func testAccVPCEndpointDataSourceConfig_byTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -302,7 +302,7 @@ data "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsVpcEndpointConfig_gatewayWithRouteTableAndTags(rName string) string {
+func testAccVPCEndpointDataSourceConfig_gatewayWithRouteTableAndTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -343,7 +343,7 @@ data "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsVpcEndpointConfig_interface(rName string) string {
+func testAccVPCEndpointDataSourceConfig_interface(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

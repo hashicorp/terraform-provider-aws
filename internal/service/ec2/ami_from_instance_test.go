@@ -24,12 +24,12 @@ func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
+		CheckDestroy: testAccCheckAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMIFromInstanceConfig(rName),
+				Config: testAccAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
+					testAccCheckAMIFromInstanceExists(resourceName, &image),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing Terraform aws_ami_from_instance resource"),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
@@ -53,29 +53,29 @@ func TestAccAWSAMIFromInstance_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
+		CheckDestroy: testAccCheckAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMIFromInstanceConfigTags1(rName, "key1", "value1"),
+				Config: testAccAMIFromInstanceTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
+					testAccCheckAMIFromInstanceExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccAWSAMIFromInstanceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAMIFromInstanceTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
+					testAccCheckAMIFromInstanceExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSAMIFromInstanceConfigTags1(rName, "key2", "value2"),
+				Config: testAccAMIFromInstanceTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
+					testAccCheckAMIFromInstanceExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -93,12 +93,12 @@ func TestAccAWSAMIFromInstance_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
+		CheckDestroy: testAccCheckAMIFromInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAMIFromInstanceConfig(rName),
+				Config: testAccAMIFromInstanceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
+					testAccCheckAMIFromInstanceExists(resourceName, &image),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMIFromInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -107,7 +107,7 @@ func TestAccAWSAMIFromInstance_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAMIFromInstanceExists(resourceName string, image *ec2.Image) resource.TestCheckFunc {
+func testAccCheckAMIFromInstanceExists(resourceName string, image *ec2.Image) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -138,7 +138,7 @@ func testAccCheckAWSAMIFromInstanceExists(resourceName string, image *ec2.Image)
 	}
 }
 
-func testAccCheckAWSAMIFromInstanceDestroy(s *terraform.State) error {
+func testAccCheckAMIFromInstanceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -160,10 +160,10 @@ func testAccCheckAWSAMIFromInstanceDestroy(s *terraform.State) error {
 	}
 
 	// Check for managed EBS snapshots
-	return testAccCheckAWSEbsSnapshotDestroy(s)
+	return testAccCheckEBSSnapshotDestroy(s)
 }
 
-func testAccAWSAMIFromInstanceConfigBase(rName string) string {
+func testAccAMIFromInstanceBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
@@ -179,9 +179,9 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccAWSAMIFromInstanceConfig(rName string) string {
+func testAccAMIFromInstanceConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAMIFromInstanceConfigBase(rName),
+		testAccAMIFromInstanceBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_ami_from_instance" "test" {
   name               = %[1]q
@@ -191,9 +191,9 @@ resource "aws_ami_from_instance" "test" {
 `, rName))
 }
 
-func testAccAWSAMIFromInstanceConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccAMIFromInstanceTags1Config(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAMIFromInstanceConfigBase(rName),
+		testAccAMIFromInstanceBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_ami_from_instance" "test" {
   name               = %[1]q
@@ -207,9 +207,9 @@ resource "aws_ami_from_instance" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccAWSAMIFromInstanceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAMIFromInstanceTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAMIFromInstanceConfigBase(rName),
+		testAccAMIFromInstanceBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_ami_from_instance" "test" {
   name               = %[1]q

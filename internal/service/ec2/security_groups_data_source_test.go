@@ -19,7 +19,7 @@ func TestAccDataSourceAwsSecurityGroups_tag(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSecurityGroupsConfig_tag(rInt),
+				Config: testAccSecurityGroupsDataSourceConfig_tag(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "3"),
 					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "3"),
@@ -39,7 +39,7 @@ func TestAccDataSourceAwsSecurityGroups_filter(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSecurityGroupsConfig_filter(rInt),
+				Config: testAccSecurityGroupsDataSourceConfig_filter(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "3"),
 					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "3"),
@@ -50,7 +50,7 @@ func TestAccDataSourceAwsSecurityGroups_filter(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsSecurityGroupsConfig_tag(rInt int) string {
+func testAccSecurityGroupsDataSourceConfig_tag(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test_tag" {
   cidr_block = "172.16.0.0/16"
@@ -78,7 +78,7 @@ data "aws_security_groups" "by_tag" {
 `, rInt)
 }
 
-func testAccDataSourceAwsSecurityGroupsConfig_filter(rInt int) string {
+func testAccSecurityGroupsDataSourceConfig_filter(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test_filter" {
   cidr_block = "172.16.0.0/16"

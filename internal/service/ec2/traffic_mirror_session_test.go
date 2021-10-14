@@ -29,17 +29,17 @@ func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorSession(t)
+			testAccPreCheckTrafficMirrorSession(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorSessionDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
 				Config: testAccTrafficMirrorSessionConfig(rName, session),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName, &v),
+					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
@@ -53,7 +53,7 @@ func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorSessionConfigWithOptionals(description, rName, session, pLen, vni),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName, &v),
+					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", strconv.Itoa(pLen)),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
@@ -64,7 +64,7 @@ func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorSessionConfig(rName, session),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName, &v),
+					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "packet_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
@@ -90,16 +90,16 @@ func TestAccAWSEc2TrafficMirrorSession_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorSession(t)
+			testAccPreCheckTrafficMirrorSession(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorSessionDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorSessionConfigTags1(rName, "key1", "value1", session),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName, &v),
+					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -112,7 +112,7 @@ func TestAccAWSEc2TrafficMirrorSession_tags(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorSessionConfigTags2(rName, "key1", "value1updated", "key2", "value2", session),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName, &v),
+					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -121,7 +121,7 @@ func TestAccAWSEc2TrafficMirrorSession_tags(t *testing.T) {
 			{
 				Config: testAccTrafficMirrorSessionConfigTags1(rName, "key2", "value2", session),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName, &v),
+					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -139,16 +139,16 @@ func TestAccAWSEc2TrafficMirrorSession_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSEc2TrafficMirrorSession(t)
+			testAccPreCheckTrafficMirrorSession(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TrafficMirrorSessionDestroy,
+		CheckDestroy: testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrafficMirrorSessionConfig(rName, session),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName, &v),
+					testAccCheckTrafficMirrorSessionExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorSession(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -157,7 +157,7 @@ func TestAccAWSEc2TrafficMirrorSession_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSEc2TrafficMirrorSessionExists(name string, session *ec2.TrafficMirrorSession) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorSessionExists(name string, session *ec2.TrafficMirrorSession) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -316,7 +316,7 @@ resource "aws_ec2_traffic_mirror_session" "test" {
 `, description, session, pLen, vni))
 }
 
-func testAccPreCheckAWSEc2TrafficMirrorSession(t *testing.T) {
+func testAccPreCheckTrafficMirrorSession(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	_, err := conn.DescribeTrafficMirrorSessions(&ec2.DescribeTrafficMirrorSessionsInput{})
@@ -330,7 +330,7 @@ func testAccPreCheckAWSEc2TrafficMirrorSession(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSEc2TrafficMirrorSessionDestroy(s *terraform.State) error {
+func testAccCheckTrafficMirrorSessionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {

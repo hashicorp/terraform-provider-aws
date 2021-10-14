@@ -20,14 +20,14 @@ func TestAccAwsVpcIpv4CidrBlockAssociation_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsVpcIpv4CidrBlockAssociationDestroy,
+		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsVpcIpv4CidrBlockAssociationConfig,
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsVpcIpv4CidrBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, "172.2.0.0/16"),
-					testAccCheckAwsVpcIpv4CidrBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.tertiary_cidr", &associationTertiary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.tertiary_cidr", &associationTertiary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationTertiary, "170.2.0.0/16"),
 				),
 			},
@@ -56,7 +56,7 @@ func testAccCheckAdditionalVPCIPv4CIDRBlock(association *ec2.VpcCidrBlockAssocia
 	}
 }
 
-func testAccCheckAwsVpcIpv4CidrBlockAssociationDestroy(s *terraform.State) error {
+func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
@@ -94,7 +94,7 @@ func testAccCheckAwsVpcIpv4CidrBlockAssociationDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccCheckAwsVpcIpv4CidrBlockAssociationExists(n string, association *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
+func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, association *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -134,7 +134,7 @@ func testAccCheckAwsVpcIpv4CidrBlockAssociationExists(n string, association *ec2
 	}
 }
 
-const testAccAwsVpcIpv4CidrBlockAssociationConfig = `
+const testAccVPCIPv4CIDRBlockAssociationConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 

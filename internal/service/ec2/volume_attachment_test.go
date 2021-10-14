@@ -40,7 +40,7 @@ func TestAccAWSVolumeAttachment_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -71,7 +71,7 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"skip_destroy", // attribute only used on resource deletion
@@ -137,7 +137,7 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -164,7 +164,7 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"force_detach", // attribute only used on resource deletion
@@ -181,7 +181,7 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"force_detach", // attribute only used on resource deletion
@@ -242,7 +242,7 @@ func TestAccAWSVolumeAttachment_stopInstance(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"stop_instance_before_detaching",
@@ -421,7 +421,7 @@ resource "aws_volume_attachment" "test" {
 `, detach)
 }
 
-func testAccAWSVolumeAttachmentImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccVolumeAttachmentImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

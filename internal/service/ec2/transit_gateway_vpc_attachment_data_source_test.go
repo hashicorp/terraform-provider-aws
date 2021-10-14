@@ -8,18 +8,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccAWSEc2TransitGatewayVpcAttachmentDataSource_Filter(t *testing.T) {
+func testAccTransitGatewayVPCAttachmentDataSource_Filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_vpc_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigFilter(),
+				Config: testAccTransitGatewayVPCAttachmentFilterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
@@ -35,18 +35,18 @@ func testAccAWSEc2TransitGatewayVpcAttachmentDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID(t *testing.T) {
+func testAccTransitGatewayVPCAttachmentDataSource_ID(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_vpc_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
+		CheckDestroy: testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigID(),
+				Config: testAccTransitGatewayVPCAttachmentIDDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
@@ -62,7 +62,7 @@ func testAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigFilter() string {
+func testAccTransitGatewayVPCAttachmentFilterDataSourceConfig() string {
 	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -99,7 +99,7 @@ data "aws_ec2_transit_gateway_vpc_attachment" "test" {
 `
 }
 
-func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigID() string {
+func testAccTransitGatewayVPCAttachmentIDDataSourceConfig() string {
 	return acctest.ConfigAvailableAZsNoOptInDefaultExclude() + `
 # IncorrectState: Transit Gateway is not available in availability zone usw2-az4	
 
