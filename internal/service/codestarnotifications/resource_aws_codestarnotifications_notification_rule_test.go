@@ -1,4 +1,4 @@
-package aws
+package codestarnotifications_test
 
 import (
 	"fmt"
