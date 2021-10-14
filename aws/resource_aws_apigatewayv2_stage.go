@@ -18,12 +18,12 @@ const (
 	apigatewayv2DefaultStageName = "$default"
 )
 
-func resourceAwsApiGatewayV2Stage() *schema.Resource {
+func ResourceStage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2StageCreate,
-		Read:   resourceAwsApiGatewayV2StageRead,
-		Update: resourceAwsApiGatewayV2StageUpdate,
-		Delete: resourceAwsApiGatewayV2StageDelete,
+		Create: resourceStageCreate,
+		Read:   resourceStageRead,
+		Update: resourceStageUpdate,
+		Delete: resourceStageDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2StageImport,
 		},
@@ -183,7 +183,7 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -235,10 +235,10 @@ func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(aws.StringValue(resp.StageName))
 
-	return resourceAwsApiGatewayV2StageRead(d, meta)
+	return resourceStageRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -328,7 +328,7 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
@@ -419,10 +419,10 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsApiGatewayV2StageRead(d, meta)
+	return resourceStageRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2StageDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s)", d.Id())

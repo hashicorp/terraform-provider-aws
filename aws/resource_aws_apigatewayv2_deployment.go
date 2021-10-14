@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayV2Deployment() *schema.Resource {
+func ResourceDeployment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2DeploymentCreate,
-		Read:   resourceAwsApiGatewayV2DeploymentRead,
-		Update: resourceAwsApiGatewayV2DeploymentUpdate,
-		Delete: resourceAwsApiGatewayV2DeploymentDelete,
+		Create: resourceDeploymentCreate,
+		Read:   resourceDeploymentRead,
+		Update: resourceDeploymentUpdate,
+		Delete: resourceDeploymentDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2DeploymentImport,
 		},
@@ -48,7 +48,7 @@ func resourceAwsApiGatewayV2Deployment() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2DeploymentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateDeploymentInput{
@@ -70,10 +70,10 @@ func resourceAwsApiGatewayV2DeploymentCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceAwsApiGatewayV2DeploymentRead(d, meta)
+	return resourceDeploymentRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	outputRaw, _, err := waiter.DeploymentStatus(conn, d.Get("api_id").(string), d.Id())()
@@ -93,7 +93,7 @@ func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsApiGatewayV2DeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateDeploymentInput{
@@ -114,10 +114,10 @@ func resourceAwsApiGatewayV2DeploymentUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceAwsApiGatewayV2DeploymentRead(d, meta)
+	return resourceDeploymentRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2DeploymentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 deployment (%s)", d.Id())

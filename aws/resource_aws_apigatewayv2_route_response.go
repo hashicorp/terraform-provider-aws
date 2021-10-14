@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsApiGatewayV2RouteResponse() *schema.Resource {
+func ResourceRouteResponse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2RouteResponseCreate,
-		Read:   resourceAwsApiGatewayV2RouteResponseRead,
-		Update: resourceAwsApiGatewayV2RouteResponseUpdate,
-		Delete: resourceAwsApiGatewayV2RouteResponseDelete,
+		Create: resourceRouteResponseCreate,
+		Read:   resourceRouteResponseRead,
+		Update: resourceRouteResponseUpdate,
+		Delete: resourceRouteResponseDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsApiGatewayV2RouteResponseImport,
 		},
@@ -49,7 +49,7 @@ func resourceAwsApiGatewayV2RouteResponse() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2RouteResponseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteResponseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.CreateRouteResponseInput{
@@ -72,10 +72,10 @@ func resourceAwsApiGatewayV2RouteResponseCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(resp.RouteResponseId))
 
-	return resourceAwsApiGatewayV2RouteResponseRead(d, meta)
+	return resourceRouteResponseRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2RouteResponseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteResponseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	resp, err := conn.GetRouteResponse(&apigatewayv2.GetRouteResponseInput{
@@ -101,7 +101,7 @@ func resourceAwsApiGatewayV2RouteResponseRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsApiGatewayV2RouteResponseUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteResponseUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	req := &apigatewayv2.UpdateRouteResponseInput{
@@ -125,10 +125,10 @@ func resourceAwsApiGatewayV2RouteResponseUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error updating API Gateway v2 route response: %s", err)
 	}
 
-	return resourceAwsApiGatewayV2RouteResponseRead(d, meta)
+	return resourceRouteResponseRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2RouteResponseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRouteResponseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route response (%s)", d.Id())
