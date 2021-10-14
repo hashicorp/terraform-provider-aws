@@ -23,12 +23,12 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
+		CheckDestroy: testAccCheckClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
+				Config: testAccClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test"),
 				),
@@ -39,9 +39,9 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayClientCertificateConfig_basic_updated,
+				Config: testAccClientCertificateConfig_basic_updated,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test - updated"),
 				),
@@ -58,12 +58,12 @@ func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
+		CheckDestroy: testAccCheckClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayClientCertificateConfigTags1("key1", "value1"),
+				Config: testAccClientCertificateTags1Config("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -74,18 +74,18 @@ func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayClientCertificateConfigTags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccClientCertificateTags2Config("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayClientCertificateConfigTags1("key2", "value2"),
+				Config: testAccClientCertificateTags1Config("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -102,12 +102,12 @@ func TestAccAWSAPIGatewayClientCertificate_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
+		CheckDestroy: testAccCheckClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
+				Config: testAccClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceClientCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -116,7 +116,7 @@ func TestAccAWSAPIGatewayClientCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayClientCertificateExists(n string, res *apigateway.ClientCertificate) resource.TestCheckFunc {
+func testAccCheckClientCertificateExists(n string, res *apigateway.ClientCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -143,7 +143,7 @@ func testAccCheckAWSAPIGatewayClientCertificateExists(n string, res *apigateway.
 	}
 }
 
-func testAccCheckAWSAPIGatewayClientCertificateDestroy(s *terraform.State) error {
+func testAccCheckClientCertificateDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -173,19 +173,19 @@ func testAccCheckAWSAPIGatewayClientCertificateDestroy(s *terraform.State) error
 	return nil
 }
 
-const testAccAWSAPIGatewayClientCertificateConfig_basic = `
+const testAccClientCertificateConfig_basic = `
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 }
 `
 
-const testAccAWSAPIGatewayClientCertificateConfig_basic_updated = `
+const testAccClientCertificateConfig_basic_updated = `
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test - updated"
 }
 `
 
-func testAccAWSAPIGatewayClientCertificateConfigTags1(tagKey1, tagValue1 string) string {
+func testAccClientCertificateTags1Config(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
@@ -197,7 +197,7 @@ resource "aws_api_gateway_client_certificate" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccAWSAPIGatewayClientCertificateConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClientCertificateTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"

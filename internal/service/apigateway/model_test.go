@@ -26,13 +26,13 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
+		CheckDestroy: testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayModelConfig(rName, modelName),
+				Config: testAccModelConfig(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayModelExists(resourceName, modelName, &conf),
-					testAccCheckAWSAPIGatewayModelAttributes(&conf, modelName),
+					testAccCheckModelExists(resourceName, modelName, &conf),
+					testAccCheckModelAttributes(&conf, modelName),
 					resource.TestCheckResourceAttr(
 						resourceName, "name", modelName),
 					resource.TestCheckResourceAttr(
@@ -44,7 +44,7 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayModelImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccModelImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -62,12 +62,12 @@ func TestAccAWSAPIGatewayModel_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
+		CheckDestroy: testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayModelConfig(rName, modelName),
+				Config: testAccModelConfig(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayModelExists(resourceName, modelName, &conf),
+					testAccCheckModelExists(resourceName, modelName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,7 +76,7 @@ func TestAccAWSAPIGatewayModel_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayModelAttributes(conf *apigateway.Model, name string) resource.TestCheckFunc {
+func testAccCheckModelAttributes(conf *apigateway.Model, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.Name != name {
 			return fmt.Errorf("Wrong Name: %q", *conf.Name)
@@ -92,7 +92,7 @@ func testAccCheckAWSAPIGatewayModelAttributes(conf *apigateway.Model, name strin
 	}
 }
 
-func testAccCheckAWSAPIGatewayModelExists(n, rName string, res *apigateway.Model) resource.TestCheckFunc {
+func testAccCheckModelExists(n, rName string, res *apigateway.Model) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -123,7 +123,7 @@ func testAccCheckAWSAPIGatewayModelExists(n, rName string, res *apigateway.Model
 	}
 }
 
-func testAccCheckAWSAPIGatewayModelDestroy(s *terraform.State) error {
+func testAccCheckModelDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -157,7 +157,7 @@ func testAccCheckAWSAPIGatewayModelDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayModelImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccModelImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -168,7 +168,7 @@ func testAccAWSAPIGatewayModelImportStateIdFunc(resourceName string) resource.Im
 	}
 }
 
-func testAccAWSAPIGatewayModelConfig(rName, modelName string) string {
+func testAccModelConfig(rName, modelName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

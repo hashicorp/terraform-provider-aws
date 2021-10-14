@@ -28,13 +28,13 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
+		CheckDestroy: testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayAccountConfig_updated(firstName),
+				Config: testAccAccountConfig_updated(firstName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_first),
+					testAccCheckAccountExists(resourceName, &conf),
+					testAccCheckAccountCloudWatchRoleARN(&conf, expectedRoleArn_first),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_first),
 				),
 			},
@@ -45,20 +45,20 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"cloudwatch_role_arn"},
 			},
 			{
-				Config: testAccAWSAPIGatewayAccountConfig_updated2(secondName),
+				Config: testAccAccountConfig_updated2(secondName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_second),
+					testAccCheckAccountExists(resourceName, &conf),
+					testAccCheckAccountCloudWatchRoleARN(&conf, expectedRoleArn_second),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "cloudwatch_role_arn", "iam", expectedRoleArn_second),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayAccountConfig_empty,
+				Config: testAccAccountConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
+					testAccCheckAccountExists(resourceName, &conf),
 					// This resource does not un-set the value, so this will preserve the CloudWatch role ARN setting on the
 					// deployed resource, but will be empty in the Terraform state
-					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_second),
+					testAccCheckAccountCloudWatchRoleARN(&conf, expectedRoleArn_second),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_role_arn", ""),
 				),
 			},
@@ -66,7 +66,7 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(conf *apigateway.Account, expectedArn *regexp.Regexp) resource.TestCheckFunc {
+func testAccCheckAccountCloudWatchRoleARN(conf *apigateway.Account, expectedArn *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if expectedArn == nil && conf.CloudwatchRoleArn == nil {
 			return nil
@@ -84,7 +84,7 @@ func testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(conf *apigateway.Account,
 	}
 }
 
-func testAccCheckAWSAPIGatewayAccountExists(n string, res *apigateway.Account) resource.TestCheckFunc {
+func testAccCheckAccountExists(n string, res *apigateway.Account) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -112,14 +112,14 @@ func testAccCheckAWSAPIGatewayAccountExists(n string, res *apigateway.Account) r
 	}
 }
 
-func testAccCheckAWSAPIGatewayAccountDestroy(s *terraform.State) error {
+func testAccCheckAccountDestroy(s *terraform.State) error {
 	// Intentionally noop
 	// as there is no API method for deleting or resetting account settings
 	return nil
 }
 
-// testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn checks whether a CloudWatch role ARN has been configured in the current AWS region.
-func testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t *testing.T) {
+// testAccPreCheckAccountCloudWatchRoleARN checks whether a CloudWatch role ARN has been configured in the current AWS region.
+func testAccPreCheckAccountCloudWatchRoleARN(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	output, err := conn.GetAccount(&apigateway.GetAccountInput{})
@@ -137,12 +137,12 @@ func testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t *testing.T) {
 	}
 }
 
-const testAccAWSAPIGatewayAccountConfig_empty = `
+const testAccAccountConfig_empty = `
 resource "aws_api_gateway_account" "test" {
 }
 `
 
-func testAccAWSAPIGatewayAccountConfig_updated(randName string) string {
+func testAccAccountConfig_updated(randName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_account" "test" {
   cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
@@ -196,7 +196,7 @@ EOF
 `, randName)
 }
 
-func testAccAWSAPIGatewayAccountConfig_updated2(randName string) string {
+func testAccAccountConfig_updated2(randName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_account" "test" {
   cloudwatch_role_arn = aws_iam_role.second.arn

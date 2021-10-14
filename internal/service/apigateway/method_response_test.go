@@ -24,13 +24,13 @@ func TestAccAWSAPIGatewayMethodResponse_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayMethodResponseDestroy,
+		CheckDestroy: testAccCheckMethodResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayMethodResponseConfig(rName),
+				Config: testAccMethodResponseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodResponseExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodResponseAttributes(&conf),
+					testAccCheckMethodResponseExists(resourceName, &conf),
+					testAccCheckMethodResponseAttributes(&conf),
 					resource.TestCheckResourceAttr(
 						resourceName, "status_code", "400"),
 					resource.TestCheckResourceAttr(
@@ -39,10 +39,10 @@ func TestAccAWSAPIGatewayMethodResponse_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayMethodResponseConfigUpdate(rName),
+				Config: testAccMethodResponseUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodResponseExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodResponseAttributesUpdate(&conf),
+					testAccCheckMethodResponseExists(resourceName, &conf),
+					testAccCheckMethodResponseAttributesUpdate(&conf),
 					resource.TestCheckResourceAttr(
 						resourceName, "status_code", "400"),
 					resource.TestCheckResourceAttr(
@@ -52,7 +52,7 @@ func TestAccAWSAPIGatewayMethodResponse_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodResponseImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMethodResponseImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -68,12 +68,12 @@ func TestAccAWSAPIGatewayMethodResponse_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayMethodResponseDestroy,
+		CheckDestroy: testAccCheckMethodResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayMethodResponseConfig(rName),
+				Config: testAccMethodResponseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodResponseExists(resourceName, &conf),
+					testAccCheckMethodResponseExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceMethodResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,7 +82,7 @@ func TestAccAWSAPIGatewayMethodResponse_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayMethodResponseAttributes(conf *apigateway.MethodResponse) resource.TestCheckFunc {
+func testAccCheckMethodResponseAttributes(conf *apigateway.MethodResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.StatusCode == "" {
 			return fmt.Errorf("empty StatusCode")
@@ -105,7 +105,7 @@ func testAccCheckAWSAPIGatewayMethodResponseAttributes(conf *apigateway.MethodRe
 	}
 }
 
-func testAccCheckAWSAPIGatewayMethodResponseAttributesUpdate(conf *apigateway.MethodResponse) resource.TestCheckFunc {
+func testAccCheckMethodResponseAttributesUpdate(conf *apigateway.MethodResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.StatusCode == "" {
 			return fmt.Errorf("empty StatusCode")
@@ -124,7 +124,7 @@ func testAccCheckAWSAPIGatewayMethodResponseAttributesUpdate(conf *apigateway.Me
 	}
 }
 
-func testAccCheckAWSAPIGatewayMethodResponseExists(n string, res *apigateway.MethodResponse) resource.TestCheckFunc {
+func testAccCheckMethodResponseExists(n string, res *apigateway.MethodResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -154,7 +154,7 @@ func testAccCheckAWSAPIGatewayMethodResponseExists(n string, res *apigateway.Met
 	}
 }
 
-func testAccCheckAWSAPIGatewayMethodResponseDestroy(s *terraform.State) error {
+func testAccCheckMethodResponseDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -188,7 +188,7 @@ func testAccCheckAWSAPIGatewayMethodResponseDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayMethodResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccMethodResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -199,7 +199,7 @@ func testAccAWSAPIGatewayMethodResponseImportStateIdFunc(resourceName string) re
 	}
 }
 
-func testAccAWSAPIGatewayMethodResponseConfig(rName string) string {
+func testAccMethodResponseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -239,7 +239,7 @@ resource "aws_api_gateway_method_response" "error" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayMethodResponseConfigUpdate(rName string) string {
+func testAccMethodResponseUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

@@ -78,12 +78,12 @@ func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
+		CheckDestroy: testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, acctest.ResourcePrefix),
+				Config: testAccBasePathBasePathConfig(name, key, certificate, acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
+					testAccCheckBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
 				),
 			},
 			{
@@ -108,12 +108,12 @@ func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
+		CheckDestroy: testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, ""),
+				Config: testAccBasePathBasePathConfig(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
+					testAccCheckBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
 				),
 			},
 			{
@@ -137,31 +137,31 @@ func TestAccAWSAPIGatewayBasePathMapping_updates(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
+		CheckDestroy: testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, ""),
+				Config: testAccBasePathBasePathConfig(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &confFirst),
-					testAccCheckAWSAPIGatewayBasePathStageAttribute(&confFirst, "test"),
+					testAccCheckBasePathExists(resourceName, &confFirst),
+					testAccCheckBasePathStageAttribute(&confFirst, "test"),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayBasePathConfigBasePathAltStageAndAPI(name, key, certificate, ""),
+				Config: testAccBasePathBasePathAltStageAndAPIConfig(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayBasePathBasePathAttribute(&conf, "(none)"),
-					testAccCheckAWSAPIGatewayBasePathStageAttribute(&conf, "test2"),
-					testAccCheckAWSAPIGatewayRestApiIdAttributeHasChanged(&conf, &confFirst),
+					testAccCheckBasePathExists(resourceName, &conf),
+					testAccCheckBasePathBasePathAttribute(&conf, "(none)"),
+					testAccCheckBasePathStageAttribute(&conf, "test2"),
+					testAccCheckRestAPIIdAttributeHasChanged(&conf, &confFirst),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "test2"),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayBasePathConfigBasePathAltStageAndAPI(name, key, certificate, "thing"),
+				Config: testAccBasePathBasePathAltStageAndAPIConfig(name, key, certificate, "thing"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayBasePathBasePathAttribute(&conf, "thing"),
-					testAccCheckAWSAPIGatewayBasePathStageAttribute(&conf, "test2"),
+					testAccCheckBasePathExists(resourceName, &conf),
+					testAccCheckBasePathBasePathAttribute(&conf, "thing"),
+					testAccCheckBasePathStageAttribute(&conf, "test2"),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "base_path", "thing"),
 				),
@@ -188,12 +188,12 @@ func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
+		CheckDestroy: testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, acctest.ResourcePrefix),
+				Config: testAccBasePathBasePathConfig(name, key, certificate, acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &conf),
+					testAccCheckBasePathExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceBasePathMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -202,7 +202,7 @@ func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayBasePathExists(n string, res *apigateway.BasePathMapping) resource.TestCheckFunc {
+func testAccCheckBasePathExists(n string, res *apigateway.BasePathMapping) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -235,7 +235,7 @@ func testAccCheckAWSAPIGatewayBasePathExists(n string, res *apigateway.BasePathM
 	}
 }
 
-func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFunc {
+func testAccCheckBasePathDestroy(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
@@ -269,7 +269,7 @@ func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFun
 	}
 }
 
-func testAccCheckAWSAPIGatewayBasePathStageAttribute(conf *apigateway.BasePathMapping, basePath string) resource.TestCheckFunc {
+func testAccCheckBasePathStageAttribute(conf *apigateway.BasePathMapping, basePath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.Stage == nil {
 			return fmt.Errorf("attribute Stage should not be nil")
@@ -282,7 +282,7 @@ func testAccCheckAWSAPIGatewayBasePathStageAttribute(conf *apigateway.BasePathMa
 	}
 }
 
-func testAccCheckAWSAPIGatewayRestApiIdAttributeHasChanged(conf *apigateway.BasePathMapping, previousConf *apigateway.BasePathMapping) resource.TestCheckFunc {
+func testAccCheckRestAPIIdAttributeHasChanged(conf *apigateway.BasePathMapping, previousConf *apigateway.BasePathMapping) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.RestApiId == nil {
 			return fmt.Errorf("attribute RestApiId should not be nil")
@@ -295,7 +295,7 @@ func testAccCheckAWSAPIGatewayRestApiIdAttributeHasChanged(conf *apigateway.Base
 	}
 }
 
-func testAccCheckAWSAPIGatewayBasePathBasePathAttribute(conf *apigateway.BasePathMapping, basePath string) resource.TestCheckFunc {
+func testAccCheckBasePathBasePathAttribute(conf *apigateway.BasePathMapping, basePath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.Stage == nil {
 			return fmt.Errorf("attribute Stage should not be nil")
@@ -308,7 +308,7 @@ func testAccCheckAWSAPIGatewayBasePathBasePathAttribute(conf *apigateway.BasePat
 	}
 }
 
-func testAccAWSAPIGatewayBasePathConfigBase(domainName, key, certificate string) string {
+func testAccBasePathBaseConfig(domainName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
@@ -362,8 +362,8 @@ resource "aws_api_gateway_deployment" "test" {
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccAWSAPIGatewayBasePathConfigBasePath(domainName, key, certificate, basePath string) string {
-	return testAccAWSAPIGatewayBasePathConfigBase(domainName, key, certificate) + fmt.Sprintf(`
+func testAccBasePathBasePathConfig(domainName, key, certificate, basePath string) string {
+	return testAccBasePathBaseConfig(domainName, key, certificate) + fmt.Sprintf(`
 resource "aws_api_gateway_base_path_mapping" "test" {
   api_id      = aws_api_gateway_rest_api.test.id
   base_path   = %[1]q
@@ -373,8 +373,8 @@ resource "aws_api_gateway_base_path_mapping" "test" {
 `, basePath)
 }
 
-func testAccAWSAPIGatewayBasePathConfigBasePathAltStageAndAPI(domainName, key, certificate, basePath string) string {
-	return testAccAWSAPIGatewayBasePathConfigBase(domainName, key, certificate) + fmt.Sprintf(`
+func testAccBasePathBasePathAltStageAndAPIConfig(domainName, key, certificate, basePath string) string {
+	return testAccBasePathBaseConfig(domainName, key, certificate) + fmt.Sprintf(`
 
 resource "aws_api_gateway_rest_api" "test2" {
   name        = "tf-acc-apigateway-base-path-mapping-alt"

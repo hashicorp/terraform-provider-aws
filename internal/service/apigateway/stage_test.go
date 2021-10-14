@@ -25,12 +25,12 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
+		CheckDestroy: testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayStageConfig_basic(rName),
+				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "prod"),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
@@ -45,13 +45,13 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayStageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccStageImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayStageConfig_updated(rName),
+				Config: testAccStageConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "prod"),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
@@ -63,9 +63,9 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayStageConfig_basic(rName),
+				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "prod"),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
@@ -91,18 +91,18 @@ func TestAccAWSAPIGatewayStage_disappears_ReferencingDeployment(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
+		CheckDestroy: testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayStageConfigReferencingDeployment(rName),
+				Config: testAccStageReferencingDeploymentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &stage),
+					testAccCheckStageExists(resourceName, &stage),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayStageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccStageImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -118,12 +118,12 @@ func TestAccAWSAPIGatewayStage_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
+		CheckDestroy: testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayStageConfigReferencingDeployment(rName),
+				Config: testAccStageReferencingDeploymentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &stage),
+					testAccCheckStageExists(resourceName, &stage),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -146,12 +146,12 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
+		CheckDestroy: testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayStageConfig_accessLogSettings(rName, clf),
+				Config: testAccStageConfig_accessLogSettings(rName, clf),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudwatchLogGroupResourceName, "arn"),
@@ -160,9 +160,9 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayStageConfig_accessLogSettings(rName, json),
+				Config: testAccStageConfig_accessLogSettings(rName, json),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudwatchLogGroupResourceName, "arn"),
@@ -170,9 +170,9 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayStageConfig_accessLogSettings(rName, xml),
+				Config: testAccStageConfig_accessLogSettings(rName, xml),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudwatchLogGroupResourceName, "arn"),
@@ -180,9 +180,9 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayStageConfig_accessLogSettings(rName, csv),
+				Config: testAccStageConfig_accessLogSettings(rName, csv),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudwatchLogGroupResourceName, "arn"),
@@ -190,9 +190,9 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayStageConfig_basic(rName),
+				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 				),
@@ -214,12 +214,12 @@ func TestAccAWSAPIGatewayStage_accessLogSettings_kinesis(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
+		CheckDestroy: testAccCheckStageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayStageConfig_accessLogSettingsKinesis(rName, clf),
+				Config: testAccStageConfig_accessLogSettingsKinesis(rName, clf),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "access_log_settings.0.destination_arn", "firehose", regexp.MustCompile(`deliverystream/amazon-apigateway-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", clf),
@@ -227,9 +227,9 @@ func TestAccAWSAPIGatewayStage_accessLogSettings_kinesis(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayStageConfig_accessLogSettingsKinesis(rName, json),
+				Config: testAccStageConfig_accessLogSettingsKinesis(rName, json),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "access_log_settings.0.destination_arn", "firehose", regexp.MustCompile(`deliverystream/amazon-apigateway-.+`)),
@@ -237,9 +237,9 @@ func TestAccAWSAPIGatewayStage_accessLogSettings_kinesis(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayStageConfig_accessLogSettingsKinesis(rName, xml),
+				Config: testAccStageConfig_accessLogSettingsKinesis(rName, xml),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "access_log_settings.0.destination_arn", "firehose", regexp.MustCompile(`deliverystream/amazon-apigateway-.+`)),
@@ -247,9 +247,9 @@ func TestAccAWSAPIGatewayStage_accessLogSettings_kinesis(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayStageConfig_accessLogSettingsKinesis(rName, csv),
+				Config: testAccStageConfig_accessLogSettingsKinesis(rName, csv),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "access_log_settings.0.destination_arn", "firehose", regexp.MustCompile(`deliverystream/amazon-apigateway-.+`)),
@@ -257,9 +257,9 @@ func TestAccAWSAPIGatewayStage_accessLogSettings_kinesis(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayStageConfig_basic(rName),
+				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
+					testAccCheckStageExists(resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 				),
@@ -268,7 +268,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings_kinesis(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayStageExists(n string, res *apigateway.Stage) resource.TestCheckFunc {
+func testAccCheckStageExists(n string, res *apigateway.Stage) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -296,7 +296,7 @@ func testAccCheckAWSAPIGatewayStageExists(n string, res *apigateway.Stage) resou
 	}
 }
 
-func testAccCheckAWSAPIGatewayStageDestroy(s *terraform.State) error {
+func testAccCheckStageDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -327,7 +327,7 @@ func testAccCheckAWSAPIGatewayStageDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayStageImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccStageImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -338,7 +338,7 @@ func testAccAWSAPIGatewayStageImportStateIdFunc(resourceName string) resource.Im
 	}
 }
 
-func testAccAWSAPIGatewayStageConfig_base(rName string) string {
+func testAccStageConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-%s"
@@ -395,7 +395,7 @@ resource "aws_api_gateway_deployment" "dev" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayStageConfigBaseDeploymentStageName(rName string, stageName string) string {
+func testAccStageBaseDeploymentStageNameConfig(rName string, stageName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
@@ -446,9 +446,9 @@ resource "aws_api_gateway_deployment" "test" {
 `, rName, stageName)
 }
 
-func testAccAWSAPIGatewayStageConfigReferencingDeployment(rName string) string {
+func testAccStageReferencingDeploymentConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSAPIGatewayStageConfigBaseDeploymentStageName(rName, ""),
+		testAccStageBaseDeploymentStageNameConfig(rName, ""),
 		`
 # Due to oddities with API Gateway, certain environments utilize
 # a double deployment configuration. This can cause destroy errors.
@@ -471,8 +471,8 @@ resource "aws_api_gateway_deployment" "test2" {
 `)
 }
 
-func testAccAWSAPIGatewayStageConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayStageConfig_base(rName) + `
+func testAccStageConfig_basic(rName string) string {
+	return testAccStageConfig_base(rName) + `
 resource "aws_api_gateway_stage" "test" {
   rest_api_id           = aws_api_gateway_rest_api.test.id
   stage_name            = "prod"
@@ -491,8 +491,8 @@ resource "aws_api_gateway_stage" "test" {
 `
 }
 
-func testAccAWSAPIGatewayStageConfig_updated(rName string) string {
-	return testAccAWSAPIGatewayStageConfig_base(rName) + `
+func testAccStageConfig_updated(rName string) string {
+	return testAccStageConfig_base(rName) + `
 resource "aws_api_gateway_stage" "test" {
   rest_api_id           = aws_api_gateway_rest_api.test.id
   stage_name            = "prod"
@@ -512,8 +512,8 @@ resource "aws_api_gateway_stage" "test" {
 `
 }
 
-func testAccAWSAPIGatewayStageConfig_accessLogSettings(rName string, format string) string {
-	return testAccAWSAPIGatewayStageConfig_base(rName) + fmt.Sprintf(`
+func testAccStageConfig_accessLogSettings(rName string, format string) string {
+	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = "foo-bar-%s"
 }
@@ -539,8 +539,8 @@ resource "aws_api_gateway_stage" "test" {
 `, rName, format)
 }
 
-func testAccAWSAPIGatewayStageConfig_accessLogSettingsKinesis(rName string, format string) string {
-	return testAccAWSAPIGatewayStageConfig_base(rName) + fmt.Sprintf(`
+func testAccStageConfig_accessLogSettingsKinesis(rName string, format string) string {
+	return testAccStageConfig_base(rName) + fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = "%[1]s"
   acl    = "private"

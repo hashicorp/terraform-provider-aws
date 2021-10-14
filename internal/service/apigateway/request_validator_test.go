@@ -24,36 +24,36 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
+		CheckDestroy: testAccCheckRequestValidatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRequestValidatorConfig(rName),
+				Config: testAccRequestValidatorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayRequestValidatorName(&conf, "tf-acc-test-request-validator"),
+					testAccCheckRequestValidatorExists(resourceName, &conf),
+					testAccCheckRequestValidatorName(&conf, "tf-acc-test-request-validator"),
 					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-request-validator"),
-					testAccCheckAWSAPIGatewayRequestValidatorValidateRequestBody(&conf, false),
+					testAccCheckRequestValidatorValidateRequestBody(&conf, false),
 					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "false"),
-					testAccCheckAWSAPIGatewayRequestValidatorValidateRequestParameters(&conf, false),
+					testAccCheckRequestValidatorValidateRequestParameters(&conf, false),
 					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "false"),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayRequestValidatorUpdatedConfig(rName),
+				Config: testAccRequestValidatorUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayRequestValidatorName(&conf, "tf-acc-test-request-validator_modified"),
+					testAccCheckRequestValidatorExists(resourceName, &conf),
+					testAccCheckRequestValidatorName(&conf, "tf-acc-test-request-validator_modified"),
 					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-request-validator_modified"),
-					testAccCheckAWSAPIGatewayRequestValidatorValidateRequestBody(&conf, true),
+					testAccCheckRequestValidatorValidateRequestBody(&conf, true),
 					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "true"),
-					testAccCheckAWSAPIGatewayRequestValidatorValidateRequestParameters(&conf, true),
+					testAccCheckRequestValidatorValidateRequestParameters(&conf, true),
 					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "true"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayRequestValidatorImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccRequestValidatorImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -69,12 +69,12 @@ func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
+		CheckDestroy: testAccCheckRequestValidatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRequestValidatorConfig(rName),
+				Config: testAccRequestValidatorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
+					testAccCheckRequestValidatorExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRequestValidator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,7 +83,7 @@ func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayRequestValidatorName(conf *apigateway.UpdateRequestValidatorOutput, expectedName string) resource.TestCheckFunc {
+func testAccCheckRequestValidatorName(conf *apigateway.UpdateRequestValidatorOutput, expectedName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.Name == nil {
 			return fmt.Errorf("Empty Name, expected: %q", expectedName)
@@ -95,7 +95,7 @@ func testAccCheckAWSAPIGatewayRequestValidatorName(conf *apigateway.UpdateReques
 	}
 }
 
-func testAccCheckAWSAPIGatewayRequestValidatorValidateRequestBody(conf *apigateway.UpdateRequestValidatorOutput, expectedValue bool) resource.TestCheckFunc {
+func testAccCheckRequestValidatorValidateRequestBody(conf *apigateway.UpdateRequestValidatorOutput, expectedValue bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.ValidateRequestBody == nil {
 			return fmt.Errorf("Empty ValidateRequestBody, expected: %t", expectedValue)
@@ -107,7 +107,7 @@ func testAccCheckAWSAPIGatewayRequestValidatorValidateRequestBody(conf *apigatew
 	}
 }
 
-func testAccCheckAWSAPIGatewayRequestValidatorValidateRequestParameters(conf *apigateway.UpdateRequestValidatorOutput, expectedValue bool) resource.TestCheckFunc {
+func testAccCheckRequestValidatorValidateRequestParameters(conf *apigateway.UpdateRequestValidatorOutput, expectedValue bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.ValidateRequestParameters == nil {
 			return fmt.Errorf("Empty ValidateRequestParameters, expected: %t", expectedValue)
@@ -119,7 +119,7 @@ func testAccCheckAWSAPIGatewayRequestValidatorValidateRequestParameters(conf *ap
 	}
 }
 
-func testAccCheckAWSAPIGatewayRequestValidatorExists(n string, res *apigateway.UpdateRequestValidatorOutput) resource.TestCheckFunc {
+func testAccCheckRequestValidatorExists(n string, res *apigateway.UpdateRequestValidatorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -147,7 +147,7 @@ func testAccCheckAWSAPIGatewayRequestValidatorExists(n string, res *apigateway.U
 	}
 }
 
-func testAccCheckAWSAPIGatewayRequestValidatorDestroy(s *terraform.State) error {
+func testAccCheckRequestValidatorDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -179,7 +179,7 @@ func testAccCheckAWSAPIGatewayRequestValidatorDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccAWSAPIGatewayRequestValidatorImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccRequestValidatorImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -190,7 +190,7 @@ func testAccAWSAPIGatewayRequestValidatorImportStateIdFunc(resourceName string) 
 	}
 }
 
-func testAccAWSAPIGatewayRequestValidatorConfig_base(rName string) string {
+func testAccRequestValidatorConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -198,8 +198,8 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayRequestValidatorConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSAPIGatewayRequestValidatorConfig_base(rName) + `
+func testAccRequestValidatorConfig(rName string) string {
+	return fmt.Sprintf(testAccRequestValidatorConfig_base(rName) + `
 resource "aws_api_gateway_request_validator" "test" {
   name        = "tf-acc-test-request-validator"
   rest_api_id = aws_api_gateway_rest_api.test.id
@@ -207,8 +207,8 @@ resource "aws_api_gateway_request_validator" "test" {
 `)
 }
 
-func testAccAWSAPIGatewayRequestValidatorUpdatedConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSAPIGatewayRequestValidatorConfig_base(rName) + `
+func testAccRequestValidatorUpdatedConfig(rName string) string {
+	return fmt.Sprintf(testAccRequestValidatorConfig_base(rName) + `
 resource "aws_api_gateway_request_validator" "test" {
   name                        = "tf-acc-test-request-validator_modified"
   rest_api_id                 = aws_api_gateway_rest_api.test.id

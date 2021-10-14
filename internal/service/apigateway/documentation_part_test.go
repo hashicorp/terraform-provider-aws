@@ -30,12 +30,12 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
+		CheckDestroy: testAccCheckDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
+				Config: testAccDocumentationPartConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
+					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "API"),
 					resource.TestCheckResourceAttr(resourceName, "properties", properties),
@@ -48,9 +48,9 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(uProperties)),
+				Config: testAccDocumentationPartConfig(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
+					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "API"),
 					resource.TestCheckResourceAttr(resourceName, "properties", uProperties),
@@ -75,12 +75,12 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
+		CheckDestroy: testAccCheckDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDocumentationPartMethodConfig(apiName, strconv.Quote(properties)),
+				Config: testAccDocumentationPartMethodConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
+					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "METHOD"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
@@ -95,9 +95,9 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayDocumentationPartMethodConfig(apiName, strconv.Quote(uProperties)),
+				Config: testAccDocumentationPartMethodConfig(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
+					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "METHOD"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
@@ -124,12 +124,12 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
+		CheckDestroy: testAccCheckDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDocumentationPartResponseHeaderConfig(apiName, strconv.Quote(properties)),
+				Config: testAccDocumentationPartResponseHeaderConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
+					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "RESPONSE_HEADER"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
@@ -146,9 +146,9 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayDocumentationPartResponseHeaderConfig(apiName, strconv.Quote(uProperties)),
+				Config: testAccDocumentationPartResponseHeaderConfig(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
+					testAccCheckDocumentationPartExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "RESPONSE_HEADER"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
@@ -176,12 +176,12 @@ func TestAccAWSAPIGatewayDocumentationPart_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
+		CheckDestroy: testAccCheckDocumentationPartDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
+				Config: testAccDocumentationPartConfig(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
+					testAccCheckDocumentationPartExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceDocumentationPart(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -190,7 +190,7 @@ func TestAccAWSAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayDocumentationPartExists(n string, res *apigateway.DocumentationPart) resource.TestCheckFunc {
+func testAccCheckDocumentationPartExists(n string, res *apigateway.DocumentationPart) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -223,7 +223,7 @@ func testAccCheckAWSAPIGatewayDocumentationPartExists(n string, res *apigateway.
 	}
 }
 
-func testAccCheckAWSAPIGatewayDocumentationPartDestroy(s *terraform.State) error {
+func testAccCheckDocumentationPartDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -253,7 +253,7 @@ func testAccCheckAWSAPIGatewayDocumentationPartDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccAWSAPIGatewayDocumentationPartConfig(apiName, properties string) string {
+func testAccDocumentationPartConfig(apiName, properties string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_part" "test" {
   location {
@@ -269,7 +269,7 @@ resource "aws_api_gateway_rest_api" "test" {
 `, properties, apiName)
 }
 
-func testAccAWSAPIGatewayDocumentationPartMethodConfig(apiName, properties string) string {
+func testAccDocumentationPartMethodConfig(apiName, properties string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_part" "test" {
   location {
@@ -287,7 +287,7 @@ resource "aws_api_gateway_rest_api" "test" {
 `, properties, apiName)
 }
 
-func testAccAWSAPIGatewayDocumentationPartResponseHeaderConfig(apiName, properties string) string {
+func testAccDocumentationPartResponseHeaderConfig(apiName, properties string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_part" "test" {
   location {

@@ -21,7 +21,7 @@ func TestAccDataSourceAwsApiGatewayApiKey_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsApiGatewayApiKeyConfig(rName),
+				Config: testAccAPIKeyDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName1, "id", dataSourceName1, "id"),
 					resource.TestCheckResourceAttrPair(resourceName1, "name", dataSourceName1, "name"),
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsApiGatewayApiKey_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsApiGatewayApiKeyConfig(r string) string {
+func testAccAPIKeyDataSourceConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "example_key" {
   name = "%s"

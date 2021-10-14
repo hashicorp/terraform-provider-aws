@@ -25,12 +25,12 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig(rName),
+				Config: testAccIntegrationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -49,9 +49,9 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfigUpdate(rName),
+				Config: testAccIntegrationUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -69,9 +69,9 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfigUpdateURI(rName),
+				Config: testAccIntegrationUpdateURIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de/updated"),
@@ -89,9 +89,9 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfigUpdateNoTemplates(rName),
+				Config: testAccIntegrationUpdateNoTemplatesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -105,9 +105,9 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig(rName),
+				Config: testAccIntegrationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -125,7 +125,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -141,12 +141,12 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig(rName),
+				Config: testAccIntegrationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -163,9 +163,9 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfigUpdateContentHandling(rName),
+				Config: testAccIntegrationUpdateContentHandlingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -181,9 +181,9 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfigRemoveContentHandling(rName),
+				Config: testAccIntegrationRemoveContentHandlingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -201,7 +201,7 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -217,12 +217,12 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfigCacheKeyParameters(rName),
+				Config: testAccIntegrationCacheKeyParametersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -244,7 +244,7 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -260,28 +260,28 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeInternet(rName),
+				Config: testAccIntegrationConfig_IntegrationTypeInternet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeVpcLink(rName),
+				Config: testAccIntegrationConfig_IntegrationTypeVPCLink(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestMatchResourceAttr(resourceName, "connection_id", regexp.MustCompile("^[0-9a-z]+$")),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeInternet(rName),
+				Config: testAccIntegrationConfig_IntegrationTypeInternet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 				),
@@ -289,7 +289,7 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -305,12 +305,12 @@ func TestAccAWSAPIGatewayIntegration_TlsConfig_InsecureSkipVerification(t *testi
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig_TlsConfig_InsecureSkipVerification(rName, true),
+				Config: testAccIntegrationConfig_TLSConfig_InsecureSkipVerification(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "true"),
 				),
@@ -318,13 +318,13 @@ func TestAccAWSAPIGatewayIntegration_TlsConfig_InsecureSkipVerification(t *testi
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig_TlsConfig_InsecureSkipVerification(rName, false),
+				Config: testAccIntegrationConfig_TLSConfig_InsecureSkipVerification(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "false"),
 				),
@@ -342,12 +342,12 @@ func TestAccAWSAPIGatewayIntegration_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
+		CheckDestroy: testAccCheckIntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig(rName),
+				Config: testAccIntegrationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -356,7 +356,7 @@ func TestAccAWSAPIGatewayIntegration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayIntegrationExists(n string, res *apigateway.Integration) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(n string, res *apigateway.Integration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -385,7 +385,7 @@ func testAccCheckAWSAPIGatewayIntegrationExists(n string, res *apigateway.Integr
 	}
 }
 
-func testAccCheckAWSAPIGatewayIntegrationDestroy(s *terraform.State) error {
+func testAccCheckIntegrationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -418,7 +418,7 @@ func testAccCheckAWSAPIGatewayIntegrationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayIntegrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccIntegrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -429,7 +429,7 @@ func testAccAWSAPIGatewayIntegrationImportStateIdFunc(resourceName string) resou
 	}
 }
 
-func testAccAWSAPIGatewayIntegrationConfig(rName string) string {
+func testAccIntegrationConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -476,7 +476,7 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayIntegrationConfigUpdate(rName string) string {
+func testAccIntegrationUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -524,7 +524,7 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayIntegrationConfigUpdateURI(rName string) string {
+func testAccIntegrationUpdateURIConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -572,7 +572,7 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayIntegrationConfigUpdateContentHandling(rName string) string {
+func testAccIntegrationUpdateContentHandlingConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -620,7 +620,7 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayIntegrationConfigRemoveContentHandling(rName string) string {
+func testAccIntegrationRemoveContentHandlingConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -667,7 +667,7 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayIntegrationConfigUpdateNoTemplates(rName string) string {
+func testAccIntegrationUpdateNoTemplatesConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -705,7 +705,7 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayIntegrationConfigCacheKeyParameters(rName string) string {
+func testAccIntegrationCacheKeyParametersConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -761,7 +761,7 @@ resource "aws_api_gateway_integration" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName string) string {
+func testAccIntegrationConfig_IntegrationTypeBase(rName string) string {
 	return fmt.Sprintf(`
 variable "name" {
   default = "%s"
@@ -825,8 +825,8 @@ resource "aws_api_gateway_vpc_link" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeVpcLink(rName string) string {
-	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + `
+func testAccIntegrationConfig_IntegrationTypeVPCLink(rName string) string {
+	return testAccIntegrationConfig_IntegrationTypeBase(rName) + `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   resource_id = aws_api_gateway_resource.test.id
@@ -844,8 +844,8 @@ resource "aws_api_gateway_integration" "test" {
 `
 }
 
-func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeInternet(rName string) string {
-	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + `
+func testAccIntegrationConfig_IntegrationTypeInternet(rName string) string {
+	return testAccIntegrationConfig_IntegrationTypeBase(rName) + `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   resource_id = aws_api_gateway_resource.test.id
@@ -860,7 +860,7 @@ resource "aws_api_gateway_integration" "test" {
 `
 }
 
-func testAccAWSAPIGatewayIntegrationConfig_TlsConfig_InsecureSkipVerification(rName string, insecureSkipVerification bool) string {
+func testAccIntegrationConfig_TLSConfig_InsecureSkipVerification(rName string, insecureSkipVerification bool) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q

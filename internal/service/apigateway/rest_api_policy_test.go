@@ -26,12 +26,12 @@ func TestAccAWSAPIGatewayRestApiPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
+		CheckDestroy: testAccCheckRestAPIPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
+				Config: testAccRestAPIPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
+					testAccCheckRestAPIPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"Action":"execute-api:Invoke".+`)),
 				),
 			},
@@ -41,9 +41,9 @@ func TestAccAWSAPIGatewayRestApiPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayRestApiPolicyConfigUpdated(rName),
+				Config: testAccRestAPIPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
+					testAccCheckRestAPIPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"aws:SourceIp":"123.123.123.123/32".+`))),
 			},
 		},
@@ -59,12 +59,12 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
+		CheckDestroy: testAccCheckRestAPIPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
+				Config: testAccRestAPIPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
+					testAccCheckRestAPIPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPIPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,12 +82,12 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears_restApi(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayRestApiPolicyDestroy,
+		CheckDestroy: testAccCheckRestAPIPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestApiPolicyConfig(rName),
+				Config: testAccRestAPIPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestApiPolicyExists(resourceName, &v),
+					testAccCheckRestAPIPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,7 +96,7 @@ func TestAccAWSAPIGatewayRestApiPolicy_disappears_restApi(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayRestApiPolicyExists(n string, res *apigateway.RestApi) resource.TestCheckFunc {
+func testAccCheckRestAPIPolicyExists(n string, res *apigateway.RestApi) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -137,7 +137,7 @@ func testAccCheckAWSAPIGatewayRestApiPolicyExists(n string, res *apigateway.Rest
 	}
 }
 
-func testAccCheckAWSAPIGatewayRestApiPolicyDestroy(s *terraform.State) error {
+func testAccCheckRestAPIPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -162,7 +162,7 @@ func testAccCheckAWSAPIGatewayRestApiPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayRestApiPolicyConfig(rName string) string {
+func testAccRestAPIPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
@@ -190,7 +190,7 @@ EOF
 `, rName)
 }
 
-func testAccAWSAPIGatewayRestApiPolicyConfigUpdated(rName string) string {
+func testAccRestAPIPolicyUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q

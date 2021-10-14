@@ -28,12 +28,12 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		CheckDestroy: testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(rName),
+				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_source", "method.request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -46,13 +46,13 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAuthorizerImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaUpdate(rName),
+				Config: testAccAuthorizerConfig_lambdaUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_source", "method.request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName+"_modified"),
@@ -74,10 +74,10 @@ func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		CheckDestroy: testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_cognito(rName),
+				Config: testAccAuthorizerConfig_cognito(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "COGNITO_USER_POOLS"),
@@ -87,11 +87,11 @@ func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAuthorizerImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_cognitoUpdate(rName),
+				Config: testAccAuthorizerConfig_cognitoUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "COGNITO_USER_POOLS"),
@@ -112,10 +112,10 @@ func TestAccAWSAPIGatewayAuthorizer_cognito_authorizerCredentials(t *testing.T) 
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		CheckDestroy: testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_cognitoAuthorizerCredentials(rName),
+				Config: testAccAuthorizerConfig_cognitoAuthorizerCredentials(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -126,7 +126,7 @@ func TestAccAWSAPIGatewayAuthorizer_cognito_authorizerCredentials(t *testing.T) 
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAuthorizerImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -143,10 +143,10 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		CheckDestroy: testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(rName),
+				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "TOKEN"),
@@ -157,11 +157,11 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAuthorizerImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_cognito(rName),
+				Config: testAccAuthorizerConfig_cognito(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "COGNITO_USER_POOLS"),
@@ -169,7 +169,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaUpdate(rName),
+				Config: testAccAuthorizerConfig_lambdaUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName+"_modified"),
 					resource.TestCheckResourceAttr(resourceName, "type", "TOKEN"),
@@ -190,39 +190,39 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		CheckDestroy: testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(rName),
+				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(tfapigateway.DefaultAuthorizerTTL)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAuthorizerImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaUpdate(rName),
+				Config: testAccAuthorizerConfig_lambdaUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(360)),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaNoCache(rName),
+				Config: testAccAuthorizerConfig_lambdaNoCache(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(0)),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(rName),
+				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", strconv.Itoa(tfapigateway.DefaultAuthorizerTTL)),
 				),
 			},
@@ -237,18 +237,18 @@ func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		CheckDestroy: testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationDefaultToken(rName),
+				Config:      testAccAuthorizerConfig_authTypeValidationDefaultToken(rName),
 				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is TOKEN`),
 			},
 			{
-				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationRequest(rName),
+				Config:      testAccAuthorizerConfig_authTypeValidationRequest(rName),
 				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is REQUEST`),
 			},
 			{
-				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationCognito(rName),
+				Config:      testAccAuthorizerConfig_authTypeValidationCognito(rName),
 				ExpectError: regexp.MustCompile(`provider_arns must be set non-empty when authorizer type is COGNITO_USER_POOLS`),
 			},
 		},
@@ -264,19 +264,19 @@ func TestAccAWSAPIGatewayAuthorizer_zero_ttl(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		CheckDestroy: testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaNoCache(rName),
+				Config: testAccAuthorizerConfig_lambdaNoCache(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayAuthorizerImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAuthorizerImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -292,12 +292,12 @@ func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		CheckDestroy: testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(rName),
+				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -306,7 +306,7 @@ func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayAuthorizerExists(n string, res *apigateway.Authorizer) resource.TestCheckFunc {
+func testAccCheckAuthorizerExists(n string, res *apigateway.Authorizer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -334,7 +334,7 @@ func testAccCheckAWSAPIGatewayAuthorizerExists(n string, res *apigateway.Authori
 	}
 }
 
-func testAccCheckAWSAPIGatewayAuthorizerDestroy(s *terraform.State) error {
+func testAccCheckAuthorizerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -366,7 +366,7 @@ func testAccCheckAWSAPIGatewayAuthorizerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayAuthorizerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAuthorizerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -377,7 +377,7 @@ func testAccAWSAPIGatewayAuthorizerImportStateIdFunc(resourceName string) resour
 	}
 }
 
-func testAccAWSAPIGatewayAuthorizerConfigBase(rName string) string {
+func testAccAuthorizerBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
@@ -453,8 +453,8 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayAuthorizerConfig_lambda(rName string) string {
-	return testAccAWSAPIGatewayAuthorizerConfigBase(rName) + fmt.Sprintf(`
+func testAccAuthorizerConfig_lambda(rName string) string {
+	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
   name                   = %[1]q
   rest_api_id            = aws_api_gateway_rest_api.test.id
@@ -464,8 +464,8 @@ resource "aws_api_gateway_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayAuthorizerConfig_lambdaUpdate(rName string) string {
-	return testAccAWSAPIGatewayAuthorizerConfigBase(rName) + fmt.Sprintf(`
+func testAccAuthorizerConfig_lambdaUpdate(rName string) string {
+	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
   name                             = "%[1]s_modified"
   rest_api_id                      = aws_api_gateway_rest_api.test.id
@@ -477,8 +477,8 @@ resource "aws_api_gateway_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayAuthorizerConfig_lambdaNoCache(rName string) string {
-	return testAccAWSAPIGatewayAuthorizerConfigBase(rName) + fmt.Sprintf(`
+func testAccAuthorizerConfig_lambdaNoCache(rName string) string {
+	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
   name                             = "%[1]s_modified"
   rest_api_id                      = aws_api_gateway_rest_api.test.id
@@ -490,7 +490,7 @@ resource "aws_api_gateway_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayAuthorizerConfig_cognito(rName string) string {
+func testAccAuthorizerConfig_cognito(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
@@ -510,7 +510,7 @@ resource "aws_api_gateway_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayAuthorizerConfig_cognitoUpdate(rName string) string {
+func testAccAuthorizerConfig_cognitoUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
@@ -530,7 +530,7 @@ resource "aws_api_gateway_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayAuthorizerConfig_cognitoAuthorizerCredentials(rName string) string {
+func testAccAuthorizerConfig_cognitoAuthorizerCredentials(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -573,8 +573,8 @@ resource "aws_api_gateway_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationDefaultToken(rName string) string {
-	return testAccAWSAPIGatewayAuthorizerConfigBase(rName) + fmt.Sprintf(`
+func testAccAuthorizerConfig_authTypeValidationDefaultToken(rName string) string {
+	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
   name                   = "%s"
   rest_api_id            = aws_api_gateway_rest_api.test.id
@@ -583,8 +583,8 @@ resource "aws_api_gateway_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationRequest(rName string) string {
-	return testAccAWSAPIGatewayAuthorizerConfigBase(rName) + fmt.Sprintf(`
+func testAccAuthorizerConfig_authTypeValidationRequest(rName string) string {
+	return testAccAuthorizerBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_authorizer" "test" {
   name                   = "%s"
   type                   = "REQUEST"
@@ -594,7 +594,7 @@ resource "aws_api_gateway_authorizer" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationCognito(rName string) string {
+func testAccAuthorizerConfig_authTypeValidationCognito(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q

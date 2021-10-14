@@ -24,13 +24,13 @@ func TestAccAWSAPIGatewayResource_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
+		CheckDestroy: testAccCheckResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayResourceConfig(rName),
+				Config: testAccResourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayResourceExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayResourceAttributes(&conf, "/test"),
+					testAccCheckResourceExists(resourceName, &conf),
+					testAccCheckResourceAttributes(&conf, "/test"),
 					resource.TestCheckResourceAttr(
 						resourceName, "path_part", "test"),
 					resource.TestCheckResourceAttr(
@@ -40,7 +40,7 @@ func TestAccAWSAPIGatewayResource_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccResourceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -56,13 +56,13 @@ func TestAccAWSAPIGatewayResource_update(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
+		CheckDestroy: testAccCheckResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayResourceConfig(rName),
+				Config: testAccResourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayResourceExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayResourceAttributes(&conf, "/test"),
+					testAccCheckResourceExists(resourceName, &conf),
+					testAccCheckResourceAttributes(&conf, "/test"),
 					resource.TestCheckResourceAttr(
 						resourceName, "path_part", "test"),
 					resource.TestCheckResourceAttr(
@@ -71,10 +71,10 @@ func TestAccAWSAPIGatewayResource_update(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayResourceConfig_updatePathPart(rName),
+				Config: testAccResourceConfig_updatePathPart(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayResourceExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayResourceAttributes(&conf, "/test_changed"),
+					testAccCheckResourceExists(resourceName, &conf),
+					testAccCheckResourceAttributes(&conf, "/test_changed"),
 					resource.TestCheckResourceAttr(
 						resourceName, "path_part", "test_changed"),
 					resource.TestCheckResourceAttr(
@@ -84,7 +84,7 @@ func TestAccAWSAPIGatewayResource_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayResourceImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccResourceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -100,12 +100,12 @@ func TestAccAWSAPIGatewayResource_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
+		CheckDestroy: testAccCheckResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayResourceConfig(rName),
+				Config: testAccResourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayResourceExists(resourceName, &conf),
+					testAccCheckResourceExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -114,7 +114,7 @@ func TestAccAWSAPIGatewayResource_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayResourceAttributes(conf *apigateway.Resource, path string) resource.TestCheckFunc {
+func testAccCheckResourceAttributes(conf *apigateway.Resource, path string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.Path != path {
 			return fmt.Errorf("Wrong Path: %q", *conf.Path)
@@ -124,7 +124,7 @@ func testAccCheckAWSAPIGatewayResourceAttributes(conf *apigateway.Resource, path
 	}
 }
 
-func testAccCheckAWSAPIGatewayResourceExists(n string, res *apigateway.Resource) resource.TestCheckFunc {
+func testAccCheckResourceExists(n string, res *apigateway.Resource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -156,7 +156,7 @@ func testAccCheckAWSAPIGatewayResourceExists(n string, res *apigateway.Resource)
 	}
 }
 
-func testAccCheckAWSAPIGatewayResourceDestroy(s *terraform.State) error {
+func testAccCheckResourceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -190,7 +190,7 @@ func testAccCheckAWSAPIGatewayResourceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -201,7 +201,7 @@ func testAccAWSAPIGatewayResourceImportStateIdFunc(resourceName string) resource
 	}
 }
 
-func testAccAWSAPIGatewayResourceConfig(rName string) string {
+func testAccResourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -215,7 +215,7 @@ resource "aws_api_gateway_resource" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayResourceConfig_updatePathPart(rName string) string {
+func testAccResourceConfig_updatePathPart(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

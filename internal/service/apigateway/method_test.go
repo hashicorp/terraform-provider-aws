@@ -25,13 +25,13 @@ func TestAccAWSAPIGatewayMethod_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
+		CheckDestroy: testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayMethodConfig(rInt),
+				Config: testAccMethodConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
+					testAccCheckMethodExists(resourceName, &conf),
+					testAccCheckMethodAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
@@ -40,15 +40,15 @@ func TestAccAWSAPIGatewayMethod_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 
 			{
-				Config: testAccAWSAPIGatewayMethodConfigUpdate(rInt),
+				Config: testAccMethodUpdateConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
+					testAccCheckMethodExists(resourceName, &conf),
+					testAccCheckMethodAttributesUpdate(&conf),
 				),
 			},
 		},
@@ -64,13 +64,13 @@ func TestAccAWSAPIGatewayMethod_customauthorizer(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
+		CheckDestroy: testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayMethodConfigWithCustomAuthorizer(rInt),
+				Config: testAccMethodWithCustomAuthorizerConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
+					testAccCheckMethodExists(resourceName, &conf),
+					testAccCheckMethodAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "CUSTOM"),
 					resource.TestMatchResourceAttr(resourceName, "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
@@ -80,15 +80,15 @@ func TestAccAWSAPIGatewayMethod_customauthorizer(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 
 			{
-				Config: testAccAWSAPIGatewayMethodConfigUpdate(rInt),
+				Config: testAccMethodUpdateConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
+					testAccCheckMethodExists(resourceName, &conf),
+					testAccCheckMethodAttributesUpdate(&conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 				),
@@ -106,13 +106,13 @@ func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
+		CheckDestroy: testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizer(rInt),
+				Config: testAccMethodWithCognitoAuthorizerConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
+					testAccCheckMethodExists(resourceName, &conf),
+					testAccCheckMethodAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "COGNITO_USER_POOLS"),
 					resource.TestMatchResourceAttr(resourceName, "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
@@ -122,10 +122,10 @@ func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizerUpdate(rInt),
+				Config: testAccMethodWithCognitoAuthorizerUpdateConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
+					testAccCheckMethodExists(resourceName, &conf),
+					testAccCheckMethodAttributesUpdate(&conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "COGNITO_USER_POOLS"),
 					resource.TestMatchResourceAttr(resourceName, "authorizer_id", regexp.MustCompile("^[a-z0-9]{6}$")),
 					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
@@ -135,7 +135,7 @@ func TestAccAWSAPIGatewayMethod_cognitoauthorizer(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -151,13 +151,13 @@ func TestAccAWSAPIGatewayMethod_customrequestvalidator(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
+		CheckDestroy: testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayMethodConfigWithCustomRequestValidator(rInt),
+				Config: testAccMethodWithCustomRequestValidatorConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
+					testAccCheckMethodExists(resourceName, &conf),
+					testAccCheckMethodAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
@@ -167,15 +167,15 @@ func TestAccAWSAPIGatewayMethod_customrequestvalidator(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 
 			{
-				Config: testAccAWSAPIGatewayMethodConfigWithCustomRequestValidatorUpdate(rInt),
+				Config: testAccMethodWithCustomRequestValidatorUpdateConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
+					testAccCheckMethodExists(resourceName, &conf),
+					testAccCheckMethodAttributesUpdate(&conf),
 					resource.TestCheckResourceAttr(resourceName, "request_validator_id", ""),
 				),
 			},
@@ -192,12 +192,12 @@ func TestAccAWSAPIGatewayMethod_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
+		CheckDestroy: testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayMethodConfig(rInt),
+				Config: testAccMethodConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
+					testAccCheckMethodExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceMethod(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -215,25 +215,25 @@ func TestAccAWSAPIGatewayMethod_OperationName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
+		CheckDestroy: testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayMethodConfigOperationName(rInt, "getTest"),
+				Config: testAccMethodOperationNameConfig(rInt, "getTest"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
+					testAccCheckMethodExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", "getTest"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayMethodConfigOperationName(rInt, "describeTest"),
+				Config: testAccMethodOperationNameConfig(rInt, "describeTest"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
+					testAccCheckMethodExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", "describeTest"),
 				),
 			},
@@ -241,7 +241,7 @@ func TestAccAWSAPIGatewayMethod_OperationName(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayMethodAttributes(conf *apigateway.Method) resource.TestCheckFunc {
+func testAccCheckMethodAttributes(conf *apigateway.Method) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.HttpMethod != "GET" {
 			return fmt.Errorf("Wrong HttpMethod: %q", *conf.HttpMethod)
@@ -269,7 +269,7 @@ func testAccCheckAWSAPIGatewayMethodAttributes(conf *apigateway.Method) resource
 	}
 }
 
-func testAccCheckAWSAPIGatewayMethodAttributesUpdate(conf *apigateway.Method) resource.TestCheckFunc {
+func testAccCheckMethodAttributesUpdate(conf *apigateway.Method) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.HttpMethod != "GET" {
 			return fmt.Errorf("Wrong HttpMethod: %q", *conf.HttpMethod)
@@ -289,7 +289,7 @@ func testAccCheckAWSAPIGatewayMethodAttributesUpdate(conf *apigateway.Method) re
 	}
 }
 
-func testAccCheckAWSAPIGatewayMethodExists(n string, res *apigateway.Method) resource.TestCheckFunc {
+func testAccCheckMethodExists(n string, res *apigateway.Method) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -318,7 +318,7 @@ func testAccCheckAWSAPIGatewayMethodExists(n string, res *apigateway.Method) res
 	}
 }
 
-func testAccCheckAWSAPIGatewayMethodDestroy(s *terraform.State) error {
+func testAccCheckMethodDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -351,7 +351,7 @@ func testAccCheckAWSAPIGatewayMethodDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccMethodImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -362,7 +362,7 @@ func testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName string) resource.I
 	}
 }
 
-func testAccAWSAPIGatewayMethodConfigWithCustomAuthorizer(rInt int) string {
+func testAccMethodWithCustomAuthorizerConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-custom-auth-%d"
@@ -468,7 +468,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt, rInt, rInt, rInt, rInt)
 }
 
-func testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizer(rInt int) string {
+func testAccMethodWithCognitoAuthorizerConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-cognito-auth-%d"
@@ -553,7 +553,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt, rInt, rInt, rInt)
 }
 
-func testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizerUpdate(rInt int) string {
+func testAccMethodWithCognitoAuthorizerUpdateConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-cognito-auth-%d"
@@ -637,7 +637,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt, rInt, rInt, rInt)
 }
 
-func testAccAWSAPIGatewayMethodConfig(rInt int) string {
+func testAccMethodConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-%d"
@@ -667,7 +667,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt)
 }
 
-func testAccAWSAPIGatewayMethodConfigUpdate(rInt int) string {
+func testAccMethodUpdateConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-%d"
@@ -696,7 +696,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt)
 }
 
-func testAccAWSAPIGatewayMethodConfigWithCustomRequestValidator(rInt int) string {
+func testAccMethodWithCustomRequestValidatorConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-custom-req-validator-%d"
@@ -734,7 +734,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt)
 }
 
-func testAccAWSAPIGatewayMethodConfigWithCustomRequestValidatorUpdate(rInt int) string {
+func testAccMethodWithCustomRequestValidatorUpdateConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-custom-req-validator-%d"
@@ -769,7 +769,7 @@ resource "aws_api_gateway_method" "test" {
 `, rInt)
 }
 
-func testAccAWSAPIGatewayMethodConfigOperationName(rInt int, operationName string) string {
+func testAccMethodOperationNameConfig(rInt int, operationName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "tf-acc-test-apig-method-custom-op-name-%[1]d"
