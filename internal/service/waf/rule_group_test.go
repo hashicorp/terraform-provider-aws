@@ -105,7 +105,7 @@ func sweepRuleGroups(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafRuleGroup_basic(t *testing.T) {
+func TestAccWAFRuleGroup_basic(t *testing.T) {
 	var rule waf.Rule
 	var group waf.RuleGroup
 	var idx int
@@ -146,7 +146,7 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRuleGroup_changeNameForceNew(t *testing.T) {
+func TestAccWAFRuleGroup_changeNameForceNew(t *testing.T) {
 	var before, after waf.RuleGroup
 
 	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
@@ -187,7 +187,7 @@ func TestAccAWSWafRuleGroup_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRuleGroup_disappears(t *testing.T) {
+func TestAccWAFRuleGroup_disappears(t *testing.T) {
 	var group waf.RuleGroup
 	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
@@ -211,7 +211,7 @@ func TestAccAWSWafRuleGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
+func TestAccWAFRuleGroup_changeActivatedRules(t *testing.T) {
 	var rule0, rule1, rule2, rule3 waf.Rule
 	var groupBefore, groupAfter waf.RuleGroup
 	var idx0, idx1, idx2, idx3 int
@@ -308,7 +308,7 @@ func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority 
 	}
 }
 
-func TestAccAWSWafRuleGroup_Tags(t *testing.T) {
+func TestAccWAFRuleGroup_tags(t *testing.T) {
 	var group waf.RuleGroup
 	groupName := fmt.Sprintf("test%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule_group.test"
@@ -359,7 +359,7 @@ func TestAccAWSWafRuleGroup_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
+func TestAccWAFRuleGroup_noActivatedRules(t *testing.T) {
 	var group waf.RuleGroup
 	groupName := fmt.Sprintf("test%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule_group.test"

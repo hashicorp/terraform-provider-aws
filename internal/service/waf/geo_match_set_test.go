@@ -106,7 +106,7 @@ func sweepGeoMatchSet(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
+func TestAccWAFGeoMatchSet_basic(t *testing.T) {
 	var v waf.GeoMatchSet
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
@@ -143,7 +143,7 @@ func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafGeoMatchSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFGeoMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.GeoMatchSet
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	geoMatchSetNewName := fmt.Sprintf("geoMatchSetNewName-%s", sdkacctest.RandString(5))
@@ -180,7 +180,7 @@ func TestAccAWSWafGeoMatchSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafGeoMatchSet_disappears(t *testing.T) {
+func TestAccWAFGeoMatchSet_disappears(t *testing.T) {
 	var v waf.GeoMatchSet
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
@@ -203,7 +203,7 @@ func TestAccAWSWafGeoMatchSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafGeoMatchSet_changeConstraints(t *testing.T) {
+func TestAccWAFGeoMatchSet_changeConstraints(t *testing.T) {
 	var before, after waf.GeoMatchSet
 	setName := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
@@ -255,7 +255,7 @@ func TestAccAWSWafGeoMatchSet_changeConstraints(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafGeoMatchSet_noConstraints(t *testing.T) {
+func TestAccWAFGeoMatchSet_noConstraints(t *testing.T) {
 	var ipset waf.GeoMatchSet
 	setName := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"

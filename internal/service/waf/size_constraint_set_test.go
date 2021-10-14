@@ -106,7 +106,7 @@ func sweepSizeConstraintSet(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafSizeConstraintSet_basic(t *testing.T) {
+func TestAccWAFSizeConstraintSet_basic(t *testing.T) {
 	var v waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
@@ -145,7 +145,7 @@ func TestAccAWSWafSizeConstraintSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafSizeConstraintSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
@@ -182,7 +182,7 @@ func TestAccAWSWafSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafSizeConstraintSet_disappears(t *testing.T) {
+func TestAccWAFSizeConstraintSet_disappears(t *testing.T) {
 	var v waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
@@ -205,7 +205,7 @@ func TestAccAWSWafSizeConstraintSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafSizeConstraintSet_changeConstraints(t *testing.T) {
+func TestAccWAFSizeConstraintSet_changeConstraints(t *testing.T) {
 	var before, after waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
@@ -261,7 +261,7 @@ func TestAccAWSWafSizeConstraintSet_changeConstraints(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafSizeConstraintSet_noConstraints(t *testing.T) {
+func TestAccWAFSizeConstraintSet_noConstraints(t *testing.T) {
 	var contraints waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"

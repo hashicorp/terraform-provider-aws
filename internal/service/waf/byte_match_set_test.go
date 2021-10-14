@@ -105,7 +105,7 @@ func sweepByteMatchSet(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafByteMatchSet_basic(t *testing.T) {
+func TestAccWAFByteMatchSet_basic(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
@@ -149,7 +149,7 @@ func TestAccAWSWafByteMatchSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafByteMatchSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFByteMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
@@ -186,7 +186,7 @@ func TestAccAWSWafByteMatchSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafByteMatchSet_changeTuples(t *testing.T) {
+func TestAccWAFByteMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
@@ -254,7 +254,7 @@ func TestAccAWSWafByteMatchSet_changeTuples(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafByteMatchSet_noTuples(t *testing.T) {
+func TestAccWAFByteMatchSet_noTuples(t *testing.T) {
 	var byteSet waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"
@@ -282,7 +282,7 @@ func TestAccAWSWafByteMatchSet_noTuples(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafByteMatchSet_disappears(t *testing.T) {
+func TestAccWAFByteMatchSet_disappears(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_byte_match_set.byte_set"

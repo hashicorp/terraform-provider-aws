@@ -109,7 +109,7 @@ func sweepIPSet(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafIPSet_basic(t *testing.T) {
+func TestAccWAFIPSet_basic(t *testing.T) {
 	var v waf.IPSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
@@ -141,7 +141,7 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafIPSet_disappears(t *testing.T) {
+func TestAccWAFIPSet_disappears(t *testing.T) {
 	var v waf.IPSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
@@ -164,7 +164,7 @@ func TestAccAWSWafIPSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafIPSet_changeNameForceNew(t *testing.T) {
+func TestAccWAFIPSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.IPSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	uName := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -207,7 +207,7 @@ func TestAccAWSWafIPSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafIPSet_changeDescriptors(t *testing.T) {
+func TestAccWAFIPSet_changeDescriptors(t *testing.T) {
 	var before, after waf.IPSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
@@ -251,7 +251,7 @@ func TestAccAWSWafIPSet_changeDescriptors(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafIPSet_noDescriptors(t *testing.T) {
+func TestAccWAFIPSet_noDescriptors(t *testing.T) {
 	var ipset waf.IPSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
@@ -279,7 +279,7 @@ func TestAccAWSWafIPSet_noDescriptors(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
+func TestAccWAFIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 	var ipset waf.IPSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"
@@ -430,7 +430,7 @@ func TestDiffWafIpSetDescriptors(t *testing.T) {
 	}
 }
 
-func TestAccAWSWafIPSet_ipv6(t *testing.T) {
+func TestAccWAFIPSet_ipv6(t *testing.T) {
 	var v waf.IPSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_ipset.test"

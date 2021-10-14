@@ -109,7 +109,7 @@ func sweepRules(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSWafRule_basic(t *testing.T) {
+func TestAccWAFRule_basic(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
@@ -138,7 +138,7 @@ func TestAccAWSWafRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRule_changeNameForceNew(t *testing.T) {
+func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 	var before, after waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
@@ -172,7 +172,7 @@ func TestAccAWSWafRule_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRule_disappears(t *testing.T) {
+func TestAccWAFRule_disappears(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
@@ -195,7 +195,7 @@ func TestAccAWSWafRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRule_changePredicates(t *testing.T) {
+func TestAccWAFRule_changePredicates(t *testing.T) {
 	var ipset waf.IPSet
 	var byteMatchSet waf.ByteMatchSet
 
@@ -239,7 +239,7 @@ func TestAccAWSWafRule_changePredicates(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRule_geoMatchSetPredicate(t *testing.T) {
+func TestAccWAFRule_geoMatchSetPredicate(t *testing.T) {
 	var geoMatchSet waf.GeoMatchSet
 
 	var v waf.Rule
@@ -269,9 +269,9 @@ func TestAccAWSWafRule_geoMatchSetPredicate(t *testing.T) {
 	})
 }
 
-// TestAccAWSWafRule_webACL validates the resource's
+// TestAccWAFRule_webACL validates the resource's
 // retry behavior when removed from a WebACL
-func TestAccAWSWafRule_webACL(t *testing.T) {
+func TestAccWAFRule_webACL(t *testing.T) {
 	var rule waf.Rule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_rule.test"
@@ -295,7 +295,7 @@ func TestAccAWSWafRule_webACL(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRule_noPredicates(t *testing.T) {
+func TestAccWAFRule_noPredicates(t *testing.T) {
 	var rule waf.Rule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
@@ -318,7 +318,7 @@ func TestAccAWSWafRule_noPredicates(t *testing.T) {
 	})
 }
 
-func TestAccAWSWafRule_Tags(t *testing.T) {
+func TestAccWAFRule_tags(t *testing.T) {
 	var rule waf.Rule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
