@@ -114,7 +114,7 @@ func TestAccAWSWafRule_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,7 +145,7 @@ func TestAccAWSWafRule_changeNameForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,14 +178,14 @@ func TestAccAWSWafRule_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRuleExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafRule(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsWafRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -204,7 +204,7 @@ func TestAccAWSWafRule_changePredicates(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -247,7 +247,7 @@ func TestAccAWSWafRule_geoMatchSetPredicate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -271,13 +271,13 @@ func TestAccAWSWafRule_geoMatchSetPredicate(t *testing.T) {
 // retry behavior when removed from a WebACL
 func TestAccAWSWafRule_webACL(t *testing.T) {
 	var rule waf.Rule
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -301,7 +301,7 @@ func TestAccAWSWafRule_noPredicates(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -324,7 +324,7 @@ func TestAccAWSWafRule_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -376,7 +376,7 @@ func testAccCheckAWSWafRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafconn
 		resp, err := conn.GetRule(
 			&waf.GetRuleInput{
 				RuleId: aws.String(rs.Primary.ID),
@@ -409,7 +409,7 @@ func testAccCheckAWSWafRuleExists(n string, v *waf.Rule) resource.TestCheckFunc 
 			return fmt.Errorf("No WAF Rule ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafconn
 		resp, err := conn.GetRule(&waf.GetRuleInput{
 			RuleId: aws.String(rs.Primary.ID),
 		})
@@ -428,7 +428,7 @@ func testAccCheckAWSWafRuleExists(n string, v *waf.Rule) resource.TestCheckFunc 
 }
 
 func testAccPreCheckAWSWaf(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).wafconn
+	conn := acctest.Provider.Meta().(*AWSClient).wafconn
 
 	input := &waf.ListRulesInput{}
 

@@ -114,7 +114,7 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -154,7 +154,7 @@ func TestAccAWSWafRuleGroup_changeNameForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -193,7 +193,7 @@ func TestAccAWSWafRuleGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -222,7 +222,7 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -313,7 +313,7 @@ func TestAccAWSWafRuleGroup_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -364,7 +364,7 @@ func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -381,7 +381,7 @@ func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
 
 func testAccCheckAWSWafRuleGroupDisappears(group *waf.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafconn
 
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
@@ -431,7 +431,7 @@ func testAccCheckAWSWafRuleGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafconn
 		resp, err := conn.GetRuleGroup(&waf.GetRuleGroupInput{
 			RuleGroupId: aws.String(rs.Primary.ID),
 		})
@@ -463,7 +463,7 @@ func testAccCheckAWSWafRuleGroupExists(n string, group *waf.RuleGroup) resource.
 			return fmt.Errorf("No WAF Rule Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafconn
 		resp, err := conn.GetRuleGroup(&waf.GetRuleGroupInput{
 			RuleGroupId: aws.String(rs.Primary.ID),
 		})

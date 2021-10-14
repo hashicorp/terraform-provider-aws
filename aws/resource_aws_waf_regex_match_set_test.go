@@ -138,7 +138,7 @@ func testAccAWSWafRegexMatchSet_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -179,7 +179,7 @@ func testAccAWSWafRegexMatchSet_changePatterns(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -231,7 +231,7 @@ func testAccAWSWafRegexMatchSet_noPatterns(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -260,7 +260,7 @@ func testAccAWSWafRegexMatchSet_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSWaf(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -291,7 +291,7 @@ func computeWafRegexMatchSetTuple(patternSet *waf.RegexPatternSet, fieldToMatch 
 
 func testAccCheckAWSWafRegexMatchSetDisappears(set *waf.RegexMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafconn
 
 		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -339,7 +339,7 @@ func testAccCheckAWSWafRegexMatchSetExists(n string, v *waf.RegexMatchSet) resou
 			return fmt.Errorf("No WAF Regex Match Set ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafconn
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -363,7 +363,7 @@ func testAccCheckAWSWafRegexMatchSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := acctest.Provider.Meta().(*AWSClient).wafconn
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: aws.String(rs.Primary.ID),
 		})

@@ -12,14 +12,14 @@ import (
 )
 
 func TestAccDataSourceAwsWafRule_basic(t *testing.T) {
-	name := sdkacctest.RandomWithPrefix("tf-acc-test")
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_rule.wafrule"
 	datasourceName := "data.aws_waf_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(waf.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, waf.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWafRuleConfig_NonExistent,
