@@ -316,7 +316,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("function_response_types"); ok && v.(*schema.Set).Len() > 0 {
-		input.FunctionResponseTypes = expandStringSet(v.(*schema.Set))
+		input.FunctionResponseTypes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
@@ -336,7 +336,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("queues"); ok && v.(*schema.Set).Len() > 0 {
-		input.Queues = expandStringSet(v.(*schema.Set))
+		input.Queues = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("self_managed_event_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -360,7 +360,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("topics"); ok && v.(*schema.Set).Len() > 0 {
-		input.Topics = expandStringSet(v.(*schema.Set))
+		input.Topics = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tumbling_window_in_seconds"); ok {
@@ -523,7 +523,7 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("function_response_types") {
-		input.FunctionResponseTypes = expandStringSet(d.Get("function_response_types").(*schema.Set))
+		input.FunctionResponseTypes = flex.ExpandStringSet(d.Get("function_response_types").(*schema.Set))
 	}
 
 	if d.HasChange("maximum_batching_window_in_seconds") {

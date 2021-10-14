@@ -144,10 +144,10 @@ func dataSourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("version", output.Version); err != nil {
 		return fmt.Errorf("error setting lambda layer version: %w", err)
 	}
-	if err := d.Set("compatible_runtimes", flattenStringList(output.CompatibleRuntimes)); err != nil {
+	if err := d.Set("compatible_runtimes", flex.FlattenStringList(output.CompatibleRuntimes)); err != nil {
 		return fmt.Errorf("error setting lambda layer compatible runtimes: %w", err)
 	}
-	if err := d.Set("compatible_architectures", flattenStringList(output.CompatibleArchitectures)); err != nil {
+	if err := d.Set("compatible_architectures", flex.FlattenStringList(output.CompatibleArchitectures)); err != nil {
 		return fmt.Errorf("Error setting lambda layer compatible architectures: %w", err)
 	}
 	if err := d.Set("description", output.Description); err != nil {

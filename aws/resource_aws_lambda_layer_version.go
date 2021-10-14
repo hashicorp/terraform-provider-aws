@@ -173,11 +173,11 @@ func resourceAwsLambdaLayerVersionPublish(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("compatible_runtimes"); ok && v.(*schema.Set).Len() > 0 {
-		params.CompatibleRuntimes = expandStringSet(v.(*schema.Set))
+		params.CompatibleRuntimes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("compatible_architectures"); ok && v.(*schema.Set).Len() > 0 {
-		params.CompatibleArchitectures = expandStringSet(v.(*schema.Set))
+		params.CompatibleArchitectures = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Publishing Lambda layer: %s", params)
@@ -246,11 +246,11 @@ func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("source_code_size", layerVersion.Content.CodeSize); err != nil {
 		return fmt.Errorf("Error setting lambda layer source code size: %s", err)
 	}
-	if err := d.Set("compatible_runtimes", flattenStringList(layerVersion.CompatibleRuntimes)); err != nil {
+	if err := d.Set("compatible_runtimes", flex.FlattenStringList(layerVersion.CompatibleRuntimes)); err != nil {
 		return fmt.Errorf("Error setting lambda layer compatible runtimes: %s", err)
 	}
 
-	if err := d.Set("compatible_architectures", flattenStringList(layerVersion.CompatibleArchitectures)); err != nil {
+	if err := d.Set("compatible_architectures", flex.FlattenStringList(layerVersion.CompatibleArchitectures)); err != nil {
 		return fmt.Errorf("Error setting lambda layer compatible architectures: %s", err)
 	}
 
