@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSIdentityStoreGroupDataSource_DisplayName(t *testing.T) {
@@ -137,7 +138,7 @@ data "aws_identitystore_group" "test" {
 `
 
 func testAccPreCheckAWSSSOAdminInstances(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).ssoadminconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
 	var instances []*ssoadmin.InstanceMetadata
 	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
