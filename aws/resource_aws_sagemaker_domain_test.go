@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func testSweepSagemakerDomains(region string) error {
 	err = conn.ListDomainsPages(&sagemaker.ListDomainsInput{}, func(page *sagemaker.ListDomainsOutput, lastPage bool) bool {
 		for _, domain := range page.Domains {
 
-			r := resourceAwsSagemakerDomain()
+			r := ResourceDomain()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domain.DomainId))
 			d.Set("retention_policy.0.home_efs_file_system", "Delete")
@@ -461,7 +462,7 @@ func testAccAWSSagemakerDomain_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerDomain(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

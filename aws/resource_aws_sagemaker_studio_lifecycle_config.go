@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerStudioLifecycleConfig() *schema.Resource {
+func ResourceStudioLifecycleConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerStudioLifecycleConfigCreate,
-		Read:   resourceAwsSagemakerStudioLifecycleConfigRead,
-		Update: resourceAwsSagemakerStudioLifecycleConfigUpdate,
-		Delete: resourceAwsSagemakerStudioLifecycleConfigDelete,
+		Create: resourceStudioLifecycleConfigCreate,
+		Read:   resourceStudioLifecycleConfigRead,
+		Update: resourceStudioLifecycleConfigUpdate,
+		Delete: resourceStudioLifecycleConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -60,7 +60,7 @@ func resourceAwsSagemakerStudioLifecycleConfig() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerStudioLifecycleConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStudioLifecycleConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -85,10 +85,10 @@ func resourceAwsSagemakerStudioLifecycleConfigCreate(d *schema.ResourceData, met
 
 	d.SetId(name)
 
-	return resourceAwsSagemakerStudioLifecycleConfigRead(d, meta)
+	return resourceStudioLifecycleConfigRead(d, meta)
 }
 
-func resourceAwsSagemakerStudioLifecycleConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStudioLifecycleConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -131,7 +131,7 @@ func resourceAwsSagemakerStudioLifecycleConfigRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsSagemakerStudioLifecycleConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStudioLifecycleConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
@@ -142,10 +142,10 @@ func resourceAwsSagemakerStudioLifecycleConfigUpdate(d *schema.ResourceData, met
 		}
 	}
 
-	return resourceAwsSagemakerStudioLifecycleConfigRead(d, meta)
+	return resourceStudioLifecycleConfigRead(d, meta)
 }
 
-func resourceAwsSagemakerStudioLifecycleConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStudioLifecycleConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteStudioLifecycleConfigInput{

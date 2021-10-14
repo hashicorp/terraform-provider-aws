@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerEndpoint() *schema.Resource {
+func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerEndpointCreate,
-		Read:   resourceAwsSagemakerEndpointRead,
-		Update: resourceAwsSagemakerEndpointUpdate,
-		Delete: resourceAwsSagemakerEndpointDelete,
+		Create: resourceEndpointCreate,
+		Read:   resourceEndpointRead,
+		Update: resourceEndpointUpdate,
+		Delete: resourceEndpointDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,7 +50,7 @@ func resourceAwsSagemakerEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -87,10 +87,10 @@ func resourceAwsSagemakerEndpointCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error waiting for SageMaker Endpoint (%s) to be in service: %s", name, err)
 	}
 
-	return resourceAwsSagemakerEndpointRead(d, meta)
+	return resourceEndpointRead(d, meta)
 }
 
-func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -144,7 +144,7 @@ func resourceAwsSagemakerEndpointRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSagemakerEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
@@ -176,10 +176,10 @@ func resourceAwsSagemakerEndpointUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsSagemakerEndpointRead(d, meta)
+	return resourceEndpointRead(d, meta)
 }
 
-func resourceAwsSagemakerEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	deleteEndpointOpts := &sagemaker.DeleteEndpointInput{

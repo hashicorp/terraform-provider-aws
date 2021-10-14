@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -35,7 +36,7 @@ func testSweepSagemakerHumanTaskUis(region string) error {
 	err = conn.ListHumanTaskUisPages(&sagemaker.ListHumanTaskUisInput{}, func(page *sagemaker.ListHumanTaskUisOutput, lastPage bool) bool {
 		for _, humanTaskUi := range page.HumanTaskUiSummaries {
 
-			r := resourceAwsSagemakerHumanTaskUi()
+			r := ResourceHumanTaskUI()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(humanTaskUi.HumanTaskUiName))
 			err := r.Delete(d, client)
@@ -153,7 +154,7 @@ func TestAccAWSSagemakerHumanTaskUi_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerHumanTaskUiCognitoBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerHumanTaskUiExists(resourceName, &humanTaskUi),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerHumanTaskUi(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceHumanTaskUI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSagemakerModelPackageGroupPolicy_basic(t *testing.T) {
@@ -56,8 +57,8 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerModelPackageGroupPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupPolicyExists(resourceName, &mpg),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerModelPackageGroupPolicy(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerModelPackageGroupPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroupPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroupPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,8 +81,8 @@ func TestAccAWSSagemakerModelPackageGroupPolicy_disappears_modelPackageGroup(t *
 				Config: testAccAWSSagemakerModelPackageGroupPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerModelPackageGroupPolicyExists(resourceName, &mpg),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerModelPackageGroup(), "aws_sagemaker_model_package_group.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerModelPackageGroupPolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroup(), "aws_sagemaker_model_package_group.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceModelPackageGroupPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

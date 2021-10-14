@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerModelPackageGroupPolicy() *schema.Resource {
+func ResourceModelPackageGroupPolicy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSagemakerModelPackageGroupPolicyPut,
-		Read:   resourceAwsSagemakerModelPackageGroupPolicyRead,
+		Read:   resourceModelPackageGroupPolicyRead,
 		Update: resourceAwsSagemakerModelPackageGroupPolicyPut,
-		Delete: resourceAwsSagemakerModelPackageGroupPolicyDelete,
+		Delete: resourceModelPackageGroupPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -57,10 +57,10 @@ func resourceAwsSagemakerModelPackageGroupPolicyPut(d *schema.ResourceData, meta
 
 	d.SetId(name)
 
-	return resourceAwsSagemakerModelPackageGroupPolicyRead(d, meta)
+	return resourceModelPackageGroupPolicyRead(d, meta)
 }
 
-func resourceAwsSagemakerModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	mpg, err := finder.ModelPackageGroupPolicyByName(conn, d.Id())
@@ -80,7 +80,7 @@ func resourceAwsSagemakerModelPackageGroupPolicyRead(d *schema.ResourceData, met
 	return nil
 }
 
-func resourceAwsSagemakerModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteModelPackageGroupPolicyInput{

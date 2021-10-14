@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerImageVersion() *schema.Resource {
+func ResourceImageVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerImageVersionCreate,
-		Read:   resourceAwsSagemakerImageVersionRead,
-		Delete: resourceAwsSagemakerImageVersionDelete,
+		Create: resourceImageVersionCreate,
+		Read:   resourceImageVersionRead,
+		Delete: resourceImageVersionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsSagemakerImageVersion() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerImageVersionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceImageVersionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("image_name").(string)
@@ -72,10 +72,10 @@ func resourceAwsSagemakerImageVersionCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error waiting for SageMaker Image Version (%s) to be created: %w", d.Id(), err)
 	}
 
-	return resourceAwsSagemakerImageVersionRead(d, meta)
+	return resourceImageVersionRead(d, meta)
 }
 
-func resourceAwsSagemakerImageVersionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceImageVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	image, err := finder.ImageVersionByName(conn, d.Id())
@@ -99,7 +99,7 @@ func resourceAwsSagemakerImageVersionRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsSagemakerImageVersionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceImageVersionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteImageVersionInput{

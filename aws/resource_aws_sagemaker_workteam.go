@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerWorkteam() *schema.Resource {
+func ResourceWorkteam() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerWorkteamCreate,
-		Read:   resourceAwsSagemakerWorkteamRead,
-		Update: resourceAwsSagemakerWorkteamUpdate,
-		Delete: resourceAwsSagemakerWorkteamDelete,
+		Create: resourceWorkteamCreate,
+		Read:   resourceWorkteamRead,
+		Update: resourceWorkteamUpdate,
+		Delete: resourceWorkteamDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -128,7 +128,7 @@ func resourceAwsSagemakerWorkteam() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -160,10 +160,10 @@ func resourceAwsSagemakerWorkteamCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(name)
 
-	return resourceAwsSagemakerWorkteamRead(d, meta)
+	return resourceWorkteamRead(d, meta)
 }
 
-func resourceAwsSagemakerWorkteamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -214,7 +214,7 @@ func resourceAwsSagemakerWorkteamRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsSagemakerWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -247,10 +247,10 @@ func resourceAwsSagemakerWorkteamUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	return resourceAwsSagemakerWorkteamRead(d, meta)
+	return resourceWorkteamRead(d, meta)
 }
 
-func resourceAwsSagemakerWorkteamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkteamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	log.Printf("[DEBUG] Deleting SageMaker Workteam: %s", d.Id())

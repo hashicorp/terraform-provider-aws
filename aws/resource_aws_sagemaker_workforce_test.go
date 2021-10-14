@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepSagemakerWorkforces(region string) error {
 	err = conn.ListWorkforcesPages(&sagemaker.ListWorkforcesInput{}, func(page *sagemaker.ListWorkforcesOutput, lastPage bool) bool {
 		for _, workforce := range page.Workforces {
 
-			r := resourceAwsSagemakerWorkforce()
+			r := ResourceWorkforce()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(workforce.WorkforceName))
 			err := r.Delete(d, client)
@@ -226,7 +227,7 @@ func testAccAWSSagemakerWorkforce_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerWorkforceCognitoConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerWorkforce(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceWorkforce(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

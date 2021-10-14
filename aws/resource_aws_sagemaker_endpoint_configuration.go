@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
+func ResourceEndpointConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerEndpointConfigurationCreate,
-		Read:   resourceAwsSagemakerEndpointConfigurationRead,
-		Update: resourceAwsSagemakerEndpointConfigurationUpdate,
-		Delete: resourceAwsSagemakerEndpointConfigurationDelete,
+		Create: resourceEndpointConfigurationCreate,
+		Read:   resourceEndpointConfigurationRead,
+		Update: resourceEndpointConfigurationUpdate,
+		Delete: resourceEndpointConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -275,7 +275,7 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerEndpointConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -315,10 +315,10 @@ func resourceAwsSagemakerEndpointConfigurationCreate(d *schema.ResourceData, met
 	}
 	d.SetId(name)
 
-	return resourceAwsSagemakerEndpointConfigurationRead(d, meta)
+	return resourceEndpointConfigurationRead(d, meta)
 }
 
-func resourceAwsSagemakerEndpointConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -370,7 +370,7 @@ func resourceAwsSagemakerEndpointConfigurationRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsSagemakerEndpointConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
@@ -380,10 +380,10 @@ func resourceAwsSagemakerEndpointConfigurationUpdate(d *schema.ResourceData, met
 			return fmt.Errorf("error updating Sagemaker Endpoint Configuration (%s) tags: %w", d.Id(), err)
 		}
 	}
-	return resourceAwsSagemakerEndpointConfigurationRead(d, meta)
+	return resourceEndpointConfigurationRead(d, meta)
 }
 
-func resourceAwsSagemakerEndpointConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	deleteOpts := &sagemaker.DeleteEndpointConfigInput{

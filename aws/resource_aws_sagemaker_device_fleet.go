@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerDeviceFleet() *schema.Resource {
+func ResourceDeviceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerDeviceFleetCreate,
-		Read:   resourceAwsSagemakerDeviceFleetRead,
-		Update: resourceAwsSagemakerDeviceFleetUpdate,
-		Delete: resourceAwsSagemakerDeviceFleetDelete,
+		Create: resourceDeviceFleetCreate,
+		Read:   resourceDeviceFleetRead,
+		Update: resourceDeviceFleetUpdate,
+		Delete: resourceDeviceFleetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -83,7 +83,7 @@ func resourceAwsSagemakerDeviceFleet() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -116,10 +116,10 @@ func resourceAwsSagemakerDeviceFleetCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(name)
 
-	return resourceAwsSagemakerDeviceFleetRead(d, meta)
+	return resourceDeviceFleetRead(d, meta)
 }
 
-func resourceAwsSagemakerDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -169,7 +169,7 @@ func resourceAwsSagemakerDeviceFleetRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsSagemakerDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -199,10 +199,10 @@ func resourceAwsSagemakerDeviceFleetUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSagemakerDeviceFleetRead(d, meta)
+	return resourceDeviceFleetRead(d, meta)
 }
 
-func resourceAwsSagemakerDeviceFleetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDeviceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteDeviceFleetInput{

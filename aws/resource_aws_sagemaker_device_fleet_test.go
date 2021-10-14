@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepSagemakerDeviceFleets(region string) error {
 		for _, deviceFleet := range page.DeviceFleetSummaries {
 			name := aws.StringValue(deviceFleet.DeviceFleetName)
 
-			r := resourceAwsSagemakerDeviceFleet()
+			r := ResourceDeviceFleet()
 			d := r.Data(nil)
 			d.SetId(name)
 			err := r.Delete(d, client)
@@ -190,7 +191,7 @@ func TestAccAWSSagemakerDeviceFleet_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerDeviceFleetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDeviceFleetExists(resourceName, &deviceFleet),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerDeviceFleet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceDeviceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

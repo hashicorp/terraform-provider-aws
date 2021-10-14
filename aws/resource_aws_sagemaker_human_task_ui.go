@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerHumanTaskUi() *schema.Resource {
+func ResourceHumanTaskUI() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerHumanTaskUiCreate,
-		Read:   resourceAwsSagemakerHumanTaskUiRead,
-		Update: resourceAwsSagemakerHumanTaskUiUpdate,
-		Delete: resourceAwsSagemakerHumanTaskUiDelete,
+		Create: resourceHumanTaskUICreate,
+		Read:   resourceHumanTaskUIRead,
+		Update: resourceHumanTaskUIUpdate,
+		Delete: resourceHumanTaskUIDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -71,7 +71,7 @@ func resourceAwsSagemakerHumanTaskUi() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerHumanTaskUiCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHumanTaskUICreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -95,10 +95,10 @@ func resourceAwsSagemakerHumanTaskUiCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(name)
 
-	return resourceAwsSagemakerHumanTaskUiRead(d, meta)
+	return resourceHumanTaskUIRead(d, meta)
 }
 
-func resourceAwsSagemakerHumanTaskUiRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHumanTaskUIRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -143,7 +143,7 @@ func resourceAwsSagemakerHumanTaskUiRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsSagemakerHumanTaskUiUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceHumanTaskUIUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
@@ -154,10 +154,10 @@ func resourceAwsSagemakerHumanTaskUiUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSagemakerHumanTaskUiRead(d, meta)
+	return resourceHumanTaskUIRead(d, meta)
 }
 
-func resourceAwsSagemakerHumanTaskUiDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHumanTaskUIDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	log.Printf("[DEBUG] Deleting SageMaker HumanTaskUi: %s", d.Id())

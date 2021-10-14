@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSSagemakerImageVersion_basic(t *testing.T) {
@@ -75,7 +76,7 @@ func TestAccAWSSagemakerImageVersion_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerImageVersion(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceImageVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,7 +105,7 @@ func TestAccAWSSagemakerImageVersion_disappears_image(t *testing.T) {
 				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerImage(), "aws_sagemaker_image.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceImage(), "aws_sagemaker_image.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerWorkforce() *schema.Resource {
+func ResourceWorkforce() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerWorkforceCreate,
-		Read:   resourceAwsSagemakerWorkforceRead,
-		Update: resourceAwsSagemakerWorkforceUpdate,
-		Delete: resourceAwsSagemakerWorkforceDelete,
+		Create: resourceWorkforceCreate,
+		Read:   resourceWorkforceRead,
+		Update: resourceWorkforceUpdate,
+		Delete: resourceWorkforceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -150,7 +150,7 @@ func resourceAwsSagemakerWorkforce() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	name := d.Get("workforce_name").(string)
@@ -179,10 +179,10 @@ func resourceAwsSagemakerWorkforceCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(name)
 
-	return resourceAwsSagemakerWorkforceRead(d, meta)
+	return resourceWorkforceRead(d, meta)
 }
 
-func resourceAwsSagemakerWorkforceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	workforce, err := finder.WorkforceByName(conn, d.Id())
@@ -218,7 +218,7 @@ func resourceAwsSagemakerWorkforceRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsSagemakerWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.UpdateWorkforceInput{
@@ -240,10 +240,10 @@ func resourceAwsSagemakerWorkforceUpdate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error updating SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsSagemakerWorkforceRead(d, meta)
+	return resourceWorkforceRead(d, meta)
 }
 
-func resourceAwsSagemakerWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	log.Printf("[DEBUG] Deleting SageMaker Workforce: %s", d.Id())

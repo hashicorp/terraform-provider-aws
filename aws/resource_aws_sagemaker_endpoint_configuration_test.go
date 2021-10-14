@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -41,7 +42,7 @@ func testSweepSagemakerEndpointConfigurations(region string) error {
 	err = conn.ListEndpointConfigsPages(req, func(page *sagemaker.ListEndpointConfigsOutput, lastPage bool) bool {
 		for _, endpointConfig := range page.EndpointConfigs {
 
-			r := resourceAwsSagemakerEndpointConfiguration()
+			r := ResourceEndpointConfiguration()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(endpointConfig.EndpointConfigName))
 			err := r.Delete(d, client)
@@ -272,8 +273,8 @@ func TestAccAWSSagemakerEndpointConfiguration_disappears(t *testing.T) {
 				Config: testAccSagemakerEndpointConfigurationConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEndpointConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEndpointConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

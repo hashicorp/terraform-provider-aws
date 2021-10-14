@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepSagemakerUserProfiles(region string) error {
 	err = conn.ListUserProfilesPages(&sagemaker.ListUserProfilesInput{}, func(page *sagemaker.ListUserProfilesOutput, lastPage bool) bool {
 		for _, userProfile := range page.UserProfiles {
 
-			r := resourceAwsSagemakerUserProfile()
+			r := ResourceUserProfile()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(userProfile.UserProfileName))
 			d.Set("user_profile_name", userProfile.UserProfileName)
@@ -312,7 +313,7 @@ func testAccAWSSagemakerUserProfile_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerUserProfileBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerUserProfileExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerUserProfile(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerImage() *schema.Resource {
+func ResourceImage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerImageCreate,
-		Read:   resourceAwsSagemakerImageRead,
-		Update: resourceAwsSagemakerImageUpdate,
-		Delete: resourceAwsSagemakerImageDelete,
+		Create: resourceImageCreate,
+		Read:   resourceImageRead,
+		Update: resourceImageUpdate,
+		Delete: resourceImageDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,7 +65,7 @@ func resourceAwsSagemakerImage() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -101,10 +101,10 @@ func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error waiting for SageMaker Image (%s) to be created: %w", d.Id(), err)
 	}
 
-	return resourceAwsSagemakerImageRead(d, meta)
+	return resourceImageRead(d, meta)
 }
 
-func resourceAwsSagemakerImageRead(d *schema.ResourceData, meta interface{}) error {
+func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -147,7 +147,7 @@ func resourceAwsSagemakerImageRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceImageUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	needsUpdate := false
 
@@ -197,10 +197,10 @@ func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	return resourceAwsSagemakerImageRead(d, meta)
+	return resourceImageRead(d, meta)
 }
 
-func resourceAwsSagemakerImageDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceImageDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteImageInput{

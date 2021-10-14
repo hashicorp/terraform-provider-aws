@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerFeatureGroup() *schema.Resource {
+func ResourceFeatureGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerFeatureGroupCreate,
-		Read:   resourceAwsSagemakerFeatureGroupRead,
-		Update: resourceAwsSagemakerFeatureGroupUpdate,
-		Delete: resourceAwsSagemakerFeatureGroupDelete,
+		Create: resourceFeatureGroupCreate,
+		Read:   resourceFeatureGroupRead,
+		Update: resourceFeatureGroupUpdate,
+		Delete: resourceFeatureGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -198,7 +198,7 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -258,10 +258,10 @@ func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error waiting for SageMaker Feature Group (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsSagemakerFeatureGroupRead(d, meta)
+	return resourceFeatureGroupRead(d, meta)
 }
 
-func resourceAwsSagemakerFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -317,7 +317,7 @@ func resourceAwsSagemakerFeatureGroupRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsSagemakerFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
@@ -328,10 +328,10 @@ func resourceAwsSagemakerFeatureGroupUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	return resourceAwsSagemakerFeatureGroupRead(d, meta)
+	return resourceFeatureGroupRead(d, meta)
 }
 
-func resourceAwsSagemakerFeatureGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFeatureGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteFeatureGroupInput{

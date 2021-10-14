@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -179,7 +180,7 @@ func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerCodeRepositoryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSagemakerCodeRepository(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCodeRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

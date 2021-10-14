@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerUserProfile() *schema.Resource {
+func ResourceUserProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerUserProfileCreate,
-		Read:   resourceAwsSagemakerUserProfileRead,
-		Update: resourceAwsSagemakerUserProfileUpdate,
-		Delete: resourceAwsSagemakerUserProfileDelete,
+		Create: resourceUserProfileCreate,
+		Read:   resourceUserProfileRead,
+		Update: resourceUserProfileUpdate,
+		Delete: resourceUserProfileDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -237,7 +237,7 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -281,10 +281,10 @@ func resourceAwsSagemakerUserProfileCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for SageMaker User Profile (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsSagemakerUserProfileRead(d, meta)
+	return resourceUserProfileRead(d, meta)
 }
 
-func resourceAwsSagemakerUserProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -336,7 +336,7 @@ func resourceAwsSagemakerUserProfileRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsSagemakerUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("user_settings") {
@@ -368,10 +368,10 @@ func resourceAwsSagemakerUserProfileUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsSagemakerUserProfileRead(d, meta)
+	return resourceUserProfileRead(d, meta)
 }
 
-func resourceAwsSagemakerUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	userProfileName := d.Get("user_profile_name").(string)

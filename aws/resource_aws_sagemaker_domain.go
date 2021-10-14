@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSagemakerDomain() *schema.Resource {
+func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSagemakerDomainCreate,
-		Read:   resourceAwsSagemakerDomainRead,
-		Update: resourceAwsSagemakerDomainUpdate,
-		Delete: resourceAwsSagemakerDomainDelete,
+		Create: resourceDomainCreate,
+		Read:   resourceDomainRead,
+		Update: resourceDomainUpdate,
+		Delete: resourceDomainDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -277,7 +277,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 	}
 }
 
-func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -317,10 +317,10 @@ func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error waiting for SageMaker domain (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsSagemakerDomainRead(d, meta)
+	return resourceDomainRead(d, meta)
 }
 
-func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -374,7 +374,7 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsSagemakerDomainUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	if d.HasChange("default_user_settings") {
@@ -402,10 +402,10 @@ func resourceAwsSagemakerDomainUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsSagemakerDomainRead(d, meta)
+	return resourceDomainRead(d, meta)
 }
 
-func resourceAwsSagemakerDomainDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteDomainInput{
