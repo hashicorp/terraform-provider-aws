@@ -15,6 +15,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -143,11 +152,11 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Println("[INFO] Waiting for CloudHSMv2 Cluster to be available")
 
 	if input.SourceBackupId != nil {
-		if _, err := waiter.ClusterActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := tfcloudhsmv2.waitClusterActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) creation: %w", d.Id(), err)
 		}
 	} else {
-		if _, err := waiter.ClusterUninitialized(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := tfcloudhsmv2.waitClusterUninitialized(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) creation: %w", d.Id(), err)
 		}
 	}
@@ -160,7 +169,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	cluster, err := finder.Cluster(conn, d.Id())
+	cluster, err := tfcloudhsmv2.FindCluster(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading CloudHSMv2 Cluster (%s): %w", d.Id(), err)
@@ -245,7 +254,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting CloudHSMv2 Cluster (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := tfcloudhsmv2.waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) deletion: %w", d.Id(), err)
 	}
 

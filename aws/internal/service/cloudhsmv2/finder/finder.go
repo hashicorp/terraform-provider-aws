@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func Cluster(conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, error) {
+func FindCluster(conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, error) {
 	input := &cloudhsmv2.DescribeClustersInput{
 		Filters: map[string][]*string{
 			"clusterIds": aws.StringSlice([]string{id}),
@@ -41,7 +41,7 @@ func Cluster(conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, error
 	return result, nil
 }
 
-func Hsm(conn *cloudhsmv2.CloudHSMV2, hsmID string, eniID string) (*cloudhsmv2.Hsm, error) {
+func FindHSM(conn *cloudhsmv2.CloudHSMV2, hsmID string, eniID string) (*cloudhsmv2.Hsm, error) {
 	input := &cloudhsmv2.DescribeClustersInput{}
 
 	var result *cloudhsmv2.Hsm

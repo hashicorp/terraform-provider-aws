@@ -6,11 +6,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 )
 
-func ClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
+func statusClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		cluster, err := finder.Cluster(conn, id)
+		cluster, err := tfcloudhsmv2.FindCluster(conn, id)
 
 		if err != nil {
 			return nil, "", err
@@ -24,9 +26,9 @@ func ClusterState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshF
 	}
 }
 
-func HsmState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
+func statusHSMState(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hsm, err := finder.Hsm(conn, id, "")
+		hsm, err := tfcloudhsmv2.FindHSM(conn, id, "")
 
 		if err != nil {
 			return nil, "", err

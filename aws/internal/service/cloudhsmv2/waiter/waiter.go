@@ -8,14 +8,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ClusterActive(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
+func waitClusterActive(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			cloudhsmv2.ClusterStateCreateInProgress,
 			cloudhsmv2.ClusterStateInitializeInProgress,
 		},
 		Target:     []string{cloudhsmv2.ClusterStateActive},
-		Refresh:    ClusterState(conn, id),
+		Refresh:    statusClusterState(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -30,11 +30,11 @@ func ClusterActive(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration
 	return nil, err
 }
 
-func ClusterDeleted(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
+func waitClusterDeleted(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.ClusterStateDeleteInProgress},
 		Target:     []string{cloudhsmv2.ClusterStateDeleted},
-		Refresh:    ClusterState(conn, id),
+		Refresh:    statusClusterState(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -49,14 +49,14 @@ func ClusterDeleted(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duratio
 	return nil, err
 }
 
-func ClusterUninitialized(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
+func waitClusterUninitialized(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			cloudhsmv2.ClusterStateCreateInProgress,
 			cloudhsmv2.ClusterStateInitializeInProgress,
 		},
 		Target:     []string{cloudhsmv2.ClusterStateUninitialized},
-		Refresh:    ClusterState(conn, id),
+		Refresh:    statusClusterState(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -71,11 +71,11 @@ func ClusterUninitialized(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.D
 	return nil, err
 }
 
-func HsmActive(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
+func waitHSMActive(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.HsmStateCreateInProgress},
 		Target:     []string{cloudhsmv2.HsmStateActive},
-		Refresh:    HsmState(conn, id),
+		Refresh:    statusHSMState(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -90,11 +90,11 @@ func HsmActive(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*
 	return nil, err
 }
 
-func HsmDeleted(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
+func waitHSMDeleted(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) (*cloudhsmv2.Hsm, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.HsmStateDeleteInProgress},
 		Target:     []string{},
-		Refresh:    HsmState(conn, id),
+		Refresh:    statusHSMState(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,

@@ -14,6 +14,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
+	tfcloudhsmv2 "github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 )
 
 func ResourceHSM() *schema.Resource {
@@ -86,7 +95,7 @@ func resourceHSMCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("availability_zone"); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	} else {
-		cluster, err := finder.Cluster(conn, d.Get("cluster_id").(string))
+		cluster, err := tfcloudhsmv2.FindCluster(conn, d.Get("cluster_id").(string))
 
 		if err != nil {
 			return fmt.Errorf("error reading CloudHSMv2 Cluster (%s): %w", d.Id(), err)
@@ -118,7 +127,7 @@ func resourceHSMCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.Hsm.HsmId))
 
-	if _, err := waiter.HsmActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := tfcloudhsmv2.waitHSMActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for CloudHSMv2 HSM (%s) creation: %w", d.Id(), err)
 	}
 
@@ -128,7 +137,7 @@ func resourceHSMCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceHSMRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
 
-	hsm, err := finder.Hsm(conn, d.Id(), d.Get("hsm_eni_id").(string))
+	hsm, err := tfcloudhsmv2.FindHSM(conn, d.Id(), d.Get("hsm_eni_id").(string))
 
 	if err != nil {
 		return fmt.Errorf("error reading CloudHSMv2 HSM (%s): %w", d.Id(), err)
@@ -182,7 +191,7 @@ func resourceHSMDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting CloudHSMv2 HSM (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.HsmDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := tfcloudhsmv2.waitHSMDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for CloudHSMv2 HSM (%s) deletion: %w", d.Id(), err)
 	}
 
