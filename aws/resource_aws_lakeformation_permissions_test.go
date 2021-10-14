@@ -19,14 +19,14 @@ import (
 )
 
 func testAccAWSLakeFormationPermissions_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,20 +44,20 @@ func testAccAWSLakeFormationPermissions_basic(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLakeFormationPermissionsConfig_twcBasic(rName, "\"event\", \"timestamp\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsLakeFormationPermissions(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsLakeFormationPermissions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,7 +66,7 @@ func testAccAWSLakeFormationPermissions_disappears(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_database(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	dbName := "aws_glue_catalog_database.test"
@@ -74,7 +74,7 @@ func testAccAWSLakeFormationPermissions_database(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,14 +99,14 @@ func testAccAWSLakeFormationPermissions_database(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_databaseIAMAllowed(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dbName := "aws_glue_catalog_database.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func testAccAWSLakeFormationPermissions_databaseIAMAllowed(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_databaseMultiple(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	resourceName2 := "aws_lakeformation_permissions.test2"
 	roleName := "aws_iam_role.test"
@@ -137,7 +137,7 @@ func testAccAWSLakeFormationPermissions_databaseMultiple(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -172,7 +172,7 @@ func testAccAWSLakeFormationPermissions_databaseMultiple(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	bucketName := "aws_s3_bucket.test"
@@ -180,7 +180,7 @@ func testAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -200,7 +200,7 @@ func testAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_tableBasic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tableName := "aws_glue_catalog_table.test"
@@ -208,7 +208,7 @@ func testAccAWSLakeFormationPermissions_tableBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -230,14 +230,14 @@ func testAccAWSLakeFormationPermissions_tableBasic(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_tableIAMAllowed(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dbName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -259,7 +259,7 @@ func testAccAWSLakeFormationPermissions_tableIAMAllowed(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_tableImplicit(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tableName := "aws_glue_catalog_table.test"
@@ -267,7 +267,7 @@ func testAccAWSLakeFormationPermissions_tableImplicit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -287,7 +287,7 @@ func testAccAWSLakeFormationPermissions_tableImplicit(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_tableMultipleRoles(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	resourceName2 := "aws_lakeformation_permissions.test2"
 	roleName := "aws_iam_role.test"
@@ -297,7 +297,7 @@ func testAccAWSLakeFormationPermissions_tableMultipleRoles(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -326,7 +326,7 @@ func testAccAWSLakeFormationPermissions_tableMultipleRoles(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_tableSelectOnly(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tableName := "aws_glue_catalog_table.test"
@@ -334,7 +334,7 @@ func testAccAWSLakeFormationPermissions_tableSelectOnly(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -354,14 +354,14 @@ func testAccAWSLakeFormationPermissions_tableSelectOnly(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_tableSelectPlus(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -378,14 +378,14 @@ func testAccAWSLakeFormationPermissions_tableSelectPlus(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_tableWildcardNoSelect(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	databaseResourceName := "aws_glue_catalog_database.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -402,14 +402,14 @@ func testAccAWSLakeFormationPermissions_tableWildcardNoSelect(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_tableWildcardSelectOnly(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -427,14 +427,14 @@ func testAccAWSLakeFormationPermissions_tableWildcardSelectOnly(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_tableWildcardSelectPlus(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -451,7 +451,7 @@ func testAccAWSLakeFormationPermissions_tableWildcardSelectPlus(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_twcBasic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tableName := "aws_glue_catalog_table.test"
@@ -459,7 +459,7 @@ func testAccAWSLakeFormationPermissions_twcBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -527,7 +527,7 @@ func testAccAWSLakeFormationPermissions_twcBasic(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_twcImplicit(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tableName := "aws_glue_catalog_table.test"
@@ -535,7 +535,7 @@ func testAccAWSLakeFormationPermissions_twcImplicit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -556,14 +556,14 @@ func testAccAWSLakeFormationPermissions_twcImplicit(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_twcWildcardExcludedColumns(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -580,7 +580,7 @@ func testAccAWSLakeFormationPermissions_twcWildcardExcludedColumns(t *testing.T)
 }
 
 func testAccAWSLakeFormationPermissions_twcWildcardSelectOnly(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tableName := "aws_glue_catalog_table.test"
@@ -588,7 +588,7 @@ func testAccAWSLakeFormationPermissions_twcWildcardSelectOnly(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -610,14 +610,14 @@ func testAccAWSLakeFormationPermissions_twcWildcardSelectOnly(t *testing.T) {
 }
 
 func testAccAWSLakeFormationPermissions_twcWildcardSelectPlus(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -634,7 +634,7 @@ func testAccAWSLakeFormationPermissions_twcWildcardSelectPlus(t *testing.T) {
 }
 
 func testAccCheckAWSLakeFormationPermissionsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+	conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_permissions" {
@@ -665,7 +665,7 @@ func testAccCheckAWSLakeFormationPermissionsExists(resourceName string) resource
 			return fmt.Errorf("acceptance test: resource not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+		conn := acctest.Provider.Meta().(*AWSClient).lakeformationconn
 
 		permCount, err := permissionCountForLakeFormationResource(conn, rs)
 
