@@ -148,7 +148,7 @@ func TestAccAWSCodeCommitRepository_tags(t *testing.T) {
 		CheckDestroy: testAccCheckCodeCommitRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeCommitRepositoryConfigTags1(rName, "key1", "value1"),
+				Config: testAccRepositoryTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeCommitRepositoryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -161,7 +161,7 @@ func TestAccAWSCodeCommitRepository_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodeCommitRepositoryConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRepositoryTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeCommitRepositoryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -170,7 +170,7 @@ func TestAccAWSCodeCommitRepository_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCodeCommitRepositoryConfigTags1(rName, "key2", "value2"),
+				Config: testAccRepositoryTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeCommitRepositoryExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -266,7 +266,7 @@ resource "aws_codecommit_repository" "test" {
 `, rInt)
 }
 
-func testAccAWSCodeCommitRepositoryConfigTags1(r, tag1Key, tag1Value string) string {
+func testAccRepositoryTags1Config(r, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
   repository_name = "terraform-test-%s"
@@ -278,7 +278,7 @@ resource "aws_codecommit_repository" "test" {
 `, r, tag1Key, tag1Value)
 }
 
-func testAccAWSCodeCommitRepositoryConfigTags2(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccRepositoryTags2Config(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
   repository_name = "terraform-test-%s"

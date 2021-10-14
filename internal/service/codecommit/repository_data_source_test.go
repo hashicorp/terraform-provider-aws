@@ -21,7 +21,7 @@ func TestAccAWSCodeCommitRepositoryDataSource_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsCodeCommitRepositoryDataSourceConfig(rName),
+				Config: testAccCheckRepositoryDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "clone_url_http", resourceName, "clone_url_http"),
@@ -33,7 +33,7 @@ func TestAccAWSCodeCommitRepositoryDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsCodeCommitRepositoryDataSourceConfig(rName string) string {
+func testAccCheckRepositoryDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "default" {
   repository_name = "%s"
