@@ -1594,14 +1594,14 @@ resource "aws_launch_template" "test1" {
   image_id      = data.aws_ssm_parameter.test.value
   instance_type = "t3.medium"
   name          = "%[1]s-1"
-  user_data     = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_launch_template" "test2" {
   image_id      = data.aws_ssm_parameter.test.value
   instance_type = "t3.medium"
   name          = "%[1]s-2"
-  user_data     = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1642,14 +1642,14 @@ resource "aws_launch_template" "test1" {
   image_id      = data.aws_ssm_parameter.test.value
   instance_type = "t3.medium"
   name          = "%[1]s-1"
-  user_data     = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_launch_template" "test2" {
   image_id      = data.aws_ssm_parameter.test.value
   instance_type = "t3.medium"
   name          = "%[1]s-2"
-  user_data     = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1690,14 +1690,14 @@ resource "aws_launch_template" "test1" {
   image_id      = data.aws_ssm_parameter.test.value
   instance_type = "t3.medium"
   name          = "%[1]s-1"
-  user_data     = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_launch_template" "test2" {
   image_id      = data.aws_ssm_parameter.test.value
   instance_type = "t3.medium"
   name          = "%[1]s-2"
-  user_data     = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1738,14 +1738,14 @@ resource "aws_launch_template" "test1" {
   image_id      = data.aws_ssm_parameter.test.value
   instance_type = "t3.medium"
   name          = "%[1]s-1"
-  user_data     = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_launch_template" "test2" {
   image_id      = data.aws_ssm_parameter.test.value
   instance_type = "t3.medium"
   name          = "%[1]s-2"
-  user_data     = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1787,7 +1787,7 @@ resource "aws_launch_template" "test" {
   instance_type          = "t3.medium"
   name                   = %[1]q
   update_default_version = true
-  user_data              = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data              = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1829,7 +1829,7 @@ resource "aws_launch_template" "test" {
   instance_type          = "t3.large"
   name                   = %[1]q
   update_default_version = true
-  user_data              = base64encode(templatefile("testdata/service/eks/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+  user_data              = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
 }
 
 resource "aws_eks_node_group" "test" {
