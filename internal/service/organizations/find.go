@@ -3,7 +3,6 @@ package organizations
 import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FindOrganization(conn *organizations.Organizations) (*organizations.Organization, error) {
