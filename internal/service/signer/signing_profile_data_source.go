@@ -130,7 +130,7 @@ func dataSourceSigningProfileRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting signer signing profile status: %w", err)
 	}
 
-	if err := d.Set("tags", tftags.SignerKeyValueTags(signingProfileOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(signingProfileOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting signer signing profile tags: %w", err)
 	}
 
