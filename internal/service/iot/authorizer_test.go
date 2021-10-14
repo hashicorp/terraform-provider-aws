@@ -62,7 +62,7 @@ func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 				Config: testAccAWSIoTAuthorizerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAuthorizerExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAuthorizer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

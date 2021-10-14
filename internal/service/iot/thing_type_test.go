@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -43,7 +44,7 @@ func testSweepIotThingTypes(region string) error {
 		}
 
 		for _, thingTypes := range page.ThingTypes {
-			r := ResourceThingType()
+			r := tfiot.ResourceThingType()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(thingTypes.ThingTypeName))

@@ -51,7 +51,7 @@ func resourceThingPrincipalAttachmentCreate(d *schema.ResourceData, meta interfa
 	return resourceThingPrincipalAttachmentRead(d, meta)
 }
 
-func getIoTThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, error) {
+func GetThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, error) {
 	out, err := conn.ListThingPrincipals(&iot.ListThingPrincipalsInput{
 		ThingName: aws.String(thing),
 	})
@@ -76,7 +76,7 @@ func resourceThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
 
-	found, err := getIoTThingPricipalAttachment(conn, thing, principal)
+	found, err := GetThingPricipalAttachment(conn, thing, principal)
 
 	if err != nil {
 		return fmt.Errorf("error listing principals for thing %s: %s", thing, err)

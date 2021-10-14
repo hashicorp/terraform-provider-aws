@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -53,7 +54,7 @@ func testSweepIotPolicyAttachments(region string) error {
 				}
 
 				for _, target := range page.Targets {
-					r := ResourcePolicyAttachment()
+					r := tfiot.ResourcePolicyAttachment()
 					d := r.Data(nil)
 
 					d.SetId(fmt.Sprintf("%s|%s", aws.StringValue(policy.PolicyName), aws.StringValue(target)))
@@ -153,7 +154,7 @@ func testAccCheckAWSIotPolicyAttchmentDestroy(s *terraform.State) error {
 		}
 
 		var policy *iot.Policy
-		err := listIotPolicyAttachmentPages(conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
+		err := tfiot.ListPolicyAttachmentPages(conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
 			for _, att := range out.Policies {
 				if policyName == aws.StringValue(att.PolicyName) {
 					policy = att
@@ -193,7 +194,7 @@ func testAccCheckAWSIotPolicyAttachmentExists(n string) resource.TestCheckFunc {
 		target := rs.Primary.Attributes["target"]
 		policyName := rs.Primary.Attributes["policy"]
 
-		policy, err := getIotPolicyAttachment(conn, target, policyName)
+		policy, err := tfiot.GetPolicyAttachment(conn, target, policyName)
 
 		if err != nil {
 			return fmt.Errorf("Error: Failed to get attached policies for target %s (%s): %s", target, n, err)

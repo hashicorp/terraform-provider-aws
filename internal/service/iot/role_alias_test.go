@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -44,7 +45,7 @@ func testSweepIotRoleAliases(region string) error {
 		}
 
 		for _, roleAlias := range page.RoleAliases {
-			r := ResourceRoleAlias()
+			r := tfiot.ResourceRoleAlias()
 			d := r.Data(nil)
 
 			d.SetId(aws.StringValue(roleAlias))
@@ -142,7 +143,7 @@ func testAccCheckAWSIotRoleAliasDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := getIotRoleAliasDescription(conn, rs.Primary.ID)
+		_, err := tfiot.GetRoleAliasDescription(conn, rs.Primary.ID)
 
 		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 			continue
@@ -167,7 +168,7 @@ func testAccCheckAWSIotRoleAliasExists(n string) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 		role_arn := rs.Primary.Attributes["role_arn"]
 
-		roleAliasDescription, err := getIotRoleAliasDescription(conn, rs.Primary.ID)
+		roleAliasDescription, err := tfiot.GetRoleAliasDescription(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("Error: Failed to get role alias %s for role %s (%s): %s", rs.Primary.ID, role_arn, n, err)

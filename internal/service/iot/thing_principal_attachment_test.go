@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -53,7 +54,7 @@ func testSweepIotThingPrincipalAttachments(region string) error {
 				}
 
 				for _, principal := range page.Principals {
-					r := ResourceThingPrincipalAttachment()
+					r := tfiot.ResourceThingPrincipalAttachment()
 					d := r.Data(nil)
 
 					d.SetId(fmt.Sprintf("%s|%s", aws.StringValue(thing.ThingName), aws.StringValue(principal)))
@@ -155,7 +156,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentDestroy(s *terraform.State) error
 		principal := rs.Primary.Attributes["principal"]
 		thing := rs.Primary.Attributes["thing"]
 
-		found, err := getIoTThingPricipalAttachment(conn, thing, principal)
+		found, err := tfiot.GetThingPricipalAttachment(conn, thing, principal)
 
 		if err != nil {
 			return fmt.Errorf("Error: Failed listing principals for thing (%s): %s", thing, err)
@@ -186,7 +187,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentExists(n string) resource.TestChe
 		thing := rs.Primary.Attributes["thing"]
 		principal := rs.Primary.Attributes["principal"]
 
-		found, err := getIoTThingPricipalAttachment(conn, thing, principal)
+		found, err := tfiot.GetThingPricipalAttachment(conn, thing, principal)
 
 		if err != nil {
 			return fmt.Errorf("Error: Failed listing principals for thing (%s), resource (%s): %s", thing, n, err)
