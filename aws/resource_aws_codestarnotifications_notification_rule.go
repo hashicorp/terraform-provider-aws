@@ -131,7 +131,7 @@ func resourceAwsCodeStarNotificationsNotificationRuleCreate(d *schema.ResourceDa
 
 	params := &codestarnotifications.CreateNotificationRuleInput{
 		DetailType:   aws.String(d.Get("detail_type").(string)),
-		EventTypeIds: expandStringSet(d.Get("event_type_ids").(*schema.Set)),
+		EventTypeIds: flex.ExpandStringSet(d.Get("event_type_ids").(*schema.Set)),
 		Name:         aws.String(d.Get("name").(string)),
 		Resource:     aws.String(d.Get("resource").(string)),
 		Status:       aws.String(d.Get("status").(string)),
@@ -268,7 +268,7 @@ func resourceAwsCodeStarNotificationsNotificationRuleUpdate(d *schema.ResourceDa
 	params := &codestarnotifications.UpdateNotificationRuleInput{
 		Arn:          aws.String(d.Id()),
 		DetailType:   aws.String(d.Get("detail_type").(string)),
-		EventTypeIds: expandStringSet(d.Get("event_type_ids").(*schema.Set)),
+		EventTypeIds: flex.ExpandStringSet(d.Get("event_type_ids").(*schema.Set)),
 		Name:         aws.String(d.Get("name").(string)),
 		Status:       aws.String(d.Get("status").(string)),
 		Targets:      expandCodeStarNotificationsNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
