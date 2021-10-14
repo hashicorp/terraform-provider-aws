@@ -785,7 +785,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := waitForASGCapacity(d, meta, capacitySatisfiedCreate); err != nil {
+	if err := waitForASGCapacity(d, meta, CapacitySatisfiedCreate); err != nil {
 		return err
 	}
 
@@ -804,7 +804,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("warm_pool"); ok {
-		_, err := conn.PutWarmPool(createPutWarmPoolInput(d.Id(), d.Get("warm_pool").([]interface{})))
+		_, err := conn.PutWarmPool(CreatePutWarmPoolInput(d.Id(), d.Get("warm_pool").([]interface{})))
 
 		if err != nil {
 			return fmt.Errorf("error creating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
@@ -931,7 +931,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("warm_pool", flattenWarmPoolConfiguration(g.WarmPoolConfiguration)); err != nil {
+	if err := d.Set("warm_pool", FlattenWarmPoolConfiguration(g.WarmPoolConfiguration)); err != nil {
 		return fmt.Errorf("error setting warm_pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
 	}
 
@@ -1314,7 +1314,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[INFO] Successfully removed Warm pool")
 		} else {
-			_, err := conn.PutWarmPool(createPutWarmPoolInput(d.Id(), d.Get("warm_pool").([]interface{})))
+			_, err := conn.PutWarmPool(CreatePutWarmPoolInput(d.Id(), d.Get("warm_pool").([]interface{})))
 
 			if err != nil {
 				return fmt.Errorf("error updating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
@@ -1325,7 +1325,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if shouldWaitForCapacity {
-		if err := waitForASGCapacity(d, meta, capacitySatisfiedUpdate); err != nil {
+		if err := waitForASGCapacity(d, meta, CapacitySatisfiedUpdate); err != nil {
 			return fmt.Errorf("error waiting for Auto Scaling Group Capacity: %w", err)
 		}
 	}
@@ -2060,7 +2060,7 @@ func flattenAutoScalingMixedInstancesPolicy(mixedInstancesPolicy *autoscaling.Mi
 	return []interface{}{m}
 }
 
-func flattenWarmPoolConfiguration(warmPoolConfiguration *autoscaling.WarmPoolConfiguration) []interface{} {
+func FlattenWarmPoolConfiguration(warmPoolConfiguration *autoscaling.WarmPoolConfiguration) []interface{} {
 	if warmPoolConfiguration == nil {
 		return []interface{}{}
 	}
@@ -2151,7 +2151,7 @@ func waitUntilAutoscalingGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling
 	return nil
 }
 
-func createPutWarmPoolInput(asgName string, l []interface{}) *autoscaling.PutWarmPoolInput {
+func CreatePutWarmPoolInput(asgName string, l []interface{}) *autoscaling.PutWarmPoolInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2177,7 +2177,7 @@ func createPutWarmPoolInput(asgName string, l []interface{}) *autoscaling.PutWar
 	return &input
 }
 
-func createAutoScalingGroupInstanceRefreshInput(asgName string, l []interface{}) *autoscaling.StartInstanceRefreshInput {
+func CreateGroupInstanceRefreshInput(asgName string, l []interface{}) *autoscaling.StartInstanceRefreshInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -2214,7 +2214,7 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 }
 
 func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
-	input := createAutoScalingGroupInstanceRefreshInput(asgName, refreshConfig)
+	input := CreateGroupInstanceRefreshInput(asgName, refreshConfig)
 	err := resource.Retry(instanceRefreshStartedTimeout, func() *resource.RetryError {
 		_, err := conn.StartInstanceRefresh(input)
 		if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeInstanceRefreshInProgressFault) {

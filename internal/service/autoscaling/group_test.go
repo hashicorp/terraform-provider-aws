@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
@@ -4944,7 +4945,7 @@ func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := createAutoScalingGroupInstanceRefreshInput(asgName, testCase.input)
+			got := tfautoscaling.CreateGroupInstanceRefreshInput(asgName, testCase.input)
 
 			if !reflect.DeepEqual(got, testCase.expected) {
 				t.Errorf("got %s, expected %s", got, testCase.expected)
@@ -5024,7 +5025,7 @@ func TestPutWarmPoolInput(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := createPutWarmPoolInput(asgName, testCase.input)
+			got := tfautoscaling.CreatePutWarmPoolInput(asgName, testCase.input)
 
 			if !reflect.DeepEqual(got, testCase.expected) {
 				t.Errorf("got %s, expected %s", got, testCase.expected)
@@ -5084,7 +5085,7 @@ func TestFlattenWarmPoolConfiguration(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := flattenWarmPoolConfiguration(testCase.input)
+			got := tfautoscaling.FlattenWarmPoolConfiguration(testCase.input)
 
 			if !reflect.DeepEqual(got, testCase.expected) {
 				t.Errorf("got %s, expected %s", got, testCase.expected)

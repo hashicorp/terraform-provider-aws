@@ -30,7 +30,7 @@ func flattenASGSuspendedProcesses(list []*autoscaling.SuspendedProcess) []string
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
 // returns a []*autoscaling.StepAdjustment.
-func expandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustment, error) {
+func ExpandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustment, error) {
 	var adjustments []*autoscaling.StepAdjustment
 
 	// Loop over our configured step adjustments and create an array
@@ -81,7 +81,7 @@ func expandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustm
 }
 
 // Flattens step adjustments into a list of map[string]interface.
-func flattenStepAdjustments(adjustments []*autoscaling.StepAdjustment) []map[string]interface{} {
+func FlattenStepAdjustments(adjustments []*autoscaling.StepAdjustment) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(adjustments))
 	for _, raw := range adjustments {
 		a := map[string]interface{}{

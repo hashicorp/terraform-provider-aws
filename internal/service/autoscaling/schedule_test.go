@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 )
 
 func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
@@ -204,7 +205,7 @@ func testAccAWSAutoscalingScheduleTime(t *testing.T, duration string) string {
 	if err != nil {
 		t.Fatalf("err parsing time duration: %s", err)
 	}
-	return n.Add(d).Format(awsAutoscalingScheduleTimeLayout)
+	return n.Add(d).Format(tfautoscaling.ScheduleTimeLayout)
 }
 
 func testAccCheckScalingScheduleExists(n string, policy *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
