@@ -86,7 +86,7 @@ func sweepDatabases(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSTimestreamWriteDatabase_basic(t *testing.T) {
+func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 	resourceName := "aws_timestreamwrite_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -115,7 +115,7 @@ func TestAccAWSTimestreamWriteDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSTimestreamWriteDatabase_disappears(t *testing.T) {
+func TestAccTimestreamWriteDatabase_disappears(t *testing.T) {
 	resourceName := "aws_timestreamwrite_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -137,7 +137,7 @@ func TestAccAWSTimestreamWriteDatabase_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSTimestreamWriteDatabase_kmsKey(t *testing.T) {
+func TestAccTimestreamWriteDatabase_kmsKey(t *testing.T) {
 	resourceName := "aws_timestreamwrite_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsResourceName := "aws_kms_key.test"
@@ -165,7 +165,7 @@ func TestAccAWSTimestreamWriteDatabase_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSTimestreamWriteDatabase_updateKmsKey(t *testing.T) {
+func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 	resourceName := "aws_timestreamwrite_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsResourceName := "aws_kms_key.test"
@@ -206,7 +206,7 @@ func TestAccAWSTimestreamWriteDatabase_updateKmsKey(t *testing.T) {
 	})
 }
 
-func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
+func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 	resourceName := "aws_timestreamwrite_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
