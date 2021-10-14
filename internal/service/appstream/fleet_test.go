@@ -21,66 +21,10 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkipAppStream)
-	resource.AddTestSweepers("aws_appstream_fleet", &resource.Sweeper{
-		Name: "aws_appstream_fleet",
-		F:    sweepFleet,
-		Dependencies: []string{
-			"aws_vpc",
-			"aws_subnet",
-		},
-	})
+
 }
 
-func sweepFleet(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.(*conns.AWSClient).AppStreamConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &appstream.DescribeFleetsInput{}
-
-	err = tfappstream.DescribeFleetsPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeFleetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, fleet := range page.Fleets {
-			if fleet == nil {
-				continue
-			}
-
-			id := aws.StringValue(fleet.Name)
-
-			r := tfappstream.ResourceImageBuilder()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing AppStream Fleets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppStream Fleets for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping AppStream Fleets sweep for %s: %s", region, err)
-		return nil // In case we have completed some pages, but had errors
-	}
-
-	return errs.ErrorOrNil()
-}
 
 // testAccErrorCheckSkipAppStream skips AppStream tests that have error messages indicating unsupported features
 func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {

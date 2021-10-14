@@ -19,63 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appstream_stack", &resource.Sweeper{
-		Name: "aws_appstream_stack",
-		F:    sweepStack,
-	})
-}
 
-func sweepStack(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).AppStreamConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &appstream.DescribeStacksInput{}
-
-	err = tfappstream.DescribeStacksPagesWithContext(context.TODO(), conn, input, func(page *appstream.DescribeStacksOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, stack := range page.Stacks {
-			if stack == nil {
-				continue
-			}
-
-			id := aws.StringValue(stack.Name)
-
-			r := tfappstream.ResourceImageBuilder()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing AppStream Stacks: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppStream Stacks for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping AppStream Stacks sweep for %s: %s", region, err)
-		return nil // In case we have completed some pages, but had errors
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccAppStreamStack_basic(t *testing.T) {
 	var stackOutput appstream.Stack
