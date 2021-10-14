@@ -3,7 +3,6 @@ package route53resolver
 import (
 	"fmt"
 	"strings"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const ruleIdSeparator = ":"
