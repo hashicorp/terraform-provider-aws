@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEksAddon() *schema.Resource {
@@ -54,8 +55,8 @@ func dataSourceAwsEksAddon() *schema.Resource {
 }
 
 func dataSourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)

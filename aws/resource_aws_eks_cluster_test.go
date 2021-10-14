@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -35,7 +36,7 @@ func testSweepEksClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).eksconn
+	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -614,7 +615,7 @@ func testAccCheckAWSEksClusterExists(resourceName string, cluster *eks.Cluster) 
 			return fmt.Errorf("No EKS Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 		output, err := finder.ClusterByName(conn, rs.Primary.ID)
 
@@ -634,7 +635,7 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 		_, err := finder.ClusterByName(conn, rs.Primary.ID)
 
@@ -673,7 +674,7 @@ func testAccCheckAWSEksClusterNotRecreated(i, j *eks.Cluster) resource.TestCheck
 }
 
 func testAccPreCheckAWSEks(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).eksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	input := &eks.ListClustersInput{}
 

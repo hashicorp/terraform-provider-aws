@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -34,7 +35,7 @@ func testSweepEksAddon(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	ctx := context.TODO()
-	conn := client.(*AWSClient).eksconn
+	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*testSweepResource, 0)
@@ -741,7 +742,7 @@ func testAccCheckAWSEksAddonExists(ctx context.Context, resourceName string, add
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 		output, err := finder.AddonByClusterNameAndAddonName(ctx, conn, clusterName, addonName)
 
@@ -757,7 +758,7 @@ func testAccCheckAWSEksAddonExists(ctx context.Context, resourceName string, add
 
 func testAccCheckAWSEksAddonDestroy(s *terraform.State) error {
 	ctx := context.TODO()
-	conn := acctest.Provider.Meta().(*AWSClient).eksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_addon" {
@@ -787,7 +788,7 @@ func testAccCheckAWSEksAddonDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSEksAddon(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).eksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	input := &eks.DescribeAddonVersionsInput{}
 
@@ -804,7 +805,7 @@ func testAccPreCheckAWSEksAddon(t *testing.T) {
 
 func testAccCheckEksAddonUpdateTags(addon *eks.Addon, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 		return keyvaluetags.EksUpdateTags(conn, aws.StringValue(addon.AddonArn), oldTags, newTags)
 	}

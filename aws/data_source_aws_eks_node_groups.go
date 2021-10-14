@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEksNodeGroups() *schema.Resource {
@@ -29,7 +30,7 @@ func dataSourceAwsEksNodeGroups() *schema.Resource {
 }
 
 func dataSourceAwsEksNodeGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName := d.Get("cluster_name").(string)
 

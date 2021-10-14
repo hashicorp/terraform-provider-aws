@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsEksNodeGroup() *schema.Resource {
@@ -285,8 +286,8 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 }
 
 func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
@@ -371,9 +372,9 @@ func resourceAwsEksNodeGroupCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
 
@@ -467,7 +468,7 @@ func resourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceAwsEksNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
 
@@ -577,7 +578,7 @@ func resourceAwsEksNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAwsEksNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(d.Id())
 

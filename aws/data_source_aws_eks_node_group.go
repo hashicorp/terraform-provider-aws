@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfeks "github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsEksNodeGroup() *schema.Resource {
@@ -137,8 +138,8 @@ func dataSourceAwsEksNodeGroup() *schema.Resource {
 }
 
 func dataSourceAwsEksNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).eksconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EKSConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := d.Get("node_group_name").(string)

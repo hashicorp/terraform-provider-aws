@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/eks/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepEksNodeGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).eksconn
+	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]*testSweepResource, 0)
@@ -1046,7 +1047,7 @@ func testAccCheckAWSEksNodeGroupExists(resourceName string, nodeGroup *eks.Nodeg
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).eksconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 		output, err := finder.NodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
@@ -1061,7 +1062,7 @@ func testAccCheckAWSEksNodeGroupExists(resourceName string, nodeGroup *eks.Nodeg
 }
 
 func testAccCheckAWSEksNodeGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).eksconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_node_group" {
