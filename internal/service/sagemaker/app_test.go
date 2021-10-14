@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func testAccApp_basic(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

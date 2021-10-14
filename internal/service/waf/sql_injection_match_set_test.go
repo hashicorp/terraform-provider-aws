@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccWAFSQLInjectionMatchSet_basic(t *testing.T) {
 	var v waf.SqlInjectionMatchSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

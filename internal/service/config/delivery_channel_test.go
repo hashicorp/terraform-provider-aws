@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func testAccConfigDeliveryChannel_basic(t *testing.T) {
 	var dc configservice.DeliveryChannel
 	rInt := sdkacctest.RandInt()

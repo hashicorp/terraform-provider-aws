@@ -21,10 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccEC2VPCPeeringConnection_basic(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", sdkacctest.RandString(17))

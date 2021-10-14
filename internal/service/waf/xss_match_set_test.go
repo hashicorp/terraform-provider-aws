@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccWAFXSSMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

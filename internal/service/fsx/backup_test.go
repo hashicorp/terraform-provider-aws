@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccFSxBackup_basic(t *testing.T) {
 	var backup fsx.Backup
 	resourceName := "aws_fsx_backup.test"

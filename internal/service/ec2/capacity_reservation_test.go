@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccEC2CapacityReservation_basic(t *testing.T) {
 	var cr ec2.CapacityReservation
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"

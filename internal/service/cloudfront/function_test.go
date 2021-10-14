@@ -21,7 +21,6 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(cloudfront.EndpointsID, testAccErrorCheckSkipFunction)
 
-
 }
 
 func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
@@ -29,8 +28,6 @@ func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
 		"InvalidParameterValueException: Unsupported source arn",
 	)
 }
-
-
 
 func TestAccCloudFrontFunction_basic(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput

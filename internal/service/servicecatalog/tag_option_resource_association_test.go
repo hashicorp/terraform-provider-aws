@@ -20,9 +20,6 @@ import (
 
 // add sweeper to delete known test servicecat tag option resource associations
 
-
-
-
 func TestAccServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_tag_option_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

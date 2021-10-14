@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

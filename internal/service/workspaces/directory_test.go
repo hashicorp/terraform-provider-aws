@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func testAccDirectory_basic(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)

@@ -100,5 +100,3 @@ func testAccGetCurRegion() string {
 
 	return testAccCurRegion
 }
-
-

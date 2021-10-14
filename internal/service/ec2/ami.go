@@ -26,7 +26,7 @@ const (
 	AWSAMIRetryTimeout    = 40 * time.Minute
 	AMIDeleteRetryTimeout = 90 * time.Minute
 	AWSAMIRetryDelay      = 5 * time.Second
-	AMIRetryMinTimeout = 3 * time.Second
+	AMIRetryMinTimeout    = 3 * time.Second
 )
 
 func ResourceAMI() *schema.Resource {

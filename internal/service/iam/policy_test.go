@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIAMPolicy_basic(t *testing.T) {
 	var out iam.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -22,10 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 /**
  Before running this test, at least one of these ENV variables combinations must be set:
 

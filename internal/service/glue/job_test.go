@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccGlueJob_basic(t *testing.T) {
 	var job glue.Job
 

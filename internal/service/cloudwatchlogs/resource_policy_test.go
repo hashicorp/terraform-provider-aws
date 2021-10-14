@@ -16,10 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccCloudWatchLogsResourcePolicy_basic(t *testing.T) {
 	name := sdkacctest.RandString(5)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"

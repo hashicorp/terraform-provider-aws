@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccEKSFargateProfile_basic(t *testing.T) {
 	var fargateProfile eks.FargateProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

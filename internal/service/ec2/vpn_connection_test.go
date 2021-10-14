@@ -40,10 +40,6 @@ type TunnelOptions struct {
 	startupAction              string
 }
 
-
-
-
-
 func TestAccEC2VPNConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)

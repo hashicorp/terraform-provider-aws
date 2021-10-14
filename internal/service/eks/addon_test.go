@@ -22,10 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccEKSAddon_basic(t *testing.T) {
 	var addon eks.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

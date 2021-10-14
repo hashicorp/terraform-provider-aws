@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 	var locationEfs1 datasync.DescribeLocationEfsOutput
 	efsFileSystemResourceName := "aws_efs_file_system.test"

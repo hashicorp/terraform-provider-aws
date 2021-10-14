@@ -29,7 +29,6 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(ec2.EndpointsID, testAccErrorCheckSkipEC2)
 
-
 }
 
 func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
@@ -38,8 +37,6 @@ func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
 		"Invalid value specified for Phase",
 	)
 }
-
-
 
 func TestFetchRootDevice(t *testing.T) {
 	cases := []struct {

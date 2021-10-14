@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func testAccIPGroup_basic(t *testing.T) {
 	var v workspaces.IpGroup
 	ipGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

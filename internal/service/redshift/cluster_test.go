@@ -21,10 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccRedshiftCluster_basic(t *testing.T) {
 	var v redshift.Cluster
 

@@ -21,10 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 	resourceName := "aws_timestreamwrite_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

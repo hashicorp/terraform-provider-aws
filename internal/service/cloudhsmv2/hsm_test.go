@@ -16,10 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func testAccHSM_basic(t *testing.T) {
 	resourceName := "aws_cloudhsm_v2_hsm.test"
 

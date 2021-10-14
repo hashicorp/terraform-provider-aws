@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccAPIGatewayV2VPCLink_basic(t *testing.T) {
 	var v apigatewayv2.GetVpcLinkOutput
 	resourceName := "aws_apigatewayv2_vpc_link.test"

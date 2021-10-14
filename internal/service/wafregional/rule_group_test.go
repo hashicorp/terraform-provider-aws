@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccWAFRegionalRuleGroup_basic(t *testing.T) {
 	var rule waf.Rule
 	var group waf.RuleGroup

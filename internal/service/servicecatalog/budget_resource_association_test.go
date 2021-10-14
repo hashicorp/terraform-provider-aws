@@ -20,9 +20,6 @@ import (
 
 // add sweeper to delete known test servicecat budget resource associations
 
-
-
-
 func TestAccServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_budget_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -84,11 +84,6 @@ func TestTrimTrailingPeriod(t *testing.T) {
 
 // add sweeper to delete resources
 
-
-
-
-
-
 func TestAccRoute53Zone_basic(t *testing.T) {
 	var zone route53.GetHostedZoneOutput
 

@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIoTTopicRule_basic(t *testing.T) {
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"

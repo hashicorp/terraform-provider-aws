@@ -21,10 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccCodePipeline_basic(t *testing.T) {
 	var p1, p2 codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)

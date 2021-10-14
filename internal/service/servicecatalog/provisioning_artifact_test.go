@@ -20,9 +20,6 @@ import (
 
 // add sweeper to delete known test servicecat provisioning artifacts
 
-
-
-
 func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

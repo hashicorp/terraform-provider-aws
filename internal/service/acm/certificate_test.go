@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccACMCertificate_emailValidation(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)

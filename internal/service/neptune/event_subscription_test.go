@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccNeptuneEventSubscription_basic(t *testing.T) {
 	var v neptune.EventSubscription
 	rInt := sdkacctest.RandInt()

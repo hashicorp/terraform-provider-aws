@@ -21,10 +21,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(lexmodelbuildingservice.EndpointsID, testAccErrorCheckSkipLex)
 
-
 }
-
-
 
 func testAccErrorCheckSkipLex(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

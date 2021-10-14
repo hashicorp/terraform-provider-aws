@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccEKSCluster_basic(t *testing.T) {
 	var cluster eks.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -21,10 +21,6 @@ import (
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
-
-
-
-
 func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

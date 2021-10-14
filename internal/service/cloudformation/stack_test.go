@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccCloudFormationStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

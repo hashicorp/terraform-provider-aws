@@ -21,10 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccEMRCluster_basic(t *testing.T) {
 	var cluster emr.Cluster
 

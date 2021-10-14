@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIoTThingType_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 

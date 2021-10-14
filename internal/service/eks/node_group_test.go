@@ -23,10 +23,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkipEKS)
 
-
 }
-
-
 
 func TestAccEKSNodeGroup_basic(t *testing.T) {
 	var nodeGroup eks.Nodegroup

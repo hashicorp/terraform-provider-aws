@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 	var assoc ec2.TargetNetwork
 	var group ec2.SecurityGroup

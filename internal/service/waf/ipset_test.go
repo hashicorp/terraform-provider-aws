@@ -23,10 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccWAFIPSet_basic(t *testing.T) {
 	var v waf.IPSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

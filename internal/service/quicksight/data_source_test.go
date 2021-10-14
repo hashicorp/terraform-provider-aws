@@ -22,10 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestQuickSightDataSourcePermissionsDiff(t *testing.T) {
 	testCases := []struct {
 		name            string

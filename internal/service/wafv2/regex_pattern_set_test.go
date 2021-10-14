@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccWAFV2RegexPatternSet_basic(t *testing.T) {
 	var v wafv2.RegexPatternSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

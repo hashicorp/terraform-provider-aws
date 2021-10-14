@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 	var classifier glue.Classifier
 

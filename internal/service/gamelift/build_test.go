@@ -20,10 +20,6 @@ import (
 
 const testAccGameliftBuildPrefix = "tf_acc_build_"
 
-
-
-
-
 func TestAccGameLiftBuild_basic(t *testing.T) {
 	var conf gamelift.Build
 

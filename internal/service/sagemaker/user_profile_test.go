@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func testAccUserProfile_basic(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

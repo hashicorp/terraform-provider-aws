@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 	resourceName := "aws_appstream_image_builder.test"
 	instanceType := "stream.standard.small"

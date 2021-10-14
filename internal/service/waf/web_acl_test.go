@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccWAFWebACL_basic(t *testing.T) {
 	var webACL waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))

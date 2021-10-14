@@ -20,10 +20,6 @@ import (
 
 const testAccGameliftGameSessionQueuePrefix = "tfAccQueue-"
 
-
-
-
-
 func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 	var conf gamelift.GameSessionQueue
 

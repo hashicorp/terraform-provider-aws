@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 // testAccErrorCheckSkipEBSVolume skips EBS volume tests that have error messages indicating unsupported features
 func testAccErrorCheckSkipEBSVolume(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

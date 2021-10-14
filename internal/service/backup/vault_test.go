@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccBackupVault_basic(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 

@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccRDSSubnetGroup_basic(t *testing.T) {
 	var v rds.DBSubnetGroup
 

@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 	var locationNfs1 datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

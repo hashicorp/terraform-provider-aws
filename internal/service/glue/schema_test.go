@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccGlueSchema_basic(t *testing.T) {
 	var schema glue.GetSchemaOutput
 

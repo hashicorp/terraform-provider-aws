@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestDecodeIamServiceLinkedRoleID(t *testing.T) {
 	var testCases = []struct {
 		Input        string

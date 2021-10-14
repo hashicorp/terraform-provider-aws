@@ -22,10 +22,6 @@ import (
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
-
-
-
-
 func TestAccSQSQueue_basic(t *testing.T) {
 	var queueAttributes map[string]string
 	resourceName := "aws_sqs_queue.test"

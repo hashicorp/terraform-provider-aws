@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccDirectConnectLag_basic(t *testing.T) {
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"

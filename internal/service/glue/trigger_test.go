@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccGlueTrigger_basic(t *testing.T) {
 	var trigger glue.Trigger
 

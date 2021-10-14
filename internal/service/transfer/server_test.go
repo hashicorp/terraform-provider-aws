@@ -22,10 +22,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(transfer.EndpointsID, testAccErrorCheckSkipTransfer)
 
-
 }
-
-
 
 func testAccErrorCheckSkipTransfer(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

@@ -22,10 +22,6 @@ import (
 	"github.com/pquerna/otp/totp"
 )
 
-
-
-
-
 func TestAccIAMUser_basic(t *testing.T) {
 	var conf iam.GetUserOutput
 

@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 	resourceName := "aws_route53_resolver_dnssec_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

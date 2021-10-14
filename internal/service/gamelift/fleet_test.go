@@ -20,12 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
-
-
 func TestDiffGameliftPortSettings(t *testing.T) {
 	testCases := []struct {
 		Old           []interface{}

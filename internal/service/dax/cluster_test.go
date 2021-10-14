@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccDAXCluster_basic(t *testing.T) {
 	var dc dax.Cluster
 	rString := sdkacctest.RandString(10)

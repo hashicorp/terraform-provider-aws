@@ -21,9 +21,6 @@ import (
 
 // add sweeper to delete known test servicecat principal portfolio associations
 
-
-
-
 func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_principal_portfolio_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

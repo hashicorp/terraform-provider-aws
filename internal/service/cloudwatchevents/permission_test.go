@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccCloudWatchEventsPermission_basic(t *testing.T) {
 	principal1 := "111111111111"
 	principal2 := "*"

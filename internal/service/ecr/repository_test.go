@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-
-
-
-
 func TestAccECRRepository_basic(t *testing.T) {
 	var v ecr.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccECRPublicRepository_basic(t *testing.T) {
 	var v ecrpublic.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

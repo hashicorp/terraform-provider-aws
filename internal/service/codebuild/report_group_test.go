@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccCodeBuildReportGroup_basic(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

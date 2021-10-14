@@ -22,12 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
-
-
 func TestAccIAMRole_basic(t *testing.T) {
 	var conf iam.Role
 	rName := sdkacctest.RandString(10)

@@ -21,10 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func testAccApp_basic(t *testing.T) {
 	var app amplify.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

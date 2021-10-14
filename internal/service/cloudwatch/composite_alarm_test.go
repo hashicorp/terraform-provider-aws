@@ -21,10 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccCloudWatchCompositeAlarm_basic(t *testing.T) {
 	suffix := sdkacctest.RandString(8)
 	resourceName := "aws_cloudwatch_composite_alarm.test"

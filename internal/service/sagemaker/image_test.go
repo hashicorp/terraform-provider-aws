@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccSageMakerImage_basic(t *testing.T) {
 	var image sagemaker.DescribeImageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccRDSParameterGroup_basic(t *testing.T) {
 	var v rds.DBParameterGroup
 	resourceName := "aws_db_parameter_group.test"

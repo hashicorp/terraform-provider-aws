@@ -23,9 +23,6 @@ import (
 
 // add sweeper to delete known test subnets
 
-
-
-
 func TestAccEC2Subnet_basic(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"

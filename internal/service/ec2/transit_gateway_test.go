@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccEC2TransitGateway_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Gateway": {

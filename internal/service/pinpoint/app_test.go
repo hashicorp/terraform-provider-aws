@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccPinpointApp_basic(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test"

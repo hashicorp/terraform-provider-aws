@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIAMOpenidConnectProvider_OpenID_basic(t *testing.T) {
 	rString := sdkacctest.RandString(5)
 	url := "accounts.testle.com/" + rString

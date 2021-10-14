@@ -24,8 +24,6 @@ func init() {
 
 }
 
-
-
 // testAccErrorCheckSkipAppStream skips AppStream tests that have error messages indicating unsupported features
 func testAccErrorCheckSkipAppStream(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

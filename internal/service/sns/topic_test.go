@@ -25,10 +25,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkipSNS)
 
-
 }
-
-
 
 func testAccErrorCheckSkipSNS(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

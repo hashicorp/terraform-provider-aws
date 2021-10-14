@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccDataSyncAgent_basic(t *testing.T) {
 	var agent1 datasync.DescribeAgentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

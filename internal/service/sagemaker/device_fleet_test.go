@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 	var deviceFleet sagemaker.DescribeDeviceFleetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

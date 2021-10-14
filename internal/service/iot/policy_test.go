@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIoTPolicy_basic(t *testing.T) {
 	var v iot.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

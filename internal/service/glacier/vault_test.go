@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccGlacierVault_basic(t *testing.T) {
 	var vault glacier.DescribeVaultOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

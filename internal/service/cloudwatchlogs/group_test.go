@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccCloudWatchLogsGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()

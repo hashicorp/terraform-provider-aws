@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccEC2NetworkACL_basic(t *testing.T) {
 	resourceName := "aws_network_acl.test"
 	var networkAcl ec2.NetworkAcl

@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccGlueMlTransform_ML_basic(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 

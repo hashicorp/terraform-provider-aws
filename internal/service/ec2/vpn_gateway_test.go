@@ -20,9 +20,6 @@ import (
 
 // add sweeper to delete known test VPN Gateways
 
-
-
-
 func TestAccEC2VPNGateway_basic(t *testing.T) {
 	var v, v2 ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"

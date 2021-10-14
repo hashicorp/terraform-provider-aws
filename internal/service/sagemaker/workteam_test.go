@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func testAccWorkteam_cognitoConfig(t *testing.T) {
 	var workteam sagemaker.Workteam
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

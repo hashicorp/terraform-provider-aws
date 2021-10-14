@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccCloudFrontMonitoringSubscription_basic(t *testing.T) {
 	var v cloudfront.MonitoringSubscription
 	resourceName := "aws_cloudfront_monitoring_subscription.test"

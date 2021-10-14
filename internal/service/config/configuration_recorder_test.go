@@ -15,10 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func testAccConfigConfigurationRecorder_basic(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
 	rInt := sdkacctest.RandInt()

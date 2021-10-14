@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -534,8 +530,6 @@ func testAccCheckCertificateAuthorityDestroy(s *terraform.State) error {
 
 	return nil
 }
-
-
 
 func testAccCertificateAuthorityConfig_Enabled(commonName, certificateAuthorityType string, enabled bool) string {
 	return fmt.Sprintf(`

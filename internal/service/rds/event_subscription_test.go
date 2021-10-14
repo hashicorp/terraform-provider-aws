@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccRDSEventSubscription_basic(t *testing.T) {
 	var v rds.EventSubscription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

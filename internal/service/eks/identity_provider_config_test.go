@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

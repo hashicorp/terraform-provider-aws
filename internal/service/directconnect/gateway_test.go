@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccDirectConnectGateway_basic(t *testing.T) {
 	var v directconnect.Gateway
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

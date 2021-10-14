@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccGlueRegistry_basic(t *testing.T) {
 	var registry glue.GetRegistryOutput
 

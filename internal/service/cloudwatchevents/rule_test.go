@@ -24,10 +24,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(events.EndpointsID, testAccErrorCheckSkipEvents)
 
-
 }
-
-
 
 func testAccErrorCheckSkipEvents(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

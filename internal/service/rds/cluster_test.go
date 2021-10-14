@@ -25,7 +25,6 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(rds.EndpointsID, testAccErrorCheckSkipRDS)
 
-
 }
 
 func testAccErrorCheckSkipRDS(t *testing.T) resource.ErrorCheckFunc {
@@ -37,8 +36,6 @@ func testAccErrorCheckSkipRDS(t *testing.T) resource.ErrorCheckFunc {
 		"Read replica DB clusters are not available in this region for engine aurora",
 	)
 }
-
-
 
 func TestAccRDSCluster_basic(t *testing.T) {
 	var dbCluster rds.DBCluster

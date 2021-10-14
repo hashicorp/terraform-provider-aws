@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func testAccWorkspace_basic(t *testing.T) {
 	var v workspaces.Workspace
 	rName := sdkacctest.RandString(8)

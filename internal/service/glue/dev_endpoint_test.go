@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccGlueDevEndpoint_basic(t *testing.T) {
 	var endpoint glue.DevEndpoint
 

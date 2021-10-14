@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccEC2Host_basic(t *testing.T) {
 	var host ec2.Host
 	resourceName := "aws_ec2_host.test"

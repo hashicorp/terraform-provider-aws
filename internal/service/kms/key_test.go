@@ -19,10 +19,6 @@ import (
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
-
-
-
-
 func TestAccKMSKey_basic(t *testing.T) {
 	var key kms.KeyMetadata
 	resourceName := "aws_kms_key.test"

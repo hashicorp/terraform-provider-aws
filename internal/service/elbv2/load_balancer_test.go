@@ -24,7 +24,6 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(elbv2.EndpointsID, testAccErrorCheckSkipELBv2)
 
-
 }
 
 func testAccErrorCheckSkipELBv2(t *testing.T) resource.ErrorCheckFunc {
@@ -33,8 +32,6 @@ func testAccErrorCheckSkipELBv2(t *testing.T) resource.ErrorCheckFunc {
 		"ValidationError: Action type 'authenticate-cognito' must be one of 'redirect,fixed-response,forward,authenticate-oidc'",
 	)
 }
-
-
 
 func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 	cases := []struct {

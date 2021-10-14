@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccQLDBLedger_basic(t *testing.T) {
 	var qldbCluster qldb.DescribeLedgerOutput
 	rInt := sdkacctest.RandInt()

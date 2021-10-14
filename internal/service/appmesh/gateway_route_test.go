@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func testAccGatewayRoute_basic(t *testing.T) {
 	var v appmesh.GatewayRouteData
 	resourceName := "aws_appmesh_gateway_route.test"

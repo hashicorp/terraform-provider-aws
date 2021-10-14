@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccServiceDiscoveryService_private(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

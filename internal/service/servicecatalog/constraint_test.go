@@ -20,9 +20,6 @@ import (
 
 // add sweeper to delete known test servicecat constraints
 
-
-
-
 func TestAccServiceCatalogConstraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

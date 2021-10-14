@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIoTRoleAlias_basic(t *testing.T) {
 	alias := sdkacctest.RandomWithPrefix("RoleAlias-")
 	alias2 := sdkacctest.RandomWithPrefix("RoleAlias2-")

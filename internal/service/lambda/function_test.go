@@ -27,7 +27,6 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(lambda.EndpointsID, testAccErrorCheckSkipLambda)
 
-
 }
 
 func testAccErrorCheckSkipLambda(t *testing.T) resource.ErrorCheckFunc {
@@ -35,8 +34,6 @@ func testAccErrorCheckSkipLambda(t *testing.T) resource.ErrorCheckFunc {
 		"InvalidParameterValueException: Unsupported source arn",
 	)
 }
-
-
 
 func TestAccLambdaFunction_basic(t *testing.T) {
 	var conf lambda.GetFunctionOutput

@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccMWAAEnvironment_basic(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 

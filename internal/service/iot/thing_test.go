@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIoTThing_basic(t *testing.T) {
 	var thing iot.DescribeThingOutput
 	rString := sdkacctest.RandString(8)

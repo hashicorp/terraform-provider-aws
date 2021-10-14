@@ -18,12 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
-
-
 func TestAccGameLiftAlias_basic(t *testing.T) {
 	var conf gamelift.Alias
 

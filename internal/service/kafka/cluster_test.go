@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 const (
 	mskClusterPortPlaintext = 9092
 	mskClusterPortSaslScram = 9096

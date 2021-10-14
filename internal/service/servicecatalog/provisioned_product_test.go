@@ -21,9 +21,6 @@ import (
 
 // add sweeper to delete known test servicecat provisioned products
 
-
-
-
 func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 

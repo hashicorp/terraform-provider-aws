@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccKinesisStream_basic(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"

@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccLexModelBuildingIntent_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"

@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccStorageGatewayGateway_GatewayType_cached(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

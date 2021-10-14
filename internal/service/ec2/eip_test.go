@@ -28,9 +28,6 @@ import (
 // although we depend on aws_vpc to potentially have
 // the majority of those associations removed.
 
-
-
-
 func TestAccEC2EIP_basic(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"

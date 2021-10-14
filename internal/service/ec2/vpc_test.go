@@ -22,9 +22,6 @@ import (
 
 // add sweeper to delete known test vpcs
 
-
-
-
 func TestAccEC2VPC_basic(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"

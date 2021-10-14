@@ -14,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-
-
 func TestAccSESEmailIdentity_basic(t *testing.T) {
 	email := acctest.DefaultEmailAddress
 	resourceName := "aws_ses_email_identity.test"

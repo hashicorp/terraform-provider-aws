@@ -29,7 +29,6 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(autoscaling.EndpointsID, testAccErrorCheckSkipAutoScaling)
 
-
 }
 
 func testAccErrorCheckSkipAutoScaling(t *testing.T) resource.ErrorCheckFunc {
@@ -37,8 +36,6 @@ func testAccErrorCheckSkipAutoScaling(t *testing.T) resource.ErrorCheckFunc {
 		"gp3 is invalid",
 	)
 }
-
-
 
 func TestAccAutoScalingGroup_basic(t *testing.T) {
 	var group autoscaling.Group

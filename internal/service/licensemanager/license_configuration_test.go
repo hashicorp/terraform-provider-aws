@@ -16,10 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 	var licenseConfiguration licensemanager.LicenseConfiguration
 	resourceName := "aws_licensemanager_license_configuration.example"

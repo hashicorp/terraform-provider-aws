@@ -18,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 	policyName := sdkacctest.RandomWithPrefix("PolicyName-")
 	policyName2 := sdkacctest.RandomWithPrefix("PolicyName2-")

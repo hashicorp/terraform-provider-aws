@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-
-
-
-
 func TestAccSchemasRegistry_basic(t *testing.T) {
 	var v schemas.DescribeRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

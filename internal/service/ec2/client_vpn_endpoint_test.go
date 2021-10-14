@@ -28,10 +28,6 @@ func init() {
 	testAccEc2ClientVpnEndpointSemaphore = sync.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVpnEndpointDefaultLimit)
 }
 
-
-
-
-
 // This is part of an experimental feature, do not use this as a starting point for tests
 //   "This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.
 //   What is here was dangerous and repulsive to us. This message is a warning about danger."

@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccGlueWorkflow_basic(t *testing.T) {
 	var workflow glue.Workflow
 

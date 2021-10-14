@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 	var locationSmb1 datasync.DescribeLocationSmbOutput
 

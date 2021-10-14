@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIAMServerCertificate_basic(t *testing.T) {
 	var cert iam.ServerCertificate
 

@@ -20,9 +20,6 @@ import (
 
 // add sweeper to delete known test servicecat service actions
 
-
-
-
 func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_service_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

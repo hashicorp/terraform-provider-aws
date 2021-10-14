@@ -25,10 +25,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(elasticache.EndpointsID, testAccErrorCheckSkipElasticache)
 
-
 }
-
-
 
 func testAccErrorCheckSkipElasticache(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,

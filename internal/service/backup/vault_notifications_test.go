@@ -17,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccBackupVaultNotifications_Notification_basic(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
 

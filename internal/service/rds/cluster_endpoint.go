@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	AWSRDSClusterEndpointCreateTimeout   = 30 * time.Minute
-	AWSRDSClusterEndpointRetryDelay      = 5 * time.Second
-	ClusterEndpointRetryMinTimeout = 3 * time.Second
+	AWSRDSClusterEndpointCreateTimeout = 30 * time.Minute
+	AWSRDSClusterEndpointRetryDelay    = 5 * time.Second
+	ClusterEndpointRetryMinTimeout     = 3 * time.Second
 )
 
 func ResourceClusterEndpoint() *schema.Resource {

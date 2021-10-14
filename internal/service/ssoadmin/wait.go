@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	awsSSOAdminAccountAssignmentCreateTimeout      = 5 * time.Minute
-	awsSSOAdminAccountAssignmentDeleteTimeout      = 5 * time.Minute
-	awsSSOAdminAccountAssignmentDelay              = 5 * time.Second
-	awsSSOAdminAccountAssignmentMinTimeout         = 3 * time.Second
-	permissionSetProvisioningRetryDelay = 5 * time.Second
-	awsSSOAdminPermissionSetProvisionTimeout       = 10 * time.Minute
+	awsSSOAdminAccountAssignmentCreateTimeout = 5 * time.Minute
+	awsSSOAdminAccountAssignmentDeleteTimeout = 5 * time.Minute
+	awsSSOAdminAccountAssignmentDelay         = 5 * time.Second
+	awsSSOAdminAccountAssignmentMinTimeout    = 3 * time.Second
+	permissionSetProvisioningRetryDelay       = 5 * time.Second
+	awsSSOAdminPermissionSetProvisionTimeout  = 10 * time.Minute
 )
 
 func waitAccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {

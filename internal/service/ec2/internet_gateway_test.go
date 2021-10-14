@@ -19,10 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccEC2InternetGateway_basic(t *testing.T) {
 	var v, v2 ec2.InternetGateway
 	resourceName := "aws_internet_gateway.test"

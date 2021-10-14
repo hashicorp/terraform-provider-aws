@@ -20,10 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-
-
-
-
 func TestAccIAMGroup_basic(t *testing.T) {
 	var conf iam.GetGroupOutput
 	resourceName := "aws_iam_group.test"
