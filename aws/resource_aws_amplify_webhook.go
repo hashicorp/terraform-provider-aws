@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAmplifyWebhook() *schema.Resource {
+func ResourceWebhook() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAmplifyWebhookCreate,
-		Read:   resourceAwsAmplifyWebhookRead,
-		Update: resourceAwsAmplifyWebhookUpdate,
-		Delete: resourceAwsAmplifyWebhookDelete,
+		Create: resourceWebhookCreate,
+		Read:   resourceWebhookRead,
+		Update: resourceWebhookUpdate,
+		Delete: resourceWebhookDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -58,7 +58,7 @@ func resourceAwsAmplifyWebhook() *schema.Resource {
 	}
 }
 
-func resourceAwsAmplifyWebhookCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	input := &amplify.CreateWebhookInput{
@@ -79,10 +79,10 @@ func resourceAwsAmplifyWebhookCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(output.Webhook.WebhookId))
 
-	return resourceAwsAmplifyWebhookRead(d, meta)
+	return resourceWebhookRead(d, meta)
 }
 
-func resourceAwsAmplifyWebhookRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	webhook, err := finder.WebhookByID(conn, d.Id())
@@ -120,7 +120,7 @@ func resourceAwsAmplifyWebhookRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsAmplifyWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	input := &amplify.UpdateWebhookInput{
@@ -142,10 +142,10 @@ func resourceAwsAmplifyWebhookUpdate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error updating Amplify Webhook (%s): %w", d.Id(), err)
 	}
 
-	return resourceAwsAmplifyWebhookRead(d, meta)
+	return resourceWebhookRead(d, meta)
 }
 
-func resourceAwsAmplifyWebhookDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AmplifyConn
 
 	log.Printf("[DEBUG] Deleting Amplify Webhook: %s", d.Id())

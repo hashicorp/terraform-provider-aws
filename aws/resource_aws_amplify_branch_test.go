@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSAmplifyBranch_basic(t *testing.T) {
@@ -79,7 +80,7 @@ func testAccAWSAmplifyBranch_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyBranchConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAmplifyBranch(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBranch(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

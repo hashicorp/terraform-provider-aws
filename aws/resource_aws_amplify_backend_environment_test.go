@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func testAccAWSAmplifyBackendEnvironment_basic(t *testing.T) {
@@ -65,7 +66,7 @@ func testAccAWSAmplifyBackendEnvironment_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyBackendEnvironmentConfigBasic(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAmplifyBackendEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceBackendEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

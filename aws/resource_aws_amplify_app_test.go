@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -43,7 +44,7 @@ func testSweepAmplifyApps(region string) error {
 		}
 
 		for _, app := range page.Apps {
-			r := resourceAwsAmplifyApp()
+			r := ResourceApp()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(app.AppId))
 			err = r.Delete(d, client)
@@ -132,7 +133,7 @@ func testAccAWSAmplifyApp_disappears(t *testing.T) {
 				Config: testAccAWSAmplifyAppConfigName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsAmplifyApp(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
