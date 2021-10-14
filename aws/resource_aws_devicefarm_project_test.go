@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
@@ -191,7 +192,7 @@ func testAccCheckDeviceFarmProjectExists(n string, v *devicefarm.Project) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).devicefarmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
 		resp, err := conn.GetProject(
 			&devicefarm.GetProjectInput{Arn: aws.String(rs.Primary.ID)})
 		if err != nil {
@@ -208,7 +209,7 @@ func testAccCheckDeviceFarmProjectExists(n string, v *devicefarm.Project) resour
 }
 
 func testAccCheckDeviceFarmProjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).devicefarmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_devicefarm_project" {
