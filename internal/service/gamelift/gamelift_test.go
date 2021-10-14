@@ -21,7 +21,7 @@ func (gg *testAccGameliftGame) Parameters(portNumber int) string {
 
 // Location found from CloudTrail event after finishing tutorial
 // e.g. https://us-west-2.console.aws.amazon.com/gamelift/home?region=us-west-2#/r/fleets/sample
-func testAccAWSGameliftSampleGame(region string) (*testAccGameliftGame, error) {
+func testAccSampleGame(region string) (*testAccGameliftGame, error) {
 	version := "v1.2.0.0"
 	accId, err := testAccGameliftAccountIdByRegion(region)
 	if err != nil {

@@ -26,11 +26,11 @@ func init() {
 		Dependencies: []string{
 			"aws_gamelift_build",
 		},
-		F: testSweepGameliftFleets,
+		F: sweepFleets,
 	})
 }
 
-func testSweepGameliftFleets(region string) error {
+func sweepFleets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -247,7 +247,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 	desc := fmt.Sprintf("Updated description %s", sdkacctest.RandString(8))
 
 	region := acctest.Region()
-	g, err := testAccAWSGameliftSampleGame(region)
+	g, err := testAccSampleGame(region)
 
 	if tfresource.NotFound(err) {
 		t.Skip(err)
@@ -270,16 +270,16 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheckAWSGamelift(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
+		CheckDestroy: testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn),
+				Config: testAccFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
@@ -297,9 +297,9 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGameliftFleetBasicUpdatedConfig(desc, uFleetName, launchPath, params, buildName, bucketName, key, roleArn),
+				Config: testAccFleetBasicUpdatedConfig(desc, uFleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
@@ -329,7 +329,7 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 	buildName := sdkacctest.RandomWithPrefix("tf-acc-build")
 
 	region := acctest.Region()
-	g, err := testAccAWSGameliftSampleGame(region)
+	g, err := testAccSampleGame(region)
 
 	if tfresource.NotFound(err) {
 		t.Skip(err)
@@ -352,33 +352,33 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheckAWSGamelift(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
+		CheckDestroy: testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGameliftFleetBasicConfigTags1(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key1", "value1"),
+				Config: testAccFleetBasicTags1Config(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccAWSGameliftFleetBasicConfigTags2(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFleetBasicTags2Config(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSGameliftFleetBasicConfigTags1(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key2", "value2"),
+				Config: testAccFleetBasicTags1Config(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -396,7 +396,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 	desc := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(8))
 
 	region := acctest.Region()
-	g, err := testAccAWSGameliftSampleGame(region)
+	g, err := testAccSampleGame(region)
 
 	if tfresource.NotFound(err) {
 		t.Skip(err)
@@ -422,16 +422,16 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheckAWSGamelift(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
+		CheckDestroy: testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath, params[0], buildName, bucketName, key, roleArn),
+				Config: testAccFleetAllFieldsConfig(fleetName, desc, launchPath, params[0], buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
@@ -468,9 +468,9 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath, params[1], buildName, bucketName, key, roleArn),
+				Config: testAccFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath, params[1], buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
@@ -517,7 +517,7 @@ func TestAccAWSGameliftFleet_disappears(t *testing.T) {
 	buildName := sdkacctest.RandomWithPrefix("tf-acc-build")
 
 	region := acctest.Region()
-	g, err := testAccAWSGameliftSampleGame(region)
+	g, err := testAccSampleGame(region)
 
 	if tfresource.NotFound(err) {
 		t.Skip(err)
@@ -540,17 +540,17 @@ func TestAccAWSGameliftFleet_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheckAWSGamelift(t)
+			testAccPreCheck(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, gamelift.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
+		CheckDestroy: testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn),
+				Config: testAccFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
-					testAccCheckAWSGameliftFleetDisappears(&conf),
+					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetDisappears(&conf),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -558,7 +558,7 @@ func TestAccAWSGameliftFleet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes) resource.TestCheckFunc {
+func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -597,7 +597,7 @@ func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes)
 	}
 }
 
-func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resource.TestCheckFunc {
+func testAccCheckFleetDisappears(res *gamelift.FleetAttributes) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
@@ -624,7 +624,7 @@ func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resou
 	}
 }
 
-func testAccCheckAWSGameliftFleetDestroy(s *terraform.State) error {
+func testAccCheckFleetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -651,8 +651,8 @@ func testAccCheckAWSGameliftFleetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
-	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
+func testAccFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
+	return testAccFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = aws_gamelift_build.test.id
   ec2_instance_type = "c4.large"
@@ -669,8 +669,8 @@ resource "aws_gamelift_fleet" "test" {
 `, fleetName, launchPath, params)
 }
 
-func testAccAWSGameliftFleetBasicConfigTags1(fleetName, launchPath, params, buildName, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
-	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
+func testAccFleetBasicTags1Config(fleetName, launchPath, params, buildName, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
+	return testAccFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = aws_gamelift_build.test.id
   ec2_instance_type = "c4.large"
@@ -691,8 +691,8 @@ resource "aws_gamelift_fleet" "test" {
 `, fleetName, launchPath, params, tagKey1, tagValue1)
 }
 
-func testAccAWSGameliftFleetBasicConfigTags2(fleetName, launchPath, params, buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
+func testAccFleetBasicTags2Config(fleetName, launchPath, params, buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = aws_gamelift_build.test.id
   ec2_instance_type = "c4.large"
@@ -714,8 +714,8 @@ resource "aws_gamelift_fleet" "test" {
 `, fleetName, launchPath, params, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSGameliftFleetBasicUpdatedConfig(desc, fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
-	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
+func testAccFleetBasicUpdatedConfig(desc, fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
+	return testAccFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id                           = aws_gamelift_build.test.id
   ec2_instance_type                  = "c4.large"
@@ -740,9 +740,9 @@ resource "aws_gamelift_fleet" "test" {
 `, desc, fleetName, launchPath, params)
 }
 
-func testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
-	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) +
-		testAccAWSGameLiftFleetIAMRole(buildName) + fmt.Sprintf(`
+func testAccFleetAllFieldsConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
+	return testAccFleetBasicTemplate(buildName, bucketName, key, roleArn) +
+		testAccFleetIAMRole(buildName) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = aws_gamelift_build.test.id
   ec2_instance_type = "c4.large"
@@ -794,9 +794,9 @@ resource "aws_gamelift_fleet" "test" {
 `, fleetName, desc, launchPath, params)
 }
 
-func testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
-	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) +
-		testAccAWSGameLiftFleetIAMRole(buildName) + fmt.Sprintf(`
+func testAccFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
+	return testAccFleetBasicTemplate(buildName, bucketName, key, roleArn) +
+		testAccFleetIAMRole(buildName) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = aws_gamelift_build.test.id
   ec2_instance_type = "c4.large"
@@ -849,7 +849,7 @@ resource "aws_gamelift_fleet" "test" {
 `, fleetName, desc, launchPath, params)
 }
 
-func testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn string) string {
+func testAccFleetBasicTemplate(buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
   name             = %[1]q
@@ -864,7 +864,7 @@ resource "aws_gamelift_build" "test" {
 `, buildName, bucketName, key, roleArn)
 }
 
-func testAccAWSGameLiftFleetIAMRole(rName string) string {
+func testAccFleetIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "test-role-%[1]s"
