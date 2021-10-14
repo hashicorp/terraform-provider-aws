@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func testSweepCloudhsmv2Hsms(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).cloudhsmv2conn
+	conn := client.(*conns.AWSClient).CloudHSMV2Conn
 	input := &cloudhsmv2.DescribeClustersInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -262,7 +263,7 @@ resource "aws_cloudhsm_v2_hsm" "test" {
 }
 
 func testAccCheckAWSCloudHsmV2HsmDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).cloudhsmv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudhsm_v2_hsm" {
@@ -285,7 +286,7 @@ func testAccCheckAWSCloudHsmV2HsmDestroy(s *terraform.State) error {
 
 func testAccCheckAWSCloudHsmV2HsmExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*AWSClient).cloudhsmv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudHSMV2Conn
 
 		it, ok := s.RootModule().Resources[name]
 		if !ok {
