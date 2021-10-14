@@ -159,7 +159,7 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   ses.ServiceName,
+		Service:   "ses",
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),

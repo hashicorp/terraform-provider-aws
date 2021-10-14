@@ -28,10 +28,16 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"cdc_start_position": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"cdc_start_time"},
+			},
 			"cdc_start_time": {
 				Type:     schema.TypeString,
 				Optional: true,
 				// Requires a Unix timestamp in seconds. Example 1484346880
+				ConflictsWith: []string{"cdc_start_position"},
 			},
 			"migration_type": {
 				Type:     schema.TypeString,
@@ -103,6 +109,10 @@ func resourceAwsDmsReplicationTaskCreate(d *schema.ResourceData, meta interface{
 		TableMappings:             aws.String(d.Get("table_mappings").(string)),
 		Tags:                      tags.IgnoreAws().DatabasemigrationserviceTags(),
 		TargetEndpointArn:         aws.String(d.Get("target_endpoint_arn").(string)),
+	}
+
+	if v, ok := d.GetOk("cdc_start_position"); ok {
+		request.CdcStartPosition = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cdc_start_time"); ok {
@@ -199,6 +209,11 @@ func resourceAwsDmsReplicationTaskUpdate(d *schema.ResourceData, meta interface{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
 	}
 	hasChanges := false
+
+	if d.HasChange("cdc_start_position") {
+		request.CdcStartPosition = aws.String(d.Get("cdc_start_position").(string))
+		hasChanges = true
+	}
 
 	if d.HasChange("cdc_start_time") {
 		seconds, err := strconv.ParseInt(d.Get("cdc_start_time").(string), 10, 64)
@@ -298,6 +313,7 @@ func resourceAwsDmsReplicationTaskDelete(d *schema.ResourceData, meta interface{
 func resourceAwsDmsReplicationTaskSetState(d *schema.ResourceData, task *dms.ReplicationTask) error {
 	d.SetId(aws.StringValue(task.ReplicationTaskIdentifier))
 
+	d.Set("cdc_start_position", task.CdcStartPosition)
 	d.Set("migration_type", task.MigrationType)
 	d.Set("replication_instance_arn", task.ReplicationInstanceArn)
 	d.Set("replication_task_arn", task.ReplicationTaskArn)

@@ -36,6 +36,11 @@ The `awsproviderlint` tool extends the `tfproviderlint` tool and its checks. See
 
 ## Development and Testing
 
+**WARNING:** The `vendor` directory for this module is required,
+because the [`analysistest` package](https://godoc.org/golang.org/x/tools/go/analysis/analysistest),
+the testing framework for the [`go/analysis`](https://godoc.org/golang.org/x/tools/go/analysis) framework,
+does not support Go Modules.
+
 This project is built on the [`tfproviderlint`](https://github.com/bflad/tfproviderlint) project and the [`go/analysis`](https://godoc.org/golang.org/x/tools/go/analysis) framework.
 
 Helpful tooling for development:

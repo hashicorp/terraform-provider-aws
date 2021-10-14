@@ -552,6 +552,7 @@ func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.Re
 		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
+	instanceState.RawState = stateVal
 
 	private := make(map[string]interface{})
 	if len(req.Private) > 0 {
@@ -656,11 +657,20 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 		return resp, nil
 	}
 
+	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
+	if err != nil {
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
+		return resp, nil
+	}
+
 	priorState, err := res.ShimInstanceStateFromValue(priorStateVal)
 	if err != nil {
 		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
+	priorState.RawState = priorStateVal
+	priorState.RawPlan = proposedNewStateVal
+	priorState.RawConfig = configVal
 	priorPrivate := make(map[string]interface{})
 	if len(req.PriorPrivate) > 0 {
 		if err := json.Unmarshal(req.PriorPrivate, &priorPrivate); err != nil {
@@ -869,6 +879,12 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 		return resp, nil
 	}
 
+	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
+	if err != nil {
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
+		return resp, nil
+	}
+
 	priorState, err := res.ShimInstanceStateFromValue(priorStateVal)
 	if err != nil {
 		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
@@ -893,9 +909,12 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 			Attributes: make(map[string]*terraform.ResourceAttrDiff),
 			Meta:       make(map[string]interface{}),
 			Destroy:    true,
+			RawPlan:    plannedStateVal,
+			RawState:   priorStateVal,
+			RawConfig:  configVal,
 		}
 	} else {
-		diff, err = DiffFromValues(ctx, priorStateVal, plannedStateVal, stripResourceModifiers(res))
+		diff, err = DiffFromValues(ctx, priorStateVal, plannedStateVal, configVal, stripResourceModifiers(res))
 		if err != nil {
 			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
@@ -906,6 +925,9 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 		diff = &terraform.InstanceDiff{
 			Attributes: make(map[string]*terraform.ResourceAttrDiff),
 			Meta:       make(map[string]interface{}),
+			RawPlan:    plannedStateVal,
+			RawState:   priorStateVal,
+			RawConfig:  configVal,
 		}
 	}
 
@@ -1100,6 +1122,8 @@ func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.
 		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
+
+	diff.RawConfig = configVal
 
 	// now we can get the new complete data source
 	newInstanceState, diags := res.ReadDataApply(ctx, diff, s.provider.Meta())

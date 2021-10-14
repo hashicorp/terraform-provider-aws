@@ -16,6 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tfrds "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -160,19 +164,8 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"agent",
-						"alert",
-						"audit",
-						"error",
-						"general",
-						"listener",
-						"slowquery",
-						"trace",
-						"postgresql",
-						"upgrade",
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(tfrds.ExportableLogType_Values(), false),
 				},
 			},
 			"endpoint": {
@@ -345,6 +338,11 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"replica_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(rds.ReplicaMode_Values(), false),
 			},
 			"replicas": {
 				Type:     schema.TypeList,
@@ -656,6 +654,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("ca_cert_identifier"); ok {
 			modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if attr, ok := d.GetOk("replica_mode"); ok {
+			opts.ReplicaMode = aws.String(attr.(string))
 			requiresModifyDbInstance = true
 		}
 
@@ -1364,14 +1367,16 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	v, err := resourceAwsDbInstanceRetrieve(d.Id(), conn)
+	v, err := finder.DBInstanceByID(conn, d.Id())
 
-	if err != nil {
-		return err
-	}
-	if v == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DB Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading DB Instance (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", v.DBName)
@@ -1491,6 +1496,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting replicas attribute: %#v, error: %#v", replicas, err)
 	}
 
+	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
@@ -1503,57 +1509,45 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	log.Printf("[DEBUG] DB Instance destroy: %v", d.Id())
+	input := &rds.DeleteDBInstanceInput{
+		DBInstanceIdentifier:   aws.String(d.Id()),
+		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
+	}
 
-	opts := rds.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
+	if d.Get("skip_final_snapshot").(bool) {
+		input.SkipFinalSnapshot = aws.Bool(true)
+	} else {
+		input.SkipFinalSnapshot = aws.Bool(false)
 
-	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	opts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
-
-	if !skipFinalSnapshot {
-		if name, present := d.GetOk("final_snapshot_identifier"); present {
-			opts.FinalDBSnapshotIdentifier = aws.String(name.(string))
+		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
-			return fmt.Errorf("DB Instance FinalSnapshotIdentifier is required when a final snapshot is required")
+			return fmt.Errorf("final_snapshot_identifier is required when skip_final_snapshot is false")
 		}
 	}
 
-	deleteAutomatedBackups := d.Get("delete_automated_backups").(bool)
-	opts.DeleteAutomatedBackups = aws.Bool(deleteAutomatedBackups)
-
-	log.Printf("[DEBUG] DB Instance destroy configuration: %v", opts)
-	_, err := conn.DeleteDBInstance(&opts)
+	log.Printf("[DEBUG] Deleting DB Instance: %s", d.Id())
+	_, err := conn.DeleteDBInstance(input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil
 	}
 
-	// InvalidDBInstanceState: Instance XXX is already being deleted.
-	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return fmt.Errorf("error deleting Database Instance %q: %s", d.Id(), err)
+	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
+		return fmt.Errorf("error deleting DB Instance (%s): %w", d.Id(), err)
 	}
 
-	log.Println("[INFO] Waiting for DB Instance to be destroyed")
-	return waitUntilAwsDbInstanceIsDeleted(d.Id(), conn, d.Timeout(schema.TimeoutDelete))
+	if _, err := waiter.DBInstanceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for DB Instance (%s) delete: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func waitUntilAwsDbInstanceIsAvailableAfterUpdate(id string, conn *rds.RDS, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceAwsDbInstanceUpdatePendingStates,
 		Target:     []string{"available", "storage-optimization"},
-		Refresh:    resourceAwsDbInstanceStateRefreshFunc(id, conn),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func waitUntilAwsDbInstanceIsDeleted(id string, conn *rds.RDS, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsDbInstanceDeletePendingStates,
-		Target:     []string{},
 		Refresh:    resourceAwsDbInstanceStateRefreshFunc(id, conn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -1748,6 +1742,11 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("replica_mode") {
+		req.ReplicaMode = aws.String(d.Get("replica_mode").(string))
+		requestUpdate = true
+	}
+
 	log.Printf("[DEBUG] Send DB Instance Modification request: %t", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
@@ -1907,21 +1906,6 @@ var resourceAwsDbInstanceCreatePendingStates = []string{
 	"starting",
 	"stopping",
 	"upgrading",
-}
-
-var resourceAwsDbInstanceDeletePendingStates = []string{
-	"available",
-	"backing-up",
-	"configuring-enhanced-monitoring",
-	"configuring-log-exports",
-	"creating",
-	"deleting",
-	"incompatible-parameters",
-	"modifying",
-	"starting",
-	"stopping",
-	"storage-full",
-	"storage-optimization",
 }
 
 var resourceAwsDbInstanceUpdatePendingStates = []string{

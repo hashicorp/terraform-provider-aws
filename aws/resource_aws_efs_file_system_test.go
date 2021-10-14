@@ -360,6 +360,7 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", efs.TransitionToIARulesAfter30Days),
 				),
 			},
@@ -375,6 +376,7 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", efs.TransitionToPrimaryStorageClassRulesAfter1Access),
 				),
 			},
@@ -383,6 +385,20 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigWithLifecyclePolicyMulti(
+					"transition_to_primary_storage_class",
+					efs.TransitionToPrimaryStorageClassRulesAfter1Access,
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter30Days,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", efs.TransitionToPrimaryStorageClassRulesAfter1Access),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_ia", efs.TransitionToIARulesAfter30Days),
 				),
 			},
 		},
@@ -625,7 +641,7 @@ resource "aws_efs_file_system" "test" {
 `, provisionedThroughputInMibps)
 }
 
-func testAccAWSEFSFileSystemConfigWithLifecyclePolicy(lpName string, lpVal string) string {
+func testAccAWSEFSFileSystemConfigWithLifecyclePolicy(lpName, lpVal string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   lifecycle_policy {
@@ -633,6 +649,20 @@ resource "aws_efs_file_system" "test" {
   }
 }
 `, lpName, lpVal)
+}
+
+func testAccAWSEFSFileSystemConfigWithLifecyclePolicyMulti(lpName1, lpVal1, lpName2, lpVal2 string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  lifecycle_policy {
+    %[1]s = %[2]q
+  }
+
+  lifecycle_policy {
+    %[3]s = %[4]q
+  }
+}
+`, lpName1, lpVal1, lpName2, lpVal2)
 }
 
 const testAccAWSEFSFileSystemConfigRemovedLifecyclePolicy = `

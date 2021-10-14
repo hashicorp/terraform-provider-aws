@@ -84,7 +84,7 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", ses.ServiceName, fmt.Sprintf("configuration-set/%s", rName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),

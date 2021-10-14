@@ -318,6 +318,7 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 			"partition_index": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				MaxItems: 3,
 				Elem: &schema.Resource{
@@ -328,7 +329,7 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"keys": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -492,6 +493,9 @@ func resourceAwsGlueCatalogTableDelete(d *schema.ResourceData, meta interface{})
 		DatabaseName: aws.String(dbName),
 	})
 	if err != nil {
+		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			return nil
+		}
 		return fmt.Errorf("Error deleting Glue Catalog Table: %w", err)
 	}
 	return nil
@@ -560,7 +564,7 @@ func expandGlueTablePartitionIndexes(a []interface{}) []*glue.PartitionIndex {
 func expandGlueTablePartitionIndex(m map[string]interface{}) *glue.PartitionIndex {
 	partitionIndex := &glue.PartitionIndex{
 		IndexName: aws.String(m["index_name"].(string)),
-		Keys:      expandStringSet(m["keys"].(*schema.Set)),
+		Keys:      expandStringList(m["keys"].([]interface{})),
 	}
 
 	return partitionIndex
@@ -869,7 +873,7 @@ func flattenGluePartitionIndex(c *glue.PartitionIndexDescriptor) map[string]inte
 		for _, key := range c.Keys {
 			names = append(names, key.Name)
 		}
-		partitionIndex["keys"] = flattenStringSet(names)
+		partitionIndex["keys"] = flattenStringList(names)
 	}
 
 	return partitionIndex

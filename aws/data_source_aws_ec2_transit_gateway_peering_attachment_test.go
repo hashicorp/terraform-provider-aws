@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *testing.T) {
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
-	resource.ParallelTest(t, resource.TestCase{
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
@@ -38,13 +39,14 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t *testing.T) {
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	resource.ParallelTest(t, resource.TestCase{
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
@@ -68,12 +70,13 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_differentAcco
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.T) {
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
-	resource.ParallelTest(t, resource.TestCase{
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
@@ -97,13 +100,14 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *te
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *testing.T) {
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	resource.ParallelTest(t, resource.TestCase{
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
@@ -127,12 +131,13 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_differentAccount(
 	})
 }
 
-func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
-	resource.ParallelTest(t, resource.TestCase{
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)

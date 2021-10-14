@@ -71,8 +71,6 @@ func resourceAwsSnsSmsPreferences() *schema.Resource {
 	}
 }
 
-const resourceId = "aws_sns_sms_id"
-
 var smsAttributeMap = map[string]string{
 	"monthly_spend_limit":                   "MonthlySpendLimit",
 	"delivery_status_iam_role_arn":          "DeliveryStatusIAMRole",
@@ -119,7 +117,8 @@ func resourceAwsSnsSmsPreferencesSet(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error setting SMS preferences: %s", err)
 	}
 
-	d.SetId(resourceId)
+	d.SetId("aws_sns_sms_id")
+
 	return nil
 }
 

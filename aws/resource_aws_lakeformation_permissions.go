@@ -601,6 +601,10 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 		return nil
 	}
 
+	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "cannot grant/revoke permission on non-existent column") {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("unable to revoke LakeFormation Permissions (input: %v): %w", input, err)
 	}

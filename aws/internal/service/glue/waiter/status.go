@@ -121,3 +121,19 @@ func GlueDevEndpointStatus(conn *glue.Glue, name string) resource.StateRefreshFu
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func GluePartitionIndexStatus(conn *glue.Glue, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.PartitionIndexByName(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.IndexStatus), nil
+	}
+}

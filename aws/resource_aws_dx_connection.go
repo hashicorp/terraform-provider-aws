@@ -65,6 +65,7 @@ func resourceAwsDxConnection() *schema.Resource {
 			"provider_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"tags":     tagsSchema(),
@@ -179,10 +180,10 @@ func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) err
 func resourceAwsDxConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	return deleteDirectConnectConnection(conn, d.Id())
+	return deleteDirectConnectConnection(conn, d.Id(), waiter.ConnectionDeleted)
 }
 
-func deleteDirectConnectConnection(conn *directconnect.DirectConnect, connectionID string) error {
+func deleteDirectConnectConnection(conn *directconnect.DirectConnect, connectionID string, waiter func(*directconnect.DirectConnect, string) (*directconnect.Connection, error)) error {
 	log.Printf("[DEBUG] Deleting Direct Connect Connection: %s", connectionID)
 	_, err := conn.DeleteConnection(&directconnect.DeleteConnectionInput{
 		ConnectionId: aws.String(connectionID),
@@ -196,7 +197,7 @@ func deleteDirectConnectConnection(conn *directconnect.DirectConnect, connection
 		return fmt.Errorf("error deleting Direct Connect Connection (%s): %w", connectionID, err)
 	}
 
-	_, err = waiter.ConnectionDeleted(conn, connectionID)
+	_, err = waiter(conn, connectionID)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Direct Connect Connection (%s) delete: %w", connectionID, err)

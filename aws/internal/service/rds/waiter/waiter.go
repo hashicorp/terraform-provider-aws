@@ -9,27 +9,64 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for an EventSubscription to return Deleted
-	EventSubscriptionDeletedTimeout  = 10 * time.Minute
 	RdsClusterInitiateUpgradeTimeout = 5 * time.Minute
 
 	DBClusterRoleAssociationCreatedTimeout = 5 * time.Minute
 	DBClusterRoleAssociationDeletedTimeout = 5 * time.Minute
 )
 
-// EventSubscriptionDeleted waits for a EventSubscription to return Deleted
-func EventSubscriptionDeleted(conn *rds.RDS, subscriptionName string) (*rds.EventSubscription, error) {
+func EventSubscriptionCreated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"deleting"},
-		Target:  []string{EventSubscriptionStatusNotFound},
-		Refresh: EventSubscriptionStatus(conn, subscriptionName),
-		Timeout: EventSubscriptionDeletedTimeout,
+		Pending:    []string{tfrds.EventSubscriptionStatusCreating},
+		Target:     []string{tfrds.EventSubscriptionStatusActive},
+		Refresh:    EventSubscriptionStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*rds.EventSubscription); ok {
-		return v, err
+	if output, ok := outputRaw.(*rds.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func EventSubscriptionDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfrds.EventSubscriptionStatusDeleting},
+		Target:     []string{},
+		Refresh:    EventSubscriptionStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func EventSubscriptionUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{tfrds.EventSubscriptionStatusModifying},
+		Target:     []string{tfrds.EventSubscriptionStatusActive},
+		Refresh:    EventSubscriptionStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.EventSubscription); ok {
+		return output, err
 	}
 
 	return nil, err
@@ -49,8 +86,8 @@ func DBProxyEndpointAvailable(conn *rds.RDS, id string, timeout time.Duration) (
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*rds.DBProxyEndpoint); ok {
-		return v, err
+	if output, ok := outputRaw.(*rds.DBProxyEndpoint); ok {
+		return output, err
 	}
 
 	return nil, err
@@ -67,8 +104,8 @@ func DBProxyEndpointDeleted(conn *rds.RDS, id string, timeout time.Duration) (*r
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*rds.DBProxyEndpoint); ok {
-		return v, err
+	if output, ok := outputRaw.(*rds.DBProxyEndpoint); ok {
+		return output, err
 	}
 
 	return nil, err
@@ -102,6 +139,61 @@ func DBClusterRoleAssociationDeleted(conn *rds.RDS, dbClusterID, roleARN string)
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*rds.DBClusterRole); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func DBInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			tfrds.DBInstanceStatusAvailable,
+			tfrds.DBInstanceStatusBackingUp,
+			tfrds.DBInstanceStatusConfiguringEnhancedMonitoring,
+			tfrds.DBInstanceStatusConfiguringLogExports,
+			tfrds.DBInstanceStatusCreating,
+			tfrds.DBInstanceStatusDeleting,
+			tfrds.DBInstanceStatusIncompatibleParameters,
+			tfrds.DBInstanceStatusModifying,
+			tfrds.DBInstanceStatusStarting,
+			tfrds.DBInstanceStatusStopping,
+			tfrds.DBInstanceStatusStorageFull,
+			tfrds.DBInstanceStatusStorageOptimization,
+		},
+		Target:     []string{},
+		Refresh:    DBInstanceStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func DBClusterInstanceDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			tfrds.DBInstanceStatusConfiguringLogExports,
+			tfrds.DBInstanceStatusDeleting,
+			tfrds.DBInstanceStatusModifying,
+		},
+		Target:     []string{},
+		Refresh:    DBInstanceStatus(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBInstance); ok {
 		return output, err
 	}
 

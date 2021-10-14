@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -36,12 +38,16 @@ func testSweepGlueConnections(region string) error {
 			return false
 		}
 		for _, connection := range page.ConnectionList {
-			name := aws.StringValue(connection.Name)
+			id := fmt.Sprintf("%s:%s", catalogID, aws.StringValue(connection.Name))
 
-			log.Printf("[INFO] Deleting Glue Connection: %s", name)
-			err := deleteGlueConnection(conn, catalogID, name)
+			log.Printf("[INFO] Deleting Glue Connection: %s", id)
+			r := resourceAwsGlueConnection()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", name, err)
+				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", id, err)
 			}
 		}
 		return !lastPage
@@ -82,12 +88,61 @@ func TestAccAWSGlueConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueConnection_tags(t *testing.T) {
+	var connection glue.Connection
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_connection.test"
+
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfigTags1(rName, jdbcConnectionUrl, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSGlueConnectionConfigTags2(rName, jdbcConnectionUrl, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSGlueConnectionConfigTags1(rName, jdbcConnectionUrl, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -342,6 +397,7 @@ func TestAccAWSGlueConnection_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -366,24 +422,15 @@ func testAccCheckAWSGlueConnectionExists(resourceName string, connection *glue.C
 			return err
 		}
 
-		output, err := conn.GetConnection(&glue.GetConnectionInput{
-			CatalogId: aws.String(catalogID),
-			Name:      aws.String(connectionName),
-		})
+		output, err := finder.ConnectionByName(conn, connectionName, catalogID)
+
 		if err != nil {
 			return err
 		}
 
-		if output.Connection == nil {
-			return fmt.Errorf("Glue Connection (%s) not found", rs.Primary.ID)
-		}
+		*connection = *output
 
-		if aws.StringValue(output.Connection.Name) == connectionName {
-			*connection = *output.Connection
-			return nil
-		}
-
-		return fmt.Errorf("Glue Connection (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -399,24 +446,17 @@ func testAccCheckAWSGlueConnectionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		output, err := conn.GetConnection(&glue.GetConnectionInput{
-			CatalogId: aws.String(catalogID),
-			Name:      aws.String(connectionName),
-		})
+		_, err = finder.ConnectionByName(conn, connectionName, catalogID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-				return nil
-			}
-
+			return err
 		}
 
-		connection := output.Connection
-		if connection != nil && aws.StringValue(connection.Name) == connectionName {
-			return fmt.Errorf("Glue Connection %s still exists", rs.Primary.ID)
-		}
-
-		return err
+		return fmt.Errorf("Glue Connection %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -583,6 +623,43 @@ resource "aws_glue_connection" "test" {
   }
 }
 `, rName, jdbcConnectionUrl)
+}
+
+func testAccAWSGlueConnectionConfigTags1(rName, jdbcConnectionUrl, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_properties = {
+    JDBC_CONNECTION_URL = %[2]q
+    PASSWORD            = "testpassword"
+    USERNAME            = "testusername"
+  }
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, jdbcConnectionUrl, tagKey1, tagValue1)
+}
+
+func testAccAWSGlueConnectionConfigTags2(rName, jdbcConnectionUrl, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_properties = {
+    JDBC_CONNECTION_URL = %[2]q
+    PASSWORD            = "testpassword"
+    USERNAME            = "testusername"
+  }
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, jdbcConnectionUrl, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSGlueConnectionConfig_MongoDB(rName, connectionUrl string) string {

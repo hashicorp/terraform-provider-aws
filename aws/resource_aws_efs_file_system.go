@@ -110,7 +110,7 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 			"lifecycle_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MaxItems: 1,
+				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"transition_to_ia": {

@@ -21,22 +21,8 @@ type Tuple struct {
 
 // Equal returns true if the two Tuples are exactly equal. Unlike Is, passing
 // in a Tuple with no ElementTypes will always return false.
-func (tu Tuple) Equal(o Tuple) bool {
-	return tu.equals(o, true)
-}
-
-// Is returns whether `t` is a Tuple type or not. If `t` is an instance of the
-// Tuple type and its ElementTypes property is not nil, it will only return
-// true if the ElementTypes are considered the same. To be considered the same,
-// there must be the same number of ElementTypes, arranged in the same order,
-// and the types in each position must be considered the same as the type in
-// the same position in the other Tuple.
-func (tu Tuple) Is(t Type) bool {
-	return tu.equals(t, false)
-}
-
-func (tu Tuple) equals(t Type, exact bool) bool {
-	v, ok := t.(Tuple)
+func (tu Tuple) Equal(o Type) bool {
+	v, ok := o.(Tuple)
 	if !ok {
 		return false
 	}
@@ -44,21 +30,51 @@ func (tu Tuple) equals(t Type, exact bool) bool {
 		// when doing exact comparisons, we can't compare types that
 		// don't have element types set, so we just consider them not
 		// equal
-		//
-		// when doing inexact comparisons, the absence of an element
-		// type just means "is this a Tuple?" We know it is, so return
-		// true
-		return !exact
+		return false
 	}
 	if len(v.ElementTypes) != len(tu.ElementTypes) {
 		return false
 	}
 	for pos, typ := range tu.ElementTypes {
-		if !typ.equals(v.ElementTypes[pos], exact) {
+		if !typ.Equal(v.ElementTypes[pos]) {
 			return false
 		}
 	}
 	return true
+}
+
+// UsableAs returns whether the two Tuples are type compatible.
+//
+// If the other type is DynamicPseudoType, it will return true.
+// If the other type is not a Tuple, it will return false.
+// If the other Tuple does not have matching ElementTypes length, it will
+// return false.
+// If the other Tuple does not have type compatible ElementTypes in each
+// position, it will return false.
+func (tu Tuple) UsableAs(o Type) bool {
+	if o.Is(DynamicPseudoType) {
+		return true
+	}
+	v, ok := o.(Tuple)
+	if !ok {
+		return false
+	}
+	if len(v.ElementTypes) != len(tu.ElementTypes) {
+		return false
+	}
+	for pos, typ := range tu.ElementTypes {
+		if !typ.UsableAs(v.ElementTypes[pos]) {
+			return false
+		}
+	}
+	return true
+}
+
+// Is returns whether `t` is a Tuple type or not. It does not perform any
+// ElementTypes checks.
+func (tu Tuple) Is(t Type) bool {
+	_, ok := t.(Tuple)
+	return ok
 }
 
 func (tu Tuple) String() string {
@@ -80,15 +96,6 @@ func (tu Tuple) supportedGoTypes() []string {
 	return []string{"[]tftypes.Value"}
 }
 
-func valueCanBeTuple(val interface{}) bool {
-	switch val.(type) {
-	case []Value:
-		return true
-	default:
-		return false
-	}
-}
-
 func valueFromTuple(types []Type, in interface{}) (Value, error) {
 	switch value := in.(type) {
 	case []Value:
@@ -102,9 +109,10 @@ func valueFromTuple(types []Type, in interface{}) (Value, error) {
 			}
 			for pos, v := range value {
 				typ := types[pos]
-				err := useTypeAs(v.Type(), typ, NewAttributePath().WithElementKeyInt(int64(pos)))
-				if err != nil {
-					return Value{}, err
+				if v.Type().Is(DynamicPseudoType) && v.IsKnown() {
+					return Value{}, NewAttributePath().WithElementKeyInt(pos).NewErrorf("invalid value %s for %s", v, v.Type())
+				} else if !v.Type().Is(DynamicPseudoType) && !v.Type().UsableAs(typ) {
+					return Value{}, NewAttributePath().WithElementKeyInt(pos).NewErrorf("can't use %s as %s", v.Type(), typ)
 				}
 			}
 		}

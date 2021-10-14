@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
 )
 
 func init() {
@@ -41,6 +42,31 @@ func testSweepRoute53ResolverFirewallRuleGroupAssociations(region string) error 
 			r := resourceAwsRoute53ResolverFirewallRuleGroupAssociation()
 			d := r.Data(nil)
 			d.SetId(id)
+
+			if aws.StringValue(firewallRuleGroupAssociation.MutationProtection) == route53resolver.MutationProtectionStatusEnabled {
+				input := &route53resolver.UpdateFirewallRuleGroupAssociationInput{
+					FirewallRuleGroupAssociationId: firewallRuleGroupAssociation.Id,
+					Name:                           firewallRuleGroupAssociation.Name,
+					MutationProtection:             aws.String(route53resolver.MutationProtectionStatusDisabled),
+				}
+
+				_, err := conn.UpdateFirewallRuleGroupAssociation(input)
+
+				if err != nil {
+					log.Printf("[ERROR] %s", err)
+					sweeperErrs = multierror.Append(sweeperErrs, err)
+					continue
+				}
+
+				_, err = waiter.FirewallRuleGroupAssociationUpdated(conn, d.Id())
+
+				if err != nil {
+					log.Printf("[ERROR] error waiting for Route53 Resolver DNS Firewall rule group association (%s) to be updated: %s", d.Id(), err)
+					sweeperErrs = multierror.Append(sweeperErrs, err)
+					continue
+				}
+			}
+
 			err := r.Delete(d, client)
 
 			if err != nil {

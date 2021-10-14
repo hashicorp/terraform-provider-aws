@@ -148,7 +148,7 @@ func testAccCheckAWSCodeStarConnectionsHostDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCodeStarConnectionsHostVpcConfig(rName string) string {
+func testAccAWSCodeStarConnectionsHostVpcBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -209,7 +209,9 @@ resource "aws_codestarconnections_host" "test" {
 }
 
 func testAccAWSCodeStarConnectionsHostConfigVpcConfig(rName string) string {
-	return testAccAWSCodeStarConnectionsHostVpcConfig(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSCodeStarConnectionsHostVpcBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_codestarconnections_host" "test" {
   name              = %[1]q
   provider_endpoint = "https://test.com"
@@ -221,5 +223,5 @@ resource "aws_codestarconnections_host" "test" {
     vpc_id             = aws_vpc.test.id
   }
 }
-`, rName)
+`, rName))
 }

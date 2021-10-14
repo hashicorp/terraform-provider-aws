@@ -5,13 +5,38 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
-	LexModelBuildingServiceStatusCreated  = "Created"
-	LexModelBuildingServiceStatusNotFound = "NotFound"
-	LexModelBuildingServiceStatusUnknown  = "Unknown"
+	//Lex Bot Statuses
+	LexModeBuildingServicesStatusBuilding          = "BUILDING"
+	LexModeBuildingServicesStatusFailed            = "FAILED"
+	LexModeBuildingServicesStatusNotBuilt          = "NOT_BUILT"
+	LexModeBuildingServicesStatusReady             = "READY"
+	LexModeBuildingServicesStatusReadyBasicTesting = "READY_BASIC_TESTING"
+
+	LexModelBuildingServiceStatusCreated  = "CREATED"
+	LexModelBuildingServiceStatusNotFound = "NOTFOUND"
+	LexModelBuildingServiceStatusUnknown  = "UNKNOWN"
 )
+
+func BotVersionStatus(conn *lexmodelbuildingservice.LexModelBuildingService, name, version string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.BotVersionByName(conn, name, version)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
 
 func LexSlotTypeStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -53,26 +78,6 @@ func LexIntentStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id s
 	}
 }
 
-func LexBotStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := conn.GetBotVersions(&lexmodelbuildingservice.GetBotVersionsInput{
-			Name: aws.String(id),
-		})
-		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
-		}
-		if err != nil {
-			return nil, LexModelBuildingServiceStatusUnknown, err
-		}
-
-		if output == nil || len(output.Bots) == 0 {
-			return nil, LexModelBuildingServiceStatusNotFound, nil
-		}
-
-		return output, LexModelBuildingServiceStatusCreated, nil
-	}
-}
-
 func LexBotAliasStatus(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
@@ -85,7 +90,6 @@ func LexBotAliasStatus(conn *lexmodelbuildingservice.LexModelBuildingService, bo
 		if err != nil {
 			return nil, LexModelBuildingServiceStatusUnknown, err
 		}
-
 		if output == nil {
 			return nil, LexModelBuildingServiceStatusNotFound, nil
 		}

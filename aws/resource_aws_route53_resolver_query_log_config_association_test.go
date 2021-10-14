@@ -41,6 +41,9 @@ func testSweepRoute53ResolverQueryLogConfigAssociations(region string) error {
 			r := resourceAwsRoute53ResolverQueryLogConfigAssociation()
 			d := r.Data(nil)
 			d.SetId(id)
+			// The following additional arguments are required during the resource's Delete operation
+			d.Set("resolver_query_log_config_id", queryLogConfigAssociation.ResolverQueryLogConfigId)
+			d.Set("resource_id", queryLogConfigAssociation.ResourceId)
 			err := r.Delete(d, client)
 
 			if err != nil {

@@ -36,3 +36,32 @@ func ClusterByID(conn *redshift.Redshift, id string) (*redshift.Cluster, error) 
 
 	return output.Clusters[0], nil
 }
+
+func ScheduledActionByName(conn *redshift.Redshift, name string) (*redshift.ScheduledAction, error) {
+	input := &redshift.DescribeScheduledActionsInput{
+		ScheduledActionName: aws.String(name),
+	}
+
+	output, err := conn.DescribeScheduledActions(input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeScheduledActionNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ScheduledActions) == 0 || output.ScheduledActions[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ScheduledActions); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.ScheduledActions[0], nil
+}

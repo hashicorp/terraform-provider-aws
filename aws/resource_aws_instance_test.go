@@ -868,7 +868,7 @@ func TestAccAWSInstance_outpost(t *testing.T) {
 func TestAccAWSInstance_placementGroup(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -881,6 +881,34 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_placementPartitionNumber(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigPlacementPartitionNumber(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
+					resource.TestCheckResourceAttr(resourceName, "placement_partition_number", "3"),
 				),
 			},
 			{
@@ -4556,6 +4584,40 @@ resource "aws_instance" "test" {
 
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfigPlacementPartitionNumber(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name            = %[1]q
+  strategy        = "partition"
+  partition_count = 4
+}
+
+# Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type               = "c5.large"
+  subnet_id                   = aws_subnet.test.id
+  associate_public_ip_address = true
+  placement_group             = aws_placement_group.test.name
+  placement_partition_number  = 3
+
+  # pre-encoded base64 data
+  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }

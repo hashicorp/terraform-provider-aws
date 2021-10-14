@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -24,45 +25,44 @@ func init() {
 func testSweepFlowLogs(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).ec2conn
-	var sweeperErrs *multierror.Error
+	input := &ec2.DescribeFlowLogsInput{}
+	sweepResources := make([]*testSweepResource, 0)
 
-	err = conn.DescribeFlowLogsPages(&ec2.DescribeFlowLogsInput{}, func(page *ec2.DescribeFlowLogsOutput, lastPage bool) bool {
+	err = conn.DescribeFlowLogsPages(input, func(page *ec2.DescribeFlowLogsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, flowLog := range page.FlowLogs {
-			id := aws.StringValue(flowLog.FlowLogId)
+			r := resourceAwsFlowLog()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(flowLog.FlowLogId))
 
-			log.Printf("[INFO] Deleting Flow Log: %s", id)
-			_, err := conn.DeleteFlowLogs(&ec2.DeleteFlowLogsInput{
-				FlowLogIds: aws.StringSlice([]string{id}),
-			})
-			if isAWSErr(err, "InvalidFlowLogId.NotFound", "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Flow Log (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
+
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping Flow Logs sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Flow Logs: %w", err))
+		log.Printf("[WARN] Skipping Flow Log sweep for %s: %s", region, err)
+		return nil
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing Flow Logs (%s): %w", region, err)
+	}
+
+	err = testSweepResourceOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Flow Logs (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func TestAccAWSFlowLog_VPCID(t *testing.T) {
@@ -84,7 +84,6 @@ func TestAccAWSFlowLog_VPCID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-flow-log/fl-.+`)),
-					testAccCheckAWSFlowLogAttributes(&flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
@@ -123,7 +122,6 @@ func TestAccAWSFlowLog_LogFormat(t *testing.T) {
 				Config: testAccFlowLogConfig_LogFormat(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckAWSFlowLogAttributes(&flowLog),
 					resource.TestCheckResourceAttr(resourceName, "log_format", logFormat),
 				),
 			},
@@ -158,7 +156,6 @@ func TestAccAWSFlowLog_SubnetID(t *testing.T) {
 				Config: testAccFlowLogConfig_SubnetID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckAWSFlowLogAttributes(&flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
@@ -193,7 +190,6 @@ func TestAccAWSFlowLog_LogDestinationType_CloudWatchLogs(t *testing.T) {
 				Config: testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckAWSFlowLogAttributes(&flowLog),
 					// We automatically trim :* from ARNs if present
 					testAccCheckResourceAttrRegionalARN(resourceName, "log_destination", "logs", fmt.Sprintf("log-group:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
@@ -225,7 +221,6 @@ func TestAccAWSFlowLog_LogDestinationType_S3(t *testing.T) {
 				Config: testAccFlowLogConfig_LogDestinationType_S3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckAWSFlowLogAttributes(&flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
 					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""),
@@ -257,6 +252,166 @@ func TestAccAWSFlowLog_LogDestinationType_S3_Invalid(t *testing.T) {
 	})
 }
 
+func TestAccAWSFlowLog_LogDestinationType_S3_DO_PlainText(t *testing.T) {
+	var flowLog ec2.FlowLog
+	s3ResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "plain-text"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSFlowLog_LogDestinationType_S3_DO_PlainText_HiveCompatible(t *testing.T) {
+	var flowLog ec2.FlowLog
+	s3ResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible_PerHour(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "plain-text"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.per_hour_partition", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSFlowLog_LogDestinationType_S3_DO_Parquet(t *testing.T) {
+	var flowLog ec2.FlowLog
+	s3ResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSFlowLog_LogDestinationType_S3_DO_Parquet_HiveCompatible(t *testing.T) {
+	var flowLog ec2.FlowLog
+	s3ResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSFlowLog_LogDestinationType_S3_DO_Parquet_HiveCompatible_PerHour(t *testing.T) {
+	var flowLog ec2.FlowLog
+	s3ResourceName := "aws_s3_bucket.test"
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible_PerHour(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),
+					resource.TestCheckResourceAttr(resourceName, "destination_options.0.per_hour_partition", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSFlowLog_LogDestinationType_MaxAggregationInterval(t *testing.T) {
 	var flowLog ec2.FlowLog
 	resourceName := "aws_flow_log.test"
@@ -272,7 +427,6 @@ func TestAccAWSFlowLog_LogDestinationType_MaxAggregationInterval(t *testing.T) {
 				Config: testAccFlowLogConfig_MaxAggregationInterval(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckAWSFlowLogAttributes(&flowLog),
 					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
 				),
 			},
@@ -300,7 +454,6 @@ func TestAccAWSFlowLog_tags(t *testing.T) {
 				Config: testAccFlowLogConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckAWSFlowLogAttributes(&flowLog),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -314,7 +467,6 @@ func TestAccAWSFlowLog_tags(t *testing.T) {
 				Config: testAccFlowLogConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckAWSFlowLogAttributes(&flowLog),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -324,7 +476,6 @@ func TestAccAWSFlowLog_tags(t *testing.T) {
 				Config: testAccFlowLogConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckAWSFlowLogAttributes(&flowLog),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -356,7 +507,7 @@ func TestAccAWSFlowLog_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFlowLogExists(n string, flowLog *ec2.FlowLog) resource.TestCheckFunc {
+func testAccCheckFlowLogExists(n string, v *ec2.FlowLog) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -368,42 +519,38 @@ func testAccCheckFlowLogExists(n string, flowLog *ec2.FlowLog) resource.TestChec
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		describeOpts := &ec2.DescribeFlowLogsInput{
-			FlowLogIds: []*string{aws.String(rs.Primary.ID)},
-		}
-		resp, err := conn.DescribeFlowLogs(describeOpts)
+
+		output, err := finder.FlowLogByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if len(resp.FlowLogs) > 0 {
-			*flowLog = *resp.FlowLogs[0]
-			return nil
-		}
-		return fmt.Errorf("No Flow Logs found for id (%s)", rs.Primary.ID)
-	}
-}
+		*v = *output
 
-func testAccCheckAWSFlowLogAttributes(flowLog *ec2.FlowLog) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if flowLog.FlowLogStatus != nil && *flowLog.FlowLogStatus == "ACTIVE" {
-			return nil
-		}
-		if flowLog.FlowLogStatus == nil {
-			return fmt.Errorf("Flow Log status is not ACTIVE, is nil")
-		} else {
-			return fmt.Errorf("Flow Log status is not ACTIVE, got: %s", *flowLog.FlowLogStatus)
-		}
+		return nil
 	}
 }
 
 func testAccCheckFlowLogDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_flow_log" {
 			continue
 		}
 
-		return nil
+		_, err := finder.FlowLogByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Flow Log %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -489,6 +636,106 @@ resource "aws_flow_log" "test" {
   vpc_id               = aws_vpc.test.id
 }
 `
+}
+
+func testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText(rName string) string {
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = aws_s3_bucket.test.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  destination_options {
+    file_format = "plain-text"
+  }
+}
+`, rName)
+}
+
+func testAccFlowLogConfig_LogDestinationType_S3_DO_PlainText_HiveCompatible_PerHour(rName string) string {
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = aws_s3_bucket.test.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  destination_options {
+    file_format                = "plain-text"
+    hive_compatible_partitions = true
+    per_hour_partition         = true
+  }
+}
+`, rName)
+}
+
+func testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet(rName string) string {
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = aws_s3_bucket.test.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  destination_options {
+    file_format = "parquet"
+  }
+}
+`, rName)
+}
+
+func testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible(rName string) string {
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = aws_s3_bucket.test.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  destination_options {
+    file_format                = "parquet"
+    hive_compatible_partitions = true
+  }
+}
+`, rName)
+}
+
+func testAccFlowLogConfig_LogDestinationType_S3_DO_Parquet_HiveCompatible_PerHour(rName string) string {
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_flow_log" "test" {
+  log_destination      = aws_s3_bucket.test.arn
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.test.id
+  destination_options {
+    file_format                = "parquet"
+    hive_compatible_partitions = true
+    per_hour_partition         = true
+  }
+}
+`, rName)
 }
 
 func testAccFlowLogConfig_SubnetID(rName string) string {

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -53,7 +54,7 @@ func testAccAWSSNSSMSPreferences_empty(t *testing.T) {
 }
 
 func testAccAWSSNSSMSPreferences_defaultSMSType(t *testing.T) {
-	resourceName := "aws_sns_sms_preferences.test_pref"
+	resourceName := "aws_sns_sms_preferences.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -77,7 +78,7 @@ func testAccAWSSNSSMSPreferences_defaultSMSType(t *testing.T) {
 }
 
 func testAccAWSSNSSMSPreferences_almostAll(t *testing.T) {
-	resourceName := "aws_sns_sms_preferences.test_pref"
+	resourceName := "aws_sns_sms_preferences.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -98,8 +99,9 @@ func testAccAWSSNSSMSPreferences_almostAll(t *testing.T) {
 }
 
 func testAccAWSSNSSMSPreferences_deliveryRole(t *testing.T) {
-	resourceName := "aws_sns_sms_preferences.test_pref"
-	iamRoleName := "aws_iam_role.test_smsdelivery_role"
+	resourceName := "aws_sns_sms_preferences.test"
+	iamRoleName := "aws_iam_role.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -108,7 +110,7 @@ func testAccAWSSNSSMSPreferences_deliveryRole(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSNSSMSPrefsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSSMSPreferencesConfig_deliveryRole,
+				Config: testAccAWSSNSSMSPreferencesConfig_deliveryRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "delivery_status_iam_role_arn", iamRoleName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_status_success_sampling_rate", "75"),
@@ -150,30 +152,31 @@ func testAccCheckAWSSNSSMSPrefsDestroy(s *terraform.State) error {
 }
 
 const testAccAWSSNSSMSPreferencesConfig_empty = `
-resource "aws_sns_sms_preferences" "test_pref" {}
+resource "aws_sns_sms_preferences" "test" {}
 `
 const testAccAWSSNSSMSPreferencesConfig_defSMSType = `
-resource "aws_sns_sms_preferences" "test_pref" {
+resource "aws_sns_sms_preferences" "test" {
   default_sms_type = "Transactional"
 }
 `
 
 const testAccAWSSNSSMSPreferencesConfig_almostAll = `
-resource "aws_sns_sms_preferences" "test_pref" {
+resource "aws_sns_sms_preferences" "test" {
   monthly_spend_limit    = "1"
   default_sms_type       = "Transactional"
   usage_report_s3_bucket = "some-bucket"
 }
 `
 
-const testAccAWSSNSSMSPreferencesConfig_deliveryRole = `
-resource "aws_sns_sms_preferences" "test_pref" {
-  delivery_status_iam_role_arn          = aws_iam_role.test_smsdelivery_role.arn
+func testAccAWSSNSSMSPreferencesConfig_deliveryRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_sms_preferences" "test" {
+  delivery_status_iam_role_arn          = aws_iam_role.test.arn
   delivery_status_success_sampling_rate = "75"
 }
 
-resource "aws_iam_role" "test_smsdelivery_role" {
-  name = "test_smsdelivery_role"
+resource "aws_iam_role" "test" {
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<POLICY
@@ -193,9 +196,9 @@ resource "aws_iam_role" "test_smsdelivery_role" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "test_smsdelivery_role_policy" {
-  name = "test_smsdelivery_role_policy"
-  role = aws_iam_role.test_smsdelivery_role.id
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
 
   policy = <<POLICY
 {
@@ -217,4 +220,5 @@ resource "aws_iam_role_policy" "test_smsdelivery_role_policy" {
 }
 POLICY
 }
-`
+`, rName)
+}

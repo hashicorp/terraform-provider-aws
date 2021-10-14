@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -48,6 +49,12 @@ func resourceAwsRouteTable() *schema.Resource {
 		Delete: resourceAwsRouteTableDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -181,7 +188,7 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(output.RouteTable.RouteTableId))
 
-	if _, err := waiter.RouteTableReady(conn, d.Id()); err != nil {
+	if _, err := waiter.RouteTableReady(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Route Table (%s) to become available: %w", d.Id(), err)
 	}
 
@@ -189,7 +196,7 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(string)
 
-			if err := ec2RouteTableEnableVgwRoutePropagation(conn, d.Id(), v); err != nil {
+			if err := ec2RouteTableEnableVgwRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
 		}
@@ -199,7 +206,7 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(map[string]interface{})
 
-			if err := ec2RouteTableAddRoute(conn, d.Id(), v); err != nil {
+			if err := ec2RouteTableAddRoute(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
 		}
@@ -285,7 +292,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 		for _, v := range add {
 			v := v.(string)
 
-			if err := ec2RouteTableEnableVgwRoutePropagation(conn, d.Id(), v); err != nil {
+			if err := ec2RouteTableEnableVgwRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return err
 			}
 		}
@@ -312,7 +319,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 					addRoute = false
 
 					if oldTarget != newTarget {
-						if err := ec2RouteTableUpdateRoute(conn, d.Id(), vNew); err != nil {
+						if err := ec2RouteTableUpdateRoute(conn, d.Id(), vNew, d.Timeout(schema.TimeoutUpdate)); err != nil {
 							return err
 						}
 					}
@@ -320,7 +327,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 
 			if addRoute {
-				if err := ec2RouteTableAddRoute(conn, d.Id(), vNew); err != nil {
+				if err := ec2RouteTableAddRoute(conn, d.Id(), vNew, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return err
 				}
 			}
@@ -344,7 +351,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 
 			if delRoute {
-				if err := ec2RouteTableDeleteRoute(conn, d.Id(), vOld); err != nil {
+				if err := ec2RouteTableDeleteRoute(conn, d.Id(), vOld, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return err
 				}
 			}
@@ -395,7 +402,7 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 
 	// Wait for the route table to really destroy
 	log.Printf("[DEBUG] Waiting for route table (%s) deletion", d.Id())
-	if _, err := waiter.RouteTableDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.RouteTableDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Route Table (%s) deletion: %w", d.Id(), err)
 	}
 
@@ -469,7 +476,7 @@ func resourceAwsRouteTableHash(v interface{}) int {
 }
 
 // ec2RouteTableAddRoute adds a route to the specified route table.
-func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}) error {
+func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
 	if err := validateNestedExactlyOneOf(tfMap, routeTableValidDestinations); err != nil {
 		return fmt.Errorf("error creating route: %w", err)
 	}
@@ -502,7 +509,7 @@ func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.PropagationTimeout,
+		timeout,
 		func() (interface{}, error) {
 			return conn.CreateRoute(input)
 		},
@@ -514,7 +521,7 @@ func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination, timeout)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
@@ -524,7 +531,7 @@ func ec2RouteTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 }
 
 // ec2RouteTableDeleteRoute deletes a route from the specified route table.
-func ec2RouteTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}) error {
+func ec2RouteTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
 	destinationAttributeKey, destination := routeTableRouteDestinationAttribute(tfMap)
 
 	input := &ec2.DeleteRouteInput{
@@ -558,7 +565,7 @@ func ec2RouteTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 		return fmt.Errorf("error deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination)
+	_, err = waiter.RouteDeleted(conn, routeFinder, routeTableID, destination, timeout)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to delete: %w", routeTableID, destination, err)
@@ -568,7 +575,7 @@ func ec2RouteTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 }
 
 // ec2RouteTableUpdateRoute updates a route in the specified route table.
-func ec2RouteTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}) error {
+func ec2RouteTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
 	if err := validateNestedExactlyOneOf(tfMap, routeTableValidDestinations); err != nil {
 		return fmt.Errorf("error updating route: %w", err)
 	}
@@ -606,7 +613,7 @@ func ec2RouteTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[stri
 		return fmt.Errorf("error updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination)
+	_, err = waiter.RouteReady(conn, routeFinder, routeTableID, destination, timeout)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
@@ -636,7 +643,7 @@ func ec2RouteTableDisableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewa
 // ec2RouteTableEnableVgwRoutePropagation attempts to enable VGW route propagation.
 // The specified eventual consistency timeout is respected.
 // Any error is returned.
-func ec2RouteTableEnableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string) error {
+func ec2RouteTableEnableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string, timeout time.Duration) error {
 	input := &ec2.EnableVgwRoutePropagationInput{
 		GatewayId:    aws.String(gatewayID),
 		RouteTableId: aws.String(routeTableID),
@@ -644,7 +651,7 @@ func ec2RouteTableEnableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gateway
 
 	log.Printf("[DEBUG] Enabling Route Table (%s) VPN Gateway (%s) route propagation", routeTableID, gatewayID)
 	_, err := tfresource.RetryWhenAwsErrCodeEquals(
-		waiter.PropagationTimeout,
+		timeout,
 		func() (interface{}, error) {
 			return conn.EnableVgwRoutePropagation(input)
 		},

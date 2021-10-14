@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
-	tf5server "github.com/hashicorp/terraform-plugin-go/tfprotov5/server"
+	tf5server "github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	tf6server "github.com/hashicorp/terraform-plugin-go/tfprotov6/server"
+	tf6server "github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 

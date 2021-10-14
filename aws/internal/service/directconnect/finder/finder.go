@@ -189,6 +189,44 @@ func GatewayAssociationProposalByID(conn *directconnect.DirectConnect, id string
 	return proposal, nil
 }
 
+func HostedConnectionByID(conn *directconnect.DirectConnect, id string) (*directconnect.Connection, error) {
+	input := &directconnect.DescribeHostedConnectionsInput{
+		ConnectionId: aws.String(id),
+	}
+
+	output, err := conn.DescribeHostedConnections(input)
+
+	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "Could not find Connection with ID") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Connections) == 0 || output.Connections[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Connections); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	connection := output.Connections[0]
+
+	if state := aws.StringValue(connection.ConnectionState); state == directconnect.ConnectionStateDeleted || state == directconnect.ConnectionStateRejected {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return connection, nil
+}
+
 func LagByID(conn *directconnect.DirectConnect, id string) (*directconnect.Lag, error) {
 	input := &directconnect.DescribeLagsInput{
 		LagId: aws.String(id),

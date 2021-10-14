@@ -30,6 +30,11 @@ func resourceAwsDxLag() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"connection_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"connections_bandwidth": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -65,6 +70,7 @@ func resourceAwsDxLag() *schema.Resource {
 			"provider_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"tags":     tagsSchema(),
@@ -85,7 +91,15 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
 		LagName:              aws.String(name),
 		Location:             aws.String(d.Get("location").(string)),
-		NumberOfConnections:  aws.Int64(int64(1)),
+	}
+
+	var connectionIDSpecified bool
+	if v, ok := d.GetOk("connection_id"); ok {
+		connectionIDSpecified = true
+		input.ConnectionId = aws.String(v.(string))
+		input.NumberOfConnections = aws.Int64(int64(1))
+	} else {
+		input.NumberOfConnections = aws.Int64(int64(1))
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {
@@ -106,10 +120,12 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.LagId))
 
 	// Delete unmanaged connection.
-	err = deleteDirectConnectConnection(conn, aws.StringValue(output.Connections[0].ConnectionId))
+	if !connectionIDSpecified {
+		err = deleteDirectConnectConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waiter.ConnectionDeleted)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	return resourceAwsDxLagRead(d, meta)
@@ -208,11 +224,15 @@ func resourceAwsDxLagDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for _, connection := range lag.Connections {
-			err = deleteDirectConnectConnection(conn, aws.StringValue(connection.ConnectionId))
+			err = deleteDirectConnectConnection(conn, aws.StringValue(connection.ConnectionId), waiter.ConnectionDeleted)
 
 			if err != nil {
 				return err
 			}
+		}
+	} else if v, ok := d.GetOk("connection_id"); ok {
+		if err := deleteDirectConnectConnectionLAGAssociation(conn, v.(string), d.Id()); err != nil {
+			return err
 		}
 	}
 
