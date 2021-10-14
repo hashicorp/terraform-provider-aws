@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSResourceGroup_basic(t *testing.T) {
@@ -123,7 +124,7 @@ func testAccCheckAWSResourceGroupExists(n string, v *resourcegroups.Group) resou
 			return fmt.Errorf("No resource group name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).resourcegroupsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn
 
 		resp, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
@@ -148,7 +149,7 @@ func testAccCheckAWSResourceGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).resourcegroupsconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn
 		resp, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
 		})

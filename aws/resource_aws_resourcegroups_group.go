@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsResourceGroupsGroup() *schema.Resource {
@@ -80,8 +81,8 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 }
 
 func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := resourcegroups.CreateGroupInput{
@@ -102,9 +103,9 @@ func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	g, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 		GroupName: aws.String(d.Id()),
@@ -159,7 +160,7 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupsconn
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 
 	if d.HasChange("description") {
 		input := resourcegroups.UpdateGroupInput{
@@ -196,7 +197,7 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsResourceGroupsGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupsconn
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 
 	input := resourcegroups.DeleteGroupInput{
 		GroupName: aws.String(d.Id()),
