@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -99,7 +99,7 @@ func resourceAwsSignerSigningProfilePermissionCreate(d *schema.ResourceData, met
 		revisionId = *getProfilePermissionsOutput.RevisionId
 	}
 
-	statementId := naming.Generate(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
+	statementId := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
 
 	addProfilePermissionInput := &signer.AddProfilePermissionInput{
 		Action:      aws.String(d.Get("action").(string)),

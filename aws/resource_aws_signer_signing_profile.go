@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/naming"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -129,7 +129,7 @@ func resourceAwsSignerSigningProfileCreate(d *schema.ResourceData, meta interfac
 
 	log.Printf("[DEBUG] Creating Signer signing profile")
 
-	profileName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	profileName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	profileName = strings.Replace(profileName, "-", "_", -1)
 
 	signingProfileInput := &signer.PutSigningProfileInput{
