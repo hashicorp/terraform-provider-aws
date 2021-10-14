@@ -55,7 +55,7 @@ func testAccCheckAwsMacie2InvitationAccepterExists(resourceName string) resource
 			return fmt.Errorf("resource (%s) has empty ID", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 		input := &macie2.GetAdministratorAccountInput{}
 		output, err := conn.GetAdministratorAccount(input)
 
@@ -72,7 +72,7 @@ func testAccCheckAwsMacie2InvitationAccepterExists(resourceName string) resource
 }
 
 func testAccCheckAwsMacie2InvitationAccepterDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_invitation_accepter" {

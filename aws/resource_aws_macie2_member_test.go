@@ -39,7 +39,7 @@ func testAccAwsMacie2Member_basic(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigBasic(testAccDefaultEmailAddress),
+				Config: testAccAwsMacieMemberConfigBasic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
@@ -52,7 +52,7 @@ func testAccAwsMacie2Member_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccAwsMacieMemberConfigBasic(testAccDefaultEmailAddress),
+				Config:            testAccAwsMacieMemberConfigBasic(acctest.DefaultEmailAddress),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -76,10 +76,10 @@ func testAccAwsMacie2Member_disappears(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigBasic(testAccDefaultEmailAddress),
+				Config: testAccAwsMacieMemberConfigBasic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsMacie2Member(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsMacie2Member(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -268,7 +268,7 @@ func testAccAwsMacie2Member_withTags(t *testing.T) {
 		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigWithTags(testAccDefaultEmailAddress),
+				Config: testAccAwsMacieMemberConfigWithTags(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
@@ -298,7 +298,7 @@ func testAccCheckAwsMacie2MemberExists(resourceName string, macie2Session *macie
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).macie2conn
+		conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 		input := &macie2.GetMemberInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetMember(input)
@@ -318,7 +318,7 @@ func testAccCheckAwsMacie2MemberExists(resourceName string, macie2Session *macie
 }
 
 func testAccCheckAwsMacie2MemberDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).macie2conn
+	conn := acctest.Provider.Meta().(*AWSClient).macie2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_member" {
