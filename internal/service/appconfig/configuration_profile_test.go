@@ -105,7 +105,7 @@ func sweepConfigurationProfiles(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSAppConfigConfigurationProfile_basic(t *testing.T) {
+func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 	appResourceName := "aws_appconfig_application.test"
@@ -138,7 +138,7 @@ func TestAccAWSAppConfigConfigurationProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigConfigurationProfile_disappears(t *testing.T) {
+func TestAccAppConfigConfigurationProfile_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
@@ -160,7 +160,7 @@ func TestAccAWSAppConfigConfigurationProfile_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigConfigurationProfile_Validators_JSON(t *testing.T) {
+func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
@@ -213,7 +213,7 @@ func TestAccAWSAppConfigConfigurationProfile_Validators_JSON(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigConfigurationProfile_Validators_Lambda(t *testing.T) {
+func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
@@ -251,7 +251,7 @@ func TestAccAWSAppConfigConfigurationProfile_Validators_Lambda(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigConfigurationProfile_Validators_Multiple(t *testing.T) {
+func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 
@@ -285,7 +285,7 @@ func TestAccAWSAppConfigConfigurationProfile_Validators_Multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigConfigurationProfile_updateName(t *testing.T) {
+func TestAccAppConfigConfigurationProfile_updateName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_configuration_profile.test"
@@ -319,7 +319,7 @@ func TestAccAWSAppConfigConfigurationProfile_updateName(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigConfigurationProfile_updateDescription(t *testing.T) {
+func TestAccAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_configuration_profile.test"
@@ -358,7 +358,7 @@ func TestAccAWSAppConfigConfigurationProfile_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigConfigurationProfile_Tags(t *testing.T) {
+func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_configuration_profile.test"
 

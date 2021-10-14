@@ -84,7 +84,7 @@ func sweepDeploymentStrategies(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
+func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
@@ -115,7 +115,7 @@ func TestAccAWSAppConfigDeploymentStrategy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
+func TestAccAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_deployment_strategy.test"
@@ -149,7 +149,7 @@ func TestAccAWSAppConfigDeploymentStrategy_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
+func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
@@ -194,7 +194,7 @@ func TestAccAWSAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
+func TestAccAppConfigDeploymentStrategy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment_strategy.test"
 
@@ -216,7 +216,7 @@ func TestAccAWSAppConfigDeploymentStrategy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigDeploymentStrategy_Tags(t *testing.T) {
+func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_deployment_strategy.test"
 

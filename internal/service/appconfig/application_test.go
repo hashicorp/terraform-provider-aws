@@ -82,7 +82,7 @@ func sweepApplications(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSAppConfigApplication_basic(t *testing.T) {
+func TestAccAppConfigApplication_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_application.test"
 
@@ -110,7 +110,7 @@ func TestAccAWSAppConfigApplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigApplication_disappears(t *testing.T) {
+func TestAccAppConfigApplication_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_application.test"
 
@@ -132,7 +132,7 @@ func TestAccAWSAppConfigApplication_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigApplication_updateName(t *testing.T) {
+func TestAccAppConfigApplication_updateName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_application.test"
@@ -165,7 +165,7 @@ func TestAccAWSAppConfigApplication_updateName(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigApplication_updateDescription(t *testing.T) {
+func TestAccAppConfigApplication_updateDescription(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_application.test"
@@ -211,7 +211,7 @@ func TestAccAWSAppConfigApplication_updateDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppConfigApplication_Tags(t *testing.T) {
+func TestAccAppConfigApplication_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_application.test"
 
