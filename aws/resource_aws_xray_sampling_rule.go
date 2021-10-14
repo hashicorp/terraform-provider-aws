@@ -119,7 +119,7 @@ func resourceAwsXraySamplingRuleCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("attributes"); ok {
-		samplingRule.Attributes = expandStringMap(v.(map[string]interface{}))
+		samplingRule.Attributes = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	params := &xray.CreateSamplingRuleInput{
@@ -217,7 +217,7 @@ func resourceAwsXraySamplingRuleUpdate(d *schema.ResourceData, meta interface{})
 			attributes := map[string]*string{}
 			if v, ok := d.GetOk("attributes"); ok {
 				if m, ok := v.(map[string]interface{}); ok {
-					attributes = expandStringMap(m)
+					attributes = flex.ExpandStringMap(m)
 				}
 			}
 			samplingRuleUpdate.Attributes = attributes
