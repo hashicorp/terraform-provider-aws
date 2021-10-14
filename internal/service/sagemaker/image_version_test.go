@@ -31,12 +31,12 @@ func TestAccAWSSagemakerImageVersion_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerImageVersionDestroy,
+		CheckDestroy: testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
+				Config: testAccImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
+					testAccCheckImageVersionExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -69,12 +69,12 @@ func TestAccAWSSagemakerImageVersion_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerImageVersionDestroy,
+		CheckDestroy: testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
+				Config: testAccImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
+					testAccCheckImageVersionExists(resourceName, &image),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImageVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,12 +98,12 @@ func TestAccAWSSagemakerImageVersion_disappears_image(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerImageVersionDestroy,
+		CheckDestroy: testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
+				Config: testAccImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
+					testAccCheckImageVersionExists(resourceName, &image),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImage(), "aws_sagemaker_image.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,7 +112,7 @@ func TestAccAWSSagemakerImageVersion_disappears_image(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSagemakerImageVersionDestroy(s *terraform.State) error {
+func testAccCheckImageVersionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -138,7 +138,7 @@ func testAccCheckAWSSagemakerImageVersionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSagemakerImageVersionExists(n string, image *sagemaker.DescribeImageVersionOutput) resource.TestCheckFunc {
+func testAccCheckImageVersionExists(n string, image *sagemaker.DescribeImageVersionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -161,7 +161,7 @@ func testAccCheckAWSSagemakerImageVersionExists(n string, image *sagemaker.Descr
 	}
 }
 
-func testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage string) string {
+func testAccImageVersionBasicConfig(rName, baseImage string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

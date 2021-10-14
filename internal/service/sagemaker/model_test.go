@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_sagemaker_model", &resource.Sweeper{
 		Name: "aws_sagemaker_model",
-		F:    testSweepSagemakerModels,
+		F:    sweepModels,
 	})
 }
 
-func testSweepSagemakerModels(region string) error {
+func sweepModels(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)

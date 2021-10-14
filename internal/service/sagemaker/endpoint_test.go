@@ -23,11 +23,11 @@ func init() {
 			"aws_sagemaker_model",
 			"aws_sagemaker_endpoint_configuration",
 		},
-		F: testSweepSagemakerEndpoints,
+		F: sweepEndpoints,
 	})
 }
 
-func testSweepSagemakerEndpoints(region string) error {
+func sweepEndpoints(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)

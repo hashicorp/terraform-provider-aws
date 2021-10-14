@@ -21,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_sagemaker_device_fleet", &resource.Sweeper{
 		Name: "aws_sagemaker_device_fleet",
-		F:    testSweepSagemakerDeviceFleets,
+		F:    sweepDeviceFleets,
 	})
 }
 
-func testSweepSagemakerDeviceFleets(region string) error {
+func sweepDeviceFleets(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -72,12 +72,12 @@ func TestAccAWSSagemakerDeviceFleet_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerDeviceFleetDestroy,
+		CheckDestroy: testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerDeviceFleetBasicConfig(rName),
+				Config: testAccDeviceFleetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("device-fleet/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
@@ -106,12 +106,12 @@ func TestAccAWSSagemakerDeviceFleet_description(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerDeviceFleetDestroy,
+		CheckDestroy: testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerDeviceFleetDescription(rName, rName),
+				Config: testAccDeviceFleetDescription(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
@@ -121,9 +121,9 @@ func TestAccAWSSagemakerDeviceFleet_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSagemakerDeviceFleetDescription(rName, "test"),
+				Config: testAccDeviceFleetDescription(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
@@ -140,12 +140,12 @@ func TestAccAWSSagemakerDeviceFleet_tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerDeviceFleetDestroy,
+		CheckDestroy: testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerDeviceFleetConfigTags1(rName, "key1", "value1"),
+				Config: testAccDeviceFleetTags1Config(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -156,18 +156,18 @@ func TestAccAWSSagemakerDeviceFleet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSagemakerDeviceFleetConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeviceFleetTags2Config(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAWSSagemakerDeviceFleetConfigTags1(rName, "key2", "value2"),
+				Config: testAccDeviceFleetTags1Config(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -185,12 +185,12 @@ func TestAccAWSSagemakerDeviceFleet_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerDeviceFleetDestroy,
+		CheckDestroy: testAccCheckDeviceFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerDeviceFleetBasicConfig(rName),
+				Config: testAccDeviceFleetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDeviceFleetExists(resourceName, &deviceFleet),
+					testAccCheckDeviceFleetExists(resourceName, &deviceFleet),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDeviceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -199,7 +199,7 @@ func TestAccAWSSagemakerDeviceFleet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSagemakerDeviceFleetDestroy(s *terraform.State) error {
+func testAccCheckDeviceFleetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -224,7 +224,7 @@ func testAccCheckAWSSagemakerDeviceFleetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSagemakerDeviceFleetExists(n string, device_fleet *sagemaker.DescribeDeviceFleetOutput) resource.TestCheckFunc {
+func testAccCheckDeviceFleetExists(n string, device_fleet *sagemaker.DescribeDeviceFleetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -247,7 +247,7 @@ func testAccCheckAWSSagemakerDeviceFleetExists(n string, device_fleet *sagemaker
 	}
 }
 
-func testAccAWSSagemakerDeviceFleetConfigBase(rName string) string {
+func testAccDeviceFleetBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -311,8 +311,8 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerDeviceFleetBasicConfig(rName string) string {
-	return testAccAWSSagemakerDeviceFleetConfigBase(rName) + fmt.Sprintf(`
+func testAccDeviceFleetBasicConfig(rName string) string {
+	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
   role_arn          = aws_iam_role.test.arn
@@ -324,8 +324,8 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerDeviceFleetDescription(rName, desc string) string {
-	return testAccAWSSagemakerDeviceFleetConfigBase(rName) + fmt.Sprintf(`
+func testAccDeviceFleetDescription(rName, desc string) string {
+	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
   role_arn          = aws_iam_role.test.arn
@@ -338,8 +338,8 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName, desc)
 }
 
-func testAccAWSSagemakerDeviceFleetConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSSagemakerDeviceFleetConfigBase(rName) + fmt.Sprintf(`
+func testAccDeviceFleetTags1Config(rName, tagKey1, tagValue1 string) string {
+	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
   role_arn          = aws_iam_role.test.arn
@@ -355,8 +355,8 @@ resource "aws_sagemaker_device_fleet" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSSagemakerDeviceFleetConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSSagemakerDeviceFleetConfigBase(rName) + fmt.Sprintf(`
+func testAccDeviceFleetTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccDeviceFleetBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_device_fleet" "test" {
   device_fleet_name = %[1]q
   role_arn          = aws_iam_role.test.arn

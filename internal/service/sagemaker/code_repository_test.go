@@ -20,11 +20,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_sagemaker_code_repository", &resource.Sweeper{
 		Name: "aws_sagemaker_code_repository",
-		F:    testSweepSagemakerCodeRepositories,
+		F:    sweepCodeRepositories,
 	})
 }
 
-func testSweepSagemakerCodeRepositories(region string) error {
+func sweepCodeRepositories(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -70,12 +70,12 @@ func TestAccAWSSagemakerCodeRepository_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
+		CheckDestroy: testAccCheckCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerCodeRepositoryBasicConfig(rName),
+				Config: testAccCodeRepositoryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
+					testAccCheckCodeRepositoryExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
@@ -100,12 +100,12 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_branch(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
+		CheckDestroy: testAccCheckCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerCodeRepositoryGitConfigBranchConfig(rName),
+				Config: testAccCodeRepositoryGitBranchConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
+					testAccCheckCodeRepositoryExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
@@ -131,12 +131,12 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
+		CheckDestroy: testAccCheckCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerCodeRepositoryGitConfigSecretConfig(rName),
+				Config: testAccCodeRepositoryGitSecretConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
+					testAccCheckCodeRepositoryExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
@@ -150,9 +150,9 @@ func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSagemakerCodeRepositoryGitConfigSecretUpdatedConfig(rName),
+				Config: testAccCodeRepositoryGitSecretUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
+					testAccCheckCodeRepositoryExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
@@ -173,12 +173,12 @@ func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
+		CheckDestroy: testAccCheckCodeRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerCodeRepositoryBasicConfig(rName),
+				Config: testAccCodeRepositoryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
+					testAccCheckCodeRepositoryExists(resourceName, &notebook),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceCodeRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -187,7 +187,7 @@ func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
+func testAccCheckCodeRepositoryDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -213,7 +213,7 @@ func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSagemakerCodeRepositoryExists(n string, codeRepo *sagemaker.DescribeCodeRepositoryOutput) resource.TestCheckFunc {
+func testAccCheckCodeRepositoryExists(n string, codeRepo *sagemaker.DescribeCodeRepositoryOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -236,7 +236,7 @@ func testAccCheckAWSSagemakerCodeRepositoryExists(n string, codeRepo *sagemaker.
 	}
 }
 
-func testAccAWSSagemakerCodeRepositoryBasicConfig(rName string) string {
+func testAccCodeRepositoryBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_code_repository" "test" {
   code_repository_name = %[1]q
@@ -248,7 +248,7 @@ resource "aws_sagemaker_code_repository" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerCodeRepositoryGitConfigBranchConfig(rName string) string {
+func testAccCodeRepositoryGitBranchConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_code_repository" "test" {
   code_repository_name = %[1]q
@@ -261,7 +261,7 @@ resource "aws_sagemaker_code_repository" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerCodeRepositoryGitConfigSecretConfig(rName string) string {
+func testAccCodeRepositoryGitSecretConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
@@ -285,7 +285,7 @@ resource "aws_sagemaker_code_repository" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerCodeRepositoryGitConfigSecretUpdatedConfig(rName string) string {
+func testAccCodeRepositoryGitSecretUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test2" {
   name = "%[1]s-2"

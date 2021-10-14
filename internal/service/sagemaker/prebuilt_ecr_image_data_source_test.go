@@ -20,7 +20,7 @@ func TestAccAWSSageMakerPrebuiltECRImage_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsSageMakerPrebuiltECRImageConfig,
+				Config: testAccCheckAWSSageMakerPrebuiltECRImageConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
@@ -42,7 +42,7 @@ func TestAccAWSSageMakerPrebuiltECRImage_region(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsSageMakerPrebuiltECRImageExplicitRegionConfig,
+				Config: testAccCheckAWSSageMakerPrebuiltECRImageExplicitRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
@@ -53,13 +53,13 @@ func TestAccAWSSageMakerPrebuiltECRImage_region(t *testing.T) {
 	})
 }
 
-const testAccCheckAwsSageMakerPrebuiltECRImageConfig = `
+const testAccCheckAWSSageMakerPrebuiltECRImageConfig = `
 data "aws_sagemaker_prebuilt_ecr_image" "test" {
   repository_name = "kmeans"
 }
 `
 
-const testAccCheckAwsSageMakerPrebuiltECRImageExplicitRegionConfig = `
+const testAccCheckAWSSageMakerPrebuiltECRImageExplicitRegionConfig = `
 data "aws_region" "current" {}
 
 data "aws_sagemaker_prebuilt_ecr_image" "test" {

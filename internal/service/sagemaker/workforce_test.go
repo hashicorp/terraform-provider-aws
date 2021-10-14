@@ -22,14 +22,14 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_sagemaker_workforce", &resource.Sweeper{
 		Name: "aws_sagemaker_workforce",
-		F:    testSweepSagemakerWorkforces,
+		F:    sweepWorkforces,
 		Dependencies: []string{
 			"aws_sagemaker_workteam",
 		},
 	})
 }
 
-func testSweepSagemakerWorkforces(region string) error {
+func sweepWorkforces(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -66,7 +66,7 @@ func testSweepSagemakerWorkforces(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func testAccAWSSagemakerWorkforce_cognitoConfig(t *testing.T) {
+func testAccWorkforce_cognitoConfig(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workforce.test"
@@ -75,12 +75,12 @@ func testAccAWSSagemakerWorkforce_cognitoConfig(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
+		CheckDestroy: testAccCheckWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerWorkforceCognitoConfig(rName),
+				Config: testAccWorkforceCognitoConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					testAccCheckWorkforceExists(resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "1"),
@@ -101,7 +101,7 @@ func testAccAWSSagemakerWorkforce_cognitoConfig(t *testing.T) {
 	})
 }
 
-func testAccAWSSagemakerWorkforce_oidcConfig(t *testing.T) {
+func testAccWorkforce_oidcConfig(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workforce.test"
@@ -112,12 +112,12 @@ func testAccAWSSagemakerWorkforce_oidcConfig(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
+		CheckDestroy: testAccCheckWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerWorkforceOidcConfig(rName, endpoint1),
+				Config: testAccWorkforceOIDCConfig(rName, endpoint1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					testAccCheckWorkforceExists(resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
@@ -142,9 +142,9 @@ func testAccAWSSagemakerWorkforce_oidcConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"oidc_config.0.client_secret"},
 			},
 			{
-				Config: testAccAWSSagemakerWorkforceOidcConfig(rName, endpoint2),
+				Config: testAccWorkforceOIDCConfig(rName, endpoint2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					testAccCheckWorkforceExists(resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
@@ -165,7 +165,7 @@ func testAccAWSSagemakerWorkforce_oidcConfig(t *testing.T) {
 		},
 	})
 }
-func testAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
+func testAccWorkforce_sourceIPConfig(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workforce.test"
@@ -174,12 +174,12 @@ func testAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
+		CheckDestroy: testAccCheckWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerWorkforceSourceIpConfig1(rName, "1.1.1.1/32"),
+				Config: testAccWorkforceSourceIP1Config(rName, "1.1.1.1/32"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					testAccCheckWorkforceExists(resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.0.cidrs.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source_ip_config.0.cidrs.*", "1.1.1.1/32"),
@@ -191,18 +191,18 @@ func testAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSagemakerWorkforceSourceIpConfig2(rName, "2.2.2.2/32", "3.3.3.3/32"),
+				Config: testAccWorkforceSourceIP2Config(rName, "2.2.2.2/32", "3.3.3.3/32"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					testAccCheckWorkforceExists(resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source_ip_config.0.cidrs.*", "2.2.2.2/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source_ip_config.0.cidrs.*", "3.3.3.3/32"),
 				),
 			},
 			{
-				Config: testAccAWSSagemakerWorkforceSourceIpConfig1(rName, "2.2.2.2/32"),
+				Config: testAccWorkforceSourceIP1Config(rName, "2.2.2.2/32"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					testAccCheckWorkforceExists(resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.0.cidrs.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source_ip_config.0.cidrs.*", "2.2.2.2/32"),
@@ -212,7 +212,7 @@ func testAccAWSSagemakerWorkforce_sourceIpConfig(t *testing.T) {
 	})
 }
 
-func testAccAWSSagemakerWorkforce_disappears(t *testing.T) {
+func testAccWorkforce_disappears(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_workforce.test"
@@ -221,12 +221,12 @@ func testAccAWSSagemakerWorkforce_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSSagemakerWorkforceDestroy,
+		CheckDestroy: testAccCheckWorkforceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerWorkforceCognitoConfig(rName),
+				Config: testAccWorkforceCognitoConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerWorkforceExists(resourceName, &workforce),
+					testAccCheckWorkforceExists(resourceName, &workforce),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceWorkforce(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -235,7 +235,7 @@ func testAccAWSSagemakerWorkforce_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSagemakerWorkforceDestroy(s *terraform.State) error {
+func testAccCheckWorkforceDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -259,7 +259,7 @@ func testAccCheckAWSSagemakerWorkforceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSagemakerWorkforceExists(n string, workforce *sagemaker.Workforce) resource.TestCheckFunc {
+func testAccCheckWorkforceExists(n string, workforce *sagemaker.Workforce) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -284,7 +284,7 @@ func testAccCheckAWSSagemakerWorkforceExists(n string, workforce *sagemaker.Work
 	}
 }
 
-func testAccAWSSagemakerWorkforceBaseConfig(rName string) string {
+func testAccWorkforceBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -303,8 +303,8 @@ resource "aws_cognito_user_pool_domain" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerWorkforceCognitoConfig(rName string) string {
-	return testAccAWSSagemakerWorkforceBaseConfig(rName) + fmt.Sprintf(`
+func testAccWorkforceCognitoConfig(rName string) string {
+	return testAccWorkforceBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
@@ -316,8 +316,8 @@ resource "aws_sagemaker_workforce" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerWorkforceSourceIpConfig1(rName, cidr1 string) string {
-	return testAccAWSSagemakerWorkforceBaseConfig(rName) + fmt.Sprintf(`
+func testAccWorkforceSourceIP1Config(rName, cidr1 string) string {
+	return testAccWorkforceBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
@@ -333,8 +333,8 @@ resource "aws_sagemaker_workforce" "test" {
 `, rName, cidr1)
 }
 
-func testAccAWSSagemakerWorkforceSourceIpConfig2(rName, cidr1, cidr2 string) string {
-	return testAccAWSSagemakerWorkforceBaseConfig(rName) + fmt.Sprintf(`
+func testAccWorkforceSourceIP2Config(rName, cidr1, cidr2 string) string {
+	return testAccWorkforceBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
@@ -350,8 +350,8 @@ resource "aws_sagemaker_workforce" "test" {
 `, rName, cidr1, cidr2)
 }
 
-func testAccAWSSagemakerWorkforceOidcConfig(rName, endpoint string) string {
-	return testAccAWSSagemakerWorkforceBaseConfig(rName) + fmt.Sprintf(`
+func testAccWorkforceOIDCConfig(rName, endpoint string) string {
+	return testAccWorkforceBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
