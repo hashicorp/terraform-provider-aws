@@ -26,6 +26,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
 func init() {
@@ -5109,7 +5112,7 @@ func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
 
-		targetGroup, err := finder.TargetGroupByARN(conn, rs.Primary.ID)
+		targetGroup, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)

@@ -1,5 +1,5 @@
 package autoscaling
 
 const (
-	TagResourceTypeAutoScalingGroup = `auto-scaling-group`
+	TagResourceTypeGroup = `auto-scaling-group`
 )

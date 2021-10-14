@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func InstanceRefreshStatus(conn *autoscaling.AutoScaling, asgName, instanceRefreshId string) resource.StateRefreshFunc {
+func statusInstanceRefresh(conn *autoscaling.AutoScaling, asgName, instanceRefreshId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: aws.String(asgName),
