@@ -41,7 +41,7 @@ func testSweepAPIGatewayV2DomainNames(region string) error {
 		}
 
 		for _, domainName := range page.Items {
-			r := ResourceDomainName()
+			r := tfapigatewayv2.ResourceDomainName()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domainName.DomainName))
 			err = r.Delete(d, client)
@@ -126,7 +126,7 @@ func TestAccAWSAPIGatewayV2DomainName_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceDomainName(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigatewayv2.ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

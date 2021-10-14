@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -163,7 +164,7 @@ func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayV2ApiConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAPI(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigatewayv2.ResourceAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

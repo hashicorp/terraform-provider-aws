@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
 func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
@@ -68,7 +69,7 @@ func TestAccAWSAPIGatewayV2Authorizer_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAuthorizer(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfapigatewayv2.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
