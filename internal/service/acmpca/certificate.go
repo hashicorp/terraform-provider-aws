@@ -99,7 +99,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAcmPcaTemplateArn,
+				ValidateFunc: ValidTemplateARN,
 			},
 		},
 	}
@@ -226,7 +226,7 @@ func resourceAwsAcmpcaCertificateRevoke(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func validateAcmPcaTemplateArn(v interface{}, k string) (ws []string, errors []error) {
+func ValidTemplateARN(v interface{}, k string) (ws []string, errors []error) {
 	wsARN, errorsARN := verify.ValidARN(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
@@ -267,7 +267,7 @@ func expandAcmpcaValidity(l []interface{}) (*acmpca.Validity, error) {
 		Type: aws.String(valueType),
 	}
 
-	i, err := expandAcmpcaValidityValue(valueType, m["value"].(string))
+	i, err := ExpandValidityValue(valueType, m["value"].(string))
 	if err != nil {
 		return nil, fmt.Errorf("error parsing value %q: %w", m["value"].(string), err)
 	}
@@ -276,7 +276,7 @@ func expandAcmpcaValidity(l []interface{}) (*acmpca.Validity, error) {
 	return result, nil
 }
 
-func expandAcmpcaValidityValue(valueType, v string) (int64, error) {
+func ExpandValidityValue(valueType, v string) (int64, error) {
 	if valueType == acmpca.ValidityPeriodTypeEndDate {
 		date, err := time.Parse(time.RFC3339, v)
 		if err != nil {

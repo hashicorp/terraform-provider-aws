@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
 func TestAwsAcmpcaCertificateAuthorityMigrateState(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAwsAcmpcaCertificateAuthorityMigrateState(t *testing.T) {
 			Attributes: testCase.Attributes,
 		}
 
-		tfResource := ResourceCertificateAuthority()
+		tfResource := tfacmpca.ResourceCertificateAuthority()
 
 		if tfResource.MigrateState == nil {
 			t.Fatalf("bad: %s, err: missing MigrateState function in resource", testName)

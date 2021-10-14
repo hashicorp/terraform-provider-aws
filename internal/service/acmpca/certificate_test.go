@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
 func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
@@ -460,7 +461,7 @@ func TestValidateAcmPcaTemplateArn(t *testing.T) {
 		"arn:aws-us-gov:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", // lintignore:AWSAT005
 	}
 	for _, v := range validNames {
-		_, errors := validateAcmPcaTemplateArn(v, "template_arn")
+		_, errors := tfacmpca.ValidTemplateARN(v, "template_arn")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid ACM PCA ARN: %q", v, errors)
 		}
@@ -474,7 +475,7 @@ func TestValidateAcmPcaTemplateArn(t *testing.T) {
 		"arn:aws:acm-pca:::not-a-template/SubordinateCACertificate_PathLen0/V1",    // lintignore:AWSAT005
 	}
 	for _, v := range invalidNames {
-		_, errors := validateAcmPcaTemplateArn(v, "template_arn")
+		_, errors := tfacmpca.ValidTemplateARN(v, "template_arn")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ARN", v)
 		}
@@ -510,7 +511,7 @@ func TestExpandAcmpcaValidityValue(t *testing.T) {
 	}
 
 	for _, testcase := range testCases {
-		i, _ := expandAcmpcaValidityValue(testcase.Type, testcase.Value)
+		i, _ := tfacmpca.ExpandValidityValue(testcase.Type, testcase.Value)
 		if i != testcase.Expected {
 			t.Errorf("%s, %q: expected %d, got %d", testcase.Type, testcase.Value, testcase.Expected, i)
 		}
