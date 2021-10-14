@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceConnection() *schema.Resource {
@@ -44,7 +45,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -97,7 +98,7 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("provider_name", connection.ProviderName)
 
-	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
+	tags, err := tftags.DirectconnectListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect Connection (%s): %w", arn, err)

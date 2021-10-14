@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/directconnect/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLocation() *schema.Resource {

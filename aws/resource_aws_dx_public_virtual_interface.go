@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourcePublicVirtualInterface() *schema.Resource {
@@ -28,7 +29,7 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.Sequence(
 			resourceAwsDxPublicVirtualInterfaceCustomizeDiff,
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -93,8 +94,8 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				MinItems: 1,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vlan": {
 				Type:         schema.TypeInt,
 				Required:     true,
@@ -113,7 +114,7 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 func resourcePublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &directconnect.CreatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -192,7 +193,7 @@ func resourcePublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}
 	}
 	d.Set("vlan", vif.Vlan)
 
-	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
+	tags, err := tftags.DirectconnectListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Direct Connect public virtual interface (%s): %s", arn, err)
