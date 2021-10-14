@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPinpointEmailChannel() *schema.Resource {
+func ResourceEmailChannel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsPinpointEmailChannelUpsert,
-		Read:   resourceAwsPinpointEmailChannelRead,
+		Read:   resourceEmailChannelRead,
 		Update: resourceAwsPinpointEmailChannelUpsert,
-		Delete: resourceAwsPinpointEmailChannelDelete,
+		Delete: resourceEmailChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,10 +88,10 @@ func resourceAwsPinpointEmailChannelUpsert(d *schema.ResourceData, meta interfac
 
 	d.SetId(applicationId)
 
-	return resourceAwsPinpointEmailChannelRead(d, meta)
+	return resourceEmailChannelRead(d, meta)
 }
 
-func resourceAwsPinpointEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEmailChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint Email Channel for application %s", d.Id())
@@ -121,7 +121,7 @@ func resourceAwsPinpointEmailChannelRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsPinpointEmailChannelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEmailChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint Email Channel for application %s", d.Id())

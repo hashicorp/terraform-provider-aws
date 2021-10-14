@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPinpointApp() *schema.Resource {
+func ResourceApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPinpointAppCreate,
-		Read:   resourceAwsPinpointAppRead,
-		Update: resourceAwsPinpointAppUpdate,
-		Delete: resourceAwsPinpointAppDelete,
+		Create: resourceAppCreate,
+		Read:   resourceAppRead,
+		Update: resourceAppUpdate,
+		Delete: resourceAppDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -146,7 +146,7 @@ func resourceAwsPinpointApp() *schema.Resource {
 	}
 }
 
-func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -181,10 +181,10 @@ func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(aws.StringValue(output.ApplicationResponse.Id))
 	d.Set("arn", output.ApplicationResponse.Arn)
 
-	return resourceAwsPinpointAppUpdate(d, meta)
+	return resourceAppUpdate(d, meta)
 }
 
-func resourceAwsPinpointAppUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
@@ -226,10 +226,10 @@ func resourceAwsPinpointAppUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	return resourceAwsPinpointAppRead(d, meta)
+	return resourceAppRead(d, meta)
 }
 
-func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -297,7 +297,7 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsPinpointAppDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Pinpoint Delete App: %s", d.Id())

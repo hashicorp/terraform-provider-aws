@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsPinpointGCMChannel() *schema.Resource {
+func ResourceGCMChannel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsPinpointGCMChannelUpsert,
-		Read:   resourceAwsPinpointGCMChannelRead,
+		Read:   resourceGCMChannelRead,
 		Update: resourceAwsPinpointGCMChannelUpsert,
-		Delete: resourceAwsPinpointGCMChannelDelete,
+		Delete: resourceGCMChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -62,10 +62,10 @@ func resourceAwsPinpointGCMChannelUpsert(d *schema.ResourceData, meta interface{
 
 	d.SetId(applicationId)
 
-	return resourceAwsPinpointGCMChannelRead(d, meta)
+	return resourceGCMChannelRead(d, meta)
 }
 
-func resourceAwsPinpointGCMChannelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGCMChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[INFO] Reading Pinpoint GCM Channel for application %s", d.Id())
@@ -90,7 +90,7 @@ func resourceAwsPinpointGCMChannelRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsPinpointGCMChannelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGCMChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).PinpointConn
 
 	log.Printf("[DEBUG] Deleting Pinpoint GCM Channel for application %s", d.Id())
