@@ -10,18 +10,18 @@ import (
 
 const (
 	// Maximum amount of time for VpcLink to become available
-	ApiGatewayVpcLinkAvailableTimeout = 20 * time.Minute
+	apiGatewayVPCLinkAvailableTimeout = 20 * time.Minute
 
 	// Maximum amount of time for VpcLink to delete
-	ApiGatewayVpcLinkDeleteTimeout = 20 * time.Minute
+	apiGatewayVPCLinkDeleteTimeout = 20 * time.Minute
 )
 
-func ApiGatewayVpcLinkAvailable(conn *apigateway.APIGateway, vpcLinkId string) error {
+func waitAPIGatewayVPCLinkAvailable(conn *apigateway.APIGateway, vpcLinkId string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    apiGatewayVpcLinkStatus(conn, vpcLinkId),
-		Timeout:    ApiGatewayVpcLinkAvailableTimeout,
+		Timeout:    apiGatewayVPCLinkAvailableTimeout,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -30,7 +30,7 @@ func ApiGatewayVpcLinkAvailable(conn *apigateway.APIGateway, vpcLinkId string) e
 	return err
 }
 
-func ApiGatewayVpcLinkDeleted(conn *apigateway.APIGateway, vpcLinkId string) error {
+func waitAPIGatewayVPCLinkDeleted(conn *apigateway.APIGateway, vpcLinkId string) error {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			apigateway.VpcLinkStatusPending,
@@ -38,7 +38,7 @@ func ApiGatewayVpcLinkDeleted(conn *apigateway.APIGateway, vpcLinkId string) err
 			apigateway.VpcLinkStatusDeleting,
 		},
 		Target:     []string{},
-		Timeout:    ApiGatewayVpcLinkDeleteTimeout,
+		Timeout:    apiGatewayVPCLinkDeleteTimeout,
 		MinTimeout: 1 * time.Second,
 		Refresh:    apiGatewayVpcLinkStatus(conn, vpcLinkId),
 	}
