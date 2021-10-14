@@ -99,7 +99,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicyRead(d *schema.ResourceDa
 		Repository:  aws.String(repoName),
 	})
 	if err != nil {
-		if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] CodeArtifact Repository Permissions Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -134,7 +134,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicyDelete(d *schema.Resource
 
 	_, err = conn.DeleteRepositoryPermissionsPolicy(input)
 
-	if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 

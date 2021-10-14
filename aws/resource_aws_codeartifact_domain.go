@@ -106,7 +106,7 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 		DomainOwner: aws.String(domainOwner),
 	})
 	if err != nil {
-		if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] CodeArtifact Domain %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -172,7 +172,7 @@ func resourceAwsCodeArtifactDomainDelete(d *schema.ResourceData, meta interface{
 
 	_, err = conn.DeleteDomain(input)
 
-	if isAWSErr(err, codeartifact.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, codeartifact.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
