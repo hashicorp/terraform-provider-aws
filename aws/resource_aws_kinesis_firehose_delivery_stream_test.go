@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -29,18 +30,18 @@ func init() {
 }
 
 func testSweepKinesisFirehoseDeliveryStreams(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).FirehoseConn
 	input := &firehose.ListDeliveryStreamsInput{}
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	for {
 		page, err := conn.ListDeliveryStreams(input)
 
-		if testSweepSkipSweepError(err) {
+		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Kinesis Firehose Delivery Streams sweep for %s: %s", region, err)
 			return nil
 		}
@@ -55,7 +56,7 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 			d.SetId("???")
 			d.Set("name", sn)
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		if !aws.BoolValue(page.HasMoreDeliveryStreams) {
@@ -63,7 +64,7 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 		}
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Kinesis Firehose Delivery Streams (%s): %w", region, err)
