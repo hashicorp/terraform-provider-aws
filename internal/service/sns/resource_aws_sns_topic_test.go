@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 )
 
 func init() {
@@ -344,7 +345,7 @@ func TestAccAWSSNSTopic_Name_Generated_FIFOTopic(t *testing.T) {
 				Config: testAccAWSSNSTopicConfigNameGeneratedFIFOTopic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					create.TestCheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsns.FifoTopicNameSuffix),
+					create.TestCheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsns.FIFOTopicNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
 				),
@@ -361,7 +362,7 @@ func TestAccAWSSNSTopic_Name_Generated_FIFOTopic(t *testing.T) {
 func TestAccAWSSNSTopic_Name_FIFOTopic(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) + tfsns.FifoTopicNameSuffix
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) + tfsns.FIFOTopicNameSuffix
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
@@ -401,7 +402,7 @@ func TestAccAWSSNSTopic_NamePrefix_FIFOTopic(t *testing.T) {
 				Config: testAccAWSSNSTopicConfigNamePrefixFIFOTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					create.TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", rName, tfsns.FifoTopicNameSuffix),
+					create.TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", rName, tfsns.FIFOTopicNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
 				),

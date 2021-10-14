@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func SubscriptionByARN(conn *sns.SNS, id string) (*sns.GetSubscriptionAttributesOutput, error) {
+func FindSubscriptionByARN(conn *sns.SNS, id string) (*sns.GetSubscriptionAttributesOutput, error) {
 	output, err := conn.GetSubscriptionAttributes(&sns.GetSubscriptionAttributesInput{
 		SubscriptionArn: aws.String(id),
 	})

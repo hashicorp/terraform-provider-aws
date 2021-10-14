@@ -9,15 +9,15 @@ import (
 )
 
 const (
-	SubscriptionCreateTimeout              = 2 * time.Minute
-	SubscriptionPendingConfirmationTimeout = 2 * time.Minute
-	SubscriptionDeleteTimeout              = 2 * time.Minute
+	subscriptionCreateTimeout              = 2 * time.Minute
+	subscriptionPendingConfirmationTimeout = 2 * time.Minute
+	subscriptionDeleteTimeout              = 2 * time.Minute
 )
 
-func SubscriptionConfirmed(conn *sns.SNS, id, expectedValue string, timeout time.Duration) (*sns.GetSubscriptionAttributesOutput, error) {
+func waitSubscriptionConfirmed(conn *sns.SNS, id, expectedValue string, timeout time.Duration) (*sns.GetSubscriptionAttributesOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:  []string{expectedValue},
-		Refresh: SubscriptionPendingConfirmation(conn, id),
+		Refresh: statusSubscriptionPendingConfirmation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -30,12 +30,12 @@ func SubscriptionConfirmed(conn *sns.SNS, id, expectedValue string, timeout time
 	return nil, err
 }
 
-func SubscriptionDeleted(conn *sns.SNS, id string) (*sns.GetSubscriptionAttributesOutput, error) {
+func waitSubscriptionDeleted(conn *sns.SNS, id string) (*sns.GetSubscriptionAttributesOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"false", "true"},
 		Target:  []string{},
-		Refresh: SubscriptionPendingConfirmation(conn, id),
-		Timeout: SubscriptionDeleteTimeout,
+		Refresh: statusSubscriptionPendingConfirmation(conn, id),
+		Timeout: subscriptionDeleteTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

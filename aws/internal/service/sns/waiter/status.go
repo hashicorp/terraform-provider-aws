@@ -6,11 +6,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sns/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 )
 
-func SubscriptionPendingConfirmation(conn *sns.SNS, id string) resource.StateRefreshFunc {
+func statusSubscriptionPendingConfirmation(conn *sns.SNS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.SubscriptionByARN(conn, id)
+		output, err := tfsns.FindSubscriptionByARN(conn, id)
 		if err != nil {
 			return nil, "", err
 		}

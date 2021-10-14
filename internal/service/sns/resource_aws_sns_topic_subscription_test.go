@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 )
 
 func TestSuppressEquivalentSnsTopicSubscriptionDeliveryPolicy(t *testing.T) {
@@ -495,7 +496,7 @@ func testAccCheckAWSSNSTopicSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := finder.SubscriptionByARN(conn, rs.Primary.ID)
+		output, err := tfsns.FindSubscriptionByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("SNS topic subscription still exists, can't continue.")
 		}
@@ -523,7 +524,7 @@ func testAccCheckAWSSNSTopicSubscriptionExists(n string, attributes map[string]s
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
-		output, err := finder.SubscriptionByARN(conn, rs.Primary.ID)
+		output, err := tfsns.FindSubscriptionByARN(conn, rs.Primary.ID)
 		for k, v := range output.Attributes {
 			attributes[k] = aws.StringValue(v)
 		}
