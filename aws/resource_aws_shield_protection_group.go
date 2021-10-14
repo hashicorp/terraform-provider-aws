@@ -84,7 +84,7 @@ func resourceAwsShieldProtectionGroupCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("members"); ok {
-		input.Members = expandStringList(v.([]interface{}))
+		input.Members = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("resource_type"); ok {
@@ -168,7 +168,7 @@ func resourceAwsShieldProtectionGroupUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("members"); ok {
-		input.Members = expandStringList(v.([]interface{}))
+		input.Members = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("resource_type"); ok {
