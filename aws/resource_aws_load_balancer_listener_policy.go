@@ -47,7 +47,7 @@ func resourceAwsLoadBalancerListenerPoliciesCreate(d *schema.ResourceData, meta 
 
 	policyNames := []*string{}
 	if v, ok := d.GetOk("policy_names"); ok {
-		policyNames = expandStringSet(v.(*schema.Set))
+		policyNames = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	setOpts := &elb.SetLoadBalancerPoliciesOfListenerInput{
@@ -106,7 +106,7 @@ func resourceAwsLoadBalancerListenerPoliciesRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("error parsing load balancer port: %s", err)
 	}
 	d.Set("load_balancer_port", loadBalancerPortVal)
-	d.Set("policy_names", flattenStringList(policyNames))
+	d.Set("policy_names", flex.FlattenStringList(policyNames))
 
 	return nil
 }

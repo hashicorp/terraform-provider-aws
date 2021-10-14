@@ -47,7 +47,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesCreate(d *schema.ResourceData, 
 
 	policyNames := []*string{}
 	if v, ok := d.GetOk("policy_names"); ok {
-		policyNames = expandStringSet(v.(*schema.Set))
+		policyNames = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	setOpts := &elb.SetLoadBalancerPoliciesForBackendServerInput{
@@ -106,7 +106,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesRead(d *schema.ResourceData, me
 		return fmt.Errorf("error parsing instance port: %s", err)
 	}
 	d.Set("instance_port", instancePortVal)
-	d.Set("policy_names", flattenStringList(policyNames))
+	d.Set("policy_names", flex.FlattenStringList(policyNames))
 
 	return nil
 }
