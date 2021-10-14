@@ -33,17 +33,17 @@ const (
 	FlowDefinitionDeletedTimeout      = 2 * time.Minute
 )
 
-// NotebookInstanceInService waits for a NotebookInstance to return InService
-func NotebookInstanceInService(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
+// WaitNotebookInstanceInService waits for a NotebookInstance to return InService
+func WaitNotebookInstanceInService(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			SagemakerNotebookInstanceStatusNotFound,
+			SageMakerNotebookInstanceStatusNotFound,
 			sagemaker.NotebookInstanceStatusUpdating,
 			sagemaker.NotebookInstanceStatusPending,
 			sagemaker.NotebookInstanceStatusStopped,
 		},
 		Target:  []string{sagemaker.NotebookInstanceStatusInService},
-		Refresh: NotebookInstanceStatus(conn, notebookName),
+		Refresh: StatusNotebookInstance(conn, notebookName),
 		Timeout: NotebookInstanceInServiceTimeout,
 	}
 
@@ -56,15 +56,15 @@ func NotebookInstanceInService(conn *sagemaker.SageMaker, notebookName string) (
 	return nil, err
 }
 
-// NotebookInstanceStopped waits for a NotebookInstance to return Stopped
-func NotebookInstanceStopped(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
+// WaitNotebookInstanceStopped waits for a NotebookInstance to return Stopped
+func WaitNotebookInstanceStopped(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.NotebookInstanceStatusUpdating,
 			sagemaker.NotebookInstanceStatusStopping,
 		},
 		Target:  []string{sagemaker.NotebookInstanceStatusStopped},
-		Refresh: NotebookInstanceStatus(conn, notebookName),
+		Refresh: StatusNotebookInstance(conn, notebookName),
 		Timeout: NotebookInstanceStoppedTimeout,
 	}
 
@@ -77,14 +77,14 @@ func NotebookInstanceStopped(conn *sagemaker.SageMaker, notebookName string) (*s
 	return nil, err
 }
 
-// NotebookInstanceDeleted waits for a NotebookInstance to return Deleted
-func NotebookInstanceDeleted(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
+// WaitNotebookInstanceDeleted waits for a NotebookInstance to return Deleted
+func WaitNotebookInstanceDeleted(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.NotebookInstanceStatusDeleting,
 		},
 		Target:  []string{},
-		Refresh: NotebookInstanceStatus(conn, notebookName),
+		Refresh: StatusNotebookInstance(conn, notebookName),
 		Timeout: NotebookInstanceDeletedTimeout,
 	}
 
@@ -97,15 +97,15 @@ func NotebookInstanceDeleted(conn *sagemaker.SageMaker, notebookName string) (*s
 	return nil, err
 }
 
-// ModelPackageGroupCompleted waits for a ModelPackageGroup to return Created
-func ModelPackageGroupCompleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
+// WaitModelPackageGroupCompleted waits for a ModelPackageGroup to return Created
+func WaitModelPackageGroupCompleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.ModelPackageGroupStatusPending,
 			sagemaker.ModelPackageGroupStatusInProgress,
 		},
 		Target:  []string{sagemaker.ModelPackageGroupStatusCompleted},
-		Refresh: ModelPackageGroupStatus(conn, name),
+		Refresh: StatusModelPackageGroup(conn, name),
 		Timeout: ModelPackageGroupCompletedTimeout,
 	}
 
@@ -118,14 +118,14 @@ func ModelPackageGroupCompleted(conn *sagemaker.SageMaker, name string) (*sagema
 	return nil, err
 }
 
-// ModelPackageGroupDeleted waits for a ModelPackageGroup to return Created
-func ModelPackageGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
+// WaitModelPackageGroupDeleted waits for a ModelPackageGroup to return Created
+func WaitModelPackageGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.ModelPackageGroupStatusDeleting,
 		},
 		Target:  []string{},
-		Refresh: ModelPackageGroupStatus(conn, name),
+		Refresh: StatusModelPackageGroup(conn, name),
 		Timeout: ModelPackageGroupDeletedTimeout,
 	}
 
@@ -138,15 +138,15 @@ func ModelPackageGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemake
 	return nil, err
 }
 
-// ImageCreated waits for a Image to return Created
-func ImageCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
+// WaitImageCreated waits for a Image to return Created
+func WaitImageCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.ImageStatusCreating,
 			sagemaker.ImageStatusUpdating,
 		},
 		Target:  []string{sagemaker.ImageStatusCreated},
-		Refresh: ImageStatus(conn, name),
+		Refresh: StatusImage(conn, name),
 		Timeout: ImageCreatedTimeout,
 	}
 
@@ -159,12 +159,12 @@ func ImageCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeIm
 	return nil, err
 }
 
-// ImageDeleted waits for a Image to return Deleted
-func ImageDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
+// WaitImageDeleted waits for a Image to return Deleted
+func WaitImageDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sagemaker.ImageStatusDeleting},
 		Target:  []string{},
-		Refresh: ImageStatus(conn, name),
+		Refresh: StatusImage(conn, name),
 		Timeout: ImageDeletedTimeout,
 	}
 
@@ -177,14 +177,14 @@ func ImageDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeIm
 	return nil, err
 }
 
-// ImageVersionCreated waits for a ImageVersion to return Created
-func ImageVersionCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+// WaitImageVersionCreated waits for a ImageVersion to return Created
+func WaitImageVersionCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.ImageVersionStatusCreating,
 		},
 		Target:  []string{sagemaker.ImageVersionStatusCreated},
-		Refresh: ImageVersionStatus(conn, name),
+		Refresh: StatusImageVersion(conn, name),
 		Timeout: ImageVersionCreatedTimeout,
 	}
 
@@ -197,12 +197,12 @@ func ImageVersionCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	return nil, err
 }
 
-// ImageVersionDeleted waits for a ImageVersion to return Deleted
-func ImageVersionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+// WaitImageVersionDeleted waits for a ImageVersion to return Deleted
+func WaitImageVersionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sagemaker.ImageVersionStatusDeleting},
 		Target:  []string{},
-		Refresh: ImageVersionStatus(conn, name),
+		Refresh: StatusImageVersion(conn, name),
 		Timeout: ImageVersionDeletedTimeout,
 	}
 
@@ -215,16 +215,16 @@ func ImageVersionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	return nil, err
 }
 
-// DomainInService waits for a Domain to return InService
-func DomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
+// WaitDomainInService waits for a Domain to return InService
+func WaitDomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			SagemakerDomainStatusNotFound,
+			SageMakerDomainStatusNotFound,
 			sagemaker.DomainStatusPending,
 			sagemaker.DomainStatusUpdating,
 		},
 		Target:  []string{sagemaker.DomainStatusInService},
-		Refresh: DomainStatus(conn, domainID),
+		Refresh: StatusDomain(conn, domainID),
 		Timeout: DomainInServiceTimeout,
 	}
 
@@ -237,14 +237,14 @@ func DomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker.Des
 	return nil, err
 }
 
-// DomainDeleted waits for a Domain to return Deleted
-func DomainDeleted(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
+// WaitDomainDeleted waits for a Domain to return Deleted
+func WaitDomainDeleted(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.DomainStatusDeleting,
 		},
 		Target:  []string{},
-		Refresh: DomainStatus(conn, domainID),
+		Refresh: StatusDomain(conn, domainID),
 		Timeout: DomainDeletedTimeout,
 	}
 
@@ -257,12 +257,12 @@ func DomainDeleted(conn *sagemaker.SageMaker, domainID string) (*sagemaker.Descr
 	return nil, err
 }
 
-// FeatureGroupCreated waits for a Feature Group to return Created
-func FeatureGroupCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
+// WaitFeatureGroupCreated waits for a Feature Group to return Created
+func WaitFeatureGroupCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sagemaker.FeatureGroupStatusCreating},
 		Target:  []string{sagemaker.FeatureGroupStatusCreated},
-		Refresh: FeatureGroupStatus(conn, name),
+		Refresh: StatusFeatureGroup(conn, name),
 		Timeout: FeatureGroupCreatedTimeout,
 	}
 
@@ -279,12 +279,12 @@ func FeatureGroupCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	return nil, err
 }
 
-// FeatureGroupDeleted waits for a Feature Group to return Deleted
-func FeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
+// WaitFeatureGroupDeleted waits for a Feature Group to return Deleted
+func WaitFeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sagemaker.FeatureGroupStatusDeleting},
 		Target:  []string{},
-		Refresh: FeatureGroupStatus(conn, name),
+		Refresh: StatusFeatureGroup(conn, name),
 		Timeout: FeatureGroupDeletedTimeout,
 	}
 
@@ -301,16 +301,16 @@ func FeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	return nil, err
 }
 
-// UserProfileInService waits for a UserProfile to return InService
-func UserProfileInService(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+// WaitUserProfileInService waits for a UserProfile to return InService
+func WaitUserProfileInService(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			SagemakerUserProfileStatusNotFound,
+			SageMakerUserProfileStatusNotFound,
 			sagemaker.UserProfileStatusPending,
 			sagemaker.UserProfileStatusUpdating,
 		},
 		Target:  []string{sagemaker.UserProfileStatusInService},
-		Refresh: UserProfileStatus(conn, domainID, userProfileName),
+		Refresh: StatusUserProfile(conn, domainID, userProfileName),
 		Timeout: UserProfileInServiceTimeout,
 	}
 
@@ -323,14 +323,14 @@ func UserProfileInService(conn *sagemaker.SageMaker, domainID, userProfileName s
 	return nil, err
 }
 
-// UserProfileDeleted waits for a UserProfile to return Deleted
-func UserProfileDeleted(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+// WaitUserProfileDeleted waits for a UserProfile to return Deleted
+func WaitUserProfileDeleted(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.UserProfileStatusDeleting,
 		},
 		Target:  []string{},
-		Refresh: UserProfileStatus(conn, domainID, userProfileName),
+		Refresh: StatusUserProfile(conn, domainID, userProfileName),
 		Timeout: UserProfileDeletedTimeout,
 	}
 
@@ -343,15 +343,15 @@ func UserProfileDeleted(conn *sagemaker.SageMaker, domainID, userProfileName str
 	return nil, err
 }
 
-// AppInService waits for a App to return InService
-func AppInService(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+// WaitAppInService waits for a App to return InService
+func WaitAppInService(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			SagemakerAppStatusNotFound,
+			SageMakerAppStatusNotFound,
 			sagemaker.AppStatusPending,
 		},
 		Target:  []string{sagemaker.AppStatusInService},
-		Refresh: AppStatus(conn, domainID, userProfileName, appType, appName),
+		Refresh: StatusApp(conn, domainID, userProfileName, appType, appName),
 		Timeout: AppInServiceTimeout,
 	}
 
@@ -364,8 +364,8 @@ func AppInService(conn *sagemaker.SageMaker, domainID, userProfileName, appType,
 	return nil, err
 }
 
-// AppDeleted waits for a App to return Deleted
-func AppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
+// WaitAppDeleted waits for a App to return Deleted
+func WaitAppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			sagemaker.AppStatusDeleting,
@@ -373,7 +373,7 @@ func AppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, a
 		Target: []string{
 			sagemaker.AppStatusDeleted,
 		},
-		Refresh: AppStatus(conn, domainID, userProfileName, appType, appName),
+		Refresh: StatusApp(conn, domainID, userProfileName, appType, appName),
 		Timeout: AppDeletedTimeout,
 	}
 
@@ -386,12 +386,12 @@ func AppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, a
 	return nil, err
 }
 
-// FlowDefinitionActive waits for a FlowDefinition to return Active
-func FlowDefinitionActive(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+// WaitFlowDefinitionActive waits for a FlowDefinition to return Active
+func WaitFlowDefinitionActive(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sagemaker.FlowDefinitionStatusInitializing},
 		Target:  []string{sagemaker.FlowDefinitionStatusActive},
-		Refresh: FlowDefinitionStatus(conn, name),
+		Refresh: StatusFlowDefinition(conn, name),
 		Timeout: FlowDefinitionActiveTimeout,
 	}
 
@@ -408,12 +408,12 @@ func FlowDefinitionActive(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 	return nil, err
 }
 
-// FlowDefinitionDeleted waits for a FlowDefinition to return Deleted
-func FlowDefinitionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
+// WaitFlowDefinitionDeleted waits for a FlowDefinition to return Deleted
+func WaitFlowDefinitionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sagemaker.FlowDefinitionStatusDeleting},
 		Target:  []string{},
-		Refresh: FlowDefinitionStatus(conn, name),
+		Refresh: StatusFlowDefinition(conn, name),
 		Timeout: FlowDefinitionDeletedTimeout,
 	}
 

@@ -17,6 +17,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
 func TestAccAWSSagemakerImageVersion_basic(t *testing.T) {
@@ -123,7 +140,7 @@ func testAccCheckAWSSagemakerImageVersionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		imageVersion, err := finder.ImageVersionByName(conn, rs.Primary.ID)
+		imageVersion, err := tfsagemaker.FindImageVersionByName(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			continue
@@ -153,7 +170,7 @@ func testAccCheckAWSSagemakerImageVersionExists(n string, image *sagemaker.Descr
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		resp, err := finder.ImageVersionByName(conn, rs.Primary.ID)
+		resp, err := tfsagemaker.FindImageVersionByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

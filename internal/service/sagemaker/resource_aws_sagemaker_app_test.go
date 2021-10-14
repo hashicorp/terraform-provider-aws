@@ -20,6 +20,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 )
 
 func init() {
@@ -220,7 +237,7 @@ func testAccCheckAWSSagemakerAppDestroy(s *terraform.State) error {
 		appType := rs.Primary.Attributes["app_type"]
 		appName := rs.Primary.Attributes["app_name"]
 
-		app, err := finder.AppByName(conn, domainID, userProfileName, appType, appName)
+		app, err := tfsagemaker.FindAppByName(conn, domainID, userProfileName, appType, appName)
 
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			continue
@@ -256,7 +273,7 @@ func testAccCheckAWSSagemakerAppExists(n string, app *sagemaker.DescribeAppOutpu
 		appType := rs.Primary.Attributes["app_type"]
 		appName := rs.Primary.Attributes["app_name"]
 
-		resp, err := finder.AppByName(conn, domainID, userProfileName, appType, appName)
+		resp, err := tfsagemaker.FindAppByName(conn, domainID, userProfileName, appType, appName)
 		if err != nil {
 			return err
 		}
