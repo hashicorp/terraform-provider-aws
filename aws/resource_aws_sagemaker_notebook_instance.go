@@ -13,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceNotebookInstance() *schema.Resource {
@@ -31,7 +32,7 @@ func ResourceNotebookInstance() *schema.Resource {
 			customdiff.ForceNewIfChange("volume_size", func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(int) < old.(int)
 			}),
-			SetTagsDiff,
+			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -134,8 +135,8 @@ func ResourceNotebookInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -143,7 +144,7 @@ func ResourceNotebookInstance() *schema.Resource {
 func resourceNotebookInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SageMakerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -290,7 +291,7 @@ func resourceNotebookInstanceRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting additional_code_repositories for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
-	tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
+	tags, err := tftags.SagemakerListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Sagemaker Notebook Instance (%s): %s", d.Id(), err)
@@ -316,7 +317,7 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Sagemaker Notebook Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
