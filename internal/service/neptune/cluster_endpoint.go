@@ -93,7 +93,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 
 	// Tags are currently only supported in AWS Commercial.
 	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		input.Tags = tags.IgnoreAws().NeptuneTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	out, err := conn.CreateDBClusterEndpoint(input)
@@ -142,7 +142,7 @@ func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error
 
 	// Tags are currently only supported in AWS Commercial.
 	if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		tags, err := tftags.NeptuneListTags(conn, arn)
+		tags, err := ListTags(conn, arn)
 
 		if err != nil {
 			return fmt.Errorf("error listing tags for Neptune Cluster Endpoint (%s): %w", arn, err)
@@ -201,7 +201,7 @@ func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("tags_all") && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Cluster Endpoint (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}

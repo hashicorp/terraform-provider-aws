@@ -97,7 +97,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 		DBParameterGroupName:   aws.String(d.Get("name").(string)),
 		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   tags.IgnoreAws().NeptuneTags(),
+		Tags:                   Tags(tags.IgnoreAws()),
 	}
 
 	log.Printf("[DEBUG] Create Neptune Parameter Group: %#v", createOpts)
@@ -167,7 +167,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting parameter: %s", err)
 	}
 
-	tags, err := tftags.NeptuneListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Neptune Parameter Group (%s): %s", d.Get("arn").(string), err)
@@ -264,7 +264,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 	if !d.IsNewResource() && d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
