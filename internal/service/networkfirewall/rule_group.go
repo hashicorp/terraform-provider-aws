@@ -423,7 +423,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Rules = aws.String(v.(string))
 	}
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().NetworkfirewallTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating NetworkFirewall Rule Group %s", name)
@@ -482,7 +482,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(fmt.Errorf("error setting rule_group: %w", err))
 	}
 
-	tags := tftags.NetworkfirewallKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -531,7 +531,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.NetworkfirewallUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Rule Group (%s) tags: %w", arn, err))
 		}
 	}

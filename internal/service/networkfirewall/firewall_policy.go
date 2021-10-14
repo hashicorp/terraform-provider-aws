@@ -122,7 +122,7 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().NetworkfirewallTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating NetworkFirewall Firewall Policy %s", name)
@@ -176,7 +176,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error setting firewall_policy: %w", err))
 	}
 
-	tags := tftags.NetworkfirewallKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -214,7 +214,7 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.NetworkfirewallUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall Policy (%s) tags: %w", arn, err))
 		}
 	}

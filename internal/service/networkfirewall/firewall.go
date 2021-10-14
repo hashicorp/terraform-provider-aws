@@ -159,7 +159,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.SubnetChangeProtection = aws.Bool(v.(bool))
 	}
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().NetworkfirewallTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[DEBUG] Creating NetworkFirewall Firewall %s", name)
@@ -220,7 +220,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.FromErr(fmt.Errorf("error setting subnet_mappings: %w", err))
 	}
 
-	tags := tftags.NetworkfirewallKeyValueTags(firewall.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(firewall.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -371,7 +371,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.NetworkfirewallUpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall (%s) tags: %w", arn, err))
 		}
 	}
