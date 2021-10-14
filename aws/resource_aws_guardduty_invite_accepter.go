@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGuardDutyInviteAccepter() *schema.Resource {
@@ -41,7 +42,7 @@ func resourceAwsGuardDutyInviteAccepter() *schema.Resource {
 }
 
 func resourceAwsGuardDutyInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	detectorID := d.Get("detector_id").(string)
 	invitationID := ""
@@ -107,7 +108,7 @@ func resourceAwsGuardDutyInviteAccepterCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGuardDutyInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	input := &guardduty.GetMasterAccountInput{
 		DetectorId: aws.String(d.Id()),
@@ -137,7 +138,7 @@ func resourceAwsGuardDutyInviteAccepterRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsGuardDutyInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	input := &guardduty.DisassociateFromMasterAccountInput{
 		DetectorId: aws.String(d.Id()),

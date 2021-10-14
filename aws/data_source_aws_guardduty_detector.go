@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsGuarddutyDetector() *schema.Resource {
@@ -35,7 +36,7 @@ func dataSourceAwsGuarddutyDetector() *schema.Resource {
 }
 
 func dataSourceAwsGuarddutyDetectorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	detectorId := d.Get("id").(string)
 

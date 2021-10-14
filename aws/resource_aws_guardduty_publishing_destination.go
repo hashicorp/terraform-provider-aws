@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/guardduty/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
 }
 
 func resourceAwsGuardDutyPublishingDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	detectorID := d.Get("detector_id").(string)
 	input := guardduty.CreatePublishingDestinationInput{
@@ -81,7 +82,7 @@ func resourceAwsGuardDutyPublishingDestinationCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
 
@@ -113,7 +114,7 @@ func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsGuardDutyPublishingDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
 
@@ -140,7 +141,7 @@ func resourceAwsGuardDutyPublishingDestinationUpdate(d *schema.ResourceData, met
 }
 
 func resourceAwsGuardDutyPublishingDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*conns.AWSClient).GuardDutyConn
 
 	destinationId, detectorId, errStateRead := decodeGuardDutyPublishDestinationID(d.Id())
 
