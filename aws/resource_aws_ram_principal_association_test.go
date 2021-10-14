@@ -7,21 +7,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ram/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
 	var association ram.ResourceShareAssociation
 	resourceName := "aws_ram_principal_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRamPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -43,11 +44,11 @@ func TestAccAwsRamPrincipalAssociation_basic(t *testing.T) {
 func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 	var association ram.ResourceShareAssociation
 	resourceName := "aws_ram_principal_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ram.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ram.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsRamPrincipalAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -55,7 +56,7 @@ func TestAccAwsRamPrincipalAssociation_disappears(t *testing.T) {
 				Config: testAccAwsRamPrincipalAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamPrincipalAssociationExists(resourceName, &association),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRamPrincipalAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRamPrincipalAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

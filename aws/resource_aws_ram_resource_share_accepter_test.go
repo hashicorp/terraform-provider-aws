@@ -7,25 +7,26 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -33,10 +34,10 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
-					testAccMatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", uuidRegexPattern))),
+					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", uuidRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexp.MustCompile(fmt.Sprintf(`^rs-%s$`, uuidRegexPattern))),
 					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
-					testAccCheckResourceAttrAccountID(resourceName, "receiver_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexp.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
@@ -55,22 +56,22 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRamResourceShareAccepterBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRamResourceShareAccepter(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRamResourceShareAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,15 +83,15 @@ func TestAccAwsRamResourceShareAccepter_resourceAssociation(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -98,10 +99,10 @@ func TestAccAwsRamResourceShareAccepter_resourceAssociation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
-					testAccMatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", uuidRegexPattern))),
+					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", uuidRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexp.MustCompile(fmt.Sprintf(`^rs-%s$`, uuidRegexPattern))),
 					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
-					testAccCheckResourceAttrAccountID(resourceName, "receiver_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexp.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
@@ -171,7 +172,7 @@ func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestChe
 }
 
 func testAccAwsRamResourceShareAccepterBasic(rName string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 resource "aws_ram_resource_share_accepter" "test" {
   share_arn = aws_ram_principal_association.test.resource_share_arn
 }
@@ -199,7 +200,7 @@ data "aws_caller_identity" "receiver" {}
 }
 
 func testAccAwsRamResourceShareAccepterResourceAssociation(rName string) string {
-	return composeConfig(testAccAwsRamResourceShareAccepterBasic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAwsRamResourceShareAccepterBasic(rName), fmt.Sprintf(`
 resource "aws_ram_resource_association" "test" {
   provider = "awsalternate"
 
