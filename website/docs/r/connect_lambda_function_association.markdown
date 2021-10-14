@@ -15,7 +15,7 @@ Provides an Amazon Connect Lambda Function Association. For more information see
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_connect_lambda_function_association" "test" {
   function_arn = aws_lambda_function.test.arn
   instance_id  = aws_connect_instance.test.id

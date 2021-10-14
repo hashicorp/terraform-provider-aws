@@ -12,7 +12,7 @@ Provides details about a specific Connect Lambda Function Association.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_connect_lambda_function_association" "test" {
   function_arn = "arn:aws:lambda:us-west-2:123456789123:function:abcdefg"
   instance_id  = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
