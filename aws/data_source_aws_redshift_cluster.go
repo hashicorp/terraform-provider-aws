@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsRedshiftCluster() *schema.Resource {
@@ -170,8 +171,8 @@ func dataSourceAwsRedshiftCluster() *schema.Resource {
 }
 
 func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	cluster := d.Get("cluster_identifier").(string)
 

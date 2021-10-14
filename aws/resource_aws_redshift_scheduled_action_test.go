@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepRedshiftScheduledActions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).redshiftconn
+	conn := client.(*conns.AWSClient).RedshiftConn
 	input := &redshift.DescribeScheduledActionsInput{}
 	sweepResources := make([]*testSweepResource, 0)
 
@@ -332,7 +333,7 @@ func TestAccAWSRedshiftScheduledAction_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSRedshiftScheduledActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_scheduled_action" {
@@ -366,7 +367,7 @@ func testAccCheckAWSRedshiftScheduledActionExists(n string, v *redshift.Schedule
 			return fmt.Errorf("No Redshift Scheduled Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 		output, err := finder.ScheduledActionByName(conn, rs.Primary.ID)
 

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSRedshiftOrderableClusterDataSource_ClusterType(t *testing.T) {
@@ -89,7 +90,7 @@ func TestAccAWSRedshiftOrderableClusterDataSource_PreferredNodeTypes(t *testing.
 }
 
 func testAccAWSRedshiftOrderableClusterPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{
 		MaxRecords: aws.Int64(20),

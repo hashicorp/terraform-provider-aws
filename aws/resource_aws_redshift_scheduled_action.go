@@ -14,6 +14,7 @@ import (
 	tfredshift "github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRedshiftScheduledAction() *schema.Resource {
@@ -145,7 +146,7 @@ func resourceAwsRedshiftScheduledAction() *schema.Resource {
 }
 
 func resourceAwsRedshiftScheduledActionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	name := d.Get("name").(string)
 	input := &redshift.CreateScheduledActionInput{
@@ -197,7 +198,7 @@ func resourceAwsRedshiftScheduledActionCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRedshiftScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	scheduledAction, err := finder.ScheduledActionByName(conn, d.Id())
 
@@ -243,7 +244,7 @@ func resourceAwsRedshiftScheduledActionRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsRedshiftScheduledActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	input := &redshift.ModifyScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -292,7 +293,7 @@ func resourceAwsRedshiftScheduledActionUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsRedshiftScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	log.Printf("[DEBUG] Deleting Redshift Scheduled Action: %s", d.Id())
 	_, err := conn.DeleteScheduledAction(&redshift.DeleteScheduledActionInput{

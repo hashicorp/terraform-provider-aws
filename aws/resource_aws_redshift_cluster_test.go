@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/redshift/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepRedshiftClusters(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).redshiftconn
+	conn := client.(*conns.AWSClient).RedshiftConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -607,7 +608,7 @@ func TestAccAWSRedshiftCluster_changeEncryption2(t *testing.T) {
 }
 
 func testAccCheckAWSRedshiftClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_cluster" {
@@ -638,7 +639,7 @@ func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
 			}
 
 			// Try and delete the snapshot before we check for the cluster not found
-			conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 			snapshot_identifier := fmt.Sprintf("tf-acctest-snapshot-%d", rInt)
 
@@ -679,7 +680,7 @@ func testAccCheckAWSRedshiftClusterExists(n string, v *redshift.Cluster) resourc
 			return fmt.Errorf("No Redshift Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
 
 		output, err := finder.ClusterByID(conn, rs.Primary.ID)
 

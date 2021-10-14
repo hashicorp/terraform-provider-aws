@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsRedshiftEventSubscription() *schema.Resource {
@@ -84,8 +85,8 @@ func resourceAwsRedshiftEventSubscription() *schema.Resource {
 }
 
 func resourceAwsRedshiftEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &redshift.CreateEventSubscriptionInput{
@@ -112,15 +113,15 @@ func resourceAwsRedshiftEventSubscriptionCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsRedshiftEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "redshift",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("eventsubscription:%s", d.Id()),
 	}.String()
 
@@ -200,7 +201,7 @@ func resourceAwsRedshiftEventSubscriptionRetrieve(name string, conn *redshift.Re
 }
 
 func resourceAwsRedshiftEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 
 	req := &redshift.ModifyEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
@@ -230,7 +231,7 @@ func resourceAwsRedshiftEventSubscriptionUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsRedshiftEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*conns.AWSClient).RedshiftConn
 	deleteOpts := redshift.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	}
