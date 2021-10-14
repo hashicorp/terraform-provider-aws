@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppStreamFleet() *schema.Resource {
@@ -184,14 +185,14 @@ func resourceAwsAppStreamFleet() *schema.Resource {
 }
 
 func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 	input := &appstream.CreateFleetInput{
 		Name:            aws.String(d.Get("name").(string)),
 		InstanceType:    aws.String(d.Get("instance_type").(string)),
 		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
 	}
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("description"); ok {
@@ -282,10 +283,10 @@ func resourceAwsAppStreamFleetCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(d.Id())}})
 
@@ -367,7 +368,7 @@ func resourceAwsAppStreamFleetRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAwsAppStreamFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 	input := &appstream.UpdateFleetInput{
 		Name: aws.String(d.Id()),
 	}
@@ -478,7 +479,7 @@ func resourceAwsAppStreamFleetUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAwsAppStreamFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	// Stop fleet workflow
 	_, err := conn.StopFleetWithContext(ctx, &appstream.StopFleetInput{

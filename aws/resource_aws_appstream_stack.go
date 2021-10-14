@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 var (
@@ -184,12 +185,12 @@ func resourceAwsAppStreamStack() *schema.Resource {
 }
 
 func resourceAwsAppStreamStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 	input := &appstream.CreateStackInput{
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("access_endpoints"); ok {
@@ -261,10 +262,10 @@ func resourceAwsAppStreamStackCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(d.Id())}})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
@@ -322,7 +323,7 @@ func resourceAwsAppStreamStackRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceAwsAppStreamStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	input := &appstream.UpdateStackInput{
 		Name: aws.String(d.Id()),
@@ -375,7 +376,7 @@ func resourceAwsAppStreamStackUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAwsAppStreamStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	_, err := conn.DeleteStackWithContext(ctx, &appstream.DeleteStackInput{
 		Name: aws.String(d.Id()),

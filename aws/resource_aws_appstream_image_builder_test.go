@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -35,7 +36,7 @@ func testSweepAppStreamImageBuilder(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).appstreamconn
+	conn := client.(*conns.AWSClient).AppStreamConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -237,7 +238,7 @@ func testAccCheckAwsAppStreamImageBuilderExists(resourceName string) resource.Te
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appstreamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 
 		imageBuilder, err := finder.ImageBuilderByName(context.Background(), conn, rs.Primary.ID)
 
@@ -254,7 +255,7 @@ func testAccCheckAwsAppStreamImageBuilderExists(resourceName string) resource.Te
 }
 
 func testAccCheckAwsAppStreamImageBuilderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appstreamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_image_builder" {

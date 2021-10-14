@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/lister"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepAppStreamStack(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).appstreamconn
+	conn := client.(*conns.AWSClient).AppStreamConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -217,7 +218,7 @@ func testAccCheckAwsAppStreamStackExists(resourceName string, appStreamStack *ap
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).appstreamconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 		resp, err := conn.DescribeStacks(&appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
 
 		if err != nil {
@@ -235,7 +236,7 @@ func testAccCheckAwsAppStreamStackExists(resourceName string, appStreamStack *ap
 }
 
 func testAccCheckAwsAppStreamStackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).appstreamconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appstream_stack" {

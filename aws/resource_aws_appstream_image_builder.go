@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/appstream/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsAppStreamImageBuilder() *schema.Resource {
@@ -168,8 +169,8 @@ func resourceAwsAppStreamImageBuilder() *schema.Resource {
 }
 
 func resourceAwsAppStreamImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).AppStreamConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -235,10 +236,10 @@ func resourceAwsAppStreamImageBuilderCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	imageBuilder, err := finder.ImageBuilderByName(ctx, conn, d.Id())
 
@@ -303,7 +304,7 @@ func resourceAwsAppStreamImageBuilderRead(ctx context.Context, d *schema.Resourc
 
 func resourceAwsAppStreamImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if d.HasChange("tags_all") {
-		conn := meta.(*AWSClient).appstreamconn
+		conn := meta.(*conns.AWSClient).AppStreamConn
 
 		o, n := d.GetChange("tags_all")
 
@@ -316,7 +317,7 @@ func resourceAwsAppStreamImageBuilderUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAwsAppStreamImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).appstreamconn
+	conn := meta.(*conns.AWSClient).AppStreamConn
 
 	_, err := conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{
 		Name: aws.String(d.Id()),
