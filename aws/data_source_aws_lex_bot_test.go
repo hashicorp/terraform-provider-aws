@@ -17,7 +17,7 @@ func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -56,7 +56,7 @@ func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t) },
 		ErrorCheck: acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
