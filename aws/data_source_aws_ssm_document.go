@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSsmDocument() *schema.Resource {
@@ -49,7 +50,7 @@ func dataSourceAwsSsmDocument() *schema.Resource {
 }
 
 func dataAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	name := d.Get("name").(string)
 
@@ -63,7 +64,7 @@ func dataAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", docInput)
-	resp, err := ssmconn.GetDocument(docInput)
+	resp, err := conn.GetDocument(docInput)
 
 	if err != nil {
 		return fmt.Errorf("Error reading SSM Document: %w", err)
@@ -72,10 +73,10 @@ func dataAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.Name))
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ssm",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("document/%s", aws.StringValue(resp.Name)),
 	}.String()
 

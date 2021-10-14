@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSsmPatchBaseline() *schema.Resource {
@@ -47,7 +48,7 @@ func dataSourceAwsSsmPatchBaseline() *schema.Resource {
 }
 
 func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	filters := []*ssm.PatchOrchestratorFilter{
 		{
@@ -73,7 +74,7 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Reading DescribePatchBaselines: %s", params)
 
-	resp, err := ssmconn.DescribePatchBaselines(params)
+	resp, err := conn.DescribePatchBaselines(params)
 
 	if err != nil {
 		return fmt.Errorf("Error describing SSM PatchBaselines: %w", err)

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSsmParameter() *schema.Resource {
@@ -44,7 +45,7 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 }
 
 func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	name := d.Get("name").(string)
 
@@ -54,7 +55,7 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", paramInput)
-	resp, err := ssmconn.GetParameter(paramInput)
+	resp, err := conn.GetParameter(paramInput)
 
 	if err != nil {
 		return fmt.Errorf("Error describing SSM parameter (%s): %w", name, err)

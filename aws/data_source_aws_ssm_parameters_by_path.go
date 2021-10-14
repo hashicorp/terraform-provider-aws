@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSsmParametersByPath() *schema.Resource {
@@ -48,7 +49,7 @@ func dataSourceAwsSsmParametersByPath() *schema.Resource {
 }
 
 func dataSourceAwsSsmParametersReadByPath(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	path := d.Get("path").(string)
 	input := &ssm.GetParametersByPathInput{
@@ -61,7 +62,7 @@ func dataSourceAwsSsmParametersReadByPath(d *schema.ResourceData, meta interface
 	types := make([]string, 0)
 	values := make([]string, 0)
 
-	err := ssmconn.GetParametersByPathPages(input, func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
+	err := conn.GetParametersByPathPages(input, func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

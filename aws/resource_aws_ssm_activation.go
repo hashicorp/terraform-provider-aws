@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSsmActivation() *schema.Resource {
@@ -72,8 +73,8 @@ func resourceAwsSsmActivation() *schema.Resource {
 }
 
 func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	log.Printf("[DEBUG] SSM activation create: %s", d.Id())
@@ -111,7 +112,7 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = ssmconn.CreateActivation(activationInput)
+		resp, err = conn.CreateActivation(activationInput)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "Not existing role") {
 			return resource.RetryableError(err)
@@ -125,7 +126,7 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = ssmconn.CreateActivation(activationInput)
+		resp, err = conn.CreateActivation(activationInput)
 	}
 
 	if err != nil {
@@ -142,9 +143,9 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SSM Activation: %s", d.Id())
 
@@ -160,7 +161,7 @@ func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) erro
 		MaxResults: aws.Int64(1),
 	}
 
-	resp, err := ssmconn.DescribeActivations(params)
+	resp, err := conn.DescribeActivations(params)
 
 	if err != nil {
 		return fmt.Errorf("Error reading SSM activation: %s", err)
@@ -194,7 +195,7 @@ func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSsmActivationDelete(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	log.Printf("[DEBUG] Deleting SSM Activation: %s", d.Id())
 
@@ -202,7 +203,7 @@ func resourceAwsSsmActivationDelete(d *schema.ResourceData, meta interface{}) er
 		ActivationId: aws.String(d.Id()),
 	}
 
-	_, err := ssmconn.DeleteActivation(params)
+	_, err := conn.DeleteActivation(params)
 
 	if err != nil {
 		return fmt.Errorf("Error deleting SSM activation: %s", err)

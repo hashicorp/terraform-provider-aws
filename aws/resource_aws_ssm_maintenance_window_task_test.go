@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
@@ -412,7 +413,7 @@ func testAccCheckAWSSSMMaintenanceWindowTaskExists(n string, task *ssm.Maintenan
 			return fmt.Errorf("No SSM Maintenance Window Task Window ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		resp, err := conn.DescribeMaintenanceWindowTasks(&ssm.DescribeMaintenanceWindowTasksInput{
 			WindowId: aws.String(rs.Primary.Attributes["window_id"]),
@@ -433,7 +434,7 @@ func testAccCheckAWSSSMMaintenanceWindowTaskExists(n string, task *ssm.Maintenan
 }
 
 func testAccCheckAWSSSMMaintenanceWindowTaskDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_maintenance_window_task" {

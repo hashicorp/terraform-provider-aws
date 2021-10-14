@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
@@ -352,7 +353,7 @@ func testAccCheckAWSSSMPatchBaselineExists(n string, patch *ssm.PatchBaselineIde
 			return fmt.Errorf("No SSM Patch Baseline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		resp, err := conn.DescribePatchBaselines(&ssm.DescribePatchBaselinesInput{
 			Filters: []*ssm.PatchOrchestratorFilter{
@@ -378,7 +379,7 @@ func testAccCheckAWSSSMPatchBaselineExists(n string, patch *ssm.PatchBaselineIde
 }
 
 func testAccCheckAWSSSMPatchBaselineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_patch_baseline" {

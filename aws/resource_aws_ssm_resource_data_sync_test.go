@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepSsmResourceDataSyncs(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).ssmconn
+	conn := client.(*conns.AWSClient).SSMConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
@@ -124,7 +125,7 @@ func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
 }
 
 func testAccCheckAWSSsmResourceDataSyncDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_resource_data_sync" {

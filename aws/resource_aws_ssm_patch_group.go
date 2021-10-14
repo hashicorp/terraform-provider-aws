@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssm/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSsmPatchGroup() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsSsmPatchGroup() *schema.Resource {
 }
 
 func resourceAwsSsmPatchGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	baselineId := d.Get("baseline_id").(string)
 	patchGroup := d.Get("patch_group").(string)
@@ -64,7 +65,7 @@ func resourceAwsSsmPatchGroupCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSsmPatchGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	patchGroup, baselineId, err := parseSsmPatchGroupId(d.Id())
 	if err != nil {
@@ -100,7 +101,7 @@ func resourceAwsSsmPatchGroupRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSsmPatchGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*conns.AWSClient).SSMConn
 
 	patchGroup, baselineId, err := parseSsmPatchGroupId(d.Id())
 	if err != nil {

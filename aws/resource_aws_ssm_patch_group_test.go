@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/ssm/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSSMPatchGroup_basic(t *testing.T) {
@@ -79,7 +80,7 @@ func TestAccAWSSSMPatchGroup_multipleBaselines(t *testing.T) {
 }
 
 func testAccCheckAWSSSMPatchGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_patch_group" {
@@ -121,7 +122,7 @@ func testAccCheckAWSSSMPatchGroupExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).ssmconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		group, err := finder.PatchGroup(conn, patchGroup, baselineId)
 
