@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/mwaa/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfmwaa "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 )
 
 const (
@@ -14,10 +15,10 @@ const (
 	environmentStatusUnknown  = "Unknown"
 )
 
-// EnvironmentStatus fetches the Environment and its Status
-func EnvironmentStatus(conn *mwaa.MWAA, name string) resource.StateRefreshFunc {
+// statusEnvironment fetches the Environment and its Status
+func statusEnvironment(conn *mwaa.MWAA, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		environment, err := finder.EnvironmentByName(conn, name)
+		environment, err := tfmwaa.findEnvironmentByName(conn, name)
 
 		if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
 			return nil, environmentStatusNotFound, nil
