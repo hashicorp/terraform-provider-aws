@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -269,7 +269,7 @@ func resourceAwsCodeBuildWebhookFilterHash(v interface{}) int {
 		}
 	}
 
-	return hashcode.String(buf.String())
+	return create.StringHashcode(buf.String())
 }
 
 func flattenAwsCodeBuildWebhookFilterData(filters []*codebuild.WebhookFilter) map[string]interface{} {
