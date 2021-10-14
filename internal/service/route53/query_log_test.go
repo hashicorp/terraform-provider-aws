@@ -25,55 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_route53_query_log", &resource.Sweeper{
-		Name: "aws_route53_query_log",
-		F:    sweepQueryLogs,
-	})
-}
 
-func sweepQueryLogs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).Route53Conn
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListQueryLoggingConfigsPages(&route53.ListQueryLoggingConfigsInput{}, func(page *route53.ListQueryLoggingConfigsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, queryLoggingConfig := range page.QueryLoggingConfigs {
-			id := aws.StringValue(queryLoggingConfig.Id)
-
-			r := tfroute53.ResourceQueryLog()
-			d := r.Data(nil)
-			d.SetId(id)
-			err := r.Delete(d, client)
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Route53 query logging configuration (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	// In unsupported AWS partitions, the API may return an error even the SDK cannot handle.
-	// Reference: https://github.com/aws/aws-sdk-go/issues/3313
-	if sweep.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "SerializationError", "failed to unmarshal error message") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
-		log.Printf("[WARN] Skipping Route53 query logging configurations sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 query logging configurations: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccRoute53QueryLog_basic(t *testing.T) {
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"

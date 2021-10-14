@@ -28,91 +28,9 @@ import (
 )
 
 // add sweeper to delete resources
-func init() {
-	resource.AddTestSweepers("aws_route53_key_signing_key", &resource.Sweeper{
-		Name: "aws_route53_key_signing_key",
-		F:    sweepKeySigningKeys,
-	})
-}
 
-func sweepKeySigningKeys(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).Route53Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &route53.ListHostedZonesInput{}
-
-	err = conn.ListHostedZonesPages(input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-	MAIN:
-		for _, detail := range page.HostedZones {
-			if detail == nil {
-				continue
-			}
-
-			id := aws.StringValue(detail.Id)
-
-			for _, domain := range hostedZonesToPreserve() {
-				if strings.Contains(aws.StringValue(detail.Name), domain) {
-					log.Printf("[DEBUG] Skipping Route53 Hosted Zone (%s): %s", domain, id)
-					continue MAIN
-				}
-			}
-
-			dnsInput := &route53.GetDNSSECInput{
-				HostedZoneId: detail.Id,
-			}
-
-			output, err := conn.GetDNSSEC(dnsInput)
-
-			if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "private hosted zones") {
-				continue
-			}
-
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error getting Route53 DNS SEC for %s: %w", region, err))
-			}
-
-			for _, dns := range output.KeySigningKeys {
-				r := tfroute53.ResourceKeySigningKey()
-				d := r.Data(nil)
-				d.SetId(id)
-				d.Set("hosted_zone_id", id)
-				d.Set("name", dns.Name)
-				d.Set("status", dns.Status)
-
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-			}
-
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error getting Route53 Key-Signing Keys for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestratorContext(context.Background(), sweepResources, 0*time.Millisecond, 1*time.Minute, 30*time.Second, 30*time.Second, 10*time.Minute); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Route53 Key-Signing Keys for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Route53 Key-Signing Keys sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
