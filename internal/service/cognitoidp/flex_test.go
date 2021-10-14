@@ -136,7 +136,7 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := cognitoUserPoolSchemaAttributeMatchesStandardAttribute(tc.Input)
+		output := UserPoolSchemaAttributeMatchesStandardAttribute(tc.Input)
 		if output != tc.Expected {
 			t.Fatalf("Expected %t match with standard attribute on input: \n\n%#v\n\n", tc.Expected, tc.Input)
 		}

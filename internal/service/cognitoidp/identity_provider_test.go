@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 )
 
 func TestAccAWSCognitoIdentityProvider_basic(t *testing.T) {
@@ -126,7 +127,7 @@ func TestAccAWSCognitoIdentityProvider_disappears(t *testing.T) {
 				Config: testAccAWSCognitoIdentityProviderConfig_basic(userPoolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceIdentityProvider(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceIdentityProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,7 +150,7 @@ func TestAccAWSCognitoIdentityProvider_disappears_userPool(t *testing.T) {
 				Config: testAccAWSCognitoIdentityProviderConfig_basic(userPoolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityProviderExists(resourceName, &identityProvider),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,7 +166,7 @@ func testAccCheckAWSCognitoIdentityProviderDestroy(s *terraform.State) error {
 			continue
 		}
 
-		userPoolID, providerName, err := decodeCognitoIdentityProviderID(rs.Primary.ID)
+		userPoolID, providerName, err := tfcognitoidp.DecodeIdentityProviderID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -193,7 +194,7 @@ func testAccCheckAWSCognitoIdentityProviderExists(resourceName string, identityP
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		userPoolID, providerName, err := decodeCognitoIdentityProviderID(rs.Primary.ID)
+		userPoolID, providerName, err := tfcognitoidp.DecodeIdentityProviderID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

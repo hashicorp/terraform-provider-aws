@@ -110,7 +110,7 @@ func resourceAwsCognitoUserPoolUICustomizationPut(d *schema.ResourceData, meta i
 func resourceUserPoolUICustomizationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
-	userPoolId, clientId, err := parseCognitoUserPoolUICustomizationID(d.Id())
+	userPoolId, clientId, err := ParseUserPoolUICustomizationID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", d.Id(), err)
@@ -152,7 +152,7 @@ func resourceUserPoolUICustomizationRead(d *schema.ResourceData, meta interface{
 func resourceUserPoolUICustomizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
 
-	userPoolId, clientId, err := parseCognitoUserPoolUICustomizationID(d.Id())
+	userPoolId, clientId, err := ParseUserPoolUICustomizationID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", d.Id(), err)
@@ -176,7 +176,7 @@ func resourceUserPoolUICustomizationDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func parseCognitoUserPoolUICustomizationID(id string) (string, string, error) {
+func ParseUserPoolUICustomizationID(id string) (string, string, error) {
 	idParts := strings.SplitN(id, ",", 2)
 
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
