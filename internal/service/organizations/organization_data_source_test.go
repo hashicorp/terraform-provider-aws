@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
+func testAccOrganizationDataSource_basic(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 	dataSourceName := "data.aws_organizations_organization.test"
 
@@ -21,10 +21,10 @@ func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsOrganizationResourceOnlyConfig,
+				Config: testAccCheckAWSOrganizationResourceOnlyConfig,
 			},
 			{
-				Config: testAccCheckAwsOrganizationConfig,
+				Config: testAccCheckAWSOrganizationConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.#", dataSourceName, "accounts.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -43,17 +43,17 @@ func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
 			{
 				// This is to make sure the data source isn't around trying to read the resource
 				// when the resource is being destroyed
-				Config: testAccCheckAwsOrganizationResourceOnlyConfig,
+				Config: testAccCheckAWSOrganizationResourceOnlyConfig,
 			},
 		},
 	})
 }
 
-const testAccCheckAwsOrganizationResourceOnlyConfig = `
+const testAccCheckAWSOrganizationResourceOnlyConfig = `
 resource "aws_organizations_organization" "test" {}
 `
 
-const testAccCheckAwsOrganizationConfig = `
+const testAccCheckAWSOrganizationConfig = `
 resource "aws_organizations_organization" "test" {}
 
 data "aws_organizations_organization" "test" {}

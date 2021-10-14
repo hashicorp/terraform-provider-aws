@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccAwsOrganizationsAccount_basic(t *testing.T) {
+func testAccAccount_basic(t *testing.T) {
 	acctest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
@@ -33,12 +33,12 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
+		CheckDestroy: testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsAccountConfig(name, email),
+				Config: testAccAccountConfig(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsAccountExists("aws_organizations_account.test", &account),
+					testAccCheckAccountExists("aws_organizations_account.test", &account),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "arn"),
 					resource.TestCheckResourceAttrSet("aws_organizations_account.test", "joined_method"),
 					acctest.CheckResourceAttrRFC3339("aws_organizations_account.test", "joined_timestamp"),
@@ -58,7 +58,7 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
+func testAccAccount_ParentID(t *testing.T) {
 	acctest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
@@ -80,12 +80,12 @@ func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
+		CheckDestroy: testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsAccountConfigParentId1(name, email),
+				Config: testAccAccountParentId1Config(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsAccountExists(resourceName, &account),
+					testAccCheckAccountExists(resourceName, &account),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_id", parentIdResourceName1, "id"),
 				),
 			},
@@ -95,9 +95,9 @@ func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsOrganizationsAccountConfigParentId2(name, email),
+				Config: testAccAccountParentId2Config(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsAccountExists(resourceName, &account),
+					testAccCheckAccountExists(resourceName, &account),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_id", parentIdResourceName2, "id"),
 				),
 			},
@@ -105,7 +105,7 @@ func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
+func testAccAccount_Tags(t *testing.T) {
 	acctest.Skip(t, "AWS Organizations Account testing is not currently automated due to manual account deletion steps.")
 
 	var account organizations.Account
@@ -125,12 +125,12 @@ func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
+		CheckDestroy: testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsAccountConfigTags1(name, email, "key1", "value1"),
+				Config: testAccAccountTags1Config(name, email, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsAccountExists(resourceName, &account),
+					testAccCheckAccountExists(resourceName, &account),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -141,18 +141,18 @@ func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsOrganizationsAccountConfigTags2(name, email, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAccountTags2Config(name, email, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsAccountExists(resourceName, &account),
+					testAccCheckAccountExists(resourceName, &account),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAwsOrganizationsAccountConfig(name, email),
+				Config: testAccAccountConfig(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsAccountExists("aws_organizations_account.test", &account),
+					testAccCheckAccountExists("aws_organizations_account.test", &account),
 					resource.TestCheckResourceAttr("aws_organizations_account.test", "tags.%", "0"),
 				),
 			},
@@ -160,7 +160,7 @@ func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsOrganizationsAccountDestroy(s *terraform.State) error {
+func testAccCheckAccountDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -191,7 +191,7 @@ func testAccCheckAwsOrganizationsAccountDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsOrganizationsAccountExists(n string, a *organizations.Account) resource.TestCheckFunc {
+func testAccCheckAccountExists(n string, a *organizations.Account) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -219,7 +219,7 @@ func testAccCheckAwsOrganizationsAccountExists(n string, a *organizations.Accoun
 	}
 }
 
-func testAccAwsOrganizationsAccountConfig(name, email string) string {
+func testAccAccountConfig(name, email string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_account" "test" {
   name  = "%s"
@@ -228,7 +228,7 @@ resource "aws_organizations_account" "test" {
 `, name, email)
 }
 
-func testAccAwsOrganizationsAccountConfigParentId1(name, email string) string {
+func testAccAccountParentId1Config(name, email string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
@@ -250,7 +250,7 @@ resource "aws_organizations_account" "test" {
 `, name, email)
 }
 
-func testAccAwsOrganizationsAccountConfigParentId2(name, email string) string {
+func testAccAccountParentId2Config(name, email string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
@@ -272,7 +272,7 @@ resource "aws_organizations_account" "test" {
 `, name, email)
 }
 
-func testAccAwsOrganizationsAccountConfigTags1(name, email, tagKey1, tagValue1 string) string {
+func testAccAccountTags1Config(name, email, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
@@ -287,7 +287,7 @@ resource "aws_organizations_account" "test" {
 `, name, email, tagKey1, tagValue1)
 }
 
-func testAccAwsOrganizationsAccountConfigTags2(name, email, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAccountTags2Config(name, email, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 

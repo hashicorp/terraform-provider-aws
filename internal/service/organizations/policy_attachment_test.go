@@ -17,7 +17,7 @@ import (
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 )
 
-func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
+func testAccPolicyAttachment_Account(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
@@ -30,20 +30,20 @@ func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
+		CheckDestroy: testAccCheckPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsPolicyAttachmentConfig_Account(rName, organizations.PolicyTypeServiceControlPolicy, serviceControlPolicyContent),
+				Config: testAccPolicyAttachmentConfig_Account(rName, organizations.PolicyTypeServiceControlPolicy, serviceControlPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName),
+					testAccCheckPolicyAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "master_account_id"),
 				),
 			},
 			{
-				Config: testAccAwsOrganizationsPolicyAttachmentConfig_Account(rName, organizations.PolicyTypeTagPolicy, tagPolicyContent),
+				Config: testAccPolicyAttachmentConfig_Account(rName, organizations.PolicyTypeTagPolicy, tagPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName),
+					testAccCheckPolicyAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "master_account_id"),
 				),
@@ -57,7 +57,7 @@ func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
+func testAccPolicyAttachment_OrganizationalUnit(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
@@ -67,12 +67,12 @@ func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
+		CheckDestroy: testAccCheckPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsPolicyAttachmentConfig_OrganizationalUnit(rName),
+				Config: testAccPolicyAttachmentConfig_OrganizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName),
+					testAccCheckPolicyAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "id"),
 				),
@@ -86,7 +86,7 @@ func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
+func testAccPolicyAttachment_Root(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
@@ -96,12 +96,12 @@ func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
+		CheckDestroy: testAccCheckPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsPolicyAttachmentConfig_Root(rName),
+				Config: testAccPolicyAttachmentConfig_Root(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName),
+					testAccCheckPolicyAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "roots.0.id"),
 				),
@@ -115,7 +115,7 @@ func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsOrganizationsPolicyAttachmentDestroy(s *terraform.State) error {
+func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -168,7 +168,7 @@ func testAccCheckAwsOrganizationsPolicyAttachmentDestroy(s *terraform.State) err
 
 }
 
-func testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPolicyAttachmentExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -210,7 +210,7 @@ func testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName string) res
 	}
 }
 
-func testAccAwsOrganizationsPolicyAttachmentConfig_Account(rName, policyType, policyContent string) string {
+func testAccPolicyAttachmentConfig_Account(rName, policyType, policyContent string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   enabled_policy_types = ["SERVICE_CONTROL_POLICY", "TAG_POLICY"]
@@ -231,7 +231,7 @@ resource "aws_organizations_policy_attachment" "test" {
 `, rName, policyType, strconv.Quote(policyContent))
 }
 
-func testAccAwsOrganizationsPolicyAttachmentConfig_OrganizationalUnit(rName string) string {
+func testAccPolicyAttachmentConfig_OrganizationalUnit(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
@@ -266,7 +266,7 @@ resource "aws_organizations_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccAwsOrganizationsPolicyAttachmentConfig_Root(rName string) string {
+func testAccPolicyAttachmentConfig_Root(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   enabled_policy_types = ["SERVICE_CONTROL_POLICY"]

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccDataSourceAwsOrganizationsOrganizationalUnits_basic(t *testing.T) {
+func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 	dataSourceName := "data.aws_organizations_organizational_units.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -20,7 +20,7 @@ func testAccDataSourceAwsOrganizationsOrganizationalUnits_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsOrganizationsOrganizationalUnitsConfig,
+				Config: testAccOrganizationalUnitsDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "children.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "children.0.name"),
@@ -32,7 +32,7 @@ func testAccDataSourceAwsOrganizationsOrganizationalUnits_basic(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsOrganizationsOrganizationalUnitsConfig = `
+const testAccOrganizationalUnitsDataSourceConfig = `
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test" {

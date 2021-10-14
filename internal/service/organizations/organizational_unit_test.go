@@ -15,7 +15,7 @@ import (
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 )
 
-func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
+func testAccOrganizationalUnit_basic(t *testing.T) {
 	var unit organizations.OrganizationalUnit
 
 	rInt := sdkacctest.RandInt()
@@ -26,12 +26,12 @@ func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
+		CheckDestroy: testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name),
+				Config: testAccOrganizationalUnitConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", "0"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`ou/o-.+/ou-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -47,7 +47,7 @@ func testAccAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsOrganizationalUnit_disappears(t *testing.T) {
+func testAccOrganizationalUnit_disappears(t *testing.T) {
 	var unit organizations.OrganizationalUnit
 
 	rInt := sdkacctest.RandInt()
@@ -58,12 +58,12 @@ func testAccAwsOrganizationsOrganizationalUnit_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
+		CheckDestroy: testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name),
+				Config: testAccOrganizationalUnitConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourceOrganizationalUnit(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -72,7 +72,7 @@ func testAccAwsOrganizationsOrganizationalUnit_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsOrganizationalUnit_Name(t *testing.T) {
+func testAccOrganizationalUnit_Name(t *testing.T) {
 	var unit organizations.OrganizationalUnit
 
 	rInt := sdkacctest.RandInt()
@@ -84,12 +84,12 @@ func testAccAwsOrganizationsOrganizationalUnit_Name(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
+		CheckDestroy: testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name1),
+				Config: testAccOrganizationalUnitConfig(name1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 				),
 			},
@@ -99,9 +99,9 @@ func testAccAwsOrganizationsOrganizationalUnit_Name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name2),
+				Config: testAccOrganizationalUnitConfig(name2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
 				),
 			},
@@ -109,7 +109,7 @@ func testAccAwsOrganizationsOrganizationalUnit_Name(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
+func testAccOrganizationalUnit_Tags(t *testing.T) {
 	var unit organizations.OrganizationalUnit
 
 	rInt := sdkacctest.RandInt()
@@ -120,12 +120,12 @@ func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, organizations.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
+		CheckDestroy: testAccCheckOrganizationalUnitDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsOrganizationalUnitConfigTags1(name, "key1", "value1"),
+				Config: testAccOrganizationalUnitTags1Config(name, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -136,18 +136,18 @@ func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsOrganizationsOrganizationalUnitConfigTags2(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOrganizationalUnitTags2Config(name, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAwsOrganizationsOrganizationalUnitConfig(name),
+				Config: testAccOrganizationalUnitConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationalUnitExists(resourceName, &unit),
+					testAccCheckOrganizationalUnitExists(resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -155,7 +155,7 @@ func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsOrganizationsOrganizationalUnitDestroy(s *terraform.State) error {
+func testAccCheckOrganizationalUnitDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -188,7 +188,7 @@ func testAccCheckAwsOrganizationsOrganizationalUnitDestroy(s *terraform.State) e
 
 }
 
-func testAccCheckAwsOrganizationsOrganizationalUnitExists(n string, ou *organizations.OrganizationalUnit) resource.TestCheckFunc {
+func testAccCheckOrganizationalUnitExists(n string, ou *organizations.OrganizationalUnit) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -219,7 +219,7 @@ func testAccCheckAwsOrganizationsOrganizationalUnitExists(n string, ou *organiza
 	}
 }
 
-func testAccAwsOrganizationsOrganizationalUnitConfig(name string) string {
+func testAccOrganizationalUnitConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
@@ -230,7 +230,7 @@ resource "aws_organizations_organizational_unit" "test" {
 `, name)
 }
 
-func testAccAwsOrganizationsOrganizationalUnitConfigTags1(name, tagKey1, tagValue1 string) string {
+func testAccOrganizationalUnitTags1Config(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
@@ -245,7 +245,7 @@ resource "aws_organizations_organizational_unit" "test" {
 `, name, tagKey1, tagValue1)
 }
 
-func testAccAwsOrganizationsOrganizationalUnitConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccOrganizationalUnitTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 

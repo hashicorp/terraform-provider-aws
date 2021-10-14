@@ -14,7 +14,7 @@ import (
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 )
 
-func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
+func testAccDelegatedAdministrator_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
@@ -28,12 +28,12 @@ func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsOrganizationsDelegatedAdministratorDestroy,
+		CheckDestroy:      testAccCheckDelegatedAdministratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal),
+				Config: testAccDelegatedAdministratorConfig(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsDelegatedAdministratorExists(resourceName, &organization),
+					testAccCheckDelegatedAdministratorExists(resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceIdentity, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
 					acctest.CheckResourceAttrRFC3339(resourceName, "delegation_enabled_date"),
@@ -49,7 +49,7 @@ func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
+func testAccDelegatedAdministrator_disappears(t *testing.T) {
 	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
@@ -61,13 +61,13 @@ func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsOrganizationsDelegatedAdministratorDestroy,
+		CheckDestroy:      testAccCheckDelegatedAdministratorDestroy,
 		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal),
+				Config: testAccDelegatedAdministratorConfig(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsDelegatedAdministratorExists(resourceName, &organization),
+					testAccCheckDelegatedAdministratorExists(resourceName, &organization),
 					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourceDelegatedAdministrator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,7 +76,7 @@ func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsOrganizationsDelegatedAdministratorDestroy(s *terraform.State) error {
+func testAccCheckDelegatedAdministratorDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -115,7 +115,7 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorDestroy(s *terraform.Stat
 	return nil
 }
 
-func testAccCheckAwsOrganizationsDelegatedAdministratorExists(n string, org *organizations.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckDelegatedAdministratorExists(n string, org *organizations.DelegatedAdministrator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -162,7 +162,7 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorExists(n string, org *org
 	}
 }
 
-func testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal string) string {
+func testAccDelegatedAdministratorConfig(servicePrincipal string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
