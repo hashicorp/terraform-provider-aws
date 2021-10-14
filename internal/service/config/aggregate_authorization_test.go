@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/config"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -30,7 +31,7 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 	}
 	conn := client.(*conns.AWSClient).ConfigConn
 
-	aggregateAuthorizations, err := describeConfigAggregateAuthorizations(conn)
+	aggregateAuthorizations, err := tfconfig.DescribeAggregateAuthorizations(conn)
 	if err != nil {
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Aggregate Authorizations sweep for %s: %s", region, err)
@@ -139,12 +140,12 @@ func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) erro
 			continue
 		}
 
-		accountId, region, err := resourceAwsConfigAggregateAuthorizationParseID(rs.Primary.ID)
+		accountId, region, err := tfconfig.AggregateAuthorizationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		aggregateAuthorizations, err := describeConfigAggregateAuthorizations(conn)
+		aggregateAuthorizations, err := tfconfig.DescribeAggregateAuthorizations(conn)
 
 		if err != nil {
 			return err

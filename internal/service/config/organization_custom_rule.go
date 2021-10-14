@@ -186,7 +186,7 @@ func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface
 func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
-	rule, err := configDescribeOrganizationConfigRule(conn, d.Id())
+	rule, err := DescribeOrganizationConfigRule(conn, d.Id())
 
 	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
 		log.Printf("[WARN] Config Organization Custom Rule (%s) not found, removing from state", d.Id())

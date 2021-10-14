@@ -77,7 +77,7 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	accountId, region, err := resourceAwsConfigAggregateAuthorizationParseID(d.Id())
+	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 	d.Set("account_id", accountId)
 	d.Set("region", region)
 
-	aggregateAuthorizations, err := describeConfigAggregateAuthorizations(conn)
+	aggregateAuthorizations, err := DescribeAggregateAuthorizations(conn)
 	if err != nil {
 		return fmt.Errorf("Error retrieving list of aggregate authorizations: %s", err)
 	}
@@ -143,7 +143,7 @@ func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface
 func resourceAggregateAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
-	accountId, region, err := resourceAwsConfigAggregateAuthorizationParseID(d.Id())
+	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func resourceAggregateAuthorizationDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func describeConfigAggregateAuthorizations(conn *configservice.ConfigService) ([]*configservice.AggregationAuthorization, error) {
+func DescribeAggregateAuthorizations(conn *configservice.ConfigService) ([]*configservice.AggregationAuthorization, error) {
 	aggregationAuthorizations := []*configservice.AggregationAuthorization{}
 	input := &configservice.DescribeAggregationAuthorizationsInput{}
 
@@ -180,7 +180,7 @@ func describeConfigAggregateAuthorizations(conn *configservice.ConfigService) ([
 	return aggregationAuthorizations, nil
 }
 
-func resourceAwsConfigAggregateAuthorizationParseID(id string) (string, string, error) {
+func AggregateAuthorizationParseID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
 		return "", "", fmt.Errorf("Please make sure the ID is in the form account_id:region (i.e. 123456789012:us-east-1") // lintignore:AWSAT003

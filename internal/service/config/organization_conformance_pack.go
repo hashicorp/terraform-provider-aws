@@ -161,7 +161,7 @@ func resourceOrganizationConformancePackCreate(d *schema.ResourceData, meta inte
 func resourceOrganizationConformancePackRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 
-	pack, err := configDescribeOrganizationConformancePack(conn, d.Id())
+	pack, err := DescribeOrganizationConformancePack(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
 		log.Printf("[WARN] Config Organization Conformance Pack (%s) not found, removing from state", d.Id())
