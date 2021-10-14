@@ -14,6 +14,7 @@ import (
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
@@ -48,7 +49,7 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"password": {
 				Type:         schema.TypeString,
@@ -77,7 +78,7 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: verify.ValidARN,
 				},
 			},
 			"subdirectory": {

@@ -13,6 +13,7 @@ import (
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceLocationNFS() *schema.Resource {
@@ -42,7 +43,7 @@ func ResourceLocationNFS() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validateArn,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
@@ -52,7 +53,7 @@ func ResourceLocationNFS() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"version": {
