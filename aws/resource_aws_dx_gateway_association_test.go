@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -72,7 +73,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 						continue
 					}
 
-					r := resourceAwsDxGatewayAssociation()
+					r := ResourceGatewayAssociation()
 					d := r.Data(nil)
 					d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, gatewayID))
 					d.Set("dx_gateway_association_id", association.AssociationId)
@@ -136,7 +137,7 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 						continue
 					}
 
-					r := resourceAwsDxGatewayAssociation()
+					r := ResourceGatewayAssociation()
 					d := r.Data(nil)
 					d.SetId(tfdirectconnect.GatewayAssociationCreateResourceID(directConnectGatewayID, transitGatewayID))
 					d.Set("dx_gateway_association_id", association.AssociationId)

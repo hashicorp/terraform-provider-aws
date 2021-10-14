@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDxConnection() *schema.Resource {
+func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDxConnectionRead,
+		Read: dataSourceConnectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -49,7 +49,7 @@ func dataSourceAwsDxConnection() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

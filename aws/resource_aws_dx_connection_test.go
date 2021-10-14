@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -65,7 +66,7 @@ func testSweepDxConnections(region string) error {
 
 		id := aws.StringValue(connection.ConnectionId)
 
-		r := resourceAwsDxConnection()
+		r := ResourceConnection()
 		d := r.Data(nil)
 		d.SetId(id)
 
@@ -131,7 +132,7 @@ func TestAccAwsDxConnection_disappears(t *testing.T) {
 				Config: testAccDxConnectionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxConnectionExists(resourceName, &connection),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxConnection(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -55,7 +56,7 @@ func testSweepDirectConnectGatewayAssociationProposals(region string) error {
 				continue
 			}
 
-			r := resourceAwsDxGatewayAssociationProposal()
+			r := ResourceGatewayAssociationProposal()
 			d := r.Data(nil)
 			d.SetId(proposalID)
 
@@ -174,7 +175,7 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 				Config: testAccDxGatewayAssociationProposalConfig_basicVpnGateway(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGatewayAssociationProposal(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -200,7 +201,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeVpn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
 					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -237,7 +238,7 @@ func TestAccAwsDxGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal),
 					testAccCheckAwsDxGatewayAssociationProposalAccepted(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDxGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{

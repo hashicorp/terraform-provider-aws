@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxHostedPublicVirtualInterface() *schema.Resource {
+func ResourceHostedPublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxHostedPublicVirtualInterfaceCreate,
-		Read:   resourceAwsDxHostedPublicVirtualInterfaceRead,
-		Delete: resourceAwsDxHostedPublicVirtualInterfaceDelete,
+		Create: resourceHostedPublicVirtualInterfaceCreate,
+		Read:   resourceHostedPublicVirtualInterfaceRead,
+		Delete: resourceHostedPublicVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxHostedPublicVirtualInterfaceImport,
 		},
@@ -108,7 +108,7 @@ func resourceAwsDxHostedPublicVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	req := &directconnect.AllocatePublicVirtualInterfaceInput{
@@ -146,10 +146,10 @@ func resourceAwsDxHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, met
 		return err
 	}
 
-	return resourceAwsDxHostedPublicVirtualInterfaceRead(d, meta)
+	return resourceHostedPublicVirtualInterfaceRead(d, meta)
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
@@ -188,7 +188,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return dxVirtualInterfaceDelete(d, meta)
 }
 

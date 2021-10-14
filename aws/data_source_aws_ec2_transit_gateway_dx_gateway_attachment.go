@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEc2TransitGatewayDxGatewayAttachment() *schema.Resource {
+func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEc2TransitGatewayDxGatewayAttachmentRead,
+		Read: dataSourceTransitGatewayDxGatewayAttachmentRead,
 
 		Schema: map[string]*schema.Schema{
 			"dx_gateway_id": {
@@ -31,7 +31,7 @@ func dataSourceAwsEc2TransitGatewayDxGatewayAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2TransitGatewayDxGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceTransitGatewayDxGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

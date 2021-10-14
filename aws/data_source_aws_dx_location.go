@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDxLocation() *schema.Resource {
+func DataSourceLocation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDxLocationRead,
+		Read: dataSourceLocationRead,
 
 		Schema: map[string]*schema.Schema{
 			"available_port_speeds": {
@@ -40,7 +40,7 @@ func dataSourceAwsDxLocation() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDxLocationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLocationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	locationCode := d.Get("location_code").(string)
 

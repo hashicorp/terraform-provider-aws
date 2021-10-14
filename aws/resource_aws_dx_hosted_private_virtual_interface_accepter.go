@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
+func ResourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxHostedPrivateVirtualInterfaceAccepterCreate,
-		Read:   resourceAwsDxHostedPrivateVirtualInterfaceAccepterRead,
-		Update: resourceAwsDxHostedPrivateVirtualInterfaceAccepterUpdate,
-		Delete: resourceAwsDxHostedPrivateVirtualInterfaceAccepterDelete,
+		Create: resourceHostedPrivateVirtualInterfaceAccepterCreate,
+		Read:   resourceHostedPrivateVirtualInterfaceAccepterRead,
+		Update: resourceHostedPrivateVirtualInterfaceAccepterUpdate,
+		Delete: resourceHostedPrivateVirtualInterfaceAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxHostedPrivateVirtualInterfaceAccepterImport,
 		},
@@ -58,7 +58,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 	}
 }
 
-func resourceAwsDxHostedPrivateVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPrivateVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vgwIdRaw, vgwOk := d.GetOk("vpn_gateway_id")
@@ -99,10 +99,10 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepterCreate(d *schema.Resource
 		return err
 	}
 
-	return resourceAwsDxHostedPrivateVirtualInterfaceAccepterUpdate(d, meta)
+	return resourceHostedPrivateVirtualInterfaceAccepterUpdate(d, meta)
 }
 
-func resourceAwsDxHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -149,15 +149,15 @@ func resourceAwsDxHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceDa
 	return nil
 }
 
-func resourceAwsDxHostedPrivateVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPrivateVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := dxVirtualInterfaceUpdate(d, meta); err != nil {
 		return err
 	}
 
-	return resourceAwsDxHostedPrivateVirtualInterfaceAccepterRead(d, meta)
+	return resourceHostedPrivateVirtualInterfaceAccepterRead(d, meta)
 }
 
-func resourceAwsDxHostedPrivateVirtualInterfaceAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPrivateVirtualInterfaceAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Will not delete Direct Connect virtual interface. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }

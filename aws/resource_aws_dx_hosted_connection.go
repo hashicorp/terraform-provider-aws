@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxHostedConnection() *schema.Resource {
+func ResourceHostedConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxHostedConnectionCreate,
-		Read:   resourceAwsDxHostedConnectionRead,
-		Delete: resourceAwsDxHostedConnectionDelete,
+		Create: resourceHostedConnectionCreate,
+		Read:   resourceHostedConnectionRead,
+		Delete: resourceHostedConnectionDelete,
 
 		Schema: map[string]*schema.Schema{
 			"aws_device": {
@@ -94,7 +94,7 @@ func resourceAwsDxHostedConnection() *schema.Resource {
 	}
 }
 
-func resourceAwsDxHostedConnectionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	name := d.Get("name").(string)
@@ -115,10 +115,10 @@ func resourceAwsDxHostedConnectionCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(output.ConnectionId))
 
-	return resourceAwsDxHostedConnectionRead(d, meta)
+	return resourceHostedConnectionRead(d, meta)
 }
 
-func resourceAwsDxHostedConnectionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	connection, err := finder.HostedConnectionByID(conn, d.Id())
@@ -153,7 +153,7 @@ func resourceAwsDxHostedConnectionRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsDxHostedConnectionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	return deleteDirectConnectConnection(conn, d.Id(), waiter.HostedConnectionDeleted)

@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxPublicVirtualInterface() *schema.Resource {
+func ResourcePublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxPublicVirtualInterfaceCreate,
-		Read:   resourceAwsDxPublicVirtualInterfaceRead,
-		Update: resourceAwsDxPublicVirtualInterfaceUpdate,
-		Delete: resourceAwsDxPublicVirtualInterfaceDelete,
+		Create: resourcePublicVirtualInterfaceCreate,
+		Read:   resourcePublicVirtualInterfaceRead,
+		Update: resourcePublicVirtualInterfaceUpdate,
+		Delete: resourcePublicVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxPublicVirtualInterfaceImport,
 		},
@@ -110,7 +110,7 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -152,10 +152,10 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 		return err
 	}
 
-	return resourceAwsDxPublicVirtualInterfaceRead(d, meta)
+	return resourcePublicVirtualInterfaceRead(d, meta)
 }
 
-func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -212,15 +212,15 @@ func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsDxPublicVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := dxVirtualInterfaceUpdate(d, meta); err != nil {
 		return err
 	}
 
-	return resourceAwsDxPublicVirtualInterfaceRead(d, meta)
+	return resourcePublicVirtualInterfaceRead(d, meta)
 }
 
-func resourceAwsDxPublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return dxVirtualInterfaceDelete(d, meta)
 }
 

@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxHostedTransitVirtualInterface() *schema.Resource {
+func ResourceHostedTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxHostedTransitVirtualInterfaceCreate,
-		Read:   resourceAwsDxHostedTransitVirtualInterfaceRead,
-		Delete: resourceAwsDxHostedTransitVirtualInterfaceDelete,
+		Create: resourceHostedTransitVirtualInterfaceCreate,
+		Read:   resourceHostedTransitVirtualInterfaceRead,
+		Delete: resourceHostedTransitVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDxHostedTransitVirtualInterfaceImport,
 		},
@@ -110,7 +110,7 @@ func resourceAwsDxHostedTransitVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceAwsDxHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	req := &directconnect.AllocateTransitVirtualInterfaceInput{
@@ -146,10 +146,10 @@ func resourceAwsDxHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, me
 		return err
 	}
 
-	return resourceAwsDxHostedTransitVirtualInterfaceRead(d, meta)
+	return resourceHostedTransitVirtualInterfaceRead(d, meta)
 }
 
-func resourceAwsDxHostedTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
@@ -187,7 +187,7 @@ func resourceAwsDxHostedTransitVirtualInterfaceRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsDxHostedTransitVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedTransitVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return dxVirtualInterfaceDelete(d, meta)
 }
 

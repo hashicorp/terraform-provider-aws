@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDxConnectionConfirmation() *schema.Resource {
+func ResourceConnectionConfirmation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDxConnectionConfirmationCreate,
-		Read:   resourceAwsDxConnectionConfirmationRead,
-		Delete: resourceAwsDxConnectionConfirmationDelete,
+		Create: resourceConnectionConfirmationCreate,
+		Read:   resourceConnectionConfirmationRead,
+		Delete: resourceConnectionConfirmationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"connection_id": {
@@ -29,7 +29,7 @@ func resourceAwsDxConnectionConfirmation() *schema.Resource {
 	}
 }
 
-func resourceAwsDxConnectionConfirmationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionConfirmationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	connectionID := d.Get("connection_id").(string)
@@ -53,7 +53,7 @@ func resourceAwsDxConnectionConfirmationCreate(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsDxConnectionConfirmationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionConfirmationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	_, err := finder.ConnectionByID(conn, d.Id())
@@ -71,7 +71,7 @@ func resourceAwsDxConnectionConfirmationRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsDxConnectionConfirmationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConnectionConfirmationDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Will not delete Direct Connect connection. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }
