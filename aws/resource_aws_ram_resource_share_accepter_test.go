@@ -132,7 +132,7 @@ func testAccCheckAwsRamResourceShareAccepterDestroy(s *terraform.State) error {
 
 		output, err := conn.GetResourceShares(input)
 		if err != nil {
-			if isAWSErr(err, ram.ErrCodeUnknownResourceException, "") {
+			if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
 				return nil
 			}
 			return fmt.Errorf("Error deleting RAM resource share: %s", err)
