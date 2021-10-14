@@ -7,21 +7,22 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/neptune/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSNeptuneClusterEndpoint_basic(t *testing.T) {
 	var dbCluster neptune.DBClusterEndpoint
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -29,7 +30,7 @@ func TestAccAWSNeptuneClusterEndpoint_basic(t *testing.T) {
 				Config: testAccAWSNeptuneClusterEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterEndpointExists(resourceName, &dbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "READER"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_identifier", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_neptune_cluster.test", "cluster_identifier"),
@@ -48,17 +49,17 @@ func TestAccAWSNeptuneClusterEndpoint_basic(t *testing.T) {
 }
 
 func TestAccAWSNeptuneClusterEndpoint_tags(t *testing.T) {
-	if testAccGetPartition() == "aws-us-gov" {
+	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("Neptune Cluster Endpoint tags are not supported in GovCloud partition")
 	}
 
 	var v neptune.DBClusterEndpoint
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -98,12 +99,12 @@ func TestAccAWSNeptuneClusterEndpoint_tags(t *testing.T) {
 
 func TestAccAWSNeptuneClusterEndpoint_disappears(t *testing.T) {
 	var dbCluster neptune.DBClusterEndpoint
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -111,7 +112,7 @@ func TestAccAWSNeptuneClusterEndpoint_disappears(t *testing.T) {
 				Config: testAccAWSNeptuneClusterEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterEndpointExists(resourceName, &dbCluster),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsNeptuneClusterEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNeptuneClusterEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -121,12 +122,12 @@ func TestAccAWSNeptuneClusterEndpoint_disappears(t *testing.T) {
 
 func TestAccAWSNeptuneClusterEndpoint_disappears_cluster(t *testing.T) {
 	var dbCluster neptune.DBClusterEndpoint
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneClusterEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -134,7 +135,7 @@ func TestAccAWSNeptuneClusterEndpoint_disappears_cluster(t *testing.T) {
 				Config: testAccAWSNeptuneClusterEndpointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNeptuneClusterEndpointExists(resourceName, &dbCluster),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsNeptuneCluster(), "aws_neptune_cluster.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsNeptuneCluster(), "aws_neptune_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -197,7 +198,7 @@ func testAccCheckAWSNeptuneClusterEndpointExistsWithProvider(n string, v *neptun
 }
 
 func testAccAWSNeptuneClusterEndpointConfigBase(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 locals {
   availability_zone_names = slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
 }
@@ -213,7 +214,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterEndpointConfig(rName string) string {
-	return composeConfig(testAccAWSNeptuneClusterEndpointConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterEndpointConfigBase(rName), fmt.Sprintf(`
 resource "aws_neptune_cluster_endpoint" "test" {
   cluster_identifier          = aws_neptune_cluster.test.cluster_identifier
   cluster_endpoint_identifier = %[1]q
@@ -223,7 +224,7 @@ resource "aws_neptune_cluster_endpoint" "test" {
 }
 
 func testAccAWSNeptuneClusterEndpointConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return composeConfig(testAccAWSNeptuneClusterEndpointConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterEndpointConfigBase(rName), fmt.Sprintf(`
 resource "aws_neptune_cluster_endpoint" "test" {
   cluster_identifier          = aws_neptune_cluster.test.cluster_identifier
   cluster_endpoint_identifier = %[1]q
@@ -237,7 +238,7 @@ resource "aws_neptune_cluster_endpoint" "test" {
 }
 
 func testAccAWSNeptuneClusterEndpointConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return composeConfig(testAccAWSNeptuneClusterEndpointConfigBase(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAWSNeptuneClusterEndpointConfigBase(rName), fmt.Sprintf(`
 resource "aws_neptune_cluster_endpoint" "test" {
   cluster_identifier          = aws_neptune_cluster.test.cluster_identifier
   cluster_endpoint_identifier = %[1]q
