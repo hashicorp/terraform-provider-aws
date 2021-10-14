@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -124,8 +125,8 @@ func expandCodeStarNotificationsNotificationRuleTargets(targetsData []interface{
 }
 
 func resourceAwsCodeStarNotificationsNotificationRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarnotificationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &codestarnotifications.CreateNotificationRuleInput{
@@ -152,9 +153,9 @@ func resourceAwsCodeStarNotificationsNotificationRuleCreate(d *schema.ResourceDa
 }
 
 func resourceAwsCodeStarNotificationsNotificationRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarnotificationsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	rule, err := conn.DescribeNotificationRule(&codestarnotifications.DescribeNotificationRuleInput{
 		Arn: aws.String(d.Id()),
@@ -262,7 +263,7 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 }
 
 func resourceAwsCodeStarNotificationsNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarnotificationsconn
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
 
 	params := &codestarnotifications.UpdateNotificationRuleInput{
 		Arn:          aws.String(d.Id()),
@@ -295,7 +296,7 @@ func resourceAwsCodeStarNotificationsNotificationRuleUpdate(d *schema.ResourceDa
 }
 
 func resourceAwsCodeStarNotificationsNotificationRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codestarnotificationsconn
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn
 
 	_, err := conn.DeleteNotificationRule(&codestarnotifications.DeleteNotificationRuleInput{
 		Arn: aws.String(d.Id()),
