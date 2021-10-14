@@ -183,10 +183,10 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaPermissionConfig(funcName, roleName),
+				Config: testAccPermissionConfig(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
@@ -200,7 +200,7 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -214,10 +214,10 @@ func TestAccAWSLambdaPermission_StatementId_Duplicate(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSLambdaPermissionConfigStatementIdDuplicate(rName),
+				Config:      testAccPermissionStatementIdDuplicateConfig(rName),
 				ExpectError: regexp.MustCompile(`ResourceConflictException`),
 			},
 		},
@@ -238,10 +238,10 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaPermissionConfig_withRawFunctionName(funcName, roleName),
+				Config: testAccPermissionConfig_withRawFunctionName(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
@@ -253,7 +253,7 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -273,10 +273,10 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaPermissionConfig_withStatementIdPrefix(rName),
+				Config: testAccPermissionConfig_withStatementIdPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
@@ -288,7 +288,7 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccAWSCLambdaPermissionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       testAccCPermissionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"statement_id_prefix"},
 			},
@@ -311,10 +311,10 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaPermissionConfig_withQualifier(aliasName, funcName, roleName),
+				Config: testAccPermissionConfig_withQualifier(aliasName, funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
@@ -327,7 +327,7 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -345,14 +345,14 @@ func TestAccAWSLambdaPermission_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			// Here we delete the Lambda permission to verify the follow-on refresh after this step
 			// should not error.
 			{
-				Config: testAccAWSLambdaPermissionConfig_multiplePerms(funcName, roleName),
+				Config: testAccPermissionConfig_multiplePerms(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSLambdaPermissionDisappears(resourceName),
+					testAccPermissionDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -381,10 +381,10 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaPermissionConfig_multiplePerms(funcName, roleName),
+				Config: testAccPermissionConfig_multiplePerms(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					// 1st
 					testAccCheckLambdaPermissionExists(resourceNameFirst, &firstStatement),
@@ -401,7 +401,7 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSLambdaPermissionConfig_multiplePermsModified(funcName, roleName),
+				Config: testAccPermissionConfig_multiplePermsModified(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					// 1st
 					testAccCheckLambdaPermissionExists(resourceNameFirst, &secondStatement),
@@ -426,13 +426,13 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 			{
 				ResourceName:      resourceNameFirst,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc(resourceNameFirst),
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceNameFirst),
 				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceNameSecondModified,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc(resourceNameSecondModified),
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceNameSecondModified),
 				ImportStateVerify: true,
 			},
 		},
@@ -455,10 +455,10 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaPermissionConfig_withS3(bucketName, funcName, roleName),
+				Config: testAccPermissionConfig_withS3(bucketName, funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
@@ -471,7 +471,7 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -494,10 +494,10 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaPermissionConfig_withSNS(topicName, funcName, roleName),
+				Config: testAccPermissionConfig_withSNS(topicName, funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
@@ -510,7 +510,7 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -532,10 +532,10 @@ func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, lambda.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		CheckDestroy: testAccCheckPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaPermissionConfig_withIAMRole(funcName, roleName),
+				Config: testAccPermissionConfig_withIAMRole(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaPermissionExists(resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, "action", "lambda:InvokeFunction"),
@@ -547,14 +547,14 @@ func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCPermissionImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccAWSLambdaPermissionDisappears(n string) resource.TestCheckFunc {
+func testAccPermissionDisappears(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -627,7 +627,7 @@ func testAccCheckLambdaPermissionExists(n string, statement *tflambda.PolicyStat
 	}
 }
 
-func testAccCheckAWSLambdaPermissionDestroy(s *terraform.State) error {
+func testAccCheckPermissionDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -722,7 +722,7 @@ func lambdaPermissionExists(rs *terraform.ResourceState, conn *lambda.Lambda) (*
 	return tflambda.FindPolicyStatementByID(&policy, rs.Primary.ID)
 }
 
-func testAccAWSCLambdaPermissionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccCPermissionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -736,7 +736,7 @@ func testAccAWSCLambdaPermissionImportStateIdFunc(resourceName string) resource.
 	}
 }
 
-func testAccAWSLambdaPermissionConfig(funcName, roleName string) string {
+func testAccPermissionConfig(funcName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "allow_cloudwatch" {
   statement_id       = "AllowExecutionFromCloudWatch"
@@ -776,7 +776,7 @@ EOF
 `, funcName, roleName)
 }
 
-func testAccAWSLambdaPermissionConfigStatementIdDuplicate(rName string) string {
+func testAccPermissionStatementIdDuplicateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "test1" {
   action             = "lambda:InvokeFunction"
@@ -824,7 +824,7 @@ EOF
 `, rName, rName)
 }
 
-func testAccAWSLambdaPermissionConfig_withRawFunctionName(funcName, roleName string) string {
+func testAccPermissionConfig_withRawFunctionName(funcName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "with_raw_func_name" {
   statement_id  = "AllowExecutionWithRawFuncName"
@@ -863,7 +863,7 @@ EOF
 `, funcName, roleName)
 }
 
-func testAccAWSLambdaPermissionConfig_withStatementIdPrefix(rName string) string {
+func testAccPermissionConfig_withStatementIdPrefix(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "with_statement_id_prefix" {
   statement_id_prefix = "AllowExecutionWithStatementIdPrefix-"
@@ -902,7 +902,7 @@ EOF
 `, rName)
 }
 
-func testAccAWSLambdaPermissionConfig_withQualifier(aliasName, funcName, roleName string) string {
+func testAccPermissionConfig_withQualifier(aliasName, funcName, roleName string) string {
 	// lintignore:AWSAT003,AWSAT005 // ARN, region not actually used
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "with_qualifier" {
@@ -952,7 +952,7 @@ EOF
 `, aliasName, funcName, roleName)
 }
 
-var testAccAWSLambdaPermissionConfig_multiplePerms_tpl = `
+var testAccPermissionConfig_multiplePerms_tpl = `
 resource "aws_lambda_permission" "first" {
   statement_id  = "AllowExecutionFirst"
   action        = "lambda:InvokeFunction"
@@ -997,13 +997,13 @@ EOF
 }
 `
 
-func testAccAWSLambdaPermissionConfig_multiplePerms(funcName, roleName string) string {
-	return fmt.Sprintf(testAccAWSLambdaPermissionConfig_multiplePerms_tpl,
+func testAccPermissionConfig_multiplePerms(funcName, roleName string) string {
+	return fmt.Sprintf(testAccPermissionConfig_multiplePerms_tpl,
 		"second", "AllowExecutionSecond", "", funcName, roleName)
 }
 
-func testAccAWSLambdaPermissionConfig_multiplePermsModified(funcName, roleName string) string {
-	return fmt.Sprintf(testAccAWSLambdaPermissionConfig_multiplePerms_tpl,
+func testAccPermissionConfig_multiplePermsModified(funcName, roleName string) string {
+	return fmt.Sprintf(testAccPermissionConfig_multiplePerms_tpl,
 		"sec0nd", "AllowExecutionSec0nd", `
 resource "aws_lambda_permission" "third" {
   statement_id  = "AllowExecutionThird"
@@ -1014,7 +1014,7 @@ resource "aws_lambda_permission" "third" {
 `, funcName, roleName)
 }
 
-func testAccAWSLambdaPermissionConfig_withS3(bucketName, funcName, roleName string) string {
+func testAccPermissionConfig_withS3(bucketName, funcName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "with_s3" {
   statement_id  = "AllowExecutionFromS3"
@@ -1059,7 +1059,7 @@ EOF
 `, bucketName, funcName, roleName)
 }
 
-func testAccAWSLambdaPermissionConfig_withSNS(topicName, funcName, roleName string) string {
+func testAccPermissionConfig_withSNS(topicName, funcName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "with_sns" {
   statement_id  = "AllowExecutionFromSNS"
@@ -1109,7 +1109,7 @@ EOF
 `, topicName, funcName, roleName)
 }
 
-func testAccAWSLambdaPermissionConfig_withIAMRole(funcName, roleName string) string {
+func testAccPermissionConfig_withIAMRole(funcName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "iam_role" {
   statement_id  = "AllowExecutionFromIAMRole"

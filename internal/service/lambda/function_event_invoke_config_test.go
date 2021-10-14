@@ -27,9 +27,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigFunctionName(rName),
+				Config: testAccFunctionEventInvokeFunctionNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", "0"),
@@ -59,11 +59,11 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunction(t *test
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigFunctionName(rName),
+				Config: testAccFunctionEventInvokeFunctionNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(lambdaFunctionResourceName, rName, &function),
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
-					testAccCheckAwsLambdaFunctionDisappears(&function),
+					testAccCheckFunctionExists(lambdaFunctionResourceName, rName, &function),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
+					testAccCheckFunctionDisappears(&function),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,10 +82,10 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_disappears_LambdaFunctionEventInv
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigFunctionName(rName),
+				Config: testAccFunctionEventInvokeFunctionNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
-					testAccCheckAwsLambdaFunctionEventInvokeConfigDisappears(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
+					testAccCheckFunctionEventInvokeDisappearsConfig(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,9 +106,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnFailure_Desti
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnFailureDestinationSqsQueue(rName),
+				Config: testAccFunctionEventInvokeDestinationOnFailureDestinationSQSQueueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", sqsQueueResourceName, "arn"),
@@ -120,9 +120,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnFailure_Desti
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnFailureDestinationSnsTopic(rName),
+				Config: testAccFunctionEventInvokeDestinationOnFailureDestinationSNSTopicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", snsTopicResourceName, "arn"),
@@ -145,9 +145,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnSuccess_Desti
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnSuccessDestinationSqsQueue(rName),
+				Config: testAccFunctionEventInvokeDestinationOnSuccessDestinationSQSQueueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_success.0.destination", sqsQueueResourceName, "arn"),
@@ -159,9 +159,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_OnSuccess_Desti
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnSuccessDestinationSnsTopic(rName),
+				Config: testAccFunctionEventInvokeDestinationOnSuccessDestinationSNSTopicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_success.0.destination", snsTopicResourceName, "arn"),
@@ -183,9 +183,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Remove(t *testi
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnFailureDestinationSqsQueue(rName),
+				Config: testAccFunctionEventInvokeDestinationOnFailureDestinationSQSQueueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", sqsQueueResourceName, "arn"),
@@ -197,9 +197,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Remove(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigQualifierFunctionVersion(rName),
+				Config: testAccFunctionEventInvokeQualifierFunctionVersionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "0"),
 				),
 			},
@@ -219,9 +219,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Swap(t *testing
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnFailureDestinationSqsQueue(rName),
+				Config: testAccFunctionEventInvokeDestinationOnFailureDestinationSQSQueueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", sqsQueueResourceName, "arn"),
@@ -233,9 +233,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_DestinationConfig_Swap(t *testing
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnSuccessDestinationSqsQueue(rName),
+				Config: testAccFunctionEventInvokeDestinationOnSuccessDestinationSQSQueueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_success.0.destination", sqsQueueResourceName, "arn"),
@@ -257,9 +257,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_FunctionName_Arn(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigFunctionNameArn(rName),
+				Config: testAccFunctionEventInvokeFunctionNameARNConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 				),
@@ -285,9 +285,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionName_Arn(t *tes
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigQualifierFunctionNameArn(rName),
+				Config: testAccFunctionEventInvokeQualifierFunctionNameARNConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", tflambda.FunctionVersionLatest),
 				),
@@ -312,9 +312,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumEventAgeInSeconds(t *testi
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigMaximumEventAgeInSeconds(rName, 100),
+				Config: testAccFunctionEventInvokeMaximumEventAgeInSecondsConfig(rName, 100),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", "100"),
 				),
 			},
@@ -324,9 +324,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumEventAgeInSeconds(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigMaximumEventAgeInSeconds(rName, 200),
+				Config: testAccFunctionEventInvokeMaximumEventAgeInSecondsConfig(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", "200"),
 				),
 			},
@@ -345,9 +345,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumRetryAttempts(t *testing.T
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigMaximumRetryAttempts(rName, 0),
+				Config: testAccFunctionEventInvokeMaximumRetryAttemptsConfig(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", "0"),
 				),
 			},
@@ -357,16 +357,16 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_MaximumRetryAttempts(t *testing.T
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigMaximumRetryAttempts(rName, 1),
+				Config: testAccFunctionEventInvokeMaximumRetryAttemptsConfig(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", "1"),
 				),
 			},
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigMaximumRetryAttempts(rName, 0),
+				Config: testAccFunctionEventInvokeMaximumRetryAttemptsConfig(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", "0"),
 				),
 			},
@@ -386,9 +386,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_AliasName(t *testing.T)
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigQualifierAliasName(rName),
+				Config: testAccFunctionEventInvokeQualifierAliasNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaAliasResourceName, "name"),
 				),
 			},
@@ -413,9 +413,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_FunctionVersion(t *test
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigQualifierFunctionVersion(rName),
+				Config: testAccFunctionEventInvokeQualifierFunctionVersionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, "version"),
 				),
@@ -440,9 +440,9 @@ func TestAccAWSLambdaFunctionEventInvokeConfig_Qualifier_Latest(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionEventInvokeConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaFunctionEventInvokeConfigQualifierLatest(rName),
+				Config: testAccFunctionEventInvokeQualifierLatestConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName),
+					testAccCheckFunctionEventInvokeExistsConfig(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", tflambda.FunctionVersionLatest),
 				),
 			},
@@ -496,7 +496,7 @@ func testAccCheckLambdaFunctionEventInvokeConfigDestroy(s *terraform.State) erro
 
 }
 
-func testAccCheckAwsLambdaFunctionEventInvokeConfigDisappears(resourceName string) resource.TestCheckFunc {
+func testAccCheckFunctionEventInvokeDisappearsConfig(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -529,7 +529,7 @@ func testAccCheckAwsLambdaFunctionEventInvokeConfigDisappears(resourceName strin
 	}
 }
 
-func testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckFunctionEventInvokeExistsConfig(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -566,7 +566,7 @@ func testAccCheckAwsLambdaFunctionEventInvokeConfigExists(resourceName string) r
 	}
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigBase(rName string) string {
+func testAccFunctionEventInvokeBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -610,8 +610,8 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnFailureDestinationSnsTopic(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + fmt.Sprintf(`
+func testAccFunctionEventInvokeDestinationOnFailureDestinationSNSTopicConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_iam_role_policy_attachment" "test-AmazonSNSFullAccess" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSNSFullAccess"
   role       = aws_iam_role.test.id
@@ -635,8 +635,8 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 `, rName)
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnFailureDestinationSqsQueue(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + fmt.Sprintf(`
+func testAccFunctionEventInvokeDestinationOnFailureDestinationSQSQueueConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_iam_role_policy_attachment" "test-AmazonSQSFullAccess" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSQSFullAccess"
   role       = aws_iam_role.test.id
@@ -660,8 +660,8 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 `, rName)
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnSuccessDestinationSnsTopic(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + fmt.Sprintf(`
+func testAccFunctionEventInvokeDestinationOnSuccessDestinationSNSTopicConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_iam_role_policy_attachment" "test-AmazonSNSFullAccess" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSNSFullAccess"
   role       = aws_iam_role.test.id
@@ -685,8 +685,8 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 `, rName)
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigDestinationConfigOnSuccessDestinationSqsQueue(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + fmt.Sprintf(`
+func testAccFunctionEventInvokeDestinationOnSuccessDestinationSQSQueueConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_iam_role_policy_attachment" "test-AmazonSQSFullAccess" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSQSFullAccess"
   role       = aws_iam_role.test.id
@@ -710,24 +710,24 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 `, rName)
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigFunctionName(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + `
+func testAccFunctionEventInvokeFunctionNameConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.function_name
 }
 `
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigFunctionNameArn(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + `
+func testAccFunctionEventInvokeFunctionNameARNConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.arn
 }
 `
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigQualifierFunctionNameArn(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + `
+func testAccFunctionEventInvokeQualifierFunctionNameARNConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.arn
   qualifier     = "$LATEST"
@@ -735,8 +735,8 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 `
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigMaximumEventAgeInSeconds(rName string, maximumEventAgeInSeconds int) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + fmt.Sprintf(`
+func testAccFunctionEventInvokeMaximumEventAgeInSecondsConfig(rName string, maximumEventAgeInSeconds int) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name                = aws_lambda_function.test.function_name
   maximum_event_age_in_seconds = %[1]d
@@ -744,8 +744,8 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 `, maximumEventAgeInSeconds)
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigMaximumRetryAttempts(rName string, maximumRetryAttempts int) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + fmt.Sprintf(`
+func testAccFunctionEventInvokeMaximumRetryAttemptsConfig(rName string, maximumRetryAttempts int) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name          = aws_lambda_function.test.function_name
   maximum_retry_attempts = %[1]d
@@ -753,8 +753,8 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 `, maximumRetryAttempts)
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigQualifierAliasName(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + `
+func testAccFunctionEventInvokeQualifierAliasNameConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + `
 resource "aws_lambda_alias" "test" {
   function_name    = aws_lambda_function.test.function_name
   function_version = aws_lambda_function.test.version
@@ -768,8 +768,8 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 `
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigQualifierFunctionVersion(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + `
+func testAccFunctionEventInvokeQualifierFunctionVersionConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.function_name
   qualifier     = aws_lambda_function.test.version
@@ -777,8 +777,8 @@ resource "aws_lambda_function_event_invoke_config" "test" {
 `
 }
 
-func testAccAWSLambdaFunctionEventInvokeConfigQualifierLatest(rName string) string {
-	return testAccAWSLambdaFunctionEventInvokeConfigBase(rName) + `
+func testAccFunctionEventInvokeQualifierLatestConfig(rName string) string {
+	return testAccFunctionEventInvokeBaseConfig(rName) + `
 resource "aws_lambda_function_event_invoke_config" "test" {
   function_name = aws_lambda_function.test.function_name
   qualifier     = "$LATEST"

@@ -26,9 +26,9 @@ func TestAccAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaCodeSigningConfigBasic(),
+				Config: testAccCodeSigningBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
@@ -56,17 +56,17 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePolicy(t *testing.T) {
 		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaCodeSigningConfigBasic(),
+				Config: testAccCodeSigningBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.untrusted_artifact_on_deployment", "Warn"),
 				),
 			},
 			{
-				Config: testAccAWSLambdaCodeSigningConfigUpdatePolicy(),
+				Config: testAccCodeSigningUpdatePolicyConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.untrusted_artifact_on_deployment", "Enforce"),
 				),
 			},
@@ -92,9 +92,9 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 		CheckDestroy: testAccCheckCodeSigningConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaCodeSigningConfigBasic(),
+				Config: testAccCodeSigningBasicConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
@@ -102,9 +102,9 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSLambdaCodeSigningConfigUpdatePublishers(),
+				Config: testAccCodeSigningUpdatePublishersConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
+					testAccCheckCodeSigningExistsConfig(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 				),
@@ -118,7 +118,7 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 	})
 }
 
-func testAccAWSLambdaCodeSigningConfigUpdatePublishers() string {
+func testAccCodeSigningUpdatePublishersConfig() string {
 	return `
 resource "aws_signer_signing_profile" "test1" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -137,7 +137,7 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 }`
 }
 
-func testAccAWSLambdaCodeSigningConfigUpdatePolicy() string {
+func testAccCodeSigningUpdatePolicyConfig() string {
 	return `
 resource "aws_signer_signing_profile" "test1" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -161,7 +161,7 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 }`
 }
 
-func testAccAWSLambdaCodeSigningConfigBasic() string {
+func testAccCodeSigningBasicConfig() string {
 	return `
 resource "aws_signer_signing_profile" "test1" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -187,7 +187,7 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 }`
 }
 
-func testAccCheckAwsCodeSigningConfigExists(n string, mapping *lambda.GetCodeSigningConfigOutput) resource.TestCheckFunc {
+func testAccCheckCodeSigningExistsConfig(n string, mapping *lambda.GetCodeSigningConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

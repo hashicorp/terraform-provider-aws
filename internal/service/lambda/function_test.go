@@ -29,7 +29,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_lambda_function", &resource.Sweeper{
 		Name: "aws_lambda_function",
-		F:    testSweepLambdaFunctions,
+		F:    sweepFunctions,
 	})
 }
 
@@ -39,7 +39,7 @@ func testAccErrorCheckSkipLambda(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func testSweepLambdaFunctions(region string) error {
+func sweepFunctions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -91,12 +91,12 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
@@ -140,9 +140,9 @@ func TestAccAWSLambdaFunction_UnpublishedCodeUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigFilename(initialFilename, funcName, policyName, roleName, sgName),
+				Config: testAccFilenameConfig(initialFilename, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf1),
+					testAccCheckFunctionExists(resourceName, funcName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 				),
@@ -154,9 +154,9 @@ func TestAccAWSLambdaFunction_UnpublishedCodeUpdate(t *testing.T) {
 					}
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccAWSLambdaConfigFilename(updatedFilename, funcName, policyName, roleName, sgName),
+				Config: testAccFilenameConfig(updatedFilename, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf2),
+					testAccCheckFunctionExists(resourceName, funcName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					func(s *terraform.State) error {
@@ -187,9 +187,9 @@ func TestAccAWSLambdaFunction_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigBasic(rName, rName, rName, rName),
+				Config: testAccBasicConfig(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &function),
+					testAccCheckFunctionExists(resourceName, rName, &function),
 					acctest.CheckResourceDisappears(acctest.Provider, tflambda.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -224,10 +224,10 @@ func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigCSCCreate(roleName, funcName),
+				Config: testAccCSCCreateConfig(roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscResourceName, "arn"),
 				),
@@ -239,10 +239,10 @@ func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigCSCUpdate(roleName, funcName),
+				Config: testAccCSCUpdateConfig(roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscUpdateResourceName, "arn"),
 				),
@@ -254,10 +254,10 @@ func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigCSCDelete(roleName, funcName),
+				Config: testAccCSCDeleteConfig(roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "code_signing_config_arn", ""),
 				),
@@ -283,10 +283,10 @@ func TestAccAWSLambdaFunction_concurrency(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigBasicConcurrency(funcName, policyName, roleName, sgName),
+				Config: testAccBasicConcurrencyConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "111"),
 				),
@@ -298,10 +298,10 @@ func TestAccAWSLambdaFunction_concurrency(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigConcurrencyUpdate(funcName, policyName, roleName, sgName),
+				Config: testAccConcurrencyUpdateConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "222"),
 				),
@@ -327,10 +327,10 @@ func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
@@ -342,19 +342,19 @@ func TestAccAWSLambdaFunction_concurrencyCycle(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigConcurrencyUpdate(funcName, policyName, roleName, sgName),
+				Config: testAccConcurrencyUpdateConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "222"),
 				),
 			},
 			{
-				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
@@ -377,7 +377,7 @@ func TestAccAWSLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSLambdaConfigWithoutFilenameAndS3Attributes(funcName, policyName, roleName, sgName),
+				Config:      testAccWithoutFilenameAndS3AttributesConfig(funcName, policyName, roleName, sgName),
 				ExpectError: regexp.MustCompile(`filename, s3_\* or image_uri attributes must be set`),
 			},
 		},
@@ -401,10 +401,10 @@ func TestAccAWSLambdaFunction_envVariables(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckNoResourceAttr(resourceName, "environment"),
 				),
@@ -416,29 +416,29 @@ func TestAccAWSLambdaFunction_envVariables(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigEnvVariables(funcName, policyName, roleName, sgName),
+				Config: testAccEnvVariablesConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
 				),
 			},
 			{
-				Config: testAccAWSLambdaConfigEnvVariablesModified(funcName, policyName, roleName, sgName),
+				Config: testAccEnvVariablesModifiedConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "baz"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo1", "bar1"),
 				),
 			},
 			{
-				Config: testAccAWSLambdaConfigEnvVariablesModifiedWithoutEnvironment(funcName, policyName, roleName, sgName),
+				Config: testAccEnvVariablesModifiedWithoutEnvironmentConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckNoResourceAttr(resourceName, "environment"),
 				),
@@ -459,9 +459,9 @@ func TestAccAWSLambdaFunction_Environment_Variables_NoValue(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigEnvironmentVariablesNoValue(rName),
+				Config: testAccEnvironmentVariablesNoValueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &conf),
+					testAccCheckFunctionExists(resourceName, rName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.key1", ""),
 				),
 			},
@@ -493,10 +493,10 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigEncryptedEnvVariables(keyDesc, funcName, policyName, roleName, sgName),
+				Config: testAccEncryptedEnvVariablesConfig(keyDesc, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
@@ -509,10 +509,10 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigEncryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName),
+				Config: testAccEncryptedEnvVariablesModifiedConfig(keyDesc, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
@@ -541,10 +541,10 @@ func TestAccAWSLambdaFunction_versioned(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigPublishable("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
+				Config: testAccPublishableConfig("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, version)),
@@ -588,7 +588,7 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigPublishable("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
+				Config: testAccPublishableConfig("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, "1")),
@@ -602,10 +602,10 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 					}
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccAWSLambdaConfigPublishable(path, funcName, policyName, roleName, sgName, true),
+				Config: testAccPublishableConfig(path, funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, version)),
@@ -619,10 +619,10 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 				PreConfig: func() {
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccAWSLambdaConfigVersionedNodeJs10xRuntime(path, funcName, policyName, roleName, sgName),
+				Config: testAccVersionedNodeJs10xRuntimeConfig(path, funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", versionUpdated),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, versionUpdated)),
@@ -663,10 +663,10 @@ func TestAccAWSLambdaFunction_enablePublish(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigPublishable(fileName, funcName, policyName, roleName, sgName, false),
+				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf1),
-					testAccCheckAwsLambdaFunctionName(&conf1, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf1),
+					testAccCheckFunctionName(&conf1, funcName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", unpublishedVersion),
@@ -675,10 +675,10 @@ func TestAccAWSLambdaFunction_enablePublish(t *testing.T) {
 			},
 			{
 				// No changes, except to `publish`. This should publish a new version.
-				Config: testAccAWSLambdaConfigPublishable(fileName, funcName, policyName, roleName, sgName, true),
+				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf2),
-					testAccCheckAwsLambdaFunctionName(&conf2, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf2),
+					testAccCheckFunctionName(&conf2, funcName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
@@ -693,10 +693,10 @@ func TestAccAWSLambdaFunction_enablePublish(t *testing.T) {
 			},
 			{
 				// No changes, `publish` is true. This should not publish a new version.
-				Config: testAccAWSLambdaConfigPublishable(fileName, funcName, policyName, roleName, sgName, true),
+				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf3),
-					testAccCheckAwsLambdaFunctionName(&conf3, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf3),
+					testAccCheckFunctionName(&conf3, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, publishedVersion)),
@@ -727,10 +727,10 @@ func TestAccAWSLambdaFunction_disablePublish(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigPublishable(fileName, funcName, policyName, roleName, sgName, true),
+				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf1),
-					testAccCheckAwsLambdaFunctionName(&conf1, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf1),
+					testAccCheckFunctionName(&conf1, funcName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
@@ -739,10 +739,10 @@ func TestAccAWSLambdaFunction_disablePublish(t *testing.T) {
 			},
 			{
 				// No changes, except to `publish`. This should not update the current version.
-				Config: testAccAWSLambdaConfigPublishable(fileName, funcName, policyName, roleName, sgName, false),
+				Config: testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf2),
-					testAccCheckAwsLambdaFunctionName(&conf2, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf2),
+					testAccCheckFunctionName(&conf2, funcName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", unpublishedVersion),
@@ -777,10 +777,10 @@ func TestAccAWSLambdaFunction_DeadLetterConfig(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithDeadLetterConfig(funcName, topicName, policyName, roleName, sgName),
+				Config: testAccWithDeadLetterConfig(funcName, topicName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					func(s *terraform.State) error {
 						if !strings.HasSuffix(*conf.Configuration.DeadLetterConfig.TargetArn, ":"+topicName) {
@@ -801,9 +801,9 @@ func TestAccAWSLambdaFunction_DeadLetterConfig(t *testing.T) {
 			},
 			// Ensure configuration can be removed
 			{
-				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 				),
 			},
 		},
@@ -829,12 +829,12 @@ func TestAccAWSLambdaFunction_DeadLetterConfigUpdated(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithDeadLetterConfig(funcName, topic1Name, policyName, roleName, sgName),
+				Config: testAccWithDeadLetterConfig(funcName, topic1Name, policyName, roleName, sgName),
 			},
 			{
-				Config: testAccAWSLambdaConfigWithDeadLetterConfigUpdated(funcName, topic1Name, topic2Name, policyName, roleName, sgName),
+				Config: testAccWithDeadLetterUpdatedConfig(funcName, topic1Name, topic2Name, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					func(s *terraform.State) error {
 						if !strings.HasSuffix(*conf.Configuration.DeadLetterConfig.TargetArn, ":"+topic2Name) {
 							return fmt.Errorf(
@@ -869,7 +869,7 @@ func TestAccAWSLambdaFunction_nilDeadLetterConfig(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithNilDeadLetterConfig(funcName, policyName, roleName, sgName),
+				Config: testAccWithNilDeadLetterConfig(funcName, policyName, roleName, sgName),
 				ExpectError: regexp.MustCompile(
 					fmt.Sprintf("nil dead_letter_config supplied for function: %s", funcName)),
 			},
@@ -895,12 +895,12 @@ func TestAccAWSLambdaFunction_FileSystemConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda file system configuration can be created
 			{
-				Config: testAccAWSLambdaFileSystemConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFileSystemConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/efs"),
 				),
@@ -914,18 +914,18 @@ func TestAccAWSLambdaFunction_FileSystemConfig(t *testing.T) {
 			},
 			// Ensure lambda file system configuration can be updated
 			{
-				Config: testAccAWSLambdaFileSystemUpdateConfig(funcName, policyName, roleName, sgName),
+				Config: testAccFileSystemUpdateConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/lambda"),
 				),
 			},
 			// Ensure lambda file system configuration can be removed
 			{
-				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "0"),
 				),
 			},
@@ -964,12 +964,12 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda image configuration can be created
 			{
-				Config: testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName, imageLatestID),
+				Config: testAccImageConfig(funcName, policyName, roleName, sgName, imageLatestID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeImage),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
@@ -986,17 +986,17 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 			},
 			// Ensure lambda image code can be updated
 			{
-				Config: testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName, imageV1ID),
+				Config: testAccImageUpdateCodeConfig(funcName, policyName, roleName, sgName, imageV1ID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV1ID),
 				),
 			},
 			// Ensure lambda image config can be updated
 			{
-				Config: testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName, imageV2ID),
+				Config: testAccImageUpdateConfig(funcName, policyName, roleName, sgName, imageV2ID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV2ID),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.another_handler"),
 				),
@@ -1023,12 +1023,12 @@ func TestAccAWSLambdaFunction_Architectures(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
-				Config: testAccAWSLambdaArchitecturesARM64(funcName, policyName, roleName, sgName),
+				Config: testAccArchitecturesARM64(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
@@ -1043,12 +1043,12 @@ func TestAccAWSLambdaFunction_Architectures(t *testing.T) {
 			},
 			// Ensure function's "architectures" attribute can be removed. The actual architecture remains unchanged.
 			{
-				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
@@ -1076,12 +1076,12 @@ func TestAccAWSLambdaFunction_ArchitecturesUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
-				Config: testAccAWSLambdaArchitecturesARM64(funcName, policyName, roleName, sgName),
+				Config: testAccArchitecturesARM64(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
@@ -1096,12 +1096,12 @@ func TestAccAWSLambdaFunction_ArchitecturesUpdate(t *testing.T) {
 			},
 			// Ensure function architecture can be updated
 			{
-				Config: testAccAWSLambdaArchitecturesUpdate(funcName, policyName, roleName, sgName),
+				Config: testAccArchitecturesUpdate(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
@@ -1130,12 +1130,12 @@ func TestAccAWSLambdaFunction_ArchitecturesWithLayer(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
-				Config: testAccAWSLambdaArchitecturesARM64WithLayer(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccArchitecturesARM64WithLayer(funcName, layerName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
@@ -1150,12 +1150,12 @@ func TestAccAWSLambdaFunction_ArchitecturesWithLayer(t *testing.T) {
 			},
 			// Ensure function architecture can be updated
 			{
-				Config: testAccAWSLambdaArchitecturesUpdateWithLayer(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccArchitecturesUpdateWithLayer(funcName, layerName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
@@ -1185,10 +1185,10 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithTracingConfig(funcName, policyName, roleName, sgName),
+				Config: testAccWithTracingConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config.0.mode", "Active"),
 				),
@@ -1200,10 +1200,10 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigWithTracingConfigUpdated(funcName, policyName, roleName, sgName),
+				Config: testAccWithTracingUpdatedConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config.0.mode", "PassThrough"),
 				),
@@ -1229,9 +1229,9 @@ func TestAccAWSLambdaFunction_KmsKeyArn_NoEnvironmentVariables(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigKmsKeyArnNoEnvironmentVariables(rName),
+				Config: testAccKMSKeyARNNoEnvironmentVariablesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &function1),
+					testAccCheckFunctionExists(resourceName, rName, &function1),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 				),
 				ExpectNonEmptyPlan: true,
@@ -1264,12 +1264,12 @@ func TestAccAWSLambdaFunction_Layers(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAWSLambdaFunctionVersion(&conf, tflambda.FunctionVersionLatest),
+					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
 				),
 			},
@@ -1302,12 +1302,12 @@ func TestAccAWSLambdaFunction_LayersUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAWSLambdaFunctionVersion(&conf, tflambda.FunctionVersionLatest),
+					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
 				),
 			},
@@ -1318,12 +1318,12 @@ func TestAccAWSLambdaFunction_LayersUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigWithLayersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName),
+				Config: testAccWithLayersUpdatedConfig(funcName, layerName, layer2Name, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAWSLambdaFunctionVersion(&conf, tflambda.FunctionVersionLatest),
+					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "2"),
 				),
 			},
@@ -1348,12 +1348,12 @@ func TestAccAWSLambdaFunction_VPC(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName),
+				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAWSLambdaFunctionVersion(&conf, tflambda.FunctionVersionLatest),
+					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
@@ -1383,9 +1383,9 @@ func TestAccAWSLambdaFunction_VPCRemoval(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithVPC(rName, rName, rName, rName),
+				Config: testAccWithVPCConfig(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &conf),
+					testAccCheckFunctionExists(resourceName, rName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 				),
 			},
@@ -1396,9 +1396,9 @@ func TestAccAWSLambdaFunction_VPCRemoval(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigBasic(rName, rName, rName, rName),
+				Config: testAccBasicConfig(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &conf),
+					testAccCheckFunctionExists(resourceName, rName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
@@ -1424,12 +1424,12 @@ func TestAccAWSLambdaFunction_VPCUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName),
+				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAWSLambdaFunctionVersion(&conf, tflambda.FunctionVersionLatest),
+					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
@@ -1442,12 +1442,12 @@ func TestAccAWSLambdaFunction_VPCUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigWithVPCUpdated(funcName, policyName, roleName, sgName, sgName2),
+				Config: testAccWithVPCUpdatedConfig(funcName, policyName, roleName, sgName, sgName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAWSLambdaFunctionVersion(&conf, tflambda.FunctionVersionLatest),
+					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
@@ -1476,10 +1476,10 @@ func TestAccAWSLambdaFunction_VPC_withInvocation(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName),
+				Config: testAccWithVPCConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccAwsInvokeLambdaFunction(&conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccInvokeFunction(&conf),
 				),
 			},
 			{
@@ -1510,9 +1510,9 @@ func TestAccAWSLambdaFunction_VPC_publish_No_Changes(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithVPCPublish(funcName, policyName, roleName, sgName),
+				Config: testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 				),
 			},
@@ -1523,9 +1523,9 @@ func TestAccAWSLambdaFunction_VPC_publish_No_Changes(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigWithVPCPublish(funcName, policyName, roleName, sgName),
+				Config: testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 				),
 			},
@@ -1553,9 +1553,9 @@ func TestAccAWSLambdaFunction_VPC_publish_Has_Changes(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithVPCPublish(funcName, policyName, roleName, sgName),
+				Config: testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 				),
 			},
@@ -1566,9 +1566,9 @@ func TestAccAWSLambdaFunction_VPC_publish_Has_Changes(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigWithVPCUpdatedPublish(funcName, policyName, roleName, sgName),
+				Config: testAccWithVPCUpdatedPublishConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 				),
 			},
@@ -1591,9 +1591,9 @@ func TestAccAWSLambdaFunction_VpcConfig_ProperIamDependencies(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigVpcConfigProperIamDependencies(rName),
+				Config: testAccVPCProperIAMDependenciesConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &function),
+					testAccCheckFunctionExists(resourceName, rName, &function),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
@@ -1621,9 +1621,9 @@ func TestAccAWSLambdaFunction_EmptyVpcConfig(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigWithEmptyVpcConfig(funcName, policyName, roleName, sgName),
+				Config: testAccWithEmptyVPCConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
@@ -1653,12 +1653,12 @@ func TestAccAWSLambdaFunction_s3(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigS3(bucketName, roleName, funcName),
+				Config: testAccS3Config(bucketName, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAWSLambdaFunctionVersion(&conf, tflambda.FunctionVersionLatest),
+					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 				),
 			},
 			{
@@ -1699,12 +1699,12 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: genAWSLambdaFunctionConfig_local(path, roleName, funcName),
+				Config: testAccFunctionConfig_local(path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
 				),
 			},
 			{
@@ -1720,12 +1720,12 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 					}
 					timeBeforeUpdate = time.Now()
 				},
-				Config: genAWSLambdaFunctionConfig_local(path, roleName, funcName),
+				Config: testAccFunctionConfig_local(path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -1767,12 +1767,12 @@ func TestAccAWSLambdaFunction_localUpdate_nameOnly(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: genAWSLambdaFunctionConfig_local_name_only(path, roleName, funcName),
+				Config: testAccFunctionConfig_local_name_only(path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
 				),
 			},
 			{
@@ -1787,12 +1787,12 @@ func TestAccAWSLambdaFunction_localUpdate_nameOnly(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: genAWSLambdaFunctionConfig_local_name_only(updatedPath, roleName, funcName),
+				Config: testAccFunctionConfig_local_name_only(updatedPath, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 				),
 			},
 		},
@@ -1829,12 +1829,12 @@ func TestAccAWSLambdaFunction_s3Update_basic(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: genAWSLambdaFunctionConfig_s3(bucketName, key, path, roleName, funcName),
+				Config: testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
 				),
 			},
 			{
@@ -1850,12 +1850,12 @@ func TestAccAWSLambdaFunction_s3Update_basic(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: genAWSLambdaFunctionConfig_s3(bucketName, key, path, roleName, funcName),
+				Config: testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 				),
 			},
 		},
@@ -1892,12 +1892,12 @@ func TestAccAWSLambdaFunction_s3Update_unversioned(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccAWSLambdaFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path),
+				Config: testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
+					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
 				),
 			},
 			{
@@ -1913,12 +1913,12 @@ func TestAccAWSLambdaFunction_s3Update_unversioned(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccAWSLambdaFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key2, path),
+				Config: testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key2, path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckAwsLambdaSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
+					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 				),
 			},
 		},
@@ -1942,10 +1942,10 @@ func TestAccAWSLambdaFunction_tags(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Config: testAccBasicConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 				),
@@ -1957,10 +1957,10 @@ func TestAccAWSLambdaFunction_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccAWSLambdaConfigTags(funcName, policyName, roleName, sgName),
+				Config: testAccTagsConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value One"),
@@ -1968,10 +1968,10 @@ func TestAccAWSLambdaFunction_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSLambdaConfigTagsModified(funcName, policyName, roleName, sgName),
+				Config: testAccTagsModifiedConfig(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionName(&conf, funcName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value One Changed"),
@@ -1991,7 +1991,7 @@ func TestAccAWSLambdaFunction_runtimes(t *testing.T) {
 	steps := []resource.TestStep{
 		{
 			// Test invalid runtime.
-			Config:      testAccAWSLambdaConfigRuntime(rName, rName),
+			Config:      testAccRuntimeConfig(rName, rName),
 			ExpectError: regexp.MustCompile(`expected runtime to be one of`),
 		},
 	}
@@ -2015,9 +2015,9 @@ func TestAccAWSLambdaFunction_runtimes(t *testing.T) {
 		}
 
 		steps = append(steps, resource.TestStep{
-			Config: testAccAWSLambdaConfigRuntime(rName, runtime),
+			Config: testAccRuntimeConfig(rName, runtime),
 			Check: resource.ComposeTestCheckFunc(
-				testAccCheckAwsLambdaFunctionExists(resourceName, rName, &v),
+				testAccCheckFunctionExists(resourceName, rName, &v),
 				resource.TestCheckResourceAttr(resourceName, "runtime", runtime),
 			),
 		})
@@ -2052,11 +2052,11 @@ func TestAccAWSLambdaFunction_zip_validation(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSLambdaZipConfigWithoutHandler(funcName, policyName, roleName, sgName),
+				Config:      testAccZipWithoutHandlerConfig(funcName, policyName, roleName, sgName),
 				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 			{
-				Config:      testAccAWSLambdaZipConfigWithoutRuntime(funcName, policyName, roleName, sgName),
+				Config:      testAccZipWithoutRuntimeConfig(funcName, policyName, roleName, sgName),
 				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 		},
@@ -2084,7 +2084,7 @@ func testAccCheckLambdaFunctionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsLambdaFunctionDisappears(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
+func testAccCheckFunctionDisappears(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
@@ -2098,7 +2098,7 @@ func testAccCheckAwsLambdaFunctionDisappears(function *lambda.GetFunctionOutput)
 	}
 }
 
-func testAccCheckAwsLambdaFunctionExists(res, funcName string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
+func testAccCheckFunctionExists(res, funcName string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	// Wait for IAM role
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[res]
@@ -2127,14 +2127,14 @@ func testAccCheckAwsLambdaFunctionExists(res, funcName string, function *lambda.
 	}
 }
 
-func testAccCheckAwsLambdaFunctionInvokeArn(name string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
+func testAccCheckFunctionInvokeARN(name string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arn := aws.StringValue(function.Configuration.FunctionArn)
 		return acctest.CheckResourceAttrRegionalARNAccountID(name, "invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", arn))(s)
 	}
 }
 
-func testAccAwsInvokeLambdaFunction(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
+func testAccInvokeFunction(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		f := function.Configuration
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
@@ -2148,7 +2148,7 @@ func testAccAwsInvokeLambdaFunction(function *lambda.GetFunctionOutput) resource
 	}
 }
 
-func testAccCheckAwsLambdaFunctionName(function *lambda.GetFunctionOutput, expectedName string) resource.TestCheckFunc {
+func testAccCheckFunctionName(function *lambda.GetFunctionOutput, expectedName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		c := function.Configuration
 		if *c.FunctionName != expectedName {
@@ -2160,7 +2160,7 @@ func testAccCheckAwsLambdaFunctionName(function *lambda.GetFunctionOutput, expec
 }
 
 // Rename to correctly identify as using API values
-func testAccCheckAWSLambdaFunctionVersion(function *lambda.GetFunctionOutput, expectedVersion string) resource.TestCheckFunc {
+func testAccCheckFunctionVersion(function *lambda.GetFunctionOutput, expectedVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		c := function.Configuration
 		if *c.Version != expectedVersion {
@@ -2170,7 +2170,7 @@ func testAccCheckAWSLambdaFunctionVersion(function *lambda.GetFunctionOutput, ex
 	}
 }
 
-func testAccCheckAwsLambdaSourceCodeHash(function *lambda.GetFunctionOutput, expectedHash string) resource.TestCheckFunc {
+func testAccCheckSourceCodeHash(function *lambda.GetFunctionOutput, expectedHash string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		c := function.Configuration
 		if *c.CodeSha256 != expectedHash {
@@ -2253,7 +2253,7 @@ func createTempFile(prefix string) (string, *os.File, error) {
 	return pathToFile, f, nil
 }
 
-func testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName string) string {
+func testAccBasicConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2265,7 +2265,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigCSCBasic(roleName string) string {
+func testAccCSCBasicConfig(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "policy" {
   statement {
@@ -2334,8 +2334,8 @@ resource "aws_lambda_code_signing_config" "code_signing_config_2" {
 `, roleName)
 }
 
-func testAccAWSLambdaConfigCSCCreate(roleName, funcName string) string {
-	return fmt.Sprintf(testAccAWSLambdaConfigCSCBasic(roleName)+`
+func testAccCSCCreateConfig(roleName, funcName string) string {
+	return fmt.Sprintf(testAccCSCBasicConfig(roleName)+`
 resource "aws_lambda_function" "test" {
   filename                = "test-fixtures/lambdatest.zip"
   function_name           = "%s"
@@ -2347,8 +2347,8 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigCSCUpdate(roleName, funcName string) string {
-	return fmt.Sprintf(testAccAWSLambdaConfigCSCBasic(roleName)+`
+func testAccCSCUpdateConfig(roleName, funcName string) string {
+	return fmt.Sprintf(testAccCSCBasicConfig(roleName)+`
 resource "aws_lambda_function" "test" {
   filename                = "test-fixtures/lambdatest.zip"
   function_name           = "%s"
@@ -2360,8 +2360,8 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigCSCDelete(roleName, funcName string) string {
-	return fmt.Sprintf(testAccAWSLambdaConfigCSCBasic(roleName)+`
+func testAccCSCDeleteConfig(roleName, funcName string) string {
+	return fmt.Sprintf(testAccCSCBasicConfig(roleName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -2372,7 +2372,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigBasicConcurrency(funcName, policyName, roleName, sgName string) string {
+func testAccBasicConcurrencyConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename                       = "test-fixtures/lambdatest.zip"
@@ -2385,7 +2385,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigConcurrencyUpdate(funcName, policyName, roleName, sgName string) string {
+func testAccConcurrencyUpdateConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename                       = "test-fixtures/lambdatest.zip"
@@ -2398,7 +2398,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigWithoutFilenameAndS3Attributes(funcName, policyName, roleName, sgName string) string {
+func testAccWithoutFilenameAndS3AttributesConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   function_name = "%s"
@@ -2409,7 +2409,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigEnvVariables(funcName, policyName, roleName, sgName string) string {
+func testAccEnvVariablesConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2427,7 +2427,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigEnvVariablesModified(funcName, policyName, roleName, sgName string) string {
+func testAccEnvVariablesModifiedConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2446,7 +2446,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigEnvVariablesModifiedWithoutEnvironment(funcName, policyName, roleName, sgName string) string {
+func testAccEnvVariablesModifiedWithoutEnvironmentConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2458,7 +2458,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigEnvironmentVariablesNoValue(rName string) string {
+func testAccEnvironmentVariablesNoValueConfig(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
@@ -2478,7 +2478,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccAWSLambdaConfigEncryptedEnvVariables(keyDesc, funcName, policyName, roleName, sgName string) string {
+func testAccEncryptedEnvVariablesConfig(keyDesc, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_kms_key" "foo" {
   description = "%s"
@@ -2519,7 +2519,7 @@ resource "aws_lambda_function" "test" {
 `, keyDesc, funcName)
 }
 
-func testAccAWSLambdaConfigEncryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName string) string {
+func testAccEncryptedEnvVariablesModifiedConfig(keyDesc, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_kms_key" "foo" {
   description = "%s"
@@ -2559,7 +2559,7 @@ resource "aws_lambda_function" "test" {
 `, keyDesc, funcName)
 }
 
-func testAccAWSLambdaConfigFilename(fileName, funcName, policyName, roleName, sgName string) string {
+func testAccFilenameConfig(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = %[1]q
@@ -2572,7 +2572,7 @@ resource "aws_lambda_function" "test" {
 `, fileName, funcName)
 }
 
-func testAccAWSLambdaConfigPublishable(fileName, funcName, policyName, roleName, sgName string, publish bool) string {
+func testAccPublishableConfig(fileName, funcName, policyName, roleName, sgName string, publish bool) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "%s"
@@ -2585,7 +2585,7 @@ resource "aws_lambda_function" "test" {
 `, fileName, funcName, publish)
 }
 
-func testAccAWSLambdaFileSystemConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFileSystemConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_efs_file_system" "efs_for_lambda" {
   tags = {
@@ -2640,7 +2640,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaFileSystemUpdateConfig(funcName, policyName, roleName, sgName string) string {
+func testAccFileSystemUpdateConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_efs_file_system" "efs_for_lambda" {
   tags = {
@@ -2695,7 +2695,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName, imageID string) string {
+func testAccImageConfig(funcName, policyName, roleName, sgName, imageID string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   image_uri     = "%s"
@@ -2711,7 +2711,7 @@ resource "aws_lambda_function" "test" {
 `, imageID, funcName)
 }
 
-func testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName, imageID string) string {
+func testAccImageUpdateCodeConfig(funcName, policyName, roleName, sgName, imageID string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   image_uri     = "%s"
@@ -2723,7 +2723,7 @@ resource "aws_lambda_function" "test" {
 `, imageID, funcName)
 }
 
-func testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName, imageID string) string {
+func testAccImageUpdateConfig(funcName, policyName, roleName, sgName, imageID string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   image_uri     = "%s"
@@ -2737,7 +2737,7 @@ resource "aws_lambda_function" "test" {
 `, imageID, funcName)
 }
 
-func testAccAWSLambdaArchitecturesARM64(funcName, policyName, roleName, sgName string) string {
+func testAccArchitecturesARM64(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2750,7 +2750,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaArchitecturesUpdate(funcName, policyName, roleName, sgName string) string {
+func testAccArchitecturesUpdate(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2763,7 +2763,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaArchitecturesARM64WithLayer(funcName, layerName, policyName, roleName, sgName string) string {
+func testAccArchitecturesARM64WithLayer(funcName, layerName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -2784,7 +2784,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, funcName)
 }
 
-func testAccAWSLambdaArchitecturesUpdateWithLayer(funcName, layerName, policyName, roleName, sgName string) string {
+func testAccArchitecturesUpdateWithLayer(funcName, layerName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
@@ -2805,7 +2805,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, funcName)
 }
 
-func testAccAWSLambdaConfigVersionedNodeJs10xRuntime(fileName, funcName, policyName, roleName, sgName string) string {
+func testAccVersionedNodeJs10xRuntimeConfig(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "%s"
@@ -2818,7 +2818,7 @@ resource "aws_lambda_function" "test" {
 `, fileName, funcName)
 }
 
-func testAccAWSLambdaConfigVpcConfigProperIamDependencies(rName string) string {
+func testAccVPCProperIAMDependenciesConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2895,7 +2895,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccAWSLambdaConfigWithTracingConfig(funcName, policyName, roleName, sgName string) string {
+func testAccWithTracingConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2911,7 +2911,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigWithTracingConfigUpdated(funcName, policyName, roleName, sgName string) string {
+func testAccWithTracingUpdatedConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2927,7 +2927,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigWithDeadLetterConfig(funcName, topicName, policyName, roleName, sgName string) string {
+func testAccWithDeadLetterConfig(funcName, topicName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2947,7 +2947,7 @@ resource "aws_sns_topic" "test" {
 `, funcName, topicName)
 }
 
-func testAccAWSLambdaConfigWithDeadLetterConfigUpdated(funcName, topic1Name, topic2Name, policyName,
+func testAccWithDeadLetterUpdatedConfig(funcName, topic1Name, topic2Name, policyName,
 	roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
@@ -2972,7 +2972,7 @@ resource "aws_sns_topic" "test_2" {
 `, funcName, topic1Name, topic2Name)
 }
 
-func testAccAWSLambdaConfigWithNilDeadLetterConfig(funcName, policyName, roleName, sgName string) string {
+func testAccWithNilDeadLetterConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -2988,7 +2988,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigKmsKeyArnNoEnvironmentVariables(rName string) string {
+func testAccKMSKeyARNNoEnvironmentVariablesConfig(rName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(rName, rName, rName)+`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -3024,7 +3024,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName string) string {
+func testAccWithLayersConfig(funcName, layerName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
@@ -3043,7 +3043,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, funcName)
 }
 
-func testAccAWSLambdaConfigWithLayersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName string) string {
+func testAccWithLayersUpdatedConfig(funcName, layerName, layer2Name, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
@@ -3071,7 +3071,7 @@ resource "aws_lambda_function" "test" {
 `, layerName, layer2Name, funcName)
 }
 
-func testAccAWSLambdaConfigWithVPC(funcName, policyName, roleName, sgName string) string {
+func testAccWithVPCConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3088,7 +3088,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigWithVPCPublish(funcName, policyName, roleName, sgName string) string {
+func testAccWithVPCPublishConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3105,7 +3105,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigWithVPCUpdatedPublish(funcName, policyName, roleName, sgName string) string {
+func testAccWithVPCUpdatedPublishConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3122,7 +3122,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigWithVPCUpdated(funcName, policyName, roleName, sgName, sgName2 string) string {
+func testAccWithVPCUpdatedConfig(funcName, policyName, roleName, sgName, sgName2 string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3159,7 +3159,7 @@ resource "aws_security_group" "sg_for_lambda_2" {
 `, funcName, sgName2)
 }
 
-func testAccAWSLambdaConfigWithEmptyVpcConfig(funcName, policyName, roleName, sgName string) string {
+func testAccWithEmptyVPCConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3176,7 +3176,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigS3(bucketName, roleName, funcName string) string {
+func testAccS3Config(bucketName, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "%s"
@@ -3219,7 +3219,7 @@ resource "aws_lambda_function" "test" {
 `, bucketName, roleName, funcName)
 }
 
-func testAccAWSLambdaConfigTags(funcName, policyName, roleName, sgName string) string {
+func testAccTagsConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3236,7 +3236,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaConfigTagsModified(funcName, policyName, roleName, sgName string) string {
+func testAccTagsModifiedConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -3254,7 +3254,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func genAWSLambdaFunctionConfig_local(filePath, roleName, funcName string) string {
+func testAccFunctionConfig_local(filePath, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
@@ -3287,11 +3287,11 @@ resource "aws_lambda_function" "test" {
 `, roleName, filePath, filePath, funcName)
 }
 
-func genAWSLambdaFunctionConfig_local_name_only(filePath, roleName, funcName string) string {
-	return testAccAWSLambdaFunctionConfig_local_name_only_tpl(filePath, roleName, funcName)
+func testAccFunctionConfig_local_name_only(filePath, roleName, funcName string) string {
+	return testAccFunctionConfig_local_name_only_tpl(filePath, roleName, funcName)
 }
 
-func testAccAWSLambdaFunctionConfig_local_name_only_tpl(filePath, roleName, funcName string) string {
+func testAccFunctionConfig_local_name_only_tpl(filePath, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
@@ -3323,7 +3323,7 @@ resource "aws_lambda_function" "test" {
 `, roleName, filePath, funcName)
 }
 
-func genAWSLambdaFunctionConfig_s3(bucketName, key, path, roleName, funcName string) string {
+func testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
@@ -3374,7 +3374,7 @@ resource "aws_lambda_function" "test" {
 `, bucketName, key, path, path, roleName, funcName)
 }
 
-func testAccAWSLambdaFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path string) string {
+func testAccFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "%s"
@@ -3420,7 +3420,7 @@ resource "aws_lambda_function" "test" {
 `, bucketName, key, path, path, roleName, funcName)
 }
 
-func testAccAWSLambdaConfigRuntime(rName, runtime string) string {
+func testAccRuntimeConfig(rName, runtime string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
@@ -3434,7 +3434,7 @@ resource "aws_lambda_function" "test" {
 `, rName, runtime))
 }
 
-func testAccAWSLambdaZipConfigWithoutHandler(funcName, policyName, roleName, sgName string) string {
+func testAccZipWithoutHandlerConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   function_name = "%s"
@@ -3444,7 +3444,7 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaZipConfigWithoutRuntime(funcName, policyName, roleName, sgName string) string {
+func testAccZipWithoutRuntimeConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   function_name = "%s"

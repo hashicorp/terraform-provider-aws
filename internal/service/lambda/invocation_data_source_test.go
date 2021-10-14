@@ -47,7 +47,7 @@ func TestAccDataSourceAwsLambdaInvocation_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsLambdaInvocation_basic_config(rName, testData),
+				Config: testAccInvocationDataSource_basic_config(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
@@ -66,7 +66,7 @@ func TestAccDataSourceAwsLambdaInvocation_qualifier(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsLambdaInvocation_qualifier_config(rName, testData),
+				Config: testAccInvocationDataSource_qualifier_config(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
@@ -85,7 +85,7 @@ func TestAccDataSourceAwsLambdaInvocation_complex(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsLambdaInvocation_complex_config(rName, testData),
+				Config: testAccInvocationDataSource_complex_config(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
@@ -94,7 +94,7 @@ func TestAccDataSourceAwsLambdaInvocation_complex(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsLambdaInvocation_base_config(roleName string) string {
+func testAccInvocationDataSource_base_config(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
   statement {
@@ -122,8 +122,8 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
 `, roleName)
 }
 
-func testAccDataSourceAwsLambdaInvocation_basic_config(rName, testData string) string {
-	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
+func testAccInvocationDataSource_basic_config(rName, testData string) string {
+	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
@@ -153,8 +153,8 @@ JSON
 `, rName, testData)
 }
 
-func testAccDataSourceAwsLambdaInvocation_qualifier_config(rName, testData string) string {
-	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
+func testAccInvocationDataSource_qualifier_config(rName, testData string) string {
+	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
@@ -186,8 +186,8 @@ JSON
 `, rName, testData)
 }
 
-func testAccDataSourceAwsLambdaInvocation_complex_config(rName, testData string) string {
-	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
+func testAccInvocationDataSource_complex_config(rName, testData string) string {
+	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 

@@ -17,7 +17,7 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLambdaCodeSigningConfigBasic,
+				Config: testAccCodeSigningBasicDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.#", resourceName, "allowed_publishers.0.signing_profile_version_arns.#"),
@@ -36,7 +36,7 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_PolicyConfigId(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLambdaCodeSigningConfigConfigurePolicy,
+				Config: testAccCodeSigningurePolicyDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.#", resourceName, "allowed_publishers.0.signing_profile_version_arns.#"),
@@ -57,7 +57,7 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_Description(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLambdaCodeSigningConfigConfigureDescription,
+				Config: testAccCodeSigningureDescriptionDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.#", resourceName, "allowed_publishers.0.signing_profile_version_arns.#"),
@@ -68,7 +68,7 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_Description(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAWSLambdaCodeSigningConfigBasic = `
+const testAccCodeSigningBasicDataSourceConfig = `
 resource "aws_signer_signing_profile" "test" {
   platform_id = "AWSLambda-SHA384-ECDSA"
 }
@@ -86,7 +86,7 @@ data "aws_lambda_code_signing_config" "test" {
 }
 `
 
-const testAccDataSourceAWSLambdaCodeSigningConfigConfigurePolicy = `
+const testAccCodeSigningurePolicyDataSourceConfig = `
 resource "aws_signer_signing_profile" "test" {
   platform_id = "AWSLambda-SHA384-ECDSA"
 }
@@ -108,7 +108,7 @@ data "aws_lambda_code_signing_config" "test" {
 }
 `
 
-const testAccDataSourceAWSLambdaCodeSigningConfigConfigureDescription = `
+const testAccCodeSigningureDescriptionDataSourceConfig = `
 resource "aws_signer_signing_profile" "test" {
   platform_id = "AWSLambda-SHA384-ECDSA"
 }
