@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
+func ResourceStorediSCSIVolume() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayStoredIscsiVolumeCreate,
-		Read:   resourceAwsStorageGatewayStoredIscsiVolumeRead,
-		Update: resourceAwsStorageGatewayStoredIscsiVolumeUpdate,
-		Delete: resourceAwsStorageGatewayStoredIscsiVolumeDelete,
+		Create: resourceStorediSCSIVolumeCreate,
+		Read:   resourceStorediSCSIVolumeRead,
+		Update: resourceStorediSCSIVolumeUpdate,
+		Delete: resourceStorediSCSIVolumeDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -117,7 +117,7 @@ func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
 	}
 }
 
-func resourceAwsStorageGatewayStoredIscsiVolumeCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStorediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -157,10 +157,10 @@ func resourceAwsStorageGatewayStoredIscsiVolumeCreate(d *schema.ResourceData, me
 		return fmt.Errorf("error waiting for Stored Iscsi Volume %q to be Available: %s", d.Id(), err)
 	}
 
-	return resourceAwsStorageGatewayStoredIscsiVolumeRead(d, meta)
+	return resourceStorediSCSIVolumeRead(d, meta)
 }
 
-func resourceAwsStorageGatewayStoredIscsiVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStorediSCSIVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChange("tags_all") {
@@ -170,10 +170,10 @@ func resourceAwsStorageGatewayStoredIscsiVolumeUpdate(d *schema.ResourceData, me
 		}
 	}
 
-	return resourceAwsStorageGatewayStoredIscsiVolumeRead(d, meta)
+	return resourceStorediSCSIVolumeRead(d, meta)
 }
 
-func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStorediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -249,7 +249,7 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsStorageGatewayStoredIscsiVolumeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStorediSCSIVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DeleteVolumeInput{

@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
+func ResourceSMBFileShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewaySmbFileShareCreate,
-		Read:   resourceAwsStorageGatewaySmbFileShareRead,
-		Update: resourceAwsStorageGatewaySmbFileShareUpdate,
-		Delete: resourceAwsStorageGatewaySmbFileShareDelete,
+		Create: resourceSMBFileShareCreate,
+		Read:   resourceSMBFileShareRead,
+		Update: resourceSMBFileShareUpdate,
+		Delete: resourceSMBFileShareDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -201,7 +201,7 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 	}
 }
 
-func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -296,10 +296,10 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsStorageGatewaySmbFileShareRead(d, meta)
+	return resourceSMBFileShareRead(d, meta)
 }
 
-func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -366,7 +366,7 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -448,10 +448,10 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceAwsStorageGatewaySmbFileShareRead(d, meta)
+	return resourceSMBFileShareRead(d, meta)
 }
 
-func resourceAwsStorageGatewaySmbFileShareDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSMBFileShareDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	log.Printf("[DEBUG] Deleting Storage Gateway SMB File Share: %s", d.Id())

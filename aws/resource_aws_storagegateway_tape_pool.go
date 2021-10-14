@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsStorageGatewayTapePool() *schema.Resource {
+func ResourceTapePool() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayTapePoolCreate,
-		Read:   resourceAwsStorageGatewayTapePoolRead,
-		Update: resourceAwsStorageGatewayTapePoolUpdate,
-		Delete: resourceAwsStorageGatewayTapePoolDelete,
+		Create: resourceTapePoolCreate,
+		Read:   resourceTapePoolRead,
+		Update: resourceTapePoolUpdate,
+		Delete: resourceTapePoolDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -61,7 +61,7 @@ func resourceAwsStorageGatewayTapePool() *schema.Resource {
 	}
 }
 
-func resourceAwsStorageGatewayTapePoolCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTapePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -82,10 +82,10 @@ func resourceAwsStorageGatewayTapePoolCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(output.PoolARN))
 
-	return resourceAwsStorageGatewayTapePoolRead(d, meta)
+	return resourceTapePoolRead(d, meta)
 }
 
-func resourceAwsStorageGatewayTapePoolUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTapePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChange("tags_all") {
@@ -95,10 +95,10 @@ func resourceAwsStorageGatewayTapePoolUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	return resourceAwsStorageGatewayTapePoolRead(d, meta)
+	return resourceTapePoolRead(d, meta)
 }
 
-func resourceAwsStorageGatewayTapePoolRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTapePoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -147,7 +147,7 @@ func resourceAwsStorageGatewayTapePoolRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsStorageGatewayTapePoolDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTapePoolDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DeleteTapePoolInput{

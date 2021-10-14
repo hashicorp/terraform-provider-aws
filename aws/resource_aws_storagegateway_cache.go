@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsStorageGatewayCache() *schema.Resource {
+func ResourceCache() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsStorageGatewayCacheCreate,
-		Read:   resourceAwsStorageGatewayCacheRead,
+		Create: resourceCacheCreate,
+		Read:   resourceCacheRead,
 		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -37,7 +37,7 @@ func resourceAwsStorageGatewayCache() *schema.Resource {
 	}
 }
 
-func resourceAwsStorageGatewayCacheCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCacheCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	diskID := d.Get("disk_id").(string)
@@ -84,10 +84,10 @@ func resourceAwsStorageGatewayCacheCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
 
-	return resourceAwsStorageGatewayCacheRead(d, meta)
+	return resourceCacheRead(d, meta)
 }
 
-func resourceAwsStorageGatewayCacheRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCacheRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	gatewayARN, diskID, err := decodeStorageGatewayCacheID(d.Id())

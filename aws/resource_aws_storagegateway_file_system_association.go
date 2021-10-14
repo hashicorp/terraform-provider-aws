@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsStorageGatewayFileSystemAssociation() *schema.Resource {
+func ResourceFileSystemAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceAwsStorageGatewayFileSystemAssociationCreate,
-		Read:          resourceAwsStorageGatewayFileSystemAssociationRead,
-		Update:        resourceAwsStorageGatewayFileSystemAssociationUpdate,
-		Delete:        resourceAwsStorageGatewayFileSystemAssociationDelete,
+		Create:        resourceFileSystemAssociationCreate,
+		Read:          resourceFileSystemAssociationRead,
+		Update:        resourceFileSystemAssociationUpdate,
+		Delete:        resourceFileSystemAssociationDelete,
 		CustomizeDiff: customdiff.Sequence(SetTagsDiff),
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -93,7 +93,7 @@ func resourceAwsStorageGatewayFileSystemAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsStorageGatewayFileSystemAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -128,10 +128,10 @@ func resourceAwsStorageGatewayFileSystemAssociationCreate(d *schema.ResourceData
 		return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) to be Available: %w", d.Id(), err)
 	}
 
-	return resourceAwsStorageGatewayFileSystemAssociationRead(d, meta)
+	return resourceFileSystemAssociationRead(d, meta)
 }
 
-func resourceAwsStorageGatewayFileSystemAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -172,7 +172,7 @@ func resourceAwsStorageGatewayFileSystemAssociationRead(d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAwsStorageGatewayFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	if d.HasChange("tags_all") {
@@ -206,10 +206,10 @@ func resourceAwsStorageGatewayFileSystemAssociationUpdate(d *schema.ResourceData
 		}
 	}
 
-	return resourceAwsStorageGatewayFileSystemAssociationRead(d, meta)
+	return resourceFileSystemAssociationRead(d, meta)
 }
 
-func resourceAwsStorageGatewayFileSystemAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFileSystemAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.DisassociateFileSystemInput{

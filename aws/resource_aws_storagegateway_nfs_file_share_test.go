@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
@@ -613,7 +614,7 @@ func TestAccAWSStorageGatewayNfsFileShare_disappears(t *testing.T) {
 				Config: testAccAWSStorageGatewayNfsFileShareConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsStorageGatewayNfsFileShare(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceNFSFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

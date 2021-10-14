@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsStorageGatewayLocalDisk() *schema.Resource {
+func DataSourceLocalDisk() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsStorageGatewayLocalDiskRead,
+		Read: dataSourceLocalDiskRead,
 
 		Schema: map[string]*schema.Schema{
 			"disk_id": {
@@ -39,7 +39,7 @@ func dataSourceAwsStorageGatewayLocalDisk() *schema.Resource {
 	}
 }
 
-func dataSourceAwsStorageGatewayLocalDiskRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLocalDiskRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.ListLocalDisksInput{
