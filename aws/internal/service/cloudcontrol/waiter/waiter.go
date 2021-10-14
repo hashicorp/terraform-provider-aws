@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ProgressEventOperationStatusSuccess(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string, timeout time.Duration) (*cloudcontrolapi.ProgressEvent, error) {
+func waitProgressEventOperationStatusSuccess(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string, timeout time.Duration) (*cloudcontrolapi.ProgressEvent, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudcontrolapi.OperationStatusInProgress, cloudcontrolapi.OperationStatusPending},
 		Target:  []string{cloudcontrolapi.OperationStatusSuccess},
-		Refresh: ProgressEventOperationStatus(ctx, conn, requestToken),
+		Refresh: statusProgressEventOperation(ctx, conn, requestToken),
 		Timeout: timeout,
 	}
 

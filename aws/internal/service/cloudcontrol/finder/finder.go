@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ProgressEventByRequestToken(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string) (*cloudcontrolapi.ProgressEvent, error) {
+func FindProgressEventByRequestToken(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string) (*cloudcontrolapi.ProgressEvent, error) {
 	input := &cloudcontrolapi.GetResourceRequestStatusInput{
 		RequestToken: aws.String(requestToken),
 	}
@@ -36,7 +36,7 @@ func ProgressEventByRequestToken(ctx context.Context, conn *cloudcontrolapi.Clou
 	return output.ProgressEvent, nil
 }
 
-func ResourceByID(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, resourceID, typeName, typeVersionID, roleARN string) (*cloudcontrolapi.ResourceDescription, error) {
+func FindResourceByID(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, resourceID, typeName, typeVersionID, roleARN string) (*cloudcontrolapi.ResourceDescription, error) {
 	input := &cloudcontrolapi.GetResourceInput{
 		Identifier: aws.String(resourceID),
 		TypeName:   aws.String(typeName),

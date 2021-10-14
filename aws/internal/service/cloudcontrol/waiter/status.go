@@ -9,11 +9,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/cloudcontrol/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
+	tfcloudcontrol "github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 )
 
-func ProgressEventOperationStatus(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string) resource.StateRefreshFunc {
+func statusProgressEventOperation(ctx context.Context, conn *cloudcontrolapi.CloudControlApi, requestToken string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.ProgressEventByRequestToken(ctx, conn, requestToken)
+		output, err := tfcloudcontrol.FindProgressEventByRequestToken(ctx, conn, requestToken)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
