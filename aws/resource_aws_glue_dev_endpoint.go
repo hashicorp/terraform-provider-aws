@@ -177,7 +177,7 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("arguments"); ok {
-		input.Arguments = expandStringMap(v.(map[string]interface{}))
+		input.Arguments = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("extra_jars_s3_path"); ok {
@@ -205,7 +205,7 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("public_keys"); ok {
-		publicKeys := expandStringSet(v.(*schema.Set))
+		publicKeys := flex.ExpandStringSet(v.(*schema.Set))
 		input.PublicKeys = publicKeys
 	}
 
@@ -214,7 +214,7 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
-		securityGroupIDs := expandStringSet(v.(*schema.Set))
+		securityGroupIDs := flex.ExpandStringSet(v.(*schema.Set))
 		input.SecurityGroupIds = securityGroupIDs
 	}
 
@@ -341,7 +341,7 @@ func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting public_key for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("public_keys", flattenStringSet(endpoint.PublicKeys)); err != nil {
+	if err := d.Set("public_keys", flex.FlattenStringSet(endpoint.PublicKeys)); err != nil {
 		return fmt.Errorf("error setting public_keys for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
@@ -353,7 +353,7 @@ func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting security_configuration for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("security_group_ids", flattenStringSet(endpoint.SecurityGroupIds)); err != nil {
+	if err := d.Set("security_group_ids", flex.FlattenStringSet(endpoint.SecurityGroupIds)); err != nil {
 		return fmt.Errorf("error setting security_group_ids for Glue Dev Endpoint (%s): %w", d.Id(), err)
 	}
 
@@ -464,10 +464,10 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		remove := os.Difference(ns)
 		add := ns.Difference(os)
 
-		input.AddPublicKeys = expandStringSet(add)
+		input.AddPublicKeys = flex.ExpandStringSet(add)
 		log.Printf("[DEBUG] expectedCreate public keys: %v", add)
 
-		input.DeletePublicKeys = expandStringSet(remove)
+		input.DeletePublicKeys = flex.ExpandStringSet(remove)
 		log.Printf("[DEBUG] remove public keys: %v", remove)
 
 		hasChanged = true

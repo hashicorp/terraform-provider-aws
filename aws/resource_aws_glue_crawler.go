@@ -334,7 +334,7 @@ func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsC
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	}
 	if classifiers, ok := d.GetOk("classifiers"); ok {
-		crawlerInput.Classifiers = expandStringList(classifiers.([]interface{}))
+		crawlerInput.Classifiers = flex.ExpandStringList(classifiers.([]interface{}))
 	}
 
 	crawlerInput.SchemaChangePolicy = expandGlueSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
@@ -387,7 +387,7 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 	}
 
 	if classifiers, ok := d.GetOk("classifiers"); ok {
-		crawlerInput.Classifiers = expandStringList(classifiers.([]interface{}))
+		crawlerInput.Classifiers = flex.ExpandStringList(classifiers.([]interface{}))
 	}
 
 	crawlerInput.SchemaChangePolicy = expandGlueSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
@@ -515,7 +515,7 @@ func expandGlueS3Target(cfg map[string]interface{}) *glue.S3Target {
 	}
 
 	if v, ok := cfg["exclusions"]; ok {
-		target.Exclusions = expandStringList(v.([]interface{}))
+		target.Exclusions = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := cfg["sample_size"]; ok && v.(int) > 0 {
@@ -545,7 +545,7 @@ func expandGlueJdbcTarget(cfg map[string]interface{}) *glue.JdbcTarget {
 	}
 
 	if exclusions, ok := cfg["exclusions"]; ok {
-		target.Exclusions = expandStringList(exclusions.([]interface{}))
+		target.Exclusions = flex.ExpandStringList(exclusions.([]interface{}))
 	}
 	return target
 }
@@ -566,7 +566,7 @@ func expandGlueCatalogTargets(targets []interface{}) []*glue.CatalogTarget {
 func expandGlueCatalogTarget(cfg map[string]interface{}) *glue.CatalogTarget {
 	target := &glue.CatalogTarget{
 		DatabaseName: aws.String(cfg["database_name"].(string)),
-		Tables:       expandStringList(cfg["tables"].([]interface{})),
+		Tables:       flex.ExpandStringList(cfg["tables"].([]interface{})),
 	}
 
 	return target
@@ -692,7 +692,7 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 	if crawler.Schedule != nil {
 		d.Set("schedule", crawler.Schedule.ScheduleExpression)
 	}
-	if err := d.Set("classifiers", flattenStringList(crawler.Classifiers)); err != nil {
+	if err := d.Set("classifiers", flex.FlattenStringList(crawler.Classifiers)); err != nil {
 		return fmt.Errorf("error setting classifiers: %w", err)
 	}
 	d.Set("table_prefix", crawler.TablePrefix)
@@ -758,7 +758,7 @@ func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 
 	for _, s3Target := range s3Targets {
 		attrs := make(map[string]interface{})
-		attrs["exclusions"] = flattenStringList(s3Target.Exclusions)
+		attrs["exclusions"] = flex.FlattenStringList(s3Target.Exclusions)
 		attrs["path"] = aws.StringValue(s3Target.Path)
 		attrs["connection_name"] = aws.StringValue(s3Target.ConnectionName)
 
@@ -776,7 +776,7 @@ func flattenGlueCatalogTargets(CatalogTargets []*glue.CatalogTarget) []map[strin
 
 	for _, catalogTarget := range CatalogTargets {
 		attrs := make(map[string]interface{})
-		attrs["tables"] = flattenStringList(catalogTarget.Tables)
+		attrs["tables"] = flex.FlattenStringList(catalogTarget.Tables)
 		attrs["database_name"] = aws.StringValue(catalogTarget.DatabaseName)
 
 		result = append(result, attrs)
@@ -804,7 +804,7 @@ func flattenGlueJdbcTargets(jdbcTargets []*glue.JdbcTarget) []map[string]interfa
 	for _, jdbcTarget := range jdbcTargets {
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.StringValue(jdbcTarget.ConnectionName)
-		attrs["exclusions"] = flattenStringList(jdbcTarget.Exclusions)
+		attrs["exclusions"] = flex.FlattenStringList(jdbcTarget.Exclusions)
 		attrs["path"] = aws.StringValue(jdbcTarget.Path)
 
 		result = append(result, attrs)

@@ -240,7 +240,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("table_name", partition.TableName)
 	d.Set("catalog_id", partition.CatalogId)
 	d.Set("database_name", partition.DatabaseName)
-	d.Set("partition_values", flattenStringList(partition.Values))
+	d.Set("partition_values", flex.FlattenStringList(partition.Values))
 
 	if partition.LastAccessTime != nil {
 		d.Set("last_accessed_time", partition.LastAccessTime.Format(time.RFC3339))
@@ -318,11 +318,11 @@ func expandGluePartitionInput(d *schema.ResourceData) *glue.PartitionInput {
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		tableInput.Parameters = expandStringMap(v.(map[string]interface{}))
+		tableInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("partition_values"); ok && len(v.([]interface{})) > 0 {
-		tableInput.Values = expandStringList(v.([]interface{}))
+		tableInput.Values = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	return tableInput

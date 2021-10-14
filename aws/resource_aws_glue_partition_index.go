@@ -170,7 +170,7 @@ func expandAwsGluePartitionIndex(l []interface{}) *glue.PartitionIndex {
 	parIndex := &glue.PartitionIndex{}
 
 	if v, ok := s["keys"].([]interface{}); ok && len(v) > 0 {
-		parIndex.Keys = expandStringList(v)
+		parIndex.Keys = flex.ExpandStringList(v)
 	}
 
 	if v, ok := s["index_name"].(string); ok && v != "" {
