@@ -311,7 +311,7 @@ func testAccCheckAWSGameliftGameSessionQueueDestroy(s *terraform.State) error {
 		err := resource.Retry(30*time.Second, func() *resource.RetryError {
 			out, err := conn.DescribeGameSessionQueues(input)
 
-			if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 				return nil
 			}
 

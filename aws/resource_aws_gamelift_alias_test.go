@@ -199,7 +199,7 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
 
-	if isResourceNotFoundError(err) {
+	if tfresource.NotFound(err) {
 		t.Skip(err)
 	}
 
@@ -338,7 +338,7 @@ func testAccCheckAWSGameliftAliasDestroy(s *terraform.State) error {
 			return fmt.Errorf("Gamelift Alias still exists")
 		}
 
-		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 			return nil
 		}
 
