@@ -16,7 +16,7 @@ import (
 )
 
 func TestAccAwsRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
 		Partition: endpoints.AwsPartitionID,
@@ -29,7 +29,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 }
 
 func TestAccAwsRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
 		Partition: endpoints.AwsPartitionID,
@@ -64,14 +64,14 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsRoute53RecoveryReadinessResourceSetConfig(rName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRoute53RecoveryReadinessResourceSetExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRoute53RecoveryReadinessResourceSet(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRoute53RecoveryReadinessResourceSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,7 +80,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 }
 
 func TestAccAwsRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
@@ -93,7 +93,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -131,7 +131,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 }
 
 func TestAccAwsRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
@@ -144,7 +144,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -165,7 +165,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) 
 }
 
 func TestAccAwsRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	domainName := "myTestDomain.test"
 	hzArn := arn.ARN{
@@ -184,7 +184,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *tes
 			testAccPreCheckAwsRoute53RecoveryReadinessResourceSet(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -208,7 +208,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *tes
 }
 
 func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
 		AccountID: "123456789012",
@@ -224,7 +224,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t 
 			testAccPreCheckAwsRoute53RecoveryReadiness(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -245,7 +245,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t 
 }
 
 func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
 		AccountID: "123456789012",
@@ -263,7 +263,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t 
 			testAccPreCheckAwsRoute53RecoveryReadiness(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -285,7 +285,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t 
 }
 
 func TestAccAwsRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
 		AccountID: "123456789012",
 		Partition: endpoints.AwsPartitionID,
@@ -298,7 +298,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckAwsRoute53RecoveryReadiness(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -320,7 +320,7 @@ func TestAccAwsRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 }
 
 func testAccCheckAwsRoute53RecoveryReadinessResourceSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53recoveryreadiness_resource_set" {
@@ -347,7 +347,7 @@ func testAccCheckAwsRoute53RecoveryReadinessResourceSetExists(name string) resou
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
+		conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
 
 		input := &route53recoveryreadiness.GetResourceSetInput{
 			ResourceSetName: aws.String(rs.Primary.ID),
@@ -360,7 +360,7 @@ func testAccCheckAwsRoute53RecoveryReadinessResourceSetExists(name string) resou
 }
 
 func testAccPreCheckAwsRoute53RecoveryReadinessResourceSet(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).route53recoveryreadinessconn
+	conn := acctest.Provider.Meta().(*AWSClient).route53recoveryreadinessconn
 
 	input := &route53recoveryreadiness.ListResourceSetsInput{}
 
