@@ -1,4 +1,4 @@
-package aws
+package acmpca
 
 import (
 	"crypto/x509"
@@ -17,13 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/acmpca/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
-	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
-	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
 func ResourceCertificate() *schema.Resource {
@@ -130,7 +126,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *acmpca.IssueCertificateOutput
-	err = resource.Retry(tfacmpca.certificateAuthorityActiveTimeout, func() *resource.RetryError {
+	err = resource.Retry(certificateAuthorityActiveTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.IssueCertificate(input)
 		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is not in a valid state for issuing certificates") {
