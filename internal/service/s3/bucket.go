@@ -723,72 +723,72 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("cors_rule") {
-		if err := resourceAwsS3BucketCorsUpdate(conn, d); err != nil {
+		if err := resourceBucketCorsUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("website") {
-		if err := resourceAwsS3BucketWebsiteUpdate(conn, d); err != nil {
+		if err := resourceBucketWebsiteUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("versioning") {
-		if err := resourceAwsS3BucketVersioningUpdate(conn, d); err != nil {
+		if err := resourceBucketVersioningUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 	if d.HasChange("acl") && !d.IsNewResource() {
-		if err := resourceAwsS3BucketAclUpdate(conn, d); err != nil {
+		if err := resourceBucketACLUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("grant") {
-		if err := resourceAwsS3BucketGrantsUpdate(conn, d); err != nil {
+		if err := resourceBucketGrantsUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("logging") {
-		if err := resourceAwsS3BucketLoggingUpdate(conn, d); err != nil {
+		if err := resourceBucketLoggingUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("lifecycle_rule") {
-		if err := resourceAwsS3BucketLifecycleUpdate(conn, d); err != nil {
+		if err := resourceBucketLifecycleUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("acceleration_status") {
-		if err := resourceAwsS3BucketAccelerationUpdate(conn, d); err != nil {
+		if err := resourceBucketAccelerationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("request_payer") {
-		if err := resourceAwsS3BucketRequestPayerUpdate(conn, d); err != nil {
+		if err := resourceBucketRequestPayerUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("replication_configuration") {
-		if err := resourceAwsS3BucketReplicationConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketReplicationConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("server_side_encryption_configuration") {
-		if err := resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("object_lock_configuration") {
-		if err := resourceAwsS3BucketObjectLockConfigurationUpdate(conn, d); err != nil {
+		if err := resourceBucketObjectLockConfigurationUpdate(conn, d); err != nil {
 			return err
 		}
 	}
@@ -1229,7 +1229,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	replicationConfiguration := make([]map[string]interface{}, 0)
 	if replication, ok := replicationResponse.(*s3.GetBucketReplicationOutput); ok {
-		replicationConfiguration = flattenAwsS3BucketReplicationConfiguration(replication.ReplicationConfiguration)
+		replicationConfiguration = flattenBucketReplicationConfiguration(replication.ReplicationConfiguration)
 	}
 	if err := d.Set("replication_configuration", replicationConfiguration); err != nil {
 		return fmt.Errorf("error setting replication_configuration: %s", err)
@@ -1248,7 +1248,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	serverSideEncryptionConfiguration := make([]map[string]interface{}, 0)
 	if encryption, ok := encryptionResponse.(*s3.GetBucketEncryptionOutput); ok && encryption.ServerSideEncryptionConfiguration != nil {
-		serverSideEncryptionConfiguration = flattenAwsS3ServerSideEncryptionConfiguration(encryption.ServerSideEncryptionConfiguration)
+		serverSideEncryptionConfiguration = flattenServerSideEncryptionConfiguration(encryption.ServerSideEncryptionConfiguration)
 	}
 	if err := d.Set("server_side_encryption_configuration", serverSideEncryptionConfiguration); err != nil {
 		return fmt.Errorf("error setting server_side_encryption_configuration: %s", err)
@@ -1444,13 +1444,13 @@ func resourceBucketPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceAwsS3BucketGrantsUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketGrantsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	rawGrants := d.Get("grant").(*schema.Set).List()
 
 	if len(rawGrants) == 0 {
 		log.Printf("[DEBUG] S3 bucket: %s, Grants fallback to canned ACL", bucket)
-		if err := resourceAwsS3BucketAclUpdate(conn, d); err != nil {
+		if err := resourceBucketACLUpdate(conn, d); err != nil {
 			return fmt.Errorf("Error fallback to canned ACL, %s", err)
 		}
 	} else {
@@ -1512,7 +1512,7 @@ func resourceAwsS3BucketGrantsUpdate(conn *s3.S3, d *schema.ResourceData) error 
 	return nil
 }
 
-func resourceAwsS3BucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	rawCors := d.Get("cors_rule").([]interface{})
 
@@ -1578,11 +1578,11 @@ func resourceAwsS3BucketCorsUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceAwsS3BucketWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	ws := d.Get("website").([]interface{})
 
 	if len(ws) == 0 {
-		return resourceAwsS3BucketWebsiteDelete(conn, d)
+		return resourceBucketWebsiteDelete(conn, d)
 	}
 
 	var w map[string]interface{}
@@ -1591,10 +1591,10 @@ func resourceAwsS3BucketWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) error
 	} else {
 		w = make(map[string]interface{})
 	}
-	return resourceAwsS3BucketWebsitePut(conn, d, w)
+	return resourceBucketWebsitePut(conn, d, w)
 }
 
-func resourceAwsS3BucketWebsitePut(conn *s3.S3, d *schema.ResourceData, website map[string]interface{}) error {
+func resourceBucketWebsitePut(conn *s3.S3, d *schema.ResourceData, website map[string]interface{}) error {
 	bucket := d.Get("bucket").(string)
 
 	var indexDocument, errorDocument, redirectAllRequestsTo, routingRules string
@@ -1668,7 +1668,7 @@ func resourceAwsS3BucketWebsitePut(conn *s3.S3, d *schema.ResourceData, website 
 	return nil
 }
 
-func resourceAwsS3BucketWebsiteDelete(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketWebsiteDelete(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	deleteInput := &s3.DeleteBucketWebsiteInput{Bucket: aws.String(bucket)}
 
@@ -1768,7 +1768,7 @@ func isOldRegion(region string) bool {
 	return false
 }
 
-func resourceAwsS3BucketAclUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketACLUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	acl := d.Get("acl").(string)
 	bucket := d.Get("bucket").(string)
 
@@ -1788,7 +1788,7 @@ func resourceAwsS3BucketAclUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceAwsS3BucketVersioningUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketVersioningUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	v := d.Get("versioning").([]interface{})
 	bucket := d.Get("bucket").(string)
 	vc := &s3.VersioningConfiguration{}
@@ -1828,7 +1828,7 @@ func resourceAwsS3BucketVersioningUpdate(conn *s3.S3, d *schema.ResourceData) er
 	return nil
 }
 
-func resourceAwsS3BucketLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	logging := d.Get("logging").(*schema.Set).List()
 	bucket := d.Get("bucket").(string)
 	loggingStatus := &s3.BucketLoggingStatus{}
@@ -1863,7 +1863,7 @@ func resourceAwsS3BucketLoggingUpdate(conn *s3.S3, d *schema.ResourceData) error
 	return nil
 }
 
-func resourceAwsS3BucketAccelerationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketAccelerationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	enableAcceleration := d.Get("acceleration_status").(string)
 
@@ -1885,7 +1885,7 @@ func resourceAwsS3BucketAccelerationUpdate(conn *s3.S3, d *schema.ResourceData) 
 	return nil
 }
 
-func resourceAwsS3BucketRequestPayerUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketRequestPayerUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	payer := d.Get("request_payer").(string)
 
@@ -1907,7 +1907,7 @@ func resourceAwsS3BucketRequestPayerUpdate(conn *s3.S3, d *schema.ResourceData) 
 	return nil
 }
 
-func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	serverSideEncryptionConfiguration := d.Get("server_side_encryption_configuration").([]interface{})
 	if len(serverSideEncryptionConfiguration) == 0 {
@@ -1974,7 +1974,7 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(conn *s3.S3, d *
 	return nil
 }
 
-func resourceAwsS3BucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	// S3 Object Lock configuration cannot be deleted, only updated.
 	req := &s3.PutObjectLockConfigurationInput{
 		Bucket:                  aws.String(d.Get("bucket").(string)),
@@ -1991,7 +1991,7 @@ func resourceAwsS3BucketObjectLockConfigurationUpdate(conn *s3.S3, d *schema.Res
 	return nil
 }
 
-func resourceAwsS3BucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 	replicationConfiguration := d.Get("replication_configuration").([]interface{})
 
@@ -2152,7 +2152,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(conn *s3.S3, d *schema.Re
 	return nil
 }
 
-func resourceAwsS3BucketLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) error {
+func resourceBucketLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	bucket := d.Get("bucket").(string)
 
 	lifecycleRules := d.Get("lifecycle_rule").([]interface{})
@@ -2311,7 +2311,7 @@ func resourceAwsS3BucketLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) err
 	return nil
 }
 
-func flattenAwsS3ServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfiguration) []map[string]interface{} {
+func flattenServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionConfiguration) []map[string]interface{} {
 	var encryptionConfiguration []map[string]interface{}
 	rules := make([]interface{}, 0, len(c.Rules))
 	for _, v := range c.Rules {
@@ -2331,7 +2331,7 @@ func flattenAwsS3ServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionCon
 	return encryptionConfiguration
 }
 
-func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map[string]interface{} {
+func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []map[string]interface{} {
 	replication_configuration := make([]map[string]interface{}, 0, 1)
 
 	if r == nil {

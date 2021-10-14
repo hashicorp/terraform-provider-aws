@@ -17,9 +17,9 @@ import (
 
 func ResourceBucketMetric() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketMetricPut,
+		Create: resourceBucketMetricPut,
 		Read:   resourceBucketMetricRead,
-		Update: resourceAwsS3BucketMetricPut,
+		Update: resourceBucketMetricPut,
 		Delete: resourceBucketMetricDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -60,7 +60,7 @@ func ResourceBucketMetric() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketMetricPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)

@@ -19,9 +19,9 @@ import (
 
 func ResourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketPolicyPut,
+		Create: resourceBucketPolicyPut,
 		Read:   resourceBucketPolicyRead,
-		Update: resourceAwsS3BucketPolicyPut,
+		Update: resourceBucketPolicyPut,
 		Delete: resourceBucketPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -44,7 +44,7 @@ func ResourceBucketPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)

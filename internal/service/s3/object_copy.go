@@ -292,7 +292,7 @@ func ResourceObjectCopy() *schema.Resource {
 }
 
 func resourceObjectCopyCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsS3ObjectCopyDoCopy(d, meta)
+	return resourceObjectCopyDoCopy(d, meta)
 }
 
 func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
@@ -349,7 +349,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceAwsS3BucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
 		return fmt.Errorf("bucket object KMS: %w", err)
 	}
 
@@ -401,7 +401,7 @@ func resourceObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
 		"copy_if_unmodified_since",
 	} {
 		if _, ok := d.GetOk(key); ok {
-			return resourceAwsS3ObjectCopyDoCopy(d, meta)
+			return resourceObjectCopyDoCopy(d, meta)
 		}
 	}
 
@@ -442,7 +442,7 @@ func resourceObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
 		"website_redirect",
 	}
 	if d.HasChanges(args...) {
-		return resourceAwsS3ObjectCopyDoCopy(d, meta)
+		return resourceObjectCopyDoCopy(d, meta)
 	}
 
 	return nil
@@ -471,7 +471,7 @@ func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
+func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))

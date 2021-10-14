@@ -19,9 +19,9 @@ import (
 
 func ResourceBucketInventory() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketInventoryPut,
+		Create: resourceBucketInventoryPut,
 		Read:   resourceBucketInventoryRead,
-		Update: resourceAwsS3BucketInventoryPut,
+		Update: resourceBucketInventoryPut,
 		Delete: resourceBucketInventoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -174,7 +174,7 @@ func ResourceBucketInventory() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)

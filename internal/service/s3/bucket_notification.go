@@ -17,9 +17,9 @@ import (
 
 func ResourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketNotificationPut,
+		Create: resourceBucketNotificationPut,
 		Read:   resourceBucketNotificationRead,
-		Update: resourceAwsS3BucketNotificationPut,
+		Update: resourceBucketNotificationPut,
 		Delete: resourceBucketNotificationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -131,7 +131,7 @@ func ResourceBucketNotification() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketNotificationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 

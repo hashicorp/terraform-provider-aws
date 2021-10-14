@@ -39,11 +39,11 @@ func ResourceBucketObject() *schema.Resource {
 		Delete: resourceBucketObjectDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsS3BucketObjectImport,
+			State: resourceBucketObjectImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			resourceAwsS3BucketObjectCustomizeDiff,
+			resourceBucketObjectCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -209,7 +209,7 @@ func ResourceBucketObject() *schema.Resource {
 	}
 }
 
-func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketObjectPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -329,7 +329,7 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceBucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsS3BucketObjectPut(d, meta)
+	return resourceBucketObjectPut(d, meta)
 }
 
 func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
@@ -403,7 +403,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceAwsS3BucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
 		return fmt.Errorf("bucket object KMS: %w", err)
 	}
 
@@ -448,7 +448,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	if hasS3BucketObjectContentChanges(d) {
-		return resourceAwsS3BucketObjectPut(d, meta)
+		return resourceBucketObjectPut(d, meta)
 	}
 
 	conn := meta.(*conns.AWSClient).S3Conn
@@ -541,7 +541,7 @@ func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func resourceAwsS3BucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceBucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	id := d.Id()
 	id = strings.TrimPrefix(id, "s3://")
 	parts := strings.Split(id, "/")
@@ -560,7 +560,7 @@ func resourceAwsS3BucketObjectImport(d *schema.ResourceData, meta interface{}) (
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsS3BucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
+func resourceBucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
@@ -593,7 +593,7 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if hasS3BucketObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}

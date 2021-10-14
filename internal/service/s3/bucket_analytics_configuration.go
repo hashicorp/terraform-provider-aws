@@ -20,9 +20,9 @@ import (
 
 func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsS3BucketAnalyticsConfigurationPut,
+		Create: resourceBucketAnalyticsConfigurationPut,
 		Read:   resourceBucketAnalyticsConfigurationRead,
-		Update: resourceAwsS3BucketAnalyticsConfigurationPut,
+		Update: resourceBucketAnalyticsConfigurationPut,
 		Delete: resourceBucketAnalyticsConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -127,7 +127,7 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 
 var filterAtLeastOneOfKeys = []string{"filter.0.prefix", "filter.0.tags"}
 
-func resourceAwsS3BucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).S3Conn
 
 	bucket := d.Get("bucket").(string)
