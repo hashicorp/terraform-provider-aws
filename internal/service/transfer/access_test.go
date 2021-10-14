@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccAWSTransferAccess_s3_basic(t *testing.T) {
+func testAccAccess_s3_basic(t *testing.T) {
 	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -22,18 +22,18 @@ func testAccAWSTransferAccess_s3_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSTransfer(t)
+			testAccPreCheck(t)
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
+		CheckDestroy: testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferAccessS3BasicConfig(rName),
+				Config: testAccAccessS3BasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
@@ -47,9 +47,9 @@ func testAccAWSTransferAccess_s3_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"role"},
 			},
 			{
-				Config: testAccAWSTransferAccessS3UpdatedConfig(rName),
+				Config: testAccAccessS3UpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/test"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
@@ -59,7 +59,7 @@ func testAccAWSTransferAccess_s3_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSTransferAccess_efs_basic(t *testing.T) {
+func testAccAccess_efs_basic(t *testing.T) {
 	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -67,18 +67,18 @@ func testAccAWSTransferAccess_efs_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSTransfer(t)
+			testAccPreCheck(t)
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
+		CheckDestroy: testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferAccessEFSBasicConfig(rName),
+				Config: testAccAccessEFSBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_directory"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
@@ -92,9 +92,9 @@ func testAccAWSTransferAccess_efs_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"role"},
 			},
 			{
-				Config: testAccAWSTransferAccessEFSUpdatedConfig(rName),
+				Config: testAccAccessEFSUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_directory"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
@@ -105,7 +105,7 @@ func testAccAWSTransferAccess_efs_basic(t *testing.T) {
 	})
 }
 
-func testAccAWSTransferAccess_disappears(t *testing.T) {
+func testAccAccess_disappears(t *testing.T) {
 	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -113,18 +113,18 @@ func testAccAWSTransferAccess_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSTransfer(t)
+			testAccPreCheck(t)
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
+		CheckDestroy: testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferAccessS3BasicConfig(rName),
+				Config: testAccAccessS3BasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					testAccCheckAccessExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tftransfer.ResourceAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -133,7 +133,7 @@ func testAccAWSTransferAccess_disappears(t *testing.T) {
 	})
 }
 
-func testAccAWSTransferAccess_s3_policy(t *testing.T) {
+func testAccAccess_s3_policy(t *testing.T) {
 	var conf transfer.DescribedAccess
 	resourceName := "aws_transfer_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -141,18 +141,18 @@ func testAccAWSTransferAccess_s3_policy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckAWSTransfer(t)
+			testAccPreCheck(t)
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTransferAccessDestroy,
+		CheckDestroy: testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferAccessS3ScopeDownPolicyConfig(rName),
+				Config: testAccAccessS3ScopeDownPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferAccessExists(resourceName, &conf),
+					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -160,7 +160,7 @@ func testAccAWSTransferAccess_s3_policy(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) resource.TestCheckFunc {
+func testAccCheckAccessExists(n string, v *transfer.DescribedAccess) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -191,7 +191,7 @@ func testAccCheckAWSTransferAccessExists(n string, v *transfer.DescribedAccess) 
 	}
 }
 
-func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
+func testAccCheckAccessDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -220,7 +220,7 @@ func testAccCheckAWSTransferAccessDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSTransferAccessConfigBase(rName string) string {
+func testAccAccessBaseConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -298,7 +298,7 @@ EOF
 }`, rName))
 }
 
-func testAccAWSTransferAccessConfigBase_S3(rName string) string {
+func testAccAccessBaseConfig_S3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "AWS_DIRECTORY_SERVICE"
@@ -342,10 +342,10 @@ POLICY
 `, rName)
 }
 
-func testAccAWSTransferAccessS3BasicConfig(rName string) string {
+func testAccAccessS3BasicConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSTransferAccessConfigBase(rName),
-		testAccAWSTransferAccessConfigBase_S3(rName),
+		testAccAccessBaseConfig(rName),
+		testAccAccessBaseConfig_S3(rName),
 		`
 resource "aws_transfer_access" "test" {
   external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"
@@ -358,10 +358,10 @@ resource "aws_transfer_access" "test" {
 `)
 }
 
-func testAccAWSTransferAccessS3UpdatedConfig(rName string) string {
+func testAccAccessS3UpdatedConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSTransferAccessConfigBase(rName),
-		testAccAWSTransferAccessConfigBase_S3(rName),
+		testAccAccessBaseConfig(rName),
+		testAccAccessBaseConfig_S3(rName),
 		`
 resource "aws_transfer_access" "test" {
   external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"
@@ -374,10 +374,10 @@ resource "aws_transfer_access" "test" {
 `)
 }
 
-func testAccAWSTransferAccessS3ScopeDownPolicyConfig(rName string) string {
+func testAccAccessS3ScopeDownPolicyConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSTransferAccessConfigBase(rName),
-		testAccAWSTransferAccessConfigBase_S3(rName),
+		testAccAccessBaseConfig(rName),
+		testAccAccessBaseConfig_S3(rName),
 		`
 resource "aws_transfer_access" "test" {
   external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"
@@ -421,7 +421,7 @@ EOF
 }`)
 }
 
-func testAccAWSTransferAccessConfigBase_efs(rName string) string {
+func testAccAccessBaseConfig_efs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "AWS_DIRECTORY_SERVICE"
@@ -453,10 +453,10 @@ POLICY
 `, rName)
 }
 
-func testAccAWSTransferAccessEFSBasicConfig(rName string) string {
+func testAccAccessEFSBasicConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSTransferAccessConfigBase(rName),
-		testAccAWSTransferAccessConfigBase_efs(rName),
+		testAccAccessBaseConfig(rName),
+		testAccAccessBaseConfig_efs(rName),
 		`
 resource "aws_transfer_access" "test" {
   external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"
@@ -474,10 +474,10 @@ resource "aws_transfer_access" "test" {
 `)
 }
 
-func testAccAWSTransferAccessEFSUpdatedConfig(rName string) string {
+func testAccAccessEFSUpdatedConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccAWSTransferAccessConfigBase(rName),
-		testAccAWSTransferAccessConfigBase_efs(rName),
+		testAccAccessBaseConfig(rName),
+		testAccAccessBaseConfig_efs(rName),
 		`
 resource "aws_transfer_access" "test" {
   external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"

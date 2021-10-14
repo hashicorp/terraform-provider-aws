@@ -15,12 +15,12 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsTransferServerConfig_basic,
+				Config: testAccServerDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain", resourceName, "domain"),
@@ -39,12 +39,12 @@ func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsTransferServerConfig_service_managed(rName),
+				Config: testAccServerDataSourceConfig_service_managed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -68,12 +68,12 @@ func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsTransferServerConfig_apigateway(rName),
+				Config: testAccServerDataSourceConfig_apigateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
@@ -87,7 +87,7 @@ func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsTransferServerConfig_basic = `
+const testAccServerDataSourceConfig_basic = `
 resource "aws_transfer_server" "test" {}
 
 data "aws_transfer_server" "test" {
@@ -95,7 +95,7 @@ data "aws_transfer_server" "test" {
 }
 `
 
-func testAccDataSourceAwsTransferServerConfig_service_managed(rName string) string {
+func testAccServerDataSourceConfig_service_managed(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "tf-test-transfer-server-iam-role-%[1]s"
@@ -148,7 +148,7 @@ data "aws_transfer_server" "test" {
 `, rName)
 }
 
-func testAccDataSourceAwsTransferServerConfig_apigateway(rName string) string {
+func testAccServerDataSourceConfig_apigateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "test"

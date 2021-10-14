@@ -15,7 +15,7 @@ import (
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 )
 
-func testAccAWSTransferSshKey_basic(t *testing.T) {
+func testAccSSHKey_basic(t *testing.T) {
 	var conf transfer.SshPublicKey
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -27,15 +27,15 @@ func testAccAWSTransferSshKey_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSTransferSshKeyDestroy,
+		CheckDestroy: testAccCheckSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferSshKeyConfig_basic(rName, publicKey),
+				Config: testAccSSHKeyConfig_basic(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferSshKeyExists(resourceName, &conf),
+					testAccCheckSSHKeyExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_transfer_user.test", "user_name"),
 					resource.TestCheckResourceAttr(resourceName, "body", publicKey),
@@ -50,7 +50,7 @@ func testAccAWSTransferSshKey_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSTransferSshKeyExists(n string, res *transfer.SshPublicKey) resource.TestCheckFunc {
+func testAccCheckSSHKeyExists(n string, res *transfer.SshPublicKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -87,7 +87,7 @@ func testAccCheckAWSTransferSshKeyExists(n string, res *transfer.SshPublicKey) r
 	}
 }
 
-func testAccCheckAWSTransferSshKeyDestroy(s *terraform.State) error {
+func testAccCheckSSHKeyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -122,7 +122,7 @@ func testAccCheckAWSTransferSshKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSTransferSshKeyConfig_basic(rName, publicKey string) string {
+func testAccSSHKeyConfig_basic(rName, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "SERVICE_MANAGED"
