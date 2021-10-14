@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -53,7 +54,7 @@ func testSweepSqsQueues(region string) error {
 		}
 
 		for _, queueUrl := range page.QueueUrls {
-			r := resourceAwsSqsQueue()
+			r := ResourceQueue()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(queueUrl))
 			err = r.Delete(d, client)
@@ -139,7 +140,7 @@ func TestAccAWSSQSQueue_disappears(t *testing.T) {
 				Config: testAccAWSSQSConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSqsQueue(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -417,7 +418,7 @@ func TestAccAWSSQSQueue_RecentlyDeleted(t *testing.T) {
 				Config: testAccAWSSQSConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsSqsQueue(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

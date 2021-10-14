@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsSqsQueue() *schema.Resource {
+func DataSourceQueue() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSqsQueueRead,
+		Read: dataSourceQueueRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -31,7 +31,7 @@ func dataSourceAwsSqsQueue() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

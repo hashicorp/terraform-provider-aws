@@ -21,13 +21,13 @@ var (
 	}
 )
 
-func resourceAwsSqsQueuePolicy() *schema.Resource {
+func ResourceQueuePolicy() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSqsQueuePolicyUpsert,
-		Read:   resourceAwsSqsQueuePolicyRead,
+		Read:   resourceQueuePolicyRead,
 		Update: resourceAwsSqsQueuePolicyUpsert,
-		Delete: resourceAwsSqsQueuePolicyDelete,
+		Delete: resourceQueuePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,10 +78,10 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error waiting for SQS Queue Policy (%s) to be set: %w", d.Id(), err)
 	}
 
-	return resourceAwsSqsQueuePolicyRead(d, meta)
+	return resourceQueuePolicyRead(d, meta)
 }
 
-func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	policy, err := finder.QueuePolicyByURL(conn, d.Id())
@@ -102,7 +102,7 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsSqsQueuePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceQueuePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	log.Printf("[DEBUG] Deleting SQS Queue Policy: %s", d.Id())
