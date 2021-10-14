@@ -15,9 +15,9 @@ import (
 
 func ResourceRegistryPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrRegistryPolicyPut,
+		Create: resourceRegistryPolicyPut,
 		Read:   resourceRegistryPolicyRead,
-		Update: resourceAwsEcrRegistryPolicyPut,
+		Update: resourceRegistryPolicyPut,
 		Delete: resourceRegistryPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -38,7 +38,7 @@ func ResourceRegistryPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsEcrRegistryPolicyPut(d *schema.ResourceData, meta interface{}) error {
+func resourceRegistryPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := ecr.PutRegistryPolicyInput{

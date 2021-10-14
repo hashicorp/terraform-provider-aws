@@ -13,9 +13,9 @@ import (
 
 func ResourceReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrReplicationConfigurationPut,
+		Create: resourceReplicationConfigurationPut,
 		Read:   resourceReplicationConfigurationRead,
-		Update: resourceAwsEcrReplicationConfigurationPut,
+		Update: resourceReplicationConfigurationPut,
 		Delete: resourceReplicationConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -65,7 +65,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsEcrReplicationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
+func resourceReplicationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := ecr.PutReplicationConfigurationInput{
