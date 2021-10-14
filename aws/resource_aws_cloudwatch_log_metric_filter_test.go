@@ -6,19 +6,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
 		Steps: []resource.TestStep{
@@ -106,12 +107,12 @@ func TestAccAWSCloudWatchLogMetricFilter_basic(t *testing.T) {
 
 func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +120,7 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogMetricFilter(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogMetricFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,12 +130,12 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears(t *testing.T) {
 
 func TestAccAWSCloudWatchLogMetricFilter_disappears_logGroup(t *testing.T) {
 	var mf cloudwatchlogs.MetricFilter
-	rInt := acctest.RandInt()
+	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogMetricFilterDestroy,
 		Steps: []resource.TestStep{
@@ -142,7 +143,7 @@ func TestAccAWSCloudWatchLogMetricFilter_disappears_logGroup(t *testing.T) {
 				Config: testAccAWSCloudWatchLogMetricFilterConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogMetricFilterExists(resourceName, &mf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogGroup(), "aws_cloudwatch_log_group.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogGroup(), "aws_cloudwatch_log_group.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

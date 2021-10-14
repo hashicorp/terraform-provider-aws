@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
@@ -16,11 +17,11 @@ func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_destination.test"
 	streamResourceName := "aws_kinesis_stream.test"
 	roleResourceName := "aws_iam_role.test"
-	rstring := acctest.RandString(5)
+	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
 					testAccCheckAWSCloudwatchLogDestinationExists(resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "logs", regexp.MustCompile(`destination:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "logs", regexp.MustCompile(`destination:.+`)),
 				),
 			},
 			{
@@ -46,11 +47,11 @@ func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 
-	rstring := acctest.RandString(5)
+	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -58,7 +59,7 @@ func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
 				Config: testAccAWSCloudwatchLogDestinationConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchLogDestinationExists(resourceName, &destination),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogDestination(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
