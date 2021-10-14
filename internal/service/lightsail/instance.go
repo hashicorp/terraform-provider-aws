@@ -149,7 +149,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		req.Tags = tags.IgnoreAws().LightsailTags()
+		req.Tags = Tags(tags.IgnoreAws())
 	}
 
 	resp, err := conn.CreateInstances(&req)
@@ -234,7 +234,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("private_ip_address", i.PrivateIpAddress)
 	d.Set("public_ip_address", i.PublicIpAddress)
 
-	tags := tftags.LightsailKeyValueTags(i.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(i.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -285,7 +285,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.LightsailUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Lightsail Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
