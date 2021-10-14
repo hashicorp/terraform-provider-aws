@@ -20,6 +20,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 )
 
 func testAccAWSLakeFormationPermissions_basic(t *testing.T) {
@@ -797,7 +808,7 @@ func permissionCountForLakeFormationResource(conn *lakeformation.LakeFormation, 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var allPermissions []*lakeformation.PrincipalResourcePermissions
 
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
 		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
 				if permission == nil {

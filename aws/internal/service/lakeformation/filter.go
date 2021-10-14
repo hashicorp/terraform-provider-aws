@@ -24,29 +24,29 @@ func FilterPermissions(input *lakeformation.ListPermissionsInput, tableType stri
 	// permissions in the special cases to avoid extra permissions being included.
 
 	if input.Resource.Catalog != nil {
-		return FilterLakeFormationCatalogPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+		return FilterCatalogPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if input.Resource.DataLocation != nil {
-		return FilterLakeFormationDataLocationPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+		return FilterDataLocationPermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if input.Resource.Database != nil {
-		return FilterLakeFormationDatabasePermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
+		return FilterDatabasePermissions(input.Principal.DataLakePrincipalIdentifier, allPermissions)
 	}
 
 	if tableType == TableTypeTableWithColumns {
-		return FilterLakeFormationTableWithColumnsPermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
+		return FilterTableWithColumnsPermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, columnNames, excludedColumnNames, columnWildcard, allPermissions)
 	}
 
 	if input.Resource.Table != nil || tableType == TableTypeTable {
-		return FilterLakeFormationTablePermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, allPermissions)
+		return FilterTablePermissions(input.Principal.DataLakePrincipalIdentifier, input.Resource.Table, allPermissions)
 	}
 
 	return nil
 }
 
-func FilterLakeFormationTablePermissions(principal *string, table *lakeformation.TableResource, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterTablePermissions(principal *string, table *lakeformation.TableResource, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	// CREATE PERMS (in)     = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT, SELECT on Table, Name = (Table Name)
 	//      LIST PERMS (out) = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT         on Table, Name = (Table Name)
 	//      LIST PERMS (out) = SELECT                                             on TableWithColumns, Name = (Table Name), ColumnWildcard
@@ -93,7 +93,7 @@ func FilterLakeFormationTablePermissions(principal *string, table *lakeformation
 	return cleanPermissions
 }
 
-func FilterLakeFormationTableWithColumnsPermissions(principal *string, twc *lakeformation.TableResource, columnNames []*string, excludedColumnNames []*string, columnWildcard bool, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterTableWithColumnsPermissions(principal *string, twc *lakeformation.TableResource, columnNames []*string, excludedColumnNames []*string, columnWildcard bool, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	// CREATE PERMS (in)       = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT, SELECT on TableWithColumns, Name = (Table Name), ColumnWildcard
 	//        LIST PERMS (out) = ALL, ALTER, DELETE, DESCRIBE, DROP, INSERT         on Table, Name = (Table Name)
 	//        LIST PERMS (out) = SELECT                                             on TableWithColumns, Name = (Table Name), ColumnWildcard
@@ -133,7 +133,7 @@ func FilterLakeFormationTableWithColumnsPermissions(principal *string, twc *lake
 	return cleanPermissions
 }
 
-func FilterLakeFormationCatalogPermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterCatalogPermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
@@ -149,7 +149,7 @@ func FilterLakeFormationCatalogPermissions(principal *string, allPermissions []*
 	return cleanPermissions
 }
 
-func FilterLakeFormationDataLocationPermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterDataLocationPermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
@@ -165,7 +165,7 @@ func FilterLakeFormationDataLocationPermissions(principal *string, allPermission
 	return cleanPermissions
 }
 
-func FilterLakeFormationDatabasePermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+func FilterDatabasePermissions(principal *string, allPermissions []*lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	var cleanPermissions []*lakeformation.PrincipalResourcePermissions
 
 	for _, perm := range allPermissions {
