@@ -69,7 +69,7 @@ func TestResourceAWSMqBrokerPasswordValidation(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validateMqBrokerPassword(tc.Value, "aws_mq_broker_user_password")
+		_, errors := tfmq.ValidBrokerPassword(tc.Value, "aws_mq_broker_user_password")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected errors %d for %s while returned errors %d", tc.ErrCount, tc.Value, len(errors))
@@ -230,7 +230,7 @@ func TestDiffAwsMqBrokerUsers(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		creations, deletions, updates, err := diffAwsMqBrokerUsers("test", tc.OldUsers, tc.NewUsers)
+		creations, deletions, updates, err := tfmq.DiffBrokerUsers("test", tc.OldUsers, tc.NewUsers)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -977,7 +977,7 @@ func TestAccAWSMqBroker_disappears(t *testing.T) {
 				Config: testAccMqBrokerConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBroker(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfmq.ResourceBroker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

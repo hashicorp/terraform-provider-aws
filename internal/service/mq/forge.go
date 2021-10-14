@@ -8,7 +8,7 @@ import (
 
 // cannonicalXML reads XML in a string and re-writes it canonically, used for
 // comparing XML for logical equivalency
-func canonicalXML(s string) (string, error) {
+func CanonicalXML(s string) (string, error) {
 	doc := etree.NewDocument()
 	doc.WriteSettings.CanonicalEndTags = true
 	if err := doc.ReadFromString(s); err != nil {

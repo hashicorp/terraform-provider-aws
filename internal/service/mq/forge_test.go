@@ -1,6 +1,7 @@
 package mq_test
 
 import (
+	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"testing"
 )
 
@@ -58,11 +59,11 @@ func TestCanonicalXML(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
-			config, err := canonicalXML(tc.Config)
+			config, err := tfmq.CanonicalXML(tc.Config)
 			if err != nil {
 				t.Fatalf("Error getting canonical xml for given config: %s", err)
 			}
-			expected, err := canonicalXML(tc.Expected)
+			expected, err := tfmq.CanonicalXML(tc.Expected)
 			if err != nil {
 				t.Fatalf("Error getting canonical xml for expected config: %s", err)
 			}
