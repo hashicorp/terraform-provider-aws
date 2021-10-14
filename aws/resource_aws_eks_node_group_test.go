@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -55,7 +56,7 @@ func testSweepEksNodeGroups(region string) error {
 				}
 
 				for _, nodeGroup := range page.Nodegroups {
-					r := resourceAwsEksNodeGroup()
+					r := ResourceNodeGroup()
 					d := r.Data(nil)
 					d.SetId(tfeks.NodeGroupCreateResourceID(aws.StringValue(cluster), aws.StringValue(nodeGroup)))
 
@@ -218,7 +219,7 @@ func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 				Config: testAccAWSEksNodeGroupConfigNodeGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEksNodeGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceNodeGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

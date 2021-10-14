@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -56,7 +57,7 @@ func testSweepEksAddon(region string) error {
 				}
 
 				for _, addon := range page.Addons {
-					r := resourceAwsEksAddon()
+					r := ResourceAddon()
 					d := r.Data(nil)
 					d.SetId(tfeks.AddonCreateResourceID(aws.StringValue(cluster), aws.StringValue(addon)))
 
@@ -147,7 +148,7 @@ func TestAccAWSEksAddon_disappears(t *testing.T) {
 				Config: testAccAWSEksAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEksAddon(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceAddon(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,7 +174,7 @@ func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
 				Config: testAccAWSEksAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsEksCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

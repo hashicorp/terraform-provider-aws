@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEksIdentityProviderConfig() *schema.Resource {
+func ResourceIdentityProviderConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsEksIdentityProviderConfigCreate,
-		ReadWithoutTimeout:   resourceAwsEksIdentityProviderConfigRead,
-		UpdateWithoutTimeout: resourceAwsEksIdentityProviderConfigUpdate,
-		DeleteWithoutTimeout: resourceAwsEksIdentityProviderConfigDelete,
+		CreateWithoutTimeout: resourceIdentityProviderConfigCreate,
+		ReadWithoutTimeout:   resourceIdentityProviderConfigRead,
+		UpdateWithoutTimeout: resourceIdentityProviderConfigUpdate,
+		DeleteWithoutTimeout: resourceIdentityProviderConfigDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -137,7 +137,7 @@ func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValid
 	}
 }
 
-func resourceAwsEksIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -170,10 +170,10 @@ func resourceAwsEksIdentityProviderConfigCreate(ctx context.Context, d *schema.R
 		return diag.Errorf("error waiting for EKS Identity Provider Config (%s) association: %s", d.Id(), err)
 	}
 
-	return resourceAwsEksIdentityProviderConfigRead(ctx, d, meta)
+	return resourceIdentityProviderConfigRead(ctx, d, meta)
 }
 
-func resourceAwsEksIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -219,7 +219,7 @@ func resourceAwsEksIdentityProviderConfigRead(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func resourceAwsEksIdentityProviderConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	if d.HasChange("tags_all") {
@@ -229,10 +229,10 @@ func resourceAwsEksIdentityProviderConfigUpdate(ctx context.Context, d *schema.R
 		}
 	}
 
-	return resourceAwsEksIdentityProviderConfigRead(ctx, d, meta)
+	return resourceIdentityProviderConfigRead(ctx, d, meta)
 }
 
-func resourceAwsEksIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	clusterName, configName, err := tfeks.IdentityProviderConfigParseResourceID(d.Id())

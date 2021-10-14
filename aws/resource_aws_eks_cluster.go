@@ -23,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsEksCluster() *schema.Resource {
+func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEksClusterCreate,
-		Read:   resourceAwsEksClusterRead,
-		Update: resourceAwsEksClusterUpdate,
-		Delete: resourceAwsEksClusterDelete,
+		Create: resourceClusterCreate,
+		Read:   resourceClusterRead,
+		Update: resourceClusterUpdate,
+		Delete: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -232,7 +232,7 @@ func resourceAwsEksCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -312,10 +312,10 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error waiting for EKS Cluster (%s) to create: %w", d.Id(), err)
 	}
 
-	return resourceAwsEksClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -382,7 +382,7 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	// Do any version update first.
@@ -485,10 +485,10 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsEksClusterRead(d, meta)
+	return resourceClusterRead(d, meta)
 }
 
-func resourceAwsEksClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EKSConn
 
 	log.Printf("[DEBUG] Deleting EKS Cluster: %s", d.Id())

@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsEksClusterAuth() *schema.Resource {
+func DataSourceClusterAuth() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsEksClusterAuthRead,
+		Read: dataSourceClusterAuthRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -29,7 +29,7 @@ func dataSourceAwsEksClusterAuth() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEksClusterAuthRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceClusterAuthRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).STSConn
 	name := d.Get("name").(string)
 	generator, err := token.NewGenerator(false, false)
