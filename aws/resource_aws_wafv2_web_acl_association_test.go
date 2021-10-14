@@ -7,22 +7,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
-	testName := fmt.Sprintf("web-acl-association-%s", acctest.RandString(5))
+	testName := fmt.Sprintf("web-acl-association-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_web_acl_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAPIGatewayTypeEDGEPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAPIGatewayTypeEDGE(t)
 			testAccPreCheckAWSWafv2ScopeRegional(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2WebACLAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -30,8 +31,8 @@ func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
 				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", testName))),
-					testAccMatchResourceAttrRegionalARN(resourceName, "web_acl_arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/webacl/%s/.*", testName))),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", testName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "web_acl_arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/webacl/%s/.*", testName))),
 				),
 			},
 			{
@@ -45,16 +46,16 @@ func TestAccAwsWafv2WebACLAssociation_basic(t *testing.T) {
 }
 
 func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
-	testName := fmt.Sprintf("web-acl-association-%s", acctest.RandString(5))
+	testName := fmt.Sprintf("web-acl-association-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_web_acl_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAPIGatewayTypeEDGEPreCheck(t)
+			acctest.PreCheck(t)
+			acctest.PreCheckAPIGatewayTypeEDGE(t)
 			testAccPreCheckAWSWafv2ScopeRegional(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2WebACLAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACLAssociation(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,7 +71,7 @@ func TestAccAwsWafv2WebACLAssociation_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2WebACLAssociationConfig(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2WebACLAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayStage(), "aws_api_gateway_stage.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsApiGatewayStage(), "aws_api_gateway_stage.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
