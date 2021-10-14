@@ -98,7 +98,7 @@ func sweepGroups(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
+func TestAccCloudWatchLogsGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -129,7 +129,7 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
+func TestAccCloudWatchLogsGroup_namePrefix(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
 
@@ -156,7 +156,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
+func TestAccCloudWatchLogsGroup_NamePrefix_retention(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -193,7 +193,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
+func TestAccCloudWatchLogsGroup_generatedName(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
 
@@ -219,7 +219,7 @@ func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
+func TestAccCloudWatchLogsGroup_retentionPolicy(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -254,7 +254,7 @@ func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogGroup_multiple(t *testing.T) {
+func TestAccCloudWatchLogsGroup_multiple(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.alpha"
@@ -286,7 +286,7 @@ func TestAccAWSCloudWatchLogGroup_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogGroup_disappears(t *testing.T) {
+func TestAccCloudWatchLogsGroup_disappears(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -309,7 +309,7 @@ func TestAccAWSCloudWatchLogGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
+func TestAccCloudWatchLogsGroup_tagging(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -372,7 +372,7 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
+func TestAccCloudWatchLogsGroup_kmsKey(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudwatch_log_group.test"

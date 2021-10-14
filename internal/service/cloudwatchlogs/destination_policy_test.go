@@ -13,7 +13,7 @@ import (
 	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
-func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
+func TestAccCloudWatchLogsDestinationPolicy_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
 	resourceName := "aws_cloudwatch_log_destination_policy.test"
 	rstring := sdkacctest.RandString(5)

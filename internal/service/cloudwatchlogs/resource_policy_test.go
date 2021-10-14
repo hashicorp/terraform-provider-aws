@@ -66,7 +66,7 @@ func sweepResourcePolicies(region string) error {
 	return nil
 }
 
-func TestAccAWSCloudWatchLogResourcePolicy_basic(t *testing.T) {
+func TestAccCloudWatchLogsResourcePolicy_basic(t *testing.T) {
 	name := sdkacctest.RandString(5)
 	resourceName := "aws_cloudwatch_log_resource_policy.test"
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
