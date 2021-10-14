@@ -7,13 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -70,8 +64,8 @@ func waitClusterDeleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*
 
 func waitClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterOperationInfo, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{tfkafka.ClusterOperationStatePending, tfkafka.ClusterOperationStateUpdateInProgress},
-		Target:  []string{tfkafka.ClusterOperationStateUpdateComplete},
+		Pending: []string{ClusterOperationStatePending, ClusterOperationStateUpdateInProgress},
+		Target:  []string{ClusterOperationStateUpdateComplete},
 		Refresh: statusClusterOperationState(conn, arn),
 		Timeout: timeout,
 	}
@@ -79,7 +73,7 @@ func waitClusterOperationCompleted(conn *kafka.Kafka, arn string, timeout time.D
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*kafka.ClusterOperationInfo); ok {
-		if state, errorInfo := aws.StringValue(output.OperationState), output.ErrorInfo; state == tfkafka.ClusterOperationStateUpdateFailed && errorInfo != nil {
+		if state, errorInfo := aws.StringValue(output.OperationState), output.ErrorInfo; state == ClusterOperationStateUpdateFailed && errorInfo != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(errorInfo.ErrorCode), aws.StringValue(errorInfo.ErrorString)))
 		}
 

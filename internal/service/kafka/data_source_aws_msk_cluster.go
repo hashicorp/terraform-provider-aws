@@ -1,4 +1,4 @@
-package aws
+package kafka
 
 import (
 	"fmt"
@@ -7,16 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
 
 func DataSourceCluster() *schema.Resource {
@@ -111,10 +105,10 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", cluster.ClusterArn)
-	d.Set("bootstrap_brokers", tfkafka.SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_iam", tfkafka.SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", tfkafka.SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", tfkafka.SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
 	d.Set("cluster_name", cluster.ClusterName)
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
@@ -123,7 +117,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.Set("zookeeper_connect_string", tfkafka.SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 

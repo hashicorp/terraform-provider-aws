@@ -1,4 +1,4 @@
-package aws
+package kafka
 
 import (
 	"context"
@@ -12,34 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kafka/waiter"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
-	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
 
 func ResourceCluster() *schema.Resource {
@@ -430,7 +407,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.ClusterArn))
 
-	_, err = tfkafka.waitClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waitClusterCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for MSK Cluster (%s) create: %w", d.Id(), err)
@@ -444,7 +421,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	cluster, err := tfkafka.FindClusterByARN(conn, d.Id())
+	cluster, err := FindClusterByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
@@ -465,10 +442,10 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", cluster.ClusterArn)
-	d.Set("bootstrap_brokers", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_iam", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", tfkafka.SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(output.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
 		return fmt.Errorf("error setting broker_node_group_info: %w", err)
@@ -503,8 +480,8 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting open_monitoring: %w", err)
 	}
 
-	d.Set("zookeeper_connect_string", tfkafka.SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
-	d.Set("zookeeper_connect_string_tls", tfkafka.SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
+	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
 
 	tags := tftags.KafkaKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
@@ -543,7 +520,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		_, err = tfkafka.waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
@@ -565,7 +542,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		_, err = tfkafka.waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
@@ -587,7 +564,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		_, err = tfkafka.waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
@@ -611,7 +588,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		_, err = tfkafka.waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
@@ -633,7 +610,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		_, err = tfkafka.waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
@@ -659,7 +636,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
 
-		_, err = tfkafka.waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+		_, err = waitClusterOperationCompleted(conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
@@ -693,7 +670,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting MSK Cluster (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfkafka.waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for MSK Cluster (%s) delete: %w", d.Id(), err)
