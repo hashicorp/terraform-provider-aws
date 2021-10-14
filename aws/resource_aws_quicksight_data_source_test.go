@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -32,12 +33,12 @@ func testSweepQuickSightDataSources(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).quicksightconn
+	conn := client.(*conns.AWSClient).QuickSightConn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
 	ctx := context.Background()
-	awsAccountId := client.(*AWSClient).accountid
+	awsAccountId := client.(*conns.AWSClient).AccountID
 
 	input := &quicksight.ListDataSourcesInput{
 		AwsAccountId: aws.String(awsAccountId),
@@ -468,7 +469,7 @@ func testAccCheckQuickSightDataSourceExists(resourceName string, dataSource *qui
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 
 		input := &quicksight.DescribeDataSourceInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -492,7 +493,7 @@ func testAccCheckQuickSightDataSourceExists(resourceName string, dataSource *qui
 }
 
 func testAccCheckQuickSightDataSourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).quicksightconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_data_source" {
 			continue

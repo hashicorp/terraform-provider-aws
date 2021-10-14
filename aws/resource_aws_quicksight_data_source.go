@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/quicksight/waiter"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsQuickSightDataSource() *schema.Resource {
@@ -601,11 +602,11 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 }
 
 func resourceAwsQuickSightDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).quicksightconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).QuickSightConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	awsAccountId := meta.(*AWSClient).accountid
+	awsAccountId := meta.(*conns.AWSClient).AccountID
 	id := d.Get("data_source_id").(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -655,9 +656,9 @@ func resourceAwsQuickSightDataSourceCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceAwsQuickSightDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).quicksightconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).QuickSightConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
 	if err != nil {
@@ -740,7 +741,7 @@ func resourceAwsQuickSightDataSourceRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceAwsQuickSightDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	if d.HasChangesExcept("permission", "tags", "tags_all") {
 		awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
@@ -825,7 +826,7 @@ func resourceAwsQuickSightDataSourceUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceAwsQuickSightDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsQuickSightGroup() *schema.Resource {
@@ -60,9 +61,9 @@ func resourceAwsQuickSightGroup() *schema.Resource {
 }
 
 func resourceAwsQuickSightGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountID := meta.(*AWSClient).accountid
+	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get("namespace").(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -90,7 +91,7 @@ func resourceAwsQuickSightGroupCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
 	if err != nil {
@@ -123,7 +124,7 @@ func resourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsQuickSightGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
 	if err != nil {
@@ -154,7 +155,7 @@ func resourceAwsQuickSightGroupUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsQuickSightGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	awsAccountID, namespace, groupName, err := resourceAwsQuickSightGroupParseID(d.Id())
 	if err != nil {
