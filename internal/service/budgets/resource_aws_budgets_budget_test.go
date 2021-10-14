@@ -1,4 +1,4 @@
-package aws
+package budgets_test
 
 import (
 	"fmt"
@@ -14,15 +14,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
+	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"

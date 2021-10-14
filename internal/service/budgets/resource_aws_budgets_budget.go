@@ -1,4 +1,4 @@
-package aws
+package budgets
 
 import (
 	"fmt"
@@ -13,23 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/shopspring/decimal"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/budgets/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 )
 
 func ResourceBudget() *schema.Resource {
@@ -220,13 +207,13 @@ func ResourceBudget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "2087-06-15_00:00",
-				ValidateFunc: tfbudgets.ValidTimePeriodTimestamp,
+				ValidateFunc: ValidTimePeriodTimestamp,
 			},
 			"time_period_start": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: tfbudgets.ValidTimePeriodTimestamp,
+				ValidateFunc: ValidTimePeriodTimestamp,
 			},
 			"time_unit": {
 				Type:         schema.TypeString,
@@ -279,13 +266,13 @@ func resourceBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
-	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
+	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
 		return err
 	}
 
-	budget, err := tfbudgets.FindBudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+	budget, err := FindBudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
@@ -328,13 +315,13 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(budget.BudgetName)))
 
 	if budget.TimePeriod != nil {
-		d.Set("time_period_end", tfbudgets.TimePeriodTimestampToString(budget.TimePeriod.End))
-		d.Set("time_period_start", tfbudgets.TimePeriodTimestampToString(budget.TimePeriod.Start))
+		d.Set("time_period_end", TimePeriodTimestampToString(budget.TimePeriod.End))
+		d.Set("time_period_start", TimePeriodTimestampToString(budget.TimePeriod.Start))
 	}
 
 	d.Set("time_unit", budget.TimeUnit)
 
-	notifications, err := tfbudgets.FindNotificationsByAccountIDAndBudgetName(conn, accountID, budgetName)
+	notifications, err := FindNotificationsByAccountIDAndBudgetName(conn, accountID, budgetName)
 
 	if tfresource.NotFound(err) {
 		return nil
@@ -361,7 +348,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 			tfMap["threshold_type"] = aws.StringValue(notification.ThresholdType)
 		}
 
-		subscribers, err := tfbudgets.FindSubscribersByAccountIDBudgetNameAndNotification(conn, accountID, budgetName, notification)
+		subscribers, err := FindSubscribersByAccountIDBudgetNameAndNotification(conn, accountID, budgetName, notification)
 
 		if tfresource.NotFound(err) {
 			tfList = append(tfList, tfMap)
@@ -399,7 +386,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 func resourceBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
-	accountID, _, err := tfbudgets.BudgetParseResourceID(d.Id())
+	accountID, _, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -430,7 +417,7 @@ func resourceBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceBudgetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
-	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
+	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -479,7 +466,7 @@ func resourceAwsBudgetsBudgetNotificationsCreate(notifications []*budgets.Notifi
 func resourceAwsBudgetsBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
-	accountID, budgetName, err := tfbudgets.BudgetParseResourceID(d.Id())
+	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
 		return err
@@ -591,13 +578,13 @@ func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, erro
 		}
 	}
 
-	budgetTimePeriodStart, err := tfbudgets.TimePeriodTimestampFromString(d.Get("time_period_start").(string))
+	budgetTimePeriodStart, err := TimePeriodTimestampFromString(d.Get("time_period_start").(string))
 
 	if err != nil {
 		return nil, err
 	}
 
-	budgetTimePeriodEnd, err := tfbudgets.TimePeriodTimestampFromString(d.Get("time_period_end").(string))
+	budgetTimePeriodEnd, err := TimePeriodTimestampFromString(d.Get("time_period_end").(string))
 
 	if err != nil {
 		return nil, err
