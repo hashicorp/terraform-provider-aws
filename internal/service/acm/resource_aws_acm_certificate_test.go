@@ -1,4 +1,4 @@
-package aws
+package acm_test
 
 import (
 	"fmt"
