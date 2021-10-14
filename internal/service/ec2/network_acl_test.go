@@ -18,94 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_network_acl", &resource.Sweeper{
-		Name: "aws_network_acl",
-		F:    sweepNetworkACLs,
-	})
-}
 
-func sweepNetworkACLs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeNetworkAclsInput{}
-	resp, err := conn.DescribeNetworkAcls(req)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Network ACL sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing Network ACLs: %s", err)
-	}
 
-	if len(resp.NetworkAcls) == 0 {
-		log.Print("[DEBUG] No Network ACLs to sweep")
-		return nil
-	}
-
-	for _, nacl := range resp.NetworkAcls {
-		// Delete rules first
-		for _, entry := range nacl.Entries {
-			// These are the rule numbers for IPv4 and IPv6 "ALL traffic" rules which cannot be deleted
-			if aws.Int64Value(entry.RuleNumber) == 32767 || aws.Int64Value(entry.RuleNumber) == 32768 {
-				log.Printf("[DEBUG] Skipping Network ACL rule: %q / %d", *nacl.NetworkAclId, *entry.RuleNumber)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting Network ACL rule: %q / %d", *nacl.NetworkAclId, *entry.RuleNumber)
-			_, err := conn.DeleteNetworkAclEntry(&ec2.DeleteNetworkAclEntryInput{
-				NetworkAclId: nacl.NetworkAclId,
-				Egress:       entry.Egress,
-				RuleNumber:   entry.RuleNumber,
-			})
-			if err != nil {
-				return fmt.Errorf(
-					"Error deleting Network ACL rule (%s / %d): %s",
-					*nacl.NetworkAclId, *entry.RuleNumber, err)
-			}
-		}
-
-		// Disassociate subnets
-		log.Printf("[DEBUG] Found %d Network ACL associations for %q", len(nacl.Associations), *nacl.NetworkAclId)
-		for _, a := range nacl.Associations {
-			log.Printf("[DEBUG] Replacing subnet associations for Network ACL %q", *nacl.NetworkAclId)
-			defaultAcl, err := tfec2.GetDefaultNetworkACL(*nacl.VpcId, conn)
-			if err != nil {
-				return fmt.Errorf("Failed to find default Network ACL for VPC %q", *nacl.VpcId)
-			}
-			_, err = conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
-				NetworkAclId:  defaultAcl.NetworkAclId,
-				AssociationId: a.NetworkAclAssociationId,
-			})
-			if err != nil {
-				return fmt.Errorf("Failed to replace subnet association for Network ACL %q: %s",
-					*nacl.NetworkAclId, err)
-			}
-		}
-
-		// Default Network ACLs will be deleted along with VPC
-		if *nacl.IsDefault {
-			log.Printf("[DEBUG] Skipping default Network ACL: %q", *nacl.NetworkAclId)
-			continue
-		}
-
-		log.Printf("[INFO] Deleting Network ACL: %q", *nacl.NetworkAclId)
-		_, err := conn.DeleteNetworkAcl(&ec2.DeleteNetworkAclInput{
-			NetworkAclId: nacl.NetworkAclId,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Network ACL (%s): %s",
-				*nacl.NetworkAclId, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccEC2NetworkACL_basic(t *testing.T) {
 	resourceName := "aws_network_acl.test"

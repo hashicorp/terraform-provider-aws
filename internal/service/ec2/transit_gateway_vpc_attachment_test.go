@@ -20,73 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ec2_transit_gateway_vpc_attachment", &resource.Sweeper{
-		Name: "aws_ec2_transit_gateway_vpc_attachment",
-		F:    sweepTransitGatewayVPCAttachments,
-	})
-}
 
-func sweepTransitGatewayVPCAttachments(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
-	for {
-		output, err := conn.DescribeTransitGatewayAttachments(input)
 
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Transit Gateway VPC Attachment sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error retrieving EC2 Transit Gateway VPC Attachments: %s", err)
-		}
-
-		for _, attachment := range output.TransitGatewayAttachments {
-			if aws.StringValue(attachment.ResourceType) != ec2.TransitGatewayAttachmentResourceTypeVpc {
-				continue
-			}
-
-			if aws.StringValue(attachment.State) == ec2.TransitGatewayAttachmentStateDeleted {
-				continue
-			}
-
-			id := aws.StringValue(attachment.TransitGatewayAttachmentId)
-
-			input := &ec2.DeleteTransitGatewayVpcAttachmentInput{
-				TransitGatewayAttachmentId: aws.String(id),
-			}
-
-			log.Printf("[INFO] Deleting EC2 Transit Gateway VPC Attachment: %s", id)
-			_, err := conn.DeleteTransitGatewayVpcAttachment(input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment (%s): %s", id, err)
-			}
-
-			if err := tfec2.WaitForTransitGatewayVPCAttachmentDeletion(conn, id); err != nil {
-				return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", id, err)
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
 
 func testAccTransitGatewayVPCAttachment_basic(t *testing.T) {
 	var transitGatewayVpcAttachment1 ec2.TransitGatewayVpcAttachment

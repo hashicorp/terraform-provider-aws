@@ -29,14 +29,7 @@ import (
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(ec2.EndpointsID, testAccErrorCheckSkipEC2)
 
-	resource.AddTestSweepers("aws_instance", &resource.Sweeper{
-		Name: "aws_instance",
-		F:    sweepInstances,
-		Dependencies: []string{
-			"aws_autoscaling_group",
-			"aws_spot_fleet_request",
-		},
-	})
+
 }
 
 func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
@@ -46,61 +39,7 @@ func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func sweepInstances(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
-	conn := client.(*conns.AWSClient).EC2Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	err = conn.DescribeInstancesPages(&ec2.DescribeInstancesInput{}, func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, reservation := range page.Reservations {
-			if reservation == nil {
-				continue
-			}
-
-			for _, instance := range reservation.Instances {
-				id := aws.StringValue(instance.InstanceId)
-
-				if instance.State != nil && aws.StringValue(instance.State.Name) == ec2.InstanceStateNameTerminated {
-					log.Printf("[INFO] Skipping terminated EC2 Instance: %s", id)
-					continue
-				}
-
-				r := tfec2.ResourceInstance()
-				d := r.Data(nil)
-				d.SetId(id)
-				d.Set("disable_api_termination", false)
-
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-			}
-		}
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Instances for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Instances for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestFetchRootDevice(t *testing.T) {
 	cases := []struct {

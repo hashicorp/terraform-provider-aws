@@ -20,63 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_spot_fleet_request", &resource.Sweeper{
-		Name: "aws_spot_fleet_request",
-		F:    sweepSpotFleetRequests,
-	})
-}
 
-func sweepSpotFleetRequests(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).EC2Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	err = conn.DescribeSpotFleetRequestsPages(&ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		if len(page.SpotFleetRequestConfigs) == 0 {
-			log.Print("[DEBUG] No Spot Fleet Requests to sweep")
-			return false
-		}
-
-		for _, config := range page.SpotFleetRequestConfigs {
-			id := aws.StringValue(config.SpotFleetRequestId)
-
-			r := tfec2.ResourceSpotFleetRequest()
-			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("terminate_instances_with_expiration", true)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Fleet Requests for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Fleet Requests for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig

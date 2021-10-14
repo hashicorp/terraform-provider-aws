@@ -19,54 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ec2_carrier_gateway", &resource.Sweeper{
-		Name: "aws_ec2_carrier_gateway",
-		F:    sweepCarrierGateway,
-	})
-}
 
-func sweepCarrierGateway(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeCarrierGatewaysInput{}
-	var sweeperErrs *multierror.Error
 
-	err = conn.DescribeCarrierGatewaysPages(input, func(page *ec2.DescribeCarrierGatewaysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, carrierGateway := range page.CarrierGateways {
-			r := tfec2.ResourceCarrierGateway()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(carrierGateway.CarrierGatewayId))
-			err = r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Carrier Gateway sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Carrier Gateways: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccEC2CarrierGateway_basic(t *testing.T) {
 	var v ec2.CarrierGateway

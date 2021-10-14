@@ -27,77 +27,9 @@ import (
 // This will currently skip EIPs with associations,
 // although we depend on aws_vpc to potentially have
 // the majority of those associations removed.
-func init() {
-	resource.AddTestSweepers("aws_eip", &resource.Sweeper{
-		Name: "aws_eip",
-		Dependencies: []string{
-			"aws_vpc",
-		},
-		F: sweepEIPs,
-	})
-}
 
-func sweepEIPs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).EC2Conn
-
-	// There is currently no paginator or Marker/NextToken
-	input := &ec2.DescribeAddressesInput{}
-
-	output, err := conn.DescribeAddresses(input)
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error describing EC2 EIPs: %s", err)
-	}
-
-	if output == nil || len(output.Addresses) == 0 {
-		log.Print("[DEBUG] No EC2 EIPs to sweep")
-		return nil
-	}
-
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	for _, address := range output.Addresses {
-		publicIP := aws.StringValue(address.PublicIp)
-
-		if address.AssociationId != nil {
-			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.StringValue(address.AssociationId))
-			continue
-		}
-
-		r := tfec2.ResourceEIP()
-		d := r.Data(nil)
-		if address.AllocationId != nil {
-			d.SetId(aws.StringValue(address.AllocationId))
-		} else {
-			d.SetId(aws.StringValue(address.PublicIp))
-		}
-
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 EIPs for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccEC2EIP_basic(t *testing.T) {
 	var conf ec2.Address

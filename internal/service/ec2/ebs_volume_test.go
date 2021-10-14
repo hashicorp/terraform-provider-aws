@@ -18,58 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ebs_volume", &resource.Sweeper{
-		Name: "aws_ebs_volume",
-		Dependencies: []string{
-			"aws_instance",
-		},
-		F: sweepEBSVolumes,
-	})
-}
 
-func sweepEBSVolumes(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
 
-	err = conn.DescribeVolumesPages(&ec2.DescribeVolumesInput{}, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
-		for _, volume := range page.Volumes {
-			id := aws.StringValue(volume.VolumeId)
 
-			if aws.StringValue(volume.State) != ec2.VolumeStateAvailable {
-				log.Printf("[INFO] Skipping unavailable EC2 EBS Volume: %s", id)
-				continue
-			}
-
-			input := &ec2.DeleteVolumeInput{
-				VolumeId: aws.String(id),
-			}
-
-			log.Printf("[INFO] Deleting EC2 EBS Volume: %s", id)
-			_, err := conn.DeleteVolume(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting EC2 EBS Volume (%s): %s", id, err)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 EBS Volume sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving EC2 EBS Volumes: %s", err)
-	}
-
-	return nil
-}
 
 // testAccErrorCheckSkipEBSVolume skips EBS volume tests that have error messages indicating unsupported features
 func testAccErrorCheckSkipEBSVolume(t *testing.T) resource.ErrorCheckFunc {

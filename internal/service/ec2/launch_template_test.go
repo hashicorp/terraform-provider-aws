@@ -21,64 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_launch_template", &resource.Sweeper{
-		Name: "aws_launch_template",
-		Dependencies: []string{
-			"aws_autoscaling_group",
-			"aws_batch_compute_environment",
-		},
-		F: sweepLaunchTemplates,
-	})
-}
 
-func sweepLaunchTemplates(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeLaunchTemplatesInput{}
-	var sweeperErrs *multierror.Error
-
-	err = conn.DescribeLaunchTemplatesPages(input, func(page *ec2.DescribeLaunchTemplatesOutput, lastPage bool) bool {
-		for _, launchTemplate := range page.LaunchTemplates {
-			id := aws.StringValue(launchTemplate.LaunchTemplateId)
-			input := &ec2.DeleteLaunchTemplateInput{
-				LaunchTemplateId: launchTemplate.LaunchTemplateId,
-			}
-
-			log.Printf("[INFO] Deleting EC2 Launch Template: %s", id)
-			_, err := conn.DeleteLaunchTemplate(input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
-				continue
-			}
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting EC2 Launch Template (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Launch Template sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error describing EC2 Launch Templates: %w", err)
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 	var template ec2.LaunchTemplate

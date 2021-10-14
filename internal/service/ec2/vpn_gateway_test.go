@@ -19,76 +19,9 @@ import (
 )
 
 // add sweeper to delete known test VPN Gateways
-func init() {
-	resource.AddTestSweepers("aws_vpn_gateway", &resource.Sweeper{
-		Name: "aws_vpn_gateway",
-		F:    sweepVPNGateways,
-		Dependencies: []string{
-			"aws_dx_gateway_association",
-		},
-	})
-}
 
-func sweepVPNGateways(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	var sweeperErrs *multierror.Error
 
-	req := &ec2.DescribeVpnGatewaysInput{}
-	resp, err := conn.DescribeVpnGateways(req)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 VPN Gateway sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing VPN Gateways: %s", err)
-	}
 
-	if len(resp.VpnGateways) == 0 {
-		log.Print("[DEBUG] No VPN Gateways to sweep")
-		return nil
-	}
-
-	for _, vpng := range resp.VpnGateways {
-		if aws.StringValue(vpng.State) == ec2.VpnStateDeleted {
-			continue
-		}
-
-		for _, vpcAttachment := range vpng.VpcAttachments {
-			if aws.StringValue(vpcAttachment.State) == ec2.AttachmentStatusDetached {
-				continue
-			}
-
-			r := tfec2.ResourceVPNGatewayAttachment()
-			d := r.Data(nil)
-			d.Set("vpc_id", vpcAttachment.VpcId)
-			d.Set("vpn_gateway_id", vpng.VpnGatewayId)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		r := tfec2.ResourceVPNGateway()
-		d := r.Data(nil)
-		d.SetId(aws.StringValue(vpng.VpnGatewayId))
-		err := r.Delete(d, client)
-
-		if err != nil {
-			log.Printf("[ERROR] %s", err)
-			sweeperErrs = multierror.Append(sweeperErrs, err)
-			continue
-		}
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccEC2VPNGateway_basic(t *testing.T) {
 	var v, v2 ec2.VpnGateway

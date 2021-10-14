@@ -28,57 +28,9 @@ func init() {
 	testAccEc2ClientVpnEndpointSemaphore = sync.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVpnEndpointDefaultLimit)
 }
 
-func init() {
-	resource.AddTestSweepers("aws_ec2_client_vpn_endpoint", &resource.Sweeper{
-		Name: "aws_ec2_client_vpn_endpoint",
-		F:    sweepClientVPNEndpoints,
-		Dependencies: []string{
-			"aws_ec2_client_vpn_network_association",
-		},
-	})
-}
 
-func sweepClientVPNEndpoints(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).EC2Conn
-
-	var sweeperErrs *multierror.Error
-
-	input := &ec2.DescribeClientVpnEndpointsInput{}
-	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
-			id := aws.StringValue(clientVpnEndpoint.ClientVpnEndpointId)
-			log.Printf("[INFO] Deleting Client VPN endpoint: %s", id)
-			err := tfec2.DeleteClientVPNEndpoint(conn, id)
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Client VPN endpoint (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Client VPN endpoint sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Client VPN endpoints: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 // This is part of an experimental feature, do not use this as a starting point for tests
 //   "This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.

@@ -18,58 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ec2_host", &resource.Sweeper{
-		Name: "aws_ec2_host",
-		F:    sweepHosts,
-		Dependencies: []string{
-			"aws_instance",
-		},
-	})
-}
 
-func sweepHosts(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeHostsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.DescribeHostsPages(input, func(page *ec2.DescribeHostsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, host := range page.Hosts {
-			r := tfec2.ResourceHost()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(host.HostId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Host sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Hosts (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping EC2 Hosts (%s): %w", region, err)
-	}
-
-	return nil
-}
 
 func TestAccEC2Host_basic(t *testing.T) {
 	var host ec2.Host

@@ -19,48 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_key_pair", &resource.Sweeper{
-		Name: "aws_key_pair",
-		Dependencies: []string{
-			"aws_elastic_beanstalk_environment",
-			"aws_instance",
-			"aws_spot_fleet_request",
-		},
-		F: sweepKeyPairs,
-	})
-}
 
-func sweepKeyPairs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
 
-	log.Printf("Destroying the tmp keys in (%s)", client.(*conns.AWSClient).Region)
 
-	resp, err := conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Key Pair sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing key pairs in Sweeper: %s", err)
-	}
-
-	keyPairs := resp.KeyPairs
-	for _, d := range keyPairs {
-		_, err := conn.DeleteKeyPair(&ec2.DeleteKeyPairInput{
-			KeyName: d.KeyName,
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error deleting key pairs in Sweeper: %s", err)
-		}
-	}
-	return nil
-}
 
 func TestAccEC2KeyPair_basic(t *testing.T) {
 	var keyPair ec2.KeyPairInfo

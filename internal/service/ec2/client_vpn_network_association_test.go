@@ -18,79 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ec2_client_vpn_network_association", &resource.Sweeper{
-		Name: "aws_ec2_client_vpn_network_association",
-		F:    sweepClientVPNNetworkAssociations,
-	})
-}
 
-func sweepClientVPNNetworkAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).EC2Conn
-
-	var sweeperErrs *multierror.Error
-
-	input := &ec2.DescribeClientVpnEndpointsInput{}
-	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
-
-			input := &ec2.DescribeClientVpnTargetNetworksInput{
-				ClientVpnEndpointId: clientVpnEndpoint.ClientVpnEndpointId,
-			}
-			err := conn.DescribeClientVpnTargetNetworksPages(input, func(page *ec2.DescribeClientVpnTargetNetworksOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, networkAssociation := range page.ClientVpnTargetNetworks {
-					networkAssociationID := aws.StringValue(networkAssociation.AssociationId)
-					clientVpnEndpointID := aws.StringValue(networkAssociation.ClientVpnEndpointId)
-
-					log.Printf("[INFO] Deleting Client VPN network association (%s,%s)", clientVpnEndpointID, networkAssociationID)
-					err := tfec2.DeleteClientVPNNetworkAssociation(conn, networkAssociationID, clientVpnEndpointID)
-
-					if err != nil {
-						sweeperErr := fmt.Errorf("error deleting Client VPN network association (%s,%s): %w", clientVpnEndpointID, networkAssociationID, err)
-						log.Printf("[ERROR] %s", sweeperErr)
-						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					}
-				}
-
-				return !lastPage
-			})
-
-			if sweep.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping Client VPN network association sweeper for %q: %s", region, err)
-				return false
-			}
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Client VPN network associations: %w", err))
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Client VPN network association sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Client VPN network associations: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 	var assoc ec2.TargetNetwork

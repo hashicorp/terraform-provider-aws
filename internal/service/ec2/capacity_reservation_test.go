@@ -17,56 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_ec2_capacity_reservation", &resource.Sweeper{
-		Name: "aws_ec2_capacity_reservation",
-		F:    sweepCapacityReservations,
-	})
-}
 
-func sweepCapacityReservations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
 
-	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Capacity Reservation sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving EC2 Capacity Reservations: %s", err)
-	}
-
-	if len(resp.CapacityReservations) == 0 {
-		log.Print("[DEBUG] No EC2 Capacity Reservations to sweep")
-		return nil
-	}
-
-	for _, r := range resp.CapacityReservations {
-		if aws.StringValue(r.State) != ec2.CapacityReservationStateCancelled && aws.StringValue(r.State) != ec2.CapacityReservationStateExpired {
-			id := aws.StringValue(r.CapacityReservationId)
-
-			log.Printf("[INFO] Cancelling EC2 Capacity Reservation EC2 Instance: %s", id)
-
-			opts := &ec2.CancelCapacityReservationInput{
-				CapacityReservationId: aws.String(id),
-			}
-
-			_, err := conn.CancelCapacityReservation(opts)
-
-			if err != nil {
-				log.Printf("[ERROR] Error cancelling EC2 Capacity Reservation (%s): %s", id, err)
-			}
-		}
-	}
-
-	return nil
-}
 
 func TestAccEC2CapacityReservation_basic(t *testing.T) {
 	var cr ec2.CapacityReservation

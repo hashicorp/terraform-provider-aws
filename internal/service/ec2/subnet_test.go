@@ -22,99 +22,9 @@ import (
 )
 
 // add sweeper to delete known test subnets
-func init() {
-	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
-		Name: "aws_subnet",
-		F:    sweepSubnets,
-		Dependencies: []string{
-			"aws_autoscaling_group",
-			"aws_batch_compute_environment",
-			"aws_elastic_beanstalk_environment",
-			"aws_cloudhsm_v2_cluster",
-			"aws_db_subnet_group",
-			"aws_directory_service_directory",
-			"aws_ec2_client_vpn_endpoint",
-			"aws_ec2_transit_gateway_vpc_attachment",
-			"aws_efs_file_system",
-			"aws_eks_cluster",
-			"aws_elasticache_cluster",
-			"aws_elasticache_replication_group",
-			"aws_elasticsearch_domain",
-			"aws_elb",
-			"aws_emr_cluster",
-			"aws_fsx_lustre_file_system",
-			"aws_fsx_ontap_file_system",
-			"aws_fsx_windows_file_system",
-			"aws_lambda_function",
-			"aws_lb",
-			"aws_mq_broker",
-			"aws_msk_cluster",
-			"aws_network_interface",
-			"aws_networkfirewall_firewall",
-			"aws_redshift_cluster",
-			"aws_route53_resolver_endpoint",
-			"aws_sagemaker_notebook_instance",
-			"aws_spot_fleet_request",
-			"aws_vpc_endpoint",
-		},
-	})
-}
 
-func sweepSubnets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).EC2Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &ec2.DescribeSubnetsInput{}
-
-	err = conn.DescribeSubnetsPages(input, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, subnet := range page.Subnets {
-			if subnet == nil {
-				continue
-			}
-
-			id := aws.StringValue(subnet.SubnetId)
-
-			if aws.BoolValue(subnet.DefaultForAz) {
-				log.Printf("[DEBUG] Skipping default EC2 Subnet: %s", id)
-				continue
-			}
-
-			r := tfec2.ResourceSubnet()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Subnets for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Subnets for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccEC2Subnet_basic(t *testing.T) {
 	var v ec2.Subnet

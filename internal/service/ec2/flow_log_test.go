@@ -18,55 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_flow_log", &resource.Sweeper{
-		Name: "aws_flow_log",
-		F:    sweepFlowLogs,
-	})
-}
 
-func sweepFlowLogs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeFlowLogsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.DescribeFlowLogsPages(input, func(page *ec2.DescribeFlowLogsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, flowLog := range page.FlowLogs {
-			r := tfec2.ResourceFlowLog()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(flowLog.FlowLogId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Flow Log sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Flow Logs (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Flow Logs (%s): %w", region, err)
-	}
-
-	return nil
-}
 
 func TestAccEC2FlowLog_vpcID(t *testing.T) {
 	var flowLog ec2.FlowLog

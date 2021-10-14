@@ -19,75 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_vpc_endpoint_service", &resource.Sweeper{
-		Name: "aws_vpc_endpoint_service",
-		F:    sweepVPCEndpointServices,
-		Dependencies: []string{
-			"aws_vpc_endpoint",
-		},
-	})
-}
 
-func sweepVPCEndpointServices(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
 
-	conn := client.(*conns.AWSClient).EC2Conn
-
-	var sweeperErrs *multierror.Error
-
-	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
-
-	err = conn.DescribeVpcEndpointServiceConfigurationsPages(input, func(page *ec2.DescribeVpcEndpointServiceConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, serviceConfiguration := range page.ServiceConfigurations {
-			if serviceConfiguration == nil {
-				continue
-			}
-
-			if aws.StringValue(serviceConfiguration.ServiceState) == ec2.ServiceStateDeleted {
-				continue
-			}
-
-			id := aws.StringValue(serviceConfiguration.ServiceId)
-
-			log.Printf("[INFO] Deleting EC2 VPC Endpoint Service: %s", id)
-
-			r := tfec2.ResourceVPCEndpointService()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			err := r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting EC2 VPC Endpoint Service (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 VPC Endpoint Service sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 VPC Endpoint Services: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccEC2VPCEndpointService_basic(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration

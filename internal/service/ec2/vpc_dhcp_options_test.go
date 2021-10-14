@@ -18,75 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_vpc_dhcp_options", &resource.Sweeper{
-		Name: "aws_vpc_dhcp_options",
-		F:    sweepVPCDHCPOptions,
-	})
-}
 
-func sweepVPCDHCPOptions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
 
-	input := &ec2.DescribeDhcpOptionsInput{}
 
-	err = conn.DescribeDhcpOptionsPages(input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
-		for _, dhcpOption := range page.DhcpOptions {
-			var defaultDomainNameFound, defaultDomainNameServersFound bool
-
-			// This skips the default dhcp configurations so they don't get deleted
-			for _, dhcpConfiguration := range dhcpOption.DhcpConfigurations {
-				if aws.StringValue(dhcpConfiguration.Key) == "domain-name" {
-					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
-						continue
-					}
-
-					if aws.StringValue(dhcpConfiguration.Values[0].Value) == tfec2.RegionalPrivateDNSSuffix(region) {
-						defaultDomainNameFound = true
-					}
-				} else if aws.StringValue(dhcpConfiguration.Key) == "domain-name-servers" {
-					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
-						continue
-					}
-
-					if aws.StringValue(dhcpConfiguration.Values[0].Value) == "AmazonProvidedDNS" {
-						defaultDomainNameServersFound = true
-					}
-				}
-			}
-
-			if defaultDomainNameFound && defaultDomainNameServersFound {
-				continue
-			}
-
-			input := &ec2.DeleteDhcpOptionsInput{
-				DhcpOptionsId: dhcpOption.DhcpOptionsId,
-			}
-
-			_, err := conn.DeleteDhcpOptions(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting EC2 DHCP Option (%s): %s", aws.StringValue(dhcpOption.DhcpOptionsId), err)
-			}
-		}
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 DHCP Option sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error describing DHCP Options: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccEC2VPCDHCPOptions_basic(t *testing.T) {
 	var d ec2.DhcpOptions

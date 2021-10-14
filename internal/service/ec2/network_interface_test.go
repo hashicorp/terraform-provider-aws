@@ -17,60 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_network_interface", &resource.Sweeper{
-		Name: "aws_network_interface",
-		F:    sweepNetworkInterfaces,
-		Dependencies: []string{
-			"aws_instance",
-		},
-	})
-}
 
-func sweepNetworkInterfaces(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
 
-	err = conn.DescribeNetworkInterfacesPages(&ec2.DescribeNetworkInterfacesInput{}, func(page *ec2.DescribeNetworkInterfacesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, networkInterface := range page.NetworkInterfaces {
-			id := aws.StringValue(networkInterface.NetworkInterfaceId)
-
-			if aws.StringValue(networkInterface.Status) != ec2.NetworkInterfaceStatusAvailable {
-				log.Printf("[INFO] Skipping EC2 Network Interface in unavailable (%s) status: %s", aws.StringValue(networkInterface.Status), id)
-				continue
-			}
-
-			input := &ec2.DeleteNetworkInterfaceInput{
-				NetworkInterfaceId: aws.String(id),
-			}
-
-			log.Printf("[INFO] Deleting EC2 Network Interface: %s", id)
-			_, err := conn.DeleteNetworkInterface(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting EC2 Network Interface (%s): %s", id, err)
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Network Interface sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving EC2 Network Interfaces: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccEC2NetworkInterface_ENI_basic(t *testing.T) {
 	var conf ec2.NetworkInterface

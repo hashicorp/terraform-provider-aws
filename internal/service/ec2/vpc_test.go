@@ -21,80 +21,9 @@ import (
 )
 
 // add sweeper to delete known test vpcs
-func init() {
-	resource.AddTestSweepers("aws_vpc", &resource.Sweeper{
-		Name: "aws_vpc",
-		Dependencies: []string{
-			"aws_ec2_carrier_gateway",
-			"aws_egress_only_internet_gateway",
-			"aws_internet_gateway",
-			"aws_nat_gateway",
-			"aws_network_acl",
-			"aws_route_table",
-			"aws_security_group",
-			"aws_subnet",
-			"aws_vpc_peering_connection",
-			"aws_vpn_gateway",
-		},
-		F: sweepVPCs,
-	})
-}
 
-func sweepVPCs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
 
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
 
-	conn := client.(*conns.AWSClient).EC2Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &ec2.DescribeVpcsInput{}
-
-	err = conn.DescribeVpcsPages(input, func(page *ec2.DescribeVpcsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, vpc := range page.Vpcs {
-			if vpc == nil {
-				continue
-			}
-
-			id := aws.StringValue(vpc.VpcId)
-
-			if aws.BoolValue(vpc.IsDefault) {
-				log.Printf("[DEBUG] Skipping default EC2 VPC: %s", id)
-				continue
-			}
-
-			r := tfec2.ResourceVPC()
-			d := r.Data(nil)
-			d.SetId(id)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 VPCs for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 VPCs for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 VPCs sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
 
 func TestAccEC2VPC_basic(t *testing.T) {
 	var vpc ec2.Vpc

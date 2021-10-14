@@ -16,48 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_nat_gateway", &resource.Sweeper{
-		Name: "aws_nat_gateway",
-		F:    sweepNatGateways,
-	})
-}
 
-func sweepNatGateways(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
 
-	req := &ec2.DescribeNatGatewaysInput{}
-	resp, err := conn.DescribeNatGateways(req)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 NAT Gateway sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing NAT Gateways: %s", err)
-	}
 
-	if len(resp.NatGateways) == 0 {
-		log.Print("[DEBUG] No AWS NAT Gateways to sweep")
-		return nil
-	}
-
-	for _, natGateway := range resp.NatGateways {
-		_, err := conn.DeleteNatGateway(&ec2.DeleteNatGatewayInput{
-			NatGatewayId: natGateway.NatGatewayId,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting NAT Gateway (%s): %s",
-				*natGateway.NatGatewayId, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccEC2NatGateway_basic(t *testing.T) {
 	var natGateway ec2.NatGateway

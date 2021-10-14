@@ -40,62 +40,9 @@ type TunnelOptions struct {
 	startupAction              string
 }
 
-func init() {
-	resource.AddTestSweepers("aws_vpn_connection", &resource.Sweeper{
-		Name: "aws_vpn_connection",
-		F:    sweepVPNConnections,
-	})
-}
 
-func sweepVPNConnections(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribeVpnConnectionsInput{}
 
-	// DescribeVpnConnections does not currently have any form of pagination
-	output, err := conn.DescribeVpnConnections(input)
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 VPN Connection sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error retrieving EC2 VPN Connections: %s", err)
-	}
-
-	for _, vpnConnection := range output.VpnConnections {
-		if aws.StringValue(vpnConnection.State) == ec2.VpnStateDeleted {
-			continue
-		}
-
-		id := aws.StringValue(vpnConnection.VpnConnectionId)
-		input := &ec2.DeleteVpnConnectionInput{
-			VpnConnectionId: vpnConnection.VpnConnectionId,
-		}
-
-		log.Printf("[INFO] Deleting EC2 VPN Connection: %s", id)
-
-		_, err := conn.DeleteVpnConnection(input)
-
-		if tfawserr.ErrMessageContains(err, "InvalidVpnConnectionID.NotFound", "") {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error deleting EC2 VPN Connection (%s): %s", id, err)
-		}
-
-		if err := tfec2.WaitForVPNConnectionDeletion(conn, id); err != nil {
-			return fmt.Errorf("error waiting for VPN connection (%s) to delete: %s", id, err)
-		}
-	}
-
-	return nil
-}
 
 func TestAccEC2VPNConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

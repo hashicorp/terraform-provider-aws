@@ -17,55 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_placement_group", &resource.Sweeper{
-		Name: "aws_placement_group",
-		F:    sweepPlacementGroups,
-		Dependencies: []string{
-			"aws_autoscaling_group",
-			"aws_instance",
-			"aws_launch_template",
-			"aws_spot_fleet_request",
-		},
-	})
-}
 
-func sweepPlacementGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn
-	input := &ec2.DescribePlacementGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
-	output, err := conn.DescribePlacementGroups(input)
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Placement Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Placement Groups (%s): %w", region, err)
-	}
-
-	for _, placementGroup := range output.PlacementGroups {
-		r := tfec2.ResourcePlacementGroup()
-		d := r.Data(nil)
-		d.SetId(aws.StringValue(placementGroup.GroupName))
-
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping EC2 Placement Groups (%s): %w", region, err)
-	}
-
-	return nil
-}
 
 func TestAccEC2PlacementGroup_basic(t *testing.T) {
 	var pg ec2.PlacementGroup
