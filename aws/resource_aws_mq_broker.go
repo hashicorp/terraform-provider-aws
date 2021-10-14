@@ -25,12 +25,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMqBroker() *schema.Resource {
+func ResourceBroker() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMqBrokerCreate,
-		Read:   resourceAwsMqBrokerRead,
-		Update: resourceAwsMqBrokerUpdate,
-		Delete: resourceAwsMqBrokerDelete,
+		Create: resourceBrokerCreate,
+		Read:   resourceBrokerRead,
+		Update: resourceBrokerUpdate,
+		Delete: resourceBrokerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -344,7 +344,7 @@ func resourceAwsMqBroker() *schema.Resource {
 	}
 }
 
-func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -410,10 +410,10 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for MQ Broker (%s) creation: %w", d.Id(), err)
 	}
 
-	return resourceAwsMqBrokerRead(d, meta)
+	return resourceBrokerRead(d, meta)
 }
 
-func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -499,7 +499,7 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 
 	requiresReboot := false
@@ -531,7 +531,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("user") {
 		o, n := d.GetChange("user")
 		var err error
-		// d.HasChange("user") always reports a change when running resourceAwsMqBrokerUpdate
+		// d.HasChange("user") always reports a change when running resourceBrokerUpdate
 		// updateAwsMqBrokerUsers needs to be called to know if changes to user are actually made
 		var usersUpdated bool
 		usersUpdated, err = updateAwsMqBrokerUsers(conn, d.Id(),
@@ -569,7 +569,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsMqBrokerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBrokerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())

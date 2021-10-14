@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsMqConfiguration() *schema.Resource {
+func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsMqConfigurationCreate,
-		Read:   resourceAwsMqConfigurationRead,
-		Update: resourceAwsMqConfigurationUpdate,
-		Delete: resourceAwsMqConfigurationDelete,
+		Create: resourceConfigurationCreate,
+		Read:   resourceConfigurationRead,
+		Update: resourceConfigurationUpdate,
+		Delete: resourceConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -88,7 +88,7 @@ func resourceAwsMqConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsMqConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -115,10 +115,10 @@ func resourceAwsMqConfigurationCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetId(aws.StringValue(out.Id))
 	d.Set("arn", out.Arn)
 
-	return resourceAwsMqConfigurationUpdate(d, meta)
+	return resourceConfigurationUpdate(d, meta)
 }
 
-func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -173,7 +173,7 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsMqConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 
 	if d.HasChanges("data", "description") {
@@ -203,10 +203,10 @@ func resourceAwsMqConfigurationUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAwsMqConfigurationRead(d, meta)
+	return resourceConfigurationRead(d, meta)
 }
 
-func resourceAwsMqConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	// TODO: Delete is not available in the API
 
 	return nil
