@@ -20,51 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_wafregional_rule_group", &resource.Sweeper{
-		Name: "aws_wafregional_rule_group",
-		F:    sweepRuleGroups,
-	})
-}
 
-func sweepRuleGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn
 
-	req := &waf.ListRuleGroupsInput{}
-	resp, err := conn.ListRuleGroups(req)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping WAF Regional Rule Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing WAF Regional Rule Groups: %s", err)
-	}
 
-	if len(resp.RuleGroups) == 0 {
-		log.Print("[DEBUG] No AWS WAF Regional Rule Groups to sweep")
-		return nil
-	}
-
-	for _, group := range resp.RuleGroups {
-		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
-			RuleGroupId: group.RuleGroupId,
-		})
-		if err != nil {
-			return err
-		}
-		oldRules := tfwafregional.FlattenWAFActivatedRules(rResp.ActivatedRules)
-		err = tfwafregional.DeleteRuleGroup(*group.RuleGroupId, oldRules, conn, region)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 func TestAccWAFRegionalRuleGroup_basic(t *testing.T) {
 	var rule waf.Rule

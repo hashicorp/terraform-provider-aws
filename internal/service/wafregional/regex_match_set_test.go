@@ -19,75 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_wafregional_regex_match_set", &resource.Sweeper{
-		Name: "aws_wafregional_regex_match_set",
-		F:    sweepRegexMatchSet,
-	})
-}
 
-func sweepRegexMatchSet(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).WAFRegionalConn
 
-	var sweeperErrs *multierror.Error
 
-	err = ListRegexMatchSetsPages(conn, &waf.ListRegexMatchSetsInput{}, func(page *waf.ListRegexMatchSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
 
-		for _, r := range page.RegexMatchSets {
-			id := aws.StringValue(r.RegexMatchSetId)
 
-			set, err := tfwafregional.FindRegexMatchSetByID(conn, id)
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving WAF Regional Regex Match Set (%s): %w", id, err))
-				continue
-			}
-
-			err = tfwafregional.DeleteRegexMatchSetResource(conn, region, region, id, tfwafregional.GetRegexMatchTuplesFromAPIResource(set))
-			if err != nil {
-				if !tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %w", id, err))
-				}
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAF Regional Regex Match Set sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAF Regional Regex Match Sets: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
-}
-
-func ListRegexMatchSetsPages(conn *wafregional.WAFRegional, input *waf.ListRegexMatchSetsInput, fn func(*waf.ListRegexMatchSetsOutput, bool) bool) error {
-	for {
-		output, err := conn.ListRegexMatchSets(input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.StringValue(output.NextMarker) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextMarker = output.NextMarker
-	}
-	return nil
-}
 
 // Serialized acceptance tests due to WAF account limits
 // https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
