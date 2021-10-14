@@ -19,6 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func init() {
@@ -209,7 +212,7 @@ func testAccCheckCloudFrontRealtimeLogConfigDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := finder.RealtimeLogConfigByARN(conn, rs.Primary.ID)
+		_, err := tfcloudfront.FindRealtimeLogConfigByARN(conn, rs.Primary.ID)
 		// Verify the error is what we want
 		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig, "") {
 			continue
@@ -235,7 +238,7 @@ func testAccCheckCloudFrontRealtimeLogConfigExists(n string, v *cloudfront.Realt
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
-		out, err := finder.RealtimeLogConfigByARN(conn, rs.Primary.ID)
+		out, err := tfcloudfront.FindRealtimeLogConfigByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

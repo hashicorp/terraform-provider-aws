@@ -12,6 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func DataSourceFunction() *schema.Resource {
@@ -74,7 +77,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	stage := d.Get("stage").(string)
 
-	describeFunctionOutput, err := finder.FunctionByNameAndStage(conn, name, stage)
+	describeFunctionOutput, err := tfcloudfront.FindFunctionByNameAndStage(conn, name, stage)
 
 	if err != nil {
 		return fmt.Errorf("error describing CloudFront Function (%s/%s): %w", name, stage, err)

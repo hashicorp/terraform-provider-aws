@@ -14,6 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func ResourceFunction() *schema.Resource {
@@ -124,7 +127,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		stage = cloudfront.FunctionStageLive
 	}
 
-	describeFunctionOutput, err := finder.FunctionByNameAndStage(conn, d.Id(), stage)
+	describeFunctionOutput, err := tfcloudfront.FindFunctionByNameAndStage(conn, d.Id(), stage)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Function (%s/%s) not found, removing from state", d.Id(), stage)

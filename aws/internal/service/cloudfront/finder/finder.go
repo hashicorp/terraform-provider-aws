@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func FunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string) (*cloudfront.DescribeFunctionOutput, error) {
+func FindFunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string) (*cloudfront.DescribeFunctionOutput, error) {
 	input := &cloudfront.DescribeFunctionInput{
 		Name:  aws.String(name),
 		Stage: aws.String(stage),
@@ -37,9 +37,9 @@ func FunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string) (*c
 	return output, nil
 }
 
-// RealtimeLogConfigByARN returns the real-time log configuration corresponding to the specified ARN.
+// FindRealtimeLogConfigByARN returns the real-time log configuration corresponding to the specified ARN.
 // Returns nil if no configuration is found.
-func RealtimeLogConfigByARN(conn *cloudfront.CloudFront, arn string) (*cloudfront.RealtimeLogConfig, error) {
+func FindRealtimeLogConfigByARN(conn *cloudfront.CloudFront, arn string) (*cloudfront.RealtimeLogConfig, error) {
 	input := &cloudfront.GetRealtimeLogConfigInput{
 		ARN: aws.String(arn),
 	}
@@ -56,9 +56,9 @@ func RealtimeLogConfigByARN(conn *cloudfront.CloudFront, arn string) (*cloudfron
 	return output.RealtimeLogConfig, nil
 }
 
-// MonitoringSubscriptionByDistributionId returns the monitoring subscription corresponding to the specified distribution id.
+// FindMonitoringSubscriptionByDistributionID returns the monitoring subscription corresponding to the specified distribution id.
 // Returns nil if no subscription is found.
-func MonitoringSubscriptionByDistributionId(conn *cloudfront.CloudFront, id string) (*cloudfront.MonitoringSubscription, error) {
+func FindMonitoringSubscriptionByDistributionID(conn *cloudfront.CloudFront, id string) (*cloudfront.MonitoringSubscription, error) {
 	input := &cloudfront.GetMonitoringSubscriptionInput{
 		DistributionId: aws.String(id),
 	}
