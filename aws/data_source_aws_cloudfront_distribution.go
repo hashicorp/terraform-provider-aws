@@ -6,8 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceDistribution() *schema.Resource {
@@ -52,7 +53,7 @@ func DataSourceDistribution() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 		},
 	}
 }
@@ -84,7 +85,7 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 			d.Set("enabled", distributionConfig.Enabled)
 		}
 	}
-	tags, err := keyvaluetags.CloudfrontListTags(conn, d.Get("arn").(string))
+	tags, err := tftags.CloudfrontListTags(conn, d.Get("arn").(string))
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudFront Distribution (%s): %w", d.Id(), err)
 	}
