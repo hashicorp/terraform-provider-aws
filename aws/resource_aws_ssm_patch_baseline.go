@@ -235,11 +235,11 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("approved_patches"); ok && v.(*schema.Set).Len() > 0 {
-		params.ApprovedPatches = expandStringSet(v.(*schema.Set))
+		params.ApprovedPatches = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("rejected_patches"); ok && v.(*schema.Set).Len() > 0 {
-		params.RejectedPatches = expandStringSet(v.(*schema.Set))
+		params.RejectedPatches = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if _, ok := d.GetOk("global_filter"); ok {
@@ -288,11 +288,11 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("approved_patches") {
-		params.ApprovedPatches = expandStringSet(d.Get("approved_patches").(*schema.Set))
+		params.ApprovedPatches = flex.ExpandStringSet(d.Get("approved_patches").(*schema.Set))
 	}
 
 	if d.HasChange("rejected_patches") {
-		params.RejectedPatches = expandStringSet(d.Get("rejected_patches").(*schema.Set))
+		params.RejectedPatches = flex.ExpandStringSet(d.Get("rejected_patches").(*schema.Set))
 	}
 
 	if d.HasChange("approved_patches_compliance_level") {
@@ -359,8 +359,8 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("description", resp.Description)
 	d.Set("operating_system", resp.OperatingSystem)
 	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
-	d.Set("approved_patches", flattenStringList(resp.ApprovedPatches))
-	d.Set("rejected_patches", flattenStringList(resp.RejectedPatches))
+	d.Set("approved_patches", flex.FlattenStringList(resp.ApprovedPatches))
+	d.Set("rejected_patches", flex.FlattenStringList(resp.RejectedPatches))
 	d.Set("rejected_patches_action", resp.RejectedPatchesAction)
 	d.Set("approved_patches_enable_non_security", resp.ApprovedPatchesEnableNonSecurity)
 
@@ -432,7 +432,7 @@ func expandAwsSsmPatchFilterGroup(d *schema.ResourceData) *ssm.PatchFilterGroup 
 
 		filter := &ssm.PatchFilter{
 			Key:    aws.String(config["key"].(string)),
-			Values: expandStringList(config["values"].([]interface{})),
+			Values: flex.ExpandStringList(config["values"].([]interface{})),
 		}
 
 		filters = append(filters, filter)
@@ -453,7 +453,7 @@ func flattenAwsSsmPatchFilterGroup(group *ssm.PatchFilterGroup) []map[string]int
 	for _, filter := range group.PatchFilters {
 		f := make(map[string]interface{})
 		f["key"] = aws.StringValue(filter.Key)
-		f["values"] = flattenStringList(filter.Values)
+		f["values"] = flex.FlattenStringList(filter.Values)
 
 		result = append(result, f)
 	}
@@ -477,7 +477,7 @@ func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
 
 			filter := &ssm.PatchFilter{
 				Key:    aws.String(fCfg["key"].(string)),
-				Values: expandStringList(fCfg["values"].([]interface{})),
+				Values: flex.ExpandStringList(fCfg["values"].([]interface{})),
 			}
 
 			filters = append(filters, filter)
@@ -545,7 +545,7 @@ func expandAwsSsmPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
 		source := &ssm.PatchSource{
 			Name:          aws.String(config["name"].(string)),
 			Configuration: aws.String(config["configuration"].(string)),
-			Products:      expandStringList(config["products"].([]interface{})),
+			Products:      flex.ExpandStringList(config["products"].([]interface{})),
 		}
 
 		sources = append(sources, source)
@@ -565,7 +565,7 @@ func flattenAwsSsmPatchSource(sources []*ssm.PatchSource) []map[string]interface
 		s := make(map[string]interface{})
 		s["name"] = aws.StringValue(source.Name)
 		s["configuration"] = aws.StringValue(source.Configuration)
-		s["products"] = flattenStringList(source.Products)
+		s["products"] = flex.FlattenStringList(source.Products)
 		result = append(result, s)
 	}
 

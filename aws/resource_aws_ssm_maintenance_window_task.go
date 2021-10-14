@@ -552,7 +552,7 @@ func expandAwsSsmTaskInvocationRunCommandParametersNotificationConfig(config []i
 		params.NotificationArn = aws.String(attr.(string))
 	}
 	if attr, ok := configParam["notification_events"]; ok && len(attr.([]interface{})) > 0 {
-		params.NotificationEvents = expandStringList(attr.([]interface{}))
+		params.NotificationEvents = flex.ExpandStringList(attr.([]interface{}))
 	}
 	if attr, ok := configParam["notification_type"]; ok && len(attr.(string)) != 0 {
 		params.NotificationType = aws.String(attr.(string))
@@ -568,7 +568,7 @@ func flattenAwsSsmTaskInvocationRunCommandParametersNotificationConfig(config *s
 		result["notification_arn"] = aws.StringValue(config.NotificationArn)
 	}
 	if config.NotificationEvents != nil {
-		result["notification_events"] = flattenStringList(config.NotificationEvents)
+		result["notification_events"] = flex.FlattenStringList(config.NotificationEvents)
 	}
 	if config.NotificationType != nil {
 		result["notification_type"] = aws.StringValue(config.NotificationType)
@@ -617,7 +617,7 @@ func expandAwsSsmTaskInvocationCommonParameters(config []interface{}) map[string
 
 	for _, v := range config {
 		paramConfig := v.(map[string]interface{})
-		params[paramConfig["name"].(string)] = expandStringList(paramConfig["values"].([]interface{}))
+		params[paramConfig["name"].(string)] = flex.ExpandStringList(paramConfig["values"].([]interface{}))
 	}
 
 	return params
@@ -661,7 +661,7 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
-		params.Targets = expandAwsSsmTargets(v.([]interface{}))
+		params.Targets = expandTargets(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("service_role_arn"); ok {
@@ -728,7 +728,7 @@ func resourceAwsSsmMaintenanceWindowTaskRead(d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := d.Set("targets", flattenAwsSsmTargets(resp.Targets)); err != nil {
+	if err := d.Set("targets", flattenAwsSSMTargets(resp.Targets)); err != nil {
 		return fmt.Errorf("Error setting targets error: %#v", err)
 	}
 
@@ -746,7 +746,7 @@ func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta inte
 		MaxConcurrency: aws.String(d.Get("max_concurrency").(string)),
 		MaxErrors:      aws.String(d.Get("max_errors").(string)),
 		TaskArn:        aws.String(d.Get("task_arn").(string)),
-		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
+		Targets:        expandTargets(d.Get("targets").([]interface{})),
 		Replace:        aws.Bool(true),
 	}
 
