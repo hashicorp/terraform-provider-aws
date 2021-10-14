@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ScalingPlanByNameAndVersion(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
+func FindScalingPlanByNameAndVersion(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
 	input := &autoscalingplans.DescribeScalingPlansInput{
 		ScalingPlanNames:   aws.StringSlice([]string{scalingPlanName}),
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),

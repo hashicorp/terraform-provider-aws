@@ -9,11 +9,11 @@ import (
 
 const scalingPlanResourceIDSeparator = "/"
 
-func ScalingPlanCreateResourceID(scalingPlanName string, scalingPlanVersion int) string {
+func scalingPlanCreateResourceID(scalingPlanName string, scalingPlanVersion int) string {
 	return fmt.Sprintf("%[1]s%[2]s%[3]d", scalingPlanName, scalingPlanResourceIDSeparator, scalingPlanVersion)
 }
 
-func ScalingPlanParseResourceID(id string) (string, int, error) {
+func scalingPlanParseResourceID(id string) (string, int, error) {
 	parts := strings.Split(id, scalingPlanResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

@@ -7,11 +7,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfautoscalingplans "github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 )
 
-func ScalingPlanStatusCode(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) resource.StateRefreshFunc {
+func statusScalingPlanCode(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		scalingPlan, err := finder.ScalingPlanByNameAndVersion(conn, scalingPlanName, scalingPlanVersion)
+		scalingPlan, err := tfautoscalingplans.FindScalingPlanByNameAndVersion(conn, scalingPlanName, scalingPlanVersion)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

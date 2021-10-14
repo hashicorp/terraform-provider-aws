@@ -22,6 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfautoscalingplans "github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
+	tfautoscalingplans "github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
+	tfautoscalingplans "github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 )
 
 func init() {
@@ -40,7 +43,7 @@ func testSweepAutoScalingPlansScalingPlans(region string) error {
 	input := &autoscalingplans.DescribeScalingPlansInput{}
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = lister.DescribeScalingPlansPages(conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
+	err = tfautoscalingplans.DescribeScalingPlansPages(conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -431,7 +434,7 @@ func testAccCheckAutoScalingPlansScalingPlanDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = finder.ScalingPlanByNameAndVersion(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+		_, err = tfautoscalingplans.FindScalingPlanByNameAndVersion(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -462,7 +465,7 @@ func testAccCheckAutoScalingPlansScalingPlanExists(name string, v *autoscalingpl
 			return err
 		}
 
-		scalingPlan, err := finder.ScalingPlanByNameAndVersion(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
+		scalingPlan, err := tfautoscalingplans.FindScalingPlanByNameAndVersion(conn, rs.Primary.Attributes["name"], scalingPlanVersion)
 
 		if err != nil {
 			return err
