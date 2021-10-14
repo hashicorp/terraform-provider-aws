@@ -13,7 +13,7 @@ import (
 
 func DataSourceBroker() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsmQBrokerRead,
+		Read: dataSourcemqBrokerRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -220,7 +220,7 @@ func DataSourceBroker() *schema.Resource {
 			"user": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Set:      resourceAwsMqUserHash,
+				Set:      resourceUserHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"console_access": {
@@ -244,7 +244,7 @@ func DataSourceBroker() *schema.Resource {
 	}
 }
 
-func dataSourceAwsmQBrokerRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcemqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

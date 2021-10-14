@@ -902,7 +902,7 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 				),
 			},
 			// Trigger a reboot and ensure the password change was applied
-			// User hashcode can be retrieved by calling resourceAwsMqUserHash
+			// User hashcode can be retrieved by calling resourceUserHash
 			{
 				Config: testAccMqBrokerConfig_updateUsersSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(

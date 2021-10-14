@@ -285,7 +285,7 @@ func ResourceBroker() *schema.Resource {
 			"user": {
 				Type:     schema.TypeSet,
 				Required: true,
-				Set:      resourceAwsMqUserHash,
+				Set:      resourceUserHash,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// AWS currently does not support updating the RabbitMQ users beyond resource creation.
 					// User list is not returned back after creation.
@@ -533,9 +533,9 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("user")
 		var err error
 		// d.HasChange("user") always reports a change when running resourceBrokerUpdate
-		// updateAwsMqBrokerUsers needs to be called to know if changes to user are actually made
+		// updateBrokerUsers needs to be called to know if changes to user are actually made
 		var usersUpdated bool
-		usersUpdated, err = updateAwsMqBrokerUsers(conn, d.Id(),
+		usersUpdated, err = updateBrokerUsers(conn, d.Id(),
 			o.(*schema.Set).List(), n.(*schema.Set).List())
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) user: %w", d.Id(), err)
@@ -588,7 +588,7 @@ func resourceBrokerDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsMqUserHash(v interface{}) int {
+func resourceUserHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	m := v.(map[string]interface{})
@@ -608,7 +608,7 @@ func resourceAwsMqUserHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func updateAwsMqBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}) (bool, error) {
+func updateBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}) (bool, error) {
 	// If there are any user creates/deletes/updates, updatedUsers will be set to true
 	updatedUsers := false
 
@@ -853,7 +853,7 @@ func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 		}
 		out = append(out, m)
 	}
-	return schema.NewSet(resourceAwsMqUserHash, out)
+	return schema.NewSet(resourceUserHash, out)
 }
 
 func expandMqWeeklyStartTime(cfg []interface{}) *mq.WeeklyStartTime {
