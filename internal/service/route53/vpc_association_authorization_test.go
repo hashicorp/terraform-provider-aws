@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
@@ -60,7 +61,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
 				Config: testAccRoute53VPCAssociationAuthorizationConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53VPCAssociationAuthorizationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVPCAssociationAuthorization(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceVPCAssociationAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,7 +77,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationDestroy(s *terraform.State) e
 			continue
 		}
 
-		zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(rs.Primary.ID)
+		zone_id, vpc_id, err := tfroute53.VPCAssociationAuthorizationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -113,7 +114,7 @@ func testAccCheckRoute53VPCAssociationAuthorizationExists(n string) resource.Tes
 			return fmt.Errorf("No VPC association authorization ID is set")
 		}
 
-		zone_id, vpc_id, err := resourceAwsRoute53VPCAssociationAuthorizationParseId(rs.Primary.ID)
+		zone_id, vpc_id, err := tfroute53.VPCAssociationAuthorizationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

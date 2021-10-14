@@ -106,12 +106,12 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error finding Route 53 Hosted Zone: %w", err)
 		}
 		for _, hostedZone := range resp.HostedZones {
-			hostedZoneId := cleanZoneID(aws.StringValue(hostedZone.Id))
+			hostedZoneId := CleanZoneID(aws.StringValue(hostedZone.Id))
 			if idExists && hostedZoneId == id.(string) {
 				hostedZoneFound = hostedZone
 				break
 				// we check if the name is the same as requested and if private zone field is the same as requested or if there is a vpc_id
-			} else if (trimTrailingPeriod(aws.StringValue(hostedZone.Name)) == trimTrailingPeriod(name)) && (aws.BoolValue(hostedZone.Config.PrivateZone) == d.Get("private_zone").(bool) || (aws.BoolValue(hostedZone.Config.PrivateZone) && vpcIdExists)) {
+			} else if (TrimTrailingPeriod(aws.StringValue(hostedZone.Name)) == TrimTrailingPeriod(name)) && (aws.BoolValue(hostedZone.Config.PrivateZone) == d.Get("private_zone").(bool) || (aws.BoolValue(hostedZone.Config.PrivateZone) && vpcIdExists)) {
 				matchingVPC := false
 				if vpcIdExists {
 					reqHostedZone := &route53.GetHostedZoneInput{}
@@ -161,12 +161,12 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("no matching Route53Zone found")
 	}
 
-	idHostedZone := cleanZoneID(aws.StringValue(hostedZoneFound.Id))
+	idHostedZone := CleanZoneID(aws.StringValue(hostedZoneFound.Id))
 	d.SetId(idHostedZone)
 	d.Set("zone_id", idHostedZone)
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set("name", trimTrailingPeriod(aws.StringValue(hostedZoneFound.Name)))
+	d.Set("name", TrimTrailingPeriod(aws.StringValue(hostedZoneFound.Name)))
 	d.Set("comment", hostedZoneFound.Config.Comment)
 	d.Set("private_zone", hostedZoneFound.Config.PrivateZone)
 	d.Set("caller_reference", hostedZoneFound.CallerReference)

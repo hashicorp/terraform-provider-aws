@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func TestCleanRecordName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := cleanRecordName(tc.Input)
+		actual := tfroute53.CleanRecordName(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -55,7 +56,7 @@ func TestExpandRecordName(t *testing.T) {
 
 	zone_name := "example.com"
 	for _, tc := range cases {
-		actual := expandRecordName(tc.Input, zone_name)
+		actual := tfroute53.ExpandRecordName(tc.Input, zone_name)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -75,7 +76,7 @@ func TestNormalizeAwsAliasName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := normalizeAwsAliasName(tc.Input)
+		actual := tfroute53.NormalizeAliasName(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -96,7 +97,7 @@ func TestParseRecordId(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		parts := parseRecordId(tc.Input)
+		parts := tfroute53.ParseRecordID(tc.Input)
 		if parts[0] != tc.Zone {
 			t.Fatalf("input: %s\noutput: %s\nexpected:%s", tc.Input, parts[0], tc.Zone)
 		}
@@ -1089,15 +1090,15 @@ func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 			continue
 		}
 
-		parts := parseRecordId(rs.Primary.ID)
+		parts := tfroute53.ParseRecordID(rs.Primary.ID)
 		zone := parts[0]
 		name := parts[1]
 		rType := parts[2]
 
-		en := expandRecordName(name, "domain.test")
+		en := tfroute53.ExpandRecordName(name, "domain.test")
 
 		lopts := &route53.ListResourceRecordSetsInput{
-			HostedZoneId:    aws.String(cleanZoneID(zone)),
+			HostedZoneId:    aws.String(tfroute53.CleanZoneID(zone)),
 			StartRecordName: aws.String(en),
 			StartRecordType: aws.String(rType),
 		}
@@ -1116,7 +1117,7 @@ func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 			return nil
 		}
 		rec := resp.ResourceRecordSets[0]
-		if FQDN(*rec.Name) == FQDN(name) && *rec.Type == rType {
+		if tfroute53.FQDN(*rec.Name) == tfroute53.FQDN(name) && *rec.Type == rType {
 			return fmt.Errorf("Record still exists: %#v", rec)
 		}
 	}
@@ -1140,7 +1141,7 @@ func testAccCheckRoute53RecordDisappears(zone *route53.GetHostedZoneOutput, reso
 			},
 		}
 
-		respRaw, err := deleteRoute53RecordSet(conn, input)
+		respRaw, err := tfroute53.DeleteRecordSet(conn, input)
 		if err != nil {
 			return fmt.Errorf("error deleting resource record set: %s", err)
 		}
@@ -1150,7 +1151,7 @@ func testAccCheckRoute53RecordDisappears(zone *route53.GetHostedZoneOutput, reso
 			return nil
 		}
 
-		if err := waitForRoute53RecordSetToSync(conn, cleanChangeID(*changeInfo.Id)); err != nil {
+		if err := tfroute53.WaitForRecordSetToSync(conn, tfroute53.CleanChangeID(*changeInfo.Id)); err != nil {
 			return fmt.Errorf("error waiting for resource record set deletion: %s", err)
 		}
 
@@ -1170,15 +1171,15 @@ func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.Resour
 			return fmt.Errorf("No hosted zone ID is set")
 		}
 
-		parts := parseRecordId(rs.Primary.ID)
+		parts := tfroute53.ParseRecordID(rs.Primary.ID)
 		zone := parts[0]
 		name := parts[1]
 		rType := parts[2]
 
-		en := expandRecordName(name, "domain.test")
+		en := tfroute53.ExpandRecordName(name, "domain.test")
 
 		lopts := &route53.ListResourceRecordSetsInput{
-			HostedZoneId:    aws.String(cleanZoneID(zone)),
+			HostedZoneId:    aws.String(tfroute53.CleanZoneID(zone)),
 			StartRecordName: aws.String(en),
 			StartRecordType: aws.String(rType),
 		}
@@ -1193,8 +1194,8 @@ func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.Resour
 
 		// rec := resp.ResourceRecordSets[0]
 		for _, rec := range resp.ResourceRecordSets {
-			recName := cleanRecordName(*rec.Name)
-			if FQDN(strings.ToLower(recName)) == FQDN(strings.ToLower(en)) && *rec.Type == rType {
+			recName := tfroute53.CleanRecordName(*rec.Name)
+			if tfroute53.FQDN(strings.ToLower(recName)) == tfroute53.FQDN(strings.ToLower(en)) && *rec.Type == rType {
 				*resourceRecordSet = *rec
 
 				return nil
@@ -1213,10 +1214,10 @@ func testAccCheckRoute53RecordDoesNotExist(zoneResourceName string, recordName s
 		}
 
 		zoneId := zoneResource.Primary.ID
-		en := expandRecordName(recordName, zoneResource.Primary.Attributes["zone_id"])
+		en := tfroute53.ExpandRecordName(recordName, zoneResource.Primary.Attributes["zone_id"])
 
 		lopts := &route53.ListResourceRecordSetsInput{
-			HostedZoneId: aws.String(cleanZoneID(zoneId)),
+			HostedZoneId: aws.String(tfroute53.CleanZoneID(zoneId)),
 		}
 
 		resp, err := conn.ListResourceRecordSets(lopts)
@@ -1226,8 +1227,8 @@ func testAccCheckRoute53RecordDoesNotExist(zoneResourceName string, recordName s
 
 		found := false
 		for _, rec := range resp.ResourceRecordSets {
-			recName := cleanRecordName(*rec.Name)
-			if FQDN(strings.ToLower(recName)) == FQDN(strings.ToLower(en)) && *rec.Type == recordType {
+			recName := tfroute53.CleanRecordName(*rec.Name)
+			if tfroute53.FQDN(strings.ToLower(recName)) == tfroute53.FQDN(strings.ToLower(en)) && *rec.Type == recordType {
 				found = true
 				break
 			}

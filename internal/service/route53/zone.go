@@ -47,7 +47,7 @@ func ResourceZone() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				StateFunc:    trimTrailingPeriod,
+				StateFunc:    TrimTrailingPeriod,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 
@@ -147,10 +147,10 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating Route53 Hosted Zone: %s", err)
 	}
 
-	d.SetId(cleanZoneID(aws.StringValue(output.HostedZone.Id)))
+	d.SetId(CleanZoneID(aws.StringValue(output.HostedZone.Id)))
 
 	if output.ChangeInfo != nil {
-		if err := route53WaitForChangeSynchronization(conn, cleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
+		if err := route53WaitForChangeSynchronization(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
 			return fmt.Errorf("error waiting for Route53 Hosted Zone (%s) creation: %s", d.Id(), err)
 		}
 	}
@@ -205,13 +205,13 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("delegation_set_id", "")
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set("name", trimTrailingPeriod(aws.StringValue(output.HostedZone.Name)))
-	d.Set("zone_id", cleanZoneID(aws.StringValue(output.HostedZone.Id)))
+	d.Set("name", TrimTrailingPeriod(aws.StringValue(output.HostedZone.Name)))
+	d.Set("zone_id", CleanZoneID(aws.StringValue(output.HostedZone.Id)))
 
 	var nameServers []string
 
 	if output.DelegationSet != nil {
-		d.Set("delegation_set_id", cleanDelegationSetId(aws.StringValue(output.DelegationSet.Id)))
+		d.Set("delegation_set_id", CleanDelegationSetID(aws.StringValue(output.DelegationSet.Id)))
 
 		nameServers = aws.StringValueSlice(output.DelegationSet.NameServers)
 	}
@@ -396,11 +396,11 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 		}
 
 		var resp interface{}
-		resp, lastDeleteErr = deleteRoute53RecordSet(conn, req)
+		resp, lastDeleteErr = DeleteRecordSet(conn, req)
 		if out, ok := resp.(*route53.ChangeResourceRecordSetsOutput); ok {
 			log.Printf("[DEBUG] Waiting for change batch to become INSYNC: %#v", out)
 			if out.ChangeInfo != nil && out.ChangeInfo.Id != nil {
-				lastErrorFromWaiter = waitForRoute53RecordSetToSync(conn, cleanChangeID(aws.StringValue(out.ChangeInfo.Id)))
+				lastErrorFromWaiter = WaitForRecordSetToSync(conn, CleanChangeID(aws.StringValue(out.ChangeInfo.Id)))
 			} else {
 				log.Printf("[DEBUG] Change info was empty")
 			}
@@ -536,21 +536,21 @@ func resourceAwsGoRoute53Wait(r53 *route53.Route53, ref *route53.GetChangeInput)
 	return true, aws.StringValue(status.ChangeInfo.Status), nil
 }
 
-// cleanChangeID is used to remove the leading /change/
-func cleanChangeID(ID string) string {
+// CleanChangeID is used to remove the leading /change/
+func CleanChangeID(ID string) string {
 	return strings.TrimPrefix(ID, "/change/")
 }
 
-// cleanZoneID is used to remove the leading /hostedzone/
-func cleanZoneID(ID string) string {
+// CleanZoneID is used to remove the leading /hostedzone/
+func CleanZoneID(ID string) string {
 	return strings.TrimPrefix(ID, "/hostedzone/")
 }
 
-// trimTrailingPeriod is used to remove the trailing period
+// TrimTrailingPeriod is used to remove the trailing period
 // of "name" or "domain name" attributes often returned from
 // the Route53 API or provided as user input.
 // The single dot (".") domain name is returned as-is.
-func trimTrailingPeriod(v interface{}) string {
+func TrimTrailingPeriod(v interface{}) string {
 	var str string
 	switch value := v.(type) {
 	case *string:
@@ -647,7 +647,7 @@ func route53HostedZoneVPCAssociate(conn *route53.Route53, zoneID string, vpc *ro
 		return fmt.Errorf("error associating Route53 Hosted Zone (%s) to VPC (%s): %s", zoneID, aws.StringValue(vpc.VPCId), err)
 	}
 
-	if err := route53WaitForChangeSynchronization(conn, cleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
+	if err := route53WaitForChangeSynchronization(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
 		return fmt.Errorf("error waiting for Route53 Hosted Zone (%s) association to VPC (%s): %s", zoneID, aws.StringValue(vpc.VPCId), err)
 	}
 
@@ -667,7 +667,7 @@ func route53HostedZoneVPCDisassociate(conn *route53.Route53, zoneID string, vpc 
 		return fmt.Errorf("error disassociating Route53 Hosted Zone (%s) from VPC (%s): %s", zoneID, aws.StringValue(vpc.VPCId), err)
 	}
 
-	if err := route53WaitForChangeSynchronization(conn, cleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
+	if err := route53WaitForChangeSynchronization(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
 		return fmt.Errorf("error waiting for Route53 Hosted Zone (%s) disassociation from VPC (%s): %s", zoneID, aws.StringValue(vpc.VPCId), err)
 	}
 

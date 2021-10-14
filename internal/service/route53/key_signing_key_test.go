@@ -83,7 +83,7 @@ func testSweepRoute53KeySigningKeys(region string) error {
 			}
 
 			for _, dns := range output.KeySigningKeys {
-				r := ResourceKeySigningKey()
+				r := tfroute53.ResourceKeySigningKey()
 				d := r.Data(nil)
 				d.SetId(id)
 				d.Set("hosted_zone_id", id)
@@ -173,7 +173,7 @@ func TestAccAwsRoute53KeySigningKey_disappears(t *testing.T) {
 				Config: testAccAwsRoute53KeySigningKeyConfig_Name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsRoute53KeySigningKeyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceKeySigningKey(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceKeySigningKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

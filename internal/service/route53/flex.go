@@ -19,7 +19,7 @@ func expandResourceRecords(recs []interface{}, typeStr string) []*route53.Resour
 	return records
 }
 
-func flattenResourceRecords(recs []*route53.ResourceRecord, typeStr string) []string {
+func FlattenResourceRecords(recs []*route53.ResourceRecord, typeStr string) []string {
 	strs := make([]string, 0, len(recs))
 	for _, r := range recs {
 		if r.Value != nil {

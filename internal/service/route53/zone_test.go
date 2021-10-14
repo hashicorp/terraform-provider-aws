@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -32,7 +33,7 @@ func TestCleanZoneID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := cleanZoneID(tc.Input)
+		actual := tfroute53.CleanZoneID(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -49,7 +50,7 @@ func TestCleanChangeID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := cleanChangeID(tc.Input)
+		actual := tfroute53.CleanChangeID(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -74,7 +75,7 @@ func TestTrimTrailingPeriod(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := trimTrailingPeriod(tc.Input)
+		actual := tfroute53.TrimTrailingPeriod(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -139,7 +140,7 @@ func testSweepRoute53Zones(region string) error {
 				}
 			}
 
-			r := ResourceZone()
+			r := tfroute53.ResourceZone()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("force_destroy", true)
@@ -581,12 +582,12 @@ func testAccCreateRandomRoute53RecordsInZoneIdWithProvider(providerF func() *sch
 			},
 		}
 		log.Printf("[DEBUG] Change set: %s\n", *req)
-		resp, err := changeRoute53RecordSet(conn, req)
+		resp, err := tfroute53.ChangeRecordSet(conn, req)
 		if err != nil {
 			return err
 		}
 		changeInfo := resp.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
-		err = waitForRoute53RecordSetToSync(conn, cleanChangeID(*changeInfo.Id))
+		err = tfroute53.WaitForRecordSetToSync(conn, tfroute53.CleanChangeID(*changeInfo.Id))
 		return err
 	}
 }
@@ -670,7 +671,7 @@ func testAccCheckRoute53ZoneAssociatesWithVpc(n string, zone *route53.GetHostedZ
 			}
 		}
 
-		return fmt.Errorf("VPC: %s is not associated to Zone: %v", n, cleanZoneID(aws.StringValue(zone.HostedZone.Id)))
+		return fmt.Errorf("VPC: %s is not associated to Zone: %v", n, tfroute53.CleanZoneID(aws.StringValue(zone.HostedZone.Id)))
 	}
 }
 

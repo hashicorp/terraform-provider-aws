@@ -48,7 +48,7 @@ func checkFlattenResourceRecords(
 	expanded []*route53.ResourceRecord,
 	expected []string) {
 
-	result := flattenResourceRecords(expanded, recordType)
+	result := FlattenResourceRecords(expanded, recordType)
 
 	if result == nil {
 		t.Fatal("expected result to have value, but got nil")

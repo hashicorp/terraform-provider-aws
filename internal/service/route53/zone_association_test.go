@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 )
 
 func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
@@ -55,7 +56,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears(t *testing.T) {
 				Config: testAccRoute53ZoneAssociationConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceZoneAssociation(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZoneAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,7 +104,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 				Config: testAccRoute53ZoneAssociationConfig(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceZone(), route53ZoneResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -186,13 +187,13 @@ func testAccCheckRoute53ZoneAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
+		zoneID, vpcID, vpcRegion, err := tfroute53.ZoneAssociationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
+		hostedZoneSummary, err := tfroute53.GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
 		if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") {
 			continue
@@ -220,7 +221,7 @@ func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.Test
 			return fmt.Errorf("No zone association ID is set")
 		}
 
-		zoneID, vpcID, vpcRegion, err := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
+		zoneID, vpcID, vpcRegion, err := tfroute53.ZoneAssociationParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -228,7 +229,7 @@ func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.Test
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
-		hostedZoneSummary, err := route53GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
+		hostedZoneSummary, err := tfroute53.GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
 
 		if err != nil {
 			return err
