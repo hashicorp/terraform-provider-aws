@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DescribeDirectConnectGatewayAssociationProposalsPages(conn *directconnect.DirectConnect, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, fn func(*directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, bool) bool) error {
