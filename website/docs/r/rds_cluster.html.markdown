@@ -98,7 +98,10 @@ resource "aws_rds_cluster" "example" {
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html).
+the AWS official documentation :
+
+* [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html).
+* [modify-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/modify-db-cluster.html)
 
 The following arguments are supported:
 
@@ -112,6 +115,7 @@ The following arguments are supported:
 * `copy_tags_to_snapshot` – (Optional, boolean) Copy all Cluster `tags` to snapshots. Default is `false`.
 * `database_name` - (Optional) Name for an automatically created database on cluster creation. There are different naming restrictions per database engine: [RDS Naming Constraints][5]
 * `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
+* `db_instance_parameter_group_name` - (Optional) Instance parameter group to associate with all instances of the DB cluster. The `db_instance_parameter_group_name` parameter is only valid in combination with the `allow_major_version_upgrade` parameter.
 * `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance. **NOTE:** This must match the `db_subnet_group_name` specified on every [`aws_rds_cluster_instance`](/docs/providers/aws/r/rds_cluster_instance.html) in the cluster.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `enable_http_endpoint` - (Optional) Enable HTTP endpoint (data API). Only valid when `engine_mode` is set to `serverless`.
@@ -121,6 +125,7 @@ The following arguments are supported:
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage. See the [Aurora MySQL](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Updates.html) and [Aurora Postgres](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Updates.html) documentation for your configured engine to determine this value. For example with Aurora MySQL 2, a potential value for this argument is `5.7.mysql_aurora.2.03.2`. The value can contain a partial version where supported by the API. The actual engine version used is returned in the attribute `engine_version_actual`, [defined below](#engine_version_actual).
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot when this DB cluster is deleted. If omitted, no final snapshot will be made.
 * `global_cluster_identifier` - (Optional) The global cluster identifier specified on [`aws_rds_global_cluster`](/docs/providers/aws/r/rds_global_cluster.html).
+* `enable_global_write_forwarding` - (Optional) Whether cluster should forward writes to an associated global cluster. Applied to secondary clusters to enable them to forward writes to an [`aws_rds_global_cluster`](/docs/providers/aws/r/rds_global_cluster.html)'s primary cluster. See the [Aurora Userguide documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-write-forwarding.html) for more information.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled. Please see [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html) for availability and limitations.
 * `iam_roles` - (Optional) A List of ARNs for the IAM roles to associate to the RDS Cluster.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.

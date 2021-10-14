@@ -117,6 +117,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"db_instance_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -130,6 +135,12 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"global_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+
+			"enable_global_write_forwarding": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 
 			"reader_endpoint": {
@@ -863,6 +874,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.GlobalClusterIdentifier = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("enable_global_write_forwarding"); ok {
+			createOpts.EnableGlobalWriteForwarding = aws.Bool(attr.(bool))
+		}
+
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
 			createOpts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
@@ -1153,6 +1168,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("db_instance_parameter_group_name") {
+		req.DBInstanceParameterGroupName = aws.String(d.Get("db_instance_parameter_group_name").(string))
+		requestUpdate = true
+	}
+
 	if d.HasChange("master_password") {
 		req.MasterUserPassword = aws.String(d.Get("master_password").(string))
 		requestUpdate = true
@@ -1229,6 +1249,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("enable_http_endpoint") {
 		req.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("enable_global_write_forwarding") {
+		req.EnableGlobalWriteForwarding = aws.Bool(d.Get("enable_global_write_forwarding").(bool))
 		requestUpdate = true
 	}
 
@@ -1470,7 +1495,9 @@ var resourceAwsRdsClusterDeletePendingStates = []string{
 
 var resourceAwsRdsClusterUpdatePendingStates = []string{
 	"backing-up",
+	"configuring-iam-database-auth",
 	"modifying",
+	"renaming",
 	"resetting-master-credentials",
 	"upgrading",
 }
