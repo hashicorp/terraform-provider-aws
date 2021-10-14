@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccAwsConnectInstanceDataSource_basic(t *testing.T) {
+func TestAccConnectInstanceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("datasource-test-terraform")
 	dataSourceName := "data.aws_connect_instance.test"
 	resourceName := "aws_connect_instance.test"
