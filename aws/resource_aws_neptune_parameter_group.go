@@ -120,7 +120,7 @@ func resourceAwsNeptuneParameterGroupRead(d *schema.ResourceData, meta interface
 
 	describeResp, err := conn.DescribeDBParameterGroups(&describeOpts)
 	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
 			log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -222,14 +222,14 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 			err := resource.Retry(30*time.Second, func() *resource.RetryError {
 				_, err := conn.ResetDBParameterGroup(&resetOpts)
 				if err != nil {
-					if isAWSErr(err, "InvalidDBParameterGroupState", " has pending changes") {
+					if tfawserr.ErrMessageContains(err, "InvalidDBParameterGroupState", " has pending changes") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
-			if isResourceTimeoutError(err) {
+			if tfresource.TimedOut(err) {
 				_, err = conn.ResetDBParameterGroup(&resetOpts)
 			}
 			if err != nil {
@@ -277,10 +277,10 @@ func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interfa
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
 		if err != nil {
-			if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
 				return nil
 			}
-			if isAWSErr(err, neptune.ErrCodeInvalidDBParameterGroupStateFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBParameterGroupStateFault, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -288,11 +288,11 @@ func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interfa
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
 	}
 
-	if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
 		return nil
 	}
 

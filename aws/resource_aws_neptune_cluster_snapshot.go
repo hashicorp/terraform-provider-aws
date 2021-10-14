@@ -136,7 +136,7 @@ func resourceAwsNeptuneClusterSnapshotRead(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Reading Neptune DB Cluster Snapshot: %s", input)
 	output, err := conn.DescribeDBClusterSnapshots(input)
 	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			log.Printf("[WARN] Neptune DB Cluster Snapshot %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -183,7 +183,7 @@ func resourceAwsNeptuneClusterSnapshotDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting Neptune DB Cluster Snapshot: %s", input)
 	_, err := conn.DeleteDBClusterSnapshot(input)
 	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Neptune DB Cluster Snapshot %q: %s", d.Id(), err)
@@ -201,7 +201,7 @@ func resourceAwsNeptuneClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifi
 		log.Printf("[DEBUG] Reading Neptune DB Cluster Snapshot: %s", input)
 		output, err := conn.DescribeDBClusterSnapshots(input)
 		if err != nil {
-			if isAWSErr(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault, "") {
 				return nil, "", nil
 			}
 			return nil, "", fmt.Errorf("Error retrieving DB Cluster Snapshots: %s", err)
