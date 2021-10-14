@@ -217,7 +217,7 @@ func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists(resourceName, &budget),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceBudget(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
