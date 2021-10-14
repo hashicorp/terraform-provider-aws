@@ -66,7 +66,7 @@ func resourceAwsInspectorAssessmentTemplateCreate(d *schema.ResourceData, meta i
 		AssessmentTargetArn:    aws.String(d.Get("target_arn").(string)),
 		AssessmentTemplateName: aws.String(d.Get("name").(string)),
 		DurationInSeconds:      aws.Int64(int64(d.Get("duration").(int))),
-		RulesPackageArns:       expandStringSet(d.Get("rules_package_arns").(*schema.Set)),
+		RulesPackageArns:       flex.ExpandStringSet(d.Get("rules_package_arns").(*schema.Set)),
 	}
 
 	log.Printf("[DEBUG] Creating Inspector assessment template: %s", req)
@@ -112,7 +112,7 @@ func resourceAwsInspectorAssessmentTemplateRead(d *schema.ResourceData, meta int
 	d.Set("name", template.Name)
 	d.Set("target_arn", template.AssessmentTargetArn)
 
-	if err := d.Set("rules_package_arns", flattenStringSet(template.RulesPackageArns)); err != nil {
+	if err := d.Set("rules_package_arns", flex.FlattenStringSet(template.RulesPackageArns)); err != nil {
 		return fmt.Errorf("error setting rules_package_arns: %s", err)
 	}
 
