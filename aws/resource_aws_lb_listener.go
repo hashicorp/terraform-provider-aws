@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceListener() *schema.Resource {
@@ -61,7 +62,7 @@ func ResourceListener() *schema.Resource {
 			"certificate_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"default_action": {
 				Type:     schema.TypeList,
@@ -107,7 +108,7 @@ func ResourceListener() *schema.Resource {
 									"user_pool_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"user_pool_client_id": {
 										Type:     schema.TypeString,
@@ -232,7 +233,7 @@ func ResourceListener() *schema.Resource {
 												"arn": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 												"weight": {
 													Type:         schema.TypeInt,
@@ -246,7 +247,7 @@ func ResourceListener() *schema.Resource {
 									"stickiness": {
 										Type:             schema.TypeList,
 										Optional:         true,
-										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -324,7 +325,7 @@ func ResourceListener() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
-							ValidateFunc:     validateArn,
+							ValidateFunc:     verify.ValidARN,
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -341,7 +342,7 @@ func ResourceListener() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"port": {
 				Type:         schema.TypeInt,

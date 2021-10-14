@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ListenerByARN(conn *elbv2.ELBV2, arn string) (*elbv2.Listener, error) {

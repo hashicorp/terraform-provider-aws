@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceListenerRule() *schema.Resource {
@@ -43,7 +44,7 @@ func ResourceListenerRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"priority": {
 				Type:         schema.TypeInt,
@@ -73,7 +74,7 @@ func ResourceListenerRule() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumForward),
-							ValidateFunc:     validateArn,
+							ValidateFunc:     verify.ValidARN,
 						},
 
 						"forward": {
@@ -93,7 +94,7 @@ func ResourceListenerRule() *schema.Resource {
 												"arn": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: verify.ValidARN,
 												},
 												"weight": {
 													Type:         schema.TypeInt,
@@ -107,7 +108,7 @@ func ResourceListenerRule() *schema.Resource {
 									"stickiness": {
 										Type:             schema.TypeList,
 										Optional:         true,
-										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -253,7 +254,7 @@ func ResourceListenerRule() *schema.Resource {
 									"user_pool_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"user_pool_client_id": {
 										Type:     schema.TypeString,
@@ -441,7 +442,7 @@ func ResourceListenerRule() *schema.Resource {
 										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validateCIDRNetworkAddress,
+											ValidateFunc: verify.ValidCIDRNetworkAddress,
 										},
 										Required: true,
 										Set:      schema.HashString,
