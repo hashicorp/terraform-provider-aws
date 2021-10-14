@@ -126,7 +126,7 @@ func resourceSamplingRuleCreate(d *schema.ResourceData, meta interface{}) error 
 
 	params := &xray.CreateSamplingRuleInput{
 		SamplingRule: samplingRule,
-		Tags:         tags.IgnoreAws().XrayTags(),
+		Tags:         Tags(tags.IgnoreAws()),
 	}
 
 	out, err := conn.CreateSamplingRule(params)
@@ -171,7 +171,7 @@ func resourceSamplingRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("attributes", aws.StringValueMap(samplingRule.Attributes))
 	d.Set("arn", arn)
 
-	tags, err := tftags.XrayListTags(conn, arn)
+	tags, err := ListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("error listing tags for Xray Sampling group (%q): %s", d.Id(), err)
 	}
@@ -195,7 +195,7 @@ func resourceSamplingRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.XrayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
