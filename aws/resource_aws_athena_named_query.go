@@ -9,11 +9,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsAthenaNamedQuery() *schema.Resource {
+func ResourceNamedQuery() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAthenaNamedQueryCreate,
-		Read:   resourceAwsAthenaNamedQueryRead,
-		Delete: resourceAwsAthenaNamedQueryDelete,
+		Create: resourceNamedQueryCreate,
+		Read:   resourceNamedQueryRead,
+		Delete: resourceNamedQueryDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -50,7 +50,7 @@ func resourceAwsAthenaNamedQuery() *schema.Resource {
 	}
 }
 
-func resourceAwsAthenaNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.CreateNamedQueryInput{
@@ -70,10 +70,10 @@ func resourceAwsAthenaNamedQueryCreate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 	d.SetId(aws.StringValue(resp.NamedQueryId))
-	return resourceAwsAthenaNamedQueryRead(d, meta)
+	return resourceNamedQueryRead(d, meta)
 }
 
-func resourceAwsAthenaNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.GetNamedQueryInput{
@@ -98,7 +98,7 @@ func resourceAwsAthenaNamedQueryRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsAthenaNamedQueryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNamedQueryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AthenaConn
 
 	input := &athena.DeleteNamedQueryInput{
