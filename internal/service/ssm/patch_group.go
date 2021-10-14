@@ -21,7 +21,7 @@ func ResourcePatchGroup() *schema.Resource {
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    resourceAwsSsmPatchGroupV0().CoreConfigSchema().ImpliedType(),
+				Type:    resourcePatchGroupV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: PatchGroupStateUpgradeV0,
 				Version: 0,
 			},

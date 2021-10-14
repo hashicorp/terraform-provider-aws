@@ -238,15 +238,15 @@ func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("max_errors", association.MaxErrors)
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
 
-	if err := d.Set("parameters", flattenAwsSSMParameters(association.Parameters)); err != nil {
+	if err := d.Set("parameters", flattenParameters(association.Parameters)); err != nil {
 		return err
 	}
 
-	if err := d.Set("targets", flattenAwsSSMTargets(association.Targets)); err != nil {
+	if err := d.Set("targets", flattenTargets(association.Targets)); err != nil {
 		return fmt.Errorf("Error setting targets error: %#v", err)
 	}
 
-	if err := d.Set("output_location", flattenAwsSsmAssociationOutoutLocation(association.OutputLocation)); err != nil {
+	if err := d.Set("output_location", flattenAssociationOutoutLocation(association.OutputLocation)); err != nil {
 		return fmt.Errorf("Error setting output_location error: %#v", err)
 	}
 
@@ -365,7 +365,7 @@ func expandSSMAssociationOutputLocation(config []interface{}) *ssm.InstanceAssoc
 	}
 }
 
-func flattenAwsSsmAssociationOutoutLocation(location *ssm.InstanceAssociationOutputLocation) []map[string]interface{} {
+func flattenAssociationOutoutLocation(location *ssm.InstanceAssociationOutputLocation) []map[string]interface{} {
 	if location == nil {
 		return nil
 	}

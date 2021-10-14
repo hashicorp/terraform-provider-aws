@@ -25,7 +25,7 @@ func expandTargets(in []interface{}) []*ssm.Target {
 	return targets
 }
 
-func flattenAwsSSMParameters(parameters map[string][]*string) map[string]string {
+func flattenParameters(parameters map[string][]*string) map[string]string {
 	result := make(map[string]string)
 	for p, values := range parameters {
 		var vs []string
@@ -39,7 +39,7 @@ func flattenAwsSSMParameters(parameters map[string][]*string) map[string]string 
 	return result
 }
 
-func flattenAwsSSMTargets(targets []*ssm.Target) []map[string]interface{} {
+func flattenTargets(targets []*ssm.Target) []map[string]interface{} {
 	if len(targets) == 0 {
 		return nil
 	}

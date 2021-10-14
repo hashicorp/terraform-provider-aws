@@ -12,7 +12,7 @@ import (
 
 func DataSourceParameter() *schema.Resource {
 	return &schema.Resource{
-		Read: dataAwsSsmParameterRead,
+		Read: dataParameterRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -44,7 +44,7 @@ func DataSourceParameter() *schema.Resource {
 	}
 }
 
-func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
+func dataParameterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	name := d.Get("name").(string)

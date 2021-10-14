@@ -13,7 +13,7 @@ import (
 
 func DataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
-		Read: dataAwsSsmPatchBaselineRead,
+		Read: dataPatchBaselineRead,
 		Schema: map[string]*schema.Schema{
 			"owner": {
 				Type:         schema.TypeString,
@@ -47,7 +47,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 	}
 }
 
-func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
+func dataPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	filters := []*ssm.PatchOrchestratorFilter{

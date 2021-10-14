@@ -14,7 +14,7 @@ import (
 
 func DataSourceDocument() *schema.Resource {
 	return &schema.Resource{
-		Read: dataAwsSsmDocumentRead,
+		Read: dataDocumentRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -49,7 +49,7 @@ func DataSourceDocument() *schema.Resource {
 	}
 }
 
-func dataAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error {
+func dataDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	name := d.Get("name").(string)

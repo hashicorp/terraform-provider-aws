@@ -410,7 +410,7 @@ func resourceDocumentUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChangesExcept("tags", "tags_all", "permissions") {
-		if err := updateAwsSSMDocument(d, meta); err != nil {
+		if err := updateDocument(d, meta); err != nil {
 			return err
 		}
 
@@ -653,7 +653,7 @@ func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []int
 	return nil
 }
 
-func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
+func updateDocument(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Updating SSM Document: %s", d.Id())
 
 	name := d.Get("name").(string)

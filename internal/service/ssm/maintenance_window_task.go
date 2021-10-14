@@ -24,7 +24,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 		Update: resourceMaintenanceWindowTaskUpdate,
 		Delete: resourceMaintenanceWindowTaskDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsSsmMaintenanceWindowTaskImport,
+			State: resourceMaintenanceWindowTaskImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -320,7 +320,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 	}
 }
 
-func expandAwsSsmTaskInvocationParameters(config []interface{}) *ssm.MaintenanceWindowTaskInvocationParameters {
+func expandTaskInvocationParameters(config []interface{}) *ssm.MaintenanceWindowTaskInvocationParameters {
 	if len(config) == 0 || config[0] == nil {
 		return nil
 	}
@@ -329,43 +329,43 @@ func expandAwsSsmTaskInvocationParameters(config []interface{}) *ssm.Maintenance
 	for _, v := range config {
 		paramConfig := v.(map[string]interface{})
 		if attr, ok := paramConfig["automation_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
-			params.Automation = expandAwsSsmTaskInvocationAutomationParameters(attr.([]interface{}))
+			params.Automation = expandTaskInvocationAutomationParameters(attr.([]interface{}))
 		}
 		if attr, ok := paramConfig["lambda_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
-			params.Lambda = expandAwsSsmTaskInvocationLambdaParameters(attr.([]interface{}))
+			params.Lambda = expandTaskInvocationLambdaParameters(attr.([]interface{}))
 		}
 		if attr, ok := paramConfig["run_command_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
-			params.RunCommand = expandAwsSsmTaskInvocationRunCommandParameters(attr.([]interface{}))
+			params.RunCommand = expandTaskInvocationRunCommandParameters(attr.([]interface{}))
 		}
 		if attr, ok := paramConfig["step_functions_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
-			params.StepFunctions = expandAwsSsmTaskInvocationStepFunctionsParameters(attr.([]interface{}))
+			params.StepFunctions = expandTaskInvocationStepFunctionsParameters(attr.([]interface{}))
 		}
 	}
 	return params
 }
 
-func flattenAwsSsmTaskInvocationParameters(parameters *ssm.MaintenanceWindowTaskInvocationParameters) []interface{} {
+func flattenTaskInvocationParameters(parameters *ssm.MaintenanceWindowTaskInvocationParameters) []interface{} {
 	result := make(map[string]interface{})
 	if parameters.Automation != nil {
-		result["automation_parameters"] = flattenAwsSsmTaskInvocationAutomationParameters(parameters.Automation)
+		result["automation_parameters"] = flattenTaskInvocationAutomationParameters(parameters.Automation)
 	}
 
 	if parameters.Lambda != nil {
-		result["lambda_parameters"] = flattenAwsSsmTaskInvocationLambdaParameters(parameters.Lambda)
+		result["lambda_parameters"] = flattenTaskInvocationLambdaParameters(parameters.Lambda)
 	}
 
 	if parameters.RunCommand != nil {
-		result["run_command_parameters"] = flattenAwsSsmTaskInvocationRunCommandParameters(parameters.RunCommand)
+		result["run_command_parameters"] = flattenTaskInvocationRunCommandParameters(parameters.RunCommand)
 	}
 
 	if parameters.StepFunctions != nil {
-		result["step_functions_parameters"] = flattenAwsSsmTaskInvocationStepFunctionsParameters(parameters.StepFunctions)
+		result["step_functions_parameters"] = flattenTaskInvocationStepFunctionsParameters(parameters.StepFunctions)
 	}
 
 	return []interface{}{result}
 }
 
-func expandAwsSsmTaskInvocationAutomationParameters(config []interface{}) *ssm.MaintenanceWindowAutomationParameters {
+func expandTaskInvocationAutomationParameters(config []interface{}) *ssm.MaintenanceWindowAutomationParameters {
 	if len(config) == 0 || config[0] == nil {
 		return nil
 	}
@@ -376,26 +376,26 @@ func expandAwsSsmTaskInvocationAutomationParameters(config []interface{}) *ssm.M
 		params.DocumentVersion = aws.String(attr.(string))
 	}
 	if attr, ok := configParam["parameter"]; ok && len(attr.(*schema.Set).List()) > 0 {
-		params.Parameters = expandAwsSsmTaskInvocationCommonParameters(attr.(*schema.Set).List())
+		params.Parameters = expandTaskInvocationCommonParameters(attr.(*schema.Set).List())
 	}
 
 	return params
 }
 
-func flattenAwsSsmTaskInvocationAutomationParameters(parameters *ssm.MaintenanceWindowAutomationParameters) []interface{} {
+func flattenTaskInvocationAutomationParameters(parameters *ssm.MaintenanceWindowAutomationParameters) []interface{} {
 	result := make(map[string]interface{})
 
 	if parameters.DocumentVersion != nil {
 		result["document_version"] = aws.StringValue(parameters.DocumentVersion)
 	}
 	if parameters.Parameters != nil {
-		result["parameter"] = flattenAwsSsmTaskInvocationCommonParameters(parameters.Parameters)
+		result["parameter"] = flattenTaskInvocationCommonParameters(parameters.Parameters)
 	}
 
 	return []interface{}{result}
 }
 
-func expandAwsSsmTaskInvocationLambdaParameters(config []interface{}) *ssm.MaintenanceWindowLambdaParameters {
+func expandTaskInvocationLambdaParameters(config []interface{}) *ssm.MaintenanceWindowLambdaParameters {
 	if len(config) == 0 || config[0] == nil {
 		return nil
 	}
@@ -414,7 +414,7 @@ func expandAwsSsmTaskInvocationLambdaParameters(config []interface{}) *ssm.Maint
 	return params
 }
 
-func flattenAwsSsmTaskInvocationLambdaParameters(parameters *ssm.MaintenanceWindowLambdaParameters) []interface{} {
+func flattenTaskInvocationLambdaParameters(parameters *ssm.MaintenanceWindowLambdaParameters) []interface{} {
 	result := make(map[string]interface{})
 
 	if parameters.ClientContext != nil {
@@ -429,7 +429,7 @@ func flattenAwsSsmTaskInvocationLambdaParameters(parameters *ssm.MaintenanceWind
 	return []interface{}{result}
 }
 
-func expandAwsSsmTaskInvocationRunCommandParameters(config []interface{}) *ssm.MaintenanceWindowRunCommandParameters {
+func expandTaskInvocationRunCommandParameters(config []interface{}) *ssm.MaintenanceWindowRunCommandParameters {
 	if len(config) == 0 || config[0] == nil {
 		return nil
 	}
@@ -449,7 +449,7 @@ func expandAwsSsmTaskInvocationRunCommandParameters(config []interface{}) *ssm.M
 		params.DocumentVersion = aws.String(attr.(string))
 	}
 	if attr, ok := configParam["notification_config"]; ok && len(attr.([]interface{})) > 0 {
-		params.NotificationConfig = expandAwsSsmTaskInvocationRunCommandParametersNotificationConfig(attr.([]interface{}))
+		params.NotificationConfig = expandTaskInvocationRunCommandParametersNotificationConfig(attr.([]interface{}))
 	}
 	if attr, ok := configParam["output_s3_bucket"]; ok && len(attr.(string)) != 0 {
 		params.OutputS3BucketName = aws.String(attr.(string))
@@ -458,7 +458,7 @@ func expandAwsSsmTaskInvocationRunCommandParameters(config []interface{}) *ssm.M
 		params.OutputS3KeyPrefix = aws.String(attr.(string))
 	}
 	if attr, ok := configParam["parameter"]; ok && len(attr.(*schema.Set).List()) > 0 {
-		params.Parameters = expandAwsSsmTaskInvocationCommonParameters(attr.(*schema.Set).List())
+		params.Parameters = expandTaskInvocationCommonParameters(attr.(*schema.Set).List())
 	}
 	if attr, ok := configParam["service_role_arn"]; ok && len(attr.(string)) != 0 {
 		params.ServiceRoleArn = aws.String(attr.(string))
@@ -468,12 +468,12 @@ func expandAwsSsmTaskInvocationRunCommandParameters(config []interface{}) *ssm.M
 	}
 
 	if attr, ok := configParam["cloudwatch_config"]; ok && len(attr.([]interface{})) > 0 {
-		params.CloudWatchOutputConfig = expandAwsSsmTaskInvocationRunCommandParametersCloudWatchConfig(attr.([]interface{}))
+		params.CloudWatchOutputConfig = expandTaskInvocationRunCommandParametersCloudWatchConfig(attr.([]interface{}))
 	}
 	return params
 }
 
-func flattenAwsSsmTaskInvocationRunCommandParameters(parameters *ssm.MaintenanceWindowRunCommandParameters) []interface{} {
+func flattenTaskInvocationRunCommandParameters(parameters *ssm.MaintenanceWindowRunCommandParameters) []interface{} {
 	result := make(map[string]interface{})
 
 	if parameters.Comment != nil {
@@ -489,7 +489,7 @@ func flattenAwsSsmTaskInvocationRunCommandParameters(parameters *ssm.Maintenance
 		result["document_version"] = aws.StringValue(parameters.DocumentVersion)
 	}
 	if parameters.NotificationConfig != nil {
-		result["notification_config"] = flattenAwsSsmTaskInvocationRunCommandParametersNotificationConfig(parameters.NotificationConfig)
+		result["notification_config"] = flattenTaskInvocationRunCommandParametersNotificationConfig(parameters.NotificationConfig)
 	}
 	if parameters.OutputS3BucketName != nil {
 		result["output_s3_bucket"] = aws.StringValue(parameters.OutputS3BucketName)
@@ -498,7 +498,7 @@ func flattenAwsSsmTaskInvocationRunCommandParameters(parameters *ssm.Maintenance
 		result["output_s3_key_prefix"] = aws.StringValue(parameters.OutputS3KeyPrefix)
 	}
 	if parameters.Parameters != nil {
-		result["parameter"] = flattenAwsSsmTaskInvocationCommonParameters(parameters.Parameters)
+		result["parameter"] = flattenTaskInvocationCommonParameters(parameters.Parameters)
 	}
 	if parameters.ServiceRoleArn != nil {
 		result["service_role_arn"] = aws.StringValue(parameters.ServiceRoleArn)
@@ -507,13 +507,13 @@ func flattenAwsSsmTaskInvocationRunCommandParameters(parameters *ssm.Maintenance
 		result["timeout_seconds"] = aws.Int64Value(parameters.TimeoutSeconds)
 	}
 	if parameters.CloudWatchOutputConfig != nil {
-		result["cloudwatch_config"] = flattenAwsSsmTaskInvocationRunCommandParametersCloudWatchConfig(parameters.CloudWatchOutputConfig)
+		result["cloudwatch_config"] = flattenTaskInvocationRunCommandParametersCloudWatchConfig(parameters.CloudWatchOutputConfig)
 	}
 
 	return []interface{}{result}
 }
 
-func expandAwsSsmTaskInvocationStepFunctionsParameters(config []interface{}) *ssm.MaintenanceWindowStepFunctionsParameters {
+func expandTaskInvocationStepFunctionsParameters(config []interface{}) *ssm.MaintenanceWindowStepFunctionsParameters {
 	if len(config) == 0 || config[0] == nil {
 		return nil
 	}
@@ -531,7 +531,7 @@ func expandAwsSsmTaskInvocationStepFunctionsParameters(config []interface{}) *ss
 	return params
 }
 
-func flattenAwsSsmTaskInvocationStepFunctionsParameters(parameters *ssm.MaintenanceWindowStepFunctionsParameters) []interface{} {
+func flattenTaskInvocationStepFunctionsParameters(parameters *ssm.MaintenanceWindowStepFunctionsParameters) []interface{} {
 	result := make(map[string]interface{})
 
 	if parameters.Input != nil {
@@ -543,7 +543,7 @@ func flattenAwsSsmTaskInvocationStepFunctionsParameters(parameters *ssm.Maintena
 	return []interface{}{result}
 }
 
-func expandAwsSsmTaskInvocationRunCommandParametersNotificationConfig(config []interface{}) *ssm.NotificationConfig {
+func expandTaskInvocationRunCommandParametersNotificationConfig(config []interface{}) *ssm.NotificationConfig {
 	if len(config) == 0 || config[0] == nil {
 		return nil
 	}
@@ -564,7 +564,7 @@ func expandAwsSsmTaskInvocationRunCommandParametersNotificationConfig(config []i
 	return params
 }
 
-func flattenAwsSsmTaskInvocationRunCommandParametersNotificationConfig(config *ssm.NotificationConfig) []interface{} {
+func flattenTaskInvocationRunCommandParametersNotificationConfig(config *ssm.NotificationConfig) []interface{} {
 	result := make(map[string]interface{})
 
 	if config.NotificationArn != nil {
@@ -580,7 +580,7 @@ func flattenAwsSsmTaskInvocationRunCommandParametersNotificationConfig(config *s
 	return []interface{}{result}
 }
 
-func expandAwsSsmTaskInvocationRunCommandParametersCloudWatchConfig(config []interface{}) *ssm.CloudWatchOutputConfig {
+func expandTaskInvocationRunCommandParametersCloudWatchConfig(config []interface{}) *ssm.CloudWatchOutputConfig {
 	if len(config) == 0 || config[0] == nil {
 		return nil
 	}
@@ -598,7 +598,7 @@ func expandAwsSsmTaskInvocationRunCommandParametersCloudWatchConfig(config []int
 	return params
 }
 
-func flattenAwsSsmTaskInvocationRunCommandParametersCloudWatchConfig(config *ssm.CloudWatchOutputConfig) []interface{} {
+func flattenTaskInvocationRunCommandParametersCloudWatchConfig(config *ssm.CloudWatchOutputConfig) []interface{} {
 	result := make(map[string]interface{})
 
 	if config.CloudWatchLogGroupName != nil {
@@ -611,7 +611,7 @@ func flattenAwsSsmTaskInvocationRunCommandParametersCloudWatchConfig(config *ssm
 	return []interface{}{result}
 }
 
-func expandAwsSsmTaskInvocationCommonParameters(config []interface{}) map[string][]*string {
+func expandTaskInvocationCommonParameters(config []interface{}) map[string][]*string {
 	if len(config) == 0 || config[0] == nil {
 		return nil
 	}
@@ -626,7 +626,7 @@ func expandAwsSsmTaskInvocationCommonParameters(config []interface{}) map[string
 	return params
 }
 
-func flattenAwsSsmTaskInvocationCommonParameters(parameters map[string][]*string) []interface{} {
+func flattenTaskInvocationCommonParameters(parameters map[string][]*string) []interface{} {
 	attributes := make([]interface{}, 0, len(parameters))
 
 	keys := make([]string, 0, len(parameters))
@@ -684,7 +684,7 @@ func resourceMaintenanceWindowTaskCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("task_invocation_parameters"); ok {
-		params.TaskInvocationParameters = expandAwsSsmTaskInvocationParameters(v.([]interface{}))
+		params.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
 	}
 
 	resp, err := conn.RegisterTaskWithMaintenanceWindow(params)
@@ -726,12 +726,12 @@ func resourceMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{})
 	d.Set("description", resp.Description)
 
 	if resp.TaskInvocationParameters != nil {
-		if err := d.Set("task_invocation_parameters", flattenAwsSsmTaskInvocationParameters(resp.TaskInvocationParameters)); err != nil {
+		if err := d.Set("task_invocation_parameters", flattenTaskInvocationParameters(resp.TaskInvocationParameters)); err != nil {
 			return fmt.Errorf("Error setting task_invocation_parameters error: %#v", err)
 		}
 	}
 
-	if err := d.Set("targets", flattenAwsSSMTargets(resp.Targets)); err != nil {
+	if err := d.Set("targets", flattenTargets(resp.Targets)); err != nil {
 		return fmt.Errorf("Error setting targets error: %#v", err)
 	}
 
@@ -766,7 +766,7 @@ func resourceMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("task_invocation_parameters"); ok {
-		params.TaskInvocationParameters = expandAwsSsmTaskInvocationParameters(v.([]interface{}))
+		params.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
 	}
 
 	_, err := conn.UpdateMaintenanceWindowTask(params)
@@ -804,7 +804,7 @@ func resourceMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsSsmMaintenanceWindowTaskImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceMaintenanceWindowTaskImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <window-id>/<window-task-id>", d.Id())

@@ -246,15 +246,15 @@ func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, ok := d.GetOk("global_filter"); ok {
-		params.GlobalFilters = expandAwsSsmPatchFilterGroup(d)
+		params.GlobalFilters = expandPatchFilterGroup(d)
 	}
 
 	if _, ok := d.GetOk("approval_rule"); ok {
-		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
+		params.ApprovalRules = expandPatchRuleGroup(d)
 	}
 
 	if _, ok := d.GetOk("source"); ok {
-		params.Sources = expandAwsSsmPatchSource(d)
+		params.Sources = expandPatchSource(d)
 	}
 
 	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok {
@@ -303,15 +303,15 @@ func resourcePatchBaselineUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("approval_rule") {
-		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
+		params.ApprovalRules = expandPatchRuleGroup(d)
 	}
 
 	if d.HasChange("global_filter") {
-		params.GlobalFilters = expandAwsSsmPatchFilterGroup(d)
+		params.GlobalFilters = expandPatchFilterGroup(d)
 	}
 
 	if d.HasChange("source") {
-		params.Sources = expandAwsSsmPatchSource(d)
+		params.Sources = expandPatchSource(d)
 	}
 
 	if d.HasChange("approved_patches_enable_non_security") {
@@ -367,15 +367,15 @@ func resourcePatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("rejected_patches_action", resp.RejectedPatchesAction)
 	d.Set("approved_patches_enable_non_security", resp.ApprovedPatchesEnableNonSecurity)
 
-	if err := d.Set("global_filter", flattenAwsSsmPatchFilterGroup(resp.GlobalFilters)); err != nil {
+	if err := d.Set("global_filter", flattenPatchFilterGroup(resp.GlobalFilters)); err != nil {
 		return fmt.Errorf("Error setting global filters error: %#v", err)
 	}
 
-	if err := d.Set("approval_rule", flattenAwsSsmPatchRuleGroup(resp.ApprovalRules)); err != nil {
+	if err := d.Set("approval_rule", flattenPatchRuleGroup(resp.ApprovalRules)); err != nil {
 		return fmt.Errorf("Error setting approval rules error: %#v", err)
 	}
 
-	if err := d.Set("source", flattenAwsSsmPatchSource(resp.Sources)); err != nil {
+	if err := d.Set("source", flattenPatchSource(resp.Sources)); err != nil {
 		return fmt.Errorf("Error setting patch sources error: %#v", err)
 	}
 
@@ -425,7 +425,7 @@ func resourcePatchBaselineDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func expandAwsSsmPatchFilterGroup(d *schema.ResourceData) *ssm.PatchFilterGroup {
+func expandPatchFilterGroup(d *schema.ResourceData) *ssm.PatchFilterGroup {
 	var filters []*ssm.PatchFilter
 
 	filterConfig := d.Get("global_filter").([]interface{})
@@ -446,7 +446,7 @@ func expandAwsSsmPatchFilterGroup(d *schema.ResourceData) *ssm.PatchFilterGroup 
 	}
 }
 
-func flattenAwsSsmPatchFilterGroup(group *ssm.PatchFilterGroup) []map[string]interface{} {
+func flattenPatchFilterGroup(group *ssm.PatchFilterGroup) []map[string]interface{} {
 	if len(group.PatchFilters) == 0 {
 		return nil
 	}
@@ -464,7 +464,7 @@ func flattenAwsSsmPatchFilterGroup(group *ssm.PatchFilterGroup) []map[string]int
 	return result
 }
 
-func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
+func expandPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
 	var rules []*ssm.PatchRule
 
 	ruleConfig := d.Get("approval_rule").([]interface{})
@@ -510,7 +510,7 @@ func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
 	}
 }
 
-func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interface{} {
+func flattenPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interface{} {
 	if len(group.PatchRules) == 0 {
 		return nil
 	}
@@ -521,7 +521,7 @@ func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interfa
 		r := make(map[string]interface{})
 		r["compliance_level"] = aws.StringValue(rule.ComplianceLevel)
 		r["enable_non_security"] = aws.BoolValue(rule.EnableNonSecurity)
-		r["patch_filter"] = flattenAwsSsmPatchFilterGroup(rule.PatchFilterGroup)
+		r["patch_filter"] = flattenPatchFilterGroup(rule.PatchFilterGroup)
 
 		if rule.ApproveAfterDays != nil {
 			r["approve_after_days"] = aws.Int64Value(rule.ApproveAfterDays)
@@ -537,7 +537,7 @@ func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interfa
 	return result
 }
 
-func expandAwsSsmPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
+func expandPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
 	var sources []*ssm.PatchSource
 
 	sourceConfigs := d.Get("source").([]interface{})
@@ -557,7 +557,7 @@ func expandAwsSsmPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
 	return sources
 }
 
-func flattenAwsSsmPatchSource(sources []*ssm.PatchSource) []map[string]interface{} {
+func flattenPatchSource(sources []*ssm.PatchSource) []map[string]interface{} {
 	if len(sources) == 0 {
 		return nil
 	}

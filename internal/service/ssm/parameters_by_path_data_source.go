@@ -11,7 +11,7 @@ import (
 
 func DataSourceParametersByPath() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSsmParametersReadByPath,
+		Read: dataSourceParametersReadByPath,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -48,7 +48,7 @@ func DataSourceParametersByPath() *schema.Resource {
 	}
 }
 
-func dataSourceAwsSsmParametersReadByPath(d *schema.ResourceData, meta interface{}) error {
+func dataSourceParametersReadByPath(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	path := d.Get("path").(string)
