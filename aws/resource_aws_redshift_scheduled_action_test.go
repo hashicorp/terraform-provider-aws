@@ -69,12 +69,12 @@ func testSweepRedshiftScheduledActions(region string) error {
 func TestAccAWSRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,14 +123,14 @@ func TestAccAWSRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 func TestAccAWSRedshiftScheduledAction_PauseClusterWithOptions(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	startTime := time.Now().UTC().Add(1 * time.Hour).Format(time.RFC3339)
 	endTime := time.Now().UTC().Add(2 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -162,12 +162,12 @@ func TestAccAWSRedshiftScheduledAction_PauseClusterWithOptions(t *testing.T) {
 func TestAccAWSRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -216,12 +216,12 @@ func TestAccAWSRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 func TestAccAWSRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -270,12 +270,12 @@ func TestAccAWSRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 func TestAccAWSRedshiftScheduledAction_ResizeClusterWithOptions(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -311,19 +311,19 @@ func TestAccAWSRedshiftScheduledAction_ResizeClusterWithOptions(t *testing.T) {
 func TestAccAWSRedshiftScheduledAction_disappears(t *testing.T) {
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSRedshiftScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRedshiftScheduledActionConfigPauseCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRedshiftScheduledActionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsRedshiftScheduledAction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsRedshiftScheduledAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -332,7 +332,7 @@ func TestAccAWSRedshiftScheduledAction_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSRedshiftScheduledActionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+	conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_scheduled_action" {
@@ -366,7 +366,7 @@ func testAccCheckAWSRedshiftScheduledActionExists(n string, v *redshift.Schedule
 			return fmt.Errorf("No Redshift Scheduled Action ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).redshiftconn
+		conn := acctest.Provider.Meta().(*AWSClient).redshiftconn
 
 		output, err := finder.ScheduledActionByName(conn, rs.Primary.ID)
 
