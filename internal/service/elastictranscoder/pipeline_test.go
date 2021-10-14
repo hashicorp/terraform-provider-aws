@@ -24,7 +24,7 @@ func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
@@ -32,7 +32,7 @@ func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 			{
 				Config: testAccPipelineBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
+					testAccCheckPipelineExists(resourceName, pipeline),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexp.MustCompile(`pipeline/.+`)),
 				),
 			},
@@ -52,7 +52,7 @@ func TestAccAWSElasticTranscoderPipeline_kmsKey(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
@@ -60,7 +60,7 @@ func TestAccAWSElasticTranscoderPipeline_kmsKey(t *testing.T) {
 			{
 				Config: testAccPipelineKMSKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
+					testAccCheckPipelineExists(resourceName, pipeline),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_kms_key_arn", keyResourceName, "arn"),
 				),
 			},
@@ -80,7 +80,7 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
@@ -88,8 +88,8 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 			{
 				Config: testAccNotificationsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, &pipeline),
-					testAccCheckAWSElasticTranscoderPipeline_notifications(&pipeline, []string{"warning", "completed"}),
+					testAccCheckPipelineExists(resourceName, &pipeline),
+					testAccCheckPipeline_notifications(&pipeline, []string{"warning", "completed"}),
 				),
 			},
 			{
@@ -101,8 +101,8 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 			{
 				Config: testAccNotificationsUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, &pipeline),
-					testAccCheckAWSElasticTranscoderPipeline_notifications(&pipeline, []string{"completed"}),
+					testAccCheckPipelineExists(resourceName, &pipeline),
+					testAccCheckPipeline_notifications(&pipeline, []string{"completed"}),
 				),
 			},
 		},
@@ -110,7 +110,7 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 }
 
 // testAccCheckTags can be used to check the tags on a resource.
-func testAccCheckAWSElasticTranscoderPipeline_notifications(
+func testAccCheckPipeline_notifications(
 	p *elastictranscoder.Pipeline, notifications []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
@@ -150,7 +150,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
@@ -158,7 +158,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 			{
 				Config: testAccPipelineWithContentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
+					testAccCheckPipelineExists(resourceName, pipeline),
 				),
 			},
 			{
@@ -169,7 +169,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 			{
 				Config: testAccPipelineWithContentUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
+					testAccCheckPipelineExists(resourceName, pipeline),
 				),
 			},
 		},
@@ -183,7 +183,7 @@ func TestAccAWSElasticTranscoderPipeline_withPermissions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
@@ -191,7 +191,7 @@ func TestAccAWSElasticTranscoderPipeline_withPermissions(t *testing.T) {
 			{
 				Config: testAccPipelineWithPermsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
+					testAccCheckPipelineExists(resourceName, pipeline),
 				),
 			},
 			{
@@ -209,7 +209,7 @@ func TestAccAWSElasticTranscoderPipeline_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
@@ -217,7 +217,7 @@ func TestAccAWSElasticTranscoderPipeline_disappears(t *testing.T) {
 			{
 				Config: testAccPipelineBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
+					testAccCheckPipelineExists(resourceName, pipeline),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelastictranscoder.ResourcePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -226,7 +226,7 @@ func TestAccAWSElasticTranscoderPipeline_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSElasticTranscoderPipelineExists(n string, res *elastictranscoder.Pipeline) resource.TestCheckFunc {
+func testAccCheckPipelineExists(n string, res *elastictranscoder.Pipeline) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -278,7 +278,7 @@ func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPreCheckAWSElasticTranscoder(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
 
 	input := &elastictranscoder.ListPipelinesInput{}
