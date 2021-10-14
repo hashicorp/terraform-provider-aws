@@ -280,7 +280,7 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 	policyDetails := &dlm.PolicyDetails{}
 	m := cfg[0].(map[string]interface{})
 	if v, ok := m["resource_types"]; ok {
-		policyDetails.ResourceTypes = expandStringList(v.([]interface{}))
+		policyDetails.ResourceTypes = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := m["schedule"]; ok {
 		policyDetails.Schedules = expandDlmSchedules(v.([]interface{}))
@@ -294,7 +294,7 @@ func expandDlmPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 
 func flattenDlmPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]interface{} {
 	result := make(map[string]interface{})
-	result["resource_types"] = flattenStringList(policyDetails.ResourceTypes)
+	result["resource_types"] = flex.FlattenStringList(policyDetails.ResourceTypes)
 	result["schedule"] = flattenDlmSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenDlmTags(policyDetails.TargetTags)
 
@@ -352,7 +352,7 @@ func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
 		IntervalUnit: aws.String(c["interval_unit"].(string)),
 	}
 	if v, ok := c["times"]; ok {
-		createRule.Times = expandStringList(v.([]interface{}))
+		createRule.Times = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	return createRule
@@ -366,7 +366,7 @@ func flattenDlmCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["interval"] = aws.Int64Value(createRule.Interval)
 	result["interval_unit"] = aws.StringValue(createRule.IntervalUnit)
-	result["times"] = flattenStringList(createRule.Times)
+	result["times"] = flex.FlattenStringList(createRule.Times)
 
 	return []map[string]interface{}{result}
 }
