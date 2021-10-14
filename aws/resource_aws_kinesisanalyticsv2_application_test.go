@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/lister"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).kinesisanalyticsv2conn
+	conn := client.(*conns.AWSClient).KinesisAnalyticsV2Conn
 	input := &kinesisanalyticsv2.ListApplicationsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -3989,7 +3990,7 @@ func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_VPCConf
 }
 
 func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).kinesisanalyticsv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesisanalyticsv2_application" {
@@ -4022,7 +4023,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, v *kinesisanalyti
 			return fmt.Errorf("No Kinesis Analytics v2 Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).kinesisanalyticsv2conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
 
 		application, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 
@@ -4037,7 +4038,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, v *kinesisanalyti
 }
 
 func testAccPreCheckAWSKinesisAnalyticsV2(t *testing.T) {
-	conn := acctest.Provider.Meta().(*AWSClient).kinesisanalyticsv2conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn
 
 	input := &kinesisanalyticsv2.ListApplicationsInput{}
 
