@@ -45,7 +45,7 @@ func testSweepAutoScalingPlansScalingPlans(region string) error {
 			scalingPlanName := aws.StringValue(scalingPlan.ScalingPlanName)
 			scalingPlanVersion := int(aws.Int64Value(scalingPlan.ScalingPlanVersion))
 
-			r := ResourceScalingPlan()
+			r := tfautoscalingplans.ResourceScalingPlan()
 			d := r.Data(nil)
 			d.SetId("????????????????") // ID not used in Delete.
 			d.Set("name", scalingPlanName)
@@ -304,7 +304,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_disappears(t *testing.T) {
 				Config: testAccAutoScalingPlansScalingPlanConfigBasicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingPlansScalingPlanExists(resourceName, &scalingPlan),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceScalingPlan(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfautoscalingplans.ResourceScalingPlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
