@@ -21,6 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 )
 
 func init() {
@@ -626,7 +631,7 @@ func testAccCheckAwsNetworkFirewallFirewallPolicyDestroy(s *terraform.State) err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := finder.FirewallPolicy(context.Background(), conn, rs.Primary.ID)
+		output, err := tfnetworkfirewall.FindFirewallPolicy(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
 		}
@@ -653,7 +658,7 @@ func testAccCheckAwsNetworkFirewallFirewallPolicyExists(n string) resource.TestC
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := finder.FirewallPolicy(context.Background(), conn, rs.Primary.ID)
+		output, err := tfnetworkfirewall.FindFirewallPolicy(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

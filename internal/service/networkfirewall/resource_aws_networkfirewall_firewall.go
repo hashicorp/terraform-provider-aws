@@ -18,6 +18,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 )
 
 func ResourceFirewall() *schema.Resource {
@@ -173,7 +189,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.Firewall.FirewallArn))
 
-	if _, err := waiter.FirewallCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := tfnetworkfirewall.waitFirewallCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be created: %w", d.Id(), err))
 	}
 
@@ -340,7 +356,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return diag.FromErr(fmt.Errorf("error associating NetworkFirewall Firewall (%s) subnet: %w", arn, err))
 			}
 
-			respToken, err := waiter.FirewallUpdated(ctx, conn, arn)
+			respToken, err := tfnetworkfirewall.waitFirewallUpdated(ctx, conn, arn)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be updated: %w", d.Id(), err))
 
@@ -363,7 +379,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return diag.FromErr(fmt.Errorf("error disassociating NetworkFirewall Firewall (%s) subnet: %w", arn, err))
 			}
 
-			_, err = waiter.FirewallUpdated(ctx, conn, arn)
+			_, err = tfnetworkfirewall.waitFirewallUpdated(ctx, conn, arn)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be updated: %w", d.Id(), err))
 
@@ -398,7 +414,7 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Firewall (%s): %w", d.Id(), err))
 	}
 
-	if _, err := waiter.FirewallDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := tfnetworkfirewall.waitFirewallDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			return nil
 		}

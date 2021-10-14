@@ -11,19 +11,19 @@ import (
 
 const (
 	// Maximum amount of time to wait for a Firewall to be created, updated, or deleted
-	FirewallTimeout = 20 * time.Minute
+	firewallTimeout = 20 * time.Minute
 	// Maximum amount of time to wait for a Firewall Policy to be deleted
-	FirewallPolicyTimeout = 10 * time.Minute
+	firewallPolicyTimeout = 10 * time.Minute
 	// Maximum amount of time to wait for a Rule Group to be deleted
-	RuleGroupDeleteTimeout = 10 * time.Minute
+	ruleGroupDeleteTimeout = 10 * time.Minute
 )
 
-func FirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
+func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
-		Refresh: FirewallCreatedStatus(ctx, conn, arn),
-		Timeout: FirewallTimeout,
+		Refresh: statusFirewallCreated(ctx, conn, arn),
+		Timeout: firewallTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -35,12 +35,12 @@ func FirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall,
 	return nil, err
 }
 
-func FirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*string, error) {
+func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*string, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
-		Refresh: FirewallUpdatedStatus(ctx, conn, arn),
-		Timeout: FirewallTimeout,
+		Refresh: statusFirewallUpdated(ctx, conn, arn),
+		Timeout: firewallTimeout,
 		// Delay added to account for Associate/DisassociateSubnet calls that return
 		// a READY status immediately after the method is called instead of immediately
 		// returning PROVISIONING
@@ -56,13 +56,13 @@ func FirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall,
 	return nil, err
 }
 
-// FirewallDeleted waits for a Firewall to return "Deleted"
-func FirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
+// waitFirewallDeleted waits for a Firewall to return "Deleted"
+func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueDeleting},
-		Target:  []string{ResourceStatusDeleted},
-		Refresh: FirewallDeletedStatus(ctx, conn, arn),
-		Timeout: FirewallTimeout,
+		Target:  []string{resourceStatusDeleted},
+		Refresh: statusFirewallDeleted(ctx, conn, arn),
+		Timeout: firewallTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -74,13 +74,13 @@ func FirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall,
 	return nil, err
 }
 
-// FirewallPolicyDeleted waits for a Firewall Policy to return "Deleted"
-func FirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.FirewallPolicy, error) {
+// waitFirewallPolicyDeleted waits for a Firewall Policy to return "Deleted"
+func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.FirewallPolicy, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkfirewall.ResourceStatusDeleting},
-		Target:  []string{ResourceStatusDeleted},
-		Refresh: FirewallPolicyStatus(ctx, conn, arn),
-		Timeout: FirewallPolicyTimeout,
+		Target:  []string{resourceStatusDeleted},
+		Refresh: statusFirewallPolicy(ctx, conn, arn),
+		Timeout: firewallPolicyTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -92,13 +92,13 @@ func FirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.NetworkFir
 	return nil, err
 }
 
-// RuleGroupDeleted waits for a Rule Group to return "Deleted"
-func RuleGroupDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.RuleGroup, error) {
+// waitRuleGroupDeleted waits for a Rule Group to return "Deleted"
+func waitRuleGroupDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.RuleGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkfirewall.ResourceStatusDeleting},
-		Target:  []string{ResourceStatusDeleted},
-		Refresh: RuleGroupStatus(ctx, conn, arn),
-		Timeout: RuleGroupDeleteTimeout,
+		Target:  []string{resourceStatusDeleted},
+		Refresh: statusRuleGroup(ctx, conn, arn),
+		Timeout: ruleGroupDeleteTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

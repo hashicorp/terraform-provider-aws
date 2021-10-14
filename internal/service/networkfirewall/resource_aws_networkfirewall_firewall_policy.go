@@ -19,6 +19,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 )
 
 func ResourceFirewallPolicy() *schema.Resource {
@@ -149,7 +170,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Firewall Policy %s", d.Id())
 
-	output, err := finder.FirewallPolicy(ctx, conn, d.Id())
+	output, err := tfnetworkfirewall.FindFirewallPolicy(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] NetworkFirewall Firewall Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -233,7 +254,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		FirewallPolicyArn: aws.String(d.Id()),
 	}
 
-	err := resource.RetryContext(ctx, waiter.FirewallPolicyTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, tfnetworkfirewall.firewallPolicyTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteFirewallPolicyWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidOperationException, "Unable to delete the object because it is still in use") {
@@ -255,7 +276,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Firewall Policy (%s): %w", d.Id(), err))
 	}
 
-	if _, err := waiter.FirewallPolicyDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := tfnetworkfirewall.waitFirewallPolicyDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			return nil
 		}

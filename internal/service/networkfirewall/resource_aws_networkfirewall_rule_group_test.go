@@ -21,6 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 )
 
 func init() {
@@ -828,7 +833,7 @@ func testAccCheckAwsNetworkFirewallRuleGroupDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := finder.RuleGroup(context.Background(), conn, rs.Primary.ID)
+		output, err := tfnetworkfirewall.FindRuleGroup(context.Background(), conn, rs.Primary.ID)
 		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 			continue
 		}
@@ -855,7 +860,7 @@ func testAccCheckAwsNetworkFirewallRuleGroupExists(n string) resource.TestCheckF
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn
-		output, err := finder.RuleGroup(context.Background(), conn, rs.Primary.ID)
+		output, err := tfnetworkfirewall.FindRuleGroup(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
