@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLicenseManagerAssociation() *schema.Resource {
+func ResourceAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLicenseManagerAssociationCreate,
-		Read:   resourceAwsLicenseManagerAssociationRead,
-		Delete: resourceAwsLicenseManagerAssociationDelete,
+		Create: resourceAssociationCreate,
+		Read:   resourceAssociationRead,
+		Delete: resourceAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -37,7 +37,7 @@ func resourceAwsLicenseManagerAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsLicenseManagerAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
 	resourceArn := d.Get("resource_arn").(string)
@@ -59,10 +59,10 @@ func resourceAwsLicenseManagerAssociationCreate(d *schema.ResourceData, meta int
 
 	d.SetId(fmt.Sprintf("%s,%s", resourceArn, licenseConfigurationArn))
 
-	return resourceAwsLicenseManagerAssociationRead(d, meta)
+	return resourceAssociationRead(d, meta)
 }
 
-func resourceAwsLicenseManagerAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
 	resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(d.Id())
@@ -121,7 +121,7 @@ func resourceAwsLicenseManagerAssociationParseId(id string) (string, string, err
 	return parts[0], parts[1], nil
 }
 
-func resourceAwsLicenseManagerAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
 	resourceArn, licenseConfigurationArn, err := resourceAwsLicenseManagerAssociationParseId(d.Id())

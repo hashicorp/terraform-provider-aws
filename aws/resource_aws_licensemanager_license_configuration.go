@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
+func ResourceLicenseConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLicenseManagerLicenseConfigurationCreate,
-		Read:   resourceAwsLicenseManagerLicenseConfigurationRead,
-		Update: resourceAwsLicenseManagerLicenseConfigurationUpdate,
-		Delete: resourceAwsLicenseManagerLicenseConfigurationDelete,
+		Create: resourceLicenseConfigurationCreate,
+		Read:   resourceLicenseConfigurationRead,
+		Update: resourceLicenseConfigurationUpdate,
+		Delete: resourceLicenseConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -77,7 +77,7 @@ func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
 	}
 }
 
-func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLicenseConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -114,10 +114,10 @@ func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData,
 		return fmt.Errorf("Error creating License Manager license configuration: %s", err)
 	}
 	d.SetId(aws.StringValue(resp.LicenseConfigurationArn))
-	return resourceAwsLicenseManagerLicenseConfigurationRead(d, meta)
+	return resourceLicenseConfigurationRead(d, meta)
 }
 
-func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -160,7 +160,7 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceAwsLicenseManagerLicenseConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLicenseConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
 	if d.HasChange("tags_all") {
@@ -188,10 +188,10 @@ func resourceAwsLicenseManagerLicenseConfigurationUpdate(d *schema.ResourceData,
 	if err != nil {
 		return fmt.Errorf("Error updating License Manager license configuration: %s", err)
 	}
-	return resourceAwsLicenseManagerLicenseConfigurationRead(d, meta)
+	return resourceLicenseConfigurationRead(d, meta)
 }
 
-func resourceAwsLicenseManagerLicenseConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLicenseConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LicenseManagerConn
 
 	opts := &licensemanager.DeleteLicenseConfigurationInput{
