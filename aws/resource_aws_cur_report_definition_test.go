@@ -80,7 +80,7 @@ func testAccAwsCurReportDefinition_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +139,7 @@ func testAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -183,7 +183,7 @@ func testAccAwsCurReportDefinition_parquet(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,7 +226,7 @@ func testAccAwsCurReportDefinition_athena(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -270,7 +270,7 @@ func testAccAwsCurReportDefinition_refresh(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -314,7 +314,7 @@ func testAccAwsCurReportDefinition_overwrite(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -351,14 +351,14 @@ func testAccAwsCurReportDefinition_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCurReportDefinition(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCurReportDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
