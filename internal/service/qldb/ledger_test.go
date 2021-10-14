@@ -2,7 +2,6 @@ package qldb_test
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
@@ -15,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfqldb "github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func TestAccQLDBLedger_basic(t *testing.T) {
