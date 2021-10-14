@@ -69,7 +69,7 @@ func testSweepServiceDiscoveryServices(region string) error {
 
 func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -78,7 +78,7 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +122,7 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -132,7 +132,7 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,7 +187,7 @@ func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -216,14 +216,14 @@ func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDiscoveryServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceDiscoveryService(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceDiscoveryService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -238,7 +238,7 @@ func TestAccAWSServiceDiscoveryService_Tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -277,7 +277,7 @@ func TestAccAWSServiceDiscoveryService_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsServiceDiscoveryServiceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sdconn
+	conn := acctest.Provider.Meta().(*AWSClient).sdconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_service" {
@@ -311,7 +311,7 @@ func testAccCheckAwsServiceDiscoveryServiceExists(name string) resource.TestChec
 			return fmt.Errorf("No Service Discovery Service ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sdconn
+		conn := acctest.Provider.Meta().(*AWSClient).sdconn
 
 		_, err := finder.ServiceByID(conn, rs.Primary.ID)
 

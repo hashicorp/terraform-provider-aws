@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 
@@ -22,7 +22,7 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceConfig(rName),
@@ -38,7 +38,7 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_private(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_public(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_dns_namespace.test"
 	resourceName := "aws_service_discovery_public_dns_namespace.test"
 
@@ -49,7 +49,7 @@ func TestAccAWSServiceDiscoveryDnsNamespaceDataSource_public(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck: acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceDiscoveryPublicDnsNamespaceConfig(rName),

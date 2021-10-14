@@ -105,7 +105,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,14 +139,14 @@ func TestAccAWSServiceDiscoveryHttpNamespace_disappears(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDiscoveryHttpNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceDiscoveryHttpNamespaceExists(resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsServiceDiscoveryHttpNamespace(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsServiceDiscoveryHttpNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,7 +165,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_Description(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,7 +195,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_Tags(t *testing.T) {
 			testAccPreCheckAWSServiceDiscovery(t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -233,7 +233,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_Tags(t *testing.T) {
 }
 
 func testAccCheckAwsServiceDiscoveryHttpNamespaceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sdconn
+	conn := acctest.Provider.Meta().(*AWSClient).sdconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_service_discovery_http_namespace" {
@@ -262,7 +262,7 @@ func testAccCheckAwsServiceDiscoveryHttpNamespaceExists(name string) resource.Te
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sdconn
+		conn := acctest.Provider.Meta().(*AWSClient).sdconn
 
 		input := &servicediscovery.GetNamespaceInput{
 			Id: aws.String(rs.Primary.ID),
