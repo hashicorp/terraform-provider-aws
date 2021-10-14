@@ -6,10 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
 const (
@@ -44,7 +41,7 @@ func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunn
 
 func StatusConnection(ctx context.Context, conn *apprunner.AppRunner, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		c, err := tfapprunner.FindConnectionSummaryByName(ctx, conn, name)
+		c, err := FindConnectionSummaryByName(ctx, conn, name)
 
 		if err != nil {
 			return nil, "", err
@@ -60,7 +57,7 @@ func StatusConnection(ctx context.Context, conn *apprunner.AppRunner, name strin
 
 func StatusCustomDomain(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		customDomain, err := tfapprunner.FindCustomDomain(ctx, conn, domainName, serviceArn)
+		customDomain, err := FindCustomDomain(ctx, conn, domainName, serviceArn)
 
 		if err != nil {
 			return nil, "", err

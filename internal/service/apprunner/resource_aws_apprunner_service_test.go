@@ -1,4 +1,4 @@
-package aws
+package apprunner_test
 
 import (
 	"context"

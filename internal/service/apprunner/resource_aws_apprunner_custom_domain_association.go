@@ -1,4 +1,4 @@
-package aws
+package apprunner
 
 import (
 	"context"
@@ -11,41 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/apprunner/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
-	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 )
 
 func ResourceCustomDomainAssociation() *schema.Resource {
@@ -138,7 +106,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.CustomDomain.DomainName), aws.StringValue(output.ServiceArn)))
 	d.Set("dns_target", output.DNSTarget)
 
-	if err := tfapprunner.WaitCustomDomainAssociationCreated(ctx, conn, domainName, serviceArn); err != nil {
+	if err := WaitCustomDomainAssociationCreated(ctx, conn, domainName, serviceArn); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for App Runner Custom Domain Association (%s) creation: %w", d.Id(), err))
 	}
 
@@ -148,13 +116,13 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
-	domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(d.Id())
+	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	customDomain, err := tfapprunner.FindCustomDomain(ctx, conn, domainName, serviceArn)
+	customDomain, err := FindCustomDomain(ctx, conn, domainName, serviceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
@@ -186,7 +154,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
-	domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(d.Id())
+	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -207,7 +175,7 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 		return diag.FromErr(fmt.Errorf("error disassociating App Runner Custom Domain (%s) for Service (%s): %w", domainName, serviceArn, err))
 	}
 
-	if err := tfapprunner.WaitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceArn); err != nil {
+	if err := WaitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceArn); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
