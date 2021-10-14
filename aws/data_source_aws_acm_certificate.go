@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCertificate() *schema.Resource {
@@ -58,7 +59,7 @@ func DataSourceCertificate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -177,7 +178,7 @@ func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
 
-	tags, err := keyvaluetags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
+	tags, err := tftags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ACM Certificate (%s): %w", d.Id(), err)
