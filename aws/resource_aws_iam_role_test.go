@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -350,7 +351,7 @@ func TestAccAWSIAMRole_disappears(t *testing.T) {
 				Config: testAccAWSIAMRoleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIamRole(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceRole(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

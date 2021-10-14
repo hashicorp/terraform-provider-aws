@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamGroup() *schema.Resource {
+func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamGroupCreate,
-		Read:   resourceAwsIamGroupRead,
-		Update: resourceAwsIamGroupUpdate,
-		Delete: resourceAwsIamGroupDelete,
+		Create: resourceGroupCreate,
+		Read:   resourceGroupRead,
+		Update: resourceGroupUpdate,
+		Delete: resourceGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -52,7 +52,7 @@ func resourceAwsIamGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsIamGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
@@ -68,10 +68,10 @@ func resourceAwsIamGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(aws.StringValue(createResp.Group.GroupName))
 
-	return resourceAwsIamGroupRead(d, meta)
+	return resourceGroupRead(d, meta)
 }
 
-func resourceAwsIamGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.GetGroupInput{
@@ -131,7 +131,7 @@ func resourceAwsIamGroupRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChanges("name", "path") {
 		conn := meta.(*conns.AWSClient).IAMConn
 		on, nn := d.GetChange("name")
@@ -147,12 +147,12 @@ func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Error updating IAM Group %s: %s", d.Id(), err)
 		}
 		d.SetId(nn.(string))
-		return resourceAwsIamGroupRead(d, meta)
+		return resourceGroupRead(d, meta)
 	}
 	return nil
 }
 
-func resourceAwsIamGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	request := &iam.DeleteGroupInput{

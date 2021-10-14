@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIAMUsers() *schema.Resource {
+func DataSourceUsers() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMUsersRead,
+		Read: dataSourceUsersRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
@@ -37,7 +37,7 @@ func dataSourceAwsIAMUsers() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIAMUsersRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	nameRegex := d.Get("name_regex").(string)

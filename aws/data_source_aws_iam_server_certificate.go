@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIAMServerCertificate() *schema.Resource {
+func DataSourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMServerCertificateRead,
+		Read: dataSourceServerCertificateRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -93,7 +93,7 @@ func (m certificateByExpiration) Less(i, j int) bool {
 	return m[i].Expiration.After(*m[j].Expiration)
 }
 
-func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	var matcher = func(cert *iam.ServerCertificateMetadata) bool {

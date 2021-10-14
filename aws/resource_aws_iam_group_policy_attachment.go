@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamGroupPolicyAttachment() *schema.Resource {
+func ResourceGroupPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamGroupPolicyAttachmentCreate,
-		Read:   resourceAwsIamGroupPolicyAttachmentRead,
-		Delete: resourceAwsIamGroupPolicyAttachmentDelete,
+		Create: resourceGroupPolicyAttachmentCreate,
+		Read:   resourceGroupPolicyAttachmentRead,
+		Delete: resourceGroupPolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamGroupPolicyAttachmentImport,
 		},
@@ -40,7 +40,7 @@ func resourceAwsIamGroupPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsIamGroupPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	group := d.Get("group").(string)
@@ -54,10 +54,10 @@ func resourceAwsIamGroupPolicyAttachmentCreate(d *schema.ResourceData, meta inte
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", group)))
 
-	return resourceAwsIamGroupPolicyAttachmentRead(d, meta)
+	return resourceGroupPolicyAttachmentRead(d, meta)
 }
 
-func resourceAwsIamGroupPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	group := d.Get("group").(string)
 	arn := d.Get("policy_arn").(string)
@@ -115,7 +115,7 @@ func resourceAwsIamGroupPolicyAttachmentRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsIamGroupPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	group := d.Get("group").(string)
 	arn := d.Get("policy_arn").(string)

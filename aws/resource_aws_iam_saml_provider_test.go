@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func testSweepIamSamlProvider(region string) error {
 	for _, sampProvider := range out.SAMLProviderList {
 		arn := aws.StringValue(sampProvider.Arn)
 
-		r := resourceAwsIamSamlProvider()
+		r := ResourceSamlProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
 		err := r.Delete(d, client)
@@ -157,7 +158,7 @@ func TestAccAWSIAMSamlProvider_disappears(t *testing.T) {
 				Config: testAccIAMSamlProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsIamSamlProvider(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceSamlProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

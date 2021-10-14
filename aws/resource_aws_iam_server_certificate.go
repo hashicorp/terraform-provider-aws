@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIAMServerCertificate() *schema.Resource {
+func ResourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIAMServerCertificateCreate,
-		Read:   resourceAwsIAMServerCertificateRead,
-		Update: resourceAwsIAMServerCertificateUpdate,
-		Delete: resourceAwsIAMServerCertificateDelete,
+		Create: resourceServerCertificateCreate,
+		Read:   resourceServerCertificateRead,
+		Update: resourceServerCertificateUpdate,
+		Delete: resourceServerCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIAMServerCertificateImport,
 		},
@@ -100,7 +100,7 @@ func resourceAwsIAMServerCertificate() *schema.Resource {
 	}
 }
 
-func resourceAwsIAMServerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -138,10 +138,10 @@ func resourceAwsIAMServerCertificateCreate(d *schema.ResourceData, meta interfac
 	d.SetId(aws.StringValue(resp.ServerCertificateMetadata.ServerCertificateId))
 	d.Set("name", sslCertName)
 
-	return resourceAwsIAMServerCertificateRead(d, meta)
+	return resourceServerCertificateRead(d, meta)
 }
 
-func resourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -194,7 +194,7 @@ func resourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsIAMServerCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceServerCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("tags_all") {
@@ -205,10 +205,10 @@ func resourceAwsIAMServerCertificateUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return resourceAwsIAMServerCertificateRead(d, meta)
+	return resourceServerCertificateRead(d, meta)
 }
 
-func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	log.Printf("[INFO] Deleting IAM Server Certificate: %s", d.Id())
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {

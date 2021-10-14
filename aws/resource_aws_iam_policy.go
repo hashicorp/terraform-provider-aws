@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamPolicy() *schema.Resource {
+func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamPolicyCreate,
-		Read:   resourceAwsIamPolicyRead,
-		Update: resourceAwsIamPolicyUpdate,
-		Delete: resourceAwsIamPolicyDelete,
+		Create: resourcePolicyCreate,
+		Read:   resourcePolicyRead,
+		Update: resourcePolicyUpdate,
+		Delete: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -83,7 +83,7 @@ func resourceAwsIamPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -112,10 +112,10 @@ func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(response.Policy.Arn))
 
-	return resourceAwsIamPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -232,7 +232,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -260,10 +260,10 @@ func resourceAwsIamPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceAwsIamPolicyRead(d, meta)
+	return resourcePolicyRead(d, meta)
 }
 
-func resourceAwsIamPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if err := iamPolicyDeleteNondefaultVersions(d.Id(), conn); err != nil {

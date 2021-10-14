@@ -16,11 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamUserPolicyAttachment() *schema.Resource {
+func ResourceUserPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamUserPolicyAttachmentCreate,
-		Read:   resourceAwsIamUserPolicyAttachmentRead,
-		Delete: resourceAwsIamUserPolicyAttachmentDelete,
+		Create: resourceUserPolicyAttachmentCreate,
+		Read:   resourceUserPolicyAttachmentRead,
+		Delete: resourceUserPolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamUserPolicyAttachmentImport,
 		},
@@ -40,7 +40,7 @@ func resourceAwsIamUserPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsIamUserPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	user := d.Get("user").(string)
@@ -54,10 +54,10 @@ func resourceAwsIamUserPolicyAttachmentCreate(d *schema.ResourceData, meta inter
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", user)))
 
-	return resourceAwsIamUserPolicyAttachmentRead(d, meta)
+	return resourceUserPolicyAttachmentRead(d, meta)
 }
 
-func resourceAwsIamUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
@@ -115,7 +115,7 @@ func resourceAwsIamUserPolicyAttachmentRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsIamUserPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)

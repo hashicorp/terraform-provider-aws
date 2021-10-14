@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamAccountPasswordPolicy() *schema.Resource {
+func ResourceAccountPasswordPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamAccountPasswordPolicyUpdate,
-		Read:   resourceAwsIamAccountPasswordPolicyRead,
-		Update: resourceAwsIamAccountPasswordPolicyUpdate,
-		Delete: resourceAwsIamAccountPasswordPolicyDelete,
+		Create: resourceAccountPasswordPolicyUpdate,
+		Read:   resourceAccountPasswordPolicyRead,
+		Update: resourceAccountPasswordPolicyUpdate,
+		Delete: resourceAccountPasswordPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -75,7 +75,7 @@ func resourceAwsIamAccountPasswordPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsIamAccountPasswordPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountPasswordPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.UpdateAccountPasswordPolicyInput{}
@@ -117,10 +117,10 @@ func resourceAwsIamAccountPasswordPolicyUpdate(d *schema.ResourceData, meta inte
 
 	d.SetId("iam-account-password-policy")
 
-	return resourceAwsIamAccountPasswordPolicyRead(d, meta)
+	return resourceAccountPasswordPolicyRead(d, meta)
 }
 
-func resourceAwsIamAccountPasswordPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountPasswordPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	input := &iam.GetAccountPasswordPolicyInput{}
@@ -153,7 +153,7 @@ func resourceAwsIamAccountPasswordPolicyRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsIamAccountPasswordPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountPasswordPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	log.Println("[DEBUG] Deleting IAM account password policy")

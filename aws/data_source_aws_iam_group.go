@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIAMGroup() *schema.Resource {
+func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMGroupRead,
+		Read: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -59,7 +59,7 @@ func dataSourceAwsIAMGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	groupName := d.Get("group_name").(string)

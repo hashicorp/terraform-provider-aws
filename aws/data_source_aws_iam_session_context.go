@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIAMSessionContext() *schema.Resource {
+func DataSourceSessionContext() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMSessionContextRead,
+		Read: dataSourceSessionContextRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -45,7 +45,7 @@ func dataSourceAwsIAMSessionContext() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIAMSessionContextRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	arn := d.Get("arn").(string)

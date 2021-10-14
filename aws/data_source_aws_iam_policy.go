@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsIAMPolicy() *schema.Resource {
+func DataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsIAMPolicyRead,
+		Read: dataSourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -58,7 +58,7 @@ func dataSourceAwsIAMPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

@@ -16,13 +16,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamUserPolicy() *schema.Resource {
+func ResourceUserPolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutUserPolicy API is idempotent, so these can be the same.
 		Create: resourceAwsIamUserPolicyPut,
-		Read:   resourceAwsIamUserPolicyRead,
+		Read:   resourceUserPolicyRead,
 		Update: resourceAwsIamUserPolicyPut,
-		Delete: resourceAwsIamUserPolicyDelete,
+		Delete: resourceUserPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -89,7 +89,7 @@ func resourceAwsIamUserPolicyPut(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsIamUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	user, name, err := resourceAwsIamUserPolicyParseId(d.Id())
@@ -151,7 +151,7 @@ func resourceAwsIamUserPolicyRead(d *schema.ResourceData, meta interface{}) erro
 	return d.Set("user", user)
 }
 
-func resourceAwsIamUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	user, name, err := resourceAwsIamUserPolicyParseId(d.Id())

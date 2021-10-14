@@ -16,12 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamServiceLinkedRole() *schema.Resource {
+func ResourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamServiceLinkedRoleCreate,
-		Read:   resourceAwsIamServiceLinkedRoleRead,
-		Update: resourceAwsIamServiceLinkedRoleUpdate,
-		Delete: resourceAwsIamServiceLinkedRoleDelete,
+		Create: resourceServiceLinkedRoleCreate,
+		Read:   resourceServiceLinkedRoleRead,
+		Update: resourceServiceLinkedRoleUpdate,
+		Delete: resourceServiceLinkedRoleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -79,7 +79,7 @@ func resourceAwsIamServiceLinkedRole() *schema.Resource {
 	}
 }
 
-func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	serviceName := d.Get("aws_service_name").(string)
@@ -103,10 +103,10 @@ func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interfac
 	}
 	d.SetId(aws.StringValue(resp.Role.Arn))
 
-	return resourceAwsIamServiceLinkedRoleRead(d, meta)
+	return resourceServiceLinkedRoleRead(d, meta)
 }
 
-func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	serviceName, roleName, customSuffix, err := decodeIamServiceLinkedRoleID(d.Id())
@@ -143,7 +143,7 @@ func resourceAwsIamServiceLinkedRoleRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceAwsIamServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())
@@ -162,10 +162,10 @@ func resourceAwsIamServiceLinkedRoleUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error updating service-linked role %s: %s", d.Id(), err)
 	}
 
-	return resourceAwsIamServiceLinkedRoleRead(d, meta)
+	return resourceServiceLinkedRoleRead(d, meta)
 }
 
-func resourceAwsIamServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	_, roleName, _, err := decodeIamServiceLinkedRoleID(d.Id())

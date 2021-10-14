@@ -16,14 +16,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamRolePolicy() *schema.Resource {
+func ResourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutRolePolicy API is idempotent, so these can be the same.
 		Create: resourceAwsIamRolePolicyPut,
 		Update: resourceAwsIamRolePolicyPut,
 
-		Read:   resourceAwsIamRolePolicyRead,
-		Delete: resourceAwsIamRolePolicyDelete,
+		Read:   resourceRolePolicyRead,
+		Delete: resourceRolePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -82,10 +82,10 @@ func resourceAwsIamRolePolicyPut(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", *request.RoleName, *request.PolicyName))
-	return resourceAwsIamRolePolicyRead(d, meta)
+	return resourceRolePolicyRead(d, meta)
 }
 
-func resourceAwsIamRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	role, name, err := resourceAwsIamRolePolicyParseId(d.Id())
@@ -147,7 +147,7 @@ func resourceAwsIamRolePolicyRead(d *schema.ResourceData, meta interface{}) erro
 	return d.Set("role", role)
 }
 
-func resourceAwsIamRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	role, name, err := resourceAwsIamRolePolicyParseId(d.Id())

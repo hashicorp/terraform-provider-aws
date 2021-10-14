@@ -22,12 +22,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsIamRole() *schema.Resource {
+func ResourceRole() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsIamRoleCreate,
-		Read:   resourceAwsIamRoleRead,
-		Update: resourceAwsIamRoleUpdate,
-		Delete: resourceAwsIamRoleDelete,
+		Create: resourceRoleCreate,
+		Read:   resourceRoleRead,
+		Update: resourceRoleUpdate,
+		Delete: resourceRoleDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamRoleImport,
 		},
@@ -163,7 +163,7 @@ func resourceAwsIamRoleImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -226,10 +226,10 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(roleName)
-	return resourceAwsIamRoleRead(d, meta)
+	return resourceRoleRead(d, meta)
 }
 
-func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -300,7 +300,7 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("assume_role_policy") {
@@ -450,10 +450,10 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsIamRoleRead(d, meta)
+	return resourceRoleRead(d, meta)
 }
 
-func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	hasInline := false
