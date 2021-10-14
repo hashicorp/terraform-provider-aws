@@ -21,7 +21,7 @@ func TestAccDataSourceAWSELB_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSELBConfigBasic(rName, t.Name()),
+				Config: testAccBasicDataSourceConfig(rName, t.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "cross_zone_load_balancing", "true"),
@@ -41,7 +41,7 @@ func TestAccDataSourceAWSELB_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSELBConfigBasic(rName, testName string) string {
+func testAccBasicDataSourceConfig(rName, testName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test" {
   name            = %[1]q

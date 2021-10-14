@@ -60,8 +60,8 @@ func TestAccAWSLBSSLNegotiationPolicy_disappears(t *testing.T) {
 				Config: testAccSslNegotiationPolicyConfig(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
-					testAccCheckAWSELBExists(elbResourceName, &loadBalancer),
-					testAccCheckAWSELBDisappears(&loadBalancer),
+					testAccCheckLoadBalancerExists(elbResourceName, &loadBalancer),
+					testAccCheckLoadBalancerDisappears(&loadBalancer),
 				),
 				ExpectNonEmptyPlan: true,
 			},

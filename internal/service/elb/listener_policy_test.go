@@ -24,26 +24,26 @@ func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLoadBalancerListenerPolicyDestroy,
+		CheckDestroy: testAccCheckListenerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLoadBalancerListenerPolicyConfig_basic0(lbName, mcName),
+				Config: testAccListenerPolicyConfig_basic0(lbName, mcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
-					testAccCheckAWSLoadBalancerListenerPolicyState(lbName, int64(80), mcName, true),
+					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
+					testAccCheckListenerPolicyState(lbName, int64(80), mcName, true),
 				),
 			},
 			{
-				Config: testAccAWSLoadBalancerListenerPolicyConfig_basic1(lbName, mcName),
+				Config: testAccListenerPolicyConfig_basic1(lbName, mcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
-					testAccCheckAWSLoadBalancerListenerPolicyState(lbName, int64(80), mcName, true),
+					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
+					testAccCheckListenerPolicyState(lbName, int64(80), mcName, true),
 				),
 			},
 			{
-				Config: testAccAWSLoadBalancerListenerPolicyConfig_basic2(lbName),
+				Config: testAccListenerPolicyConfig_basic2(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerListenerPolicyState(lbName, int64(80), mcName, false),
+					testAccCheckListenerPolicyState(lbName, int64(80), mcName, false),
 				),
 			},
 		},
@@ -59,7 +59,7 @@ func policyInListenerPolicies(str string, list []string) bool {
 	return false
 }
 
-func testAccCheckAWSLoadBalancerListenerPolicyDestroy(s *terraform.State) error {
+func testAccCheckListenerPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -117,7 +117,7 @@ func testAccCheckAWSLoadBalancerListenerPolicyDestroy(s *terraform.State) error 
 	return nil
 }
 
-func testAccCheckAWSLoadBalancerListenerPolicyState(loadBalancerName string, loadBalancerListenerPort int64, loadBalancerListenerPolicyName string, assigned bool) resource.TestCheckFunc {
+func testAccCheckListenerPolicyState(loadBalancerName string, loadBalancerListenerPort int64, loadBalancerListenerPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
@@ -149,7 +149,7 @@ func testAccCheckAWSLoadBalancerListenerPolicyState(loadBalancerName string, loa
 	}
 }
 
-func testAccAWSLoadBalancerListenerPolicyConfig_basic0(lbName, mcName string) string {
+func testAccListenerPolicyConfig_basic0(lbName, mcName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
@@ -189,7 +189,7 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
 `, lbName, mcName))
 }
 
-func testAccAWSLoadBalancerListenerPolicyConfig_basic1(lbName, mcName string) string {
+func testAccListenerPolicyConfig_basic1(lbName, mcName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
@@ -229,7 +229,7 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
 `, lbName, mcName))
 }
 
-func testAccAWSLoadBalancerListenerPolicyConfig_basic2(lbName string) string {
+func testAccListenerPolicyConfig_basic2(lbName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"

@@ -20,34 +20,34 @@ func TestAccAWSELBAttachment_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSELBDestroy,
+		CheckDestroy: testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSELBAttachmentConfig1(),
+				Config: testAccAttachment1Config(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(resourceName, &conf),
-					testAccAWSELBAttachmentCheckInstanceCount(&conf, 1),
+					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
 			{
-				Config: testAccAWSELBAttachmentConfig2(),
+				Config: testAccAttachment2Config(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(resourceName, &conf),
-					testAccAWSELBAttachmentCheckInstanceCount(&conf, 2),
+					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
 			{
-				Config: testAccAWSELBAttachmentConfig3(),
+				Config: testAccAttachment3Config(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(resourceName, &conf),
-					testAccAWSELBAttachmentCheckInstanceCount(&conf, 2),
+					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
 			{
-				Config: testAccAWSELBAttachmentConfig4(),
+				Config: testAccAttachment4Config(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(resourceName, &conf),
-					testAccAWSELBAttachmentCheckInstanceCount(&conf, 0),
+					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccAttachmentCheckInstanceCount(&conf, 0),
 				),
 			},
 		},
@@ -80,29 +80,29 @@ func TestAccAWSELBAttachment_drift(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSELBDestroy,
+		CheckDestroy: testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSELBAttachmentConfig1(),
+				Config: testAccAttachment1Config(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(resourceName, &conf),
-					testAccAWSELBAttachmentCheckInstanceCount(&conf, 1),
+					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
 			// remove an instance from the ELB, and make sure it gets re-added
 			{
-				Config:    testAccAWSELBAttachmentConfig1(),
+				Config:    testAccAttachment1Config(),
 				PreConfig: deregInstance,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(resourceName, &conf),
-					testAccAWSELBAttachmentCheckInstanceCount(&conf, 1),
+					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
 		},
 	})
 }
 
-func testAccAWSELBAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription, expected int) resource.TestCheckFunc {
+func testAccAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription, expected int) resource.TestCheckFunc {
 	return func(*terraform.State) error {
 		if actual := len(conf.Instances); actual != expected {
 			return fmt.Errorf("instance count does not match: expected %d, got %d", expected, actual)
@@ -112,7 +112,7 @@ func testAccAWSELBAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription
 }
 
 // add one attachment
-func testAccAWSELBAttachmentConfig1() string {
+func testAccAttachment1Config() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
@@ -147,7 +147,7 @@ resource "aws_elb_attachment" "foo1" {
 }
 
 // add a second attachment
-func testAccAWSELBAttachmentConfig2() string {
+func testAccAttachment2Config() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
@@ -192,7 +192,7 @@ resource "aws_elb_attachment" "foo2" {
 }
 
 // swap attachments between resources
-func testAccAWSELBAttachmentConfig3() string {
+func testAccAttachment3Config() string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
@@ -237,7 +237,7 @@ resource "aws_elb_attachment" "foo2" {
 }
 
 // destroy attachments
-func testAccAWSELBAttachmentConfig4() string {
+func testAccAttachment4Config() string {
 	return `
 data "aws_availability_zones" "available" {
   state = "available"

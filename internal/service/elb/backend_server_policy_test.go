@@ -28,29 +28,29 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLoadBalancerBackendServerPolicyDestroy,
+		CheckDestroy: testAccCheckBackendServerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic0(lbName, privateKey1, publicKey1, certificate1),
+				Config: testAccBackendServerPolicyConfig_basic0(lbName, privateKey1, publicKey1, certificate1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
-					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
-					testAccCheckAWSLoadBalancerBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
+					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
+					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
+					testAccCheckBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
 				),
 			},
 			{
-				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic1(lbName, privateKey1, publicKey1, certificate1, publicKey2),
+				Config: testAccBackendServerPolicyConfig_basic1(lbName, privateKey1, publicKey1, certificate1, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
-					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy1"),
-					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
-					testAccCheckAWSLoadBalancerBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
+					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
+					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy1"),
+					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
+					testAccCheckBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
 				),
 			},
 			{
-				Config: testAccAWSLoadBalancerBackendServerPolicyConfig_basic2(lbName, privateKey1, certificate1),
+				Config: testAccBackendServerPolicyConfig_basic2(lbName, privateKey1, certificate1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerBackendServerPolicyState(lbName, "test-backend-auth-policy0", false),
+					testAccCheckBackendServerPolicyState(lbName, "test-backend-auth-policy0", false),
 				),
 			},
 		},
@@ -66,7 +66,7 @@ func policyInBackendServerPolicies(str string, list []string) bool {
 	return false
 }
 
-func testAccCheckAWSLoadBalancerBackendServerPolicyDestroy(s *terraform.State) error {
+func testAccCheckBackendServerPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -115,7 +115,7 @@ func testAccCheckAWSLoadBalancerBackendServerPolicyDestroy(s *terraform.State) e
 	return nil
 }
 
-func testAccCheckAWSLoadBalancerBackendServerPolicyState(loadBalancerName string, loadBalancerBackendAuthPolicyName string, assigned bool) resource.TestCheckFunc {
+func testAccCheckBackendServerPolicyState(loadBalancerName string, loadBalancerBackendAuthPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
@@ -144,7 +144,7 @@ func testAccCheckAWSLoadBalancerBackendServerPolicyState(loadBalancerName string
 	}
 }
 
-func testAccAWSLoadBalancerBackendServerPolicyConfig_basic0(rName, privateKey, publicKey, certificate string) string {
+func testAccBackendServerPolicyConfig_basic0(rName, privateKey, publicKey, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -211,7 +211,7 @@ resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-4
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey), acctest.TLSPEMEscapeNewlines(publicKey))
 }
 
-func testAccAWSLoadBalancerBackendServerPolicyConfig_basic1(rName, privateKey1, publicKey1, certificate1, publicKey2 string) string {
+func testAccBackendServerPolicyConfig_basic1(rName, privateKey1, publicKey1, certificate1, publicKey2 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -289,7 +289,7 @@ resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-4
 `, rName, acctest.TLSPEMEscapeNewlines(certificate1), acctest.TLSPEMEscapeNewlines(privateKey1), acctest.TLSPEMEscapeNewlines(publicKey1), acctest.TLSPEMEscapeNewlines(publicKey2))
 }
 
-func testAccAWSLoadBalancerBackendServerPolicyConfig_basic2(rName, privateKey, certificate string) string {
+func testAccBackendServerPolicyConfig_basic2(rName, privateKey, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"

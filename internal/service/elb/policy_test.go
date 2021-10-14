@@ -27,13 +27,13 @@ func TestAccAWSLoadBalancerPolicy_basic(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLoadBalancerPolicyConfig_basic(rInt),
+				Config: testAccPolicyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerPolicyExists(resourceName, &policy),
-					testAccCheckAWSLoadBalancerPolicyState(loadBalancerResourceName, resourceName),
+					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyState(loadBalancerResourceName, resourceName),
 				),
 			},
 		},
@@ -51,23 +51,23 @@ func TestAccAWSLoadBalancerPolicy_disappears(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLoadBalancerPolicyConfig_basic(rInt),
+				Config: testAccPolicyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(loadBalancerResourceName, &loadBalancer),
-					testAccCheckAWSLoadBalancerPolicyExists(resourceName, &policy),
-					testAccCheckAWSLoadBalancerPolicyDisappears(&loadBalancer, &policy),
+					testAccCheckLoadBalancerExists(loadBalancerResourceName, &loadBalancer),
+					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyDisappears(&loadBalancer, &policy),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAWSLoadBalancerPolicyConfig_basic(rInt),
+				Config: testAccPolicyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists(loadBalancerResourceName, &loadBalancer),
-					testAccCheckAWSLoadBalancerPolicyExists(resourceName, &policy),
-					testAccCheckAWSELBDisappears(&loadBalancer),
+					testAccCheckLoadBalancerExists(loadBalancerResourceName, &loadBalancer),
+					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckLoadBalancerDisappears(&loadBalancer),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,27 +85,27 @@ func TestAccAWSLoadBalancerPolicy_updateWhileAssigned(t *testing.T) {
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
 		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAWSLoadBalancerPolicyDestroy,
+		CheckDestroy: testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt),
+				Config: testAccPolicyConfig_updateWhileAssigned0(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerPolicyExists(resourceName, &policy),
-					testAccCheckAWSLoadBalancerPolicyState(loadBalancerResourceName, resourceName),
+					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyState(loadBalancerResourceName, resourceName),
 				),
 			},
 			{
-				Config: testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt),
+				Config: testAccPolicyConfig_updateWhileAssigned1(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLoadBalancerPolicyExists(resourceName, &policy),
-					testAccCheckAWSLoadBalancerPolicyState(loadBalancerResourceName, resourceName),
+					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyState(loadBalancerResourceName, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSLoadBalancerPolicyExists(resourceName string, policyDescription *elb.PolicyDescription) resource.TestCheckFunc {
+func testAccCheckPolicyExists(resourceName string, policyDescription *elb.PolicyDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -141,7 +141,7 @@ func testAccCheckAWSLoadBalancerPolicyExists(resourceName string, policyDescript
 	}
 }
 
-func testAccCheckAWSLoadBalancerPolicyDestroy(s *terraform.State) error {
+func testAccCheckPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -169,7 +169,7 @@ func testAccCheckAWSLoadBalancerPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSLoadBalancerPolicyDisappears(loadBalancer *elb.LoadBalancerDescription, policy *elb.PolicyDescription) resource.TestCheckFunc {
+func testAccCheckPolicyDisappears(loadBalancer *elb.LoadBalancerDescription, policy *elb.PolicyDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
 
@@ -183,7 +183,7 @@ func testAccCheckAWSLoadBalancerPolicyDisappears(loadBalancer *elb.LoadBalancerD
 	}
 }
 
-func testAccCheckAWSLoadBalancerPolicyState(elbResource string, policyResource string) resource.TestCheckFunc {
+func testAccCheckPolicyState(elbResource string, policyResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[elbResource]
 		if !ok {
@@ -242,7 +242,7 @@ func testAccCheckAWSLoadBalancerPolicyState(elbResource string, policyResource s
 	}
 }
 
-func testAccAWSLoadBalancerPolicyConfig_basic(rInt int) string {
+func testAccPolicyConfig_basic(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "test-lb-%[1]d"
@@ -273,7 +273,7 @@ resource "aws_load_balancer_policy" "test-policy" {
 `, rInt))
 }
 
-func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt int) string {
+func testAccPolicyConfig_updateWhileAssigned0(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "test-lb-%[1]d"
@@ -313,7 +313,7 @@ resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
 `, rInt))
 }
 
-func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt int) string {
+func testAccPolicyConfig_updateWhileAssigned1(rInt int) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "test-lb-%[1]d"

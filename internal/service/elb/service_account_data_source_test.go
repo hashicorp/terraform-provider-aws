@@ -20,7 +20,7 @@ func TestAccAWSElbServiceAccount_basic(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsElbServiceAccountConfig,
+				Config: testAccCheckAWSElbServiceAccountConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
@@ -41,7 +41,7 @@ func TestAccAWSElbServiceAccount_Region(t *testing.T) {
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsElbServiceAccountExplicitRegionConfig,
+				Config: testAccCheckAWSElbServiceAccountExplicitRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
@@ -51,11 +51,11 @@ func TestAccAWSElbServiceAccount_Region(t *testing.T) {
 	})
 }
 
-const testAccCheckAwsElbServiceAccountConfig = `
+const testAccCheckAWSElbServiceAccountConfig = `
 data "aws_elb_service_account" "main" {}
 `
 
-const testAccCheckAwsElbServiceAccountExplicitRegionConfig = `
+const testAccCheckAWSElbServiceAccountExplicitRegionConfig = `
 data "aws_region" "current" {}
 
 data "aws_elb_service_account" "regional" {
