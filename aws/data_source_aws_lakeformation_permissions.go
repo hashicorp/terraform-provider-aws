@@ -12,6 +12,7 @@ import (
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/lakeformation/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourcePermissions() *schema.Resource {
