@@ -7,10 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -53,13 +54,13 @@ func testSweepGlueSchema(region string) error {
 func TestAccAWSGlueSchema_basic(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_schema.test"
 	registryResourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueSchema(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -67,7 +68,7 @@ func TestAccAWSGlueSchema_basic(t *testing.T) {
 				Config: testAccAWSGlueSchemaBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("schema/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("schema/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "schema_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "NONE"),
@@ -93,12 +94,12 @@ func TestAccAWSGlueSchema_basic(t *testing.T) {
 func TestAccAWSGlueSchema_description(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueSchema(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -128,12 +129,12 @@ func TestAccAWSGlueSchema_description(t *testing.T) {
 func TestAccAWSGlueSchema_compatibility(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueSchema(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -162,12 +163,12 @@ func TestAccAWSGlueSchema_compatibility(t *testing.T) {
 
 func TestAccAWSGlueSchema_Tags(t *testing.T) {
 	var schema glue.GetSchemaOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueSchema(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -208,12 +209,12 @@ func TestAccAWSGlueSchema_Tags(t *testing.T) {
 func TestAccAWSGlueSchema_schemaDefUpdated(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueSchema(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -247,12 +248,12 @@ func TestAccAWSGlueSchema_schemaDefUpdated(t *testing.T) {
 func TestAccAWSGlueSchema_disappears(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueSchema(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -260,7 +261,7 @@ func TestAccAWSGlueSchema_disappears(t *testing.T) {
 				Config: testAccAWSGlueSchemaBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueSchema(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -271,12 +272,12 @@ func TestAccAWSGlueSchema_disappears(t *testing.T) {
 func TestAccAWSGlueSchema_disappears_registry(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueSchema(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueSchema(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
 		Steps: []resource.TestStep{
@@ -284,7 +285,7 @@ func TestAccAWSGlueSchema_disappears_registry(t *testing.T) {
 				Config: testAccAWSGlueSchemaBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueRegistry(), "aws_glue_registry.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueRegistry(), "aws_glue_registry.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -298,7 +299,7 @@ func testAccPreCheckAWSGlueSchema(t *testing.T) {
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Schemas return InternalFailure
-	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccDataSourceAwsGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
@@ -14,8 +15,8 @@ func TestAccDataSourceAwsGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 	datasourceName := "data.aws_glue_data_catalog_encryption_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:   func() { acctest.PreCheck(t) },
+		ErrorCheck: acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -58,13 +59,13 @@ func testSweepGlueJobs(region string) error {
 func TestAccAWSGlueJob_basic(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -72,7 +73,7 @@ func TestAccAWSGlueJob_basic(t *testing.T) {
 				Config: testAccAWSGlueJobConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("job/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("job/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
@@ -95,12 +96,12 @@ func TestAccAWSGlueJob_basic(t *testing.T) {
 func TestAccAWSGlueJob_Command(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -132,12 +133,12 @@ func TestAccAWSGlueJob_Command(t *testing.T) {
 func TestAccAWSGlueJob_DefaultArguments(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -171,12 +172,12 @@ func TestAccAWSGlueJob_DefaultArguments(t *testing.T) {
 func TestAccAWSGlueJob_nonOverridableArguments(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -210,12 +211,12 @@ func TestAccAWSGlueJob_nonOverridableArguments(t *testing.T) {
 func TestAccAWSGlueJob_Description(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -245,12 +246,12 @@ func TestAccAWSGlueJob_Description(t *testing.T) {
 func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -287,12 +288,12 @@ func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
 func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -328,12 +329,12 @@ func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 func TestAccAWSGlueJob_MaxRetries(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -367,12 +368,12 @@ func TestAccAWSGlueJob_MaxRetries(t *testing.T) {
 func TestAccAWSGlueJob_NotificationProperty(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -408,12 +409,12 @@ func TestAccAWSGlueJob_NotificationProperty(t *testing.T) {
 func TestAccAWSGlueJob_Tags(t *testing.T) {
 	var job1, job2, job3 glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -454,12 +455,12 @@ func TestAccAWSGlueJob_Tags(t *testing.T) {
 func TestAccAWSGlueJob_Timeout(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -489,12 +490,12 @@ func TestAccAWSGlueJob_Timeout(t *testing.T) {
 func TestAccAWSGlueJob_SecurityConfiguration(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -524,12 +525,12 @@ func TestAccAWSGlueJob_SecurityConfiguration(t *testing.T) {
 func TestAccAWSGlueJob_WorkerType(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -566,12 +567,12 @@ func TestAccAWSGlueJob_WorkerType(t *testing.T) {
 func TestAccAWSGlueJob_PythonShell(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -622,12 +623,12 @@ func TestAccAWSGlueJob_PythonShell(t *testing.T) {
 func TestAccAWSGlueJob_MaxCapacity(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -660,12 +661,12 @@ func TestAccAWSGlueJob_MaxCapacity(t *testing.T) {
 func TestAccAWSGlueJob_disappears(t *testing.T) {
 	var job glue.Job
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
@@ -673,7 +674,7 @@ func TestAccAWSGlueJob_disappears(t *testing.T) {
 				Config: testAccAWSGlueJobConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueJob(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueJob(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

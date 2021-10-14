@@ -5,19 +5,20 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSGluePartitionIndex_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
 		Steps: []resource.TestStep{
@@ -43,12 +44,12 @@ func TestAccAWSGluePartitionIndex_basic(t *testing.T) {
 }
 
 func TestAccAWSGluePartitionIndex_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
 		Steps: []resource.TestStep{
@@ -57,8 +58,8 @@ func TestAccAWSGluePartitionIndex_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionIndexExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGluePartitionIndex(), resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGluePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGluePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGluePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,12 +68,12 @@ func TestAccAWSGluePartitionIndex_disappears(t *testing.T) {
 }
 
 func TestAccAWSGluePartitionIndex_disappears_table(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
 		Steps: []resource.TestStep{
@@ -81,8 +82,8 @@ func TestAccAWSGluePartitionIndex_disappears_table(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionIndexExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogTable(), "aws_glue_catalog_table.test"),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGluePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGluePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,12 +92,12 @@ func TestAccAWSGluePartitionIndex_disappears_table(t *testing.T) {
 }
 
 func TestAccAWSGluePartitionIndex_disappears_database(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
 		Steps: []resource.TestStep{
@@ -105,8 +106,8 @@ func TestAccAWSGluePartitionIndex_disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionIndexExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGluePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGluePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

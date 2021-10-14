@@ -7,11 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -66,14 +67,14 @@ func testSweepGlueConnections(region string) error {
 func TestAccAWSGlueConnection_basic(t *testing.T) {
 	var connection glue.Connection
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
-	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccAWSGlueConnection_basic(t *testing.T) {
 				Config: testAccAWSGlueConnectionConfig_Required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("connection/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("connection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.JDBC_CONNECTION_URL", jdbcConnectionUrl),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
@@ -103,14 +104,14 @@ func TestAccAWSGlueConnection_basic(t *testing.T) {
 func TestAccAWSGlueConnection_tags(t *testing.T) {
 	var connection glue.Connection
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
-	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -151,14 +152,14 @@ func TestAccAWSGlueConnection_tags(t *testing.T) {
 func TestAccAWSGlueConnection_MongoDB(t *testing.T) {
 	var connection glue.Connection
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
-	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", testAccRandomDomainName())
+	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -187,14 +188,14 @@ func TestAccAWSGlueConnection_MongoDB(t *testing.T) {
 func TestAccAWSGlueConnection_Kafka(t *testing.T) {
 	var connection glue.Connection
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
-	bootstrapServers := fmt.Sprintf("%s:9094,%s:9094", testAccRandomDomainName(), testAccRandomDomainName())
+	bootstrapServers := fmt.Sprintf("%s:9094,%s:9094", acctest.RandomDomainName(), acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -221,12 +222,12 @@ func TestAccAWSGlueConnection_Kafka(t *testing.T) {
 func TestAccAWSGlueConnection_Network(t *testing.T) {
 	var connection glue.Connection
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -255,14 +256,14 @@ func TestAccAWSGlueConnection_Network(t *testing.T) {
 func TestAccAWSGlueConnection_Description(t *testing.T) {
 	var connection glue.Connection
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
-	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -292,14 +293,14 @@ func TestAccAWSGlueConnection_Description(t *testing.T) {
 func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 	var connection glue.Connection
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
-	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -344,12 +345,12 @@ func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 	var connection glue.Connection
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -381,14 +382,14 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 func TestAccAWSGlueConnection_disappears(t *testing.T) {
 	var connection glue.Connection
 
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_connection.test"
 
-	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", testAccRandomDomainName())
+	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -396,8 +397,8 @@ func TestAccAWSGlueConnection_disappears(t *testing.T) {
 				Config: testAccAWSGlueConnectionConfig_Required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
