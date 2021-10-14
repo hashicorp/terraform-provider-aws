@@ -86,7 +86,7 @@ func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) err
 			Target:     []string{route53.ChangeStatusInsync},
 			Timeout:    10 * time.Minute,
 			MinTimeout: 2 * time.Second,
-			Refresh:    resourceAwsRoute53ZoneAssociationRefreshFunc(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id)), d.Id()),
+			Refresh:    resourceZoneAssociationRefreshFunc(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id)), d.Id()),
 		}
 
 		if _, err := wait.WaitForState(); err != nil {
@@ -203,12 +203,12 @@ func ZoneAssociationParseID(id string) (string, string, string, error) {
 	return parts[0], parts[1], "", nil
 }
 
-func resourceAwsRoute53ZoneAssociationRefreshFunc(conn *route53.Route53, changeId, id string) resource.StateRefreshFunc {
+func resourceZoneAssociationRefreshFunc(conn *route53.Route53, changeId, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		changeRequest := &route53.GetChangeInput{
 			Id: aws.String(changeId),
 		}
-		result, state, err := resourceAwsGoRoute53Wait(conn, changeRequest)
+		result, state, err := resourceGoWait(conn, changeRequest)
 		if tfawserr.ErrMessageContains(err, "AccessDenied", "") {
 			log.Printf("[WARN] AccessDenied when trying to get Route 53 change progress for %s - ignoring due to likely cross account issue", id)
 			return true, route53.ChangeStatusInsync, nil

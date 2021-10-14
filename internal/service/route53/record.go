@@ -123,7 +123,7 @@ func ResourceRecord() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsRoute53AliasRecordHash,
+				Set: resourceAliasRecordHash,
 			},
 
 			"failover_routing_policy": {
@@ -334,7 +334,7 @@ func resourceRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Build the to be created record
-	rec, err := resourceAwsRoute53RecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
+	rec, err := resourceRecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
 	if err != nil {
 		return err
 	}
@@ -406,7 +406,7 @@ func resourceRecordCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Build the record
-	rec, err := resourceAwsRoute53RecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
+	rec, err := resourceRecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
 	if err != nil {
 		return err
 	}
@@ -505,7 +505,7 @@ func WaitForRecordSetToSync(conn *route53.Route53, requestId string) error {
 			changeRequest := &route53.GetChangeInput{
 				Id: aws.String(requestId),
 			}
-			return resourceAwsGoRoute53Wait(conn, changeRequest)
+			return resourceGoWait(conn, changeRequest)
 		},
 	}
 	_, err := wait.WaitForState()
@@ -782,7 +782,7 @@ func DeleteRecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordS
 	return out, err
 }
 
-func resourceAwsRoute53RecordBuildSet(d *schema.ResourceData, zoneName string) (*route53.ResourceRecordSet, error) {
+func resourceRecordBuildSet(d *schema.ResourceData, zoneName string) (*route53.ResourceRecordSet, error) {
 	// get expanded name
 	en := ExpandRecordName(d.Get("name").(string), zoneName)
 
@@ -940,7 +940,7 @@ func ExpandRecordName(name, zone string) string {
 	return rn
 }
 
-func resourceAwsRoute53AliasRecordHash(v interface{}) int {
+func resourceAliasRecordHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", NormalizeAliasName(m["name"].(string))))
