@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func TestAccAWSAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
+func TestAccAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
 	var apiId, integrationId string
 	var v apigatewayv2.GetIntegrationResponseOutput
 	resourceName := "aws_apigatewayv2_integration_response.test"
@@ -48,7 +48,7 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2IntegrationResponse_disappears(t *testing.T) {
+func TestAccAPIGatewayV2IntegrationResponse_disappears(t *testing.T) {
 	var apiId, integrationId string
 	var v apigatewayv2.GetIntegrationResponseOutput
 	resourceName := "aws_apigatewayv2_integration_response.test"
@@ -72,7 +72,7 @@ func TestAccAWSAPIGatewayV2IntegrationResponse_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2IntegrationResponse_AllAttributes(t *testing.T) {
+func TestAccAPIGatewayV2IntegrationResponse_allAttributes(t *testing.T) {
 	var apiId, integrationId string
 	var v apigatewayv2.GetIntegrationResponseOutput
 	resourceName := "aws_apigatewayv2_integration_response.test"

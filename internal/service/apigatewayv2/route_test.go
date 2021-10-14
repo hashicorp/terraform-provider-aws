@@ -16,7 +16,7 @@ import (
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
-func TestAccAWSAPIGatewayV2Route_basic(t *testing.T) {
+func TestAccAPIGatewayV2Route_basic(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"
@@ -54,7 +54,7 @@ func TestAccAWSAPIGatewayV2Route_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Route_disappears(t *testing.T) {
+func TestAccAPIGatewayV2Route_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"
@@ -78,7 +78,7 @@ func TestAccAWSAPIGatewayV2Route_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Route_Authorizer(t *testing.T) {
+func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"
@@ -135,7 +135,7 @@ func TestAccAWSAPIGatewayV2Route_Authorizer(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Route_JwtAuthorization(t *testing.T) {
+func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"
@@ -192,7 +192,7 @@ func TestAccAWSAPIGatewayV2Route_JwtAuthorization(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Route_Model(t *testing.T) {
+func TestAccAPIGatewayV2Route_model(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"
@@ -233,7 +233,7 @@ func TestAccAWSAPIGatewayV2Route_Model(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Route_RequestParameters(t *testing.T) {
+func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"
@@ -315,7 +315,7 @@ func TestAccAWSAPIGatewayV2Route_RequestParameters(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Route_SimpleAttributes(t *testing.T) {
+func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"
@@ -385,7 +385,7 @@ func TestAccAWSAPIGatewayV2Route_SimpleAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Route_Target(t *testing.T) {
+func TestAccAPIGatewayV2Route_target(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"
@@ -424,7 +424,7 @@ func TestAccAWSAPIGatewayV2Route_Target(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Route_UpdateRouteKey(t *testing.T) {
+func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"

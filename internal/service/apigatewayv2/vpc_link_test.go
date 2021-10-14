@@ -81,7 +81,7 @@ func sweepVPCLinks(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSAPIGatewayV2VpcLink_basic(t *testing.T) {
+func TestAccAPIGatewayV2VPCLink_basic(t *testing.T) {
 	var v apigatewayv2.GetVpcLinkOutput
 	resourceName := "aws_apigatewayv2_vpc_link.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -124,7 +124,7 @@ func TestAccAWSAPIGatewayV2VpcLink_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2VpcLink_disappears(t *testing.T) {
+func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 	var v apigatewayv2.GetVpcLinkOutput
 	resourceName := "aws_apigatewayv2_vpc_link.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -147,7 +147,7 @@ func TestAccAWSAPIGatewayV2VpcLink_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2VpcLink_Tags(t *testing.T) {
+func TestAccAPIGatewayV2VPCLink_tags(t *testing.T) {
 	var v apigatewayv2.GetVpcLinkOutput
 	resourceName := "aws_apigatewayv2_vpc_link.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

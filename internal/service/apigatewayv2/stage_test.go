@@ -17,7 +17,7 @@ import (
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 )
 
-func TestAccAWSAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
+func TestAccAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -63,7 +63,7 @@ func TestAccAWSAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_basicHttp(t *testing.T) {
+func TestAccAPIGatewayV2Stage_basicHTTP(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -109,7 +109,7 @@ func TestAccAWSAPIGatewayV2Stage_basicHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_defaultHttpStage(t *testing.T) {
+func TestAccAPIGatewayV2Stage_defaultHTTPStage(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -155,7 +155,7 @@ func TestAccAWSAPIGatewayV2Stage_defaultHttpStage(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_autoDeployHttp(t *testing.T) {
+func TestAccAPIGatewayV2Stage_autoDeployHTTP(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -227,7 +227,7 @@ func TestAccAWSAPIGatewayV2Stage_autoDeployHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_disappears(t *testing.T) {
+func TestAccAPIGatewayV2Stage_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -251,7 +251,7 @@ func TestAccAWSAPIGatewayV2Stage_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_AccessLogSettings(t *testing.T) {
+func TestAccAPIGatewayV2Stage_accessLogSettings(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -323,7 +323,7 @@ func TestAccAWSAPIGatewayV2Stage_AccessLogSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_ClientCertificateIdAndDescription(t *testing.T) {
+func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -394,7 +394,7 @@ func TestAccAWSAPIGatewayV2Stage_ClientCertificateIdAndDescription(t *testing.T)
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettingsWebSocket(t *testing.T) {
+func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -485,7 +485,7 @@ func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettingsWebSocket(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettingsHttp(t *testing.T) {
+func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -576,7 +576,7 @@ func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettingsHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_Deployment(t *testing.T) {
+func TestAccAPIGatewayV2Stage_deployment(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -623,7 +623,7 @@ func TestAccAWSAPIGatewayV2Stage_Deployment(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
+func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -751,7 +751,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp(t *testing.T) {
+func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -856,7 +856,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp_WithRoute(t *testing.T) {
+func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -940,7 +940,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp_WithRoute(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_StageVariables(t *testing.T) {
+func TestAccAPIGatewayV2Stage_stageVariables(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -1009,7 +1009,7 @@ func TestAccAWSAPIGatewayV2Stage_StageVariables(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Stage_Tags(t *testing.T) {
+func TestAccAPIGatewayV2Stage_tags(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"

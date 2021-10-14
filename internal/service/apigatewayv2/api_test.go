@@ -73,7 +73,7 @@ func sweepAPIs(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSAPIGatewayV2Api_basicWebSocket(t *testing.T) {
+func TestAccAPIGatewayV2API_basicWebSocket(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -111,7 +111,7 @@ func TestAccAWSAPIGatewayV2Api_basicWebSocket(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_basicHttp(t *testing.T) {
+func TestAccAPIGatewayV2API_basicHTTP(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -149,7 +149,7 @@ func TestAccAWSAPIGatewayV2Api_basicHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
+func TestAccAPIGatewayV2API_disappears(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -172,7 +172,7 @@ func TestAccAWSAPIGatewayV2Api_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_AllAttributesWebSocket(t *testing.T) {
+func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -254,7 +254,7 @@ func TestAccAWSAPIGatewayV2Api_AllAttributesWebSocket(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_AllAttributesHttp(t *testing.T) {
+func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -336,7 +336,7 @@ func TestAccAWSAPIGatewayV2Api_AllAttributesHttp(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_Openapi(t *testing.T) {
+func TestAccAPIGatewayV2API_openAPI(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -383,7 +383,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_Openapi_WithTags(t *testing.T) {
+func TestAccAPIGatewayV2API_OpenAPI_withTags(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -428,7 +428,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi_WithTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_Openapi_WithCorsConfiguration(t *testing.T) {
+func TestAccAPIGatewayV2API_OpenAPI_withCors(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -485,7 +485,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi_WithCorsConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_OpenapiWithMoreFields(t *testing.T) {
+func TestAccAPIGatewayV2API_OpenAPI_withMoreFields(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -538,7 +538,7 @@ func TestAccAWSAPIGatewayV2Api_OpenapiWithMoreFields(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_Openapi_FailOnWarnings(t *testing.T) {
+func TestAccAPIGatewayV2API_OpenAPI_failOnWarnings(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -622,7 +622,7 @@ func testAccCheckAPIRoutes(v *apigatewayv2.GetApiOutput, routes []string) resour
 	}
 }
 
-func TestAccAWSAPIGatewayV2Api_Tags(t *testing.T) {
+func TestAccAPIGatewayV2API_tags(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -675,7 +675,7 @@ func TestAccAWSAPIGatewayV2Api_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
+func TestAccAPIGatewayV2API_cors(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -766,7 +766,7 @@ func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Api_QuickCreate(t *testing.T) {
+func TestAccAPIGatewayV2API_quickCreate(t *testing.T) {
 	var v apigatewayv2.GetApiOutput
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
