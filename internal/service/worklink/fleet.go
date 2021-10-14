@@ -293,7 +293,7 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED"},
-		Refresh:    worklinkFleetStateRefresh(conn, d.Id()),
+		Refresh:    FleetStateRefresh(conn, d.Id()),
 		Timeout:    15 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -309,7 +309,7 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func worklinkFleetStateRefresh(conn *worklink.WorkLink, arn string) resource.StateRefreshFunc {
+func FleetStateRefresh(conn *worklink.WorkLink, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		emptyResp := &worklink.DescribeFleetMetadataOutput{}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfworklink "github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 )
 
 func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
@@ -291,7 +292,7 @@ func testAccCheckAWSWorkLinkFleetDisappears(resourceName string) resource.TestCh
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"DELETING"},
 			Target:     []string{"DELETED"},
-			Refresh:    worklinkFleetStateRefresh(conn, rs.Primary.ID),
+			Refresh:    tfworklink.FleetStateRefresh(conn, rs.Primary.ID),
 			Timeout:    15 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,

@@ -74,7 +74,7 @@ func resourceWebsiteCertificateAuthorityAssociationCreate(d *schema.ResourceData
 func resourceWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkLinkConn
 
-	fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
+	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func resourceWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, 
 func resourceWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WorkLinkConn
 
-	fleetArn, websiteCaID, err := decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(d.Id())
+	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func resourceWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED"},
-		Refresh:    worklinkWebsiteCertificateAuthorityAssociationStateRefresh(conn, websiteCaID, fleetArn),
+		Refresh:    WebsiteCertificateAuthorityAssociationStateRefresh(conn, websiteCaID, fleetArn),
 		Timeout:    15 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -141,7 +141,7 @@ func resourceWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData
 	return nil
 }
 
-func worklinkWebsiteCertificateAuthorityAssociationStateRefresh(conn *worklink.WorkLink, websiteCaID, arn string) resource.StateRefreshFunc {
+func WebsiteCertificateAuthorityAssociationStateRefresh(conn *worklink.WorkLink, websiteCaID, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		emptyResp := &worklink.DescribeWebsiteCertificateAuthorityOutput{}
 
@@ -160,7 +160,7 @@ func worklinkWebsiteCertificateAuthorityAssociationStateRefresh(conn *worklink.W
 	}
 }
 
-func decodeWorkLinkWebsiteCertificateAuthorityAssociationResourceID(id string) (string, string, error) {
+func DecodeWebsiteCertificateAuthorityAssociationResourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ",", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", "", fmt.Errorf("Unexpected format of ID(%s), expected WebsiteCaId/FleetArn", id)
