@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRdsOrderableDbInstance() *schema.Resource {
+func DataSourceOrderableInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRdsOrderableDbInstanceRead,
+		Read: dataSourceOrderableInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"availability_zone_group": {
 				Type:     schema.TypeString,
@@ -175,7 +175,7 @@ func dataSourceAwsRdsOrderableDbInstance() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRdsOrderableDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{}

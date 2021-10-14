@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDbClusterSnapshot() *schema.Resource {
+func DataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbClusterSnapshotRead,
+		Read: dataSourceClusterSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
 			//selection criteria
@@ -111,7 +111,7 @@ func dataSourceAwsDbClusterSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

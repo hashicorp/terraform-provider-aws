@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbOptionGroup() *schema.Resource {
+func ResourceOptionGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbOptionGroupCreate,
-		Read:   resourceAwsDbOptionGroupRead,
-		Update: resourceAwsDbOptionGroupUpdate,
-		Delete: resourceAwsDbOptionGroupDelete,
+		Create: resourceOptionGroupCreate,
+		Read:   resourceOptionGroupRead,
+		Update: resourceOptionGroupUpdate,
+		Delete: resourceOptionGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -127,7 +127,7 @@ func resourceAwsDbOptionGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsDbOptionGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOptionGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -161,10 +161,10 @@ func resourceAwsDbOptionGroupCreate(d *schema.ResourceData, meta interface{}) er
 	// Set for update
 	d.Set("arn", output.OptionGroup.OptionGroupArn)
 
-	return resourceAwsDbOptionGroupUpdate(d, meta)
+	return resourceOptionGroupUpdate(d, meta)
 }
 
-func resourceAwsDbOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -239,7 +239,7 @@ func optionInList(optionName string, list []*string) bool {
 	return false
 }
 
-func resourceAwsDbOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	if d.HasChange("option") {
 		o, n := d.GetChange("option")
@@ -310,10 +310,10 @@ func resourceAwsDbOptionGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAwsDbOptionGroupRead(d, meta)
+	return resourceOptionGroupRead(d, meta)
 }
 
-func resourceAwsDbOptionGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOptionGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	deleteOpts := &rds.DeleteOptionGroupInput{

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRdsEngineVersion() *schema.Resource {
+func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRdsEngineVersionRead,
+		Read: dataSourceEngineVersionRead,
 		Schema: map[string]*schema.Schema{
 			"default_character_set": {
 				Type:     schema.TypeString,
@@ -124,7 +124,7 @@ func dataSourceAwsRdsEngineVersion() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRdsEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeDBEngineVersionsInput{

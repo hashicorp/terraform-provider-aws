@@ -20,12 +20,12 @@ const (
 	rdsGlobalClusterRemovalTimeout = 2 * time.Minute
 )
 
-func resourceAwsRDSGlobalCluster() *schema.Resource {
+func ResourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSGlobalClusterCreate,
-		Read:   resourceAwsRDSGlobalClusterRead,
-		Update: resourceAwsRDSGlobalClusterUpdate,
-		Delete: resourceAwsRDSGlobalClusterDelete,
+		Create: resourceGlobalClusterCreate,
+		Read:   resourceGlobalClusterRead,
+		Update: resourceGlobalClusterUpdate,
+		Delete: resourceGlobalClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -109,7 +109,7 @@ func resourceAwsRDSGlobalCluster() *schema.Resource {
 	}
 }
 
-func resourceAwsRDSGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.CreateGlobalClusterInput{
@@ -158,10 +158,10 @@ func resourceAwsRDSGlobalClusterCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error waiting for RDS Global Cluster (%s) availability: %s", d.Id(), err)
 	}
 
-	return resourceAwsRDSGlobalClusterRead(d, meta)
+	return resourceGlobalClusterRead(d, meta)
 }
 
-func resourceAwsRDSGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	globalCluster, err := rdsDescribeGlobalCluster(conn, d.Id())
@@ -205,7 +205,7 @@ func resourceAwsRDSGlobalClusterRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsRDSGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.ModifyGlobalClusterInput{
@@ -234,7 +234,7 @@ func resourceAwsRDSGlobalClusterUpdate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error waiting for RDS Global Cluster (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceAwsRDSGlobalClusterRead(d, meta)
+	return resourceGlobalClusterRead(d, meta)
 }
 
 func resourceAwsRDSGlobalClusterGetIdByArn(conn *rds.RDS, arn string) string {
@@ -250,7 +250,7 @@ func resourceAwsRDSGlobalClusterGetIdByArn(conn *rds.RDS, arn string) string {
 	return ""
 }
 
-func resourceAwsRDSGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGlobalClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.Get("force_destroy").(bool) {

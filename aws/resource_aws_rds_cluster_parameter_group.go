@@ -17,12 +17,12 @@ import (
 
 const rdsClusterParameterGroupMaxParamsBulkEdit = 20
 
-func resourceAwsRDSClusterParameterGroup() *schema.Resource {
+func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSClusterParameterGroupCreate,
-		Read:   resourceAwsRDSClusterParameterGroupRead,
-		Update: resourceAwsRDSClusterParameterGroupUpdate,
-		Delete: resourceAwsRDSClusterParameterGroupDelete,
+		Create: resourceClusterParameterGroupCreate,
+		Read:   resourceClusterParameterGroupRead,
+		Update: resourceClusterParameterGroupUpdate,
+		Delete: resourceClusterParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -91,7 +91,7 @@ func resourceAwsRDSClusterParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsRDSClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -124,10 +124,10 @@ func resourceAwsRDSClusterParameterGroupCreate(d *schema.ResourceData, meta inte
 	// Set for update
 	d.Set("arn", output.DBClusterParameterGroup.DBClusterParameterGroupArn)
 
-	return resourceAwsRDSClusterParameterGroupUpdate(d, meta)
+	return resourceClusterParameterGroupUpdate(d, meta)
 }
 
-func resourceAwsRDSClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -199,7 +199,7 @@ func resourceAwsRDSClusterParameterGroupRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChange("parameter") {
@@ -306,10 +306,10 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceAwsRDSClusterParameterGroupRead(d, meta)
+	return resourceClusterParameterGroupRead(d, meta)
 }
 
-func resourceAwsRDSClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending"},
 		Target:     []string{"destroyed"},

@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsDbProxy() *schema.Resource {
+func DataSourceProxy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsDbProxyRead,
+		Read: dataSourceProxyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -87,7 +87,7 @@ func dataSourceAwsDbProxy() *schema.Resource {
 	}
 }
 
-func dataSourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	name := d.Get("name").(string)

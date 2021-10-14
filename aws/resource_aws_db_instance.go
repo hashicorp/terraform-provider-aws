@@ -23,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbInstance() *schema.Resource {
+func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbInstanceCreate,
-		Read:   resourceAwsDbInstanceRead,
-		Update: resourceAwsDbInstanceUpdate,
-		Delete: resourceAwsDbInstanceDelete,
+		Create: resourceInstanceCreate,
+		Read:   resourceInstanceRead,
+		Update: resourceInstanceUpdate,
+		Delete: resourceInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsDbInstanceImport,
 		},
@@ -491,7 +491,7 @@ func resourceAwsDbInstance() *schema.Resource {
 	}
 }
 
-func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -846,7 +846,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return err
 		}
 
-		return resourceAwsDbInstanceRead(d, meta)
+		return resourceInstanceRead(d, meta)
 	} else if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBInstanceFromDBSnapshotInput{
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
@@ -1360,10 +1360,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsDbInstanceRead(d, meta)
+	return resourceInstanceRead(d, meta)
 }
 
-func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -1507,7 +1507,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.DeleteDBInstanceInput{
@@ -1558,7 +1558,7 @@ func waitUntilAwsDbInstanceIsAvailableAfterUpdate(id string, conn *rds.RDS, time
 	return err
 }
 
-func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	req := &rds.ModifyDBInstanceInput{
@@ -1813,7 +1813,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	}
 
-	return resourceAwsDbInstanceRead(d, meta)
+	return resourceInstanceRead(d, meta)
 }
 
 // resourceAwsDbInstanceRetrieve fetches DBInstance information from the AWS

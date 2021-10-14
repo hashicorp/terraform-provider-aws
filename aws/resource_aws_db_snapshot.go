@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbSnapshot() *schema.Resource {
+func ResourceSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbSnapshotCreate,
-		Read:   resourceAwsDbSnapshotRead,
-		Update: resourceAwsDbSnapshotUpdate,
-		Delete: resourceAwsDbSnapshotDelete,
+		Create: resourceSnapshotCreate,
+		Read:   resourceSnapshotRead,
+		Update: resourceSnapshotUpdate,
+		Delete: resourceSnapshotDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -115,7 +115,7 @@ func resourceAwsDbSnapshot() *schema.Resource {
 	}
 }
 
-func resourceAwsDbSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -148,10 +148,10 @@ func resourceAwsDbSnapshotCreate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	return resourceAwsDbSnapshotRead(d, meta)
+	return resourceSnapshotRead(d, meta)
 }
 
-func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -213,7 +213,7 @@ func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDbSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := &rds.DeleteDBSnapshotInput{
@@ -231,7 +231,7 @@ func resourceAwsDbSnapshotDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsDbSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChange("tags_all") {

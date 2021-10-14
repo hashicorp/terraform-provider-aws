@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsDbProxy() *schema.Resource {
+func ResourceProxy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsDbProxyCreate,
-		Read:   resourceAwsDbProxyRead,
-		Update: resourceAwsDbProxyUpdate,
-		Delete: resourceAwsDbProxyDelete,
+		Create: resourceProxyCreate,
+		Read:   resourceProxyRead,
+		Update: resourceProxyUpdate,
+		Delete: resourceProxyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -117,7 +117,7 @@ func resourceAwsDbProxy() *schema.Resource {
 	}
 }
 
-func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -168,7 +168,7 @@ func resourceAwsDbProxyCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error waiting for DB Proxy creation: %s", err)
 	}
 
-	return resourceAwsDbProxyRead(d, meta)
+	return resourceProxyRead(d, meta)
 }
 
 func resourceAwsDbProxyRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
@@ -246,7 +246,7 @@ func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) []interface{
 	return s
 }
 
-func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -314,7 +314,7 @@ func resourceAwsDbProxyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChanges(
@@ -377,10 +377,10 @@ func resourceAwsDbProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsDbProxyRead(d, meta)
+	return resourceProxyRead(d, meta)
 }
 
-func resourceAwsDbProxyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	params := rds.DeleteDBProxyInput{

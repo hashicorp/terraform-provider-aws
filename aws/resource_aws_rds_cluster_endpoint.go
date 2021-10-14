@@ -20,12 +20,12 @@ const (
 	AWSRDSClusterEndpointRetryMinTimeout = 3 * time.Second
 )
 
-func resourceAwsRDSClusterEndpoint() *schema.Resource {
+func ResourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRDSClusterEndpointCreate,
-		Read:   resourceAwsRDSClusterEndpointRead,
-		Update: resourceAwsRDSClusterEndpointUpdate,
-		Delete: resourceAwsRDSClusterEndpointDelete,
+		Create: resourceClusterEndpointCreate,
+		Read:   resourceClusterEndpointRead,
+		Update: resourceClusterEndpointUpdate,
+		Delete: resourceClusterEndpointDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -81,7 +81,7 @@ func resourceAwsRDSClusterEndpoint() *schema.Resource {
 	}
 }
 
-func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -116,10 +116,10 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return resourceAwsRDSClusterEndpointRead(d, meta)
+	return resourceClusterEndpointRead(d, meta)
 }
 
-func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -187,7 +187,7 @@ func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsRDSClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	input := &rds.ModifyDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
@@ -222,10 +222,10 @@ func resourceAwsRDSClusterEndpointUpdate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error modifying RDS Cluster Endpoint: %s", err)
 	}
 
-	return resourceAwsRDSClusterEndpointRead(d, meta)
+	return resourceClusterEndpointRead(d, meta)
 }
 
-func resourceAwsRDSClusterEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceClusterEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	input := &rds.DeleteDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),

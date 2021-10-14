@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsRdsCertificate() *schema.Resource {
+func DataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsRdsCertificateRead,
+		Read: dataSourceCertificateRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -56,7 +56,7 @@ func dataSourceAwsRdsCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceAwsRdsCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	input := &rds.DescribeCertificatesInput{}

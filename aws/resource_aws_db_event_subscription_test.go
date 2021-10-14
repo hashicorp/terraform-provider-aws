@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func testSweepDbEventSubscriptions(region string) error {
 		}
 
 		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := resourceAwsDbEventSubscription()
+			r := ResourceEventSubscription()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
 
@@ -117,7 +118,7 @@ func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
 				Config: testAccAWSDBEventSubscriptionConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsDbEventSubscription(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEventSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
