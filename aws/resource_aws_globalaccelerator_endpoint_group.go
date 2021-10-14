@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/globalaccelerator/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
@@ -148,8 +149,8 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 }
 
 func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	region := meta.(*conns.AWSClient).Region
 
 	opts := &globalaccelerator.CreateEndpointGroupInput{
 		EndpointGroupRegion: aws.String(region),
@@ -216,7 +217,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsGlobalAcceleratorEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	endpointGroup, err := finder.EndpointGroupByARN(conn, d.Id())
 
@@ -256,7 +257,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	opts := &globalaccelerator.UpdateEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
@@ -320,7 +321,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 }
 
 func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).globalacceleratorconn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	input := &globalaccelerator.DeleteEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
