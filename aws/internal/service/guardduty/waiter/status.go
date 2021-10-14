@@ -9,35 +9,35 @@ import (
 
 const (
 	// AdminStatus NotFound
-	AdminStatusNotFound = "NotFound"
+	adminStatusNotFound = "NotFound"
 
 	// AdminStatus Unknown
-	AdminStatusUnknown = "Unknown"
+	adminStatusUnknown = "Unknown"
 
 	// Constants not currently provided by the AWS Go SDK
-	PublishingStatusFailed  = "Failed"
-	PublishingStatusUnknown = "Unknown"
+	publishingStatusFailed  = "Failed"
+	publishingStatusUnknown = "Unknown"
 )
 
-// AdminAccountAdminStatus fetches the AdminAccount and its AdminStatus
-func AdminAccountAdminStatus(conn *guardduty.GuardDuty, adminAccountID string) resource.StateRefreshFunc {
+// statusAdminAccountAdmin fetches the AdminAccount and its AdminStatus
+func statusAdminAccountAdmin(conn *guardduty.GuardDuty, adminAccountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		adminAccount, err := getOrganizationAdminAccount(conn, adminAccountID)
 
 		if err != nil {
-			return nil, AdminStatusUnknown, err
+			return nil, adminStatusUnknown, err
 		}
 
 		if adminAccount == nil {
-			return adminAccount, AdminStatusNotFound, nil
+			return adminAccount, adminStatusNotFound, nil
 		}
 
 		return adminAccount, aws.StringValue(adminAccount.AdminStatus), nil
 	}
 }
 
-// PublishingDestinationStatus fetches the PublishingDestination and its Status
-func PublishingDestinationStatus(conn *guardduty.GuardDuty, destinationID, detectorID string) resource.StateRefreshFunc {
+// statusPublishingDestination fetches the PublishingDestination and its Status
+func statusPublishingDestination(conn *guardduty.GuardDuty, destinationID, detectorID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &guardduty.DescribePublishingDestinationInput{
 			DetectorId:    aws.String(detectorID),
@@ -47,11 +47,11 @@ func PublishingDestinationStatus(conn *guardduty.GuardDuty, destinationID, detec
 		output, err := conn.DescribePublishingDestination(input)
 
 		if err != nil {
-			return output, PublishingStatusFailed, err
+			return output, publishingStatusFailed, err
 		}
 
 		if output == nil {
-			return output, PublishingStatusUnknown, nil
+			return output, publishingStatusUnknown, nil
 		}
 
 		return output, aws.StringValue(output.Status), nil

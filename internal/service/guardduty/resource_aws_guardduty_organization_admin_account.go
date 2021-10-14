@@ -11,6 +11,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
 
 func ResourceOrganizationAdminAccount() *schema.Resource {
@@ -51,7 +65,7 @@ func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(adminAccountID)
 
-	if _, err := waiter.AdminAccountEnabled(conn, d.Id()); err != nil {
+	if _, err := tfguardduty.waitAdminAccountEnabled(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to enable: %w", d.Id(), err)
 	}
 
@@ -91,7 +105,7 @@ func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error disabling GuardDuty Organization Admin Account (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.AdminAccountNotFound(conn, d.Id()); err != nil {
+	if _, err := tfguardduty.waitAdminAccountNotFound(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to disable: %w", d.Id(), err)
 	}
 
