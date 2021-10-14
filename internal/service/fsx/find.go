@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FindAdministrativeActionByFileSystemIDAndActionType(conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
