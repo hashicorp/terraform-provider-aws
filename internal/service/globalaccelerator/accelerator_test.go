@@ -56,7 +56,7 @@ func testSweepGlobalAcceleratorAccelerators(region string) error {
 				sweeperErrs = multierror.Append(sweeperErrs, errs)
 			}
 
-			r := ResourceAccelerator()
+			r := tfglobalaccelerator.ResourceAccelerator()
 			d := r.Data(nil)
 			d.SetId(arn)
 			err = r.Delete(d, client)
@@ -102,7 +102,7 @@ func sweepGlobalAcceleratorListeners(client interface{}, acceleratorArn *string)
 
 		arn := aws.StringValue(listener.ListenerArn)
 
-		r := ResourceListener()
+		r := tfglobalaccelerator.ResourceListener()
 		d := r.Data(nil)
 		d.SetId(arn)
 		err = r.Delete(d, client)
@@ -136,7 +136,7 @@ func sweepGlobalAcceleratorEndpointGroups(client interface{}, listenerArn *strin
 	for _, endpoint := range output.EndpointGroups {
 		arn := aws.StringValue(endpoint.EndpointGroupArn)
 
-		r := ResourceEndpointGroup()
+		r := tfglobalaccelerator.ResourceEndpointGroup()
 		d := r.Data(nil)
 		d.SetId(arn)
 		err = r.Delete(d, client)
@@ -207,7 +207,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 				Config: testAccGlobalAcceleratorAcceleratorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceAccelerator(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglobalaccelerator.ResourceAccelerator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

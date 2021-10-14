@@ -60,7 +60,7 @@ func TestAccAwsGlobalAcceleratorListener_disappears(t *testing.T) {
 				Config: testAccGlobalAcceleratorListener_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorListenerExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceListener(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglobalaccelerator.ResourceListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
