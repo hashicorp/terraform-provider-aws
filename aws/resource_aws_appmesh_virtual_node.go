@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVirtualNode() *schema.Resource {
@@ -53,7 +54,7 @@ func ResourceVirtualNode() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateAwsAccountId,
+				ValidateFunc: verify.ValidAccountID,
 			},
 
 			"spec": {
@@ -596,7 +597,7 @@ func ResourceVirtualNode() *schema.Resource {
 																		"certificate_arn": {
 																			Type:         schema.TypeString,
 																			Required:     true,
-																			ValidateFunc: validateArn,
+																			ValidateFunc: verify.ValidARN,
 																		},
 																	},
 																},
