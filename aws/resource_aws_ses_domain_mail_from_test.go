@@ -8,18 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
-	dn := testAccRandomDomain()
+	dn := acctest.RandomDomain()
 	domain := dn.String()
 	mailFromDomain1 := dn.Subdomain("bounce1").String()
 	mailFromDomain2 := dn.Subdomain("bounce2").String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -51,14 +52,14 @@ func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
 }
 
 func TestAccAWSSESDomainMailFrom_disappears(t *testing.T) {
-	dn := testAccRandomDomain()
+	dn := acctest.RandomDomain()
 	domain := dn.String()
 	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -75,14 +76,14 @@ func TestAccAWSSESDomainMailFrom_disappears(t *testing.T) {
 }
 
 func TestAccAWSSESDomainMailFrom_disappears_Identity(t *testing.T) {
-	dn := testAccRandomDomain()
+	dn := acctest.RandomDomain()
 	domain := dn.String()
 	mailFromDomain := dn.Subdomain("bounce").String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -99,12 +100,12 @@ func TestAccAWSSESDomainMailFrom_disappears_Identity(t *testing.T) {
 }
 
 func TestAccAWSSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
-	domain := testAccRandomDomain().String()
+	domain := acctest.RandomDomain().String()
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{

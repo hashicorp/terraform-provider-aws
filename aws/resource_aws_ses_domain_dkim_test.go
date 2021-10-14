@@ -10,18 +10,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSESDomainDkim_basic(t *testing.T) {
 	resourceName := "aws_ses_domain_dkim.test"
-	domain := testAccRandomDomainName()
+	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainDkimDestroy,
 		Steps: []resource.TestStep{

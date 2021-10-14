@@ -8,22 +8,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
-	domain := testAccRandomDomainName()
-	topicName := acctest.RandomWithPrefix("test-topic")
+	domain := acctest.RandomDomainName()
+	topicName := sdkacctest.RandomWithPrefix("test-topic")
 	resourceName := "aws_ses_identity_notification_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityNotificationTopicDestroy,
 		Steps: []resource.TestStep{

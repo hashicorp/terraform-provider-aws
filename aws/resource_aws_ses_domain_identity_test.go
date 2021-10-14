@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func init() {
@@ -67,11 +68,11 @@ func testSweepSesIdentities(region, identityType string) error {
 }
 
 func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
-	domain := testAccRandomDomainName()
+	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -87,11 +88,11 @@ func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 }
 
 func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
-	domain := testAccRandomDomainName()
+	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -110,11 +111,11 @@ func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 // TestAccAWSSESDomainIdentity_trailingPeriod updated in 3.0 to account for domain plan-time validation
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
 func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
-	domain := testAccRandomFQDomainName()
+	domain := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -229,7 +230,7 @@ func testAccPreCheckAWSSES(t *testing.T) {
 
 	_, err := conn.ListIdentities(input)
 
-	if testAccPreCheckSkipError(err) {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

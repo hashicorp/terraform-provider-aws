@@ -6,15 +6,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSESEventDestination_basic(t *testing.T) {
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test-kinesis")
-	rName3 := acctest.RandomWithPrefix("tf-acc-test-sns")
+	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-kinesis")
+	rName3 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
 	cloudwatchDestinationResourceName := "aws_ses_event_destination.cloudwatch"
 	kinesisDestinationResourceName := "aws_ses_event_destination.kinesis"
 	snsDestinationResourceName := "aws_ses_event_destination.sns"
@@ -22,10 +23,10 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -35,9 +36,9 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 					testAccCheckAwsSESEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckAwsSESEventDestinationExists(kinesisDestinationResourceName, &v2),
 					testAccCheckAwsSESEventDestinationExists(snsDestinationResourceName, &v3),
-					testAccCheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
-					testAccCheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
-					testAccCheckResourceAttrRegionalARN(snsDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
+					acctest.CheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
+					acctest.CheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
+					acctest.CheckResourceAttrRegionalARN(snsDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
 					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, "name", rName1),
 					resource.TestCheckResourceAttr(kinesisDestinationResourceName, "name", rName2),
 					resource.TestCheckResourceAttr(snsDestinationResourceName, "name", rName3),
@@ -66,9 +67,9 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 }
 
 func TestAccAWSSESEventDestination_disappears(t *testing.T) {
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test-kinesis")
-	rName3 := acctest.RandomWithPrefix("tf-acc-test-sns")
+	rName1 := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-kinesis")
+	rName3 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
 	cloudwatchDestinationResourceName := "aws_ses_event_destination.cloudwatch"
 	kinesisDestinationResourceName := "aws_ses_event_destination.kinesis"
 	snsDestinationResourceName := "aws_ses_event_destination.sns"
@@ -76,10 +77,10 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			acctest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESEventDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -89,9 +90,9 @@ func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 					testAccCheckAwsSESEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckAwsSESEventDestinationExists(kinesisDestinationResourceName, &v2),
 					testAccCheckAwsSESEventDestinationExists(snsDestinationResourceName, &v3),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), cloudwatchDestinationResourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), kinesisDestinationResourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), snsDestinationResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), cloudwatchDestinationResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), kinesisDestinationResourceName),
+					acctest.CheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), snsDestinationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

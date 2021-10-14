@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccAwsSesDomainIdentityDomainFromEnv(t *testing.T) string {
@@ -27,11 +28,11 @@ func testAccAwsSesDomainIdentityDomainFromEnv(t *testing.T) string {
 
 func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
 	rootDomain := testAccAwsSesDomainIdentityDomainFromEnv(t)
-	domain := fmt.Sprintf("tf-acc-%d.%s", acctest.RandInt(), rootDomain)
+	domain := fmt.Sprintf("tf-acc-%d.%s", sdkacctest.RandInt(), rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -44,11 +45,11 @@ func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
 }
 
 func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
-	domain := testAccRandomDomainName()
+	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -61,11 +62,11 @@ func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
 }
 
 func TestAccAwsSesDomainIdentityVerification_nonexistent(t *testing.T) {
-	domain := testAccRandomDomainName()
+	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{

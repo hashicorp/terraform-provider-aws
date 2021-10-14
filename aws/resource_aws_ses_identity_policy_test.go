@@ -6,18 +6,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
-	domain := testAccRandomDomainName()
+	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -37,13 +38,13 @@ func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 }
 
 func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
-	emailPrefix := acctest.RandomWithPrefix("tf-acc-test")
-	email := fmt.Sprintf("%s@%s", emailPrefix, testAccRandomDomainName())
+	emailPrefix := sdkacctest.RandomWithPrefix("tf-acc-test")
+	email := fmt.Sprintf("%s@%s", emailPrefix, acctest.RandomDomainName())
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -63,12 +64,12 @@ func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
 }
 
 func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
-	domain := testAccRandomDomainName()
+	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
