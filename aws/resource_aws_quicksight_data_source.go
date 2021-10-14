@@ -662,7 +662,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -746,7 +746,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
 	if d.HasChangesExcept("permission", "tags", "tags_all") {
-		awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+		awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -785,7 +785,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChange("permission") {
-		awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+		awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -830,7 +830,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn
 
-	awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -1690,7 +1690,7 @@ func flattenQuickSightVpcConnectionProperties(props *quicksight.VpcConnectionPro
 	return []interface{}{m}
 }
 
-func resourceAwsQuickSightDataSourceParseID(id string) (string, string, error) {
+func ParseDataSourceID(id string) (string, string, error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/DATA_SOURCE_ID", id)

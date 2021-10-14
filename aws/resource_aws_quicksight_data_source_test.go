@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
 
 func init() {
@@ -468,7 +469,7 @@ func testAccCheckQuickSightDataSourceExists(resourceName string, dataSource *qui
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		awsAccountID, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(rs.Primary.ID)
+		awsAccountID, dataSourceId, err := tfquicksight.ParseDataSourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -503,7 +504,7 @@ func testAccCheckQuickSightDataSourceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		awsAccountID, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(rs.Primary.ID)
+		awsAccountID, dataSourceId, err := tfquicksight.ParseDataSourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
