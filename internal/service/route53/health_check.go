@@ -296,7 +296,7 @@ func resourceHealthCheckCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(resp.HealthCheck.Id))
 
-	if err := tftags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, tags); err != nil {
+	if err := UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, tags); err != nil {
 		return fmt.Errorf("error setting Route53 Health Check (%s) tags: %w", d.Id(), err)
 	}
 
@@ -349,7 +349,7 @@ func resourceHealthCheckRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("cloudwatch_alarm_region", healthCheckConfig.AlarmIdentifier.Region)
 	}
 
-	tags, err := tftags.Route53ListTags(conn, d.Id(), route53.TagResourceTypeHealthcheck)
+	tags, err := ListTags(conn, d.Id(), route53.TagResourceTypeHealthcheck)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Health Check (%s): %w", d.Id(), err)
@@ -455,7 +455,7 @@ func resourceHealthCheckUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := tftags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, o, n); err != nil {
+		if err := UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Health Check (%s) tags: %w", d.Id(), err)
 		}
 	}

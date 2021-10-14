@@ -134,7 +134,7 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 				// we check if tags match
 				matchingTags := true
 				if len(tags) > 0 {
-					listTags, err := tftags.Route53ListTags(conn, hostedZoneId, route53.TagResourceTypeHostedzone)
+					listTags, err := ListTags(conn, hostedZoneId, route53.TagResourceTypeHostedzone)
 
 					if err != nil {
 						return fmt.Errorf("Error finding Route 53 Hosted Zone: %w", err)
@@ -186,7 +186,7 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting name_servers: %w", err)
 	}
 
-	tags, err = tftags.Route53ListTags(conn, idHostedZone, route53.TagResourceTypeHostedzone)
+	tags, err = ListTags(conn, idHostedZone, route53.TagResourceTypeHostedzone)
 
 	if err != nil {
 		return fmt.Errorf("error listing Route 53 Hosted Zone (%s) tags: %w", idHostedZone, err)
