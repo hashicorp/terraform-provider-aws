@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// MemberNotAssociated Return a list of members not associated and compare with account ID
-func MemberNotAssociated(conn *macie2.Macie2, accountID string) (*macie2.Member, error) {
+// findMemberNotAssociated Return a list of members not associated and compare with account ID
+func findMemberNotAssociated(conn *macie2.Macie2, accountID string) (*macie2.Member, error) {
 	input := &macie2.ListMembersInput{
 		OnlyAssociated: aws.String("false"),
 	}

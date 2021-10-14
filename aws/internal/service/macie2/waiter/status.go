@@ -6,12 +6,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/macie2/finder"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 )
 
-// MemberRelationshipStatus fetches the Member and its relationship status
-func MemberRelationshipStatus(conn *macie2.Macie2, adminAccountID string) resource.StateRefreshFunc {
+// statusMemberRelationship fetches the Member and its relationship status
+func statusMemberRelationship(conn *macie2.Macie2, adminAccountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		adminAccount, err := finder.MemberNotAssociated(conn, adminAccountID)
+		adminAccount, err := tfmacie2.findMemberNotAssociated(conn, adminAccountID)
 
 		if err != nil {
 			return nil, "Unknown", err
