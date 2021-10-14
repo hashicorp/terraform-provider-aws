@@ -1,4 +1,4 @@
-package aws
+package route53resolver
 
 import (
 	"fmt"
@@ -9,46 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 )
 
 func ResourceDNSSECConfig() *schema.Resource {
@@ -106,7 +69,7 @@ func resourceDNSSECConfigCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(resp.ResolverDNSSECConfig.Id))
 
-	_, err = tfroute53resolver.WaitDNSSECConfigCreated(conn, d.Id())
+	_, err = WaitDNSSECConfigCreated(conn, d.Id())
 	if err != nil {
 		return err
 	}
@@ -117,7 +80,7 @@ func resourceDNSSECConfigCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceDNSSECConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	config, err := tfroute53resolver.FindResolverDNSSECConfigByID(conn, d.Id())
+	config, err := FindResolverDNSSECConfigByID(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error getting Route 53 Resolver DNSSEC config (%s): %w", d.Id(), err)
@@ -156,7 +119,7 @@ func resourceDNSSECConfigDelete(d *schema.ResourceData, meta interface{}) error 
 	// To determine how many Updates are required,
 	// we first find the config by ID and proceed as follows:
 
-	config, err := tfroute53resolver.FindResolverDNSSECConfigByID(conn, d.Id())
+	config, err := FindResolverDNSSECConfigByID(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
@@ -183,7 +146,7 @@ func resourceDNSSECConfigDelete(d *schema.ResourceData, meta interface{}) error 
 
 	// (1.a) Wait for Route 53 ResolverDnssecConfig to reach "DISABLED" state, if necessary
 	if aws.StringValue(config.ValidationStatus) != route53resolver.ResolverDNSSECValidationStatusDisabled {
-		if _, err = tfroute53resolver.WaitDNSSECConfigDisabled(conn, d.Id()); err != nil {
+		if _, err = WaitDNSSECConfigDisabled(conn, d.Id()); err != nil {
 			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 				return nil
 			}

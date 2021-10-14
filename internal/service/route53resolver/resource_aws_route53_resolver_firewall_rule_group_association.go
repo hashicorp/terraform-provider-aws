@@ -1,4 +1,4 @@
-package aws
+package route53resolver
 
 import (
 	"fmt"
@@ -9,47 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/finder"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 )
 
 func ResourceFirewallRuleGroupAssociation() *schema.Resource {
@@ -132,7 +95,7 @@ func resourceFirewallRuleGroupAssociationCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.FirewallRuleGroupAssociation.Id))
 
-	_, err = tfroute53resolver.WaitFirewallRuleGroupAssociationCreated(conn, d.Id())
+	_, err = WaitFirewallRuleGroupAssociationCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver DNS Firewall rule group association (%s) to become available: %w", d.Id(), err)
@@ -146,7 +109,7 @@ func resourceFirewallRuleGroupAssociationRead(d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ruleGroupAssociation, err := tfroute53resolver.FindFirewallRuleGroupAssociationByID(conn, d.Id())
+	ruleGroupAssociation, err := FindFirewallRuleGroupAssociationByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Route53 Resolver DNS Firewall rule group association (%s) not found, removing from state", d.Id())
@@ -215,7 +178,7 @@ func resourceFirewallRuleGroupAssociationUpdate(d *schema.ResourceData, meta int
 			return fmt.Errorf("error creating Route 53 Resolver DNS Firewall rule group association: %w", err)
 		}
 
-		_, err = tfroute53resolver.WaitFirewallRuleGroupAssociationUpdated(conn, d.Id())
+		_, err = WaitFirewallRuleGroupAssociationUpdated(conn, d.Id())
 
 		if err != nil {
 			return fmt.Errorf("error waiting for Route53 Resolver DNS Firewall rule group association (%s) to be updated: %w", d.Id(), err)
@@ -247,7 +210,7 @@ func resourceFirewallRuleGroupAssociationDelete(d *schema.ResourceData, meta int
 		return fmt.Errorf("error deleting Route 53 Resolver DNS Firewall rule group association (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfroute53resolver.WaitFirewallRuleGroupAssociationDeleted(conn, d.Id())
+	_, err = WaitFirewallRuleGroupAssociationDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver DNS Firewall rule group association (%s) to be deleted: %w", d.Id(), err)
