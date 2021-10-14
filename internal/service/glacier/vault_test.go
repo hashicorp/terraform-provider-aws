@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfglacier "github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -261,7 +262,7 @@ func TestAccAWSGlacierVault_disappears(t *testing.T) {
 				Config: testAccGlacierVaultBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlacierVaultExists(resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceVault(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfglacier.ResourceVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
