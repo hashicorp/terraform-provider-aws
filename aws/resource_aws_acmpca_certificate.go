@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/acmpca/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCertificate() *schema.Resource {
@@ -59,7 +60,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: verify.ValidARN,
 			},
 			"certificate_signing_request": {
 				Type:     schema.TypeString,
@@ -90,7 +91,7 @@ func ResourceCertificate() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateTypeStringIsDateOrPositiveInt,
+							ValidateFunc: verify.ValidStringDateOrPositiveInt,
 						},
 					},
 				},
@@ -227,7 +228,7 @@ func resourceAwsAcmpcaCertificateRevoke(d *schema.ResourceData, meta interface{}
 }
 
 func validateAcmPcaTemplateArn(v interface{}, k string) (ws []string, errors []error) {
-	wsARN, errorsARN := validateArn(v, k)
+	wsARN, errorsARN := verify.ValidARN(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
 
