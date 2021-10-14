@@ -41,7 +41,7 @@ func testSweepMskClusters(region string) error {
 		}
 
 		for _, cluster := range page.ClusterInfoList {
-			r := ResourceCluster()
+			r := tfkafka.ResourceCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(cluster.ClusterArn))
 
