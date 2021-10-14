@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -117,7 +118,7 @@ func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceKeyGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceKeyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

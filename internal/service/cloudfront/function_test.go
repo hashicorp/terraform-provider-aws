@@ -63,7 +63,7 @@ func testSweepCloudfrontFunctions(region string) error {
 				continue
 			}
 
-			r := ResourceFunction()
+			r := tfcloudfront.ResourceFunction()
 			d := r.Data(nil)
 			d.SetId(name)
 			d.Set("etag", output.ETag)
@@ -143,7 +143,7 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 				Config: testAccAWSCloudfrontConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, ResourceFunction(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
