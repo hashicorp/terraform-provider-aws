@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/rds/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceProxyEndpoint() *schema.Resource {
@@ -26,7 +27,7 @@ func ResourceProxyEndpoint() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
@@ -58,8 +59,8 @@ func ResourceProxyEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"target_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -90,7 +91,7 @@ func ResourceProxyEndpoint() *schema.Resource {
 func resourceProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	dbProxyEndpointName := d.Get("db_proxy_endpoint_name").(string)
@@ -167,7 +168,7 @@ func resourceProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_subnet_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSubnetIds))
 	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxyEndpoint.VpcSecurityGroupIds))
 
-	tags, err := keyvaluetags.RdsListTags(conn, endpointArn)
+	tags, err := tftags.RdsListTags(conn, endpointArn)
 
 	if err != nil {
 		return fmt.Errorf("Error listing tags for RDS DB Proxy Endpoint (%s): %w", endpointArn, err)
@@ -209,7 +210,7 @@ func resourceProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("Error updating RDS DB Proxy Endpoint (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
