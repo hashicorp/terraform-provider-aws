@@ -68,7 +68,7 @@ func testSweepGlueMLTransforms(region string) error {
 func TestAccAWSGlueMLTransform_basic(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 	roleResourceName := "aws_iam_role.test"
 	tableResourceName := "aws_glue_catalog_table.test"
@@ -76,7 +76,7 @@ func TestAccAWSGlueMLTransform_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -118,13 +118,13 @@ func TestAccAWSGlueMLTransform_basic(t *testing.T) {
 func TestAccAWSGlueMLTransform_typeFindMatchesFull(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -178,13 +178,13 @@ func TestAccAWSGlueMLTransform_typeFindMatchesFull(t *testing.T) {
 func TestAccAWSGlueMLTransform_description(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -213,13 +213,13 @@ func TestAccAWSGlueMLTransform_description(t *testing.T) {
 func TestAccAWSGlueMLTransform_glueVersion(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -248,13 +248,13 @@ func TestAccAWSGlueMLTransform_glueVersion(t *testing.T) {
 func TestAccAWSGlueMLTransform_maxRetries(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -287,13 +287,13 @@ func TestAccAWSGlueMLTransform_maxRetries(t *testing.T) {
 func TestAccAWSGlueMLTransform_Tags(t *testing.T) {
 	var transform1, transform2, transform3 glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -333,13 +333,13 @@ func TestAccAWSGlueMLTransform_Tags(t *testing.T) {
 func TestAccAWSGlueMLTransform_timeout(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -368,13 +368,13 @@ func TestAccAWSGlueMLTransform_timeout(t *testing.T) {
 func TestAccAWSGlueMLTransform_workerType(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -405,13 +405,13 @@ func TestAccAWSGlueMLTransform_workerType(t *testing.T) {
 func TestAccAWSGlueMLTransform_maxCapacity(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -440,20 +440,20 @@ func TestAccAWSGlueMLTransform_maxCapacity(t *testing.T) {
 func TestAccAWSGlueMLTransform_disappears(t *testing.T) {
 	var transform glue.GetMLTransformOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueMLTransformBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueMLTransformExists(resourceName, &transform),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueMLTransform(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueMLTransform(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -472,7 +472,7 @@ func testAccCheckAWSGlueMLTransformExists(resourceName string, mlTransform *glue
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := conn.GetMLTransform(&glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),
@@ -500,7 +500,7 @@ func testAccCheckAWSGlueMLTransformDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := conn.GetMLTransform(&glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),

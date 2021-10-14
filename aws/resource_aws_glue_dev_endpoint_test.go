@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	GlueDevEndpointResourcePrefix = "tf-acc-test"
 )
 
 func init() {
@@ -43,7 +42,7 @@ func testSweepGlueDevEndpoint(region string) error {
 		}
 		for _, endpoint := range page.DevEndpoints {
 			name := aws.StringValue(endpoint.EndpointName)
-			if !strings.HasPrefix(name, GlueDevEndpointResourcePrefix) {
+			if !strings.HasPrefix(name, acctest.ResourcePrefix) {
 				log.Printf("[INFO] Skipping Glue Dev Endpoint: %s", name)
 				continue
 			}
@@ -72,13 +71,13 @@ func testSweepGlueDevEndpoint(region string) error {
 func TestAccGlueDevEndpoint_Basic(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,13 +105,13 @@ func TestAccGlueDevEndpoint_Basic(t *testing.T) {
 func TestAccGlueDevEndpoint_Arguments(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,7 +151,7 @@ func TestAccGlueDevEndpoint_Arguments(t *testing.T) {
 func TestAccGlueDevEndpoint_ExtraJarsS3Path(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	extraJarsS3Path := "foo"
 	extraJarsS3PathUpdated := "bar"
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -160,7 +159,7 @@ func TestAccGlueDevEndpoint_ExtraJarsS3Path(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -189,7 +188,7 @@ func TestAccGlueDevEndpoint_ExtraJarsS3Path(t *testing.T) {
 func TestAccGlueDevEndpoint_ExtraPythonLibsS3Path(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	extraPythonLibsS3Path := "foo"
 	extraPythonLibsS3PathUpdated := "bar"
 	resourceName := "aws_glue_dev_endpoint.test"
@@ -197,7 +196,7 @@ func TestAccGlueDevEndpoint_ExtraPythonLibsS3Path(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -226,13 +225,13 @@ func TestAccGlueDevEndpoint_ExtraPythonLibsS3Path(t *testing.T) {
 func TestAccGlueDevEndpoint_GlueVersion(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -265,13 +264,13 @@ func TestAccGlueDevEndpoint_GlueVersion(t *testing.T) {
 func TestAccGlueDevEndpoint_NumberOfNodes(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -304,13 +303,13 @@ func TestAccGlueDevEndpoint_NumberOfNodes(t *testing.T) {
 func TestAccGlueDevEndpoint_NumberOfWorkers(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -343,14 +342,14 @@ func TestAccGlueDevEndpoint_NumberOfWorkers(t *testing.T) {
 func TestAccGlueDevEndpoint_PublicKey(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	publicKey1, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey1, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
-	publicKey2, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey2, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -358,7 +357,7 @@ func TestAccGlueDevEndpoint_PublicKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -387,22 +386,22 @@ func TestAccGlueDevEndpoint_PublicKey(t *testing.T) {
 func TestAccGlueDevEndpoint_PublicKeys(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
-	publicKey1, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey1, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
-	publicKey2, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey2, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
-	publicKey3, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey3, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
-	publicKey4, _, err := sdkacctest.RandSSHKeyPair(testAccDefaultEmailAddress)
+	publicKey4, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
@@ -410,7 +409,7 @@ func TestAccGlueDevEndpoint_PublicKeys(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -446,13 +445,13 @@ func TestAccGlueDevEndpoint_PublicKeys(t *testing.T) {
 func TestAccGlueDevEndpoint_SecurityConfiguration(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -475,13 +474,13 @@ func TestAccGlueDevEndpoint_SecurityConfiguration(t *testing.T) {
 func TestAccGlueDevEndpoint_SubnetID_SecurityGroupIDs(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -506,13 +505,13 @@ func TestAccGlueDevEndpoint_SubnetID_SecurityGroupIDs(t *testing.T) {
 func TestAccGlueDevEndpoint_Tags(t *testing.T) {
 	var endpoint1, endpoint2, endpoint3 glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -552,13 +551,13 @@ func TestAccGlueDevEndpoint_Tags(t *testing.T) {
 func TestAccGlueDevEndpoint_WorkerType(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -594,20 +593,20 @@ func TestAccGlueDevEndpoint_WorkerType(t *testing.T) {
 func TestAccGlueDevEndpoint_disappears(t *testing.T) {
 	var endpoint glue.DevEndpoint
 
-	rName := sdkacctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlueDevEndpointConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueDevEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueDevEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -626,7 +625,7 @@ func testAccCheckAWSGlueDevEndpointExists(resourceName string, v *glue.DevEndpoi
 			return fmt.Errorf("no Glue Dev Endpoint ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := finder.DevEndpointByName(conn, rs.Primary.ID)
 
@@ -641,7 +640,7 @@ func testAccCheckAWSGlueDevEndpointExists(resourceName string, v *glue.DevEndpoi
 }
 
 func testAccCheckAWSGlueDevEndpointDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_dev_endpoint" {

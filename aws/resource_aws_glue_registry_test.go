@@ -54,13 +54,13 @@ func testSweepGlueRegistry(region string) error {
 func TestAccAWSGlueRegistry_basic(t *testing.T) {
 	var registry glue.GetRegistryOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -85,13 +85,13 @@ func TestAccAWSGlueRegistry_basic(t *testing.T) {
 func TestAccAWSGlueRegistry_Description(t *testing.T) {
 	var registry glue.GetRegistryOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -119,13 +119,13 @@ func TestAccAWSGlueRegistry_Description(t *testing.T) {
 
 func TestAccAWSGlueRegistry_Tags(t *testing.T) {
 	var registry glue.GetRegistryOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -165,20 +165,20 @@ func TestAccAWSGlueRegistry_Tags(t *testing.T) {
 func TestAccAWSGlueRegistry_disappears(t *testing.T) {
 	var registry glue.GetRegistryOutput
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckAWSGlueRegistry(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueRegistryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueRegistryBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueRegistryExists(resourceName, &registry),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueRegistry(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,7 +187,7 @@ func TestAccAWSGlueRegistry_disappears(t *testing.T) {
 }
 
 func testAccPreCheckAWSGlueRegistry(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
@@ -212,7 +212,7 @@ func testAccCheckAWSGlueRegistryExists(resourceName string, registry *glue.GetRe
 			return fmt.Errorf("No Glue Registry ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 		output, err := finder.RegistryByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -237,7 +237,7 @@ func testAccCheckAWSGlueRegistryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 		output, err := finder.RegistryByID(conn, rs.Primary.ID)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {

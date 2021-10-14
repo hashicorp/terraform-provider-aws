@@ -71,13 +71,13 @@ func testSweepGlueClassifiers(region string) error {
 func TestAccAWSGlueClassifier_CsvClassifier(t *testing.T) {
 	var classifier glue.Classifier
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,13 +126,13 @@ func TestAccAWSGlueClassifier_CsvClassifier(t *testing.T) {
 func TestAccAWSGlueClassifier_CsvClassifier_quoteSymbol(t *testing.T) {
 	var classifier glue.Classifier
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -163,13 +163,13 @@ func TestAccAWSGlueClassifier_CsvClassifier_quoteSymbol(t *testing.T) {
 func TestAccAWSGlueClassifier_GrokClassifier(t *testing.T) {
 	var classifier glue.Classifier
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -212,13 +212,13 @@ func TestAccAWSGlueClassifier_GrokClassifier(t *testing.T) {
 func TestAccAWSGlueClassifier_GrokClassifier_CustomPatterns(t *testing.T) {
 	var classifier glue.Classifier
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -261,13 +261,13 @@ func TestAccAWSGlueClassifier_GrokClassifier_CustomPatterns(t *testing.T) {
 func TestAccAWSGlueClassifier_JsonClassifier(t *testing.T) {
 	var classifier glue.Classifier
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -306,13 +306,13 @@ func TestAccAWSGlueClassifier_JsonClassifier(t *testing.T) {
 func TestAccAWSGlueClassifier_TypeChange(t *testing.T) {
 	var classifier glue.Classifier
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -375,13 +375,13 @@ func TestAccAWSGlueClassifier_TypeChange(t *testing.T) {
 func TestAccAWSGlueClassifier_XmlClassifier(t *testing.T) {
 	var classifier glue.Classifier
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -422,20 +422,20 @@ func TestAccAWSGlueClassifier_XmlClassifier(t *testing.T) {
 func TestAccAWSGlueClassifier_disappears(t *testing.T) {
 	var classifier glue.Classifier
 
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueClassifierConfig_CsvClassifier(rName, false, "PRESENT", "|", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueClassifierExists(resourceName, &classifier),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueClassifier(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueClassifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -454,7 +454,7 @@ func testAccCheckAWSGlueClassifierExists(resourceName string, classifier *glue.C
 			return fmt.Errorf("No Glue Classifier ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := conn.GetClassifier(&glue.GetClassifierInput{
 			Name: aws.String(rs.Primary.ID),
@@ -478,7 +478,7 @@ func testAccCheckAWSGlueClassifierDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		output, err := conn.GetClassifier(&glue.GetClassifierInput{
 			Name: aws.String(rs.Primary.ID),

@@ -34,7 +34,7 @@ func testAccAWSGlueResourcePolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +57,7 @@ func testAccAWSGlueResourcePolicy_hybrid(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,15 +92,15 @@ func testAccAWSGlueResourcePolicy_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSGlueResourcePolicy_Required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSGlueResourcePolicy(resourceName, "glue:CreateTable"),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueResourcePolicy(), resourceName),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsGlueResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlueResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -164,7 +164,7 @@ func testAccAWSGlueResourcePolicy_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSGlueResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -199,7 +199,7 @@ func testAccAWSGlueResourcePolicy(n string, action string) resource.TestCheckFun
 			return fmt.Errorf("No policy id set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 		policy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 		if err != nil {
@@ -223,7 +223,7 @@ func testAccAWSGlueResourcePolicy(n string, action string) resource.TestCheckFun
 }
 
 func testAccCheckAWSGlueResourcePolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
+	conn := acctest.Provider.Meta().(*AWSClient).glueconn
 
 	policy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 
