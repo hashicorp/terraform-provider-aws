@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 )
 
 func init() {
@@ -382,12 +383,12 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeTypeGp3(t *t
 		CheckDestroy: testAccCheckAwsImageBuilderImageRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsImageBuilderImageRecipeConfigBlockDeviceMappingEbsVolumeType(rName, tfimagebuilder.EbsVolumeTypeGp3),
+				Config: testAccAwsImageBuilderImageRecipeConfigBlockDeviceMappingEbsVolumeType(rName, tfimagebuilder.EBSVolumeTypeGP3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImageRecipeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
-						"ebs.0.volume_type": tfimagebuilder.EbsVolumeTypeGp3,
+						"ebs.0.volume_type": tfimagebuilder.EBSVolumeTypeGP3,
 					}),
 				),
 			},

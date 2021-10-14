@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 )
 
 func ResourceImageRecipe() *schema.Resource {
@@ -102,7 +103,7 @@ func ResourceImageRecipe() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 										// https://github.com/hashicorp/terraform-provider-aws/issues/17274.
-										ValidateFunc: validation.StringInSlice(append(imagebuilder.EbsVolumeType_Values(), tfimagebuilder.EbsVolumeTypeGp3), false),
+										ValidateFunc: validation.StringInSlice(append(imagebuilder.EbsVolumeType_Values(), tfimagebuilder.EBSVolumeTypeGP3), false),
 									},
 								},
 							},

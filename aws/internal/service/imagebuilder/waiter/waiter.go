@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// ImageStatusAvailable waits for an Image to return Available
-func ImageStatusAvailable(conn *imagebuilder.Imagebuilder, imageBuildVersionArn string, timeout time.Duration) (*imagebuilder.Image, error) {
+// waitImageStatusAvailable waits for an Image to return Available
+func waitImageStatusAvailable(conn *imagebuilder.Imagebuilder, imageBuildVersionArn string, timeout time.Duration) (*imagebuilder.Image, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			imagebuilder.ImageStatusBuilding,
@@ -20,7 +20,7 @@ func ImageStatusAvailable(conn *imagebuilder.Imagebuilder, imageBuildVersionArn 
 			imagebuilder.ImageStatusTesting,
 		},
 		Target:  []string{imagebuilder.ImageStatusAvailable},
-		Refresh: ImageStatus(conn, imageBuildVersionArn),
+		Refresh: statusImage(conn, imageBuildVersionArn),
 		Timeout: timeout,
 	}
 
