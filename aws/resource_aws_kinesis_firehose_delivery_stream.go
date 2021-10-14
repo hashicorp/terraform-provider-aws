@@ -13,12 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/firehose/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/firehose/waiter"
 	iamwaiter "github.com/hashicorp/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 const (
@@ -812,7 +813,7 @@ func ResourceDeliveryStream() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsKinesisFirehoseMigrateState,
@@ -824,9 +825,9 @@ func ResourceDeliveryStream() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 
-			"tags": tagsSchema(),
+			"tags": tftags.TagsSchema(),
 
-			"tags_all": tagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaComputed(),
 
 			"server_side_encryption": {
 				Type:             schema.TypeList,
@@ -2467,7 +2468,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 
 	conn := meta.(*conns.AWSClient).FirehoseConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	sn := d.Get("name").(string)
 
@@ -2714,7 +2715,7 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.FirehoseUpdateTags(conn, sn, o, n); err != nil {
+		if err := tftags.FirehoseUpdateTags(conn, sn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Firehose Delivery Stream (%s) tags: %s", sn, err)
 		}
 	}
@@ -2779,7 +2780,7 @@ func resourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	tags, err := keyvaluetags.FirehoseListTags(conn, sn)
+	tags, err := tftags.FirehoseListTags(conn, sn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %w", sn, err)
