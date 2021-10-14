@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -31,14 +32,14 @@ func init() {
 }
 
 func testSweepEksNodeGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*testSweepResource, 0)
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -60,13 +61,13 @@ func testSweepEksNodeGroups(region string) error {
 					d := r.Data(nil)
 					d.SetId(tfeks.NodeGroupCreateResourceID(aws.StringValue(cluster), aws.StringValue(nodeGroup)))
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
 			})
 
-			if testSweepSkipSweepError(err) {
+			if sweep.SkipSweepError(err) {
 				continue
 			}
 
@@ -78,7 +79,7 @@ func testSweepEksNodeGroups(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EKS Node Groups sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -87,7 +88,7 @@ func testSweepEksNodeGroups(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EKS Clusters (%s): %w", region, err))
 	}
 
-	err = testSweepResourceOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EKS Node Groups (%s): %w", region, err))
