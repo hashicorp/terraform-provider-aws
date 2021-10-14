@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWafv2RuleGroup() *schema.Resource {
+func DataSourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafv2RuleGroupRead,
+		Read: dataSourceRuleGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -39,7 +39,7 @@ func dataSourceAwsWafv2RuleGroup() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	name := d.Get("name").(string)
 

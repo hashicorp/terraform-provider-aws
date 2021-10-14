@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dataSourceAwsWafv2WebACL() *schema.Resource {
+func DataSourceWebACL() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsWafv2WebACLRead,
+		Read: dataSourceWebACLRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -39,7 +39,7 @@ func dataSourceAwsWafv2WebACL() *schema.Resource {
 	}
 }
 
-func dataSourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFV2Conn
 	name := d.Get("name").(string)
 
