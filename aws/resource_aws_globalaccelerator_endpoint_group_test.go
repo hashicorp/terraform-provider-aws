@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 )
 
 func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
@@ -71,7 +72,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 				Config: testAccGlobalAcceleratorEndpointGroupConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsGlobalAcceleratorEndpointGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, ResourceEndpointGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

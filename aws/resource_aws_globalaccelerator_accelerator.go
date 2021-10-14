@@ -24,12 +24,12 @@ import (
 // https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html).
 const globalAcceleratorRoute53ZoneID = "Z2BJ6XQ5FK7U4H"
 
-func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
+func ResourceAccelerator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlobalAcceleratorAcceleratorCreate,
-		Read:   resourceAwsGlobalAcceleratorAcceleratorRead,
-		Update: resourceAwsGlobalAcceleratorAcceleratorUpdate,
-		Delete: resourceAwsGlobalAcceleratorAcceleratorDelete,
+		Create: resourceAcceleratorCreate,
+		Read:   resourceAcceleratorRead,
+		Update: resourceAcceleratorUpdate,
+		Delete: resourceAcceleratorDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -120,7 +120,7 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 	}
 }
 
-func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -164,10 +164,10 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsGlobalAcceleratorAcceleratorRead(d, meta)
+	return resourceAcceleratorRead(d, meta)
 }
 
-func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -223,7 +223,7 @@ func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	if d.HasChanges("name", "ip_address_type", "enabled") {
@@ -290,10 +290,10 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsGlobalAcceleratorAcceleratorRead(d, meta)
+	return resourceAcceleratorRead(d, meta)
 }
 
-func resourceAwsGlobalAcceleratorAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	{

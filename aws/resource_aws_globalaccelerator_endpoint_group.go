@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
+func ResourceEndpointGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlobalAcceleratorEndpointGroupCreate,
-		Read:   resourceAwsGlobalAcceleratorEndpointGroupRead,
-		Update: resourceAwsGlobalAcceleratorEndpointGroupUpdate,
-		Delete: resourceAwsGlobalAcceleratorEndpointGroupDelete,
+		Create: resourceEndpointGroupCreate,
+		Read:   resourceEndpointGroupRead,
+		Update: resourceEndpointGroupUpdate,
+		Delete: resourceEndpointGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -148,7 +148,7 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	region := meta.(*conns.AWSClient).Region
 
@@ -213,10 +213,10 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
-	return resourceAwsGlobalAcceleratorEndpointGroupRead(d, meta)
+	return resourceEndpointGroupRead(d, meta)
 }
 
-func resourceAwsGlobalAcceleratorEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	endpointGroup, err := finder.EndpointGroupByARN(conn, d.Id())
@@ -256,7 +256,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	opts := &globalaccelerator.UpdateEndpointGroupInput{
@@ -317,10 +317,10 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
-	return resourceAwsGlobalAcceleratorEndpointGroupRead(d, meta)
+	return resourceEndpointGroupRead(d, meta)
 }
 
-func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	input := &globalaccelerator.DeleteEndpointGroupInput{

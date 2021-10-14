@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsGlobalAcceleratorListener() *schema.Resource {
+func ResourceListener() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsGlobalAcceleratorListenerCreate,
-		Read:   resourceAwsGlobalAcceleratorListenerRead,
-		Update: resourceAwsGlobalAcceleratorListenerUpdate,
-		Delete: resourceAwsGlobalAcceleratorListenerDelete,
+		Create: resourceListenerCreate,
+		Read:   resourceListenerRead,
+		Update: resourceListenerUpdate,
+		Delete: resourceListenerDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -76,7 +76,7 @@ func resourceAwsGlobalAcceleratorListener() *schema.Resource {
 	}
 }
 
-func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
@@ -102,10 +102,10 @@ func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
-	return resourceAwsGlobalAcceleratorListenerRead(d, meta)
+	return resourceListenerRead(d, meta)
 }
 
-func resourceAwsGlobalAcceleratorListenerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 
 	listener, err := finder.ListenerByARN(conn, d.Id())
@@ -136,7 +136,7 @@ func resourceAwsGlobalAcceleratorListenerRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsGlobalAcceleratorListenerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
@@ -157,10 +157,10 @@ func resourceAwsGlobalAcceleratorListenerUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", acceleratorARN, err)
 	}
 
-	return resourceAwsGlobalAcceleratorListenerRead(d, meta)
+	return resourceListenerRead(d, meta)
 }
 
-func resourceAwsGlobalAcceleratorListenerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceListenerDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
