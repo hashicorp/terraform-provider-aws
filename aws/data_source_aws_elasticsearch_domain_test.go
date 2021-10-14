@@ -18,7 +18,7 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElasticsearchDomainConfigWithDataSource(rInt),
@@ -51,7 +51,7 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		ErrorCheck: acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
-		Providers:  testAccProviders,
+		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt),

@@ -47,7 +47,7 @@ func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +56,7 @@ func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "2.3"),
 					func(s *terraform.State) error {
-						awsClient := testAccProvider.Meta().(*AWSClient)
+						awsClient := acctest.Provider.Meta().(*AWSClient)
 						expectedArn, err := buildESDomainArn(name, awsClient.partition, awsClient.accountid, awsClient.region)
 						if err != nil {
 							return err
