@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sfn/finder"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/sfn/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSfnStateMachine() *schema.Resource {
@@ -120,8 +121,8 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 }
 
 func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SFNConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -182,9 +183,9 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SFNConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.StateMachineByARN(conn, d.Id())
 
@@ -251,7 +252,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
+	conn := meta.(*conns.AWSClient).SFNConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
@@ -315,7 +316,7 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSfnStateMachineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
+	conn := meta.(*conns.AWSClient).SFNConn
 
 	_, err := conn.DeleteStateMachine(&sfn.DeleteStateMachineInput{
 		StateMachineArn: aws.String(d.Id()),

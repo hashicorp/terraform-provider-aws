@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func resourceAwsSfnActivity() *schema.Resource {
@@ -44,8 +45,8 @@ func resourceAwsSfnActivity() *schema.Resource {
 }
 
 func resourceAwsSfnActivityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*conns.AWSClient).SFNConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating Step Function Activity")
 
@@ -65,7 +66,7 @@ func resourceAwsSfnActivityCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSfnActivityUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
+	conn := meta.(*conns.AWSClient).SFNConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -78,9 +79,9 @@ func resourceAwsSfnActivityUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SFNConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading Step Function Activity: %s", d.Id())
 
@@ -122,7 +123,7 @@ func resourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsSfnActivityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
+	conn := meta.(*conns.AWSClient).SFNConn
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
 
 	input := &sfn.DeleteActivityInput{

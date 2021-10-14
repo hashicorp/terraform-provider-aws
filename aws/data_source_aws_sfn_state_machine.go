@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func dataSourceAwsSfnStateMachine() *schema.Resource {
@@ -43,7 +44,7 @@ func dataSourceAwsSfnStateMachine() *schema.Resource {
 }
 
 func dataSourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sfnconn
+	conn := meta.(*conns.AWSClient).SFNConn
 	params := &sfn.ListStateMachinesInput{}
 	log.Printf("[DEBUG] Reading Step Function State Machine: %s", d.Id())
 

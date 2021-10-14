@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccAWSSfnActivity_basic(t *testing.T) {
@@ -96,7 +97,7 @@ func testAccCheckAWSSfnActivityExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Step Function ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*AWSClient).sfnconn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
 
 		_, err := conn.DescribeActivity(&sfn.DescribeActivityInput{
 			ActivityArn: aws.String(rs.Primary.ID),
@@ -107,7 +108,7 @@ func testAccCheckAWSSfnActivityExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckAWSSfnActivityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*AWSClient).sfnconn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sfn_activity" {
