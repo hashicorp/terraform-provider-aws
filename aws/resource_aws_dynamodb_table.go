@@ -1435,11 +1435,11 @@ func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection 
 	}
 
 	if v, ok := data["non_key_attributes"].([]interface{}); ok && len(v) > 0 {
-		projection.NonKeyAttributes = expandStringList(v)
+		projection.NonKeyAttributes = flex.ExpandStringList(v)
 	}
 
 	if v, ok := data["non_key_attributes"].(*schema.Set); ok && v.Len() > 0 {
-		projection.NonKeyAttributes = expandStringSet(v)
+		projection.NonKeyAttributes = flex.ExpandStringSet(v)
 	}
 
 	return projection

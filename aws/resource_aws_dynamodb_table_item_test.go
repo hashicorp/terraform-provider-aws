@@ -242,7 +242,7 @@ func testAccCheckAWSDynamoDbItemDestroy(s *terraform.State) error {
 		}
 
 		attrs := rs.Primary.Attributes
-		attributes, err := expandDynamoDbTableItemAttributes(attrs["item"])
+		attributes, err := expandTableItemAttributes(attrs["item"])
 		if err != nil {
 			return err
 		}
@@ -284,7 +284,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
 
 		attrs := rs.Primary.Attributes
-		attributes, err := expandDynamoDbTableItemAttributes(attrs["item"])
+		attributes, err := expandTableItemAttributes(attrs["item"])
 		if err != nil {
 			return err
 		}
