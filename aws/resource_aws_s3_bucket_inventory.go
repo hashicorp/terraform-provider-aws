@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceBucketInventory() *schema.Resource {
@@ -84,12 +85,12 @@ func ResourceBucketInventory() *schema.Resource {
 									"bucket_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: verify.ValidARN,
 									},
 									"account_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateAwsAccountId,
+										ValidateFunc: verify.ValidAccountID,
 									},
 									"prefix": {
 										Type:     schema.TypeString,
@@ -111,7 +112,7 @@ func ResourceBucketInventory() *schema.Resource {
 															"key_id": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: verify.ValidARN,
 															},
 														},
 													},

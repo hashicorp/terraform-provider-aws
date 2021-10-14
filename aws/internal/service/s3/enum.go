@@ -2,6 +2,7 @@ package s3
 
 import (
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // These should be defined in the AWS SDK for Go. There is an open issue https://github.com/aws/aws-sdk-go/issues/2683
