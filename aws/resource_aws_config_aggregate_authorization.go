@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftags "github.com/hashicorp/terraform-provider-aws/aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func ResourceAggregateAuthorization() *schema.Resource {
@@ -39,18 +40,18 @@ func ResourceAggregateAuthorization() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	accountId := d.Get("account_id").(string)
 	region := d.Get("region").(string)
@@ -105,7 +106,7 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)
 
-	tags, err := keyvaluetags.ConfigserviceListTags(conn, d.Get("arn").(string))
+	tags, err := tftags.ConfigserviceListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Config Aggregate Authorization (%s): %s", d.Get("arn").(string), err)
@@ -131,7 +132,7 @@ func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.ConfigserviceUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := tftags.ConfigserviceUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Config Aggregate Authorization (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
