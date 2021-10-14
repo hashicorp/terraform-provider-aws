@@ -882,7 +882,7 @@ func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error is what we want
-		if !isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, acm.ErrCodeResourceNotFoundException, "") {
 			return err
 		}
 	}
