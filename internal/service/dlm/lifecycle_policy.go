@@ -162,7 +162,7 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if len(tags) > 0 {
-		input.Tags = tags.IgnoreAws().DlmTags()
+		input.Tags = Tags(tags.IgnoreAws())
 	}
 
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
@@ -204,7 +204,7 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting policy details %s", err)
 	}
 
-	tags := tftags.DlmKeyValueTags(out.Policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(out.Policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -253,7 +253,7 @@ func resourceLifecyclePolicyUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := tftags.DlmUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
