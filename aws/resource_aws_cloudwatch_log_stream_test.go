@@ -15,12 +15,12 @@ import (
 func TestAccAWSCloudWatchLogStream_basic(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	resourceName := "aws_cloudwatch_log_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchLogStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -42,19 +42,19 @@ func TestAccAWSCloudWatchLogStream_basic(t *testing.T) {
 func TestAccAWSCloudWatchLogStream_disappears(t *testing.T) {
 	var ls cloudwatchlogs.LogStream
 	resourceName := "aws_cloudwatch_log_stream.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchLogStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudWatchLogStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogStream(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,12 +67,12 @@ func TestAccAWSCloudWatchLogStream_disappears_LogGroup(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	resourceName := "aws_cloudwatch_log_stream.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudWatchLogStreamDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,7 +80,7 @@ func TestAccAWSCloudWatchLogStream_disappears_LogGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogStreamExists(resourceName, &ls),
 					testAccCheckCloudWatchLogGroupExists(logGroupResourceName, &lg),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogGroup(), logGroupResourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +96,7 @@ func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStrea
 		}
 
 		logGroupName := rs.Primary.Attributes["log_group_name"]
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
 		logGroup, exists, err := lookupCloudWatchLogStream(conn, rs.Primary.ID, logGroupName, nil)
 		if err != nil {
 			return err
@@ -112,7 +112,7 @@ func testAccCheckCloudWatchLogStreamExists(n string, ls *cloudwatchlogs.LogStrea
 }
 
 func testAccCheckAWSCloudWatchLogStreamDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_stream" {

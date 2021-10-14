@@ -22,7 +22,7 @@ func TestAccAWSCloudwatchLogDestination_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,14 +52,14 @@ func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudwatchLogDestinationConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchLogDestinationExists(resourceName, &destination),
-					acctest.CheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogDestination(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, resourceAwsCloudWatchLogDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,7 +68,7 @@ func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSCloudwatchLogDestinationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_destination" {
@@ -96,7 +96,7 @@ func testAccCheckAWSCloudwatchLogDestinationExists(n string, d *cloudwatchlogs.D
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
 		destination, exists, err := lookupCloudWatchLogDestination(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err

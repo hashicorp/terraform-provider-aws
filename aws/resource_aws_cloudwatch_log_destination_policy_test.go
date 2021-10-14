@@ -19,7 +19,7 @@ func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		Providers:    testAccProviders,
+		Providers:    acctest.Providers,
 		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +38,7 @@ func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAWSCloudwatchLogDestinationPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+	conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_destination_policy" {
@@ -66,7 +66,7 @@ func testAccCheckAWSCloudwatchLogDestinationPolicyExists(n string, d *cloudwatch
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
+		conn := acctest.Provider.Meta().(*AWSClient).cloudwatchlogsconn
 		destination, exists, err := lookupCloudWatchLogDestination(conn, rs.Primary.ID, nil)
 		if err != nil {
 			return err
