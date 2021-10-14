@@ -1,8 +1,9 @@
 package autoscaling_test
 
 import (
-	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"testing"
+
+	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 )
 
 func TestCapacitySatisfiedCreate(t *testing.T) {
