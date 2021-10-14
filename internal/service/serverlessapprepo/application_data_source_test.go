@@ -13,7 +13,7 @@ import (
 
 func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Basic(t *testing.T) {
 	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
-	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID()
+	appARN := testAccCloudFormationApplicationID()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -21,9 +21,9 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Basic(t *tes
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig(appARN),
+				Config: testAccCheckApplicationDataSourceConfig(appARN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceID(datasourceName),
+					testAccCheckApplicationIDDataSource(datasourceName),
 					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttrSet(datasourceName, "semantic_version"),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
@@ -32,7 +32,7 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Basic(t *tes
 				),
 			},
 			{
-				Config:      testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_NonExistent(),
+				Config:      testAccCheckApplicationDataSourceConfig_NonExistent(),
 				ExpectError: regexp.MustCompile(`error getting Serverless Application Repository application`),
 			},
 		},
@@ -41,7 +41,7 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Basic(t *tes
 
 func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Versioned(t *testing.T) {
 	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
-	appARN := testAccAwsServerlessApplicationRepositoryCloudFormationApplicationID()
+	appARN := testAccCloudFormationApplicationID()
 
 	const (
 		version1 = "1.0.13"
@@ -54,9 +54,9 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Versioned(t 
 		Providers:  acctest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_Versioned(appARN, version1),
+				Config: testAccCheckApplicationDataSourceConfig_Versioned(appARN, version1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceID(datasourceName),
+					testAccCheckApplicationIDDataSource(datasourceName),
 					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version1),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
@@ -65,9 +65,9 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Versioned(t 
 				),
 			},
 			{
-				Config: testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_Versioned(appARN, version2),
+				Config: testAccCheckApplicationDataSourceConfig_Versioned(appARN, version2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceID(datasourceName),
+					testAccCheckApplicationIDDataSource(datasourceName),
 					resource.TestCheckResourceAttr(datasourceName, "name", "SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version2),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
@@ -78,14 +78,14 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Versioned(t 
 				),
 			},
 			{
-				Config:      testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_Versioned_NonExistent(appARN),
+				Config:      testAccCheckApplicationDataSourceConfig_Versioned_NonExistent(appARN),
 				ExpectError: regexp.MustCompile(`error getting Serverless Application Repository application`),
 			},
 		},
 	})
 }
 
-func testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceID(n string) resource.TestCheckFunc {
+func testAccCheckApplicationIDDataSource(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -99,7 +99,7 @@ func testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceID(n str
 	}
 }
 
-func testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig(appARN string) string {
+func testAccCheckApplicationDataSourceConfig(appARN string) string {
 	return fmt.Sprintf(`
 data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
   application_id = %[1]q
@@ -107,7 +107,7 @@ data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres
 `, appARN)
 }
 
-func testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_NonExistent() string {
+func testAccCheckApplicationDataSourceConfig_NonExistent() string {
 	return `
 data "aws_caller_identity" "current" {}
 
@@ -121,7 +121,7 @@ data "aws_serverlessapplicationrepository_application" "no_such_function" {
 `
 }
 
-func testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_Versioned(appARN, version string) string {
+func testAccCheckApplicationDataSourceConfig_Versioned(appARN, version string) string {
 	return fmt.Sprintf(`
 data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
   application_id   = %[1]q
@@ -130,7 +130,7 @@ data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres
 `, appARN, version)
 }
 
-func testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_Versioned_NonExistent(appARN string) string {
+func testAccCheckApplicationDataSourceConfig_Versioned_NonExistent(appARN string) string {
 	return fmt.Sprintf(`
 data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
   application_id   = %[1]q
