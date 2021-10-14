@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
 func init() {
@@ -25,7 +26,7 @@ func init() {
 }
 
 func testSweepEfsAccessPoints(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
