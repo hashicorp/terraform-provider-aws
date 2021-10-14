@@ -26,6 +26,52 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func ResourceLoadBalancer() *schema.Resource {
@@ -413,7 +459,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		if lb.VPCId != nil {
-			sg, err := finder.SecurityGroupByNameAndVpcID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
 			if err != nil {
 				return fmt.Errorf("Error looking up ELB Security Group ID: %w", err)
 			} else {
