@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func resourceAwsSwfDomain() *schema.Resource {
+func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSwfDomainCreate,
-		Read:   resourceAwsSwfDomainRead,
-		Update: resourceAwsSwfDomainUpdate,
-		Delete: resourceAwsSwfDomainDelete,
+		Create: resourceDomainCreate,
+		Read:   resourceDomainRead,
+		Update: resourceDomainUpdate,
+		Delete: resourceDomainDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -67,7 +67,7 @@ func resourceAwsSwfDomain() *schema.Resource {
 	}
 }
 
-func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SWFConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
@@ -99,10 +99,10 @@ func resourceAwsSwfDomainCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(name)
 
-	return resourceAwsSwfDomainRead(d, meta)
+	return resourceDomainRead(d, meta)
 }
 
-func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SWFConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -153,7 +153,7 @@ func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsSwfDomainUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SWFConn
 
 	if d.HasChange("tags_all") {
@@ -164,10 +164,10 @@ func resourceAwsSwfDomainUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceAwsSwfDomainRead(d, meta)
+	return resourceDomainRead(d, meta)
 }
 
-func resourceAwsSwfDomainDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SWFConn
 
 	input := &swf.DeprecateDomainInput{
