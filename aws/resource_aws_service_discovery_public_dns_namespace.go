@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePublicDNSNamespace() *schema.Resource {
@@ -29,7 +30,7 @@ func ResourcePublicDNSNamespace() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateServiceDiscoveryNamespaceName,
+				ValidateFunc: validNamespaceName,
 			},
 			"description": {
 				Type:     schema.TypeString,

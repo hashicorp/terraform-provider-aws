@@ -9,6 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 	"github.com/hashicorp/terraform-provider-aws/aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -143,4 +146,15 @@ func resourceAwsServiceDiscoveryInstanceImport(ctx context.Context, d *schema.Re
 	d.SetId(instanceID)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
+func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			diags = append(diags, validator(i, k)...)
+		}
+		return diags
+	}
 }
