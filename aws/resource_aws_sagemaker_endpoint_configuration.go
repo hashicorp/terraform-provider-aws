@@ -539,11 +539,11 @@ func expandSagemakerCaptureContentTypeHeader(m map[string]interface{}) *sagemake
 	c := &sagemaker.CaptureContentTypeHeader{}
 
 	if v, ok := m["csv_content_types"].(*schema.Set); ok && v.Len() > 0 {
-		c.CsvContentTypes = expandStringSet(v)
+		c.CsvContentTypes = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := m["json_content_types"].(*schema.Set); ok && v.Len() > 0 {
-		c.JsonContentTypes = expandStringSet(v)
+		c.JsonContentTypes = flex.ExpandStringSet(v)
 	}
 
 	return c
@@ -557,11 +557,11 @@ func flattenSagemakerCaptureContentTypeHeader(contentTypeHeader *sagemaker.Captu
 	l := make(map[string]interface{})
 
 	if contentTypeHeader.CsvContentTypes != nil {
-		l["csv_content_types"] = flattenStringSet(contentTypeHeader.CsvContentTypes)
+		l["csv_content_types"] = flex.FlattenStringSet(contentTypeHeader.CsvContentTypes)
 	}
 
 	if contentTypeHeader.JsonContentTypes != nil {
-		l["json_content_types"] = flattenStringSet(contentTypeHeader.JsonContentTypes)
+		l["json_content_types"] = flex.FlattenStringSet(contentTypeHeader.JsonContentTypes)
 	}
 
 	return []map[string]interface{}{l}

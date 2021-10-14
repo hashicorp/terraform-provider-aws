@@ -287,7 +287,7 @@ func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) 
 		AuthMode:             aws.String(d.Get("auth_mode").(string)),
 		VpcId:                aws.String(d.Get("vpc_id").(string)),
 		AppNetworkAccessType: aws.String(d.Get("app_network_access_type").(string)),
-		SubnetIds:            expandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:            flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		DefaultUserSettings:  expandSagemakerDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
 	}
 
@@ -346,7 +346,7 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("vpc_id", domain.VpcId)
 	d.Set("kms_key_id", domain.KmsKeyId)
 
-	if err := d.Set("subnet_ids", flattenStringSet(domain.SubnetIds)); err != nil {
+	if err := d.Set("subnet_ids", flex.FlattenStringSet(domain.SubnetIds)); err != nil {
 		return fmt.Errorf("error setting subnet_ids for SageMaker domain (%s): %w", d.Id(), err)
 	}
 
@@ -460,7 +460,7 @@ func expandSagemakerDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSe
 	}
 
 	if v, ok := m["security_groups"].(*schema.Set); ok && v.Len() > 0 {
-		config.SecurityGroups = expandStringSet(v)
+		config.SecurityGroups = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := m["tensor_board_app_settings"].([]interface{}); ok && len(v) > 0 {
@@ -496,7 +496,7 @@ func expandSagemakerDomainJupyterServerAppSettings(l []interface{}) *sagemaker.J
 	}
 
 	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
-		config.LifecycleConfigArns = expandStringSet(v)
+		config.LifecycleConfigArns = flex.ExpandStringSet(v)
 	}
 
 	return config
@@ -516,7 +516,7 @@ func expandSagemakerDomainKernelGatewayAppSettings(l []interface{}) *sagemaker.K
 	}
 
 	if v, ok := m["lifecycle_config_arns"].(*schema.Set); ok && v.Len() > 0 {
-		config.LifecycleConfigArns = expandStringSet(v)
+		config.LifecycleConfigArns = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
@@ -617,7 +617,7 @@ func flattenSagemakerDomainDefaultUserSettings(config *sagemaker.UserSettings) [
 	}
 
 	if config.SecurityGroups != nil {
-		m["security_groups"] = flattenStringSet(config.SecurityGroups)
+		m["security_groups"] = flex.FlattenStringSet(config.SecurityGroups)
 	}
 
 	if config.JupyterServerAppSettings != nil {
@@ -683,7 +683,7 @@ func flattenSagemakerDomainJupyterServerAppSettings(config *sagemaker.JupyterSer
 	}
 
 	if config.LifecycleConfigArns != nil {
-		m["lifecycle_config_arns"] = flattenStringSet(config.LifecycleConfigArns)
+		m["lifecycle_config_arns"] = flex.FlattenStringSet(config.LifecycleConfigArns)
 	}
 
 	return []map[string]interface{}{m}
@@ -701,7 +701,7 @@ func flattenSagemakerDomainKernelGatewayAppSettings(config *sagemaker.KernelGate
 	}
 
 	if config.LifecycleConfigArns != nil {
-		m["lifecycle_config_arns"] = flattenStringSet(config.LifecycleConfigArns)
+		m["lifecycle_config_arns"] = flex.FlattenStringSet(config.LifecycleConfigArns)
 	}
 
 	if config.CustomImages != nil {

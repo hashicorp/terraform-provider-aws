@@ -269,8 +269,8 @@ func expandSageMakerVpcConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 	m := l[0].(map[string]interface{})
 
 	return &sagemaker.VpcConfig{
-		SecurityGroupIds: expandStringSet(m["security_group_ids"].(*schema.Set)),
-		Subnets:          expandStringSet(m["subnets"].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
 	}
 }
 
@@ -340,8 +340,8 @@ func flattenSageMakerVpcConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[str
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flattenStringSet(vpcConfig.SecurityGroupIds),
-		"subnets":            flattenStringSet(vpcConfig.Subnets),
+		"security_group_ids": flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
+		"subnets":            flex.FlattenStringSet(vpcConfig.Subnets),
 	}
 
 	return []map[string]interface{}{m}
@@ -405,7 +405,7 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 		container.ModelDataUrl = aws.String(v.(string))
 	}
 	if v, ok := m["environment"]; ok {
-		container.Environment = expandStringMap(v.(map[string]interface{}))
+		container.Environment = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := m["image_config"]; ok {
