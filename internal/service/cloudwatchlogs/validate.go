@@ -1,29 +1,10 @@
 package cloudwatchlogs
 
-
 import (
-	"errors"
 	"fmt"
-	"net"
-	"net/url"
 	"regexp"
-	"strconv"
-	"strings"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	tfnet "github.com/hashicorp/terraform-provider-aws/internal/net"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func validResourcePolicyDocument(v interface{}, k string) (ws []string, errors []error) {
@@ -116,4 +97,3 @@ func validLogMetricFilterTransformationName(v interface{}, k string) (ws []strin
 
 	return
 }
-

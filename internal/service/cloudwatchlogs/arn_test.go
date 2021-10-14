@@ -3,8 +3,6 @@ package cloudwatchlogs_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 	tfcloudwatchlogs "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatchlogs"
 )
 
