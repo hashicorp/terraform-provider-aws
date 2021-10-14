@@ -410,13 +410,13 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
 	}
 
-	err = resourceAwsSecurityGroupUpdateRules(d, "ingress", meta, group)
+	err = resourceSecurityGroupUpdateRules(d, "ingress", meta, group)
 	if err != nil {
 		return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
 	}
 
 	if d.Get("vpc_id") != nil {
-		err = resourceAwsSecurityGroupUpdateRules(d, "egress", meta, group)
+		err = resourceSecurityGroupUpdateRules(d, "egress", meta, group)
 		if err != nil {
 			return fmt.Errorf("error updating Security Group (%s): %w", d.Id(), err)
 		}
@@ -679,7 +679,7 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 	return rules
 }
 
-func resourceAwsSecurityGroupUpdateRules(
+func resourceSecurityGroupUpdateRules(
 	d *schema.ResourceData, ruleset string,
 	meta interface{}, group *ec2.SecurityGroup) error {
 
@@ -1101,7 +1101,7 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 
 // Duplicate ingress/egress block structure and fill out all
 // the required fields
-func resourceAwsSecurityGroupCopyRule(src map[string]interface{}, self bool, k string, v interface{}) map[string]interface{} {
+func resourceSecurityGroupCopyRule(src map[string]interface{}, self bool, k string, v interface{}) map[string]interface{} {
 	var keys_to_copy = []string{"description", "from_port", "to_port", "protocol"}
 
 	dst := make(map[string]interface{})
@@ -1223,7 +1223,7 @@ func SecurityGroupExpandRules(rules *schema.Set) *schema.Set {
 		rule := rawRule.(map[string]interface{})
 
 		if v, ok := rule["self"]; ok && v.(bool) {
-			new_rule := resourceAwsSecurityGroupCopyRule(rule, true, "", nil)
+			new_rule := resourceSecurityGroupCopyRule(rule, true, "", nil)
 			normalized.Add(new_rule)
 		}
 		for _, key := range keys_to_expand {
@@ -1240,11 +1240,11 @@ func SecurityGroupExpandRules(rules *schema.Set) *schema.Set {
 					if key == "security_groups" {
 						new_v := schema.NewSet(schema.HashString, nil)
 						new_v.Add(v)
-						new_rule = resourceAwsSecurityGroupCopyRule(rule, false, key, new_v)
+						new_rule = resourceSecurityGroupCopyRule(rule, false, key, new_v)
 					} else {
 						new_v := make([]interface{}, 0)
 						new_v = append(new_v, v)
-						new_rule = resourceAwsSecurityGroupCopyRule(rule, false, key, new_v)
+						new_rule = resourceSecurityGroupCopyRule(rule, false, key, new_v)
 					}
 					normalized.Add(new_rule)
 				}

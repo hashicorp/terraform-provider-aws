@@ -59,7 +59,7 @@ func resourceSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, meta i
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"denied"},
 		Target:     []string{"granted"},
-		Refresh:    resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn, snapshot_id, account_id),
+		Refresh:    resourceSnapshotCreateVolumePermissionStateRefreshFunc(conn, snapshot_id, account_id),
 		Timeout:    20 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
@@ -119,7 +119,7 @@ func resourceSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta i
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"granted"},
 		Target:     []string{"denied"},
-		Refresh:    resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn, snapshotID, accountID),
+		Refresh:    resourceSnapshotCreateVolumePermissionStateRefreshFunc(conn, snapshotID, accountID),
 		Timeout:    5 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
@@ -134,7 +134,7 @@ func resourceSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta i
 }
 
 func HasCreateVolumePermission(conn *ec2.EC2, snapshot_id string, account_id string) (bool, error) {
-	_, state, err := resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn, snapshot_id, account_id)()
+	_, state, err := resourceSnapshotCreateVolumePermissionStateRefreshFunc(conn, snapshot_id, account_id)()
 	if err != nil {
 		return false, err
 	}
@@ -145,7 +145,7 @@ func HasCreateVolumePermission(conn *ec2.EC2, snapshot_id string, account_id str
 	}
 }
 
-func resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn *ec2.EC2, snapshot_id string, account_id string) resource.StateRefreshFunc {
+func resourceSnapshotCreateVolumePermissionStateRefreshFunc(conn *ec2.EC2, snapshot_id string, account_id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		attrs, err := conn.DescribeSnapshotAttribute(&ec2.DescribeSnapshotAttributeInput{
 			SnapshotId: aws.String(snapshot_id),

@@ -45,7 +45,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) 
 					//	peer_owner_id - The AWS account ID of the owner of the requester VPC
 					//	peer_region - The region of the accepter VPC
 					// ** TODO
-					// ** TODO resourceAwsVPCPeeringRead() is not doing this correctly for same-account peerings
+					// ** TODO resourceVPCPeeringRead() is not doing this correctly for same-account peerings
 					// ** TODO
 					// resource.TestCheckResourceAttrPair(resourceNameAccepter, "vpc_id", resourceNamePeerVpc, "id"),
 					// resource.TestCheckResourceAttrPair(resourceNameAccepter, "peer_vpc_id", resourceNameMainVpc, "id"),

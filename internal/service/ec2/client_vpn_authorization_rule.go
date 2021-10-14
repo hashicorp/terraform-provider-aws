@@ -18,7 +18,7 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 		Read:   resourceClientVPNAuthorizationRuleRead,
 		Delete: resourceClientVPNAuthorizationRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsEc2ClientVpnAuthorizationRuleImport,
+			State: resourceClientVPNAuthorizationRuleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -152,7 +152,7 @@ func resourceClientVPNAuthorizationRuleDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceAwsEc2ClientVpnAuthorizationRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClientVPNAuthorizationRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	endpointID, targetNetworkCidr, accessGroupID, err := ClientVPNAuthorizationRuleParseID(d.Id())
 	if err != nil {
 		return nil, err

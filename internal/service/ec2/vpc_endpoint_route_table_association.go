@@ -19,7 +19,7 @@ func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
 		Read:   resourceVPCEndpointRouteTableAssociationRead,
 		Delete: resourceVPCEndpointRouteTableAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsVpcEndpointRouteTableAssociationImport,
+			State: resourceVPCEndpointRouteTableAssociationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -124,7 +124,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceAwsVpcEndpointRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVPCEndpointRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("Wrong format of resource: %s. Please follow 'vpc-endpoint-id/route-table-id'", d.Id())

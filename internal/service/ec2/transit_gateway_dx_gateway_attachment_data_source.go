@@ -49,7 +49,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(d *schema.ResourceData, met
 		},
 	}
 	if filtersOk {
-		input.Filters = append(input.Filters, buildAwsDataSourceFilters(filters.(*schema.Set))...)
+		input.Filters = append(input.Filters, buildFiltersDataSource(filters.(*schema.Set))...)
 	}
 	if tagsOk {
 		input.Filters = append(input.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)

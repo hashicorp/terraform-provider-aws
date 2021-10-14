@@ -21,7 +21,7 @@ func ResourceTrafficMirrorFilterRule() *schema.Resource {
 		Update: resourceTrafficMirrorFilterRuleUpdate,
 		Delete: resourceTrafficMirrorFilterRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsEc2TrafficMirrorFilterRuleImport,
+			State: resourceTrafficMirrorFilterRuleImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -365,7 +365,7 @@ func buildTrafficMirrorFilterRulePortRangeSchema(portRange *ec2.TrafficMirrorPor
 	return out
 }
 
-func resourceAwsEc2TrafficMirrorFilterRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTrafficMirrorFilterRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.SplitN(d.Id(), ":", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <filter-id>:<rule-id>", d.Id())

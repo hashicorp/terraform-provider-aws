@@ -109,7 +109,7 @@ func resourceEBSSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(res.SnapshotId))
 
-	err = resourceAwsEbsSnapshotCopyWaitForAvailable(d.Id(), conn)
+	err = resourceEBSSnapshotCopyWaitForAvailable(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func resourceEBSSnapshotCopyUpdate(d *schema.ResourceData, meta interface{}) err
 	return resourceEBSSnapshotRead(d, meta)
 }
 
-func resourceAwsEbsSnapshotCopyWaitForAvailable(id string, conn *ec2.EC2) error {
+func resourceEBSSnapshotCopyWaitForAvailable(id string, conn *ec2.EC2) error {
 	log.Printf("Waiting for Snapshot %s to become available...", id)
 
 	req := &ec2.DescribeSnapshotsInput{

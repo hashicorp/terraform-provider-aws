@@ -36,7 +36,7 @@ func dataSourceRegionsRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading regions.")
 	request := &ec2.DescribeRegionsInput{}
 	if v, ok := d.GetOk("filter"); ok {
-		request.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		request.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("all_regions"); ok {
 		request.AllRegions = aws.Bool(v.(bool))

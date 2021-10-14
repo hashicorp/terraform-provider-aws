@@ -233,7 +233,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("enable_dns_support", enableDnsSupport)
 
-	routeTableId, err := resourceAwsVpcSetMainRouteTable(conn, aws.StringValue(vpc.VpcId))
+	routeTableId, err := resourceVPCSetMainRouteTable(conn, aws.StringValue(vpc.VpcId))
 	if err != nil {
 		log.Printf("[WARN] Unable to set Main Route Table: %s", err)
 	}

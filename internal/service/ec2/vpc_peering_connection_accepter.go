@@ -13,10 +13,10 @@ import (
 
 func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVPCPeeringAccepterCreate,
-		Read:   resourceAwsVPCPeeringRead,
-		Update: resourceAwsVPCPeeringUpdate,
-		Delete: resourceAwsVPCPeeringAccepterDelete,
+		Create: resourceVPCPeeringAccepterCreate,
+		Read:   resourceVPCPeeringRead,
+		Update: resourceVPCPeeringUpdate,
+		Delete: resourceVPCPeeringAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
 				d.Set("vpc_peering_connection_id", d.Id())
@@ -65,7 +65,7 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 	}
 }
 
-func resourceAwsVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -98,10 +98,10 @@ func resourceAwsVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsVPCPeeringUpdate(d, meta)
+	return resourceVPCPeeringUpdate(d, meta)
 }
 
-func resourceAwsVPCPeeringAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[WARN] Will not delete VPC peering connection. Terraform will remove this resource from the state file, however resources may remain.")
 	return nil
 }

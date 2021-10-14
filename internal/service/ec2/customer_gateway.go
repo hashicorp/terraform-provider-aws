@@ -86,7 +86,7 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	bgpAsn := d.Get("bgp_asn").(string)
 	deviceName := d.Get("device_name").(string)
 
-	alreadyExists, err := resourceAwsCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName, conn)
+	alreadyExists, err := resourceCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName, conn)
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func customerGatewayRefreshFunc(conn *ec2.EC2, gatewayId string) resource.StateR
 	}
 }
 
-func resourceAwsCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName string, conn *ec2.EC2) (bool, error) {
+func resourceCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName string, conn *ec2.EC2) (bool, error) {
 	filters := []*ec2.Filter{
 		{
 			Name:   aws.String("ip-address"),

@@ -15,13 +15,13 @@ func InstanceMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS Instance State v0; migrating to v1")
-		return migrateAwsInstanceStateV0toV1(is)
+		return migrateInstanceStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateAwsInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() || is.Attributes == nil {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 		return is, nil

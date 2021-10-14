@@ -103,7 +103,7 @@ func dataSourceVPCEndpointServiceRead(d *schema.ResourceData, meta interface{}) 
 
 	req := &ec2.DescribeVpcEndpointServicesInput{}
 	if filtersOk {
-		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		req.Filters = buildFiltersDataSource(filters.(*schema.Set))
 	}
 	if serviceNameOk {
 		req.ServiceNames = aws.StringSlice([]string{serviceName})

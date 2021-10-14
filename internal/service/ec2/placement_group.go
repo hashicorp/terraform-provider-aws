@@ -60,7 +60,7 @@ func ResourcePlacementGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			resourceAwsPlacementGroupCustomizeDiff,
+			resourcePlacementGroupCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 	}
@@ -185,7 +185,7 @@ func resourcePlacementGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsPlacementGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.Id() == "" {
 		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != ec2.PlacementGroupStrategyPartition {
 			return fmt.Errorf("partition_count must not be set when strategy = %q", strategy)

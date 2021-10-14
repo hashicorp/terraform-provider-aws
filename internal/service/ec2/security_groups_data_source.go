@@ -52,7 +52,7 @@ func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) erro
 
 	if filtersOk {
 		req.Filters = append(req.Filters,
-			buildAwsDataSourceFilters(filters.(*schema.Set))...)
+			buildFiltersDataSource(filters.(*schema.Set))...)
 	}
 	if tagsOk {
 		req.Filters = append(req.Filters, BuildTagFilterList(

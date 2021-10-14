@@ -113,7 +113,7 @@ func ResourceNetworkACL() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsNetworkAclEntryHash,
+				Set: resourceNetworkACLEntryHash,
 			},
 			"egress": {
 				Type:       schema.TypeSet,
@@ -178,7 +178,7 @@ func ResourceNetworkACL() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsNetworkAclEntryHash,
+				Set: resourceNetworkACLEntryHash,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -680,7 +680,7 @@ func cleanUpDependencyViolations(d *schema.ResourceData, conn *ec2.EC2) error {
 	return nil
 }
 
-func resourceAwsNetworkAclEntryHash(v interface{}) int {
+func resourceNetworkACLEntryHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))

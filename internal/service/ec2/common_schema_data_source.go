@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func buildAwsDataSourceFilters(set *schema.Set) []*ec2.Filter {
+func buildFiltersDataSource(set *schema.Set) []*ec2.Filter {
 	var filters []*ec2.Filter
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})

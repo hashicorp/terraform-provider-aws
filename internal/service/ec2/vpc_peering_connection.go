@@ -18,10 +18,10 @@ import (
 
 func ResourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVPCPeeringCreate,
-		Read:   resourceAwsVPCPeeringRead,
-		Update: resourceAwsVPCPeeringUpdate,
-		Delete: resourceAwsVPCPeeringDelete,
+		Create: resourceVPCPeeringCreate,
+		Read:   resourceVPCPeeringRead,
+		Update: resourceVPCPeeringUpdate,
+		Delete: resourceVPCPeeringDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -73,7 +73,7 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 	}
 }
 
-func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -113,10 +113,10 @@ func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error waiting for VPC Peering Connection to become available: %s", err)
 	}
 
-	return resourceAwsVPCPeeringUpdate(d, meta)
+	return resourceVPCPeeringUpdate(d, meta)
 }
 
-func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient)
 	defaultTagsConfig := client.DefaultTagsConfig
 	ignoreTagsConfig := client.IgnoreTagsConfig
@@ -205,7 +205,7 @@ func resourceVPCPeeringConnectionAccept(conn *ec2.EC2, id string) (string, error
 	return aws.StringValue(resp.VpcPeeringConnection.Status.Code), nil
 }
 
-func resourceAwsVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") && !d.IsNewResource() {
@@ -266,10 +266,10 @@ func resourceAwsVPCPeeringUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsVPCPeeringRead(d, meta)
+	return resourceVPCPeeringRead(d, meta)
 }
 
-func resourceAwsVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	req := &ec2.DeleteVpcPeeringConnectionInput{

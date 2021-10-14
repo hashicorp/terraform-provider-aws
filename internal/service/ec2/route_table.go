@@ -150,7 +150,7 @@ func ResourceRouteTable() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsRouteTableHash,
+				Set: resourceRouteTableHash,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -407,7 +407,7 @@ func resourceRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsRouteTableHash(v interface{}) int {
+func resourceRouteTableHash(v interface{}) int {
 	var buf bytes.Buffer
 	m, castOk := v.(map[string]interface{})
 	if !castOk {

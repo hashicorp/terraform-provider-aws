@@ -374,7 +374,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	// Build up search parameters
 	params := &ec2.DescribeInstancesInput{}
 	if filtersOk {
-		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		params.Filters = buildFiltersDataSource(filters.(*schema.Set))
 	}
 	if instanceIDOk {
 		params.InstanceIds = []*string{aws.String(instanceID.(string))}
@@ -425,7 +425,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getAwsEc2InstancePasswordData(aws.StringValue(instance.InstanceId), conn)
+		passwordData, err := getInstancePasswordData(aws.StringValue(instance.InstanceId), conn)
 		if err != nil {
 			return err
 		}

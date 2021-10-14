@@ -112,7 +112,7 @@ func ResourceNetworkInterface() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsEniAttachmentHash,
+				Set: resourceEniAttachmentHash,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -323,7 +323,7 @@ func networkInterfaceAttachmentRefreshFunc(conn *ec2.EC2, id string) resource.St
 	}
 }
 
-func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId string) error {
+func resourceNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId string) error {
 	// if there was an old attachment, remove it
 	if oa != nil && len(oa.List()) > 0 {
 		old_attachment := oa.List()[0].(map[string]interface{})
@@ -361,7 +361,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("attachment") {
 		oa, na := d.GetChange("attachment")
 
-		detach_err := resourceAwsNetworkInterfaceDetach(oa.(*schema.Set), meta, d.Id())
+		detach_err := resourceNetworkInterfaceDetach(oa.(*schema.Set), meta, d.Id())
 		if detach_err != nil {
 			return detach_err
 		}
@@ -586,7 +586,7 @@ func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[INFO] Deleting ENI: %s", d.Id())
 
-	if err := resourceAwsNetworkInterfaceDetach(d.Get("attachment").(*schema.Set), meta, d.Id()); err != nil {
+	if err := resourceNetworkInterfaceDetach(d.Get("attachment").(*schema.Set), meta, d.Id()); err != nil {
 		return err
 	}
 
@@ -600,7 +600,7 @@ func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAwsEniAttachmentHash(v interface{}) int {
+func resourceEniAttachmentHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["instance"].(string)))

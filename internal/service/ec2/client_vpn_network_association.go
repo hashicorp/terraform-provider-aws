@@ -19,7 +19,7 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 		Update: resourceClientVPNNetworkAssociationUpdate,
 		Delete: resourceClientVPNNetworkAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsEc2ClientVpnNetworkAssociationImport,
+			State: resourceClientVPNNetworkAssociationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -188,7 +188,7 @@ func DeleteClientVPNNetworkAssociation(conn *ec2.EC2, networkAssociationID, clie
 	return err
 }
 
-func resourceAwsEc2ClientVpnNetworkAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClientVPNNetworkAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	endpointID, associationID, err := ClientVPNNetworkAssociationParseID(d.Id())
 	if err != nil {
 		return nil, err

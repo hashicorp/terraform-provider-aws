@@ -41,7 +41,7 @@ func dataSourcePrefixListRead(d *schema.ResourceData, meta interface{}) error {
 
 	req := &ec2.DescribePrefixListsInput{}
 	if filtersOk {
-		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		req.Filters = buildFiltersDataSource(filters.(*schema.Set))
 	}
 	if prefixListID := d.Get("prefix_list_id"); prefixListID != "" {
 		req.PrefixListIds = aws.StringSlice([]string{prefixListID.(string)})

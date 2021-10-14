@@ -245,7 +245,7 @@ func resourceAMIFromInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	d.SetId(aws.StringValue(res.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
-	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), client)
+	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), client)
 	if err != nil {
 		return err
 	}

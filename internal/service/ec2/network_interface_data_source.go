@@ -155,7 +155,7 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading Network Interface: %s", input)

@@ -92,7 +92,7 @@ func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// Attach the new gateway to the correct vpc
-	err = resourceAwsInternetGatewayAttach(d, meta)
+	err = resourceInternetGatewayAttach(d, meta)
 	if err != nil {
 		return fmt.Errorf("error attaching EC2 Internet Gateway (%s): %s", d.Id(), err)
 	}
@@ -152,12 +152,12 @@ func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error
 func resourceInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("vpc_id") {
 		// If we're already attached, detach it first
-		if err := resourceAwsInternetGatewayDetach(d, meta); err != nil {
+		if err := resourceInternetGatewayDetach(d, meta); err != nil {
 			return err
 		}
 
 		// Attach the gateway to the new vpc
-		if err := resourceAwsInternetGatewayAttach(d, meta); err != nil {
+		if err := resourceInternetGatewayAttach(d, meta); err != nil {
 			return err
 		}
 	}
@@ -179,7 +179,7 @@ func resourceInternetGatewayDelete(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Detach if it is attached
-	if err := resourceAwsInternetGatewayDetach(d, meta); err != nil {
+	if err := resourceInternetGatewayDetach(d, meta); err != nil {
 		return err
 	}
 
@@ -212,7 +212,7 @@ func resourceInternetGatewayDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) error {
+func resourceInternetGatewayAttach(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.Get("vpc_id").(string) == "" {
@@ -270,7 +270,7 @@ func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAwsInternetGatewayDetach(d *schema.ResourceData, meta interface{}) error {
+func resourceInternetGatewayDetach(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Get the old VPC ID to detach from

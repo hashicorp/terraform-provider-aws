@@ -655,18 +655,18 @@ func ResourceInstance() *schema.Resource {
 					var err error
 					var templateId, instanceVersion, defaultVersion, latestVersion string
 
-					templateId, err = getAwsInstanceLaunchTemplateId(conn, diff.Id())
+					templateId, err = getInstanceLaunchTemplateID(conn, diff.Id())
 					if err != nil {
 						return err
 					}
 
 					if templateId != "" {
-						instanceVersion, err = getAwsInstanceLaunchTemplateVersion(conn, diff.Id())
+						instanceVersion, err = getInstanceLaunchTemplateVersion(conn, diff.Id())
 						if err != nil {
 							return err
 						}
 
-						_, defaultVersion, latestVersion, err = getAwsLaunchTemplateSpecification(conn, templateId)
+						_, defaultVersion, latestVersion, err = getLaunchTemplateSpecification(conn, templateId)
 						if err != nil {
 							return err
 						}
@@ -721,7 +721,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	instanceOpts, err := buildAwsInstanceOpts(d, meta)
+	instanceOpts, err := buildInstanceOpts(d, meta)
 	if err != nil {
 		return fmt.Errorf("error collecting instance settings: %w", err)
 	}
@@ -978,7 +978,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	{
-		launchTemplate, err := getAwsInstanceLaunchTemplate(conn, d)
+		launchTemplate, err := getInstanceLaunchTemplate(conn, d)
 		if err != nil {
 			return fmt.Errorf("error reading Instance (%s) Launch Template: %w", d.Id(), err)
 		}
@@ -1179,7 +1179,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getAwsEc2InstancePasswordData(aws.StringValue(instance.InstanceId), conn)
+		passwordData, err := getInstancePasswordData(aws.StringValue(instance.InstanceId), conn)
 		if err != nil {
 			return err
 		}
@@ -1208,7 +1208,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
-		volumeIds, err := getAwsInstanceVolumeIds(conn, d.Id())
+		volumeIds, err := getInstanceVolumeIDs(conn, d.Id())
 		if err != nil {
 			return err
 		}
@@ -1493,7 +1493,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
-		err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+		err := resourceInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
 
 		if err != nil {
 			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
@@ -1726,7 +1726,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+	err := resourceInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
 
 	if err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 instance (%s) despite error modifying attribute (%s): %s", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
@@ -1741,7 +1741,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsInstanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITermination bool) error {
+func resourceInstanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITermination bool) error {
 	// false = enable api termination
 	// true = disable api termination (protected)
 
@@ -2405,7 +2405,7 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 }
 
 func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
-	volumeIds, err := getAwsInstanceVolumeIds(conn, instanceId)
+	volumeIds, err := getInstanceVolumeIDs(conn, instanceId)
 	if err != nil {
 		return nil, err
 	}
@@ -2498,7 +2498,7 @@ func readInstanceShutdownBehavior(d *schema.ResourceData, conn *ec2.EC2) error {
 	return nil
 }
 
-func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
+func getInstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
 	log.Printf("[INFO] Reading password data for instance %s", instanceID)
 
 	var passwordData string
@@ -2569,7 +2569,7 @@ type awsInstanceOpts struct {
 	EnclaveOptions                    *ec2.EnclaveOptionsRequest
 }
 
-func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
+func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &awsInstanceOpts{
@@ -2830,7 +2830,7 @@ func userDataHashSum(user_data string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func getAwsInstanceVolumeIds(conn *ec2.EC2, instanceId string) ([]string, error) {
+func getInstanceVolumeIDs(conn *ec2.EC2, instanceId string) ([]string, error) {
 	volumeIds := []string{}
 
 	resp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
@@ -3064,7 +3064,7 @@ func flattenCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse
 // * If no instance is found, returns nil and nil
 // * If an error occurs, returns nil and the error
 func InstanceFindByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
-	instances, err := resourceAwsInstanceFind(conn, &ec2.DescribeInstancesInput{
+	instances, err := resourceInstanceFind(conn, &ec2.DescribeInstancesInput{
 		InstanceIds: aws.StringSlice([]string{id}),
 	})
 	if err != nil {
@@ -3078,11 +3078,11 @@ func InstanceFindByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
 	return instances[0], nil
 }
 
-// resourceAwsInstanceFind returns EC2 instances matching the input parameters
+// resourceInstanceFind returns EC2 instances matching the input parameters
 // * If instances are found, returns a slice of instances and nil
 // * If no instances are found, returns an empty slice and nil
 // * If an error occurs, returns nil and the error
-func resourceAwsInstanceFind(conn *ec2.EC2, params *ec2.DescribeInstancesInput) ([]*ec2.Instance, error) {
+func resourceInstanceFind(conn *ec2.EC2, params *ec2.DescribeInstancesInput) ([]*ec2.Instance, error) {
 	resp, err := conn.DescribeInstances(params)
 	if err != nil {
 		return nil, err
@@ -3095,11 +3095,11 @@ func resourceAwsInstanceFind(conn *ec2.EC2, params *ec2.DescribeInstancesInput) 
 	return resp.Reservations[0].Instances, nil
 }
 
-func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[string]interface{}, error) {
+func getInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[string]interface{}, error) {
 	attrs := map[string]interface{}{}
 	result := make([]map[string]interface{}, 0)
 
-	id, err := getAwsInstanceLaunchTemplateId(conn, d.Id())
+	id, err := getInstanceLaunchTemplateID(conn, d.Id())
 	if err != nil {
 		return nil, err
 	}
@@ -3107,7 +3107,7 @@ func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[
 		return nil, nil
 	}
 
-	name, defaultVersion, latestVersion, err := getAwsLaunchTemplateSpecification(conn, id)
+	name, defaultVersion, latestVersion, err := getLaunchTemplateSpecification(conn, id)
 
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.Malformed", "") || tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") {
@@ -3121,7 +3121,7 @@ func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[
 	attrs["id"] = id
 	attrs["name"] = name
 
-	liveVersion, err := getAwsInstanceLaunchTemplateVersion(conn, d.Id())
+	liveVersion, err := getInstanceLaunchTemplateVersion(conn, d.Id())
 	if err != nil {
 		return nil, err
 	}
@@ -3165,7 +3165,7 @@ func getAwsInstanceLaunchTemplate(conn *ec2.EC2, d *schema.ResourceData) ([]map[
 	return result, nil
 }
 
-func getAwsInstanceLaunchTemplateId(conn *ec2.EC2, instanceId string) (string, error) {
+func getInstanceLaunchTemplateID(conn *ec2.EC2, instanceId string) (string, error) {
 	idTag := "aws:ec2launchtemplate:id"
 
 	launchTemplateId, err := getInstanceTagValue(conn, instanceId, idTag)
@@ -3179,7 +3179,7 @@ func getAwsInstanceLaunchTemplateId(conn *ec2.EC2, instanceId string) (string, e
 	return *launchTemplateId, nil
 }
 
-func getAwsInstanceLaunchTemplateVersion(conn *ec2.EC2, instanceId string) (string, error) {
+func getInstanceLaunchTemplateVersion(conn *ec2.EC2, instanceId string) (string, error) {
 	versionTag := "aws:ec2launchtemplate:version"
 
 	launchTemplateVersion, err := getInstanceTagValue(conn, instanceId, versionTag)
@@ -3193,9 +3193,9 @@ func getAwsInstanceLaunchTemplateVersion(conn *ec2.EC2, instanceId string) (stri
 	return *launchTemplateVersion, nil
 }
 
-// getAwsLaunchTemplateSpecification takes conn and template id
+// getLaunchTemplateSpecification takes conn and template id
 // returns name, default version, latest version
-func getAwsLaunchTemplateSpecification(conn *ec2.EC2, id string) (string, string, string, error) {
+func getLaunchTemplateSpecification(conn *ec2.EC2, id string) (string, string, string, error) {
 	dlt, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
 		LaunchTemplateIds: []*string{aws.String(id)},
 	})

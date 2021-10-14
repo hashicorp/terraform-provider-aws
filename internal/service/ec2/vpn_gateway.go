@@ -91,7 +91,7 @@ func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.VpnGateway.VpnGatewayId))
 
 	if _, ok := d.GetOk("vpc_id"); ok {
-		if err := resourceAwsVpnGatewayAttach(d, meta); err != nil {
+		if err := resourceVPNGatewayAttach(d, meta); err != nil {
 			return fmt.Errorf("error attaching EC2 VPN Gateway (%s) to VPC: %s", d.Id(), err)
 		}
 	}
@@ -165,12 +165,12 @@ func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 func resourceVPNGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("vpc_id") {
 		// If we're already attached, detach it first
-		if err := resourceAwsVpnGatewayDetach(d, meta); err != nil {
+		if err := resourceVPNGatewayDetach(d, meta); err != nil {
 			return err
 		}
 
 		// Attach the VPN gateway to the new vpc
-		if err := resourceAwsVpnGatewayAttach(d, meta); err != nil {
+		if err := resourceVPNGatewayAttach(d, meta); err != nil {
 			return err
 		}
 	}
@@ -192,7 +192,7 @@ func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Detach if it is attached
-	if err := resourceAwsVpnGatewayDetach(d, meta); err != nil {
+	if err := resourceVPNGatewayDetach(d, meta); err != nil {
 		return err
 	}
 
@@ -228,7 +228,7 @@ func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayAttach(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	vpcId := d.Get("vpc_id").(string)
@@ -277,7 +277,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayDetach(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	// Get the old VPC ID to detach from

@@ -108,7 +108,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsDefaultSecurityGroupRuleHash,
+				Set: resourceDefaultSecurityGroupRuleHash,
 			},
 			"egress": {
 				Type:       schema.TypeSet,
@@ -169,7 +169,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsDefaultSecurityGroupRuleHash,
+				Set: resourceDefaultSecurityGroupRuleHash,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -333,13 +333,13 @@ func resourceDefaultSecurityGroupUpdate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 	}
 
-	err = resourceAwsSecurityGroupUpdateRules(d, "ingress", meta, group)
+	err = resourceSecurityGroupUpdateRules(d, "ingress", meta, group)
 	if err != nil {
 		return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 	}
 
 	if d.Get("vpc_id") != nil {
-		err = resourceAwsSecurityGroupUpdateRules(d, "egress", meta, group)
+		err = resourceSecurityGroupUpdateRules(d, "egress", meta, group)
 		if err != nil {
 			return fmt.Errorf("error updating Default Security Group (%s): %w", d.Id(), err)
 		}
@@ -401,7 +401,7 @@ func revokeDefaultSecurityGroupRules(meta interface{}, g *ec2.SecurityGroup) err
 	return nil
 }
 
-func resourceAwsDefaultSecurityGroupRuleHash(v interface{}) int {
+func resourceDefaultSecurityGroupRuleHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
@@ -472,13 +472,13 @@ func DefaultSecurityGroupMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS Default Security Group state v0; migrating to v1")
-		return migrateAwsDefaultSecurityGroupStateV0toV1(is)
+		return migrateDefaultSecurityGroupStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateAwsDefaultSecurityGroupStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateDefaultSecurityGroupStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() || is.Attributes == nil {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 		return is, nil

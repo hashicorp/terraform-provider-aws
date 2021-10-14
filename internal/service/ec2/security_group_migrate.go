@@ -12,13 +12,13 @@ func SecurityGroupMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS SecurityGroup State v0; migrating to v1")
-		return migrateAwsSecurityGroupStateV0toV1(is)
+		return migrateSecurityGroupStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateAwsSecurityGroupStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateSecurityGroupStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() || is.Attributes == nil {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 		return is, nil

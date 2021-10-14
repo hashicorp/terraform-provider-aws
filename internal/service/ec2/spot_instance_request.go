@@ -162,7 +162,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	instanceOpts, err := buildAwsInstanceOpts(d, meta)
+	instanceOpts, err := buildInstanceOpts(d, meta)
 	if err != nil {
 		return err
 	}
@@ -455,7 +455,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+		passwordData, err := getInstancePasswordData(*instance.InstanceId, conn)
 		if err != nil {
 			return err
 		}

@@ -19,10 +19,10 @@ import (
 
 func ResourceFlowLog() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLogFlowCreate,
-		Read:   resourceAwsLogFlowRead,
-		Update: resourceAwsLogFlowUpdate,
-		Delete: resourceAwsLogFlowDelete,
+		Create: resourceLogFlowCreate,
+		Read:   resourceLogFlowRead,
+		Update: resourceLogFlowUpdate,
+		Delete: resourceLogFlowDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -133,7 +133,7 @@ func ResourceFlowLog() *schema.Resource {
 	}
 }
 
-func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -212,10 +212,10 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.FlowLogIds[0]))
 
-	return resourceAwsLogFlowRead(d, meta)
+	return resourceLogFlowRead(d, meta)
 }
 
-func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
+func resourceLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -278,7 +278,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
@@ -288,10 +288,10 @@ func resourceAwsLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAwsLogFlowRead(d, meta)
+	return resourceLogFlowRead(d, meta)
 }
 
-func resourceAwsLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceLogFlowDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting Flow Log: %s", d.Id())

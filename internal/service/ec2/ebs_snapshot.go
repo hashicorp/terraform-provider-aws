@@ -116,7 +116,7 @@ func resourceEBSSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(res.SnapshotId))
 
-	err = resourceAwsEbsSnapshotWaitForAvailable(d, conn)
+	err = resourceEBSSnapshotWaitForAvailable(d, conn)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func resourceEBSSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEbsSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC2) error {
+func resourceEBSSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC2) error {
 	log.Printf("Waiting for Snapshot %s to become available...", d.Id())
 	input := &ec2.DescribeSnapshotsInput{
 		SnapshotIds: []*string{aws.String(d.Id())},

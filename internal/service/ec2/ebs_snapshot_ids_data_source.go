@@ -54,7 +54,7 @@ func dataSourceEBSSnapshotIDsRead(d *schema.ResourceData, meta interface{}) erro
 		params.RestorableByUserIds = flex.ExpandStringList(restorableUsers.([]interface{}))
 	}
 	if filtersOk {
-		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		params.Filters = buildFiltersDataSource(filters.(*schema.Set))
 	}
 	if ownersOk {
 		params.OwnerIds = flex.ExpandStringList(owners.([]interface{}))

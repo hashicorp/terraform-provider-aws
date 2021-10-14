@@ -39,7 +39,7 @@ func dataSourceSubnetsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
 		input.Filters = append(input.Filters,
-			buildAwsDataSourceFilters(filters.(*schema.Set))...)
+			buildFiltersDataSource(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {

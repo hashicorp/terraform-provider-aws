@@ -19,7 +19,7 @@ func ResourceManagedPrefixListEntry() *schema.Resource {
 		Read:   resourceManagedPrefixListEntryRead,
 		Delete: resourceManagedPrefixListEntryDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsEc2ManagedPrefixListEntryImport,
+			State: resourceManagedPrefixListEntryImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -151,7 +151,7 @@ func resourceManagedPrefixListEntryDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsEc2ManagedPrefixListEntryImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceManagedPrefixListEntryImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	plID, cidr, err := ManagedPrefixListEntryParseID(d.Id())
 
 	if err != nil {

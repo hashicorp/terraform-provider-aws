@@ -172,7 +172,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 		for _, v := range clientData.([]interface{}) {
 			if cdv, ok := v.(map[string]interface{}); ok {
 
-				clientData, err := expandAwsEbsSnapshotClientData(cdv)
+				clientData, err := expandEBSSnapshotClientData(cdv)
 				if err != nil {
 					return err
 				}
@@ -192,7 +192,7 @@ func resourceEBSSnapshotImportCreate(d *schema.ResourceData, meta interface{}) e
 	for _, v := range diskContainer.([]interface{}) {
 		if dcv, ok := v.(map[string]interface{}); ok {
 
-			diskContainer := expandAwsEbsSnapshotDiskContainer(dcv)
+			diskContainer := expandEBSSnapshotDiskContainer(dcv)
 			request.DiskContainer = diskContainer
 		}
 	}
@@ -344,7 +344,7 @@ func resourceEBSSnapshotImportDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandAwsEbsSnapshotClientData(tfMap map[string]interface{}) (*ec2.ClientData, error) {
+func expandEBSSnapshotClientData(tfMap map[string]interface{}) (*ec2.ClientData, error) {
 	clientData := &ec2.ClientData{}
 
 	if v, ok := tfMap["comment"].(string); ok {
@@ -374,7 +374,7 @@ func expandAwsEbsSnapshotClientData(tfMap map[string]interface{}) (*ec2.ClientDa
 	return clientData, nil
 }
 
-func expandAwsEbsSnapshotDiskContainer(tfMap map[string]interface{}) *ec2.SnapshotDiskContainer {
+func expandEBSSnapshotDiskContainer(tfMap map[string]interface{}) *ec2.SnapshotDiskContainer {
 	diskContainer := &ec2.SnapshotDiskContainer{
 		Format: aws.String(tfMap["format"].(string)),
 	}

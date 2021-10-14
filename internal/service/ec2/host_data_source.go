@@ -14,7 +14,7 @@ import (
 
 func DataSourceHost() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAwsEc2HostRead,
+		Read: dataSourceHostRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -68,11 +68,11 @@ func DataSourceHost() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAwsEc2HostRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	host, err := FindHostByIDAndFilters(conn, d.Get("host_id").(string), buildAwsDataSourceFilters(d.Get("filter").(*schema.Set)))
+	host, err := FindHostByIDAndFilters(conn, d.Get("host_id").(string), buildFiltersDataSource(d.Get("filter").(*schema.Set)))
 
 	if err != nil {
 		return tfresource.SingularDataSourceFindError("EC2 Host", err)

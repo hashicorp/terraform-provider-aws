@@ -18,7 +18,7 @@ func ResourceClientVPNRoute() *schema.Resource {
 		Read:   resourceClientVPNRouteRead,
 		Delete: resourceClientVPNRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsEc2ClientVpnRouteImport,
+			State: resourceClientVPNRouteImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -160,7 +160,7 @@ func deleteClientVpnRoute(conn *ec2.EC2, input *ec2.DeleteClientVpnRouteInput) e
 	return err
 }
 
-func resourceAwsEc2ClientVpnRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceClientVPNRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	endpointID, targetSubnetID, destinationCidr, err := ClientVPNRouteParseID(d.Id())
 	if err != nil {
 		return nil, err

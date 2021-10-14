@@ -20,7 +20,7 @@ func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 		Update: resourceVPCDHCPOptionsAssociationUpdate,
 		Delete: resourceVPCDHCPOptionsAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsVpcDhcpOptionsAssociationImport,
+			State: resourceVPCDHCPOptionsAssociationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -38,7 +38,7 @@ func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 	}
 }
 
-func resourceAwsVpcDhcpOptionsAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVPCDHCPOptionsAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	// Provide the vpc_id as the id to import
 	vpcRaw, _, err := VPCStateRefreshFunc(conn, d.Id())()

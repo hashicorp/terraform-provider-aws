@@ -13,9 +13,9 @@ import (
 
 func ResourceVPNGatewayRoutePropagation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsVpnGatewayRoutePropagationEnable,
+		Create: resourceVPNGatewayRoutePropagationEnable,
 		Read:   resourceVPNGatewayRoutePropagationRead,
-		Delete: resourceAwsVpnGatewayRoutePropagationDisable,
+		Delete: resourceVPNGatewayRoutePropagationDisable,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
@@ -37,7 +37,7 @@ func ResourceVPNGatewayRoutePropagation() *schema.Resource {
 	}
 }
 
-func resourceAwsVpnGatewayRoutePropagationEnable(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayRoutePropagationEnable(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	gatewayID := d.Get("vpn_gateway_id").(string)
@@ -53,7 +53,7 @@ func resourceAwsVpnGatewayRoutePropagationEnable(d *schema.ResourceData, meta in
 	return resourceVPNGatewayRoutePropagationRead(d, meta)
 }
 
-func resourceAwsVpnGatewayRoutePropagationDisable(d *schema.ResourceData, meta interface{}) error {
+func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())

@@ -56,7 +56,7 @@ func dataSourceCustomerGatewayRead(d *schema.ResourceData, meta interface{}) err
 	input := ec2.DescribeCustomerGatewaysInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("id"); ok {

@@ -322,7 +322,7 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
+	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
 	if err != nil {
 		return err
 	}
@@ -385,7 +385,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 		// before we continue. We should never take this branch in normal
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
-		image, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
+		image, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
 		if err != nil {
 			return err
 		}
@@ -574,7 +574,7 @@ func AMIWaitForDestroy(timeout time.Duration, id string, client *ec2.EC2) error 
 	return nil
 }
 
-func resourceAwsAmiWaitForAvailable(timeout time.Duration, id string, client *ec2.EC2) (*ec2.Image, error) {
+func resourceAMIWaitForAvailable(timeout time.Duration, id string, client *ec2.EC2) (*ec2.Image, error) {
 	log.Printf("Waiting for AMI %s to become available...", id)
 
 	stateConf := &resource.StateChangeConf{

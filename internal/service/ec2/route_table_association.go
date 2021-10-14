@@ -20,7 +20,7 @@ func ResourceRouteTableAssociation() *schema.Resource {
 		Update: resourceRouteTableAssociationUpdate,
 		Delete: resourceRouteTableAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsRouteTableAssociationImport,
+			State: resourceRouteTableAssociationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -149,7 +149,7 @@ func resourceRouteTableAssociationDelete(d *schema.ResourceData, meta interface{
 	return ec2RouteTableAssociationDelete(conn, d.Id())
 }
 
-func resourceAwsRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())

@@ -24,7 +24,7 @@ func ResourceDefaultRouteTable() *schema.Resource {
 		Delete: resourceDefaultRouteTableDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDefaultRouteTableImport,
+			State: resourceDefaultRouteTableImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -129,7 +129,7 @@ func ResourceDefaultRouteTable() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsRouteTableHash,
+				Set: resourceRouteTableHash,
 			},
 
 			"tags":     tftags.TagsSchema(),
@@ -267,7 +267,7 @@ func resourceDefaultRouteTableDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceAwsDefaultRouteTableImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceDefaultRouteTableImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	routeTable, err := FindMainRouteTableByVPCID(conn, d.Id())

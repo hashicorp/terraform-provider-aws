@@ -172,7 +172,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 	// If they are not set the AWS API will silently fail. This causes TF to hit a timeout
 	// at 5-minutes waiting for the security group rule to appear, when it was never actually
 	// created.
-	if err := validateAwsSecurityGroupRule(d); err != nil {
+	if err := validSecurityGroupRule(d); err != nil {
 		return err
 	}
 
@@ -836,7 +836,7 @@ func descriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) strin
 }
 
 // Validates that either 'cidr_blocks', 'ipv6_cidr_blocks', 'self', or 'source_security_group_id' is set
-func validateAwsSecurityGroupRule(d *schema.ResourceData) error {
+func validSecurityGroupRule(d *schema.ResourceData) error {
 	blocks, blocksOk := d.GetOk("cidr_blocks")
 	self, selfOk := d.GetOk("self")
 	if blocksOk && self.(bool) {

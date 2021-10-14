@@ -29,11 +29,11 @@ func ResourceVPC() *schema.Resource {
 		Update: resourceVPCUpdate,
 		Delete: resourceVPCDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsVpcInstanceImport,
+			State: resourceVPCInstanceImport,
 		},
 
 		CustomizeDiff: customdiff.All(
-			resourceAwsVpcCustomizeDiff,
+			resourceVPCCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -409,19 +409,19 @@ func resourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_classiclink_dns_support", classiclinkdns_enabled)
 	}
 
-	routeTableId, err := resourceAwsVpcSetMainRouteTable(conn, vpcid)
+	routeTableId, err := resourceVPCSetMainRouteTable(conn, vpcid)
 	if err != nil {
 		log.Printf("[WARN] Unable to set Main Route Table: %s", err)
 	}
 	d.Set("main_route_table_id", routeTableId)
 
-	if err := resourceAwsVpcSetDefaultNetworkAcl(conn, d); err != nil {
+	if err := resourceVPCSetDefaultNetworkACL(conn, d); err != nil {
 		log.Printf("[WARN] Unable to set Default Network ACL: %s", err)
 	}
-	if err := resourceAwsVpcSetDefaultSecurityGroup(conn, d); err != nil {
+	if err := resourceVPCSetDefaultSecurityGroup(conn, d); err != nil {
 		log.Printf("[WARN] Unable to set Default Security Group: %s", err)
 	}
-	if err := resourceAwsVpcSetDefaultRouteTable(conn, d); err != nil {
+	if err := resourceVPCSetDefaultRouteTable(conn, d); err != nil {
 		log.Printf("[WARN] Unable to set Default Route Table: %s", err)
 	}
 
@@ -616,7 +616,7 @@ func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsVpcCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.HasChange("assign_generated_ipv6_cidr_block") {
 		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
 			return fmt.Errorf("error setting ipv6_association_id to computed: %s", err)
@@ -694,7 +694,7 @@ func Ipv6CidrStateRefreshFunc(conn *ec2.EC2, id string, associationId string) re
 	}
 }
 
-func resourceAwsVpcSetDefaultNetworkAcl(conn *ec2.EC2, d *schema.ResourceData) error {
+func resourceVPCSetDefaultNetworkACL(conn *ec2.EC2, d *schema.ResourceData) error {
 	filter1 := &ec2.Filter{
 		Name:   aws.String("default"),
 		Values: []*string{aws.String("true")},
@@ -718,7 +718,7 @@ func resourceAwsVpcSetDefaultNetworkAcl(conn *ec2.EC2, d *schema.ResourceData) e
 	return nil
 }
 
-func resourceAwsVpcSetDefaultSecurityGroup(conn *ec2.EC2, d *schema.ResourceData) error {
+func resourceVPCSetDefaultSecurityGroup(conn *ec2.EC2, d *schema.ResourceData) error {
 	filter1 := &ec2.Filter{
 		Name:   aws.String("group-name"),
 		Values: []*string{aws.String("default")},
@@ -742,7 +742,7 @@ func resourceAwsVpcSetDefaultSecurityGroup(conn *ec2.EC2, d *schema.ResourceData
 	return nil
 }
 
-func resourceAwsVpcSetDefaultRouteTable(conn *ec2.EC2, d *schema.ResourceData) error {
+func resourceVPCSetDefaultRouteTable(conn *ec2.EC2, d *schema.ResourceData) error {
 	filter1 := &ec2.Filter{
 		Name:   aws.String("association.main"),
 		Values: []*string{aws.String("true")},
@@ -771,7 +771,7 @@ func resourceAwsVpcSetDefaultRouteTable(conn *ec2.EC2, d *schema.ResourceData) e
 	return nil
 }
 
-func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, vpcid string) (string, error) {
+func resourceVPCSetMainRouteTable(conn *ec2.EC2, vpcid string) (string, error) {
 	filter1 := &ec2.Filter{
 		Name:   aws.String("association.main"),
 		Values: []*string{aws.String("true")},
@@ -798,7 +798,7 @@ func resourceAwsVpcSetMainRouteTable(conn *ec2.EC2, vpcid string) (string, error
 	return aws.StringValue(resp.RouteTables[0].RouteTableId), nil
 }
 
-func resourceAwsVpcInstanceImport(
+func resourceVPCInstanceImport(
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("assign_generated_ipv6_cidr_block", false)
 	return []*schema.ResourceData{d}, nil

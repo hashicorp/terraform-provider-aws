@@ -80,7 +80,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 
 	if filtersOk {
 		params.Filters = append(params.Filters,
-			buildAwsDataSourceFilters(filters.(*schema.Set))...)
+			buildFiltersDataSource(filters.(*schema.Set))...)
 	}
 	if tagsOk {
 		params.Filters = append(params.Filters, BuildTagFilterList(

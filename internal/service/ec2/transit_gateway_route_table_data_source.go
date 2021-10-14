@@ -52,7 +52,7 @@ func dataSourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interfa
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("id"); ok {

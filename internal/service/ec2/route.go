@@ -42,7 +42,7 @@ func ResourceRoute() *schema.Resource {
 		Update: resourceRouteUpdate,
 		Delete: resourceRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsRouteImport,
+			State: resourceRouteImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -454,7 +454,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "_")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected ROUTETABLEID_DESTINATION", d.Id())

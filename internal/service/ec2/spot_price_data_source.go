@@ -57,7 +57,7 @@ func dataSourceSpotPriceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
 	var foundSpotPrice []*ec2.SpotPrice

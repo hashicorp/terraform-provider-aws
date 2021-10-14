@@ -122,7 +122,7 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsNetworkAclEntryHash,
+				Set: resourceNetworkACLEntryHash,
 			},
 			"egress": {
 				Type:     schema.TypeSet,
@@ -182,7 +182,7 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsNetworkAclEntryHash,
+				Set: resourceNetworkACLEntryHash,
 			},
 
 			"tags":     tftags.TagsSchema(),

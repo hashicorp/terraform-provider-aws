@@ -198,7 +198,7 @@ func resourceEIPAssociationRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	return readAwsEipAssociation(d, response.Addresses[0])
+	return readEIPAssociation(d, response.Addresses[0])
 }
 
 func resourceEIPAssociationDelete(d *schema.ResourceData, meta interface{}) error {
@@ -234,7 +234,7 @@ func resourceEIPAssociationDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func readAwsEipAssociation(d *schema.ResourceData, address *ec2.Address) error {
+func readEIPAssociation(d *schema.ResourceData, address *ec2.Address) error {
 	if err := d.Set("allocation_id", address.AllocationId); err != nil {
 		return err
 	}

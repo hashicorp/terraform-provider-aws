@@ -25,14 +25,14 @@ func ResourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceEBSVolumeCreate,
 		Read:   resourceEBSVolumeRead,
-		Update: resourceAWSEbsVolumeUpdate,
+		Update: resourceEBSVolumeUpdate,
 		Delete: resourceEBSVolumeDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			resourceAwsEbsVolumeCustomizeDiff,
+			resourceEBSVolumeCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 
@@ -171,7 +171,7 @@ func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceEBSVolumeRead(d, meta)
 }
 
-func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -392,7 +392,7 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEbsVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	iops := diff.Get("iops").(int)
 	multiAttachEnabled := diff.Get("multi_attach_enabled").(bool)
 	throughput := diff.Get("throughput").(int)

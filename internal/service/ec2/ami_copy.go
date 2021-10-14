@@ -277,7 +277,7 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), client)
+	_, err = resourceAMIWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), client)
 	if err != nil {
 		return err
 	}

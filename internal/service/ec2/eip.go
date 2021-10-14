@@ -200,7 +200,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domain := resourceAwsEipDomain(d)
+	domain := resourceEIPDomain(d)
 	id := d.Id()
 
 	req := &ec2.DescribeAddressesInput{}
@@ -330,7 +330,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	domain := resourceAwsEipDomain(d)
+	domain := resourceEIPDomain(d)
 
 	// If we are updating an EIP that is not newly created, and we are attached to
 	// an instance or interface, detach first.
@@ -442,7 +442,7 @@ func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	domain := resourceAwsEipDomain(d)
+	domain := resourceEIPDomain(d)
 
 	var input *ec2.ReleaseAddressInput
 	switch domain {
@@ -480,7 +480,7 @@ func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsEipDomain(d *schema.ResourceData) string {
+func resourceEIPDomain(d *schema.ResourceData) string {
 	if v, ok := d.GetOk("domain"); ok {
 		return v.(string)
 	} else if strings.Contains(d.Id(), "eipalloc") {
@@ -496,7 +496,7 @@ func disassociateEip(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	log.Printf("[DEBUG] Disassociating EIP: %s", d.Id())
 	var err error
-	switch resourceAwsEipDomain(d) {
+	switch resourceEIPDomain(d) {
 	case ec2.DomainTypeVpc:
 		associationID := d.Get("association_id").(string)
 		if associationID == "" {

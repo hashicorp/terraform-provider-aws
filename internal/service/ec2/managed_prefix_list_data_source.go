@@ -74,7 +74,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	input := ec2.DescribeManagedPrefixListsInput{}
 
 	if filters, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		input.Filters = buildFiltersDataSource(filters.(*schema.Set))
 	}
 
 	if prefixListId, ok := d.GetOk("id"); ok {

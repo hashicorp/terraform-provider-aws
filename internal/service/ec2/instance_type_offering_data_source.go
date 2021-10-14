@@ -44,7 +44,7 @@ func dataSourceInstanceTypeOfferingRead(d *schema.ResourceData, meta interface{}
 	input := &ec2.DescribeInstanceTypeOfferingsInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("location_type"); ok {
