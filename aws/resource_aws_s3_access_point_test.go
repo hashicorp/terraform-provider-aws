@@ -51,7 +51,7 @@ func testSweepS3AccessPoints(region string) error {
 			log.Printf("[INFO] Deleting S3 Access Point: %s", name)
 			_, err := conn.DeleteAccessPoint(input)
 
-			if isAWSErr(err, "NoSuchAccessPoint", "") {
+			if tfawserr.ErrMessageContains(err, "NoSuchAccessPoint", "") {
 				continue
 			}
 
